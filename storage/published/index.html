@@ -341,9 +341,10 @@
 
 <!-- HERO -->
 <header class="hero" id="hero">
-  <div id="hero-video-bg" class="hero-video-bg" aria-hidden="true"></div>
+  <div id="hero-video-bg" class="hero-video-bg" aria-hidden="true">
+    <iframe src="https://player.vimeo.com/video/1133996815?autoplay=1&loop=1&muted=1&background=1" allow="autoplay; fullscreen" loading="eager" fetchpriority="high" frameborder="0" aria-hidden="true" title=""></iframe>
+  </div>
   <div class="hero-overlay" aria-hidden="true"></div>
-  <span id="hero-vid" style="display:none">1133996815</span>
 
   <nav class="navbar" id="site-navbar" aria-label="Hlavní navigace">
     <a href="/" class="logo">RB<span class="logo-sep">&nbsp;&middot;&nbsp;</span>Photos &amp; Videos</a>
@@ -671,21 +672,6 @@
   });
 })();
 
-// Hero video background
-(function(){
-  var el = document.getElementById('hero-vid');
-  if (!el) return;
-  var id = el.textContent.trim();
-  if (!id) return;
-  var bg = document.getElementById('hero-video-bg');
-  if (!bg) return;
-  var iframe = document.createElement('iframe');
-  iframe.src = 'https://player.vimeo.com/video/' + encodeURIComponent(id) + '?autoplay=1&loop=1&muted=1&background=1';
-  iframe.allow = 'autoplay; fullscreen';
-  iframe.setAttribute('frameborder', '0');
-  iframe.setAttribute('aria-hidden', 'true');
-  bg.appendChild(iframe);
-})();
 
 // Fixed navbar + scroll-to-top
 (function(){
@@ -719,4 +705,5 @@
 
 </body>
 </html>
+
 
