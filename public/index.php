@@ -48,13 +48,25 @@ if (file_exists($candidate)) {
     exit;
 }
 
-// Special files
-$special = ['sitemap.xml', 'robots.txt', '.htaccess'];
-foreach ($special as $s) {
-    if ($path === $s && file_exists($publishedDir . '/' . $s)) {
-        readfile($publishedDir . '/' . $s);
-        exit;
-    }
+// Serve any root-level static file directly from storage/published
+$rootFile = $publishedDir . '/' . $path;
+if ($path !== '' && is_file($rootFile)) {
+    $ext  = strtolower(pathinfo($rootFile, PATHINFO_EXTENSION));
+    $mime = match ($ext) {
+        'ico'          => 'image/x-icon',
+        'png'          => 'image/png',
+        'jpg', 'jpeg'  => 'image/jpeg',
+        'webp'         => 'image/webp',
+        'svg'          => 'image/svg+xml',
+        'webmanifest'  => 'application/manifest+json',
+        'json'         => 'application/json',
+        'xml'          => 'application/xml',
+        'txt'          => 'text/plain',
+        default        => 'application/octet-stream',
+    };
+    header('Content-Type: ' . $mime);
+    readfile($rootFile);
+    exit;
 }
 
 http_response_code(404);

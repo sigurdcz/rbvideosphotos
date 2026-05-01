@@ -3,14 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta name="theme-color" content="#0c0c0e">
   <title>Blog | RB Photos &amp; Videos — Fotograf Olomouc</title>
   <meta name="description" content="Tipy a inspirace od profesionálního fotografa z Olomouce. Příprava na svatební focení, rodinné focení s dětmi a další rady.">
   <meta name="robots" content="index,follow">
-  <link rel="canonical" href="http://localhost:8000/blog">
+  <link rel="canonical" href="/blog">
   <meta property="og:title" content="Blog | RB Photos &amp; Videos">
   <meta property="og:description" content="Tipy a inspirace od profesionálního fotografa z Olomouce.">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="http://localhost:8000/blog">
+  <meta property="og:url" content="og-url-placeholder">
   <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-BD4BS9R4JZ"></script>
   <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-BD4BS9R4JZ');</script>
@@ -43,6 +49,11 @@ a { color: inherit; text-decoration: none; }
 .nav-links { display: flex; list-style: none; gap: 28px; align-items: center; }
 .nav-links a { color: rgba(255,255,255,.5); font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; transition: color .2s; }
 .nav-links a:hover, .nav-links a.active { color: #fff; }
+.nav-burger { display: none; flex-direction: column; justify-content: center; gap: 5px; width: 40px; height: 40px; background: none; border: none; cursor: pointer; padding: 8px; flex-shrink: 0; }
+.nav-burger span { display: block; width: 22px; height: 2px; background: rgba(255,255,255,.8); border-radius: 2px; transition: transform .25s, opacity .25s; transform-origin: center; }
+.nav-burger.is-open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.nav-burger.is-open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+.nav-burger.is-open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 .btn-nav { background: var(--gold) !important; color: #fff !important; padding: 8px 20px; border-radius: var(--radius); font-size: 12px; }
 
 /* BLOG HERO */
@@ -77,6 +88,13 @@ a { color: inherit; text-decoration: none; }
 
 @media (max-width: 768px) {
   .nav-links { display: none; }
+  .nav-burger { display: flex; }
+  .nav-links.nav-open { display: flex; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0; background: var(--dark); padding: 12px 20px 20px; gap: 0; border-top: 1px solid rgba(196,150,60,.1); }
+  .nav-links.nav-open li { border-bottom: 1px solid rgba(255,255,255,.05); }
+  .nav-links.nav-open li:last-child { border-bottom: none; }
+  .nav-links.nav-open a { display: block; padding: 13px 4px; font-size: 14px; color: rgba(255,255,255,.7) !important; }
+  .nav-links.nav-open a:hover { color: #fff !important; }
+  .nav-links.nav-open .btn-nav { display: inline-block; margin-top: 4px; padding: 10px 22px; }
   .articles-grid { grid-template-columns: 1fr; }
 }
 </style>
@@ -87,13 +105,14 @@ a { color: inherit; text-decoration: none; }
   <nav class="navbar-blog">
     <div class="nb-inner">
       <a href="/" class="logo">RB<span class="logo-sep">&nbsp;&middot;&nbsp;</span>Photos &amp; Videos</a>
-      <ul class="nav-links">
+      <ul class="nav-links" id="nav-links">
         <li><a href="/#sluzby">Slu&#382;by</a></li>
-        <li><a href="/#videa">Videa</a></li>
+        <li><a href="/#portfolio">Uk&aacute;zka pr&aacute;ce</a></li>
         <li><a href="/#reference">Reference</a></li>
         <li><a href="/blog" class="active">Blog</a></li>
         <li><a href="/#kontakt" class="btn-nav">Kontakt</a></li>
       </ul>
+      <button class="nav-burger" id="nav-burger" aria-label="Otevřít menu" aria-expanded="false" aria-controls="nav-links"><span></span><span></span><span></span></button>
     </div>
   </nav>
 
@@ -183,6 +202,31 @@ a { color: inherit; text-decoration: none; }
   window.addEventListener('scroll', function(){
     btn.classList.toggle('visible', window.scrollY > 320);
   }, {passive: true});
+})();
+(function(){
+  var o = location.origin;
+  var c = document.querySelector('link[rel="canonical"]');
+  if(c) c.href = o + '/blog';
+  var og = document.querySelector('meta[property="og:url"]');
+  if(og) og.content = o + '/blog';
+})();
+(function(){
+  var burger = document.getElementById('nav-burger');
+  var nav    = document.getElementById('nav-links');
+  if (!burger || !nav) return;
+  burger.addEventListener('click', function(){
+    var open = burger.getAttribute('aria-expanded') === 'true';
+    burger.setAttribute('aria-expanded', String(!open));
+    burger.classList.toggle('is-open');
+    nav.classList.toggle('nav-open');
+  });
+  nav.querySelectorAll('a').forEach(function(a){
+    a.addEventListener('click', function(){
+      burger.setAttribute('aria-expanded', 'false');
+      burger.classList.remove('is-open');
+      nav.classList.remove('nav-open');
+    });
+  });
 })();
 </script>
 </body>

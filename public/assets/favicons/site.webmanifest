@@ -1,0 +1,21 @@
+{
+  "name": "RB Photos & Videos — Fotograf Olomouc",
+  "short_name": "RB Photos",
+  "description": "Profesionální fotograf a videograf v Olomouci. Svatby, rodiny, portréty.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0c0c0e",
+  "theme_color": "#0c0c0e",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

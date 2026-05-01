@@ -44,7 +44,11 @@
       "Bash(git init *)",
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(grep \"\\\\.php$\")",
+      "PowerShell(Head -20)",
+      "PowerShell(ls -Recurse \"c:\\\\Users\\\\sigur\\\\Desktop\\\\seo-editor\" | Where-Object {$_.Extension -eq \".php\"})",
+      "Bash(git commit *)"
     ]
   }
 }
