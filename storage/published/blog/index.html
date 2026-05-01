@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blog | RB Photos &amp; Videos — Fotograf Olomouc</title>
+  <meta name="description" content="Tipy a inspirace od profesionálního fotografa z Olomouce. Příprava na svatební focení, rodinné focení s dětmi a další rady.">
+  <meta name="robots" content="index,follow">
+  <link rel="canonical" href="http://localhost:8000/blog">
+  <meta property="og:title" content="Blog | RB Photos &amp; Videos">
+  <meta property="og:description" content="Tipy a inspirace od profesionálního fotografa z Olomouce.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="http://localhost:8000/blog">
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-BD4BS9R4JZ"></script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-BD4BS9R4JZ');</script>
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-542MMSL');</script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --gold:   #c4963c;
+  --gold-d: #a67c2a;
+  --dark:   #0c0c0e;
+  --dark2:  #141416;
+  --dark3:  #1e1e22;
+  --light:  #f9f8f6;
+  --text:   #1c1c1e;
+  --muted:  #6b7280;
+  --border: #e4e4e7;
+  --radius: 3px;
+}
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; color: var(--text); background: #fff; line-height: 1.65; -webkit-font-smoothing: antialiased; }
+h1, h2, h3 { letter-spacing: -.02em; line-height: 1.25; }
+a { color: inherit; text-decoration: none; }
+.container { max-width: 1100px; margin: 0 auto; padding: 0 28px; }
+
+/* NAVBAR */
+.navbar-blog { background: var(--dark); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(196,150,60,.12); }
+.nb-inner { max-width: 1100px; margin: 0 auto; padding: 0 28px; display: flex; align-items: center; justify-content: space-between; height: 64px; }
+.logo { font-size: 15px; font-weight: 700; color: #fff; letter-spacing: .08em; text-transform: uppercase; }
+.logo-sep { color: var(--gold); font-weight: 300; }
+.nav-links { display: flex; list-style: none; gap: 28px; align-items: center; }
+.nav-links a { color: rgba(255,255,255,.5); font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; transition: color .2s; }
+.nav-links a:hover, .nav-links a.active { color: #fff; }
+.btn-nav { background: var(--gold) !important; color: #fff !important; padding: 8px 20px; border-radius: var(--radius); font-size: 12px; }
+
+/* BLOG HERO */
+.blog-hero { background: var(--dark); padding: 80px 0 64px; border-bottom: 1px solid rgba(196,150,60,.1); }
+.blog-hero-tag { font-size: 11px; font-weight: 700; color: var(--gold); letter-spacing: .2em; text-transform: uppercase; margin-bottom: 20px; }
+.blog-hero h1 { font-size: clamp(2rem, 4vw, 3rem); font-weight: 800; color: #fff; margin-bottom: 16px; }
+.blog-hero p { font-size: 1.05rem; color: rgba(255,255,255,.45); max-width: 580px; line-height: 1.75; }
+
+/* ARTICLES GRID */
+.articles-section { padding: 72px 0 100px; }
+.articles-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+.article-card { display: flex; flex-direction: column; border: 1px solid var(--border); transition: all .22s; background: #fff; }
+.article-card:hover { border-color: var(--gold); transform: translateY(-4px); box-shadow: 0 10px 32px rgba(0,0,0,.09); }
+.article-card-thumb { background: var(--dark2); aspect-ratio: 16/9; overflow: hidden; position: relative; }
+.article-card-thumb iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; }
+.article-card-body { padding: 28px 24px 24px; display: flex; flex-direction: column; flex: 1; }
+.article-card-cat { font-size: 10.5px; font-weight: 700; color: var(--gold); letter-spacing: .18em; text-transform: uppercase; margin-bottom: 12px; display: block; }
+.article-card h2 { font-size: 1.08rem; font-weight: 700; margin-bottom: 10px; line-height: 1.4; }
+.article-card p { font-size: .875rem; color: var(--muted); line-height: 1.75; margin-bottom: 20px; flex: 1; }
+.article-card-meta { display: flex; align-items: center; justify-content: space-between; margin-top: auto; }
+.article-card-date { font-size: 11px; color: var(--muted); letter-spacing: .05em; }
+.article-read-more { font-size: 11px; font-weight: 700; color: var(--gold); letter-spacing: .08em; text-transform: uppercase; }
+
+/* FOOTER */
+.footer { background: var(--dark); padding: 48px 0 28px; border-top: 1px solid rgba(196,150,60,.08); }
+.footer-inner { display: flex; flex-direction: column; align-items: center; gap: 20px; text-align: center; }
+.footer-brand p { color: rgba(255,255,255,.28); font-size: .82rem; margin-top: 6px; }
+.footer-links { display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; }
+.footer-links a { color: rgba(255,255,255,.3); font-size: .78rem; letter-spacing: .07em; text-transform: uppercase; transition: color .2s; }
+.footer-links a:hover { color: var(--gold); }
+.footer-copy { color: rgba(255,255,255,.18); font-size: .72rem; }
+
+@media (max-width: 768px) {
+  .nav-links { display: none; }
+  .articles-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar-blog">
+    <div class="nb-inner">
+      <a href="/" class="logo">RB<span class="logo-sep">&nbsp;&middot;&nbsp;</span>Photos &amp; Videos</a>
+      <ul class="nav-links">
+        <li><a href="/#sluzby">Slu&#382;by</a></li>
+        <li><a href="/#videa">Videa</a></li>
+        <li><a href="/#reference">Reference</a></li>
+        <li><a href="/blog" class="active">Blog</a></li>
+        <li><a href="/#kontakt" class="btn-nav">Kontakt</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- BLOG HERO -->
+  <header class="blog-hero">
+    <div class="container">
+      <p class="blog-hero-tag">Blog</p>
+      <h1>Tipy a inspirace</h1>
+      <p>Rady od profesion&aacute;ln&iacute;ho fotografa &mdash; p&#345;&iacute;prava na focen&iacute;, tipy pro klienty a pohled do na&scaron;&iacute; pr&aacute;ce.</p>
+    </div>
+  </header>
+
+  <!-- ARTICLES -->
+  <section class="articles-section">
+    <div class="container">
+      <div class="articles-grid">
+
+        <a href="/blog/priprava-na-svatebni-foceni" class="article-card">
+          <div class="article-card-thumb">
+            <iframe src="https://player.vimeo.com/video/1133996815?wmode=opaque" allowfullscreen loading="lazy" title="Svatebn&iacute; focen&iacute;"></iframe>
+          </div>
+          <div class="article-card-body">
+            <span class="article-card-cat">Svatebn&iacute; fotografie</span>
+            <h2>10 tip&#367;, jak se p&#345;ipravit na dokonal&eacute; svatebn&iacute; focen&iacute;</h2>
+            <p>V&aacute;&scaron; svatebn&iacute; den je jedn&iacute;m z nejd&#367;le&#382;it&#283;j&scaron;&iacute;ch okam&#382;ik&#367; &#382;ivota. S t&#283;mito tipy od profesion&aacute;ln&iacute;ho fotografa zajist&iacute;te, &#382;e ka&#382;d&yacute; z&aacute;b&#283;r bude dokonal&yacute; &mdash; a vy si ten den budete u&#382;&iacute;vat bez zbyte&#269;n&eacute;ho stresu.</p>
+            <div class="article-card-meta">
+              <span class="article-card-date">12. dubna 2025</span>
+              <span class="article-read-more">&#268;&iacute;st &#269;l&aacute;nek &#8594;</span>
+            </div>
+          </div>
+        </a>
+
+        <a href="/blog/rodinne-foceni-s-detmi" class="article-card">
+          <div class="article-card-thumb">
+            <iframe src="https://player.vimeo.com/video/1122538281?wmode=opaque" allowfullscreen loading="lazy" title="Rodinn&eacute; focen&iacute;"></iframe>
+          </div>
+          <div class="article-card-body">
+            <span class="article-card-cat">Rodinn&eacute; focen&iacute;</span>
+            <h2>Rodinn&eacute; focen&iacute;: jak dostat p&#345;irozen&eacute; sn&iacute;mky i s mal&yacute;mi d&#283;tmi</h2>
+            <p>Mal&eacute; d&#283;ti a fotoapar&aacute;t? Zn&iacute; to jako recept na chaos. Ale p&#345;esn&#283; v tom chaosu se skr&yacute;vaj&iacute; ty nejkr&aacute;sn&#283;j&scaron;&iacute; momenty. P&#345;e&#269;t&#283;te si, jak z rodinn&eacute;ho focen&iacute; ud&#283;lat z&aacute;bavn&yacute; z&aacute;&#382;itek &mdash; a dom&#367; si odn&eacute;st sn&iacute;mky, na kter&eacute; budete hrd&iacute; cel&yacute; &#382;ivot.</p>
+            <div class="article-card-meta">
+              <span class="article-card-date">28. b&#345;ezna 2025</span>
+              <span class="article-read-more">&#268;&iacute;st &#269;l&aacute;nek &#8594;</span>
+            </div>
+          </div>
+        </a>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <span class="logo">RB<span class="logo-sep">&nbsp;&middot;&nbsp;</span>Photos &amp; Videos</span>
+        <p>Profesion&aacute;ln&iacute; fotografie a videografie &mdash; Olomouc</p>
+      </div>
+      <div class="footer-links">
+        <a href="https://www.facebook.com/rbvideosandphotos" target="_blank" rel="noopener">Facebook</a>
+        <a href="https://www.instagram.com/rb_videos_photos/" target="_blank" rel="noopener">Instagram</a>
+        <a href="https://www.youtube.com/channel/UC5miHVzPxIs2MjEsoPAzGCw/videos" target="_blank" rel="noopener">YouTube</a>
+        <a href="tel:792483583">792 483 583</a>
+      </div>
+      <p class="footer-copy">&copy; 2025 RB Photos &amp; Videos. V&scaron;echna pr&aacute;va vyhrazena.</p>
+    </div>
+  </footer>
+
+</body>
+</html>

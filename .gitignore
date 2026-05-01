@@ -1,6 +1,5 @@
 /vendor/
 /storage/media/
-/storage/published/
 /storage/cache/
 /storage/logs/
 *.log

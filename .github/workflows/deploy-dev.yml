@@ -36,7 +36,6 @@ jobs:
             --exclude='storage/database.sqlite-shm' \
             --exclude='storage/database.sqlite-wal' \
             --exclude='storage/media/' \
-            --exclude='storage/published/' \
             --exclude='storage/cache/' \
             --exclude='storage/logs/' \
             ./ _deploy/
