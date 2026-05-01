@@ -40,21 +40,24 @@ jobs:
             --exclude='storage/cache/' \
             --exclude='storage/logs/' \
             ./ _deploy/
-          # Ensure writable storage dirs exist on first deploy
           mkdir -p _deploy/storage/cache
           mkdir -p _deploy/storage/logs
           mkdir -p _deploy/storage/media
           mkdir -p _deploy/storage/published
           mkdir -p _deploy/storage/templates
 
-      - name: Deploy via SFTP
-        uses: wlixcc/SFTP-Deploy-Action@v1.2.6
+      - name: Deploy via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server: ${{ secrets.SFTP_HOST }}
-          username: ${{ secrets.SFTP_USERNAME }}
-          password: ${{ secrets.SFTP_PASSWORD }}
-          port: ${{ secrets.SFTP_PORT }}
-          local_path: './_deploy/*'
-          remote_path: ${{ secrets.SFTP_TARGET }}
-          # SFTP_TARGET = /www/  (webzdarma root: .log / .sessions / .tmp / web — web je na /www/)
-          sftp_only: true
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASS }}
+          port: 21
+          protocol: ftps
+          local-dir: ./_deploy/
+          server-dir: /www/
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/_deploy/**

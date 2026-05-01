@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - dev
-      # pozn.: produkční větev je 'master', ne 'main'
 
 jobs:
   deploy:
@@ -47,13 +46,18 @@ jobs:
           mkdir -p _deploy/storage/published
           mkdir -p _deploy/storage/templates
 
-      - name: Deploy via SFTP
-        uses: wlixcc/SFTP-Deploy-Action@v1.2.6
+      - name: Deploy via FTP (dev)
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server: ${{ secrets.SFTP_HOST }}
-          username: ${{ secrets.SFTP_USERNAME }}
-          password: ${{ secrets.SFTP_PASSWORD }}
-          port: ${{ secrets.SFTP_PORT }}
-          local_path: './_deploy/*'
-          remote_path: '/www/dev'
-          sftp_only: true
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASS }}
+          port: 21
+          protocol: ftps
+          local-dir: ./_deploy/
+          server-dir: /www/dev/
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/_deploy/**
