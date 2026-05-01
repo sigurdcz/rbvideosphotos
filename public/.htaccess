@@ -1,0 +1,16 @@
+Options -Indexes
+RewriteEngine On
+
+# Admin panel
+RewriteRule ^admin(/.*)?$ /admin/index.php [L,QSA]
+
+# Serve admin assets directly
+RewriteRule ^admin/assets/(.*)$ /admin/assets/$1 [L]
+
+# Serve storage/media directly
+RewriteRule ^storage/media/(.*)$ /storage/media/$1 [L]
+
+# Public front
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ /public/index.php [L,QSA]

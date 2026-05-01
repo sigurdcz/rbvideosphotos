@@ -1,0 +1,8 @@
+/vendor/
+/storage/media/
+/storage/published/
+/storage/cache/
+/storage/logs/
+*.log
+.env
+config/database.local.php

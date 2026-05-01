@@ -1,0 +1,76 @@
+<?php
+
+namespace App\Services;
+
+class SeoRenderer
+{
+    public function renderHead(array $seo, array $site, string $pageUrl, ?string $ogImageUrl, ?string $twImageUrl): string
+    {
+        $robots = [];
+        if (!empty($seo['robots_index'])) $robots[] = 'index'; else $robots[] = 'noindex';
+        if (!empty($seo['robots_follow'])) $robots[] = 'follow'; else $robots[] = 'nofollow';
+
+        $lines = [];
+
+        if (!empty($seo['meta_title'])) {
+            $lines[] = '<title>' . $this->e($seo['meta_title']) . '</title>';
+        }
+        if (!empty($seo['meta_description'])) {
+            $lines[] = '<meta name="description" content="' . $this->e($seo['meta_description']) . '">';
+        }
+        if (!empty($seo['meta_keywords'])) {
+            $lines[] = '<meta name="keywords" content="' . $this->e($seo['meta_keywords']) . '">';
+        }
+        $lines[] = '<meta name="robots" content="' . implode(',', $robots) . '">';
+        $canonical = !empty($seo['canonical_url']) ? $seo['canonical_url'] : $pageUrl;
+        $lines[] = '<link rel="canonical" href="' . $this->e($canonical) . '">';
+
+        // Open Graph
+        $ogTitle = $seo['og_title'] ?? ($seo['meta_title'] ?? '');
+        $ogDesc  = $seo['og_description'] ?? ($seo['meta_description'] ?? '');
+        if ($ogTitle) $lines[] = '<meta property="og:title" content="' . $this->e($ogTitle) . '">';
+        if ($ogDesc)  $lines[] = '<meta property="og:description" content="' . $this->e($ogDesc) . '">';
+        $lines[] = '<meta property="og:type" content="website">';
+        $lines[] = '<meta property="og:url" content="' . $this->e($canonical) . '">';
+        if ($ogImageUrl) $lines[] = '<meta property="og:image" content="' . $this->e($ogImageUrl) . '">';
+
+        // Twitter Card
+        $twTitle = $seo['twitter_title'] ?? $ogTitle;
+        $twDesc  = $seo['twitter_description'] ?? $ogDesc;
+        $lines[] = '<meta name="twitter:card" content="summary_large_image">';
+        if ($twTitle) $lines[] = '<meta name="twitter:title" content="' . $this->e($twTitle) . '">';
+        if ($twDesc)  $lines[] = '<meta name="twitter:description" content="' . $this->e($twDesc) . '">';
+        if ($twImageUrl) $lines[] = '<meta name="twitter:image" content="' . $this->e($twImageUrl) . '">';
+
+        // JSON-LD
+        if (!empty($seo['schema_json'])) {
+            $lines[] = '<script type="application/ld+json">' . "\n" . $seo['schema_json'] . "\n</script>";
+        }
+
+        // Analytics
+        if (!empty($site['google_analytics_id'])) {
+            $gaid = $this->e($site['google_analytics_id']);
+            $lines[] = "<!-- Google Analytics -->\n<script async src=\"https://www.googletagmanager.com/gtag/js?id={$gaid}\"></script>\n<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','{$gaid}');</script>";
+        }
+        if (!empty($site['google_tag_manager_id'])) {
+            $gtm = $this->e($site['google_tag_manager_id']);
+            $lines[] = "<!-- Google Tag Manager -->\n<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','{$gtm}');</script>";
+        }
+        if (!empty($site['head_scripts'])) {
+            $lines[] = $site['head_scripts'];
+        }
+
+        return implode("\n", $lines);
+    }
+
+    public function renderBodyScripts(array $site): string
+    {
+        if (empty($site['body_scripts'])) return '';
+        return $site['body_scripts'];
+    }
+
+    private function e(string $v): string
+    {
+        return htmlspecialchars($v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    }
+}
