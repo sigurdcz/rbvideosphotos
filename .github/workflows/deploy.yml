@@ -1,0 +1,59 @@
+name: Deploy to Webzdarma (production)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup PHP & Composer
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          tools: composer
+
+      - name: Install Composer dependencies (no-dev)
+        run: composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+
+      - name: Build deploy artifact
+        run: |
+          rsync -av \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='.env' \
+            --exclude='.env.*' \
+            --exclude='.claude/' \
+            --exclude='_deploy/' \
+            --exclude='*.bat' \
+            --exclude='storage/database.sqlite' \
+            --exclude='storage/database.sqlite-shm' \
+            --exclude='storage/database.sqlite-wal' \
+            --exclude='storage/media/' \
+            --exclude='storage/published/' \
+            --exclude='storage/cache/' \
+            --exclude='storage/logs/' \
+            ./ _deploy/
+          # Ensure writable storage dirs exist on first deploy
+          mkdir -p _deploy/storage/cache
+          mkdir -p _deploy/storage/logs
+          mkdir -p _deploy/storage/media
+          mkdir -p _deploy/storage/published
+          mkdir -p _deploy/storage/templates
+
+      - name: Deploy via SFTP
+        uses: wlixcc/SFTP-Deploy-Action@v1.2.6
+        with:
+          server: ${{ secrets.SFTP_HOST }}
+          username: ${{ secrets.SFTP_USERNAME }}
+          password: ${{ secrets.SFTP_PASSWORD }}
+          port: ${{ secrets.SFTP_PORT }}
+          local_path: './_deploy/*'
+          remote_path: ${{ secrets.SFTP_TARGET }}
+          sftp_only: true

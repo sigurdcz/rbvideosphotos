@@ -5,4 +5,9 @@
 /storage/logs/
 *.log
 .env
+.env.*
 config/database.local.php
+_deploy/
+.DS_Store
+.idea/
+.vscode/
