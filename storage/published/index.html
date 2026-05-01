@@ -482,5 +482,28 @@ a { color: inherit; text-decoration: none; }
   bg.appendChild(iframe);
 })();
 </script>
+
+<button id="scroll-top" aria-label="Scroll to top" onclick="window.scrollTo({top:0,behavior:'smooth'})">&#8593;</button>
+<style>
+#scroll-top {
+  position: fixed; bottom: 32px; right: 32px; z-index: 999;
+  width: 44px; height: 44px; border-radius: 50%;
+  background: var(--gold); color: #fff; border: none; cursor: pointer;
+  font-size: 18px; line-height: 1;
+  opacity: 0; visibility: hidden;
+  transition: opacity .25s, transform .25s;
+  box-shadow: 0 4px 16px rgba(0,0,0,.25);
+}
+#scroll-top.visible { opacity: 1; visibility: visible; }
+#scroll-top:hover { transform: translateY(-3px); background: var(--gold-d); }
+</style>
+<script>
+(function(){
+  var btn = document.getElementById('scroll-top');
+  window.addEventListener('scroll', function(){
+    btn.classList.toggle('visible', window.scrollY > 320);
+  }, {passive: true});
+})();
+</script>
 </body>
 </html>
