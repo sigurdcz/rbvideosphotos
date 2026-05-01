@@ -56,4 +56,5 @@ jobs:
           port: ${{ secrets.SFTP_PORT }}
           local_path: './_deploy/*'
           remote_path: ${{ secrets.SFTP_TARGET }}
+          # SFTP_TARGET = /www/  (webzdarma root: .log / .sessions / .tmp / web — web je na /www/)
           sftp_only: true
