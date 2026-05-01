@@ -3,7 +3,7 @@ name: Deploy to Webzdarma (production)
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   deploy:

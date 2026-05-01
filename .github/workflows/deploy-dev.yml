@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - dev
+      # pozn.: produkční větev je 'master', ne 'main'
 
 jobs:
   deploy:
