@@ -18,12 +18,6 @@ date_default_timezone_set(\App\Core\Config::get('app', 'timezone', 'Europe/Pragu
 Runtime::boot('admin');
 Runtime::startRequest();
 
-// Error handling (dev)
-if (\App\Core\Config::get('app', 'debug')) {
-    ini_set('display_errors', '1');
-    error_reporting(E_ALL);
-}
-
 try {
     $router = new Router();
 

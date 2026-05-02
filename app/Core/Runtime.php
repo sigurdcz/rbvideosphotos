@@ -15,6 +15,10 @@ class Runtime
     {
         self::$channel = $channel;
         self::$startedAt = microtime(true);
+        $debug = Config::get('app', 'debug');
+
+        ini_set('display_errors', $debug ? '1' : '0');
+        error_reporting(E_ALL);
 
         set_error_handler([self::class, 'handleError']);
         set_exception_handler([self::class, 'handleException']);
