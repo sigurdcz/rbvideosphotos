@@ -24,7 +24,27 @@ class Logger
         self::write('CRITICAL', $category, $message, $context);
     }
 
-    private static function write(string $level, string $category, string $message, array $context = []): void
+    public static function infoTo(string $stream, string $category, string $message, array $context = []): void
+    {
+        self::write('INFO', $category, $message, $context, $stream);
+    }
+
+    public static function warningTo(string $stream, string $category, string $message, array $context = []): void
+    {
+        self::write('WARNING', $category, $message, $context, $stream);
+    }
+
+    public static function errorTo(string $stream, string $category, string $message, array $context = []): void
+    {
+        self::write('ERROR', $category, $message, $context, $stream);
+    }
+
+    public static function criticalTo(string $stream, string $category, string $message, array $context = []): void
+    {
+        self::write('CRITICAL', $category, $message, $context, $stream);
+    }
+
+    private static function write(string $level, string $category, string $message, array $context = [], string $stream = 'app'): void
     {
         $directory = dirname(__DIR__, 2) . '/storage/logs';
         if (!is_dir($directory)) {
@@ -32,7 +52,8 @@ class Logger
         }
 
         $timestamp = date('Y-m-d H:i:s');
-        $filename = $directory . '/app-' . date('Y-m-d') . '.log';
+        $safeStream = preg_replace('/[^a-z0-9_-]/i', '-', $stream) ?: 'app';
+        $filename = $directory . '/' . $safeStream . '-' . date('Y-m-d') . '.log';
         $line = sprintf('[%s] [%s] [%s] %s', $timestamp, $level, $category, $message);
 
         if ($context !== []) {
