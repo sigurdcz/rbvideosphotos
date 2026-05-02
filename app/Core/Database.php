@@ -38,6 +38,13 @@ class Database
                     ]);
                 }
             } catch (PDOException $e) {
+                Logger::critical('database', 'Database connection failed', [
+                    'driver' => $driver,
+                    'message' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                ]);
+
                 if (Config::get('app', 'debug')) {
                     throw $e;
                 }

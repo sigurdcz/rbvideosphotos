@@ -7,17 +7,18 @@
   <link rel="stylesheet" href="/admin/assets/admin.css">
 </head>
 <body>
+<?php $requestUri = $_SERVER['REQUEST_URI'] ?? ''; ?>
 <div class="layout">
   <nav class="sidebar">
     <div class="sidebar-logo">SEO CMS</div>
     <ul class="nav-list">
-      <li><a href="/admin" class="<?= str_starts_with($_SERVER['REQUEST_URI'], '/admin') && $_SERVER['REQUEST_URI'] === '/admin' ? 'active' : '' ?>">Dashboard</a></li>
-      <li><a href="/admin/pages" class="<?= str_starts_with($_SERVER['REQUEST_URI'], '/admin/pages') ? 'active' : '' ?>">Stránky</a></li>
-      <li><a href="/admin/templates" class="<?= str_starts_with($_SERVER['REQUEST_URI'], '/admin/templates') ? 'active' : '' ?>">Šablony</a></li>
-      <li><a href="/admin/media" class="<?= str_starts_with($_SERVER['REQUEST_URI'], '/admin/media') ? 'active' : '' ?>">Média</a></li>
-      <li><a href="/admin/redirects" class="<?= str_starts_with($_SERVER['REQUEST_URI'], '/admin/redirects') ? 'active' : '' ?>">Redirecty</a></li>
-      <li><a href="/admin/publish" class="<?= str_starts_with($_SERVER['REQUEST_URI'], '/admin/publish') ? 'active' : '' ?>">Publikování</a></li>
-      <li><a href="/admin/settings" class="<?= str_starts_with($_SERVER['REQUEST_URI'], '/admin/settings') ? 'active' : '' ?>">Nastavení</a></li>
+      <li><a href="/admin" class="<?= $requestUri === '/admin' ? 'active' : '' ?>">Dashboard</a></li>
+      <li><a href="/admin/pages" class="<?= strpos($requestUri, '/admin/pages') === 0 ? 'active' : '' ?>">Stránky</a></li>
+      <li><a href="/admin/templates" class="<?= strpos($requestUri, '/admin/templates') === 0 ? 'active' : '' ?>">Šablony</a></li>
+      <li><a href="/admin/media" class="<?= strpos($requestUri, '/admin/media') === 0 ? 'active' : '' ?>">Média</a></li>
+      <li><a href="/admin/redirects" class="<?= strpos($requestUri, '/admin/redirects') === 0 ? 'active' : '' ?>">Redirecty</a></li>
+      <li><a href="/admin/publish" class="<?= strpos($requestUri, '/admin/publish') === 0 ? 'active' : '' ?>">Publikování</a></li>
+      <li><a href="/admin/settings" class="<?= strpos($requestUri, '/admin/settings') === 0 ? 'active' : '' ?>">Nastavení</a></li>
     </ul>
     <div class="sidebar-footer">
       <span><?= htmlspecialchars($_user['email'] ?? '') ?></span>
