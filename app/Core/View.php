@@ -8,12 +8,12 @@ class View
 
     public static function render(string $template, array $data = []): void
     {
-        $path = self::resolvePath($template);
-        if (!file_exists($path)) {
-            throw new \RuntimeException("View not found: {$path}");
+        $__path = self::resolvePath($template);
+        if (!file_exists($__path)) {
+            throw new \RuntimeException("View not found: {$__path}");
         }
-        extract($data, EXTR_SKIP);
-        require $path;
+        extract($data, EXTR_OVERWRITE);
+        require $__path;
     }
 
     public static function renderString(string $template, array $data = []): string

@@ -9,12 +9,77 @@
 
 require dirname(__DIR__) . '/vendor/autoload.php';
 
+use App\Core\Auth;
 use App\Core\Config;
 use App\Core\Runtime;
+use App\Repositories\BlockRepository;
+use App\Repositories\PageRepository;
+use App\Repositories\SiteRepository;
+use App\Repositories\TemplateRepository;
+use App\Services\PageRenderer;
 
 date_default_timezone_set(Config::get('app', 'timezone', 'Europe/Prague'));
 Runtime::boot('public');
 Runtime::startRequest();
+Auth::start();
+
+function serveEditMode(string $uri): never
+{
+    $slug = ltrim($uri, '/');
+
+    $site = (new SiteRepository())->findFirst();
+    if (!$site) { http_response_code(404); exit; }
+
+    $page = null;
+    foreach ((new PageRepository())->allBySite($site['id']) as $p) {
+        if (($p['url_path'] ?? $p['slug']) === $slug) { $page = $p; break; }
+    }
+    if (!$page) { http_response_code(404); exit; }
+
+    $template = (new TemplateRepository())->findById($page['template_id'] ?? 0);
+    if (!$template) { http_response_code(404); exit; }
+
+    $blocks   = (new BlockRepository())->allByPage($page['id']);
+    $renderer = new PageRenderer();
+    $html = $renderer->render($template['html_source'], $blocks, [], true);
+    $html = $renderer->injectAssets($html, $template['css_source'] ?? '', $template['js_source'] ?? '');
+
+    $csrfToken = Auth::csrfToken();
+    $user      = Auth::user();
+    $userEmail = htmlspecialchars($user['email'] ?? '', ENT_QUOTES);
+    $pageTitle = htmlspecialchars($page['title'] ?? '', ENT_QUOTES);
+    $pageId    = (int) $page['id'];
+
+    $editorMeta = '<meta name="inline-page-id" content="' . $pageId . '">'
+        . '<meta name="inline-csrf" content="' . htmlspecialchars($csrfToken, ENT_QUOTES) . '">'
+        . '<link rel="stylesheet" href="/assets/inline-editor.css">';
+
+    $adminBar = <<<HTML
+<div id="cms-adminbar">
+  <div class="cms-ab-left">
+    <a class="cms-ab-logo" href="/admin">&#9998;&nbsp;CMS</a>
+    <span class="cms-ab-sep"></span>
+    <span class="cms-ab-page">{$pageTitle}</span>
+  </div>
+  <div class="cms-ab-right">
+    <span class="cms-ab-email">{$userEmail}</span>
+    <a class="cms-ab-btn" href="/admin">Administrace</a>
+    <form method="POST" action="/admin/logout" style="margin:0;padding:0;display:inline">
+      <input type="hidden" name="_csrf" value="{$csrfToken}">
+      <button type="submit" class="cms-ab-btn cms-ab-logout">Odhlásit</button>
+    </form>
+  </div>
+</div>
+HTML;
+
+    $html = str_replace('</head>', "\n" . $editorMeta . "\n</head>", $html);
+    $html = str_replace('<body', $adminBar . "\n<body", $html);
+    $html = str_replace('</body>', "\n<script src=\"/assets/inline-editor.js\"></script>\n</body>", $html);
+
+    header('Content-Type: text/html; charset=UTF-8');
+    echo $html;
+    exit;
+}
 
 try {
     $publishedDir = dirname(__DIR__) . '/storage/published';
@@ -27,13 +92,32 @@ try {
         if (is_file($file)) {
             $ext  = strtolower(pathinfo($file, PATHINFO_EXTENSION));
             $mime = match ($ext) {
-                'css' => 'text/css',
-                'js' => 'application/javascript',
-                'png' => 'image/png',
+                'css'         => 'text/css',
+                'js'          => 'application/javascript',
+                'png'         => 'image/png',
                 'jpg', 'jpeg' => 'image/jpeg',
-                'webp' => 'image/webp',
-                'svg' => 'image/svg+xml',
-                default => 'application/octet-stream',
+                'webp'        => 'image/webp',
+                'svg'         => 'image/svg+xml',
+                default       => 'application/octet-stream',
+            };
+            header('Content-Type: ' . $mime);
+            readfile($file);
+            exit;
+        }
+    }
+
+    // Serve uploaded media files
+    if (str_starts_with($uri, '/storage/media/')) {
+        $file = dirname(__DIR__) . $uri;
+        if (is_file($file)) {
+            $ext  = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+            $mime = match ($ext) {
+                'png'         => 'image/png',
+                'jpg', 'jpeg' => 'image/jpeg',
+                'webp'        => 'image/webp',
+                'gif'         => 'image/gif',
+                'svg'         => 'image/svg+xml',
+                default       => 'application/octet-stream',
             };
             header('Content-Type: ' . $mime);
             readfile($file);
@@ -53,6 +137,9 @@ try {
     }
 
     if (file_exists($candidate)) {
+        if (Auth::check()) {
+            serveEditMode($uri);
+        }
         header('Content-Type: text/html; charset=UTF-8');
         readfile($candidate);
         exit;
@@ -63,16 +150,16 @@ try {
     if ($path !== '' && is_file($rootFile)) {
         $ext  = strtolower(pathinfo($rootFile, PATHINFO_EXTENSION));
         $mime = match ($ext) {
-            'ico' => 'image/x-icon',
-            'png' => 'image/png',
+            'ico'         => 'image/x-icon',
+            'png'         => 'image/png',
             'jpg', 'jpeg' => 'image/jpeg',
-            'webp' => 'image/webp',
-            'svg' => 'image/svg+xml',
+            'webp'        => 'image/webp',
+            'svg'         => 'image/svg+xml',
             'webmanifest' => 'application/manifest+json',
-            'json' => 'application/json',
-            'xml' => 'application/xml',
-            'txt' => 'text/plain',
-            default => 'application/octet-stream',
+            'json'        => 'application/json',
+            'xml'         => 'application/xml',
+            'txt'         => 'text/plain',
+            default       => 'application/octet-stream',
         };
         header('Content-Type: ' . $mime);
         readfile($rootFile);

@@ -49,6 +49,10 @@ try {
     // Blocks
     $router->post('/admin/blocks/sync-template', 'BlockController', 'syncFromTemplate');
 
+    // Inline editor (front-end, requires auth + CSRF)
+    $router->post('/admin/inline/update', 'InlineController', 'update');
+    $router->post('/admin/inline/upload', 'InlineController', 'upload');
+
     // SEO
     $router->get('/admin/seo/edit',    'SeoController', 'edit');
     $router->post('/admin/seo/update', 'SeoController', 'update');

@@ -10,7 +10,7 @@ class PageRenderer
     /**
      * Inject content blocks and media into template HTML.
      */
-    public function render(string $templateHtml, array $blocks, array $mediaMap): string
+    public function render(string $templateHtml, array $blocks, array $mediaMap, bool $editMode = false): string
     {
         if (trim($templateHtml) === '') {
             return $templateHtml;
@@ -23,6 +23,19 @@ class PageRenderer
 
         $xpath = new DOMXPath($dom);
 
+        // In edit mode: tag all data-block elements with inline-editor attributes
+        if ($editMode) {
+            $typeMap = [];
+            foreach ($blocks as $b) {
+                $typeMap[$b['block_key']] = $b['block_type'] ?? 'text';
+            }
+            foreach ($xpath->query('//*[@data-block]') as $node) {
+                $k = $node->getAttribute('data-block');
+                $node->setAttribute('data-inline-key', $k);
+                $node->setAttribute('data-inline-type', $typeMap[$k] ?? 'text');
+            }
+        }
+
         // Replace data-block content
         foreach ($blocks as $block) {
             $key     = $block['block_key'];
@@ -30,6 +43,14 @@ class PageRenderer
             $nodes   = $xpath->query('//*[@data-block="' . $key . '"]');
 
             foreach ($nodes as $node) {
+                // Image blocks: set src attribute directly
+                if (($block['block_type'] ?? '') === 'image' && $node->nodeName === 'img') {
+                    if ($content !== '') {
+                        $node->setAttribute('src', $content);
+                    }
+                    continue;
+                }
+
                 while ($node->firstChild) {
                     $node->removeChild($node->firstChild);
                 }
