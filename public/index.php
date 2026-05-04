@@ -32,14 +32,12 @@ function tryServeEditMode(string $uri): bool
     $slug = ltrim($uri, '/');
 
     try {
-        $site = (new SiteRepository())->findFirst();
-        if (!$site) return false;
-
-        $page = null;
-        foreach ((new PageRepository())->allBySite($site['id']) as $p) {
-            if (($p['url_path'] ?? $p['slug']) === $slug) { $page = $p; break; }
-        }
+        // Find page directly by url_path (works even if multiple sites exist in DB)
+        $page = (new PageRepository())->findByUrlPath($slug);
         if (!$page) return false;
+
+        $site = (new SiteRepository())->findById($page['site_id']);
+        if (!$site) return false;
 
         $template = (new TemplateRepository())->findById($page['template_id'] ?? 0);
         if (!$template) return false;

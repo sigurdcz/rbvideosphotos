@@ -35,6 +35,14 @@ class PageRepository
         return $row ?: null;
     }
 
+    public function findByUrlPath(string $urlPath): ?array
+    {
+        $stmt = $this->db->prepare('SELECT * FROM pages WHERE url_path = ? LIMIT 1');
+        $stmt->execute([$urlPath]);
+        $row = $stmt->fetch();
+        return $row ?: null;
+    }
+
     public function findPublishedBySite(int $siteId): array
     {
         $stmt = $this->db->prepare(
