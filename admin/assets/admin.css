@@ -85,11 +85,13 @@ body { font-family: system-ui, -apple-system, sans-serif; font-size: 14px; color
 
 /* Grid stats */
 .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.stat-card--wide { grid-column: span 2; min-width: 0; }
 .stat-card {
   background: var(--c-surface); border: 1px solid var(--c-border);
   border-radius: var(--radius); padding: 20px; text-align: center;
 }
 .stat-card .stat-num { font-size: 32px; font-weight: 700; color: var(--c-primary); }
+.stat-card .stat-url { font-size: 14px; font-weight: 600; color: var(--c-primary); word-break: break-all; overflow-wrap: anywhere; }
 .stat-card .stat-lbl { color: var(--c-muted); font-size: 12px; margin-top: 4px; }
 
 /* Buttons */

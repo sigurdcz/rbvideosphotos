@@ -152,6 +152,34 @@ try {
     }
 
     if (file_exists($candidate)) {
+        // Logged-in user but tryServeEditMode failed (e.g. no page in DB yet):
+        // inject a minimal admin bar so navigation is still accessible.
+        if (Auth::check()) {
+            $csrfToken = Auth::csrfToken();
+            $user      = Auth::user();
+            $email     = htmlspecialchars($user['email'] ?? '', ENT_QUOTES);
+            $bar = <<<HTML
+<div id="cms-adminbar">
+  <div class="cms-ab-left">
+    <a class="cms-ab-logo" href="/admin">&#9998;&nbsp;CMS</a>
+  </div>
+  <div class="cms-ab-right">
+    <span class="cms-ab-email">{$email}</span>
+    <a class="cms-ab-btn" href="/admin">Administrace</a>
+    <form method="POST" action="/admin/logout" style="margin:0;padding:0;display:inline">
+      <input type="hidden" name="_csrf" value="{$csrfToken}">
+      <button type="submit" class="cms-ab-btn cms-ab-logout">Odhlásit</button>
+    </form>
+  </div>
+</div>
+HTML;
+            $html = file_get_contents($candidate);
+            $html = str_replace('</head>', "\n" . '<link rel="stylesheet" href="/assets/inline-editor.css">' . "\n</head>", $html);
+            $html = str_replace('<body', "\n" . $bar . "\n<body", $html);
+            header('Content-Type: text/html; charset=UTF-8');
+            echo $html;
+            exit;
+        }
         header('Content-Type: text/html; charset=UTF-8');
         readfile($candidate);
         exit;

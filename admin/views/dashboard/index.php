@@ -12,8 +12,8 @@ ob_start();
     <div class="stat-lbl">Šablony</div>
   </div>
   <?php if ($site): ?>
-  <div class="stat-card">
-    <div class="stat-num" style="font-size:16px"><?= htmlspecialchars($site['domain']) ?></div>
+  <div class="stat-card stat-card--wide">
+    <div class="stat-url"><?= htmlspecialchars($site['domain']) ?></div>
     <div class="stat-lbl">Doména</div>
   </div>
   <?php endif; ?>
