@@ -79,6 +79,10 @@ try {
     $router->get('/admin/settings',        'SettingsController', 'index');
     $router->post('/admin/settings/update','SettingsController', 'update');
 
+    // Setup / seed
+    $router->get('/admin/setup',      'SetupController', 'index');
+    $router->post('/admin/setup/run', 'SetupController', 'run');
+
     $router->dispatch();
 } catch (\Throwable $e) {
     Runtime::handleException($e);

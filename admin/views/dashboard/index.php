@@ -23,6 +23,10 @@ ob_start();
   <div class="card">
     <p>Nejprve <a href="/admin/settings">nastavte web</a> (název + doménu).</p>
   </div>
+<?php elseif ((int)$pagesCount === 0): ?>
+  <div class="alert alert-warning">
+    Databáze neobsahuje žádné stránky. <a href="/admin/setup"><strong>Spusť počáteční seed →</strong></a>
+  </div>
 <?php else: ?>
 
 <div class="card">
