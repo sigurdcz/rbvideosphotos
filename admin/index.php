@@ -10,6 +10,8 @@ use App\Core\Auth;
 use App\Core\Router;
 use App\Core\Runtime;
 
+header('Content-Type: text/html; charset=UTF-8');
+
 // Init session
 Auth::start();
 

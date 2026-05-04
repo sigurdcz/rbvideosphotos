@@ -1,11 +1,25 @@
 <?php
 $pageTitle = 'Nastavení webu';
 $h = fn($v) => htmlspecialchars((string)($v ?? ''));
+
+// Auto-detect correct domain for the warning / pre-fill
+$detectedUrl   = \App\Core\Config::get('app', 'url');
+$storedDomain  = $site['domain'] ?? '';
+$isLocalDomain = str_contains($storedDomain, 'localhost') || $storedDomain === '';
+$domainValue   = $isLocalDomain ? $detectedUrl : $storedDomain;
+
 ob_start();
 ?>
 <div class="page-header">
   <h1>Nastavení webu</h1>
 </div>
+
+<?php if ($isLocalDomain && $detectedUrl && !str_contains($detectedUrl, 'localhost')): ?>
+<div class="alert alert-warning" style="margin-bottom:16px">
+  ⚠️ Doména je nastavena na <strong><?= $h($storedDomain ?: '(prázdná)') ?></strong>.
+  Automaticky jsem předvyplnil správnou URL z aktuálního requestu — zkontroluj a ulož.
+</div>
+<?php endif; ?>
 
 <form method="POST" action="/admin/settings/update">
   <input type="hidden" name="_csrf" value="<?= $h($_csrfToken) ?>">
@@ -19,7 +33,7 @@ ob_start();
       </div>
       <div class="form-group">
         <label>Doména *</label>
-        <input type="url" name="domain" value="<?= $h($site['domain'] ?? '') ?>" placeholder="https://example.cz" required>
+        <input type="url" name="domain" value="<?= $h($domainValue) ?>" placeholder="https://example.cz" required>
       </div>
     </div>
     <div class="form-group">
