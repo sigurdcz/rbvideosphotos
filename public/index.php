@@ -142,6 +142,10 @@ try {
     $path = ltrim($uri, '/');
     if ($path === '') {
         $candidate = $publishedDir . '/index.html';
+    } elseif (pathinfo($path, PATHINFO_EXTENSION) !== '') {
+        // Path has an extension (favicon.ico, site.webmanifest, etc.) — skip directory lookup
+        // to avoid open_basedir errors on restricted hosts; fall through to root-file check below
+        $candidate = '';
     } else {
         $candidate = $publishedDir . '/' . $path . '/index.html';
         if (!file_exists($candidate)) {
@@ -149,7 +153,7 @@ try {
         }
     }
 
-    if (file_exists($candidate)) {
+    if ($candidate !== '' && file_exists($candidate)) {
         // Logged-in user but tryServeEditMode failed (e.g. no page in DB yet):
         // inject a minimal admin bar so navigation is still accessible.
         if (Auth::check()) {

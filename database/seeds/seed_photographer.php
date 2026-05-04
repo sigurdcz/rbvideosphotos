@@ -1,8 +1,8 @@
 <?php
 declare(strict_types=1);
 
-define('BASE_PATH', dirname(__DIR__, 2));
-require BASE_PATH . '/vendor/autoload.php';
+defined('BASE_PATH') || define('BASE_PATH', dirname(__DIR__, 2));
+require_once BASE_PATH . '/vendor/autoload.php';
 
 use App\Core\Database;
 use App\Services\PublishService;
