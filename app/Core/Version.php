@@ -4,5 +4,5 @@ namespace App\Core;
 
 class Version
 {
-    const APP = 'v_1.0.3';
+    const APP = 'v_1.0.4';
 }

@@ -37,8 +37,12 @@ class PageRepository
 
     public function findByUrlPath(string $urlPath): ?array
     {
-        $stmt = $this->db->prepare('SELECT * FROM pages WHERE url_path = ? LIMIT 1');
-        $stmt->execute([$urlPath]);
+        // Normalize: strip leading/trailing slashes on both sides so
+        // url_path='/', url_path='' and url_path='/cenik', url_path='cenik'
+        // all match regardless of how the seed stored them.
+        $normalized = trim($urlPath, '/');
+        $stmt = $this->db->prepare("SELECT * FROM pages WHERE TRIM(url_path, '/') = ? LIMIT 1");
+        $stmt->execute([$normalized]);
         $row = $stmt->fetch();
         return $row ?: null;
     }
