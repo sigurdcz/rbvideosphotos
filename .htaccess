@@ -11,8 +11,9 @@ RewriteRule ^admin(/.*)?$ admin/index.php [L,QSA]
 # Storage media — serve directly
 RewriteRule ^storage/media/(.*)$ storage/media/$1 [L]
 
-# Everything else (non-file, non-dir) → public front controller
+# Everything else (non-file) → public front controller
+# NOTE: directories are intentionally included so that / and sub-paths
+# reach public/index.php (which serves storage/published/ or edit mode).
 RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_URI} !^/index\.php
 RewriteRule ^(.*)$ public/index.php [L,QSA]

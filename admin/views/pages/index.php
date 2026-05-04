@@ -33,6 +33,8 @@ ob_start();
         <div class="actions">
           <a href="/admin/pages/edit?id=<?= $p['id'] ?>" class="btn btn-sm btn-secondary">Upravit</a>
           <a href="/admin/seo/edit?page_id=<?= $p['id'] ?>" class="btn btn-sm btn-secondary">SEO</a>
+          <?php $frontUrl = '/' . ltrim($p['url_path'] ?? '', '/'); ?>
+          <a href="<?= htmlspecialchars($frontUrl) ?>" target="_blank" class="btn btn-sm btn-inline-edit" title="Otevřít stránku ve frontendu a editovat inline">&#9998; Na webu</a>
           <form method="POST" action="/admin/publish/page" data-confirm="Publikovat tuto stránku?">
             <input type="hidden" name="_csrf" value="<?= htmlspecialchars($_csrfToken) ?>">
             <input type="hidden" name="page_id" value="<?= $p['id'] ?>">

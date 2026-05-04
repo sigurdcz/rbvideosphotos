@@ -118,9 +118,11 @@ ob_start();
     <?php endif; ?>
 
     <?php if ($isEdit): ?>
-    <div style="display:flex;gap:10px;margin-top:4px">
+    <?php $frontUrl = '/' . ltrim($page['url_path'] ?? '', '/'); ?>
+    <div style="display:flex;gap:10px;margin-top:4px;flex-wrap:wrap">
       <button type="submit" class="btn btn-primary">Uložit změny</button>
       <a href="/admin/seo/edit?page_id=<?= (int)$page['id'] ?>" class="btn btn-secondary">SEO nastavení</a>
+      <a href="<?= htmlspecialchars($frontUrl) ?>" target="_blank" class="btn btn-inline-edit">&#9998; Editovat na webu</a>
       <form method="POST" action="/admin/publish/page" style="display:inline" data-confirm="Publikovat stránku?">
         <input type="hidden" name="_csrf" value="<?= $h($_csrfToken) ?>">
         <input type="hidden" name="page_id" value="<?= (int)$page['id'] ?>">

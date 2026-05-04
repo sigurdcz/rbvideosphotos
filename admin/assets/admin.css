@@ -107,6 +107,8 @@ body { font-family: system-ui, -apple-system, sans-serif; font-size: 14px; color
 .btn-success  { background: var(--c-success); color: #fff; }
 .btn-success:hover  { background: #15803d; }
 .btn-sm { padding: 5px 10px; font-size: 12px; }
+.btn-inline-edit { background: #312e81; color: #c7d2fe; border: 1px solid #4338ca; }
+.btn-inline-edit:hover { background: #3730a3; color: #e0e7ff; }
 .btn-link { background: none; border: none; color: var(--c-sidebar-t); cursor: pointer; font-size: 12px; padding: 0; text-decoration: underline; }
 
 /* Page header */
