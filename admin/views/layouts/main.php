@@ -30,6 +30,7 @@
         <input type="hidden" name="_csrf" value="<?= htmlspecialchars($_csrfToken ?? '') ?>">
         <button type="submit" class="btn-link">Odhlásit</button>
       </form>
+      <div class="sidebar-version"><?= \App\Core\Version::APP ?></div>
     </div>
   </nav>
 

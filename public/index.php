@@ -12,6 +12,7 @@ require dirname(__DIR__) . '/vendor/autoload.php';
 use App\Core\Auth;
 use App\Core\Config;
 use App\Core\Runtime;
+use App\Core\Version;
 use App\Repositories\BlockRepository;
 use App\Repositories\PageRepository;
 use App\Repositories\SiteRepository;
@@ -53,8 +54,10 @@ function tryServeEditMode(string $uri): bool
         $pageTitle = htmlspecialchars($page['title'] ?? '', ENT_QUOTES);
         $pageId    = (int) $page['id'];
 
+        $appVersion = Version::APP;
         $editorMeta = '<meta name="inline-page-id" content="' . $pageId . '">'
             . '<meta name="inline-csrf" content="' . htmlspecialchars($csrfToken, ENT_QUOTES) . '">'
+            . '<meta name="app-version" content="' . $appVersion . '">'
             . '<link rel="stylesheet" href="/assets/inline-editor.css">';
 
         $adminBar = <<<HTML
@@ -65,6 +68,7 @@ function tryServeEditMode(string $uri): bool
     <span class="cms-ab-page">{$pageTitle}</span>
   </div>
   <div class="cms-ab-right">
+    <span class="cms-ab-ver">{$appVersion}</span>
     <span class="cms-ab-email">{$userEmail}</span>
     <a class="cms-ab-btn" href="/admin">Administrace</a>
     <form method="POST" action="/admin/logout" style="margin:0;padding:0;display:inline">
