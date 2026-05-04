@@ -1,5 +1,6 @@
 Options -Indexes
 RewriteEngine On
+RewriteBase /
 
 # Admin assets — serve directly
 RewriteRule ^admin/assets/(.*)$ admin/assets/$1 [L]
@@ -12,5 +13,6 @@ RewriteRule ^storage/media/(.*)$ storage/media/$1 [L]
 
 # Everything else (non-file, non-dir) → public front controller
 RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_URI} !^/index\.php
 RewriteRule ^(.*)$ public/index.php [L,QSA]

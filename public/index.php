@@ -23,38 +23,43 @@ Runtime::boot('public');
 Runtime::startRequest();
 Auth::start();
 
-function serveEditMode(string $uri): never
+/**
+ * Render the page from the database in edit mode and echo it.
+ * Returns true on success, false if any lookup fails (caller falls back to static file).
+ */
+function tryServeEditMode(string $uri): bool
 {
     $slug = ltrim($uri, '/');
 
-    $site = (new SiteRepository())->findFirst();
-    if (!$site) { http_response_code(404); exit; }
+    try {
+        $site = (new SiteRepository())->findFirst();
+        if (!$site) return false;
 
-    $page = null;
-    foreach ((new PageRepository())->allBySite($site['id']) as $p) {
-        if (($p['url_path'] ?? $p['slug']) === $slug) { $page = $p; break; }
-    }
-    if (!$page) { http_response_code(404); exit; }
+        $page = null;
+        foreach ((new PageRepository())->allBySite($site['id']) as $p) {
+            if (($p['url_path'] ?? $p['slug']) === $slug) { $page = $p; break; }
+        }
+        if (!$page) return false;
 
-    $template = (new TemplateRepository())->findById($page['template_id'] ?? 0);
-    if (!$template) { http_response_code(404); exit; }
+        $template = (new TemplateRepository())->findById($page['template_id'] ?? 0);
+        if (!$template) return false;
 
-    $blocks   = (new BlockRepository())->allByPage($page['id']);
-    $renderer = new PageRenderer();
-    $html = $renderer->render($template['html_source'], $blocks, [], true);
-    $html = $renderer->injectAssets($html, $template['css_source'] ?? '', $template['js_source'] ?? '');
+        $blocks   = (new BlockRepository())->allByPage($page['id']);
+        $renderer = new PageRenderer();
+        $html = $renderer->render($template['html_source'], $blocks, [], true);
+        $html = $renderer->injectAssets($html, $template['css_source'] ?? '', $template['js_source'] ?? '');
 
-    $csrfToken = Auth::csrfToken();
-    $user      = Auth::user();
-    $userEmail = htmlspecialchars($user['email'] ?? '', ENT_QUOTES);
-    $pageTitle = htmlspecialchars($page['title'] ?? '', ENT_QUOTES);
-    $pageId    = (int) $page['id'];
+        $csrfToken = Auth::csrfToken();
+        $user      = Auth::user();
+        $userEmail = htmlspecialchars($user['email'] ?? '', ENT_QUOTES);
+        $pageTitle = htmlspecialchars($page['title'] ?? '', ENT_QUOTES);
+        $pageId    = (int) $page['id'];
 
-    $editorMeta = '<meta name="inline-page-id" content="' . $pageId . '">'
-        . '<meta name="inline-csrf" content="' . htmlspecialchars($csrfToken, ENT_QUOTES) . '">'
-        . '<link rel="stylesheet" href="/assets/inline-editor.css">';
+        $editorMeta = '<meta name="inline-page-id" content="' . $pageId . '">'
+            . '<meta name="inline-csrf" content="' . htmlspecialchars($csrfToken, ENT_QUOTES) . '">'
+            . '<link rel="stylesheet" href="/assets/inline-editor.css">';
 
-    $adminBar = <<<HTML
+        $adminBar = <<<HTML
 <div id="cms-adminbar">
   <div class="cms-ab-left">
     <a class="cms-ab-logo" href="/admin">&#9998;&nbsp;CMS</a>
@@ -72,13 +77,18 @@ function serveEditMode(string $uri): never
 </div>
 HTML;
 
-    $html = str_replace('</head>', "\n" . $editorMeta . "\n</head>", $html);
-    $html = str_replace('<body', $adminBar . "\n<body", $html);
-    $html = str_replace('</body>', "\n<script src=\"/assets/inline-editor.js\"></script>\n</body>", $html);
+        $html = str_replace('</head>', "\n" . $editorMeta . "\n</head>", $html);
+        $html = str_replace('<body', $adminBar . "\n<body", $html);
+        $html = str_replace('</body>', "\n<script src=\"/assets/inline-editor.js\"></script>\n</body>", $html);
 
-    header('Content-Type: text/html; charset=UTF-8');
-    echo $html;
-    exit;
+        header('Content-Type: text/html; charset=UTF-8');
+        echo $html;
+        return true;
+
+    } catch (\Throwable $e) {
+        // DB or render error — fall back silently to static file
+        return false;
+    }
 }
 
 try {
@@ -125,6 +135,11 @@ try {
         }
     }
 
+    // Logged-in users: try live edit-mode render from DB first
+    if (Auth::check() && tryServeEditMode($uri)) {
+        exit;
+    }
+
     // Resolve to published HTML file
     $path = ltrim($uri, '/');
     if ($path === '') {
@@ -137,9 +152,6 @@ try {
     }
 
     if (file_exists($candidate)) {
-        if (Auth::check()) {
-            serveEditMode($uri);
-        }
         header('Content-Type: text/html; charset=UTF-8');
         readfile($candidate);
         exit;
