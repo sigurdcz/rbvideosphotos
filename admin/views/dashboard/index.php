@@ -31,6 +31,7 @@ ob_start();
     <a href="/admin/pages/create" class="btn btn-primary">+ Nová stránka</a>
     <a href="/admin/templates/create" class="btn btn-secondary">+ Nová šablona</a>
     <a href="/admin/publish" class="btn btn-success">Publikovat</a>
+    <a href="/" target="_blank" class="btn btn-inline-edit">&#9998; Editovat web</a>
   </div>
 </div>
 

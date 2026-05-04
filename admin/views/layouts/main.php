@@ -20,6 +20,9 @@
       <li><a href="/admin/publish" class="<?= strpos($requestUri, '/admin/publish') === 0 ? 'active' : '' ?>">Publikování</a></li>
       <li><a href="/admin/settings" class="<?= strpos($requestUri, '/admin/settings') === 0 ? 'active' : '' ?>">Nastavení</a></li>
     </ul>
+    <div style="padding: 12px 16px 0">
+      <a href="/" target="_blank" class="btn btn-inline-edit" style="width:100%;justify-content:center;box-sizing:border-box">&#9998; Editovat web</a>
+    </div>
     <div class="sidebar-footer">
       <span><?= htmlspecialchars($_user['email'] ?? '') ?></span>
       <form method="POST" action="/admin/logout" style="display:inline">
