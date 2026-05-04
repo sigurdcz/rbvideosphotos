@@ -141,6 +141,27 @@ tr:hover td { background: #fafafa; }
 
 /* Forms */
 .form-group { margin-bottom: 18px; }
+.form-group--full { grid-column: 1 / -1; }
+
+/* Template picker */
+.tpl-picker { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
+.tpl-card {
+  position: relative; cursor: pointer; display: flex; flex-direction: column; align-items: flex-start;
+  border: 2px solid var(--c-border); border-radius: var(--radius); padding: 12px 14px;
+  min-width: 140px; max-width: 200px; flex: 1;
+  transition: border-color .15s, background .15s; background: var(--c-surface);
+}
+.tpl-card input[type=radio] { position: absolute; opacity: 0; width: 0; height: 0; }
+.tpl-card:hover { border-color: var(--c-primary); }
+.tpl-card--active { border-color: var(--c-primary); background: #eff6ff; }
+.tpl-card-icon { font-size: 22px; margin-bottom: 6px; color: var(--c-muted); }
+.tpl-card--active .tpl-card-icon { color: var(--c-primary); }
+.tpl-card-name { font-weight: 600; font-size: 13px; color: var(--c-text); line-height: 1.3; }
+.tpl-card-edit {
+  position: absolute; top: 6px; right: 8px; font-size: 13px; color: var(--c-muted);
+  text-decoration: none; opacity: 0; transition: opacity .15s;
+}
+.tpl-card:hover .tpl-card-edit { opacity: 1; }
 label { display: block; font-weight: 500; font-size: 13px; margin-bottom: 5px; color: var(--c-muted); }
 input[type=text], input[type=email], input[type=password], input[type=url],
 select, textarea {

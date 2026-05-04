@@ -178,6 +178,240 @@ HTML;
 
 $tplHome = tpl($pdo, $siteId, 'Homepage', $htmlHome, $baseCss, $baseJs);
 
+// ─── Template: Homepage — Plná ────────────────────────────────────────────────
+
+$htmlHomeFull = <<<'HTML'
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+</head>
+<body>
+<nav class="nav" id="sitenav">
+  <div class="container nav-inner">
+    <a href="/" class="brand">RB&#160;Photos&#160;&amp;&#160;Videos</a>
+    <div class="nav-links">
+      <a href="#sluzby">Slu&#382;by</a>
+      <a href="#videa">Videa</a>
+      <a href="#reference">Reference</a>
+      <a href="#kontakt" class="nav-cta">Kontakt</a>
+    </div>
+  </div>
+</nav>
+<header class="hero" id="hero">
+  <img data-block="hero_bg" class="hero-bg" src="" alt="">
+  <div class="hero-overlay"></div>
+  <div class="container hero-body">
+    <span class="hero-tag" data-block="hero_tag"></span>
+    <h1 data-block="hero_h1"></h1>
+    <p class="hero-sub" data-block="hero_sub"></p>
+    <div class="hero-btns">
+      <a href="tel:792483583" class="btn-h btn-h--gold">792&#160;483&#160;583</a>
+      <a href="#sluzby" class="btn-h btn-h--outline">Na&#353;e slu&#382;by</a>
+    </div>
+  </div>
+</header>
+<section class="stats-bar">
+  <div class="container stats-row">
+    <div class="stat-item" data-block="stat_1"></div>
+    <div class="stat-item" data-block="stat_2"></div>
+    <div class="stat-item" data-block="stat_3"></div>
+    <div class="stat-item" data-block="stat_4"></div>
+  </div>
+</section>
+<section class="section" id="sluzby">
+  <div class="container">
+    <div class="sec-hdr">
+      <h2 data-block="services_title"></h2>
+      <p data-block="services_intro"></p>
+    </div>
+    <div class="svc-grid">
+      <div class="svc-card svc-card--dark" data-block="service_1"></div>
+      <div class="svc-card" data-block="service_2"></div>
+      <div class="svc-card" data-block="service_3"></div>
+      <div class="svc-card" data-block="service_4"></div>
+    </div>
+  </div>
+</section>
+<section class="section section-dark" id="proc-my">
+  <div class="container">
+    <div class="sec-hdr">
+      <h2 data-block="why_title"></h2>
+      <p data-block="why_intro"></p>
+    </div>
+    <div class="feat-grid">
+      <div class="feat" data-block="why_1"></div>
+      <div class="feat" data-block="why_2"></div>
+      <div class="feat" data-block="why_3"></div>
+      <div class="feat" data-block="why_4"></div>
+    </div>
+  </div>
+</section>
+<section class="section" id="videa">
+  <div class="container">
+    <div class="sec-hdr">
+      <h2 data-block="videos_title"></h2>
+      <p data-block="videos_intro"></p>
+    </div>
+    <div class="vid-grid">
+      <div class="vid-wrap" data-block="video_1"></div>
+      <div class="vid-wrap" data-block="video_2"></div>
+      <div class="vid-wrap" data-block="video_3"></div>
+      <div class="vid-wrap" data-block="video_4"></div>
+    </div>
+    <div class="sec-btns" data-block="videos_btns"></div>
+  </div>
+</section>
+<section class="section section-light" id="reference">
+  <div class="container">
+    <div class="sec-hdr">
+      <h2 data-block="reviews_title"></h2>
+      <p data-block="reviews_intro"></p>
+    </div>
+    <div class="rev-grid">
+      <div class="rev-card" data-block="review_1"></div>
+      <div class="rev-card" data-block="review_2"></div>
+      <div class="rev-card" data-block="review_3"></div>
+    </div>
+    <div class="sec-btns" data-block="reviews_cta"></div>
+  </div>
+</section>
+<section class="section" id="kontakt">
+  <div class="container cta-2col">
+    <div class="cta-l">
+      <h2 data-block="cta_title"></h2>
+      <p data-block="cta_sub"></p>
+      <div data-block="contact_info"></div>
+    </div>
+    <div class="cta-r" data-block="contact_card"></div>
+  </div>
+</section>
+<footer class="footer">
+  <p data-block="footer_text"></p>
+</footer>
+<button id="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">&#8593;</button>
+</body>
+</html>
+HTML;
+
+$cssHomeFull = <<<'CSS'
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;color:#222;background:#fff;line-height:1.6;font-size:16px}
+.container{max-width:1100px;margin:0 auto;padding:0 24px}
+a{color:#c4963c;text-decoration:none}
+img{max-width:100%;height:auto}
+.nav{position:fixed;top:0;left:0;right:0;z-index:500;background:rgba(17,17,17,.96);transition:background .3s}
+.nav-inner{display:flex;align-items:center;height:60px}
+.brand{font-size:13px;font-weight:800;letter-spacing:.1em;color:#fff;text-transform:uppercase;margin-right:auto}
+.nav-links{display:flex;gap:28px;align-items:center}
+.nav-links a{color:rgba(255,255,255,.6);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;transition:color .2s}
+.nav-links a:hover{color:#fff}
+.nav-cta{background:#c4963c !important;color:#fff !important;padding:8px 18px}
+.nav-cta:hover{background:#b5853a !important}
+.hero{position:relative;min-height:100vh;display:flex;align-items:center;overflow:hidden;background:#0f0f0f}
+.hero-bg{position:absolute;inset:-15% 0;width:100%;height:130%;object-fit:cover;will-change:transform;opacity:.6;z-index:0;pointer-events:none}
+.hero-overlay{position:absolute;inset:0;background:linear-gradient(160deg,rgba(0,0,0,.4) 0%,rgba(0,0,0,.65) 100%);z-index:1}
+.hero-body{position:relative;z-index:2;max-width:820px;padding:100px 0 60px}
+.hero-tag{display:inline-block;font-size:10px;color:#c4963c;text-transform:uppercase;letter-spacing:.22em;border:1px solid rgba(196,150,60,.55);padding:5px 14px;margin-bottom:24px}
+.hero h1{font-size:clamp(2.4rem,5.5vw,4.2rem);font-weight:900;color:#fff;line-height:1.1;margin-bottom:18px}
+.hero-sub{font-size:1.05rem;color:rgba(255,255,255,.65);max-width:520px;margin-bottom:36px;line-height:1.7}
+.hero-btns{display:flex;gap:14px;flex-wrap:wrap}
+.btn-h{display:inline-block;padding:14px 28px;font-size:12px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;transition:all .2s;border:2px solid transparent}
+.btn-h--gold{background:#c4963c;color:#fff;border-color:#c4963c}
+.btn-h--gold:hover{background:#b5853a;border-color:#b5853a;color:#fff}
+.btn-h--outline{background:transparent;color:#fff;border-color:rgba(255,255,255,.7)}
+.btn-h--outline:hover{background:#fff;color:#111;border-color:#fff}
+.stats-bar{background:#111;padding:40px 0}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr)}
+.stat-item{text-align:center;padding:10px 20px;border-right:1px solid rgba(255,255,255,.07)}
+.stat-item:last-child{border-right:none}
+.stat-num{display:block;font-size:2.4rem;font-weight:900;color:#c4963c;line-height:1}
+.stat-lbl{display:block;font-size:10px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.12em;margin-top:8px}
+.section{padding:88px 0}
+.section-dark{background:#111;padding:88px 0}
+.section-light{background:#f8f6f2;padding:88px 0}
+.sec-hdr{text-align:center;margin-bottom:60px}
+.sec-hdr h2{font-size:2.1rem;font-weight:900;color:#111;display:inline-block;margin-bottom:8px}
+.sec-hdr h2::after{content:'';display:block;width:36px;height:3px;background:#c4963c;margin:12px auto 0}
+.sec-hdr p{color:#666;font-size:1rem;max-width:500px;margin:0 auto}
+.section-dark .sec-hdr h2{color:#fff}
+.section-dark .sec-hdr p{color:rgba(255,255,255,.5)}
+.svc-grid{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #e5e5e5}
+.svc-card{padding:30px 22px;border-right:1px solid #e5e5e5}
+.svc-card:last-child{border-right:none}
+.svc-card--dark{background:#111}
+.svc-num{display:block;font-size:10px;color:#c4963c;font-weight:700;letter-spacing:.12em;margin-bottom:14px}
+.svc-card h3{font-size:1rem;font-weight:700;margin-bottom:10px;color:#111}
+.svc-card--dark h3{color:#fff}
+.svc-card p{font-size:.87rem;color:#666;line-height:1.7}
+.svc-card--dark p{color:rgba(255,255,255,.5)}
+.feat-grid{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid rgba(255,255,255,.07)}
+.feat{padding:32px 20px;border-right:1px solid rgba(255,255,255,.07)}
+.feat:last-child{border-right:none}
+.feat-num{display:block;font-size:10px;color:#c4963c;font-weight:700;letter-spacing:.12em;margin-bottom:14px}
+.feat h3{font-size:.95rem;font-weight:700;color:#fff;margin-bottom:8px}
+.feat p{font-size:.87rem;color:rgba(255,255,255,.45);line-height:1.7}
+.vid-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:36px}
+.vid-wrap{aspect-ratio:16/9;overflow:hidden;background:#111;line-height:0}
+.vid-wrap iframe{width:100%;height:100%;border:none;display:block}
+.sec-btns{text-align:center;display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:8px}
+.btn-g{display:inline-block;background:#c4963c;color:#fff;padding:12px 22px;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.btn-g:hover{background:#b5853a;color:#fff}
+.btn-od{display:inline-block;border:2px solid #222;color:#222;padding:12px 22px;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.btn-od:hover{background:#222;color:#fff}
+.rev-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-bottom:36px}
+.rev-card{background:#fff;padding:26px;box-shadow:0 2px 14px rgba(0,0,0,.07)}
+.rev-stars{color:#c4963c;font-size:.9rem;margin-bottom:14px}
+.rev-card blockquote{font-size:.88rem;color:#444;line-height:1.75;font-style:italic;margin-bottom:16px}
+.rev-name{font-weight:700;color:#111;font-size:.88rem}
+.rev-type{font-size:.78rem;color:#999;margin-top:3px}
+.cta-2col{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:start}
+.cta-l h2{font-size:2rem;font-weight:900;margin-bottom:14px;color:#111}
+.cta-l p{color:#666;margin-bottom:20px;font-size:.95rem}
+.cta-info{margin-top:12px}
+.cta-info p{color:#333;font-size:.93rem;margin-bottom:6px}
+.cta-info a{color:#c4963c;font-weight:600}
+.cta-r{background:#111;padding:30px}
+.cta-r h3{color:#fff;font-size:1rem;font-weight:700;margin-bottom:6px}
+.cta-r-sub{color:rgba(255,255,255,.45);font-size:.85rem;margin-bottom:22px}
+.cta-btn{display:block;padding:13px 16px;text-align:center;font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;margin-bottom:10px;transition:all .2s}
+.cta-btn:last-child{margin-bottom:0}
+.cta-btn--gold{background:#c4963c;color:#fff}
+.cta-btn--gold:hover{background:#b5853a;color:#fff}
+.cta-btn--dark{border:1px solid rgba(255,255,255,.18);color:rgba(255,255,255,.8)}
+.cta-btn--dark:hover{background:rgba(255,255,255,.08);color:#fff}
+.footer{background:#111;color:rgba(255,255,255,.35);padding:24px;text-align:center;font-size:12px}
+#scroll-top{position:fixed;bottom:24px;right:24px;background:#c4963c;color:#fff;border:none;width:44px;height:44px;border-radius:50%;cursor:pointer;font-size:20px;opacity:0;visibility:hidden;transition:opacity .25s;z-index:999;line-height:1}
+#scroll-top.vis{opacity:1;visibility:visible}
+@media(max-width:1024px){.svc-grid{grid-template-columns:1fr 1fr}.feat-grid{grid-template-columns:1fr 1fr}.svc-card{border-bottom:1px solid #e5e5e5}.feat{border-bottom:1px solid rgba(255,255,255,.07)}}
+@media(max-width:900px){.cta-2col{grid-template-columns:1fr;gap:32px}.stats-row{grid-template-columns:repeat(2,1fr)}.rev-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:640px){.vid-grid{grid-template-columns:1fr}.rev-grid{grid-template-columns:1fr}.nav-links a:not(.nav-cta){display:none}.hero h1{font-size:2.2rem}}
+CSS;
+
+$jsHomeFull = <<<'JS'
+(function(){
+  var nav    = document.getElementById('sitenav');
+  var heroBg = document.querySelector('.hero-bg');
+  var btn    = document.getElementById('scroll-top');
+
+  if (nav && document.getElementById('cms-adminbar')) { nav.style.top = '40px'; }
+
+  window.addEventListener('scroll', function(){
+    var y = window.pageYOffset;
+    if (btn)    btn.classList.toggle('vis', y > 300);
+    if (heroBg) heroBg.style.transform = 'translateY(' + (y * 0.32) + 'px)';
+    if (nav)    nav.style.background   = y > 80 ? 'rgba(10,10,10,.98)' : 'rgba(17,17,17,.96)';
+  }, {passive: true});
+})();
+JS;
+
+$tplHomeFull = tpl($pdo, $siteId, 'Homepage — Plná', $htmlHomeFull, $cssHomeFull, $jsHomeFull);
+
 // ─── Template: Ceník ──────────────────────────────────────────────────────────
 
 $htmlCenik = <<<'HTML'
@@ -354,7 +588,7 @@ $tplArticle = tpl($pdo, $siteId, 'Blog article', $htmlArticle, $articleCss, $bas
 
 // ─── Pages ────────────────────────────────────────────────────────────────────
 
-$pidHome  = addPage($pdo, $siteId, $tplHome,    'Fotograf & Videograf Olomouc | RB Photos & Videos',                         '',                               '/');
+$pidHome  = addPage($pdo, $siteId, $tplHomeFull, 'Fotograf & Videograf Olomouc | RB Photos & Videos',                         '',                               '/');
 $pidCenik = addPage($pdo, $siteId, $tplCenik,   'Ceník fotografa Olomouc | RB Photos & Videos',                             'cenik',                          '/cenik');
 $pidFaq   = addPage($pdo, $siteId, $tplFaq,     'Časté otázky | Fotograf Olomouc — RB Photos & Videos',                     'faq',                            '/faq');
 $pidBlog  = addPage($pdo, $siteId, $tplBlog,    'Blog | RB Photos & Videos',                                                'blog',                           '/blog');
@@ -363,9 +597,50 @@ $pidArt2  = addPage($pdo, $siteId, $tplArticle, 'Rodinné focení s dětmi — t
 
 // ─── Content blocks: Homepage ─────────────────────────────────────────────────
 
-block($pdo, $pidHome, 'hero_tag', 'text',     'Hero Tag',  'Fotograf & Videograf — Olomouc', 1);
-block($pdo, $pidHome, 'hero_h1',  'text',     'Hero H1',   'Fotograf & Videograf Olomouc, který zachytí váš příběh', 2);
-block($pdo, $pidHome, 'hero_sub', 'textarea', 'Hero Sub',  'Profesionální svatební fotograf Olomouc s 8+ lety praxe. Rodinné focení, portréty, reklamní videa — po celé ČR. Zálohy 5 let zdarma.', 3);
+block($pdo, $pidHome, 'hero_bg',         'image',    'Hero — pozadí (foto)',    '', 1);
+block($pdo, $pidHome, 'hero_tag',        'text',     'Hero — tag',              'Fotograf & Videograf — Olomouc', 2);
+block($pdo, $pidHome, 'hero_h1',         'text',     'Hero — nadpis',           'Zachytíme váš příběh. Na vždy....', 3);
+block($pdo, $pidHome, 'hero_sub',        'textarea', 'Hero — podnadpis',        'Profesionální svatební fotografie a videografie v Olomouci a celé České republice. Každý okamžik si zaslouží být nezapomenutelný.', 4);
+
+block($pdo, $pidHome, 'stat_1', 'html', 'Statistika 1', '<span class="stat-num">150+</span><span class="stat-lbl">Spokojených klientů</span>', 10);
+block($pdo, $pidHome, 'stat_2', 'html', 'Statistika 2', '<span class="stat-num">8+</span><span class="stat-lbl">Let zkušeností</span>', 11);
+block($pdo, $pidHome, 'stat_3', 'html', 'Statistika 3', '<span class="stat-num">5 let</span><span class="stat-lbl">Zálohy fotek zdarma</span>', 12);
+block($pdo, $pidHome, 'stat_4', 'html', 'Statistika 4', '<span class="stat-num">2 fotografové</span><span class="stat-lbl">Tým profesionálů</span>', 13);
+
+block($pdo, $pidHome, 'services_title', 'text',     'Služby — nadpis', 'Co pro vás uděláme', 20);
+block($pdo, $pidHome, 'services_intro', 'textarea', 'Služby — intro',  'Ať jde o svatbu, portrét nebo firemní projekt — jsme tu pro vás.', 21);
+block($pdo, $pidHome, 'service_1', 'html', 'Služba 1 — Svatby', '<span class="svc-num">01</span><h3>Svatební foto &amp; video</h3><p>Zachytíme každý dotek, každý pohled, každou slzu štěstí. Přirozené reportážní fotografie a filmové video, které vám budou vyprávět příběh vašeho dne po celý život.</p>', 22);
+block($pdo, $pidHome, 'service_2', 'html', 'Služba 2 — Rodiny', '<span class="svc-num">02</span><h3>Rodinné &amp; portrétní focení</h3><p>Rodinné vzpomínky, těhotenské focení, křtiny nebo portréty. Přirozené, nenucené a krásné snímky, na které budete hrdí.</p>', 23);
+block($pdo, $pidHome, 'service_3', 'html', 'Služba 3 — Reklama', '<span class="svc-num">03</span><h3>Reklamní foto &amp; video</h3><p>Profesionální vizuální obsah pro firmy, kapely, produkty nebo brand. Videoklipy, firemní prezentace a obsah, který prodává.</p>', 24);
+block($pdo, $pidHome, 'service_4', 'html', 'Služba 4 — Akce', '<span class="svc-num">04</span><h3>Akce &amp; události</h3><p>Konference, kulturní akce, plesy, narozeniny. Každá událost si zaslouží být profesionálně zdokumentována.</p>', 25);
+
+block($pdo, $pidHome, 'why_title', 'text',     'Proč my — nadpis', 'Proč si vybrat RB Photos & Videos?', 30);
+block($pdo, $pidHome, 'why_intro', 'textarea', 'Proč my — intro',  'Nejsme jen fotografové. Jsme vypravěči příběhů.', 31);
+block($pdo, $pidHome, 'why_1', 'html', 'Důvod 1', '<span class="feat-num">01</span><h3>Osobní přístup</h3><p>Každý klient je pro nás jedinečný. Přátelský tým, který naslouchá vašim přáním a pomůže i s kompozicí.</p>', 32);
+block($pdo, $pidHome, 'why_2', 'html', 'Důvod 2', '<span class="feat-num">02</span><h3>Zkušený tým</h3><p>Více než 8 let zkušeností, profesionální vybavení a neustálé vzdělávání. Investujeme do kvality pro vás.</p>', 33);
+block($pdo, $pidHome, 'why_3', 'html', 'Důvod 3', '<span class="feat-num">03</span><h3>5 let zálohy zdarma</h3><p>Vaše fotografie a videa bezpečně zálohujeme po dobu 5 let. Nikdy o vzpomínky nepřijdete.</p>', 34);
+block($pdo, $pidHome, 'why_4', 'html', 'Důvod 4', '<span class="feat-num">04</span><h3>Celá ČR i zahraničí</h3><p>Sídlíme v Olomouci, ale fotografujeme po celé České republice i v zahraničí. Přijedeme za vámi.</p>', 35);
+
+block($pdo, $pidHome, 'videos_title', 'text',     'Videa — nadpis', 'Ukázka naší práce', 40);
+block($pdo, $pidHome, 'videos_intro', 'textarea', 'Videa — intro',  'Svatební filmy, klipy a reportáže — podívejte se jak pracujeme.', 41);
+block($pdo, $pidHome, 'video_1', 'html', 'Video 1', '<iframe src="https://player.vimeo.com/video/1133996815?wmode=opaque" frameborder="0" allow="autoplay; fullscreen" allowfullscreen loading="lazy" title="Simona a Michal Novákovi 6.9.25"></iframe>', 42);
+block($pdo, $pidHome, 'video_2', 'html', 'Video 2', '<iframe src="https://player.vimeo.com/video/1122538281?wmode=opaque" frameborder="0" allow="autoplay; fullscreen" allowfullscreen loading="lazy" title="Martina a Jaroslav Žáčkovi 2.8.2025"></iframe>', 43);
+block($pdo, $pidHome, 'video_3', 'html', 'Video 3', '<iframe src="https://player.vimeo.com/video/1122538281?wmode=opaque" frameborder="0" allow="autoplay; fullscreen" allowfullscreen loading="lazy" title="Lucie a Miroslav Provazovi 7.6.25"></iframe>', 44);
+block($pdo, $pidHome, 'video_4', 'html', 'Video 4', '<iframe width="100%" height="100%" src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>', 45);
+block($pdo, $pidHome, 'videos_btns', 'html', 'Videa — tlačítka', '<a href="https://www.youtube.com/@rbvideosandphotos" target="_blank" rel="noopener" class="btn-g">Všechna videa na YouTube</a><a href="https://www.instagram.com/rb_videos_photos/" target="_blank" rel="noopener" class="btn-od">Instagram portfolio</a>', 46);
+
+block($pdo, $pidHome, 'reviews_title', 'text',     'Recenze — nadpis', 'Co říkají naši klienti', 50);
+block($pdo, $pidHome, 'reviews_intro', 'textarea', 'Recenze — intro',  'Přes 150 spokojených klientů — jejich slova mluví za nás.', 51);
+block($pdo, $pidHome, 'review_1', 'html', 'Recenze 1', '<div class="rev-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><blockquote>"Kluci jsou naprostí profesionálové. Jsou to opravdu přátelští borci, kteří vám udělají fotky a videa podle vašich představ a ještě líp. Za mě TOP ve svém oboru. Děkujeme, že jste mohli být na naší svatbě!"</blockquote><div class="rev-name">Jan Jüngling</div><div class="rev-type">Svatba M+H</div>', 52);
+block($pdo, $pidHome, 'review_2', 'html', 'Recenze 2', '<div class="rev-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><blockquote>"Super domluva, milý a profesionální přístup k focení. Zdena nám nafotil svatební obřad s poobřadním focením v zámeckém parku. Z kvality fotek jsme nadšení a byly dodány dříve než jsme byli domluveni. Velká spokojenost. Doporučuji."</blockquote><div class="rev-name">Václav Konopka</div><div class="rev-type">Svatební focení</div>', 53);
+block($pdo, $pidHome, 'review_3', 'html', 'Recenze 3', '<div class="rev-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><blockquote>"Moc doporučuji, pan fotograf nám vyčaroval ty nejkrásnější rodinné fotky i s dětmi, co neměly zrovna fotící náladu. Profesionální přístup a špičková kvalita. Už se těším na další focení!"</blockquote><div class="rev-name">Jana Dudková</div><div class="rev-type">Rodinné focení</div>', 54);
+block($pdo, $pidHome, 'reviews_cta', 'html', 'Recenze — tlačítko', '<a href="https://www.facebook.com/rbvideosandphotos/reviews" target="_blank" rel="noopener" class="btn-od">Všechny recenze na Facebooku</a>', 55);
+
+block($pdo, $pidHome, 'cta_title',    'text',     'CTA — nadpis',     'Pojďme vytvořit něco krásného', 60);
+block($pdo, $pidHome, 'cta_sub',      'textarea', 'CTA — podnadpis',  'Nezávazně se nám ozvěte — rádi odpovíme na vaše otázky a připravíme nabídku na míru pro váš den.', 61);
+block($pdo, $pidHome, 'contact_info', 'html',     'Kontakt — info',   '<div class="cta-info"><p><strong>792&nbsp;483&nbsp;583</strong></p><p><strong>604&nbsp;225&nbsp;032</strong></p><p>Olomouc a celá ČR</p><p><a href="https://www.facebook.com/rbvideosandphotos" target="_blank" rel="noopener">Facebook: RB Videos &amp; Photos</a></p><p><a href="https://www.instagram.com/rb_videos_photos/" target="_blank" rel="noopener">Instagram: @rb_videos_photos</a></p><p><a href="https://www.youtube.com/@rbvideosandphotos" target="_blank" rel="noopener">YouTube kanál</a></p></div>', 62);
+block($pdo, $pidHome, 'contact_card', 'html',     'Kontakt — karta',  '<h3>Ozvěte se nám</h3><p class="cta-r-sub">Zavolejte nebo napište na sociální sítě. Odpovídáme rychle!</p><a href="tel:792483583" class="cta-btn cta-btn--gold">Zavolat: 792&nbsp;483&nbsp;583</a><a href="tel:604225032" class="cta-btn cta-btn--dark">Zavolat: 604&nbsp;225&nbsp;032</a><a href="https://www.instagram.com/rb_videos_photos/" target="_blank" rel="noopener" class="cta-btn cta-btn--dark">Instagram</a><a href="https://www.facebook.com/rbvideosandphotos" target="_blank" rel="noopener" class="cta-btn cta-btn--dark">Facebook</a>', 63);
+block($pdo, $pidHome, 'footer_text',  'text',     'Patička — text',   '© 2025 RB Photos & Videos — Olomouc', 70);
 
 // ─── Content blocks: Ceník ───────────────────────────────────────────────────
 

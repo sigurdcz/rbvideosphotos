@@ -41,14 +41,23 @@ ob_start();
           </div>
         </div>
         <div class="form-row">
-          <div class="form-group">
-            <label for="page-template">Šablona</label>
-            <select id="page-template" name="template_id">
-              <option value="">— bez šablony —</option>
+          <div class="form-group form-group--full">
+            <label>Šablona</label>
+            <div class="tpl-picker" id="tpl-picker">
+              <label class="tpl-card <?= empty($page['template_id']) ? 'tpl-card--active' : '' ?>">
+                <input type="radio" name="template_id" value="" <?= empty($page['template_id']) ? 'checked' : '' ?>>
+                <span class="tpl-card-icon">∅</span>
+                <span class="tpl-card-name">Bez šablony</span>
+              </label>
               <?php foreach ($templates as $t): ?>
-                <option value="<?= (int)$t['id'] ?>" <?= ($page['template_id'] ?? 0) == $t['id'] ? 'selected' : '' ?>><?= $h($t['name']) ?></option>
+              <label class="tpl-card <?= ($page['template_id'] ?? 0) == $t['id'] ? 'tpl-card--active' : '' ?>">
+                <input type="radio" name="template_id" value="<?= (int)$t['id'] ?>" <?= ($page['template_id'] ?? 0) == $t['id'] ? 'checked' : '' ?>>
+                <span class="tpl-card-icon">⊞</span>
+                <span class="tpl-card-name"><?= $h($t['name']) ?></span>
+                <a href="/admin/templates/edit?id=<?= (int)$t['id'] ?>" class="tpl-card-edit" onclick="event.stopPropagation()" title="Upravit šablonu">✎</a>
+              </label>
               <?php endforeach; ?>
-            </select>
+            </div>
           </div>
           <div class="form-group">
             <label for="page-lang">Jazyk</label>

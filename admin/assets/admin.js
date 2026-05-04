@@ -53,6 +53,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // Template card picker
+  document.querySelectorAll('.tpl-picker input[type=radio]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      document.querySelectorAll('.tpl-picker .tpl-card').forEach(c => c.classList.remove('tpl-card--active'));
+      radio.closest('.tpl-card').classList.add('tpl-card--active');
+    });
+  });
+
   // Auto-generate slug from title
   const titleInput = document.getElementById('page-title');
   const slugInput  = document.getElementById('page-slug');
