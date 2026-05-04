@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Core\Database;
+use App\Core\Version;
 use App\Repositories\PageRepository;
 use App\Repositories\SiteRepository;
 
@@ -13,14 +14,26 @@ class SetupController extends Controller
     {
         $this->requireAuth();
 
-        $pages = (new PageRepository());
-        $sites = (new SiteRepository());
+        $pages = new PageRepository();
+        $sites = new SiteRepository();
         $site  = $sites->findFirst();
         $pageCount = $site ? count($pages->allBySite($site['id'])) : 0;
+
+        // Diagnostics
+        $diag = ['version' => Version::APP, 'db_ok' => false, 'db_error' => '', 'pages_total' => 0, 'homepage' => null];
+        try {
+            $db = Database::getInstance();
+            $diag['db_ok'] = true;
+            $diag['pages_total'] = (int) $db->query('SELECT COUNT(*) FROM pages')->fetchColumn();
+            $diag['homepage'] = $pages->findByUrlPath('');
+        } catch (\Throwable $e) {
+            $diag['db_error'] = $e->getMessage();
+        }
 
         $this->view('setup.index', [
             'pageCount' => $pageCount,
             'site'      => $site,
+            'diag'      => $diag,
         ]);
     }
 

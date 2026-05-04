@@ -11,6 +11,7 @@ require dirname(__DIR__) . '/vendor/autoload.php';
 
 use App\Core\Auth;
 use App\Core\Config;
+use App\Core\Logger;
 use App\Core\Runtime;
 use App\Core\Version;
 use App\Repositories\BlockRepository;
@@ -88,7 +89,7 @@ HTML;
         return true;
 
     } catch (\Throwable $e) {
-        // DB or render error — fall back silently to static file
+        Logger::error('inline-edit', $e->getMessage(), ['uri' => $uri, 'file' => $e->getFile(), 'line' => $e->getLine()]);
         return false;
     }
 }
@@ -161,13 +162,16 @@ try {
         // Logged-in user but tryServeEditMode failed (e.g. no page in DB yet):
         // inject a minimal admin bar so navigation is still accessible.
         if (Auth::check()) {
-            $csrfToken = Auth::csrfToken();
-            $user      = Auth::user();
-            $email     = htmlspecialchars($user['email'] ?? '', ENT_QUOTES);
+            $csrfToken  = Auth::csrfToken();
+            $user       = Auth::user();
+            $email      = htmlspecialchars($user['email'] ?? '', ENT_QUOTES);
+            $appVersion = Version::APP;
             $bar = <<<HTML
 <div id="cms-adminbar">
   <div class="cms-ab-left">
     <a class="cms-ab-logo" href="/admin">&#9998;&nbsp;CMS</a>
+    <span class="cms-ab-sep"></span>
+    <span class="cms-ab-ver">{$appVersion} [static]</span>
   </div>
   <div class="cms-ab-right">
     <span class="cms-ab-email">{$email}</span>
@@ -180,7 +184,7 @@ try {
 </div>
 HTML;
             $html = file_get_contents($candidate);
-            $html = str_replace('</head>', "\n" . '<link rel="stylesheet" href="/assets/inline-editor.css">' . "\n</head>", $html);
+            $html = str_replace('</head>', "\n" . '<meta name="app-version" content="' . $appVersion . '">' . "\n" . '<link rel="stylesheet" href="/assets/inline-editor.css">' . "\n</head>", $html);
             $html = str_replace('<body', "\n" . $bar . "\n<body", $html);
             header('Content-Type: text/html; charset=UTF-8');
             echo $html;

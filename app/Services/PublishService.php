@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Core\Config;
+use App\Core\Version;
 use App\Repositories\BlockRepository;
 use App\Repositories\MediaRepository;
 use App\Repositories\PageRepository;
@@ -85,7 +86,8 @@ class PublishService
         // Write HTML file
         $filePath = $this->resolveFilePath($page['url_path']);
         $this->ensureDir(dirname($filePath));
-        file_put_contents($filePath, $html);
+        $stamp = '<!-- cms: ' . Version::APP . ' published: ' . date('Y-m-d H:i:s') . " -->\n";
+        file_put_contents($filePath, $stamp . $html);
 
         // Update page status
         $this->pages->update($pageId, [
