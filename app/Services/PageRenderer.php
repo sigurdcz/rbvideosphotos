@@ -54,19 +54,37 @@ class PageRenderer
                 while ($node->firstChild) {
                     $node->removeChild($node->firstChild);
                 }
-                // Use text node for plain text, fragment for HTML content
                 if ($content === '' || $content === null) {
                     continue;
                 }
-                // Try as XML fragment first (for HTML content), fall back to text node
-                $fragment = $dom->createDocumentFragment();
-                // Encode non-ASCII as numeric entities so appendXML handles UTF-8 safely
-                $encoded = mb_encode_numericentity($content, [0x80, 0x10FFFF, 0, 0x1FFFFF], 'UTF-8');
-                $ok      = @$fragment->appendXML($encoded);
-                if ($ok && $fragment->hasChildNodes()) {
-                    $node->appendChild($fragment);
+
+                if (($block['block_type'] ?? 'text') === 'html') {
+                    // HTML blocks: parse via a temp DOMDocument so &nbsp; and all
+                    // named HTML entities are handled correctly (appendXML rejects them
+                    // because they are not valid XML entity references).
+                    $tmpDoc = new DOMDocument('1.0', 'UTF-8');
+                    libxml_use_internal_errors(true);
+                    $tmpDoc->loadHTML(
+                        '<?xml encoding="UTF-8"><html><body>' . $content . '</body></html>',
+                        LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD
+                    );
+                    libxml_clear_errors();
+                    $body = $tmpDoc->getElementsByTagName('body')->item(0);
+                    if ($body) {
+                        foreach (iterator_to_array($body->childNodes) as $child) {
+                            $node->appendChild($dom->importNode($child, true));
+                        }
+                    }
                 } else {
-                    $node->appendChild($dom->createTextNode($content));
+                    // text / textarea / link — plain text, encode non-ASCII for XML safety
+                    $encoded  = mb_encode_numericentity($content, [0x80, 0x10FFFF, 0, 0x1FFFFF], 'UTF-8');
+                    $fragment = $dom->createDocumentFragment();
+                    $ok       = @$fragment->appendXML($encoded);
+                    if ($ok && $fragment->hasChildNodes()) {
+                        $node->appendChild($fragment);
+                    } else {
+                        $node->appendChild($dom->createTextNode($content));
+                    }
                 }
             }
         }
