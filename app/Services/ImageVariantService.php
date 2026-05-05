@@ -6,25 +6,66 @@ class ImageVariantService
 {
     public function createWebP(string $sourcePath, string $destPath, int $quality = 85): bool
     {
-        if (!$this->supportsWebP()) {
-            return false;
-        }
-
+        if (!$this->supportsWebP()) return false;
         $info = @getimagesize($sourcePath);
         if (!$info) return false;
-
-        $src = match ($info[2]) {
-            IMAGETYPE_JPEG => imagecreatefromjpeg($sourcePath),
-            IMAGETYPE_PNG  => imagecreatefrompng($sourcePath),
-            IMAGETYPE_WEBP => imagecreatefromwebp($sourcePath),
-            default        => null,
-        };
-
+        $src = $this->loadImage($sourcePath, $info[2]);
         if (!$src) return false;
-
         $result = imagewebp($src, $destPath, $quality);
         imagedestroy($src);
         return $result;
+    }
+
+    /**
+     * Create a resized variant, saved as WebP (falls back to JPEG).
+     * If source is smaller than maxW, the original is just converted/copied.
+     */
+    public function createResized(string $sourcePath, string $destPath, int $maxW, int $quality = 82): bool
+    {
+        if (!extension_loaded('gd')) return false;
+        $info = @getimagesize($sourcePath);
+        if (!$info) return false;
+
+        [$origW, $origH] = [$info[0], $info[1]];
+        if ($origW <= 0 || $origH <= 0) return false;
+
+        $scale = $origW > $maxW ? $maxW / $origW : 1.0;
+        $newW  = (int)round($origW * $scale);
+        $newH  = (int)round($origH * $scale);
+
+        $src = $this->loadImage($sourcePath, $info[2]);
+        if (!$src) return false;
+
+        $dst = imagecreatetruecolor($newW, $newH);
+        // Preserve alpha for PNG
+        if ($info[2] === IMAGETYPE_PNG) {
+            imagealphablending($dst, false);
+            imagesavealpha($dst, true);
+            imagefill($dst, 0, 0, imagecolorallocatealpha($dst, 255, 255, 255, 127));
+        }
+        imagecopyresampled($dst, $src, 0, 0, 0, 0, $newW, $newH, $origW, $origH);
+
+        $ext    = strtolower(pathinfo($destPath, PATHINFO_EXTENSION));
+        $result = match ($ext) {
+            'webp'        => $this->supportsWebP() ? imagewebp($dst, $destPath, $quality) : false,
+            'jpg', 'jpeg' => imagejpeg($dst, $destPath, $quality),
+            'png'         => imagepng($dst, $destPath, 7),
+            default       => false,
+        };
+
+        // If WebP not supported, fall back to JPEG
+        if (!$result && $ext === 'webp') {
+            $jpegPath = preg_replace('/\.webp$/i', '.jpg', $destPath);
+            $result   = imagejpeg($dst, $jpegPath, $quality);
+            if ($result) {
+                // Caller checks actual path via return value — signal with rename
+                @rename($jpegPath, $destPath); // best-effort; caller should use getDimensions to verify
+            }
+        }
+
+        imagedestroy($src);
+        imagedestroy($dst);
+        return (bool)$result;
     }
 
     public function supportsWebP(): bool
@@ -33,8 +74,7 @@ class ImageVariantService
             return in_array('WEBP', \Imagick::queryFormats());
         }
         if (extension_loaded('gd')) {
-            $info = gd_info();
-            return !empty($info['WebP Support']);
+            return !empty(gd_info()['WebP Support']);
         }
         return false;
     }
@@ -42,7 +82,24 @@ class ImageVariantService
     public function getDimensions(string $path): array
     {
         $size = @getimagesize($path);
-        if (!$size) return [0, 0];
-        return [$size[0], $size[1]];
+        return $size ? [$size[0], $size[1]] : [0, 0];
+    }
+
+    public static function formatBytes(int $bytes): string
+    {
+        if ($bytes >= 1_048_576) return round($bytes / 1_048_576, 1) . ' MB';
+        if ($bytes >= 1_024)    return round($bytes / 1_024, 0) . ' kB';
+        return $bytes . ' B';
+    }
+
+    private function loadImage(string $path, int $type): ?\GdImage
+    {
+        return match ($type) {
+            IMAGETYPE_JPEG => @imagecreatefromjpeg($path),
+            IMAGETYPE_PNG  => @imagecreatefrompng($path),
+            IMAGETYPE_WEBP => @imagecreatefromwebp($path),
+            IMAGETYPE_GIF  => @imagecreatefromgif($path),
+            default        => null,
+        };
     }
 }

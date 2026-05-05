@@ -94,6 +94,26 @@
 
 .cms-ab-logout:hover { background: rgba(243,139,168,0.12); }
 
+/* Active / highlighted button (e.g. "← Editace" in preview mode) */
+.cms-ab-btn--active {
+  background: rgba(99,102,241,0.25);
+  border-color: rgba(99,102,241,0.5);
+  color: #a5b4fc;
+}
+.cms-ab-btn--active:hover { background: rgba(99,102,241,0.38); }
+
+/* Mode indicator badges */
+.cms-ab-mode-badge {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+.cms-ab-mode-badge--edit    { background: rgba(99,102,241,0.25); color: #a5b4fc; }
+.cms-ab-mode-badge--preview { background: rgba(250,189,47,0.2);  color: #f9e2af; }
+
 /* Push page content down so the bar doesn't overlap */
 body { padding-top: 40px !important; }
 

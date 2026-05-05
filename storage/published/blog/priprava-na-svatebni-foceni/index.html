@@ -1,168 +1,61 @@
 <!DOCTYPE html>
-<html lang="cs">
+<?xml encoding="UTF-8"><html lang="cs">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
   <link rel="manifest" href="/site.webmanifest">
-  <meta name="theme-color" content="#0c0c0e">
 
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --gold:   #c4963c;
-  --gold-d: #a67c2a;
-  --dark:   #0c0c0e;
-  --dark2:  #141416;
-  --light:  #f9f8f6;
-  --text:   #1c1c1e;
-  --muted:  #6b7280;
-  --border: #e4e4e7;
-  --radius: 3px;
-}
-body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; color: var(--text); background: #fff; line-height: 1.65; -webkit-font-smoothing: antialiased; }
-h1, h2, h3 { letter-spacing: -.02em; }
-a { color: inherit; text-decoration: none; }
-.container { max-width: 1100px; margin: 0 auto; padding: 0 28px; }
-
-/* NAVBAR */
-.navbar-blog { background: var(--dark); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(196,150,60,.12); }
-.nb-inner { max-width: 1100px; margin: 0 auto; padding: 0 28px; display: flex; align-items: center; justify-content: space-between; height: 64px; }
-.logo { font-size: 15px; font-weight: 700; color: #fff; letter-spacing: .08em; text-transform: uppercase; }
-.logo-sep { color: var(--gold); font-weight: 300; }
-.nav-links { display: flex; list-style: none; gap: 28px; align-items: center; }
-.nav-links a { color: rgba(255,255,255,.5); font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; transition: color .2s; }
-.nav-links a:hover { color: #fff; }
-.nav-burger { display: none; flex-direction: column; justify-content: center; gap: 5px; width: 40px; height: 40px; background: none; border: none; cursor: pointer; padding: 8px; flex-shrink: 0; }
-.nav-burger span { display: block; width: 22px; height: 2px; background: rgba(255,255,255,.8); border-radius: 2px; transition: transform .25s, opacity .25s; transform-origin: center; }
-.nav-burger.is-open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
-.nav-burger.is-open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
-.nav-burger.is-open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
-.btn-nav { background: var(--gold) !important; color: #fff !important; padding: 8px 20px; border-radius: var(--radius); font-size: 12px; }
-
-/* ARTICLE HERO */
-.article-hero { background: var(--dark); padding: 72px 0 60px; }
-.article-breadcrumb { font-size: 11px; color: rgba(255,255,255,.3); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 20px; }
-.article-breadcrumb a { color: rgba(255,255,255,.35); transition: color .2s; }
-.article-breadcrumb a:hover { color: var(--gold); }
-.article-meta { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
-.article-cat { font-size: 11px; font-weight: 700; color: var(--gold); letter-spacing: .15em; text-transform: uppercase; border: 1px solid rgba(196,150,60,.35); padding: 4px 12px; }
-.article-date { font-size: 12px; color: rgba(255,255,255,.3); letter-spacing: .06em; }
-.article-title { font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 800; color: #fff; max-width: 760px; margin-bottom: 20px; }
-.article-lead { font-size: 1.08rem; color: rgba(255,255,255,.5); max-width: 680px; line-height: 1.75; }
-
-/* THUMBNAIL */
-.article-thumb-wrap { background: var(--dark2); padding: 0 0 48px; }
-.article-thumb { position: relative; padding-bottom: 46.25%; border-radius: var(--radius); overflow: hidden; background: #000; max-width: 860px; }
-.article-thumb iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
-
-/* LAYOUT */
-.article-layout { display: grid; grid-template-columns: 1fr 300px; gap: 60px; padding-top: 56px; padding-bottom: 80px; align-items: start; }
-
-/* ARTICLE BODY */
-.article-body { min-width: 0; }
-.article-section { margin-bottom: 40px; }
-.article-section h2 { font-size: 1.25rem; font-weight: 700; margin-bottom: 12px; position: relative; padding-left: 16px; }
-.article-section h2::before { content: ''; position: absolute; left: 0; top: 4px; bottom: 4px; width: 3px; background: var(--gold); border-radius: 2px; }
-.article-section div { color: var(--muted); font-size: .97rem; line-height: 1.8; }
-
-/* TAGS */
-.article-tags { display: flex; gap: 8px; flex-wrap: wrap; margin: 40px 0 32px; }
-.article-tags a { font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; border: 1px solid var(--border); padding: 5px 14px; border-radius: 2px; transition: all .2s; }
-.article-tags a:hover { border-color: var(--gold); color: var(--gold); }
-
-/* AUTHOR */
-.article-author { display: flex; gap: 16px; align-items: flex-start; padding: 24px; background: var(--light); border-left: 3px solid var(--gold); }
-.author-avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--dark); color: var(--gold); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; letter-spacing: .04em; }
-.article-author strong { font-size: .95rem; font-weight: 700; display: block; margin-bottom: 4px; }
-.article-author p { font-size: .85rem; color: var(--muted); line-height: 1.6; }
-
-/* SIDEBAR */
-.article-sidebar { position: sticky; top: 80px; display: flex; flex-direction: column; gap: 20px; }
-.sidebar-card { background: var(--light); padding: 24px; border: 1px solid var(--border); }
-.sidebar-label { font-size: 10.5px; font-weight: 700; color: var(--gold); letter-spacing: .18em; text-transform: uppercase; margin-bottom: 10px; }
-.sidebar-card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 8px; }
-.sidebar-card p { font-size: .88rem; color: var(--muted); line-height: 1.6; }
-.sidebar-social { display: flex; gap: 12px; margin-top: 14px; }
-.sidebar-social a { font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; transition: color .2s; }
-.sidebar-social a:hover { color: var(--gold); }
-.sidebar-video { position: relative; padding-bottom: 56.25%; background: #000; margin-top: 10px; }
-.sidebar-video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; }
-
-/* BUTTONS */
-.btn { display: inline-block; padding: 12px 24px; font-weight: 600; font-size: 12px; cursor: pointer; transition: all .22s; letter-spacing: .06em; text-transform: uppercase; border-radius: var(--radius); }
-.btn-primary { background: var(--gold); color: #fff; }
-.btn-primary:hover { background: var(--gold-d); }
-.btn-outline-sb { background: transparent; border: 1px solid var(--border); color: var(--text); }
-.btn-outline-sb:hover { border-color: var(--gold); color: var(--gold); }
-.btn-outline-light2 { background: transparent; border: 1px solid rgba(255,255,255,.25); color: rgba(255,255,255,.8); }
-.btn-outline-light2:hover { border-color: rgba(255,255,255,.6); color: #fff; }
-
-/* CTA SECTION */
-.article-cta-section { background: var(--dark); padding: 72px 0; border-top: 1px solid rgba(196,150,60,.1); }
-.article-cta-inner { display: flex; align-items: center; justify-content: space-between; gap: 40px; flex-wrap: wrap; }
-.article-cta-inner h2 { font-size: 1.8rem; font-weight: 800; color: #fff; margin-bottom: 8px; }
-.article-cta-inner p { color: rgba(255,255,255,.45); font-size: .97rem; }
-.cta-btns { display: flex; gap: 12px; flex-wrap: wrap; flex-shrink: 0; }
-
-/* FOOTER */
-.footer { background: var(--dark); padding: 48px 0 28px; border-top: 1px solid rgba(196,150,60,.08); }
-.footer-inner { display: flex; flex-direction: column; align-items: center; gap: 20px; text-align: center; }
-.footer-brand p { color: rgba(255,255,255,.28); font-size: .82rem; margin-top: 6px; }
-.footer-links { display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; }
-.footer-links a { color: rgba(255,255,255,.3); font-size: .78rem; letter-spacing: .07em; text-transform: uppercase; transition: color .2s; }
-.footer-links a:hover { color: var(--gold); }
-.footer-copy { color: rgba(255,255,255,.18); font-size: .72rem; }
-
-/* RESPONSIVE */
-@media (max-width: 900px) {
-  .article-layout { grid-template-columns: 1fr; }
-  .article-sidebar { position: static; }
-  .article-cta-inner { flex-direction: column; text-align: center; }
-  .cta-btns { justify-content: center; }
-}
-@media (max-width: 640px) {
-  .nav-links { display: none; }
-  .nav-burger { display: flex; }
-  .nav-links.nav-open { display: flex; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0; background: var(--dark); padding: 12px 20px 20px; gap: 0; border-top: 1px solid rgba(196,150,60,.1); }
-  .nav-links.nav-open li { border-bottom: 1px solid rgba(255,255,255,.05); }
-  .nav-links.nav-open li:last-child { border-bottom: none; }
-  .nav-links.nav-open a { display: block; padding: 13px 4px; font-size: 14px; color: rgba(255,255,255,.7) !important; }
-  .nav-links.nav-open a:hover { color: #fff !important; }
-  .nav-links.nav-open .btn-nav { display: inline-block; margin-top: 4px; padding: 10px 22px; }
-  .article-hero { padding: 52px 0 40px; }
-}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:sans-serif;color:#222;background:#fff;line-height:1.6;font-size:16px}
+.container{max-width:960px;margin:0 auto;padding:0 20px}
+a{color:#c4963c;text-decoration:none}
+h1{font-size:2rem;margin-bottom:.5rem}
+h2{font-size:1.4rem;margin-bottom:.75rem;color:#222}
+p{color:#555;margin-bottom:1rem}
+.nav{background:#111;padding:14px 0}
+.nav-inner{max-width:960px;margin:0 auto;padding:0 20px;display:flex;gap:20px;align-items:center}
+.nav-inner a{color:rgba(255,255,255,.6);font-size:13px;font-weight:600}
+.brand{font-weight:700;margin-right:auto;color:#fff !important}
+.hero{background:#1a1a1a;color:#fff;padding:64px 0}
+.hero h1{color:#fff;font-size:2.2rem}
+.hero p{color:rgba(255,255,255,.6);max-width:600px}
+.hero-tag{display:block;font-size:11px;color:#c4963c;text-transform:uppercase;letter-spacing:.15em;margin-bottom:14px}
+.section{padding:60px 0}
+.section-dark{background:#1a1a1a;padding:60px 0}
+.section-dark h2{color:#fff}
+.section-dark p{color:rgba(255,255,255,.6)}
+footer{background:#111;color:rgba(255,255,255,.45);padding:28px 20px;text-align:center;font-size:13px;margin-top:0}
+.btn{display:inline-block;background:#c4963c;color:#fff !important;padding:10px 22px;font-size:13px;font-weight:600;margin-top:16px}
+#scroll-top{position:fixed;bottom:24px;right:24px;background:#c4963c;color:#fff;border:none;width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:18px;opacity:0;visibility:hidden;transition:opacity .25s}
+#scroll-top.vis{opacity:1;visibility:visible}
+.article-meta{display:flex;gap:12px;align-items:center;margin-bottom:20px;font-size:13px}
+.article-cat{background:#c4963c;color:#fff;padding:3px 10px;font-size:11px;text-transform:uppercase;letter-spacing:.1em}
+.article-date{color:rgba(255,255,255,.4)}
+.article-thumb{position:relative;padding-bottom:56.25%;background:#000;margin:0 0 0}
+.article-thumb iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
+.thumb-wrap{background:#141414;padding:0 0 40px}
+.article-section{margin-bottom:36px}
+.article-section h2{font-size:1.2rem;font-weight:700;margin-bottom:10px;padding-left:14px;border-left:3px solid #c4963c}
+.article-section div{color:#555;font-size:.97rem;line-height:1.75}
 </style>
 
 <title>10 tipů jak se připravit na dokonalé svatební focení | RB Photos &amp; Videos</title>
-<meta name="description" content="Profesionální fotograf z Olomouce sdílí 10 klíčových tipů, jak se připravit na svatební focení. Od harmonogramu až po zlatou hodinu — vše, co potřebujete vědět.">
-<meta name="keywords" content="příprava na svatební focení, tipy od fotografa, svatební fotografie Olomouc, zlatá hodinka, harmonogram svatebního dne">
+<meta name="description" content="Profesionální fotograf z Olomouce sdílí 10 klíčových tipů, jak se připravit na svatební focení. Od harmonogramu až po zlatou hodinu.">
+<meta name="keywords" content="příprava na svatební focení, tipy od fotografa, svatební fotografie Olomouc">
 <meta name="robots" content="index,follow">
 <link rel="canonical" href="/blog/priprava-na-svatebni-foceni">
 <meta property="og:title" content="10 tipů jak se připravit na dokonalé svatební focení | RB Photos &amp; Videos">
-<meta property="og:description" content="Profesionální fotograf z Olomouce sdílí 10 klíčových tipů, jak se připravit na svatební focení. Od harmonogramu až po zlatou hodinu — vše, co potřebujete vědět.">
-<meta property="og:type" content="article">
-<meta property="og:url" content="og-url-placeholder">
+<meta property="og:description" content="Profesionální fotograf z Olomouce sdílí 10 klíčových tipů, jak se připravit na svatební focení. Od harmonogramu až po zlatou hodinu.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="/blog/priprava-na-svatebni-foceni">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="10 tipů jak se připravit na dokonalé svatební focení | RB Photos &amp; Videos">
-<meta name="twitter:description" content="Profesionální fotograf z Olomouce sdílí 10 klíčových tipů, jak se připravit na svatební focení. Od harmonogramu až po zlatou hodinu — vše, co potřebujete vědět.">
-<script type="application/ld+json" id="ld-article">
-{
-  "@context": "https://schema.org",
-  "@type": "BlogPosting",
-  "headline": "10 tipů jak se připravit na dokonalé svatební focení | RB Photos & Videos",
-  "description": "Profesionální fotograf z Olomouce sdílí 10 klíčových tipů, jak se připravit na svatební focení. Od harmonogramu až po zlatou hodinu — vše, co potřebujete vědět.",
-  "datePublished": "2025-04-12",
-  "dateModified": "2025-04-12",
-  "author": {"@type": "Organization", "name": "RB Photos & Videos", "url": "ARTICLE_ORIGIN/"},
-  "publisher": {"@type": "Organization", "name": "RB Photos & Videos", "url": "ARTICLE_ORIGIN/"},
-  "url": "ARTICLE_ORIGIN/blog/priprava-na-svatebni-foceni",
-  "mainEntityOfPage": {"@type": "WebPage", "@id": "ARTICLE_ORIGIN/blog/priprava-na-svatebni-foceni"},
-  "keywords": ["příprava na svatební focení", "tipy od fotografa", "svatební fotografie Olomouc", "zlatá hodinka", "harmonogram svatebního dne"]
-}
+<meta name="twitter:description" content="Profesionální fotograf z Olomouce sdílí 10 klíčových tipů, jak se připravit na svatební focení. Od harmonogramu až po zlatou hodinu.">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","headline":"10 tipů jak se připravit na dokonalé svatební focení | RB Photos & Videos","datePublished":"2025-04-12","dateModified":"2025-04-12","author":{"@type":"Organization","name":"RB Photos & Videos","url":"https://rbvideosphotos.kvalitne.cz/"},"publisher":{"@type":"Organization","name":"RB Photos & Videos","url":"https://rbvideosphotos.kvalitne.cz/"},"url":"https://rbvideosphotos.kvalitne.cz/blog/priprava-na-svatebni-foceni"}
 </script>
 <!-- Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-BD4BS9R4JZ"></script>
@@ -171,199 +64,46 @@ a { color: inherit; text-decoration: none; }
 <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-542MMSL');</script>
 </head>
 <body>
-
-  <!-- NAVBAR -->
-  <nav class="navbar-blog">
-    <div class="nb-inner">
-      <a href="/" class="logo">RB<span class="logo-sep">&nbsp;&middot;&nbsp;</span>Photos &amp; Videos</a>
-      <ul class="nav-links" id="nav-links">
-        <li><a href="/#sluzby">Slu&#382;by</a></li>
-        <li><a href="/#portfolio">Uk&aacute;zka pr&aacute;ce</a></li>
-        <li><a href="/#reference">Reference</a></li>
-        <li><a href="/blog">Blog</a></li>
-        <li><a href="/#kontakt" class="btn-nav">Kontakt</a></li>
-      </ul>
-      <button class="nav-burger" id="nav-burger" aria-label="Otevřít menu" aria-expanded="false" aria-controls="nav-links"><span></span><span></span><span></span></button>
-    </div>
-  </nav>
-
-  <!-- ARTICLE HERO -->
-  <header class="article-hero">
-    <div class="container">
-      <div class="article-breadcrumb">
-        <a href="/">Dom&#367;</a>&nbsp;&rsaquo;&nbsp;<a href="/blog">Blog</a>
-      </div>
-      <div class="article-meta">
-        <span class="article-cat">Svatebn&iacute; fotografie</span>
-        <span class="article-date">12. dubna 2025</span>
-      </div>
-      <h1 class="article-title">10 tip&#367;, jak se p&#345;ipravit na dokonal&eacute; svatebn&iacute; focen&iacute;</h1>
-      <p class="article-lead">V&aacute;&scaron; svatebn&iacute; den je jedn&iacute;m z nejd&#367;le&#382;it&#283;j&scaron;&iacute;ch okam&#382;ik&#367; &#382;ivota. S t&#283;mito tipy od profesion&aacute;ln&iacute;ho fotografa zajist&iacute;te, &#382;e ka&#382;d&yacute; z&aacute;b&#283;r bude dokonal&yacute; &mdash; a vy si ten den budete u&#382;&iacute;vat bez zbyte&#269;n&eacute;ho stresu.</p>
-    </div>
-  </header>
-
-  <!-- THUMBNAIL -->
-  <div class="article-thumb-wrap">
-    <div class="container">
-      <div class="article-thumb">
-        <iframe src="https://player.vimeo.com/video/1133996815?wmode=opaque" allowfullscreen loading="lazy" title="Uk&aacute;zka na&scaron;&iacute; pr&aacute;ce">https://player.vimeo.com/video/1133996815?wmode=opaque</iframe>
-      </div>
-    </div>
+<nav class="nav"><div class="nav-inner">
+  <a href="/" class="brand">RB Photos &amp; Videos</a>
+  <a href="/cenik">Cen&iacute;k</a>
+  <a href="/faq">FAQ</a>
+  <a href="/blog">Blog</a>
+</div></nav>
+<header class="hero"><div class="container">
+  <div class="article-meta">
+    <span class="article-cat">Svatebn&iacute; fotografie</span>
+    <span class="article-date">12. dubna 2025</span>
   </div>
+  <h1>10 tip&#367;, jak se p&#345;ipravit na dokonal&eacute; svatebn&iacute; focen&iacute;</h1>
+  <p>V&aacute;&scaron; svatebn&iacute; den je jedn&iacute;m z nejd&#367;le&#382;it&#283;j&scaron;&iacute;ch okam&#382;ik&#367; &#382;ivota. S t&#283;mito tipy zajist&iacute;te, &#382;e ka&#382;d&yacute; z&aacute;b&#283;r bude dokonal&yacute; &mdash; a vy si ten den budete u&#382;&iacute;vat bez zbyte&#269;n&eacute;ho stresu.</p>
+</div></header>
+<div class="thumb-wrap"><div class="container">
+  <div class="article-thumb"><iframe src="https://player.vimeo.com/video/1133996815?wmode=opaque" allowfullscreen="allowfullscreen" loading="lazy" title="Uk&aacute;zka na&scaron;&iacute; pr&aacute;ce"></iframe></div>
+</div></div>
+<section class="section"><div class="container">
+  <div class="article-section"><h2>1. Konzultace s fotografem &mdash; co nejd&#345;&iacute;ve</h2><div>Osobn&iacute; sch&#367;zka s fotografem je&scaron;t&#283; p&#345;ed svatbou je absolutn&iacute; z&aacute;klad. Promluvte si o m&iacute;st&#283; ob&#345;adu, harmonogramu dne a va&scaron;ich p&#345;&aacute;n&iacute;ch. Dobr&yacute; fotograf v&aacute;m pom&#367;&#382;e sestavit realistick&yacute; &#269;asov&yacute; pl&aacute;n a doporu&#269;&iacute; nejlep&scaron;&iacute; m&iacute;sta pro p&aacute;rov&eacute; fotografie.</div></div>
+  <div class="article-section"><h2>2. Napl&aacute;nujte harmonogram s rezervou</h2><div>Jednou z nej&#269;ast&#283;j&scaron;&iacute;ch chyb je podce&#328;ov&aacute;n&iacute; &#269;asu. P&#345;idejte ke ka&#382;d&eacute; &#269;&aacute;sti dne z&aacute;lo&#382;n&iacute; &#269;as &mdash; vlasy a make-up trvaj&iacute; d&eacute;le, ne&#382; &#269;ek&aacute;te, host&eacute; p&#345;ich&aacute;zej&iacute; postupn&#283; a skupinov&eacute; fotografie s celou rodinou zaberou alespo&#328; 20&ndash;30 minut.</div></div>
+  <div class="article-section"><h2>3. P&#345;ipravte detaily s l&aacute;skou</h2><div>Prsteny, kytice, pozv&aacute;nky, &scaron;perky, parf&eacute;m &mdash; to jsou detaily, kter&eacute; d&#283;laj&iacute; sn&iacute;mky v&yacute;jime&#269;n&yacute;mi. P&#345;ipravte je na pevnou podlo&#382;ku nebo neutr&aacute;ln&iacute; povrch r&aacute;no, ne&#382; za&#269;ne chaos p&#345;&iacute;prav.</div></div>
+  <div class="article-section"><h2>4. Vyu&#382;ijte zlatou hodinu &mdash; tajemstv&iacute; kr&aacute;sn&eacute;ho sv&#283;tla</h2><div>Hodina p&#345;ed z&aacute;padem slunce je &#269;as, kdy je sv&#283;tlo nejkr&aacute;sn&#283;j&scaron;&iacute; &mdash; tepl&eacute;, m&#283;kk&eacute;, kinematografick&eacute;. Pokud je to mo&#382;n&eacute;, napl&aacute;nujte p&aacute;rov&eacute; focen&iacute; pr&aacute;v&#283; na tento &#269;as. V Olomouci m&aacute;me spoustu m&iacute;st, kde zlat&aacute; hodinka vypad&aacute; &uacute;chvatn&#283;.</div></div>
+  <div class="article-section"><h2>5. Z&#367;sta&#328;te sami sebou &mdash; p&#345;irozenost je z&aacute;klad</h2><div>Nejkr&aacute;sn&#283;j&scaron;&iacute; fotografie jsou ty p&#345;irozen&eacute;. Nehledejte do objektivu, h&yacute;bejte se, sm&#283;jte se, &scaron;eptejte si. Zku&scaron;en&yacute; fotograf zachyt&iacute; skute&#269;n&eacute; emoce &mdash; ty se nedaj&iacute; re&#382;&iacute;rovat.</div></div>
+</div></section>
+<section class="section-dark"><div class="container">
+  <h2>Chcete dokonal&eacute; svatebn&iacute; fotografie?</h2>
+  <p>Obl&iacute;ben&eacute; soboty se obsazuj&iacute; rok i v&iacute;ce dop&#345;edu. Kontaktujte n&aacute;s co nejd&#345;&iacute;ve a zajist&#283;te si v&aacute;&scaron; term&iacute;n.</p>
+  <a href="tel:792483583" class="btn">&#9742; 792&nbsp;483&nbsp;583</a>
+</div></section>
+<footer><p>&copy; 2025 RB Photos &amp; Videos</p></footer>
+<button id="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">&uarr;</button>
 
-  <!-- ARTICLE BODY + SIDEBAR -->
-  <div class="container article-layout">
-    <article class="article-body">
-
-      <section class="article-section">
-        <h2>1. Konzultace s fotografem &mdash; co nejd&#345;&iacute;ve</h2>
-        <div>Osobn&iacute; sch&#367;zka s fotografem je&scaron;t&#283; p&#345;ed svatbou je absolutn&iacute; z&aacute;klad. Promluvte si o m&iacute;st&#283; ob&#345;adu, harmonogramu dne a va&scaron;ich p&#345;&aacute;n&iacute;ch. Dobr&yacute; fotograf v&aacute;m pom&#367;&#382;e sestavit realistick&yacute; &#269;asov&yacute; pl&aacute;n a doporu&#269;&iacute; nejlep&scaron;&iacute; m&iacute;sta pro p&aacute;rov&eacute; fotografie. Na sch&#367;zce nav&iacute;c zjist&iacute;te, zda si spolu sednete &mdash; a to je stejn&#283; d&#367;le&#382;it&eacute; jako portfolio.</div>
-      </section>
-
-      <section class="article-section">
-        <h2>2. Napl&aacute;nujte harmonogram s rezervou</h2>
-        <div>Jednou z nej&#269;ast&#283;j&scaron;&iacute;ch chyb je podce&#328;ov&aacute;n&iacute; &#269;asu. P&#345;idejte ke ka&#382;d&eacute; &#269;&aacute;sti dne z&aacute;lo&#382;n&iacute; &#269;as &mdash; vlasy a make-up trvaj&iacute; d&eacute;le, ne&#382; &#269;ek&aacute;te, host&eacute; p&#345;ich&aacute;zej&iacute; postupn&#283; a skupinov&eacute; fotografie s celou rodinou zaberou aspo&#328; 20&ndash;30 minut. Zlat&eacute; pravidlo: lep&scaron;&iacute; m&iacute;t &#269;as nav&iacute;c ne&#382; fotit ve sp&#283;chu a pod tlakem.</div>
-      </section>
-
-      <section class="article-section">
-        <h2>3. P&#345;ipravte detaily s l&aacute;skou</h2>
-        <div>Prsteny, kytice, pozv&aacute;nky, &scaron;perky, parf&eacute;m &mdash; to jsou detaily, kter&eacute; d&#283;laj&iacute; sn&iacute;mky v&yacute;jime&#269;n&yacute;mi. P&#345;ipravte je na pevnou podlo&#382;ku nebo neutr&aacute;ln&iacute; povrch (d&#345;evo, mramor, textil) r&aacute;no, ne&#382; za&#269;ne ve&scaron;ker&yacute; chaos p&#345;&iacute;prav. B&iacute;l&eacute; i tmav&eacute; pozad&iacute; se hod&iacute;, p&#345;ibalte ob&#283; varianty. Fotograf si s v&aacute;mi pak vybere tu nejlep&scaron;&iacute;.</div>
-      </section>
-
-      <section class="article-section">
-        <h2>4. Vyu&#382;ijte zlatou hodinu &mdash; tajemstv&iacute; kr&aacute;sn&eacute;ho sv&#283;tla</h2>
-        <div>Hodina p&#345;ed z&aacute;padem slunce je &#269;as, kdy je sv&#283;tlo nejkr&aacute;sn&#283;j&scaron;&iacute; &mdash; tepl&eacute;, m&#283;kk&eacute;, kinematografick&eacute;. Pokud je to mo&#382;n&eacute;, napl&aacute;nujte p&aacute;rov&eacute; focen&iacute; pr&aacute;v&#283; na tento &#269;as. V&yacute;sledky jsou v&#382;dy magick&eacute; a odli&scaron;uj&iacute; pr&#367;m&#283;rn&eacute; sn&iacute;mky od t&#283;ch, kter&eacute; v&aacute;s popadnou za srdce. V Olomouci a okol&iacute; m&aacute;me spoustu m&iacute;st, kde zlat&aacute; hodinka vypad&aacute; &uacute;chvatn&#283;.</div>
-      </section>
-
-      <section class="article-section">
-        <h2>5. Z&#367;sta&#328;te sami sebou &mdash; p&#345;irozenost je z&aacute;klad</h2>
-        <div>Nejkr&aacute;sn&#283;j&scaron;&iacute; fotografie jsou ty p&#345;irozen&eacute;. Nehledejte do objektivu, h&yacute;bejte se, sm&#283;jte se, &scaron;eptejte si. Zku&scaron;en&yacute; fotograf zachyt&iacute; skute&#269;n&eacute; emoce &mdash; ty se nedaj&iacute; re&#382;&iacute;rovat. P&#345;ed ob&#345;adem si s partnerem domluvte, &#382;e budete moment pro&#382;&iacute;vat naplno, a kame&#345;e nechte starosti na fotografovi. V&yacute;sledek v&aacute;s p&#345;ekvap&iacute;.</div>
-      </section>
-
-      <div class="article-tags">
-        <a href="/#sluzby">Svatebn&iacute; focen&iacute;</a>
-        <a href="/#sluzby">Olomouc</a>
-        <a href="/#sluzby">Tipy od fotografa</a>
-      </div>
-
-      <div class="article-author">
-        <div class="author-avatar">RB</div>
-        <div>
-          <strong>RB Photos &amp; Videos</strong>
-          <p>Profesion&aacute;ln&iacute; fotograf a videograf v Olomouci. Specializujeme se na svatebn&iacute; fotografie a videografie, rodinn&eacute; focen&iacute; a komer&#269;n&iacute; obsah.</p>
-        </div>
-      </div>
-
-    </article>
-
-    <!-- SIDEBAR -->
-    <aside class="article-sidebar">
-      <div class="sidebar-card">
-        <p class="sidebar-label">Fotograf &amp; Videograf</p>
-        <h3>Rezervujte term&iacute;n</h3>
-        <p>Obsazujeme se rychle. Kontaktujte n&aacute;s co nejd&#345;&iacute;ve pro dostupn&eacute; term&iacute;ny.</p>
-        <a href="tel:792483583" class="btn btn-primary" style="display:block;text-align:center;margin-top:20px">792 483 583</a>
-        <a href="tel:604225032" class="btn btn-outline-sb" style="display:block;text-align:center;margin-top:10px">604 225 032</a>
-        <div class="sidebar-social">
-          <a href="https://www.instagram.com/rb_videos_photos/" target="_blank" rel="noopener">Instagram</a>
-          <a href="https://www.facebook.com/rbvideosandphotos" target="_blank" rel="noopener">Facebook</a>
-        </div>
-      </div>
-      <div class="sidebar-card">
-        <p class="sidebar-label">Na&scaron;e pr&aacute;ce</p>
-        <div class="sidebar-video">
-          <iframe src="https://player.vimeo.com/video/1144185057?wmode=opaque" allowfullscreen loading="lazy" title="Video uk&aacute;zka"></iframe>
-        </div>
-      </div>
-      <div class="sidebar-card">
-        <p class="sidebar-label">Dal&scaron;&iacute; &#269;l&aacute;nky</p>
-        <h3 style="font-size:.95rem;margin-bottom:10px"><a href="/blog/rodinne-foceni-s-detmi" style="color:var(--text);text-decoration:none">Rodinn&eacute; focen&iacute;: p&#345;irozen&eacute; sn&iacute;mky i s mal&yacute;mi d&#283;tmi</a></h3>
-        <a href="/blog" style="font-size:11px;font-weight:700;color:var(--gold);letter-spacing:.08em;text-transform:uppercase">V&scaron;echny &#269;l&aacute;nky &#8594;</a>
-      </div>
-    </aside>
-  </div>
-
-  <!-- CTA -->
-  <section class="article-cta-section">
-    <div class="container article-cta-inner">
-      <div>
-        <h2>Chcete dokonal&eacute; svatebn&iacute; fotografie?</h2>
-        <p>Obl&iacute;ben&eacute; soboty se obsazuj&iacute; rok i v&iacute;ce dop&#345;edu. Kontaktujte n&aacute;s co nejd&#345;&iacute;ve a zajist&#283;te si v&aacute;&scaron; term&iacute;n.</p>
-      </div>
-      <div class="cta-btns">
-        <a href="tel:792483583" class="btn btn-primary">792 483 583</a>
-        <a href="/#kontakt" class="btn btn-outline-light2">Napsat zpr&aacute;vu</a>
-      </div>
-    </div>
-  </section>
-
-  <!-- FOOTER -->
-  <footer class="footer">
-    <div class="container footer-inner">
-      <div class="footer-brand">
-        <span class="logo">RB<span class="logo-sep">&nbsp;&middot;&nbsp;</span>Photos &amp; Videos</span>
-        <p>Profesion&aacute;ln&iacute; fotografie a videografie &mdash; Olomouc</p>
-      </div>
-      <div class="footer-links">
-        <a href="https://www.facebook.com/rbvideosandphotos" target="_blank" rel="noopener">Facebook</a>
-        <a href="https://www.instagram.com/rb_videos_photos/" target="_blank" rel="noopener">Instagram</a>
-        <a href="https://www.youtube.com/channel/UC5miHVzPxIs2MjEsoPAzGCw/videos" target="_blank" rel="noopener">YouTube</a>
-        <a href="tel:792483583">792 483 583</a>
-      </div>
-      <p class="footer-copy">&copy; 2025 RB Photos &amp; Videos. V&scaron;echna pr&aacute;va vyhrazena.</p>
-    </div>
-  </footer>
-
-
-<button id="scroll-top" aria-label="Scroll to top" onclick="window.scrollTo({top:0,behavior:'smooth'})">&#8593;</button>
-<style>
-#scroll-top {
-  position: fixed; bottom: 32px; right: 32px; z-index: 999;
-  width: 44px; height: 44px; border-radius: 50%;
-  background: var(--gold); color: #fff; border: none; cursor: pointer;
-  font-size: 18px; line-height: 1;
-  opacity: 0; visibility: hidden;
-  transition: opacity .25s, transform .25s;
-  box-shadow: 0 4px 16px rgba(0,0,0,.25);
-}
-#scroll-top.visible { opacity: 1; visibility: visible; }
-#scroll-top:hover { transform: translateY(-3px); background: var(--gold-d); }
-</style>
 <script>
 (function(){
-  var btn = document.getElementById('scroll-top');
-  window.addEventListener('scroll', function(){
-    btn.classList.toggle('visible', window.scrollY > 320);
-  }, {passive: true});
-})();
-(function(){
-  var o = location.origin;
-  var path = '/blog/priprava-na-svatebni-foceni';
-  var c = document.querySelector('link[rel="canonical"]');
-  if(c) c.href = o + path;
-  var og = document.querySelector('meta[property="og:url"]');
-  if(og) og.content = o + path;
-  var ld = document.getElementById('ld-article');
-  if(ld) ld.textContent = ld.textContent.replace(/ARTICLE_ORIGIN/g, o);
-})();
-(function(){
-  var burger = document.getElementById('nav-burger');
-  var nav    = document.getElementById('nav-links');
-  if (!burger || !nav) return;
-  burger.addEventListener('click', function(){
-    var open = burger.getAttribute('aria-expanded') === 'true';
-    burger.setAttribute('aria-expanded', String(!open));
-    burger.classList.toggle('is-open');
-    nav.classList.toggle('nav-open');
-  });
-  nav.querySelectorAll('a').forEach(function(a){
-    a.addEventListener('click', function(){
-      burger.setAttribute('aria-expanded', 'false');
-      burger.classList.remove('is-open');
-      nav.classList.remove('nav-open');
-    });
-  });
+  var b=document.getElementById("scroll-top");
+  if(!b)return;
+  window.addEventListener("scroll",function(){b.classList.toggle("vis",window.scrollY>300);},{passive:true});
 })();
 </script>
+
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-542MMSL" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </body>
 </html>

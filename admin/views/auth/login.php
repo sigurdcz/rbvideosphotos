@@ -25,6 +25,9 @@
       </div>
       <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">Přihlásit se</button>
     </form>
+    <div style="text-align:center;margin-top:20px">
+      <a href="/" style="font-size:13px;color:var(--c-muted);text-decoration:none">&#8592; Zpět na web</a>
+    </div>
   </div>
 </div>
 </body>

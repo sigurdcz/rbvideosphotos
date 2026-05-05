@@ -73,4 +73,36 @@ class MediaRepository
             $data['filesize'] ?? null,
         ]);
     }
+
+    public function allBySiteWithVariants(int $siteId): array
+    {
+        $stmt = $this->db->prepare('SELECT * FROM media WHERE site_id = ? ORDER BY created_at DESC');
+        $stmt->execute([$siteId]);
+        $rows = $stmt->fetchAll();
+
+        if (empty($rows)) return [];
+
+        $ids          = array_column($rows, 'id');
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $vstmt        = $this->db->prepare("SELECT * FROM media_variants WHERE media_id IN ($placeholders) ORDER BY id");
+        $vstmt->execute($ids);
+        $variants     = $vstmt->fetchAll();
+
+        $vmap = [];
+        foreach ($variants as $v) {
+            $vmap[$v['media_id']][] = $v;
+        }
+        foreach ($rows as &$row) {
+            $row['variants'] = $vmap[$row['id']] ?? [];
+        }
+
+        return $rows;
+    }
+
+    public function variantsByMediaId(int $mediaId): array
+    {
+        $stmt = $this->db->prepare('SELECT * FROM media_variants WHERE media_id = ?');
+        $stmt->execute([$mediaId]);
+        return $stmt->fetchAll();
+    }
 }

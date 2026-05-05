@@ -26,10 +26,10 @@ Runtime::startRequest();
 Auth::start();
 
 /**
- * Render the page from the database in edit mode and echo it.
+ * Render the page from the database in edit or preview mode and echo it.
  * Returns true on success, false if any lookup fails (caller falls back to static file).
  */
-function tryServeEditMode(string $uri): bool
+function tryServeEditMode(string $uri, bool $previewMode = false): bool
 {
     $slug = ltrim($uri, '/');
 
@@ -46,31 +46,36 @@ function tryServeEditMode(string $uri): bool
 
         $blocks   = (new BlockRepository())->allByPage($page['id']);
         $renderer = new PageRenderer();
-        $html = $renderer->render($template['html_source'], $blocks, [], true);
+        // editMode=false in preview so no dashed outlines or data-inline-* attributes
+        $html = $renderer->render($template['html_source'], $blocks, [], !$previewMode);
         $html = $renderer->injectAssets($html, $template['css_source'] ?? '', $template['js_source'] ?? '');
 
-        $csrfToken = Auth::csrfToken();
-        $user      = Auth::user();
-        $userEmail = htmlspecialchars($user['email'] ?? '', ENT_QUOTES);
-        $pageTitle = htmlspecialchars($page['title'] ?? '', ENT_QUOTES);
-        $pageId    = (int) $page['id'];
-
+        $csrfToken  = Auth::csrfToken();
+        $user       = Auth::user();
+        $userEmail  = htmlspecialchars($user['email'] ?? '', ENT_QUOTES);
+        $pageTitle  = htmlspecialchars($page['title'] ?? '', ENT_QUOTES);
+        $pageId     = (int) $page['id'];
         $appVersion = Version::APP;
-        $editorMeta = '<meta name="inline-page-id" content="' . $pageId . '">'
-            . '<meta name="inline-csrf" content="' . htmlspecialchars($csrfToken, ENT_QUOTES) . '">'
-            . '<meta name="app-version" content="' . $appVersion . '">'
-            . '<link rel="stylesheet" href="/assets/inline-editor.css">';
 
-        $adminBar = <<<HTML
+        $previewHref = htmlspecialchars($uri . '?cms_preview=1', ENT_QUOTES);
+        $editHref    = htmlspecialchars($uri, ENT_QUOTES);
+
+        if ($previewMode) {
+            // Preview mode: no editor JS, minimal bar with "← Editace" button
+            $editorMeta = '<meta name="app-version" content="' . $appVersion . '">'
+                . '<link rel="stylesheet" href="/assets/inline-editor.css">';
+
+            $adminBar = <<<HTML
 <div id="cms-adminbar">
   <div class="cms-ab-left">
     <a class="cms-ab-logo" href="/admin">&#9998;&nbsp;CMS</a>
     <span class="cms-ab-sep"></span>
     <span class="cms-ab-page">{$pageTitle}</span>
+    <span class="cms-ab-mode-badge cms-ab-mode-badge--preview">NÁHLED</span>
   </div>
   <div class="cms-ab-right">
     <span class="cms-ab-ver">{$appVersion}</span>
-    <span class="cms-ab-email">{$userEmail}</span>
+    <a class="cms-ab-btn cms-ab-btn--active" href="{$editHref}">&#9998; Editace</a>
     <a class="cms-ab-btn" href="/admin">Administrace</a>
     <form method="POST" action="/admin/logout" style="margin:0;padding:0;display:inline">
       <input type="hidden" name="_csrf" value="{$csrfToken}">
@@ -80,9 +85,42 @@ function tryServeEditMode(string $uri): bool
 </div>
 HTML;
 
-        $html = str_replace('</head>', "\n" . $editorMeta . "\n</head>", $html);
-        $html = str_replace('<body', $adminBar . "\n<body", $html);
-        $html = str_replace('</body>', "\n<script src=\"/assets/inline-editor.js\"></script>\n</body>", $html);
+            $html = str_replace('</head>', "\n" . $editorMeta . "\n</head>", $html);
+            $html = str_replace('<body', $adminBar . "\n<body", $html);
+            // No inline-editor.js — clean page, no edit affordances
+
+        } else {
+            // Edit mode: full inline editor
+            $editorMeta = '<meta name="inline-page-id" content="' . $pageId . '">'
+                . '<meta name="inline-csrf" content="' . htmlspecialchars($csrfToken, ENT_QUOTES) . '">'
+                . '<meta name="app-version" content="' . $appVersion . '">'
+                . '<link rel="stylesheet" href="/assets/inline-editor.css">';
+
+            $adminBar = <<<HTML
+<div id="cms-adminbar">
+  <div class="cms-ab-left">
+    <a class="cms-ab-logo" href="/admin">&#9998;&nbsp;CMS</a>
+    <span class="cms-ab-sep"></span>
+    <span class="cms-ab-page">{$pageTitle}</span>
+    <span class="cms-ab-mode-badge cms-ab-mode-badge--edit">EDITACE</span>
+  </div>
+  <div class="cms-ab-right">
+    <span class="cms-ab-ver">{$appVersion}</span>
+    <span class="cms-ab-email">{$userEmail}</span>
+    <a class="cms-ab-btn" href="{$previewHref}">&#128065; Náhled</a>
+    <a class="cms-ab-btn" href="/admin">Administrace</a>
+    <form method="POST" action="/admin/logout" style="margin:0;padding:0;display:inline">
+      <input type="hidden" name="_csrf" value="{$csrfToken}">
+      <button type="submit" class="cms-ab-btn cms-ab-logout">Odhlásit</button>
+    </form>
+  </div>
+</div>
+HTML;
+
+            $html = str_replace('</head>', "\n" . $editorMeta . "\n</head>", $html);
+            $html = str_replace('<body', $adminBar . "\n<body", $html);
+            $html = str_replace('</body>', "\n<script src=\"/assets/inline-editor.js\"></script>\n</body>", $html);
+        }
 
         header('Content-Type: text/html; charset=UTF-8');
         echo $html;
@@ -138,9 +176,12 @@ try {
         }
     }
 
-    // Logged-in users: try live edit-mode render from DB first
-    if (Auth::check() && tryServeEditMode($uri)) {
-        exit;
+    // Logged-in users: try live render from DB (edit or preview mode)
+    if (Auth::check()) {
+        $previewMode = isset($_GET['cms_preview']);
+        if (tryServeEditMode($uri, $previewMode)) {
+            exit;
+        }
     }
 
     // Resolve to published HTML file
