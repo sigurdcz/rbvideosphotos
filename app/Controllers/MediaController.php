@@ -37,12 +37,14 @@ class MediaController extends Controller
         }
 
         $appCfg      = Config::get('app');
-        $allowedExt  = $appCfg['allowed_image_extensions'];
-        $allowedMime = $appCfg['allowed_image_types'];
+        $allowedExt  = array_merge($appCfg['allowed_image_extensions'], $appCfg['allowed_video_extensions']);
+        $allowedMime = array_merge($appCfg['allowed_image_types'],      $appCfg['allowed_video_types']);
 
         $files = $this->normalizeFiles($_FILES['files'] ?? $_FILES['file'] ?? null);
         if (empty($files)) {
-            $this->json(['error' => 'Žádné soubory nebyly nahrány.'], 400);
+            // $_FILES is empty — most likely post_max_size exceeded on the server
+            $phpLimit = ini_get('post_max_size');
+            $this->json(['error' => 'Žádné soubory nebyly přijaty serverem. Pravděpodobně překročen limit velikosti POST dat (' . $phpLimit . '). Zkuste menší soubor.'], 400);
         }
 
         $results = [];
@@ -50,21 +52,28 @@ class MediaController extends Controller
         $svc     = new ImageVariantService();
 
         foreach ($files as $file) {
+            if ($file['error'] === UPLOAD_ERR_INI_SIZE || $file['error'] === UPLOAD_ERR_FORM_SIZE) {
+                $results[] = ['error' => 'Soubor je příliš velký (PHP limit): ' . $file['name']];
+                continue;
+            }
             if ($file['error'] !== UPLOAD_ERR_OK) {
-                $results[] = ['error' => 'Upload selhal: ' . $file['name']];
+                $results[] = ['error' => 'Upload selhal (kód ' . $file['error'] . '): ' . $file['name']];
                 continue;
             }
 
-            $ext  = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-            $mime = mime_content_type($file['tmp_name']);
+            $ext      = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            $mime     = mime_content_type($file['tmp_name']);
+            $isVideo  = in_array($mime, $appCfg['allowed_video_types']) || in_array($ext, $appCfg['allowed_video_extensions']);
+            $maxSize  = $isVideo ? $appCfg['upload_video_max_size'] : $appCfg['upload_max_size'];
 
             if (!in_array($ext, $allowedExt) || !in_array($mime, $allowedMime)) {
-                $results[] = ['error' => 'Nepodporovaný typ: ' . $file['name']];
+                $results[] = ['error' => 'Nepodporovaný typ (' . $mime . '): ' . $file['name']];
                 continue;
             }
 
-            if ($file['size'] > $appCfg['upload_max_size']) {
-                $results[] = ['error' => 'Příliš velký soubor: ' . $file['name']];
+            if ($file['size'] > $maxSize) {
+                $mb = round($maxSize / 1_048_576);
+                $results[] = ['error' => 'Příliš velký soubor (max ' . $mb . ' MB): ' . $file['name']];
                 continue;
             }
 
@@ -72,7 +81,8 @@ class MediaController extends Controller
             $fullDir     = dirname(__DIR__, 2) . '/' . $storagePath;
             if (!is_dir($fullDir)) mkdir($fullDir, 0755, true);
 
-            $newName = uniqid('img_', true) . '.' . $ext;
+            $prefix  = $isVideo ? 'vid_' : 'img_';
+            $newName = uniqid($prefix, true) . '.' . $ext;
             $dest    = $fullDir . '/' . $newName;
 
             if (!move_uploaded_file($file['tmp_name'], $dest)) {
@@ -80,7 +90,10 @@ class MediaController extends Controller
                 continue;
             }
 
-            [$w, $h] = $svc->getDimensions($dest);
+            $w = $h = 0;
+            if (!$isVideo) {
+                [$w, $h] = $svc->getDimensions($dest);
+            }
 
             $mediaId = $repo->create([
                 'site_id'           => $site['id'],
@@ -93,7 +106,9 @@ class MediaController extends Controller
                 'mime_type'         => $mime,
             ]);
 
-            $this->generateVariants($repo, $svc, $mediaId, $dest, $storagePath, $fullDir, $w, $h, $ext);
+            if (!$isVideo) {
+                $this->generateVariants($repo, $svc, $mediaId, $dest, $storagePath, $fullDir, $w, $h, $ext);
+            }
 
             $results[] = ['success' => true, 'media_id' => $mediaId, 'name' => basename($file['name'])];
         }

@@ -32,7 +32,7 @@ ob_start();
 
 <!-- Upload card -->
 <div class="card">
-  <div class="card-title">Nahrát obrázky</div>
+  <div class="card-title">Nahrát soubory</div>
   <form id="upload-form" enctype="multipart/form-data">
     <input type="hidden" name="_csrf" value="<?= $h($_csrfToken) ?>">
     <div class="form-row" style="margin-bottom:12px">
@@ -46,11 +46,11 @@ ob_start();
       </div>
     </div>
     <div class="drop-zone" id="upload-drop" data-upload-input="#upload-file-input">
-      <span id="drop-label">Přetáhněte obrázky sem nebo klikněte pro výběr</span>
-      <br><small style="color:var(--c-muted)">JPG, PNG, WebP, GIF — max 10 MB — lze vybrat více souborů najednou</small>
+      <span id="drop-label">Přetáhněte soubory sem nebo klikněte pro výběr</span>
+      <br><small style="color:var(--c-muted)">Obrázky: JPG, PNG, WebP, GIF — max 10 MB &nbsp;|&nbsp; Video: MP4, MOV, WebM, AVI — max 512 MB</small>
     </div>
     <input type="file" id="upload-file-input" name="files[]"
-           accept=".jpg,.jpeg,.png,.webp,.gif" multiple style="display:none">
+           accept=".jpg,.jpeg,.png,.webp,.gif,.mp4,.mov,.webm,.avi,.mkv" multiple style="display:none">
 
     <div id="upload-queue" style="display:none;margin-top:10px"></div>
 
@@ -69,28 +69,36 @@ ob_start();
   <div class="card-title">Knihovna médií</div>
   <div class="media-grid media-grid--manage">
     <?php foreach ($media as $m):
-      $thumb = $mediaThumb($m);
-      $vmap  = $variantMap($m);
-      $isGif = ($m['mime_type'] === 'image/gif');
+      $isGif   = ($m['mime_type'] === 'image/gif');
+      $isVideo = str_starts_with($m['mime_type'] ?? '', 'video/');
+      $thumb   = $isVideo ? null : $mediaThumb($m);
+      $vmap    = $variantMap($m);
     ?>
     <div class="media-card media-card--manage">
       <div class="media-card-preview">
-        <img src="<?= $h($thumb) ?>" alt="<?= $h($m['alt_text']) ?>" loading="lazy">
-        <?php if ($isGif): ?>
-          <span class="media-badge-type">GIF</span>
+        <?php if ($isVideo): ?>
+          <div style="display:flex;align-items:center;justify-content:center;height:100%;background:#111;color:#c4963c;font-size:2.4rem">&#9654;</div>
+          <span class="media-badge-type">VIDEO</span>
+        <?php else: ?>
+          <img src="<?= $h($thumb) ?>" alt="<?= $h($m['alt_text']) ?>" loading="lazy">
+          <?php if ($isGif): ?>
+            <span class="media-badge-type">GIF</span>
+          <?php endif; ?>
         <?php endif; ?>
       </div>
       <div class="media-card-body">
         <div class="media-card-name" title="<?= $h($m['original_filename']) ?>">
           <?= $h($m['original_filename']) ?>
         </div>
-        <?php if ($m['width'] && $m['height']): ?>
+        <?php if (!$isVideo && $m['width'] && $m['height']): ?>
           <div class="media-card-dim"><?= (int)$m['width'] ?> × <?= (int)$m['height'] ?> px</div>
         <?php endif; ?>
 
         <div class="media-card-variants">
           <span class="mv-badge mv-badge--orig" title="Originál">orig</span>
-          <?php if (!$isGif): ?>
+          <?php if ($isVideo): ?>
+            <span class="mv-badge mv-badge--gif" title="Video — náhledy se negenerují">video</span>
+          <?php elseif (!$isGif): ?>
             <span class="mv-badge <?= isset($vmap['webp'])   ? 'mv-badge--ok' : 'mv-badge--miss' ?>"
                   title="<?= isset($vmap['webp']) ? 'WebP · ' . $vmap['webp']['width'] . '×' . $vmap['webp']['height'] . ' · ' . $fmtBytes((int)$vmap['webp']['filesize']) : 'WebP varianta chybí' ?>">webp</span>
             <span class="mv-badge <?= isset($vmap['thumb'])  ? 'mv-badge--ok' : 'mv-badge--miss' ?>"
@@ -121,14 +129,23 @@ ob_start();
 
 <script>
 (function () {
-  const form  = document.getElementById('upload-form');
-  const input = document.getElementById('upload-file-input');
-  const queue = document.getElementById('upload-queue');
-  const btn   = document.getElementById('upload-btn');
-  const status = document.getElementById('upload-status');
+  const VIDEO_EXTS  = ['mp4','mov','webm','avi','mkv'];
+  const IMG_MAX_MB  = 10;
+  const VID_MAX_MB  = 512;
+
+  const form      = document.getElementById('upload-form');
+  const input     = document.getElementById('upload-file-input');
+  const queue     = document.getElementById('upload-queue');
+  const btn       = document.getElementById('upload-btn');
+  const status    = document.getElementById('upload-status');
   const dropLabel = document.getElementById('drop-label');
 
   input.addEventListener('change', renderQueue);
+
+  function isVideo(name) {
+    const ext = name.split('.').pop().toLowerCase();
+    return VIDEO_EXTS.includes(ext);
+  }
 
   function renderQueue() {
     const files = input.files;
@@ -137,11 +154,14 @@ ob_start();
     queue.innerHTML = '';
     dropLabel.textContent = files.length + ' soubor' + (files.length > 1 ? 'ů vybráno' : ' vybrán');
     Array.from(files).forEach(f => {
+      const maxMb  = isVideo(f.name) ? VID_MAX_MB : IMG_MAX_MB;
+      const tooBig = f.size > maxMb * 1048576;
       const el = document.createElement('div');
       el.className = 'upload-queue-item';
       el.innerHTML = '<span class="uq-name">' + esc(f.name) + '</span>'
-                   + '<span class="uq-size">' + fmtBytes(f.size) + '</span>'
-                   + '<span class="uq-state">⏸</span>';
+                   + '<span class="uq-size">' + fmtBytes(f.size) + (tooBig ? ' <span style="color:#dc2626">▲ přes ' + maxMb + ' MB</span>' : '') + '</span>'
+                   + '<span class="uq-state">' + (tooBig ? '✗' : '⏸') + '</span>';
+      if (tooBig) el.querySelector('.uq-state').style.color = '#dc2626';
       queue.appendChild(el);
     });
   }
@@ -149,6 +169,16 @@ ob_start();
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!input.files.length) { setStatus('Vyberte soubory.', ''); return; }
+
+    // Client-side size check before uploading
+    const oversized = Array.from(input.files).filter(f => {
+      const maxMb = isVideo(f.name) ? VID_MAX_MB : IMG_MAX_MB;
+      return f.size > maxMb * 1048576;
+    });
+    if (oversized.length) {
+      setStatus('Některé soubory překračují povolený limit. Zkontrolujte frontu výše.', '#dc2626');
+      return;
+    }
 
     btn.disabled = true;
     btn.textContent = 'Nahrávám…';
@@ -158,7 +188,27 @@ ob_start();
     const fd = new FormData(form);
     try {
       const resp = await fetch('/admin/media/upload', { method: 'POST', body: fd });
-      const data = await resp.json();
+
+      // Server may return non-JSON (e.g. 413 from Apache) — handle gracefully
+      const text = await resp.text();
+      let data;
+      try { data = JSON.parse(text); } catch (_) {
+        if (resp.status === 413) {
+          setStatus('Soubor je příliš velký — server odmítl požadavek (HTTP 413). Zkuste menší soubor nebo nahrajte přes FTP.', '#dc2626');
+        } else {
+          setStatus('Neočekávaná chyba serveru (HTTP ' + resp.status + ').', '#dc2626');
+        }
+        btn.disabled = false;
+        btn.textContent = 'Nahrát';
+        return;
+      }
+
+      if (data.error && !data.results) {
+        setStatus('Chyba: ' + data.error, '#dc2626');
+        btn.disabled = false;
+        btn.textContent = 'Nahrát';
+        return;
+      }
 
       const results = Array.isArray(data.results)
         ? data.results
@@ -181,12 +231,13 @@ ob_start();
         setStatus(ok + ' nahráno, ' + fail + ' selhalo. Obnovuji…', '#d97706');
         setTimeout(() => location.reload(), 2500);
       } else {
-        setStatus('Nahrávání selhalo. Zkontrolujte formát a velikost.', '#dc2626');
+        setStatus('Nahrávání selhalo. ' + (results[0]?.error || ''), '#dc2626');
         btn.disabled = false;
         btn.textContent = 'Nahrát';
       }
     } catch (err) {
-      setStatus('Chyba sítě: ' + err.message, '#dc2626');
+      // Network error — most often server rejected oversized request and closed connection
+      setStatus('Chyba sítě: soubor je pravděpodobně příliš velký pro server. Zkuste menší soubor nebo nahrajte přes FTP.', '#dc2626');
       btn.disabled = false;
       btn.textContent = 'Nahrát';
     }
