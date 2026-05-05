@@ -263,7 +263,13 @@ HTML;
     }
 
     http_response_code(404);
-    echo '<!DOCTYPE html><html><body><h1>404 Stránka nenalezena</h1></body></html>';
+    $notFoundFile = $publishedDir . '/404.html';
+    header('Content-Type: text/html; charset=UTF-8');
+    if (file_exists($notFoundFile)) {
+        readfile($notFoundFile);
+    } else {
+        echo '<!DOCTYPE html><html><body><h1>404 Stránka nenalezena</h1></body></html>';
+    }
 } catch (\Throwable $e) {
     Runtime::handleException($e);
 }

@@ -126,6 +126,7 @@ class PublishService
 
         $this->regenerateSitemapAndRobots($siteId, $site);
         $this->generateHtaccess($siteId);
+        $this->generate404($site);
 
         return ['success' => empty($errors), 'errors' => $errors];
     }
@@ -145,12 +146,84 @@ class PublishService
     public function generateHtaccess(int $siteId): void
     {
         $redirects = $this->redirects->allBySite($siteId);
-        $lines = ["Options -Indexes", "RewriteEngine On", ""];
+        $lines = ["Options -Indexes", "RewriteEngine On", "ErrorDocument 404 /404.html", ""];
         foreach ($redirects as $r) {
             $lines[] = "Redirect {$r['status_code']} {$r['from_path']} {$r['to_path']}";
         }
         $lines[] = "";
         file_put_contents($this->publishedDir . '/.htaccess', implode("\n", $lines));
+    }
+
+    public function generate404(array $site): void
+    {
+        $name   = htmlspecialchars($site['name'] ?? 'RB Photos & Videos', ENT_QUOTES);
+        $domain = rtrim($site['domain'] ?? '', '/');
+        $stamp  = '<!-- cms: ' . Version::APP . ' published: ' . date('Y-m-d H:i:s') . " -->\n";
+
+        $html = <<<HTML
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>404 &#8212; St&#225;nka nenalezena | {$name}</title>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;color:#222;background:#0f0f0f;line-height:1.6;font-size:16px}
+.container{max-width:1100px;margin:0 auto;padding:0 24px}
+a{color:#c4963c;text-decoration:none}
+.nav{position:fixed;top:0;left:0;right:0;z-index:500;background:rgba(17,17,17,.97)}
+.nav-inner{display:flex;align-items:center;height:60px}
+.brand{font-size:13px;font-weight:800;letter-spacing:.1em;color:#fff;text-transform:uppercase;margin-right:auto}
+.nav-links{display:flex;gap:28px;align-items:center}
+.nav-links a{color:rgba(255,255,255,.6);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;transition:color .2s}
+.nav-links a:hover{color:#fff}
+.nav-cta{background:#c4963c !important;color:#fff !important;padding:8px 18px}
+.hero-404{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;background:#0f0f0f;padding:80px 24px 60px}
+.err-num{display:block;font-size:clamp(7rem,20vw,13rem);font-weight:900;color:#c4963c;line-height:1;letter-spacing:-.04em;margin-bottom:0}
+.err-line{display:block;width:60px;height:3px;background:#c4963c;margin:16px auto 28px}
+.hero-404 h1{font-size:clamp(1.6rem,4vw,2.4rem);font-weight:900;color:#fff;margin-bottom:14px}
+.hero-404 p{color:rgba(255,255,255,.5);font-size:1rem;max-width:440px;margin:0 auto 36px}
+.btn-h{display:inline-block;padding:14px 28px;font-size:12px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;transition:all .2s;border:2px solid transparent}
+.btn-h--gold{background:#c4963c;color:#fff;border-color:#c4963c}
+.btn-h--gold:hover{background:#b5853a;border-color:#b5853a;color:#fff}
+.btn-h--outline{background:transparent;color:rgba(255,255,255,.7);border-color:rgba(255,255,255,.35);margin-left:12px}
+.btn-h--outline:hover{background:rgba(255,255,255,.08);color:#fff;border-color:rgba(255,255,255,.6)}
+.footer{background:#111;color:rgba(255,255,255,.3);padding:24px;text-align:center;font-size:12px}
+@media(max-width:480px){.btn-h--outline{margin-left:0;margin-top:10px}}
+  </style>
+</head>
+<body>
+<nav class="nav">
+  <div class="container nav-inner">
+    <a href="/" class="brand">{$name}</a>
+    <div class="nav-links">
+      <a href="/#sluzby">Slu&#382;by</a>
+      <a href="/#videa">Videa</a>
+      <a href="/#reference">Reference</a>
+      <a href="/#kontakt" class="nav-cta">Kontakt</a>
+    </div>
+  </div>
+</nav>
+<div class="hero-404">
+  <div>
+    <span class="err-num">404</span>
+    <span class="err-line"></span>
+    <h1>St&#225;nka nenalezena</h1>
+    <p>Tato str&#225;nka neexistuje nebo byla p&#345;esunuta. Zkuste to od za&#269;&#225;tku.</p>
+    <a href="/" class="btn-h btn-h--gold">&#8592; Zp&#283;t na &#250;vodn&#237; str&#225;nku</a>
+    <a href="javascript:history.back()" class="btn-h btn-h--outline">&#8592; P&#345;edchoz&#237; str&#225;nka</a>
+  </div>
+</div>
+<footer class="footer">
+  <p>&copy; 2025 {$name}</p>
+</footer>
+</body>
+</html>
+HTML;
+
+        file_put_contents($this->publishedDir . '/404.html', $stamp . $html);
     }
 
     private function resolveFilePath(string $urlPath): string
