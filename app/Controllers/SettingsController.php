@@ -13,8 +13,12 @@ class SettingsController extends Controller
         $sites = new SiteRepository();
         $site  = $sites->findFirst();
 
+        $apiKeyFile = dirname(__DIR__, 2) . '/storage/api_key.txt';
+        $apiKey     = file_exists($apiKeyFile) ? trim(file_get_contents($apiKeyFile)) : null;
+
         $this->view('settings.index', [
             'site'    => $site,
+            'apiKey'  => $apiKey,
             'success' => $this->getFlash('success'),
             'error'   => $this->getFlash('error'),
         ]);

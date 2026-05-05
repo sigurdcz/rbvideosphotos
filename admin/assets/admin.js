@@ -103,6 +103,81 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+// ── Article WYSIWYG editor ───────────────────────────────────────────────────
+(function () {
+  const editor  = document.getElementById('article-editor');
+  const hidden  = document.getElementById('article-content-hidden');
+  const source  = document.getElementById('article-source');
+  if (!editor || !hidden) return;
+
+  let sourceMode = false;
+
+  // Sync hidden input before form submit
+  editor.closest('form')?.addEventListener('submit', () => {
+    if (sourceMode) syncEditorFromSource();
+    hidden.value = editor.innerHTML;
+  });
+
+  // Toolbar buttons
+  document.querySelectorAll('[data-cmd]').forEach(btn => {
+    btn.addEventListener('mousedown', e => {
+      e.preventDefault();
+      const cmd = btn.dataset.cmd;
+      const val = btn.dataset.val || null;
+
+      if (cmd === 'source') {
+        toggleSource();
+        return;
+      }
+      if (sourceMode) return;
+
+      editor.focus();
+      if (cmd === 'createLink') {
+        const url = prompt('URL odkazu:', 'https://');
+        if (url) document.execCommand('createLink', false, url);
+      } else if (val) {
+        document.execCommand('formatBlock', false, val);
+      } else {
+        document.execCommand(cmd, false, null);
+      }
+      updateActiveStates();
+    });
+  });
+
+  editor.addEventListener('keyup',   updateActiveStates);
+  editor.addEventListener('mouseup', updateActiveStates);
+  editor.addEventListener('focus',   updateActiveStates);
+
+  function updateActiveStates() {
+    document.querySelectorAll('[data-cmd]').forEach(btn => {
+      const cmd = btn.dataset.cmd;
+      if (['bold','italic','underline'].includes(cmd)) {
+        btn.classList.toggle('ae-active', document.queryCommandState(cmd));
+      }
+    });
+  }
+
+  function toggleSource() {
+    sourceMode = !sourceMode;
+    const btn = document.querySelector('[data-cmd="source"]');
+    if (sourceMode) {
+      source.value = editor.innerHTML;
+      editor.style.display = 'none';
+      source.style.display = 'block';
+      if (btn) btn.classList.add('ae-active');
+    } else {
+      syncEditorFromSource();
+      source.style.display = 'none';
+      editor.style.display = 'block';
+      if (btn) btn.classList.remove('ae-active');
+    }
+  }
+
+  function syncEditorFromSource() {
+    editor.innerHTML = source.value;
+  }
+})();
+
 function slugify(str) {
   const map = {á:'a',č:'c',ď:'d',é:'e',ě:'e',í:'i',ň:'n',ó:'o',ř:'r',š:'s',ť:'t',ú:'u',ů:'u',ý:'y',ž:'z'};
   return str.toLowerCase()

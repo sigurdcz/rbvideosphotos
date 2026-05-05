@@ -137,6 +137,11 @@ try {
     $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
     $uri = rtrim($uri, '/') ?: '/';
 
+    // API endpoints — /api/v1/*
+    if (str_starts_with($uri, '/api/v1/') || $uri === '/api/v1') {
+        (new \App\Controllers\ApiController())->dispatch($uri);
+    }
+
     // Serve static assets (CSS, JS, images) from /public/assets
     if (str_starts_with($uri, '/assets/')) {
         $file = __DIR__ . $uri;

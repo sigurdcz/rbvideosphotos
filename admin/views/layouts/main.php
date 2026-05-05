@@ -16,6 +16,8 @@
       <li><a href="/admin/pages" class="<?= strpos($requestUri, '/admin/pages') === 0 ? 'active' : '' ?>">Stránky</a></li>
       <li><a href="/admin/templates" class="<?= strpos($requestUri, '/admin/templates') === 0 ? 'active' : '' ?>">Šablony</a></li>
       <li><a href="/admin/media" class="<?= strpos($requestUri, '/admin/media') === 0 ? 'active' : '' ?>">Média</a></li>
+      <li><a href="/admin/blog" class="<?= strpos($requestUri, '/admin/blog') === 0 ? 'active' : '' ?>">Blog — články</a></li>
+      <li><a href="/admin/portfolio" class="<?= strpos($requestUri, '/admin/portfolio') === 0 ? 'active' : '' ?>">Naše práce</a></li>
       <li><a href="/admin/redirects" class="<?= strpos($requestUri, '/admin/redirects') === 0 ? 'active' : '' ?>">Redirecty</a></li>
       <li><a href="/admin/publish" class="<?= strpos($requestUri, '/admin/publish') === 0 ? 'active' : '' ?>">Publikování</a></li>
       <li><a href="/admin/settings" class="<?= strpos($requestUri, '/admin/settings') === 0 ? 'active' : '' ?>">Nastavení</a></li>

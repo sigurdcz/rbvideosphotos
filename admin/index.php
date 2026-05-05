@@ -79,6 +79,22 @@ try {
     $router->get('/admin/settings',        'SettingsController', 'index');
     $router->post('/admin/settings/update','SettingsController', 'update');
 
+    // Blog articles
+    $router->get('/admin/blog',          'BlogController', 'index');
+    $router->get('/admin/blog/create',   'BlogController', 'create');
+    $router->post('/admin/blog/store',   'BlogController', 'store');
+    $router->get('/admin/blog/edit',     'BlogController', 'edit');
+    $router->post('/admin/blog/update',  'BlogController', 'update');
+    $router->post('/admin/blog/delete',  'BlogController', 'delete');
+
+    // Portfolio (Naše práce)
+    $router->get('/admin/portfolio',         'PortfolioController', 'index');
+    $router->get('/admin/portfolio/create',  'PortfolioController', 'create');
+    $router->post('/admin/portfolio/store',  'PortfolioController', 'store');
+    $router->get('/admin/portfolio/edit',    'PortfolioController', 'edit');
+    $router->post('/admin/portfolio/update', 'PortfolioController', 'update');
+    $router->post('/admin/portfolio/delete', 'PortfolioController', 'delete');
+
     // Setup / seed
     $router->get('/admin/setup',      'SetupController', 'index');
     $router->post('/admin/setup/run', 'SetupController', 'run');

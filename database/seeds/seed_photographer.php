@@ -267,6 +267,15 @@ $htmlHomeFull = <<<'HTML'
     <div class="sec-btns" data-block="videos_btns"></div>
   </div>
 </section>
+<section class="section section-dark" id="nase-prace">
+  <div class="container">
+    <div class="sec-hdr">
+      <h2 style="color:#fff">Naše práce</h2>
+      <p style="color:rgba(255,255,255,.6)">Ukázky naší tvorby — videa a fotografie z reálných zakázek</p>
+    </div>
+    <div data-block="portfolio-tiles"></div>
+  </div>
+</section>
 <section class="section section-light" id="reference">
   <div class="container">
     <div class="sec-hdr">
@@ -389,8 +398,20 @@ img{max-width:100%;height:auto}
 #scroll-top{position:fixed;bottom:24px;right:24px;background:#c4963c;color:#fff;border:none;width:44px;height:44px;border-radius:50%;cursor:pointer;font-size:20px;opacity:0;visibility:hidden;transition:opacity .25s;z-index:999;line-height:1}
 #scroll-top.vis{opacity:1;visibility:visible}
 @media(max-width:1024px){.svc-grid{grid-template-columns:1fr 1fr}.feat-grid{grid-template-columns:1fr 1fr}.svc-card{border-bottom:1px solid #e5e5e5}.feat{border-bottom:1px solid rgba(255,255,255,.07)}}
+/* Portfolio tiles */
+.pt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:24px;margin-bottom:8px}
+.pt-tile{display:block;text-decoration:none;color:inherit;background:#1e1e2e;border-radius:10px;overflow:hidden;transition:transform .2s,box-shadow .2s}
+.pt-tile:hover{transform:translateY(-4px);box-shadow:0 10px 28px rgba(0,0,0,.45)}
+.pt-thumb{position:relative;height:200px;overflow:hidden;background:#111;line-height:0}
+.pt-thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s}
+.pt-tile:hover .pt-thumb img{transform:scale(1.04)}
+.pt-play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:2.2rem;color:rgba(255,255,255,.7);background:rgba(0,0,0,.18);transition:background .2s}
+.pt-tile:hover .pt-play{background:rgba(0,0,0,.32)}
+.pt-photos{display:flex;gap:4px;height:64px;overflow:hidden}
+.pt-photos img{flex:1;min-width:0;height:100%;object-fit:cover}
+.pt-caption{padding:12px 14px;font-size:.9rem;font-weight:700;color:#fff;background:#1a1a2e}
 @media(max-width:900px){.cta-2col{grid-template-columns:1fr;gap:32px}.stats-row{grid-template-columns:repeat(2,1fr)}.rev-grid{grid-template-columns:1fr 1fr}}
-@media(max-width:640px){.vid-grid{grid-template-columns:1fr}.rev-grid{grid-template-columns:1fr}.nav-links a:not(.nav-cta){display:none}.hero h1{font-size:2.2rem}}
+@media(max-width:640px){.vid-grid{grid-template-columns:1fr}.rev-grid{grid-template-columns:1fr}.nav-links a:not(.nav-cta){display:none}.hero h1{font-size:2.2rem}.pt-grid{grid-template-columns:1fr}}
 CSS;
 
 $jsHomeFull = <<<'JS'
@@ -629,6 +650,7 @@ block($pdo, $pidHome, 'video_3', 'html', 'Video 3', '<iframe src="https://player
 block($pdo, $pidHome, 'video_4', 'html', 'Video 4', '<iframe width="100%" height="100%" src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>', 45);
 block($pdo, $pidHome, 'videos_btns', 'html', 'Videa — tlačítka', '<a href="https://www.youtube.com/@rbvideosandphotos" target="_blank" rel="noopener" class="btn-g">Všechna videa na YouTube</a><a href="https://www.instagram.com/rb_videos_photos/" target="_blank" rel="noopener" class="btn-od">Instagram portfolio</a>', 46);
 
+block($pdo, $pidHome, 'portfolio-tiles', 'html', 'Naše práce — dlaždice', '<p style="color:rgba(255,255,255,.5);text-align:center;padding:40px 0">Přidejte první práci v sekci <strong>Naše práce</strong> a dlaždice se zde zobrazí automaticky.</p>', 38);
 block($pdo, $pidHome, 'reviews_title', 'text',     'Recenze — nadpis', 'Co říkají naši klienti', 50);
 block($pdo, $pidHome, 'reviews_intro', 'textarea', 'Recenze — intro',  'Přes 150 spokojených klientů — jejich slova mluví za nás.', 51);
 block($pdo, $pidHome, 'review_1', 'html', 'Recenze 1', '<div class="rev-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><blockquote>"Kluci jsou naprostí profesionálové. Jsou to opravdu přátelští borci, kteří vám udělají fotky a videa podle vašich představ a ještě líp. Za mě TOP ve svém oboru. Děkujeme, že jste mohli být na naší svatbě!"</blockquote><div class="rev-name">Jan Jüngling</div><div class="rev-type">Svatba M+H</div>', 52);
