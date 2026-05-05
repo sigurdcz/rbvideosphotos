@@ -17,7 +17,7 @@ ob_start();
     <?php endif; ?>
   </div>
 
-  <form method="POST" action="<?= $isEdit ? '/admin/pages/update' : '/admin/pages/store' ?>">
+  <form method="POST" action="<?= $isEdit ? '/admin/pages/update' : '/admin/pages/store' ?>" id="page-form">
     <input type="hidden" name="_csrf" value="<?= $h($_csrfToken) ?>">
     <?php if ($isEdit): ?><input type="hidden" name="id" value="<?= (int)$page['id'] ?>"><?php endif; ?>
 
@@ -83,11 +83,7 @@ ob_start();
     <div class="tab-pane" id="tab-blocks">
       <div class="card">
         <p style="color:var(--c-muted);margin-bottom:14px">Tato stránka zatím nemá žádné bloky. Synchronizujte je ze šablony.</p>
-        <form method="POST" action="/admin/blocks/sync-template">
-          <input type="hidden" name="_csrf" value="<?= $h($_csrfToken) ?>">
-          <input type="hidden" name="page_id" value="<?= (int)$page['id'] ?>">
-          <button type="submit" class="btn btn-primary">Načíst bloky ze šablony</button>
-        </form>
+        <button type="submit" form="sync-form" class="btn btn-primary">Načíst bloky ze šablony</button>
       </div>
     </div>
     <?php endif; ?>
@@ -96,11 +92,7 @@ ob_start();
     <?php if ($isEdit && !empty($blocks)): ?>
     <div class="tab-pane" id="tab-blocks">
       <div style="margin-bottom:12px">
-        <form method="POST" action="/admin/blocks/sync-template" style="display:inline">
-          <input type="hidden" name="_csrf" value="<?= $h($_csrfToken) ?>">
-          <input type="hidden" name="page_id" value="<?= (int)$page['id'] ?>">
-          <button type="submit" class="btn btn-sm btn-secondary">&#8635; Synchronizovat bloky ze šablony</button>
-        </form>
+        <button type="submit" form="sync-form" class="btn btn-sm btn-secondary">&#8635; Synchronizovat bloky ze šablony</button>
       </div>
       <div class="card">
         <div class="blocks-list">
@@ -132,14 +124,23 @@ ob_start();
       <button type="submit" class="btn btn-primary">Uložit změny</button>
       <a href="/admin/seo/edit?page_id=<?= (int)$page['id'] ?>" class="btn btn-secondary">SEO nastavení</a>
       <a href="<?= htmlspecialchars($frontUrl) ?>" target="_blank" class="btn btn-inline-edit">&#9998; Editovat na webu</a>
-      <form method="POST" action="/admin/publish/page" style="display:inline" data-confirm="Publikovat stránku?">
-        <input type="hidden" name="_csrf" value="<?= $h($_csrfToken) ?>">
-        <input type="hidden" name="page_id" value="<?= (int)$page['id'] ?>">
-        <button type="submit" class="btn btn-success">Publikovat</button>
-      </form>
+      <button type="submit" form="publish-form" class="btn btn-success">Publikovat</button>
     </div>
     <?php endif; ?>
   </form>
+
+  <?php if ($isEdit): ?>
+  <!-- Sync-template form — must be outside the main form to avoid invalid HTML nesting -->
+  <form id="sync-form" method="POST" action="/admin/blocks/sync-template">
+    <input type="hidden" name="_csrf" value="<?= $h($_csrfToken) ?>">
+    <input type="hidden" name="page_id" value="<?= (int)$page['id'] ?>">
+  </form>
+  <!-- Publish form — same reason -->
+  <form id="publish-form" method="POST" action="/admin/publish/page" data-confirm="Publikovat stránku?">
+    <input type="hidden" name="_csrf" value="<?= $h($_csrfToken) ?>">
+    <input type="hidden" name="page_id" value="<?= (int)$page['id'] ?>">
+  </form>
+  <?php endif; ?>
 </div>
 <?php
 $slot = ob_get_clean();
