@@ -27,9 +27,6 @@ ob_start();
   <span style="color:var(--c-muted);font-size:13px"><?= count($media) ?> souborů</span>
 </div>
 
-<?php if ($success ?? null): ?><div class="alert alert-success"><?= $h($success) ?></div><?php endif; ?>
-<?php if ($error   ?? null): ?><div class="alert alert-error"><?= $h($error) ?></div><?php endif; ?>
-
 <!-- Upload card -->
 <div class="card">
   <div class="card-title">Nahrát soubory</div>
