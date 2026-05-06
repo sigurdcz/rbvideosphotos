@@ -46,11 +46,11 @@ if (!hash_equals($token, $providedToken)) {
         'ip' => $_SERVER['REMOTE_ADDR'] ?? '',
         'uri' => $_SERVER['REQUEST_URI'] ?? '',
     ]);
-    renderPage('Pøístup zamítnut', '403', '<h1>Pøístup zamítnut.</h1><p>Token v URL je neplatný nebo chybí.</p>', 403);
+    renderPage('Pï¿½ï¿½stup zamï¿½tnut', '403', '<h1>Pï¿½ï¿½stup zamï¿½tnut.</h1><p>Token v URL je neplatnï¿½ nebo chybï¿½.</p>', 403);
 }
 
 if (file_exists($lockFile)) {
-    renderPage('Migrace už probìhla', 'Locked', '<h1>Migrace už byla spuštìna.</h1><p>Lock soubor existuje, takže utilita už znovu nic nespustí. Pokud ji opravdu potøebuješ znovu, smaž <code>storage/.migration-lock</code>.</p>');
+    renderPage('Migrace uï¿½ probï¿½hla', 'Locked', '<h1>Migrace uï¿½ byla spuï¿½tï¿½na.</h1><p>Lock soubor existuje, takï¿½e utilita uï¿½ znovu nic nespustï¿½. Pokud ji opravdu potï¿½ebujeï¿½ znovu, smaï¿½ <code>storage/.migration-lock</code>.</p>');
 }
 
 try {
@@ -85,19 +85,16 @@ try {
 
         $sql = file_get_contents($file);
         if ($sql === false) {
-            throw new RuntimeException('Nepodaøilo se naèíst migraci: ' . $name);
+            throw new RuntimeException('Nepodaï¿½ilo se naï¿½ï¿½st migraci: ' . $name);
         }
 
-        $pdo->beginTransaction();
-        try {
-            $pdo->exec($sql);
-            $stmt = $pdo->prepare('INSERT INTO schema_migrations (migration) VALUES (?)');
-            $stmt->execute([$name]);
-            $pdo->commit();
-        } catch (Throwable $e) {
-            $pdo->rollBack();
-            throw $e;
-        }
+        // MySQL DDL (CREATE TABLE etc.) causes an implicit commit,
+        // so wrapping schema migrations in a transaction doesn't work â€”
+        // beginTransaction/commit/rollBack would all throw "no active transaction".
+        // We run the SQL directly and record it in schema_migrations separately.
+        $pdo->exec($sql);
+        $pdo->prepare('INSERT INTO schema_migrations (migration) VALUES (?)')
+            ->execute([$name]);
     }
 
     file_put_contents($lockFile, 'Applied at ' . date('Y-m-d H:i:s') . PHP_EOL);
@@ -108,16 +105,16 @@ try {
     ]);
 
     renderPage(
-        'Migrace dokonèena',
+        'Migrace dokonï¿½ena',
         'Success',
-        '<h1>Migrace probìhla úspìšnì.</h1><p>Databázové schema i seed data byly vytvoøeny v MariaDB/MySQL databázi.</p><div class="panel"><pre><span class="ok">Databáze:</span> ' . htmlspecialchars($db, ENT_QUOTES, 'UTF-8') . '
+        '<h1>Migrace probï¿½hla ï¿½spï¿½nï¿½.</h1><p>Databï¿½zovï¿½ schema i seed data byly vytvoï¿½eny v MariaDB/MySQL databï¿½zi.</p><div class="panel"><pre><span class="ok">Databï¿½ze:</span> ' . htmlspecialchars($db, ENT_QUOTES, 'UTF-8') . '
 <span class="ok">Admin e-mail:</span> admin@example.com
 <span class="ok">Admin heslo:</span> admin123
 
-Doporuèení:
-1. Pøihlas se do adminu.
-2. Zmìò heslo.
-3. Smaž nebo zablokuj tento util soubor.</pre></div>'
+Doporuï¿½enï¿½:
+1. Pï¿½ihlas se do adminu.
+2. Zmï¿½ï¿½ heslo.
+3. Smaï¿½ nebo zablokuj tento util soubor.</pre></div>'
     );
 } catch (Throwable $e) {
     Logger::criticalTo('exceptions', 'migration_failure', $e->getMessage(), [
@@ -131,7 +128,7 @@ Doporuèení:
     renderPage(
         'Migrace selhala',
         'Error',
-        '<h1>Migrace selhala.</h1><p>Zkontroluj prosím pøihlašovací údaje k MariaDB/MySQL v <code>.env</code> a ovìø, že databáze i uživatel existují. Detail chyby je zalogovaný do exception logu.</p><div class="panel"><pre><span class="warn">' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '</span></pre></div>',
+        '<h1>Migrace selhala.</h1><p>Zkontroluj prosï¿½m pï¿½ihlaï¿½ovacï¿½ ï¿½daje k MariaDB/MySQL v <code>.env</code> a ovï¿½ï¿½, ï¿½e databï¿½ze i uï¿½ivatel existujï¿½. Detail chyby je zalogovanï¿½ do exception logu.</p><div class="panel"><pre><span class="warn">' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '</span></pre></div>',
         500
     );
 }
