@@ -46,11 +46,11 @@ if (!hash_equals($token, $providedToken)) {
         'ip' => $_SERVER['REMOTE_ADDR'] ?? '',
         'uri' => $_SERVER['REQUEST_URI'] ?? '',
     ]);
-    renderPage('P��stup zam�tnut', '403', '<h1>P��stup zam�tnut.</h1><p>Token v URL je neplatn� nebo chyb�.</p>', 403);
+    renderPage('Přístup zamítnut', '403', '<h1>Přístup zamítnut.</h1><p>Token v URL je neplatný nebo chybí.</p>', 403);
 }
 
 if (file_exists($lockFile)) {
-    renderPage('Migrace u� prob�hla', 'Locked', '<h1>Migrace u� byla spu�t�na.</h1><p>Lock soubor existuje, tak�e utilita u� znovu nic nespust�. Pokud ji opravdu pot�ebuje� znovu, sma� <code>storage/.migration-lock</code>.</p>');
+    renderPage('Migrace již proběhla', 'Locked', '<h1>Migrace již byla spuštěna.</h1><p>Lock soubor existuje, takže utilita již znovu nic nespustí. Pokud ji opravdu potřebuješ znovu, smaž <code>storage/.migration-lock</code>.</p>');
 }
 
 try {
@@ -85,7 +85,7 @@ try {
 
         $sql = file_get_contents($file);
         if ($sql === false) {
-            throw new RuntimeException('Nepoda�ilo se na��st migraci: ' . $name);
+            throw new RuntimeException('Nepodařilo se načíst migraci: ' . $name);
         }
 
         // MySQL DDL (CREATE TABLE etc.) causes an implicit commit,
@@ -105,16 +105,16 @@ try {
     ]);
 
     renderPage(
-        'Migrace dokon�ena',
+        'Migrace dokončena',
         'Success',
-        '<h1>Migrace prob�hla �sp�n�.</h1><p>Datab�zov� schema i seed data byly vytvo�eny v MariaDB/MySQL datab�zi.</p><div class="panel"><pre><span class="ok">Datab�ze:</span> ' . htmlspecialchars($db, ENT_QUOTES, 'UTF-8') . '
+        '<h1>Migrace proběhla úspěšně.</h1><p>Databázové schema bylo vytvořeno v MariaDB/MySQL databázi.</p><div class="panel"><pre><span class="ok">Databáze:</span> ' . htmlspecialchars($db, ENT_QUOTES, 'UTF-8') . '
 <span class="ok">Admin e-mail:</span> admin@example.com
 <span class="ok">Admin heslo:</span> admin123
 
-Doporu�en�:
-1. P�ihlas se do adminu.
-2. Zm�� heslo.
-3. Sma� nebo zablokuj tento util soubor.</pre></div>'
+Doporučení:
+1. Přihlas se do adminu.
+2. Změň heslo.
+3. Smaž nebo zablokuj tento util soubor.</pre></div>'
     );
 } catch (Throwable $e) {
     Logger::criticalTo('exceptions', 'migration_failure', $e->getMessage(), [
@@ -128,7 +128,7 @@ Doporu�en�:
     renderPage(
         'Migrace selhala',
         'Error',
-        '<h1>Migrace selhala.</h1><p>Zkontroluj pros�m p�ihla�ovac� �daje k MariaDB/MySQL v <code>.env</code> a ov��, �e datab�ze i u�ivatel existuj�. Detail chyby je zalogovan� do exception logu.</p><div class="panel"><pre><span class="warn">' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '</span></pre></div>',
+        '<h1>Migrace selhala.</h1><p>Zkontroluj prosím přihlašovací údaje k MariaDB/MySQL v <code>.env</code> a ověř, že databáze i uživatel existují. Detail chyby je zalogovaný do exception logu.</p><div class="panel"><pre><span class="warn">' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '</span></pre></div>',
         500
     );
 }
