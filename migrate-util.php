@@ -6,13 +6,14 @@ define('BASE_PATH', __DIR__);
 
 require BASE_PATH . '/vendor/autoload.php';
 
-use App\Core\Config;
+use App\Core\Env;
 use App\Core\Logger;
 
+Env::load(BASE_PATH . '/.env');
+
 $token = 'rbpv-migrate-2026-05-02-t7K9mQ4sX2';
-$providedToken = (string)($_GET['token'] ?? '');
-$timezone = Config::get('app', 'timezone', 'Europe/Prague');
-date_default_timezone_set($timezone);
+$providedToken = (string) ($_GET['token'] ?? '');
+date_default_timezone_set(getenv('APP_TZ') ?: 'Europe/Prague');
 
 header('Content-Type: text/html; charset=UTF-8');
 header('X-Robots-Tag: noindex, nofollow, noarchive', true);
@@ -53,100 +54,64 @@ if (file_exists($lockFile)) {
 }
 
 try {
-    $cfg = Config::get('database');
-    $driver = $cfg['driver'] ?? 'sqlite';
+    $host = getenv('DB_HOST') ?: '127.0.0.1';
+    $port = getenv('DB_PORT') ?: '3306';
+    $db   = getenv('DB_NAME') ?: 'seo_editor_cms';
+    $user = getenv('DB_USER') ?: 'seo_editor_app';
+    $pass = getenv('DB_PASS') ?: '';
 
-    if ($driver === 'sqlite') {
-        $dbPath = $cfg['path'] ?? (BASE_PATH . '/storage/database.sqlite');
-        if (!is_dir(dirname($dbPath))) {
-            mkdir(dirname($dbPath), 0775, true);
-        }
-
-        $pdo = new PDO('sqlite:' . $dbPath, null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        ]);
-        $pdo->exec('PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON;');
-        $schema = file_get_contents(BASE_PATH . '/database/schema.sqlite.sql');
-        if ($schema === false) {
-            throw new RuntimeException('Nepodaøilo se naèíst database/schema.sqlite.sql');
-        }
-        $pdo->exec($schema);
-
-        $hash = password_hash('admin123', PASSWORD_BCRYPT, ['cost' => 12]);
-        $stmt = $pdo->prepare('INSERT OR IGNORE INTO users (email, password_hash, role) VALUES (?, ?, ?)');
-        $stmt->execute(['admin@example.com', $hash, 'admin']);
-
-        $stmt = $pdo->prepare('INSERT OR IGNORE INTO sites (id, name, domain, default_language) VALUES (1, ?, ?, ?)');
-        $stmt->execute(['Mùj web', Config::get('app', 'url', 'http://localhost:8000'), 'cs']);
-
-        $html = <<<'HTML'
-<!DOCTYPE html>
-<html lang="cs">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Test stránka</title>
-</head>
-<body>
-  <header>
-    <h1 data-block="hero_title">Svatební fotograf Olomouc</h1>
-    <p data-block="hero_subtitle">Zachytím váš svatební den pøirozenì a krásnì.</p>
-  </header>
-  <main>
-    <section>
-      <h2 data-block="about_title">O mnì</h2>
-      <p data-block="about_text">Krátký text o fotografovi.</p>
-    </section>
-    <section>
-      <h2 data-block="services_title">Služby</h2>
-      <p data-block="services_text">Popis služeb.</p>
-    </section>
-    <section>
-      <h2 data-block="contact_title">Kontakt</h2>
-      <p data-block="contact_text">Kontaktujte mì.</p>
-    </section>
-  </main>
-</body>
-</html>
-HTML;
-        $stmt = $pdo->prepare('INSERT OR IGNORE INTO templates (id, site_id, name, html_source) VALUES (1, 1, ?, ?)');
-        $stmt->execute(['Testovací šablona', $html]);
-    } else {
-        $dsn = sprintf(
-            'mysql:host=%s;port=%s;dbname=%s;charset=%s',
-            $cfg['host'],
-            $cfg['port'],
-            $cfg['dbname'],
-            $cfg['charset'] ?? 'utf8mb4'
-        );
-
-        $pdo = new PDO($dsn, $cfg['username'] ?? '', $cfg['password'] ?? '', [
+    $pdo = new PDO(
+        sprintf('mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4', $host, $port, $db),
+        $user,
+        $pass,
+        [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             PDO::ATTR_EMULATE_PREPARES => false,
-        ]);
+        ]
+    );
 
-        $schema = file_get_contents(BASE_PATH . '/database/schema.sql');
-        $seed = file_get_contents(BASE_PATH . '/database/seed.sql');
-        if ($schema === false || $seed === false) {
-            throw new RuntimeException('Nepodaøilo se naèíst SQL soubory pro MySQL migraci');
+    $pdo->exec('CREATE TABLE IF NOT EXISTS schema_migrations (id INT UNSIGNED NOT NULL AUTO_INCREMENT, migration VARCHAR(255) NOT NULL UNIQUE, applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
+
+    $applied = $pdo->query('SELECT migration FROM schema_migrations')->fetchAll(PDO::FETCH_COLUMN) ?: [];
+    $files = glob(BASE_PATH . '/database/migrations/*.sql') ?: [];
+    sort($files, SORT_NATURAL);
+
+    foreach ($files as $file) {
+        $name = basename($file);
+        if (in_array($name, $applied, true)) {
+            continue;
         }
 
-        $pdo->exec($schema);
-        $pdo->exec($seed);
+        $sql = file_get_contents($file);
+        if ($sql === false) {
+            throw new RuntimeException('Nepodaøilo se naèíst migraci: ' . $name);
+        }
+
+        $pdo->beginTransaction();
+        try {
+            $pdo->exec($sql);
+            $stmt = $pdo->prepare('INSERT INTO schema_migrations (migration) VALUES (?)');
+            $stmt->execute([$name]);
+            $pdo->commit();
+        } catch (Throwable $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
     }
 
     file_put_contents($lockFile, 'Applied at ' . date('Y-m-d H:i:s') . PHP_EOL);
     Logger::info('migration', 'Migration utility completed', [
-        'driver' => $driver,
+        'driver' => 'mysql',
+        'database' => $db,
         'lock_file' => $lockFile,
     ]);
 
     renderPage(
         'Migrace dokonèena',
         'Success',
-        '<h1>Migrace probìhla úspìšnì.</h1><p>Databázové schema i seed data byly vytvoøeny. Login je teï pøipravený.</p><div class="panel"><pre><span class="ok">Admin e-mail:</span> admin@example.com
+        '<h1>Migrace probìhla úspìšnì.</h1><p>Databázové schema i seed data byly vytvoøeny v MariaDB/MySQL databázi.</p><div class="panel"><pre><span class="ok">Databáze:</span> ' . htmlspecialchars($db, ENT_QUOTES, 'UTF-8') . '
+<span class="ok">Admin e-mail:</span> admin@example.com
 <span class="ok">Admin heslo:</span> admin123
 
 Doporuèení:
@@ -166,10 +131,7 @@ Doporuèení:
     renderPage(
         'Migrace selhala',
         'Error',
-        '<h1>Migrace selhala.</h1><p>Zkus zkontrolovat konfiguraci databáze nebo oprávnìní zápisu. Detail chyby je zalogovaný do exception logu.</p><div class="panel"><pre><span class="warn">'
-        . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8')
-        . '</span></pre></div>',
+        '<h1>Migrace selhala.</h1><p>Zkontroluj prosím pøihlašovací údaje k MariaDB/MySQL v <code>.env</code> a ovìø, že databáze i uživatel existují. Detail chyby je zalogovaný do exception logu.</p><div class="panel"><pre><span class="warn">' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '</span></pre></div>',
         500
     );
 }
-

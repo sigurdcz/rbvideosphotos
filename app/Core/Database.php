@@ -13,30 +13,26 @@ class Database
     {
         if (self::$instance === null) {
             $cfg = Config::get('database');
-            $driver = $cfg['driver'] ?? 'mysql';
+            $driver = strtolower((string)($cfg['driver'] ?? 'mysql'));
 
             try {
-                if ($driver === 'sqlite') {
-                    $path = $cfg['path'] ?? dirname(__DIR__, 2) . '/storage/database.sqlite';
-                    self::$instance = new PDO('sqlite:' . $path, null, null, [
-                        PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-                        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                    ]);
-                    self::$instance->exec('PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON;');
-                } else {
-                    $dsn = sprintf(
-                        'mysql:host=%s;port=%s;dbname=%s;charset=%s',
-                        $cfg['host'],
-                        $cfg['port'],
-                        $cfg['dbname'],
-                        $cfg['charset']
-                    );
-                    self::$instance = new PDO($dsn, $cfg['username'], $cfg['password'], [
-                        PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-                        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                        PDO::ATTR_EMULATE_PREPARES   => false,
-                    ]);
+                if ($driver !== 'mysql' && $driver !== 'mariadb') {
+                    throw new PDOException('Unsupported database driver: ' . $driver . '. This project is configured for MySQL/MariaDB only.');
                 }
+
+                $dsn = sprintf(
+                    'mysql:host=%s;port=%s;dbname=%s;charset=%s',
+                    $cfg['host'],
+                    $cfg['port'],
+                    $cfg['dbname'],
+                    $cfg['charset']
+                );
+
+                self::$instance = new PDO($dsn, $cfg['username'], $cfg['password'], [
+                    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                    PDO::ATTR_EMULATE_PREPARES   => false,
+                ]);
             } catch (PDOException $e) {
                 Logger::critical('database', 'Database connection failed', [
                     'driver' => $driver,

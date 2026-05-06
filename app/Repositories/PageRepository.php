@@ -37,12 +37,26 @@ class PageRepository
 
     public function findByUrlPath(string $urlPath): ?array
     {
-        // Normalize: strip leading/trailing slashes on both sides so
-        // url_path='/', url_path='' and url_path='/cenik', url_path='cenik'
-        // all match regardless of how the seed stored them.
-        $normalized = trim($urlPath, '/');
-        $stmt = $this->db->prepare("SELECT * FROM pages WHERE TRIM(url_path, '/') = ? LIMIT 1");
-        $stmt->execute([$normalized]);
+        $stmt = $this->db->prepare(
+            "SELECT * FROM pages
+             WHERE url_path IN (?, ?, ?)
+             ORDER BY id ASC
+             LIMIT 1"
+        );
+        $stmt->execute($this->urlPathVariants($urlPath));
+        $row = $stmt->fetch();
+        return $row ?: null;
+    }
+
+    public function findPublishedByUrlPath(string $urlPath): ?array
+    {
+        $stmt = $this->db->prepare(
+            "SELECT * FROM pages
+             WHERE status = 'published' AND url_path IN (?, ?, ?)
+             ORDER BY id ASC
+             LIMIT 1"
+        );
+        $stmt->execute($this->urlPathVariants($urlPath));
         $row = $stmt->fetch();
         return $row ?: null;
     }
@@ -105,5 +119,15 @@ class PageRepository
             $stmt->execute([$siteId, $slug]);
         }
         return (bool)$stmt->fetch();
+    }
+
+    private function urlPathVariants(string $urlPath): array
+    {
+        $normalized = trim($urlPath, '/');
+        if ($normalized === '') {
+            return ['', '/', 'index'];
+        }
+
+        return [$normalized, '/' . $normalized, $normalized . '/'];
     }
 }

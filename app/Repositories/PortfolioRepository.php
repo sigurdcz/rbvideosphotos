@@ -12,32 +12,6 @@ class PortfolioRepository
     public function __construct()
     {
         $this->db = Database::getInstance();
-        $this->db->exec("
-            CREATE TABLE IF NOT EXISTS portfolio_entries (
-                id           INTEGER PRIMARY KEY AUTOINCREMENT,
-                site_id      INTEGER NOT NULL,
-                title        TEXT    NOT NULL,
-                slug         TEXT    NOT NULL,
-                description  TEXT    DEFAULT '',
-                video_url    TEXT    DEFAULT NULL,
-                status       TEXT    NOT NULL DEFAULT 'draft',
-                published_at TEXT    DEFAULT NULL,
-                sort_order   INTEGER NOT NULL DEFAULT 0,
-                meta_title   TEXT    DEFAULT NULL,
-                meta_description TEXT DEFAULT NULL,
-                created_at   TEXT    NOT NULL DEFAULT (datetime('now')),
-                updated_at   TEXT    NOT NULL DEFAULT (datetime('now')),
-                UNIQUE(site_id, slug)
-            )
-        ");
-        $this->db->exec("
-            CREATE TABLE IF NOT EXISTS portfolio_media (
-                id           INTEGER PRIMARY KEY AUTOINCREMENT,
-                portfolio_id INTEGER NOT NULL,
-                media_id     INTEGER NOT NULL,
-                sort_order   INTEGER NOT NULL DEFAULT 0
-            )
-        ");
     }
 
     public function allBySite(int $siteId): array
@@ -92,7 +66,7 @@ class PortfolioRepository
     public function update(int $id, array $d): void
     {
         $stmt = $this->db->prepare(
-            'UPDATE portfolio_entries SET title=?, slug=?, description=?, video_url=?, status=?, published_at=?, sort_order=?, meta_title=?, meta_description=?, updated_at=datetime(\'now\') WHERE id=?'
+            'UPDATE portfolio_entries SET title=?, slug=?, description=?, video_url=?, status=?, published_at=?, sort_order=?, meta_title=?, meta_description=? WHERE id=?'
         );
         $stmt->execute([
             $d['title'],

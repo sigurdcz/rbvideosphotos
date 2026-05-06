@@ -1,7 +1,19 @@
 # SEO Mini CMS
 
-JednoduchÃ½ SEO CMS pro statickÃ© weby napsanÃ½ v ÄistÃ©m PHP 8+. UmÃ­ spravovat HTML Å¡ablony, editovat obsah pÅ™es `data-block` atributy a publikovat hotovÃ© statickÃ© soubory vÄetnÄ› sitemap.xml a robots.txt.
+Jednoduchı SEO CMS pro statické weby napsanı v èistém PHP 8+. Umí spravovat HTML šablony, editovat obsah pøes data-block atributy a publikovat hotové statické soubory vèetnì sitemap.xml a robots.txt.
 
+
+## Lokální databáze pro tento projekt
+
+- Typ: `MariaDB / MySQL`
+- Host: `127.0.0.1`
+- Port: `3306`
+- Databáze projektu: `seo_editor_cms`
+- Aplikaèní uivatel: `seo_editor_app`
+- Kódování: `utf8mb4`
+- phpMyAdmin: `http://127.0.0.1:8081/`
+
+Projekt je teï nastavenı jako `MySQL/MariaDB only`. SQLite fallback se nemá pouívat.
 ---
 
 ## PoÅ¾adavky
@@ -184,3 +196,5 @@ php -S localhost:8000 router.php
 ## Licence
 
 MIT
+
+

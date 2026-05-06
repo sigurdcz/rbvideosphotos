@@ -12,24 +12,6 @@ class BlogRepository
     public function __construct()
     {
         $this->db = Database::getInstance();
-        $this->db->exec("
-            CREATE TABLE IF NOT EXISTS blog_posts (
-                id                  INTEGER PRIMARY KEY AUTOINCREMENT,
-                site_id             INTEGER NOT NULL,
-                title               TEXT    NOT NULL,
-                slug                TEXT    NOT NULL,
-                excerpt             TEXT    DEFAULT '',
-                content             TEXT    DEFAULT '',
-                featured_image_id   INTEGER DEFAULT NULL,
-                status              TEXT    NOT NULL DEFAULT 'draft',
-                published_at        TEXT    DEFAULT NULL,
-                meta_title          TEXT    DEFAULT NULL,
-                meta_description    TEXT    DEFAULT NULL,
-                created_at          TEXT    NOT NULL DEFAULT (datetime('now')),
-                updated_at          TEXT    NOT NULL DEFAULT (datetime('now')),
-                UNIQUE(site_id, slug)
-            )
-        ");
     }
 
     public function allBySite(int $siteId): array
@@ -84,7 +66,7 @@ class BlogRepository
     public function update(int $id, array $d): void
     {
         $stmt = $this->db->prepare(
-            'UPDATE blog_posts SET title=?, slug=?, excerpt=?, content=?, featured_image_id=?, status=?, published_at=?, meta_title=?, meta_description=?, updated_at=datetime(\'now\') WHERE id=?'
+            'UPDATE blog_posts SET title=?, slug=?, excerpt=?, content=?, featured_image_id=?, status=?, published_at=?, meta_title=?, meta_description=? WHERE id=?'
         );
         $stmt->execute([
             $d['title'],

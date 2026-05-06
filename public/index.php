@@ -2,70 +2,121 @@
 /*
  * Public front-end entry point.
  *
- * In production, serve static files from /storage/published directly via
- * the web server. This PHP file is only used for local development routing
- * or when you want to serve the published static files through PHP.
+ * This project now serves page content directly from MySQL/MariaDB.
+ * Static files under storage/published are only used for explicit assets
+ * such as sitemap.xml, robots.txt, favicon files or generated exports.
  */
 
 require dirname(__DIR__) . '/vendor/autoload.php';
 
 use App\Core\Auth;
 use App\Core\Config;
+use App\Core\Env;
 use App\Core\Logger;
 use App\Core\Runtime;
 use App\Core\Version;
 use App\Repositories\BlockRepository;
+use App\Repositories\MediaRepository;
 use App\Repositories\PageRepository;
+use App\Repositories\SeoRepository;
 use App\Repositories\SiteRepository;
 use App\Repositories\TemplateRepository;
 use App\Services\PageRenderer;
+use App\Services\SeoRenderer;
+
+Env::load(dirname(__DIR__) . '/.env');
 
 date_default_timezone_set(Config::get('app', 'timezone', 'Europe/Prague'));
 Runtime::boot('public');
 Runtime::startRequest();
 Auth::start();
 
-/**
- * Render the page from the database in edit or preview mode and echo it.
- * Returns true on success, false if any lookup fails (caller falls back to static file).
- */
-function tryServeEditMode(string $uri, bool $previewMode = false): bool
+function tryServeDatabasePage(string $uri, bool $authenticated = false, bool $previewMode = false): bool
 {
     $slug = ltrim($uri, '/');
 
     try {
-        // Find page directly by url_path (works even if multiple sites exist in DB)
-        $page = (new PageRepository())->findByUrlPath($slug);
-        if (!$page) return false;
+        $pages = new PageRepository();
+        $page = $authenticated
+            ? $pages->findByUrlPath($slug)
+            : $pages->findPublishedByUrlPath($slug);
+        if (!$page) {
+            return false;
+        }
 
-        $site = (new SiteRepository())->findById($page['site_id']);
-        if (!$site) return false;
+        $site = (new SiteRepository())->findById((int)$page['site_id']);
+        if (!$site) {
+            return false;
+        }
 
-        $template = (new TemplateRepository())->findById($page['template_id'] ?? 0);
-        if (!$template) return false;
+        $template = (new TemplateRepository())->findById((int)($page['template_id'] ?? 0));
+        if (!$template) {
+            return false;
+        }
 
-        $blocks   = (new BlockRepository())->allByPage($page['id']);
+        $blocks = (new BlockRepository())->allByPage((int)$page['id']);
+        $seo = (new SeoRepository())->findByPage((int)$page['id']) ?? [];
+        $mediaRepo = new MediaRepository();
         $renderer = new PageRenderer();
-        // editMode=false in preview so no dashed outlines or data-inline-* attributes
-        $html = $renderer->render($template['html_source'], $blocks, [], !$previewMode);
+        $seoRenderer = new SeoRenderer();
+        $mediaMap = [];
+
+        foreach ($blocks as $block) {
+            if (($block['block_type'] ?? '') === 'image' && !empty($block['content'])) {
+                $mediaMap[$block['block_key']] = [
+                    'url' => $block['content'],
+                    'alt' => $block['label'] ?? '',
+                ];
+            }
+        }
+
+        $pagePath = trim((string)($page['url_path'] ?? ''), '/');
+        $pageUrl = rtrim((string)$site['domain'], '/') . ($pagePath === '' ? '/' : '/' . $pagePath);
+
+        $ogImageUrl = null;
+        if (!empty($seo['og_image_id'])) {
+            $media = $mediaRepo->findById((int)$seo['og_image_id']);
+            if ($media) {
+                $ogImageUrl = rtrim((string)$site['domain'], '/') . '/' . ltrim((string)$media['storage_path'], '/');
+            }
+        }
+
+        $twImageUrl = null;
+        if (!empty($seo['twitter_image_id'])) {
+            $media = $mediaRepo->findById((int)$seo['twitter_image_id']);
+            if ($media) {
+                $twImageUrl = rtrim((string)$site['domain'], '/') . '/' . ltrim((string)$media['storage_path'], '/');
+            }
+        }
+
+        $html = $renderer->render(
+            $template['html_source'],
+            $blocks,
+            $mediaMap,
+            $authenticated && !$previewMode
+        );
         $html = $renderer->injectAssets($html, $template['css_source'] ?? '', $template['js_source'] ?? '');
+        $html = $renderer->injectSeo(
+            $html,
+            $seoRenderer->renderHead($seo, $site, $pageUrl, $ogImageUrl, $twImageUrl),
+            $seoRenderer->renderBodyScripts($site)
+        );
 
-        $csrfToken  = Auth::csrfToken();
-        $user       = Auth::user();
-        $userEmail  = htmlspecialchars($user['email'] ?? '', ENT_QUOTES);
-        $pageTitle  = htmlspecialchars($page['title'] ?? '', ENT_QUOTES);
-        $pageId     = (int) $page['id'];
-        $appVersion = Version::APP;
+        if ($authenticated) {
+            $csrfToken  = Auth::csrfToken();
+            $user       = Auth::user();
+            $userEmail  = htmlspecialchars($user['email'] ?? '', ENT_QUOTES);
+            $pageTitle  = htmlspecialchars($page['title'] ?? '', ENT_QUOTES);
+            $pageId     = (int) $page['id'];
+            $appVersion = Version::APP;
+            $previewHref = htmlspecialchars($uri . '?cms_preview=1', ENT_QUOTES);
+            $editHref    = htmlspecialchars($uri, ENT_QUOTES);
 
-        $previewHref = htmlspecialchars($uri . '?cms_preview=1', ENT_QUOTES);
-        $editHref    = htmlspecialchars($uri, ENT_QUOTES);
+            if ($previewMode) {
+                $editorMeta = '<meta name="app-version" content="' . $appVersion . '">'
+                    . '<link rel="stylesheet" href="/assets/inline-editor.css">';
 
-        if ($previewMode) {
-            // Preview mode: no editor JS, minimal bar with "← Editace" button
-            $editorMeta = '<meta name="app-version" content="' . $appVersion . '">'
-                . '<link rel="stylesheet" href="/assets/inline-editor.css">';
-
-            $adminBar = <<<HTML
+                $adminBar = <<<HTML
 <div id="cms-adminbar">
   <div class="cms-ab-left">
     <a class="cms-ab-logo" href="/admin">&#9998;&nbsp;CMS</a>
@@ -85,18 +136,15 @@ function tryServeEditMode(string $uri, bool $previewMode = false): bool
 </div>
 HTML;
 
-            $html = str_replace('</head>', "\n" . $editorMeta . "\n</head>", $html);
-            $html = str_replace('<body', $adminBar . "\n<body", $html);
-            // No inline-editor.js — clean page, no edit affordances
+                $html = str_replace('</head>', "\n" . $editorMeta . "\n</head>", $html);
+                $html = str_replace('<body', $adminBar . "\n<body", $html);
+            } else {
+                $editorMeta = '<meta name="inline-page-id" content="' . $pageId . '">'
+                    . '<meta name="inline-csrf" content="' . htmlspecialchars($csrfToken, ENT_QUOTES) . '">'
+                    . '<meta name="app-version" content="' . $appVersion . '">'
+                    . '<link rel="stylesheet" href="/assets/inline-editor.css">';
 
-        } else {
-            // Edit mode: full inline editor
-            $editorMeta = '<meta name="inline-page-id" content="' . $pageId . '">'
-                . '<meta name="inline-csrf" content="' . htmlspecialchars($csrfToken, ENT_QUOTES) . '">'
-                . '<meta name="app-version" content="' . $appVersion . '">'
-                . '<link rel="stylesheet" href="/assets/inline-editor.css">';
-
-            $adminBar = <<<HTML
+                $adminBar = <<<HTML
 <div id="cms-adminbar">
   <div class="cms-ab-left">
     <a class="cms-ab-logo" href="/admin">&#9998;&nbsp;CMS</a>
@@ -117,17 +165,21 @@ HTML;
 </div>
 HTML;
 
-            $html = str_replace('</head>', "\n" . $editorMeta . "\n</head>", $html);
-            $html = str_replace('<body', $adminBar . "\n<body", $html);
-            $html = str_replace('</body>', "\n<script src=\"/assets/inline-editor.js\"></script>\n</body>", $html);
+                $html = str_replace('</head>', "\n" . $editorMeta . "\n</head>", $html);
+                $html = str_replace('<body', $adminBar . "\n<body", $html);
+                $html = str_replace('</body>', "\n<script src=\"/assets/inline-editor.js\"></script>\n</body>", $html);
+            }
         }
 
         header('Content-Type: text/html; charset=UTF-8');
         echo $html;
         return true;
-
     } catch (\Throwable $e) {
-        Logger::error('inline-edit', $e->getMessage(), ['uri' => $uri, 'file' => $e->getFile(), 'line' => $e->getLine()]);
+        Logger::error('frontend-render', $e->getMessage(), [
+            'uri' => $uri,
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+        ]);
         return false;
     }
 }
@@ -137,12 +189,10 @@ try {
     $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
     $uri = rtrim($uri, '/') ?: '/';
 
-    // API endpoints — /api/v1/*
     if (str_starts_with($uri, '/api/v1/') || $uri === '/api/v1') {
         (new \App\Controllers\ApiController())->dispatch($uri);
     }
 
-    // Serve static assets (CSS, JS, images) from /public/assets
     if (str_starts_with($uri, '/assets/')) {
         $file = __DIR__ . $uri;
         if (is_file($file)) {
@@ -162,7 +212,6 @@ try {
         }
     }
 
-    // Serve uploaded media files
     if (str_starts_with($uri, '/storage/media/')) {
         $file = dirname(__DIR__) . $uri;
         if (is_file($file)) {
@@ -181,69 +230,14 @@ try {
         }
     }
 
-    // Logged-in users: try live render from DB (edit or preview mode)
-    if (Auth::check()) {
-        $previewMode = isset($_GET['cms_preview']);
-        if (tryServeEditMode($uri, $previewMode)) {
-            exit;
-        }
-    }
-
-    // Resolve to published HTML file
-    $path = ltrim($uri, '/');
-    if ($path === '') {
-        $candidate = $publishedDir . '/index.html';
-    } elseif (pathinfo($path, PATHINFO_EXTENSION) !== '') {
-        // Path has an extension (favicon.ico, site.webmanifest, etc.) — skip directory lookup
-        // to avoid open_basedir errors on restricted hosts; fall through to root-file check below
-        $candidate = '';
-    } else {
-        $candidate = $publishedDir . '/' . $path . '/index.html';
-        if (!file_exists($candidate)) {
-            $candidate = $publishedDir . '/' . $path . '.html';
-        }
-    }
-
-    if ($candidate !== '' && file_exists($candidate)) {
-        // Logged-in user but tryServeEditMode failed (e.g. no page in DB yet):
-        // inject a minimal admin bar so navigation is still accessible.
-        if (Auth::check()) {
-            $csrfToken  = Auth::csrfToken();
-            $user       = Auth::user();
-            $email      = htmlspecialchars($user['email'] ?? '', ENT_QUOTES);
-            $appVersion = Version::APP;
-            $bar = <<<HTML
-<div id="cms-adminbar">
-  <div class="cms-ab-left">
-    <a class="cms-ab-logo" href="/admin">&#9998;&nbsp;CMS</a>
-    <span class="cms-ab-sep"></span>
-    <span class="cms-ab-ver">{$appVersion} [static]</span>
-  </div>
-  <div class="cms-ab-right">
-    <span class="cms-ab-email">{$email}</span>
-    <a class="cms-ab-btn" href="/admin">Administrace</a>
-    <form method="POST" action="/admin/logout" style="margin:0;padding:0;display:inline">
-      <input type="hidden" name="_csrf" value="{$csrfToken}">
-      <button type="submit" class="cms-ab-btn cms-ab-logout">Odhlásit</button>
-    </form>
-  </div>
-</div>
-HTML;
-            $html = file_get_contents($candidate);
-            $html = str_replace('</head>', "\n" . '<meta name="app-version" content="' . $appVersion . '">' . "\n" . '<link rel="stylesheet" href="/assets/inline-editor.css">' . "\n</head>", $html);
-            $html = str_replace('<body', "\n" . $bar . "\n<body", $html);
-            header('Content-Type: text/html; charset=UTF-8');
-            echo $html;
-            exit;
-        }
-        header('Content-Type: text/html; charset=UTF-8');
-        readfile($candidate);
+    $previewMode = Auth::check() && isset($_GET['cms_preview']);
+    if (tryServeDatabasePage($uri, Auth::check(), $previewMode)) {
         exit;
     }
 
-    // Serve any root-level static file directly from storage/published
+    $path = ltrim($uri, '/');
     $rootFile = $publishedDir . '/' . $path;
-    if ($path !== '' && is_file($rootFile)) {
+    if ($path !== '' && pathinfo($path, PATHINFO_EXTENSION) !== '' && is_file($rootFile)) {
         $ext  = strtolower(pathinfo($rootFile, PATHINFO_EXTENSION));
         $mime = match ($ext) {
             'ico'         => 'image/x-icon',
@@ -265,7 +259,7 @@ HTML;
     http_response_code(404);
     $notFoundFile = $publishedDir . '/404.html';
     header('Content-Type: text/html; charset=UTF-8');
-    if (file_exists($notFoundFile)) {
+    if (is_file($notFoundFile)) {
         readfile($notFoundFile);
     } else {
         echo '<!DOCTYPE html><html><body><h1>404 Stránka nenalezena</h1></body></html>';
