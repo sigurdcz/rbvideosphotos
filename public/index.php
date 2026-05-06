@@ -230,6 +230,27 @@ try {
         }
     }
 
+    // Portfolio entries — serve pre-generated static files
+    if ($uri === '/nase-prace' || str_starts_with($uri, '/nase-prace/')) {
+        $path = ltrim($uri, '/');
+        $candidates = [
+            $publishedDir . '/' . $path . '/index.html',
+            $publishedDir . '/' . $path . '.html',
+        ];
+        foreach ($candidates as $f) {
+            if (is_file($f)) {
+                header('Content-Type: text/html; charset=UTF-8');
+                readfile($f);
+                exit;
+            }
+        }
+        http_response_code(404);
+        header('Content-Type: text/html; charset=UTF-8');
+        $nf = $publishedDir . '/404.html';
+        echo is_file($nf) ? file_get_contents($nf) : '<!DOCTYPE html><html><body><h1>404 Stránka nenalezena</h1></body></html>';
+        exit;
+    }
+
     $previewMode = Auth::check() && isset($_GET['cms_preview']);
     if (tryServeDatabasePage($uri, Auth::check(), $previewMode)) {
         exit;

@@ -18,11 +18,13 @@ if (in_array('--fresh', $argv ?? [], true)) {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+if (!function_exists('upsertUser')) {
+
 function upsertUser(PDO $pdo, string $email, string $pw, string $role = 'admin'): int
 {
     $h = password_hash($pw, PASSWORD_DEFAULT);
-    $pdo->prepare('INSERT OR IGNORE INTO users (email,password_hash,role) VALUES (?,?,?)')->execute([$email,$h,$role]);
-    $pdo->prepare('UPDATE users SET password_hash=?,role=?,updated_at=datetime(\'now\') WHERE email=?')->execute([$h,$role,$email]);
+    $pdo->prepare('INSERT IGNORE INTO users (email,password_hash,role) VALUES (?,?,?)')->execute([$email,$h,$role]);
+    $pdo->prepare('UPDATE users SET password_hash=?,role=?,updated_at=NOW() WHERE email=?')->execute([$h,$role,$email]);
     $s = $pdo->prepare('SELECT id FROM users WHERE email=?');
     $s->execute([$email]);
     return (int)$s->fetchColumn();
@@ -34,7 +36,7 @@ function upsertSite(PDO $pdo, string $name, string $domain, string $ga, string $
     $s->execute([$domain]);
     $id = $s->fetchColumn();
     if ($id) {
-        $pdo->prepare('UPDATE sites SET name=?,google_analytics_id=?,google_tag_manager_id=?,body_scripts=?,updated_at=datetime(\'now\') WHERE id=?')
+        $pdo->prepare('UPDATE sites SET name=?,google_analytics_id=?,google_tag_manager_id=?,body_scripts=?,updated_at=NOW() WHERE id=?')
             ->execute([$name,$ga,$gtm,$body,$id]);
         return (int)$id;
     }
@@ -49,7 +51,7 @@ function tpl(PDO $pdo, int $siteId, string $name, string $html, string $css, str
     $s->execute([$siteId,$name]);
     $id = $s->fetchColumn();
     if ($id) {
-        $pdo->prepare('UPDATE templates SET html_source=?,css_source=?,js_source=?,updated_at=datetime(\'now\') WHERE id=?')
+        $pdo->prepare('UPDATE templates SET html_source=?,css_source=?,js_source=?,updated_at=NOW() WHERE id=?')
             ->execute([$html,$css,$js,$id]);
         return (int)$id;
     }
@@ -60,9 +62,9 @@ function tpl(PDO $pdo, int $siteId, string $name, string $html, string $css, str
 
 function addPage(PDO $pdo, int $siteId, int $tplId, string $title, string $slug, string $urlPath): int
 {
-    $pdo->prepare('INSERT OR IGNORE INTO pages (site_id,template_id,title,slug,url_path,status) VALUES (?,?,?,?,?,\'published\')')
+    $pdo->prepare('INSERT IGNORE INTO pages (site_id,template_id,title,slug,url_path,status) VALUES (?,?,?,?,?,\'published\')')
         ->execute([$siteId,$tplId,$title,$slug,$urlPath]);
-    $pdo->prepare('UPDATE pages SET template_id=?,title=?,url_path=?,status=\'published\',updated_at=datetime(\'now\') WHERE site_id=? AND slug=?')
+    $pdo->prepare('UPDATE pages SET template_id=?,title=?,url_path=?,status=\'published\',updated_at=NOW() WHERE site_id=? AND slug=?')
         ->execute([$tplId,$title,$urlPath,$siteId,$slug]);
     $s = $pdo->prepare('SELECT id FROM pages WHERE site_id=? AND slug=?');
     $s->execute([$siteId,$slug]);
@@ -71,13 +73,13 @@ function addPage(PDO $pdo, int $siteId, int $tplId, string $title, string $slug,
 
 function block(PDO $pdo, int $pid, string $key, string $type, string $label, string $content, int $sort = 0): void
 {
-    $pdo->prepare('INSERT OR REPLACE INTO content_blocks (page_id,block_key,block_type,label,content,sort_order) VALUES (?,?,?,?,?,?)')
+    $pdo->prepare('REPLACE INTO content_blocks (page_id,block_key,block_type,label,content,sort_order) VALUES (?,?,?,?,?,?)')
         ->execute([$pid,$key,$type,$label,$content,$sort]);
 }
 
 function seo(PDO $pdo, int $pid, array $d): void
 {
-    $pdo->prepare('INSERT OR REPLACE INTO seo_settings (page_id,meta_title,meta_description,meta_keywords,canonical_url,robots_index,robots_follow,og_title,og_description,twitter_title,twitter_description,schema_type,schema_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)')
+    $pdo->prepare('REPLACE INTO seo_settings (page_id,meta_title,meta_description,meta_keywords,canonical_url,robots_index,robots_follow,og_title,og_description,twitter_title,twitter_description,schema_type,schema_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)')
         ->execute([
             $pid,
             $d['title']      ?? null,
@@ -93,6 +95,8 @@ function seo(PDO $pdo, int $pid, array $d): void
             $d['schema_json']?? null,
         ]);
 }
+
+} // end if (!function_exists('upsertUser'))
 
 // ─── CSS (wireframe base) ─────────────────────────────────────────────────────
 
@@ -197,7 +201,7 @@ $htmlHomeFull = <<<'HTML'
     <a href="/" class="brand">RB&#160;Photos&#160;&amp;&#160;Videos</a>
     <div class="nav-links">
       <a href="#sluzby">Slu&#382;by</a>
-      <a href="#videa">Videa</a>
+      <a href="#nase-prace">Na&#353;e pr&#225;ce</a>
       <a href="#reference">Reference</a>
       <a href="#kontakt" class="nav-cta">Kontakt</a>
     </div>
@@ -252,28 +256,14 @@ $htmlHomeFull = <<<'HTML'
     </div>
   </div>
 </section>
-<section class="section" id="videa">
-  <div class="container">
-    <div class="sec-hdr">
-      <h2 data-block="videos_title"></h2>
-      <p data-block="videos_intro"></p>
-    </div>
-    <div class="vid-grid">
-      <div class="vid-wrap" data-block="video_1"></div>
-      <div class="vid-wrap" data-block="video_2"></div>
-      <div class="vid-wrap" data-block="video_3"></div>
-      <div class="vid-wrap" data-block="video_4"></div>
-    </div>
-    <div class="sec-btns" data-block="videos_btns"></div>
-  </div>
-</section>
 <section class="section section-dark" id="nase-prace">
   <div class="container">
     <div class="sec-hdr">
-      <h2 style="color:#fff">Naše práce</h2>
-      <p style="color:rgba(255,255,255,.6)">Ukázky naší tvorby — videa a fotografie z reálných zakázek</p>
+      <h2 data-block="portfolio_title"></h2>
+      <p data-block="portfolio_intro"></p>
     </div>
     <div data-block="portfolio-tiles"></div>
+    <div class="sec-btns" data-block="portfolio_btns"></div>
   </div>
 </section>
 <section class="section section-light" id="reference">
@@ -642,13 +632,9 @@ block($pdo, $pidHome, 'why_2', 'html', 'Důvod 2', '<span class="feat-num">02</s
 block($pdo, $pidHome, 'why_3', 'html', 'Důvod 3', '<span class="feat-num">03</span><h3>5 let zálohy zdarma</h3><p>Vaše fotografie a videa bezpečně zálohujeme po dobu 5 let. Nikdy o vzpomínky nepřijdete.</p>', 34);
 block($pdo, $pidHome, 'why_4', 'html', 'Důvod 4', '<span class="feat-num">04</span><h3>Celá ČR i zahraničí</h3><p>Sídlíme v Olomouci, ale fotografujeme po celé České republice i v zahraničí. Přijedeme za vámi.</p>', 35);
 
-block($pdo, $pidHome, 'videos_title', 'text',     'Videa — nadpis', 'Ukázka naší práce', 40);
-block($pdo, $pidHome, 'videos_intro', 'textarea', 'Videa — intro',  'Svatební filmy, klipy a reportáže — podívejte se jak pracujeme.', 41);
-block($pdo, $pidHome, 'video_1', 'html', 'Video 1', '<iframe src="https://player.vimeo.com/video/1133996815?wmode=opaque" frameborder="0" allow="autoplay; fullscreen" allowfullscreen loading="lazy" title="Simona a Michal Novákovi 6.9.25"></iframe>', 42);
-block($pdo, $pidHome, 'video_2', 'html', 'Video 2', '<iframe src="https://player.vimeo.com/video/1122538281?wmode=opaque" frameborder="0" allow="autoplay; fullscreen" allowfullscreen loading="lazy" title="Martina a Jaroslav Žáčkovi 2.8.2025"></iframe>', 43);
-block($pdo, $pidHome, 'video_3', 'html', 'Video 3', '<iframe src="https://player.vimeo.com/video/1122538281?wmode=opaque" frameborder="0" allow="autoplay; fullscreen" allowfullscreen loading="lazy" title="Lucie a Miroslav Provazovi 7.6.25"></iframe>', 44);
-block($pdo, $pidHome, 'video_4', 'html', 'Video 4', '<iframe width="100%" height="100%" src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>', 45);
-block($pdo, $pidHome, 'videos_btns', 'html', 'Videa — tlačítka', '<a href="https://www.youtube.com/@rbvideosandphotos" target="_blank" rel="noopener" class="btn-g">Všechna videa na YouTube</a><a href="https://www.instagram.com/rb_videos_photos/" target="_blank" rel="noopener" class="btn-od">Instagram portfolio</a>', 46);
+block($pdo, $pidHome, 'portfolio_title', 'text',     'Práce — nadpis',    'Ukázka naší práce', 40);
+block($pdo, $pidHome, 'portfolio_intro', 'textarea', 'Práce — intro',     'Svatební filmy, klipy a reportáže — podívejte se jak pracujeme.', 41);
+block($pdo, $pidHome, 'portfolio_btns',  'html',     'Práce — tlačítka',  '<a href="/nase-prace" class="btn-g">V&#353;echny pr&#225;ce</a>', 46);
 
 block($pdo, $pidHome, 'portfolio-tiles', 'html', 'Naše práce — dlaždice', '<p style="color:rgba(255,255,255,.5);text-align:center;padding:40px 0">Přidejte první práci v sekci <strong>Naše práce</strong> a dlaždice se zde zobrazí automaticky.</p>', 38);
 block($pdo, $pidHome, 'reviews_title', 'text',     'Recenze — nadpis', 'Co říkají naši klienti', 50);
