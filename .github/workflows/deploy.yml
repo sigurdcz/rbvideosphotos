@@ -45,6 +45,26 @@ jobs:
           mkdir -p _deploy/storage/published
           mkdir -p _deploy/storage/templates
 
+      - name: Write production .env from GitHub secrets
+        env:
+          PROD_APP_URL:  ${{ secrets.PROD_APP_URL }}
+          PROD_DB_HOST:  ${{ secrets.PROD_DB_HOST }}
+          PROD_DB_PORT:  ${{ secrets.PROD_DB_PORT }}
+          PROD_DB_NAME:  ${{ secrets.PROD_DB_NAME }}
+          PROD_DB_USER:  ${{ secrets.PROD_DB_USER }}
+          PROD_DB_PASS:  ${{ secrets.PROD_DB_PASS }}
+        run: |
+          {
+            echo "APP_URL=${PROD_APP_URL}"
+            echo "APP_DEBUG=false"
+            echo "DB_DRIVER=mysql"
+            echo "DB_HOST=${PROD_DB_HOST}"
+            echo "DB_PORT=${PROD_DB_PORT:-3306}"
+            echo "DB_NAME=${PROD_DB_NAME}"
+            echo "DB_USER=${PROD_DB_USER}"
+            echo "DB_PASS=${PROD_DB_PASS}"
+          } > _deploy/.env
+
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:

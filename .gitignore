@@ -5,6 +5,7 @@
 *.log
 .env
 .env.*
+!.env.example
 config/database.local.php
 _deploy/
 .DS_Store
