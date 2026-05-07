@@ -11,8 +11,6 @@ Jednoduche SEO CMS pro male staticke weby v cistem PHP 8. Aplikace ma admin rozh
 - Media: `storage/media/*`
 - Publikovane exporty: `storage/published/*`
 
-Poznamka: starsi zminky o SQLite uz neplati. Projekt je ted veden jako `MySQL/MariaDB only`.
-
 ## Lokalni databaze pro tento projekt
 
 - Host: `127.0.0.1`
