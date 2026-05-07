@@ -21,6 +21,12 @@ class TemplateRepository
         return $stmt->fetchAll();
     }
 
+    public function allForAdmin(): array
+    {
+        $stmt = $this->db->query('SELECT * FROM templates ORDER BY name ASC, id ASC');
+        return $stmt->fetchAll();
+    }
+
     public function findById(int $id): ?array
     {
         $stmt = $this->db->prepare('SELECT * FROM templates WHERE id = ? LIMIT 1');

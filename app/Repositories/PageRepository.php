@@ -27,6 +27,17 @@ class PageRepository
         return $stmt->fetchAll();
     }
 
+    public function allForAdmin(): array
+    {
+        $stmt = $this->db->query(
+            'SELECT p.*, t.name AS template_name
+             FROM pages p
+             LEFT JOIN templates t ON t.id = p.template_id
+             ORDER BY p.created_at DESC, p.id DESC'
+        );
+        return $stmt->fetchAll();
+    }
+
     public function findById(int $id): ?array
     {
         $stmt = $this->db->prepare('SELECT * FROM pages WHERE id = ? LIMIT 1');

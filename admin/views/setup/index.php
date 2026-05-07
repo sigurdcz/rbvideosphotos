@@ -1,31 +1,31 @@
 <?php
-$pageTitle = 'Počáteční nastavení';
+$pageTitle = 'Pocatecni nastaveni';
 $h = fn($v) => htmlspecialchars((string)($v ?? ''));
 ob_start();
 $d = $diag ?? [];
 ?>
 <div class="page-header">
-  <h1>Počáteční nastavení dat</h1>
+  <h1>Pocatecni nastaveni dat</h1>
 </div>
 
 <?php if ($pageCount > 0): ?>
 <div class="alert alert-success">
-  Databáze již obsahuje <?= (int)$pageCount ?> stránek. Seed není potřeba spouštět znovu
-  (pokud nechceš přepsat existující data).
+  Databaze uz obsahuje <?= (int) $pageCount ?> stranek. Seed neni potreba spoustet znovu
+  (pokud nechces prepsat existujici data).
 </div>
 <?php else: ?>
 <div class="alert alert-warning">
-  Databáze neobsahuje žádné stránky. Spusť seed pro načtení ukázkových dat RB Photos &amp; Videos.
+  Databaze neobsahuje zadne stranky. Spust seed pro nacteni ukazkovych dat RB Photos &amp; Videos.
 </div>
 <?php endif; ?>
 
 <div class="card">
   <div class="card-title">Spustit seed: RB Photos &amp; Videos</div>
   <p style="color:var(--c-muted);margin-bottom:16px;font-size:13.5px">
-    Seed vytvoří uživatele, šablony, stránky s obsahem, SEO nastavení a publikuje celý web.
-    Existující záznamy se přepíší (upsert), nic se nesmaže.
+    Seed vytvori uzivatele, layouty, stranky s obsahem, SEO nastaveni a publikuje cely web.
+    Existujici zaznamy se prepisi jako upsert, nic se nemaze.
   </p>
-  <form method="POST" action="/admin/setup/run" data-confirm="Spustit seed a načíst data?">
+  <form method="POST" action="/admin/setup/run" data-confirm="Spustit seed a nacist data?">
     <input type="hidden" name="_csrf" value="<?= $h($_csrfToken) ?>">
     <button type="submit" class="btn btn-primary">&#9654; Spustit seed</button>
   </form>
@@ -36,31 +36,31 @@ $d = $diag ?? [];
   <table style="width:100%;border-collapse:collapse;font-size:13px">
     <tr>
       <td style="padding:6px 10px;color:var(--c-muted);width:180px">Verze aplikace</td>
-      <td style="padding:6px 10px;font-family:monospace"><?= $h($d['version'] ?? '—') ?></td>
+      <td style="padding:6px 10px;font-family:monospace"><?= $h($d['version'] ?? '-') ?></td>
     </tr>
     <tr style="background:rgba(0,0,0,.04)">
-      <td style="padding:6px 10px;color:var(--c-muted)">Připojení k DB</td>
+      <td style="padding:6px 10px;color:var(--c-muted)">Pripojeni k DB</td>
       <td style="padding:6px 10px">
         <?php if ($d['db_ok'] ?? false): ?>
-          <span style="color:#40a02b">✓ OK</span>
+          <span style="color:#40a02b">OK</span>
         <?php else: ?>
-          <span style="color:#d20f39">✗ CHYBA: <?= $h($d['db_error'] ?? '') ?></span>
+          <span style="color:#d20f39">CHYBA: <?= $h($d['db_error'] ?? '') ?></span>
         <?php endif; ?>
       </td>
     </tr>
     <tr>
-      <td style="padding:6px 10px;color:var(--c-muted)">Stránky v DB (celkem)</td>
-      <td style="padding:6px 10px;font-family:monospace"><?= (int)($d['pages_total'] ?? 0) ?></td>
+      <td style="padding:6px 10px;color:var(--c-muted)">Stranky v DB celkem</td>
+      <td style="padding:6px 10px;font-family:monospace"><?= (int) ($d['pages_total'] ?? 0) ?></td>
     </tr>
     <tr style="background:rgba(0,0,0,.04)">
       <td style="padding:6px 10px;color:var(--c-muted)">Homepage (url_path='')</td>
       <td style="padding:6px 10px">
         <?php if (!empty($d['homepage'])): ?>
-          <span style="color:#40a02b">✓ nalezena — id=<?= (int)$d['homepage']['id'] ?>, title=<?= $h($d['homepage']['title'] ?? '') ?></span>
+          <span style="color:#40a02b">Nalezena - id=<?= (int) $d['homepage']['id'] ?>, title=<?= $h($d['homepage']['title'] ?? '') ?></span>
         <?php elseif ($d['db_ok'] ?? false): ?>
-          <span style="color:#d20f39">✗ žádná stránka s url_path='' → inline edit selže, spusť seed</span>
+          <span style="color:#d20f39">Zadna stranka s url_path='' - inline edit selze, spust seed</span>
         <?php else: ?>
-          <span style="color:#e64553">— DB nedostupná</span>
+          <span style="color:#e64553">DB nedostupna</span>
         <?php endif; ?>
       </td>
     </tr>

@@ -20,7 +20,7 @@ class PageController extends Controller
         $repo  = new PageRepository();
 
         $this->view('pages.index', [
-            'pages'   => $site ? $repo->allBySite($site['id']) : [],
+            'pages'   => $repo->allForAdmin(),
             'site'    => $site,
             'success' => $this->getFlash('success'),
             'error'   => $this->getFlash('error'),
@@ -32,7 +32,7 @@ class PageController extends Controller
         $this->requireAuth();
         $sites     = new SiteRepository();
         $site      = $sites->findFirst();
-        $templates = $site ? (new TemplateRepository())->allBySite($site['id']) : [];
+        $templates = (new TemplateRepository())->allForAdmin();
 
         $this->view('pages.form', [
             'page'      => null,
@@ -96,7 +96,7 @@ class PageController extends Controller
 
         $sites     = new SiteRepository();
         $blocks    = (new BlockRepository())->allByPage($id);
-        $templates = (new TemplateRepository())->allBySite($page['site_id']);
+        $templates = (new TemplateRepository())->allForAdmin();
 
         $this->view('pages.form', [
             'page'      => $page,

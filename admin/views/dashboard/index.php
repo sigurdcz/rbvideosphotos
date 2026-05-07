@@ -5,44 +5,44 @@ ob_start();
 <div class="stats-grid">
   <div class="stat-card">
     <div class="stat-num"><?= (int)$pagesCount ?></div>
-    <div class="stat-lbl">Stránky</div>
+    <div class="stat-lbl">Stranky</div>
   </div>
   <div class="stat-card">
     <div class="stat-num"><?= (int)$templatesCount ?></div>
-    <div class="stat-lbl">Šablony</div>
+    <div class="stat-lbl">Layouty stranek</div>
   </div>
   <?php if ($site): ?>
   <div class="stat-card stat-card--wide">
     <div class="stat-url"><?= htmlspecialchars($site['domain']) ?></div>
-    <div class="stat-lbl">Doména</div>
+    <div class="stat-lbl">Domena</div>
   </div>
   <?php endif; ?>
 </div>
 
 <?php if (!$site): ?>
   <div class="card">
-    <p>Nejprve <a href="/admin/settings">nastavte web</a> (název + doménu).</p>
+    <p>Nejprve <a href="/admin/settings">nastavte web</a> (nazev + domenu).</p>
   </div>
 <?php elseif ((int)$pagesCount === 0): ?>
   <div class="alert alert-warning">
-    Databáze neobsahuje žádné stránky. <a href="/admin/setup"><strong>Spusť počáteční seed →</strong></a>
+    Databaze neobsahuje zadne stranky. <a href="/admin/setup"><strong>Spustit pocatecni seed -&gt;</strong></a>
   </div>
 <?php else: ?>
 
 <div class="card">
-  <div class="card-title">Rychlé akce</div>
+  <div class="card-title">Rychle akce</div>
   <div class="actions">
-    <a href="/admin/pages/create" class="btn btn-primary">+ Nová stránka</a>
-    <a href="/admin/templates/create" class="btn btn-secondary">+ Nová šablona</a>
+    <a href="/admin/pages/create" class="btn btn-primary">+ Nova stranka</a>
+    <a href="/admin/layouts/create" class="btn btn-secondary">+ Novy layout</a>
     <a href="/admin/publish" class="btn btn-success">Publikovat</a>
     <a href="/" target="_blank" class="btn btn-inline-edit">&#9998; Editovat web</a>
   </div>
 </div>
 
 <div class="card">
-  <div class="card-title">Poslední publikování</div>
+  <div class="card-title">Posledni publikovani</div>
   <?php if (empty($history)): ?>
-    <p style="color:var(--c-muted)">Zatím žádné publikování.</p>
+    <p style="color:var(--c-muted)">Zatim zadne publikovani.</p>
   <?php else: ?>
     <table class="history-table">
       <thead><tr><th>#</th><th>Verze</th><th>Status</th><th>Autor</th><th>Datum</th></tr></thead>

@@ -42,7 +42,16 @@ try {
     $router->post('/admin/pages/update', 'PageController', 'update');
     $router->post('/admin/pages/delete', 'PageController', 'delete');
 
-    // Templates
+    // Layouts (primary routes)
+    $router->get('/admin/layouts',         'TemplateController', 'index');
+    $router->get('/admin/layouts/create',  'TemplateController', 'create');
+    $router->post('/admin/layouts/store',  'TemplateController', 'store');
+    $router->get('/admin/layouts/edit',    'TemplateController', 'edit');
+    $router->post('/admin/layouts/update', 'TemplateController', 'update');
+    $router->post('/admin/layouts/delete', 'TemplateController', 'delete');
+    $router->get('/admin/layouts/parse',   'TemplateController', 'parse');
+
+    // Templates (legacy aliases)
     $router->get('/admin/templates',         'TemplateController', 'index');
     $router->get('/admin/templates/create',  'TemplateController', 'create');
     $router->post('/admin/templates/store',  'TemplateController', 'store');

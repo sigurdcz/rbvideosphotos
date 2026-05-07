@@ -20,11 +20,13 @@ class DashboardController extends Controller
         $history = new PublishHistoryRepository();
 
         $site = $sites->findFirst();
+        $allPages = $pages->allForAdmin();
+        $allTemplates = $tmpl->allForAdmin();
 
         $this->view('dashboard.index', [
             'site'         => $site,
-            'pagesCount'   => $site ? count($pages->allBySite($site['id'])) : 0,
-            'templatesCount' => $site ? count($tmpl->allBySite($site['id'])) : 0,
+            'pagesCount'   => count($allPages),
+            'templatesCount' => count($allTemplates),
             'history'      => $site ? $history->allBySite($site['id'], 5) : [],
             'success'      => $this->getFlash('success'),
         ]);
