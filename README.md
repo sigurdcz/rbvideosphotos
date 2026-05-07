@@ -1,200 +1,131 @@
-# SEO Mini CMS
+﻿# SEO Mini CMS
 
-Jednoduch� SEO CMS pro statick� weby napsan� v �ist�m PHP 8+. Um� spravovat HTML �ablony, editovat obsah p�es data-block atributy a publikovat hotov� statick� soubory v�etn� sitemap.xml a robots.txt.
+Jednoduche SEO CMS pro male staticke weby v cistem PHP 8. Aplikace ma admin rozhrani pro spravu obsahu, SEO a medii, ale verejny web se servira bez frameworku a bez buildu.
 
+## Aktualni stav
 
-## Lok�ln� datab�ze pro tento projekt
+- Backend: custom PHP aplikace bez Laravelu a Symfony
+- Databaze: pouze MySQL nebo MariaDB
+- Admin: `/admin`
+- Verejny web: `public/index.php`
+- Media: `storage/media/*`
+- Publikovane exporty: `storage/published/*`
 
-- Typ: `MariaDB / MySQL`
+Poznamka: starsi zminky o SQLite uz neplati. Projekt je ted veden jako `MySQL/MariaDB only`.
+
+## Lokalni databaze pro tento projekt
+
 - Host: `127.0.0.1`
 - Port: `3306`
-- Datab�ze projektu: `seo_editor_cms`
-- Aplika�n� u�ivatel: `seo_editor_app`
-- K�dov�n�: `utf8mb4`
+- Databaze: `seo_editor_cms` nebo hodnota z `.env`
+- Uzivatel: podle `.env`
 - phpMyAdmin: `http://127.0.0.1:8081/`
 
-Projekt je te� nastaven� jako `MySQL/MariaDB only`. SQLite fallback se nem� pou��vat.
----
-
-## Požadavky
+## Pozadavky
 
 - PHP 8.0+
 - MySQL 8+ nebo MariaDB 10.4+
-- Rozšíření: PDO, PDO_MySQL, GD nebo Imagick (pro WebP), DOM
-- Composer (volitelné — autoloader je přiložen)
+- Rozsireni: `PDO`, `pdo_mysql`, `DOM`, `GD` nebo `Imagick`
 
----
+## Konfigurace
 
-## Instalace
+Projekt cte nastaveni z `.env`:
 
-### 1. Vytvoření databáze
+```env
+APP_URL=http://localhost:8000
+APP_DEBUG=true
 
-```sql
-CREATE DATABASE seo_cms CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-```
-
-### 2. Import schématu
-
-```bash
-mysql -u root -p seo_cms < database/schema.sql
-```
-
-### 3. Import seed dat (výchozí admin + ukázková šablona)
-
-```bash
-mysql -u root -p seo_cms < database/seed.sql
-```
-
-### 4. Konfigurace databáze
-
-Zkopírujte nebo upravte `config/database.php`:
-
-```php
-return [
-    'host'     => '127.0.0.1',
-    'port'     => '3306',
-    'dbname'   => 'seo_cms',
-    'username' => 'root',
-    'password' => '',
-    'charset'  => 'utf8mb4',
-];
-```
-
-Nebo použijte proměnné prostředí:
-```
+DB_DRIVER=mysql
 DB_HOST=127.0.0.1
-DB_NAME=seo_cms
+DB_PORT=3306
+DB_NAME=seo_editor_cms
 DB_USER=root
-DB_PASS=heslo
+DB_PASS=
 ```
 
-### 5. Spuštění přes lokální PHP server
+## Prvotni spusteni
 
-```bash
-# Ze složky projektu:
-php -S localhost:8000 -t . router.php
-```
+1. Vytvor databazi.
+2. Spust migrace.
+3. Volitelne nacti seed.
+4. Spust lokalni PHP server.
 
-### 6. Přihlášení do administrace
-
-Otevřete: **http://localhost:8000/admin**
-
-Výchozí přihlašovací údaje:
-- **E-mail:** `admin@example.com`
-- **Heslo:** `admin123`
-
-> Po přihlášení heslo změňte!
-
----
-
-## Struktura projektu
-
-```
-seo-editor/
-├── app/
-│   ├── Core/           # Router, Controller, View, Database, Auth, Config
-│   ├── Controllers/    # HTTP controllery
-│   ├── Repositories/   # Databázové operace (PDO)
-│   └── Services/       # Business logika (parser, renderer, publish...)
-├── admin/
-│   ├── index.php       # Entry point administrace
-│   ├── assets/         # admin.css, admin.js
-│   └── views/          # PHP views (dashboard, pages, templates, seo...)
-├── config/             # app.php, database.php, seo.php
-├── database/           # schema.sql, seed.sql
-├── public/             # Veřejný front-end
-├── storage/
-│   ├── media/          # Nahrané obrázky
-│   ├── published/      # Vygenerované statické HTML, sitemap, robots
-│   └── logs/
-├── vendor/             # Autoloader (nebo Composer)
-└── .htaccess           # Apache routing
-```
-
----
-
-## Jak to funguje
-
-### 1. Šablona
-
-Nahrajte HTML šablonu s `data-block` atributy:
-
-```html
-<h1 data-block="hero_title">Původní nadpis</h1>
-<p data-block="hero_text">Původní text</p>
-<img data-media="hero_image" src="/assets/hero.jpg" alt="">
-```
-
-### 2. Stránka
-
-Vytvořte stránku, vyberte šablonu. Systém automaticky parsuje bloky z HTML.
-
-### 3. Editace
-
-V admin panelu upravte obsah každého bloku.
-
-### 4. SEO
-
-Nastavte meta title, description, OG tagy, Twitter Card, schema.org JSON-LD.
-
-### 5. Publikování
-
-Klikněte **Publikovat** — systém vygeneruje hotový statický HTML soubor do `/storage/published/`.
-
----
-
-## Výstup publikování
-
-```
-storage/published/
-├── index.html
-├── sluzby/
-│   └── index.html
-├── kontakt/
-│   └── index.html
-├── sitemap.xml
-├── robots.txt
-└── .htaccess          # Pro redirecty
-```
-
----
-
-## Bezpečnost
-
-- PDO prepared statements
-- CSRF tokeny pro všechny POST formuláře
-- Validace uploadů (typ, velikost, MIME)
-- `password_hash` / `password_verify`
-- `session_regenerate_id` po přihlášení
-- HTTPOnly session cookies
-- XSS escapování výstupu
-
----
-
-## PHP server — router.php
-
-Pro lokální vývoj pomocí vestavěného PHP serveru:
+Priklady:
 
 ```bash
 php -S localhost:8000 router.php
 ```
 
----
+Migrace pres URL utility:
 
-## Roadmap (budoucí rozšíření)
+```text
+http://localhost:8000/migrate-util.php?token=rbpv-migrate-2026-05-02-t7K9mQ4sX2
+```
 
-- Vícejazyčnost stránek
-- Verzování stránek
-- Real-time preview
-- FTP/Git deploy
-- AI generování SEO textů
-- Správa více webů
-- WYSIWYG editor (Quill/TipTap)
+Seed z adminu:
 
----
+```text
+http://localhost:8000/admin/setup
+```
 
-## Licence
+Seed z CLI:
 
-MIT
+```bash
+php database/seeds/seed_photographer.php
+php database/seeds/seed_photographer.php --fresh
+```
 
+## Prihlaseni do administrace
 
+- URL: `http://localhost:8000/admin`
+- Vychozi e-mail: `admin@example.com`
+- Vychozi heslo: `admin123`
+
+## Jak projekt funguje
+
+1. Do adminu se nahraji sablony a obsah.
+2. Verejne stranky se bezne renderuji primo z databaze.
+3. Cast vystupu se pri publishi generuje do `storage/published`.
+4. Portfolio listing a detail se generuji jako staticke HTML do `storage/published/nase-prace`.
+5. `sitemap.xml`, `robots.txt` a dalsi exporty se take ukladaji do `storage/published`.
+
+## Dulezite URL pravidlo
+
+Pro media a interni odkazy nepouzivej natvrdo ulozenou domenu tam, kde to neni nutne.
+
+- Interni odkazy preferuj relativni, napr. `/blog`, `/cenik`, `/nase-prace`
+- Media na webu pouzivej jako root-relative cesty, napr. `/storage/media/2026/05/obrazek.webp`
+- Absolutni URL jsou potreba hlavne pro SEO vystupy typu `sitemap.xml`
+
+## Struktura projektu
+
+```text
+seo-editor/
+|- app/                aplikacni logika
+|- admin/              admin panel
+|- config/             konfigurace
+|- database/           migrace, schema, seedy
+|- public/             verejny front controller a assety
+|- storage/
+|  |- media/           nahrane soubory
+|  |- logs/            logy
+|  `- published/       generovane exporty a portfolio HTML
+|- vendor/             autoload
+|- router.php          router pro lokalni PHP server
+|- index.php           vstup pro hosting
+`- migrate-util.php    tokenova migracni utilita
+```
+
+## Nasazeni
+
+- Produkce bezi z branche `master`
+- Staging bezi z branche `dev`
+- Deploy probiha pres GitHub Actions a FTP
+- `.env` se nedeployuje
+- `storage/media` se nedeployuje jako soucast buildu
+
+## Poznamky k portfoliu
+
+- Vybrane obrazky se ukladaji do vazebni tabulky `portfolio_media`
+- Detail i listing portfolia se publikuji do `storage/published/nase-prace`
+- Galerie a nahledy medii pouzivaji verejne root-relative URL z `storage_path`
