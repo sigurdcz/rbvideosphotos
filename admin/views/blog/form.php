@@ -1,12 +1,13 @@
-<?php
+﻿<?php
 $isEdit    = $post !== null;
-$pageTitle = $isEdit ? 'Upravit článek' : 'Nový článek';
+$pageTitle = $isEdit ? 'Upravit clanek' : 'Novy clanek';
 $h = fn($v) => htmlspecialchars((string)($v ?? ''));
+$selectedFeaturedId = (int)($post['featured_image_id'] ?? 0);
 ob_start();
 ?>
 <div class="page-header">
   <h1><?= $pageTitle ?></h1>
-  <a href="/admin/blog" class="btn btn-secondary">← Zpět</a>
+  <a href="/admin/blog" class="btn btn-secondary">&larr; Zpet</a>
 </div>
 
 <form method="POST" action="<?= $isEdit ? '/admin/blog/update' : '/admin/blog/store' ?>" id="blog-form">
@@ -19,72 +20,66 @@ ob_start();
       <button type="button" class="tab-btn" data-tab="meta">SEO &amp; Meta</button>
     </div>
 
-    <!-- TAB: Obsah -->
     <div class="tab-pane" id="tab-content">
       <div class="card">
         <div class="form-group">
-          <label for="blog-title">Název článku *</label>
+          <label for="blog-title">Nazev clanku *</label>
           <input type="text" id="blog-title" name="title" value="<?= $h($post['title'] ?? '') ?>" required>
         </div>
         <div class="form-row">
           <div class="form-group">
             <label for="blog-slug">Slug</label>
             <input type="text" id="blog-slug" name="slug" value="<?= $h($post['slug'] ?? '') ?>">
-            <div class="form-hint">Vyplní se automaticky z názvu</div>
+            <div class="form-hint">Vyplni se automaticky z nazvu</div>
           </div>
           <div class="form-group">
             <label>Stav</label>
             <select name="status">
-              <option value="draft"     <?= ($post['status'] ?? 'draft') === 'draft'     ? 'selected' : '' ?>>Koncept</option>
-              <option value="published" <?= ($post['status'] ?? '') === 'published' ? 'selected' : '' ?>>Publikováno</option>
+              <option value="draft" <?= ($post['status'] ?? 'draft') === 'draft' ? 'selected' : '' ?>>Koncept</option>
+              <option value="published" <?= ($post['status'] ?? '') === 'published' ? 'selected' : '' ?>>Publikovano</option>
             </select>
           </div>
         </div>
 
         <div class="form-group">
-          <label for="blog-excerpt">Perex <small style="font-weight:400;color:var(--c-muted)">(krátký popis pro výpis)</small></label>
+          <label for="blog-excerpt">Perex <small style="font-weight:400;color:var(--c-muted)">(kratky popis pro vypis)</small></label>
           <textarea name="excerpt" id="blog-excerpt" style="min-height:80px"><?= $h($post['excerpt'] ?? '') ?></textarea>
         </div>
       </div>
 
-      <!-- Article editor -->
       <div class="card">
-        <div class="card-title">Text článku</div>
+        <div class="card-title">Text clanku</div>
         <div class="article-editor-wrap">
           <div class="article-editor-toolbar" id="ae-toolbar">
             <button type="button" class="ae-btn ae-sep-after" data-cmd="formatBlock" data-val="<h2>" title="Nadpis 2">H2</button>
             <button type="button" class="ae-btn" data-cmd="formatBlock" data-val="<h3>" title="Nadpis 3">H3</button>
             <span class="ae-sep"></span>
-            <button type="button" class="ae-btn" data-cmd="bold"      title="Tučné"><strong>B</strong></button>
-            <button type="button" class="ae-btn" data-cmd="italic"    title="Kurzíva"><em>I</em></button>
-            <button type="button" class="ae-btn" data-cmd="underline" title="Podtržení"><u>U</u></button>
+            <button type="button" class="ae-btn" data-cmd="bold" title="Tucne"><strong>B</strong></button>
+            <button type="button" class="ae-btn" data-cmd="italic" title="Kurziva"><em>I</em></button>
+            <button type="button" class="ae-btn" data-cmd="underline" title="Podtrzeni"><u>U</u></button>
             <span class="ae-sep"></span>
-            <button type="button" class="ae-btn" data-cmd="insertUnorderedList" title="Odrážky">&#8226; ul</button>
-            <button type="button" class="ae-btn" data-cmd="insertOrderedList"   title="Číslovaný seznam">1. ol</button>
-            <button type="button" class="ae-btn" data-cmd="formatBlock" data-val="<blockquote>" title="Citát">&#10077;</button>
+            <button type="button" class="ae-btn" data-cmd="insertUnorderedList" title="Odrzky">&#8226; ul</button>
+            <button type="button" class="ae-btn" data-cmd="insertOrderedList" title="Cislovany seznam">1. ol</button>
+            <button type="button" class="ae-btn" data-cmd="formatBlock" data-val="<blockquote>" title="Citace">&#10077;</button>
             <span class="ae-sep"></span>
-            <button type="button" class="ae-btn" data-cmd="createLink" title="Vložit odkaz">&#128279; Link</button>
-            <button type="button" class="ae-btn" data-cmd="formatBlock" data-val="<p>" title="Odstavec">¶</button>
+            <button type="button" class="ae-btn" data-cmd="createLink" title="Vlozit odkaz">&#128279; Link</button>
+            <button type="button" class="ae-btn" data-cmd="formatBlock" data-val="<p>" title="Odstavec">&para;</button>
             <span class="ae-sep"></span>
-            <button type="button" class="ae-btn ae-source-btn" data-cmd="source" title="HTML zdrojový kód">&lt;/&gt; HTML</button>
+            <button type="button" class="ae-btn ae-source-btn" data-cmd="source" title="HTML zdrojovy kod">&lt;/&gt; HTML</button>
           </div>
-          <!-- WYSIWYG editor div -->
           <div id="article-editor" contenteditable="true"><?= $post['content'] ?? '' ?></div>
-          <!-- Source mode textarea (hidden by default) -->
           <textarea id="article-source" style="display:none" class="code" spellcheck="false"></textarea>
         </div>
-        <!-- Hidden field submitted with the form -->
         <input type="hidden" name="content" id="article-content-hidden" value="<?= $h($post['content'] ?? '') ?>">
       </div>
     </div>
 
-    <!-- TAB: SEO & Meta -->
     <div class="tab-pane" id="tab-meta">
       <div class="card">
         <div class="form-group">
           <label>Meta title</label>
           <input type="text" name="meta_title" value="<?= $h($post['meta_title'] ?? '') ?>">
-          <div class="form-hint">Pokud prázdné, použije se název článku</div>
+          <div class="form-hint">Pokud prazdne, pouzije se nazev clanku</div>
         </div>
         <div class="form-group">
           <label>Meta description</label>
@@ -92,17 +87,36 @@ ob_start();
         </div>
         <?php if (!empty($media)): ?>
         <div class="form-group">
-          <label>Náhledový obrázek (featured image)</label>
-          <div style="display:flex;gap:12px;align-items:center">
-            <select name="featured_image_id" id="fi-select" style="flex:1">
-              <option value="">— Bez obrázku —</option>
-              <?php foreach ($media as $m): ?>
-              <option value="<?= (int)$m['id'] ?>" <?= ((int)($post['featured_image_id'] ?? 0)) === (int)$m['id'] ? 'selected' : '' ?>>
-                <?= $h($m['original_filename']) ?> (<?= (int)$m['width'] ?>×<?= (int)$m['height'] ?>)
-              </option>
-              <?php endforeach; ?>
-            </select>
-            <img id="fi-preview" src="" alt="" style="height:48px;width:64px;object-fit:cover;border-radius:4px;display:none;border:1px solid var(--c-border)">
+          <label>Nahledovy obrazek (featured image)</label>
+          <p style="font-size:13px;color:var(--c-muted);margin-bottom:12px">
+            Kliknete na obrazek pro vyber. Opakovanym kliknutim jej odeberete.
+            <span id="fi-status" style="font-weight:600;color:var(--c-primary)">
+              <?= $selectedFeaturedId > 0 ? '1 vybran' : 'bez obrazku' ?>
+            </span>
+          </p>
+          <input type="hidden" name="featured_image_id" id="fi-input" value="<?= $selectedFeaturedId > 0 ? $selectedFeaturedId : '' ?>">
+          <div class="media-grid" id="fi-grid">
+            <?php foreach ($media as $m): ?>
+            <?php $mediaId = (int)$m['id']; ?>
+            <div class="media-card fi-item <?= $selectedFeaturedId === $mediaId ? 'fi-selected' : '' ?>"
+                 data-media-id="<?= $mediaId ?>"
+                 data-media-src="<?= $h('/' . ltrim((string)$m['storage_path'], '/')) ?>"
+                 data-media-name="<?= $h($m['original_filename']) ?>"
+                 style="cursor:pointer">
+              <img src="/<?= $h($m['storage_path']) ?>" alt="<?= $h($m['alt_text']) ?>" loading="lazy" style="height:90px;object-fit:cover;display:block;width:100%">
+              <div class="media-card-info" style="display:flex;justify-content:space-between;padding:5px 8px">
+                <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><?= $h($m['original_filename']) ?></span>
+                <span class="fi-check" style="flex-shrink:0;font-size:14px;color:#16a34a">&#10003;</span>
+              </div>
+            </div>
+            <?php endforeach; ?>
+          </div>
+          <div id="fi-preview-wrap" style="display:<?= $selectedFeaturedId > 0 ? 'flex' : 'none' ?>;gap:12px;align-items:center;margin-top:12px">
+            <img id="fi-preview" src="" alt="" style="height:64px;width:88px;object-fit:cover;border-radius:6px;display:block;border:1px solid var(--c-border)">
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <div id="fi-preview-name" style="font-size:13px;color:var(--c-text);font-weight:600"></div>
+              <button type="button" id="fi-clear" class="btn btn-secondary" style="width:max-content">Odebrat obrazek</button>
+            </div>
           </div>
         </div>
         <?php endif; ?>
@@ -111,32 +125,74 @@ ob_start();
   </div>
 
   <div style="margin-top:16px;display:flex;gap:8px">
-    <button type="submit" class="btn btn-primary">Uložit článek</button>
-    <a href="/admin/blog" class="btn btn-secondary">Zrušit</a>
+    <button type="submit" class="btn btn-primary">Ulozit clanek</button>
+    <a href="/admin/blog" class="btn btn-secondary">Zrusit</a>
   </div>
 </form>
 
+<style>
+.fi-item { transition: box-shadow .15s, outline .1s; outline: 3px solid transparent; }
+.fi-item .fi-check { display: none; }
+.fi-item.fi-selected { outline-color: #6366f1; }
+.fi-item.fi-selected .fi-check { display: inline; }
+</style>
+
 <script>
-// Pre-populate featured image preview
 (function() {
-  const sel = document.getElementById('fi-select');
-  const img = document.getElementById('fi-preview');
-  if (!sel || !img) return;
-  const mediaMap = {
-    <?php foreach ($media as $m): ?>
-    <?= (int)$m['id'] ?>: '<?= $h('/' . $m['storage_path']) ?>',
-    <?php endforeach; ?>
-  };
-  function updatePreview() {
-    const id = sel.value;
-    if (id && mediaMap[id]) { img.src = mediaMap[id]; img.style.display = 'block'; }
-    else { img.style.display = 'none'; }
+  const grid = document.getElementById('fi-grid');
+  const input = document.getElementById('fi-input');
+  const status = document.getElementById('fi-status');
+  const previewWrap = document.getElementById('fi-preview-wrap');
+  const preview = document.getElementById('fi-preview');
+  const previewName = document.getElementById('fi-preview-name');
+  const clearBtn = document.getElementById('fi-clear');
+  if (!grid || !input) return;
+
+  let selectedId = input.value ? parseInt(input.value, 10) : null;
+
+  function renderFeaturedImage() {
+    grid.querySelectorAll('.fi-item').forEach(item => {
+      const id = parseInt(item.dataset.mediaId, 10);
+      item.classList.toggle('fi-selected', selectedId === id);
+    });
+
+    const selectedItem = selectedId
+      ? grid.querySelector('.fi-item[data-media-id="' + selectedId + '"]')
+      : null;
+
+    input.value = selectedId ? String(selectedId) : '';
+
+    if (selectedItem) {
+      if (status) status.textContent = '1 vybran';
+      if (previewWrap) previewWrap.style.display = 'flex';
+      if (preview) preview.src = selectedItem.dataset.mediaSrc || '';
+      if (previewName) previewName.textContent = selectedItem.dataset.mediaName || '';
+    } else {
+      if (status) status.textContent = 'bez obrazku';
+      if (previewWrap) previewWrap.style.display = 'none';
+      if (preview) preview.src = '';
+      if (previewName) previewName.textContent = '';
+    }
   }
-  sel.addEventListener('change', updatePreview);
-  updatePreview();
+
+  grid.querySelectorAll('.fi-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const id = parseInt(item.dataset.mediaId, 10);
+      selectedId = selectedId === id ? null : id;
+      renderFeaturedImage();
+    });
+  });
+
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      selectedId = null;
+      renderFeaturedImage();
+    });
+  }
+
+  renderFeaturedImage();
 })();
 
-// Auto-slug from title
 (function() {
   const title = document.getElementById('blog-title');
   const slug  = document.getElementById('blog-slug');
@@ -145,9 +201,14 @@ ob_start();
     slug.value = slugify(title.value);
   });
   function slugify(str) {
-    const map = {á:'a',č:'c',ď:'d',é:'e',ě:'e',í:'i',ň:'n',ó:'o',ř:'r',š:'s',ť:'t',ú:'u',ů:'u',ý:'y',ž:'z'};
-    return str.toLowerCase().replace(/[áčďéěíňóřšťúůýž]/g, c => map[c]||c)
-      .replace(/[^a-z0-9\s-]/g,'').trim().replace(/\s+/g,'-').replace(/-+/g,'-');
+    const map = {a:'a',c:'c',d:'d',e:'e',i:'i',n:'n',o:'o',r:'r',s:'s',t:'t',u:'u',y:'y',z:'z'};
+    return str.toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9\s-]/g,'')
+      .trim()
+      .replace(/\s+/g,'-')
+      .replace(/-+/g,'-');
   }
 })();
 </script>

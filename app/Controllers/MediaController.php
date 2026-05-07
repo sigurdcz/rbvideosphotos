@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Core\Config;
 use App\Core\Controller;
+use App\Core\Logger;
 use App\Repositories\MediaRepository;
 use App\Repositories\SiteRepository;
 use App\Services\ImageVariantService;
@@ -40,6 +41,12 @@ class MediaController extends Controller
         $allowedExt  = array_merge($appCfg['allowed_image_extensions'], $appCfg['allowed_video_extensions']);
         $allowedMime = array_merge($appCfg['allowed_image_types'],      $appCfg['allowed_video_types']);
 
+        $altText = trim($_POST['alt_text'] ?? '');
+        if ($altText === '') {
+            $this->json(['error' => 'ALT text je povinný.'], 400);
+        }
+        $title = trim($_POST['title'] ?? '') ?: $altText;
+
         $files = $this->normalizeFiles($_FILES['files'] ?? $_FILES['file'] ?? null);
         if (empty($files)) {
             // $_FILES is empty — most likely post_max_size exceeded on the server
@@ -62,7 +69,7 @@ class MediaController extends Controller
             }
 
             $ext      = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-            $mime     = mime_content_type($file['tmp_name']);
+            $mime     = $this->getMimeType($file['tmp_name'], $ext);
             $isVideo  = in_array($mime, $appCfg['allowed_video_types']) || in_array($ext, $appCfg['allowed_video_extensions']);
             $maxSize  = $isVideo ? $appCfg['upload_video_max_size'] : $appCfg['upload_max_size'];
 
@@ -99,18 +106,24 @@ class MediaController extends Controller
                 'site_id'           => $site['id'],
                 'original_filename' => basename($file['name']),
                 'storage_path'      => $storagePath . '/' . $newName,
-                'alt_text'          => $_POST['alt_text'] ?? '',
-                'title'             => $_POST['title']    ?? '',
+                'alt_text'          => $altText,
+                'title'             => $title,
                 'width'             => $w,
                 'height'            => $h,
                 'mime_type'         => $mime,
             ]);
 
+            $variantWarning = null;
             if (!$isVideo) {
-                $this->generateVariants($repo, $svc, $mediaId, $dest, $storagePath, $fullDir, $w, $h, $ext);
+                $variantCount = $this->generateVariants($repo, $svc, $mediaId, $dest, $storagePath, $fullDir, $w, $h, $ext);
+                if ($variantCount === 0) {
+                    $variantWarning = 'Varianty nebyly vygenerovány (GD extension nedostupná nebo nepodporuje tento formát).';
+                }
             }
 
-            $results[] = ['success' => true, 'media_id' => $mediaId, 'name' => basename($file['name'])];
+            $r = ['success' => true, 'media_id' => $mediaId, 'name' => basename($file['name'])];
+            if ($variantWarning) $r['warning'] = $variantWarning;
+            $results[] = $r;
         }
 
         $this->json(['results' => $results]);
@@ -153,6 +166,31 @@ class MediaController extends Controller
         $this->redirect('/admin/media');
     }
 
+    private function getMimeType(string $path, string $ext): string
+    {
+        if (class_exists('\finfo')) {
+            $fi = new \finfo(\FILEINFO_MIME_TYPE);
+            $result = $fi->file($path);
+            if ($result && $result !== false) return $result;
+        }
+        if (function_exists('mime_content_type')) {
+            $result = \mime_content_type($path);
+            if ($result && $result !== false) return $result;
+        }
+        return match($ext) {
+            'jpg', 'jpeg' => 'image/jpeg',
+            'png'         => 'image/png',
+            'webp'        => 'image/webp',
+            'gif'         => 'image/gif',
+            'mp4'         => 'video/mp4',
+            'mov'         => 'video/quicktime',
+            'webm'        => 'video/webm',
+            'avi'         => 'video/x-msvideo',
+            'mkv'         => 'video/x-matroska',
+            default       => 'application/octet-stream',
+        };
+    }
+
     private function normalizeFiles(?array $raw): array
     {
         if (!$raw) return [];
@@ -183,8 +221,14 @@ class MediaController extends Controller
         int    $w,
         int    $h,
         string $ext
-    ): void {
+    ): int {
+        if (!extension_loaded('gd')) {
+            Logger::warning('media', 'GD extension not loaded — skipping variant generation', ['media_id' => $mediaId]);
+            return 0;
+        }
+
         $isGif = ($ext === 'gif');
+        $created = 0;
 
         // WebP conversion of original (skip GIF — preserve animation)
         if (!$isGif && $ext !== 'webp' && $svc->supportsWebP()) {
@@ -198,6 +242,7 @@ class MediaController extends Controller
                     'path'     => $storagePath . '/' . $webpName,
                     'filesize' => @filesize($webpDest) ?: null,
                 ]);
+                $created++;
             }
         }
 
@@ -214,6 +259,9 @@ class MediaController extends Controller
                     'path'     => $storagePath . '/' . $thumbName,
                     'filesize' => @filesize($thumbDest) ?: null,
                 ]);
+                $created++;
+            } else {
+                Logger::warning('media', 'Thumbnail generation failed', ['media_id' => $mediaId, 'ext' => $ext, 'gd_webp' => $svc->supportsWebP()]);
             }
         }
 
@@ -230,7 +278,10 @@ class MediaController extends Controller
                     'path'     => $storagePath . '/' . $medName,
                     'filesize' => @filesize($medDest) ?: null,
                 ]);
+                $created++;
             }
         }
+
+        return $created;
     }
 }

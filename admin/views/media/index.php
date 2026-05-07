@@ -34,11 +34,11 @@ ob_start();
     <input type="hidden" name="_csrf" value="<?= $h($_csrfToken) ?>">
     <div class="form-row" style="margin-bottom:12px">
       <div class="form-group" style="margin-bottom:0">
-        <label>ALT text <span style="font-weight:400;color:var(--c-muted)">(pro všechny nahrané)</span></label>
-        <input type="text" name="alt_text" id="upload-alt">
+        <label>ALT text <span style="color:#dc2626">*</span> <span style="font-weight:400;color:var(--c-muted)">(pro všechny nahrané)</span></label>
+        <input type="text" name="alt_text" id="upload-alt" required>
       </div>
       <div class="form-group" style="margin-bottom:0">
-        <label>Název</label>
+        <label>Název <span style="font-weight:400;color:var(--c-muted)">(nepovinné — zkopíruje ALT)</span></label>
         <input type="text" name="title" id="upload-title">
       </div>
     </div>
@@ -163,9 +163,21 @@ ob_start();
     });
   }
 
+  const altInput   = document.getElementById('upload-alt');
+  const titleInput = document.getElementById('upload-title');
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!input.files.length) { setStatus('Vyberte soubory.', ''); return; }
+
+    const altVal = altInput.value.trim();
+    if (!altVal) {
+      altInput.focus();
+      setStatus('ALT text je povinný.', '#dc2626');
+      return;
+    }
+    // Auto-fill title from alt if left empty
+    if (!titleInput.value.trim()) titleInput.value = altVal;
 
     // Client-side size check before uploading
     const oversized = Array.from(input.files).filter(f => {

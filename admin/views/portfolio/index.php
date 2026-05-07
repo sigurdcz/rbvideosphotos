@@ -1,22 +1,22 @@
 <?php
-$pageTitle = 'Naše práce';
+$pageTitle = 'Nase prace';
 $h = fn($v) => htmlspecialchars((string)($v ?? ''));
 ob_start();
 ?>
 <div class="page-header">
-  <h1>Naše práce</h1>
+  <h1>Nase prace</h1>
   <div class="actions">
-    <a href="/admin/portfolio/create" class="btn btn-primary">+ Nová práce</a>
+    <a href="/admin/portfolio/create" class="btn btn-primary">+ Nova prace</a>
   </div>
 </div>
 
 <div class="alert alert-warning" style="font-size:13px">
-  <strong>Tip:</strong> Po uložení práce se dlaždice automaticky synchronizují do bloku <code>portfolio-tiles</code> na homepage.
-  Aby se dlaždice zobrazily na webu, ujistěte se, že homepage šablona obsahuje <code>&lt;section data-block="portfolio-tiles"&gt;&lt;/section&gt;</code>, pak <a href="/admin/publish">Publikujte web</a>.
+  <strong>Tip:</strong> Po ulozeni prace se dlazdice automaticky synchronizuji do bloku <code>portfolio-tiles</code> na homepage.
+  Pokud chces, aby se propsaly i do verejneho exportu, publikuj potom web nebo konkretni stranku znovu.
 </div>
 
 <?php if (empty($entries)): ?>
-  <div class="card"><p style="color:var(--c-muted)">Žádné práce. <a href="/admin/portfolio/create">Přidat první</a>.</p></div>
+  <div class="card"><p style="color:var(--c-muted)">Zadne prace. <a href="/admin/portfolio/create">Pridat prvni</a>.</p></div>
 <?php else: ?>
 <div class="media-grid media-grid--manage">
   <?php foreach ($entries as $e):
@@ -35,17 +35,17 @@ ob_start();
       <?php else: ?>
         <div style="height:130px;background:#111;display:flex;align-items:center;justify-content:center;font-size:2rem;color:rgba(255,255,255,.3)">&#9654;</div>
       <?php endif; ?>
-      <span class="media-badge-type"><?= $e['status'] === 'published' ? '✓' : '⋯' ?></span>
+      <span class="media-badge-type"><?= $e['status'] === 'published' ? '&#10003;' : '&#8943;' ?></span>
     </div>
     <div class="media-card-body">
       <div class="media-card-name" title="<?= $h($e['title']) ?>"><?= $h($e['title']) ?></div>
-      <div class="media-card-dim"><?= $e['video_url'] ? 'Video + fotky' : 'Fotky' ?> · pořadí: <?= (int)$e['sort_order'] ?></div>
+      <div class="media-card-dim"><?= $e['video_url'] ? 'Video + fotky' : 'Fotky' ?> - poradi: <?= (int)$e['sort_order'] ?></div>
       <div class="media-card-variants">
-        <span class="mv-badge <?= $e['status'] === 'published' ? 'mv-badge--ok' : 'badge-draft' ?>"><?= $e['status'] === 'published' ? 'Publikováno' : 'Koncept' ?></span>
+        <span class="mv-badge <?= $e['status'] === 'published' ? 'mv-badge--ok' : 'badge-draft' ?>"><?= $e['status'] === 'published' ? 'Publikovano' : 'Koncept' ?></span>
       </div>
       <div class="media-card-footer">
         <a href="/admin/portfolio/edit?id=<?= (int)$e['id'] ?>" class="btn btn-sm btn-secondary">Upravit</a>
-        <form method="POST" action="/admin/portfolio/delete" data-confirm="Smazat tuto práci?">
+        <form method="POST" action="/admin/portfolio/delete" data-confirm="Smazat tuto praci?">
           <input type="hidden" name="_csrf" value="<?= $h($_csrfToken) ?>">
           <input type="hidden" name="id" value="<?= (int)$e['id'] ?>">
           <button class="btn btn-sm btn-danger">Smazat</button>
