@@ -193,7 +193,24 @@ function sanitizeFrontendHtml(string $html): string
 
 function publicMediaUrl(string $storagePath): string
 {
-    return '/' . ltrim(str_replace('\\', '/', $storagePath), '/');
+    $normalized = str_replace('\\', '/', trim($storagePath));
+    if ($normalized === '') {
+        return '';
+    }
+
+    if (preg_match('~https?://[^/]+(/storage/media/.*)$~i', $normalized, $m)) {
+        return $m[1];
+    }
+
+    if (str_starts_with($normalized, '/storage/media/')) {
+        return $normalized;
+    }
+
+    if (str_starts_with($normalized, 'storage/media/')) {
+        return '/' . $normalized;
+    }
+
+    return '/' . ltrim($normalized, '/');
 }
 
 function renderPortfolioNav(string $siteName, string $active = 'portfolio'): string

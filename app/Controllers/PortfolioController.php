@@ -253,7 +253,7 @@ HTML;
 
         $dir = dirname(__DIR__, 2) . '/storage/published/nase-prace/' . $entry['slug'];
         if (!is_dir($dir)) mkdir($dir, 0755, true);
-        file_put_contents($dir . '/index.html', $html);
+        file_put_contents($dir . '/index.html', $this->sanitizePortfolioHtml($html));
 
         // Regenerate listing page
         $this->regenerateListingPage(new PortfolioRepository(), $site);
@@ -318,7 +318,7 @@ HTML;
 
         $dir = dirname(__DIR__, 2) . '/storage/published/nase-prace';
         if (!is_dir($dir)) mkdir($dir, 0755, true);
-        file_put_contents($dir . '/index.html', $html);
+        file_put_contents($dir . '/index.html', $this->sanitizePortfolioHtml($html));
     }
 
     // ── Homepage tiles sync ───────────────────────────────────────────────────
@@ -404,6 +404,28 @@ TILE;
     }
     private function publicMediaUrl(string $storagePath): string
     {
-        return '/' . ltrim(str_replace('\\', '/', $storagePath), '/');
+        $normalized = str_replace('\\', '/', trim($storagePath));
+        if ($normalized === '') {
+            return '';
+        }
+
+        if (preg_match('~https?://[^/]+(/storage/media/.*)$~i', $normalized, $m)) {
+            return $m[1];
+        }
+
+        if (str_starts_with($normalized, '/storage/media/')) {
+            return $normalized;
+        }
+
+        if (str_starts_with($normalized, 'storage/media/')) {
+            return '/' . $normalized;
+        }
+
+        return '/' . ltrim($normalized, '/');
+    }
+
+    private function sanitizePortfolioHtml(string $html): string
+    {
+        return preg_replace('~https?://localhost(?::\d+)?/storage/media/~i', '/storage/media/', $html) ?? $html;
     }
 }
