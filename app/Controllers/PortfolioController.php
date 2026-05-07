@@ -184,13 +184,12 @@ class PortfolioController extends Controller
 
         $h  = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
         $sn = $h($site['name'] ?? 'RB Photos & Videos');
-        $sd = rtrim($site['domain'] ?? '', '/');
         $title = $h($entry['title']);
 
         // Photo gallery HTML
         $galleryHtml = '';
         foreach ($mediaItems as $m) {
-            $src = $h($sd . '/' . ltrim($m['storage_path'], '/'));
+            $src = $h($this->publicMediaUrl((string)($m['storage_path'] ?? '')));
             $alt = $h($m['alt_text'] ?? $entry['title']);
             $galleryHtml .= "<div class=\"pf-photo\"><img src=\"{$src}\" alt=\"{$alt}\" loading=\"lazy\"></div>";
         }
@@ -265,14 +264,13 @@ HTML;
         $entries = $repo->allPublished($site['id']);
         $h  = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
         $sn = $h($site['name'] ?? '');
-        $sd = rtrim($site['domain'] ?? '', '/');
 
         $tilesHtml = '';
         foreach ($entries as $e) {
             $media      = $repo->getFirstMedia($e['id']);
             $thumb      = $e['video_url'] ? PortfolioRepository::youtubeThumbnail($e['video_url']) : '';
             if (!$thumb && $media) {
-                $thumb = $sd . '/' . ltrim($media['storage_path'], '/');
+                $thumb = $this->publicMediaUrl((string)($media['storage_path'] ?? ''));
             }
             $imgHtml = $thumb ? "<img src=\"{$h($thumb)}\" alt=\"{$h($e['title'])}\" loading=\"lazy\">" : "<div class=\"pl-no-thumb\">▶</div>";
             $tilesHtml .= "<a class=\"pl-tile\" href=\"/nase-prace/{$h($e['slug'])}\"><div class=\"pl-thumb\">{$imgHtml}</div><div class=\"pl-caption\">{$h($e['title'])}</div></a>";
@@ -349,8 +347,6 @@ HTML;
             return '<p style="color:#888;text-align:center;padding:40px 0">Zatím žádné publikované práce.</p>';
         }
 
-        $site = (new SiteRepository())->findFirst();
-        $sd   = rtrim($site['domain'] ?? '', '/');
         $h    = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
 
         $tiles = '';
@@ -359,7 +355,7 @@ HTML;
             $thumb    = $e['video_url'] ? PortfolioRepository::youtubeThumbnail($e['video_url']) : '';
             $hasVideo = (bool)$e['video_url'];
             if (!$thumb && !empty($photos)) {
-                $thumb = $sd . '/' . ltrim($photos[0]['storage_path'], '/');
+                $thumb = $this->publicMediaUrl((string)($photos[0]['storage_path'] ?? ''));
             }
 
             $thumbHtml = $thumb
@@ -371,7 +367,7 @@ HTML;
             $extraHtml = '';
             $extraPhotos = array_slice($photos, 0, 3);
             foreach ($extraPhotos as $p) {
-                $psrc = $h($sd . '/' . ltrim($p['storage_path'], '/'));
+                $psrc = $h($this->publicMediaUrl((string)($p['storage_path'] ?? '')));
                 $palt = $h($p['alt_text'] ?? '');
                 $extraHtml .= "<img src=\"{$psrc}\" alt=\"{$palt}\" loading=\"lazy\">";
             }
@@ -405,5 +401,9 @@ TILE;
         $s   = preg_replace('/[^a-z0-9\s-]/', '', $s);
         $s   = preg_replace('/[\s-]+/', '-', trim($s));
         return $s;
+    }
+    private function publicMediaUrl(string $storagePath): string
+    {
+        return '/' . ltrim(str_replace('\\', '/', $storagePath), '/');
     }
 }

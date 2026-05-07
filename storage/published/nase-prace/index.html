@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Naše práce — RB Photos &amp; Videos</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:system-ui,-apple-system,sans-serif;color:#1a1a1a;background:#f8f6f2}
+    .pl-nav{background:#111;padding:14px 24px;display:flex;align-items:center;gap:16px}
+    .pl-nav a{color:#fff;text-decoration:none;font-size:14px;opacity:.8}.pl-nav a:hover{opacity:1}
+    .pl-nav-logo{font-weight:700;font-size:16px;opacity:1!important}
+    .pl-hero{background:#111;color:#fff;padding:56px 24px 48px;text-align:center}
+    .pl-hero h1{font-size:clamp(1.6rem,4vw,2.6rem);font-weight:700}
+    .pl-container{max-width:1100px;margin:0 auto;padding:48px 24px}
+    .pl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:24px}
+    .pl-tile{display:block;text-decoration:none;color:inherit;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08);transition:transform .2s,box-shadow .2s}
+    .pl-tile:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(0,0,0,.15)}
+    .pl-thumb{height:210px;overflow:hidden;background:#111}
+    .pl-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+    .pl-no-thumb{height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;color:rgba(255,255,255,.3)}
+    .pl-caption{padding:14px 16px;font-weight:600;font-size:.95rem}
+    footer{background:#111;color:rgba(255,255,255,.4);text-align:center;padding:20px;font-size:13px;margin-top:48px}
+  </style>
+</head>
+<body>
+<nav class="pl-nav">
+  <a class="pl-nav-logo" href="/">RB Photos &amp; Videos</a>
+  <a href="/">← Domů</a>
+</nav>
+<div class="pl-hero"><h1>Naše práce</h1></div>
+<div class="pl-container">
+  <div class="pl-grid"><a class="pl-tile" href="/nase-prace/test"><div class="pl-thumb"><img src="https://img.youtube.com/vi/GvyGf9uRXY0/hqdefault.jpg" alt="test" loading="lazy"></div><div class="pl-caption">test</div></a></div>
+</div>
+<footer>RB Photos &amp; Videos</footer>
+</body>
+</html>
