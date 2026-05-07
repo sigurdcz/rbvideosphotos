@@ -8,6 +8,8 @@
 </head>
 <body>
 <?php $requestUri = $_SERVER['REQUEST_URI'] ?? ''; ?>
+<?php $homepageEditUrl = '/'; ?>
+<?php $homepagePreviewUrl = '/?cms_preview=1'; ?>
 <div class="layout">
   <nav class="sidebar">
     <div class="sidebar-logo">SEO CMS</div>
@@ -23,8 +25,9 @@
       <li><a href="/admin/settings" class="<?= strpos($requestUri, '/admin/settings') === 0 ? 'active' : '' ?>">Nastaveni</a></li>
       <li><a href="/admin/setup" class="<?= strpos($requestUri, '/admin/setup') === 0 ? 'active' : '' ?>">Pocatecni data</a></li>
     </ul>
-    <div style="padding: 12px 16px 0">
-      <a href="/" target="_blank" class="btn btn-inline-edit" style="width:100%;justify-content:center;box-sizing:border-box">&#9998; Editovat web</a>
+    <div style="padding:12px 16px 0;display:flex;flex-direction:column;gap:8px">
+      <a href="<?= htmlspecialchars($homepageEditUrl) ?>" target="_blank" class="btn btn-inline-edit" style="width:100%;justify-content:center;box-sizing:border-box">&#9998; Editovat inline</a>
+      <a href="<?= htmlspecialchars($homepagePreviewUrl) ?>" target="_blank" class="btn btn-secondary" style="width:100%;justify-content:center;box-sizing:border-box">&#128065; Nahled homepage</a>
     </div>
     <div class="sidebar-footer">
       <span><?= htmlspecialchars($_user['email'] ?? '') ?></span>
@@ -39,6 +42,10 @@
   <div class="main-wrap">
     <header class="topbar">
       <div class="topbar-title"><?= isset($pageTitle) ? htmlspecialchars($pageTitle) : 'Dashboard' ?></div>
+      <div class="topbar-actions">
+        <a href="<?= htmlspecialchars($homepagePreviewUrl) ?>" target="_blank" class="btn btn-sm btn-secondary">&#128065; Nahled</a>
+        <a href="<?= htmlspecialchars($homepageEditUrl) ?>" target="_blank" class="btn btn-sm btn-inline-edit">&#9998; Editace inline</a>
+      </div>
     </header>
     <main class="content">
       <?php if (!empty($success)): ?>

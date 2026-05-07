@@ -110,6 +110,7 @@ try {
     // Setup / seed
     $router->get('/admin/setup',      'SetupController', 'index');
     $router->post('/admin/setup/run', 'SetupController', 'run');
+    $router->post('/admin/setup/armageddon', 'SetupController', 'armageddon');
 
     $router->dispatch();
 } catch (\Throwable $e) {

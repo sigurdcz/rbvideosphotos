@@ -35,7 +35,8 @@ ob_start();
     <a href="/admin/pages/create" class="btn btn-primary">+ Nova stranka</a>
     <a href="/admin/layouts/create" class="btn btn-secondary">+ Novy layout</a>
     <a href="/admin/publish" class="btn btn-success">Publikovat</a>
-    <a href="/" target="_blank" class="btn btn-inline-edit">&#9998; Editovat web</a>
+    <a href="/?cms_preview=1" target="_blank" class="btn btn-secondary">&#128065; Nahled webu</a>
+    <a href="/" target="_blank" class="btn btn-inline-edit">&#9998; Editovat inline</a>
   </div>
 </div>
 

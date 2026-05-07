@@ -32,6 +32,21 @@ $d = $diag ?? [];
 </div>
 
 <div class="card">
+  <div class="card-title">Armagedon</div>
+  <p style="color:var(--c-muted);margin-bottom:16px;font-size:13.5px">
+    Provede kompletní reset: smaže všechna média ve <code>storage/media</code>, shodí celou databázi,
+    znovu spustí migrace a nakonec nahraje seed od nuly.
+  </p>
+  <div class="alert alert-error" style="margin-bottom:16px">
+    Tohle je nevratná akce. Všechna vlastní média i data v aktuální databázi budou ztracena.
+  </div>
+  <form method="POST" action="/admin/setup/armageddon" data-confirm="ARMAGEDON smaže všechna média i celou databázi a znovu nahraje seed. Opravdu pokračovat?">
+    <input type="hidden" name="_csrf" value="<?= $h($_csrfToken) ?>">
+    <button type="submit" class="btn btn-danger">Armagedon</button>
+  </form>
+</div>
+
+<div class="card">
   <div class="card-title">Diagnostika inline editace</div>
   <table style="width:100%;border-collapse:collapse;font-size:13px">
     <tr>

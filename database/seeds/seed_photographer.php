@@ -523,8 +523,8 @@ $htmlBlog = <<<'HTML'
   <p data-block="hero_sub"></p>
 </div></header>
 <section class="section"><div class="container">
-  <p><a href="/blog/priprava-na-svatebni-foceni">10 tip&#367;, jak se p&#345;ipravit na dokonal&eacute; svatebn&#237; focen&#237; &rarr;</a></p>
-  <p><a href="/blog/rodinne-foceni-s-detmi">Rodinn&eacute; focen&#237;: jak dostat p&#345;irozen&eacute; sn&#237;mky i s mal&#253;mi d&#283;tmi &rarr;</a></p>
+  <p><a href="/priprava-na-svatebni-foceni">10 tip&#367;, jak se p&#345;ipravit na dokonal&eacute; svatebn&#237; focen&#237; &rarr;</a></p>
+  <p><a href="/rodinne-foceni-s-detmi">Rodinn&eacute; focen&#237;: jak dostat p&#345;irozen&eacute; sn&#237;mky i s mal&#253;mi d&#283;tmi &rarr;</a></p>
 </div></section>
 <footer><p>&copy; 2025 RB Photos &amp; Videos</p></footer>
 <button id="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">&#8593;</button>
@@ -603,8 +603,8 @@ $pidHome  = addPage($pdo, $siteId, $tplHomeFull, 'Fotograf & Videograf Olomouc |
 $pidCenik = addPage($pdo, $siteId, $tplCenik,   'Ceník fotografa Olomouc | RB Photos & Videos',                             'cenik',                          '/cenik');
 $pidFaq   = addPage($pdo, $siteId, $tplFaq,     'Časté otázky | Fotograf Olomouc — RB Photos & Videos',                     'faq',                            '/faq');
 $pidBlog  = addPage($pdo, $siteId, $tplBlog,    'Blog | RB Photos & Videos',                                                'blog',                           '/blog');
-$pidArt1  = addPage($pdo, $siteId, $tplArticle, '10 tipů jak se připravit na dokonalé svatební focení | RB Photos & Videos', 'blog/priprava-na-svatebni-foceni','/blog/priprava-na-svatebni-foceni');
-$pidArt2  = addPage($pdo, $siteId, $tplArticle, 'Rodinné focení s dětmi — tipy pro přirozené snímky | RB Photos & Videos',  'blog/rodinne-foceni-s-detmi',    '/blog/rodinne-foceni-s-detmi');
+$pidArt1  = addPage($pdo, $siteId, $tplArticle, '10 tipů jak se připravit na dokonalé svatební focení | RB Photos & Videos', 'priprava-na-svatebni-foceni',    '/priprava-na-svatebni-foceni');
+$pidArt2  = addPage($pdo, $siteId, $tplArticle, 'Rodinné focení s dětmi — tipy pro přirozené snímky | RB Photos & Videos',  'rodinne-foceni-s-detmi',         '/rodinne-foceni-s-detmi');
 
 // ─── Content blocks: Homepage ─────────────────────────────────────────────────
 
@@ -750,18 +750,18 @@ seo($pdo, $pidArt1, [
     'title'       => '10 tipů jak se připravit na dokonalé svatební focení | RB Photos & Videos',
     'desc'        => 'Profesionální fotograf z Olomouce sdílí 10 klíčových tipů, jak se připravit na svatební focení. Od harmonogramu až po zlatou hodinu.',
     'kw'          => 'příprava na svatební focení, tipy od fotografa, svatební fotografie Olomouc',
-    'canonical'   => '/blog/priprava-na-svatebni-foceni',
+    'canonical'   => '/priprava-na-svatebni-foceni',
     'schema_type' => 'BlogPosting',
-    'schema_json' => '{"@context":"https://schema.org","@type":"BlogPosting","headline":"10 tipů jak se připravit na dokonalé svatební focení | RB Photos & Videos","datePublished":"2025-04-12","dateModified":"2025-04-12","author":{"@type":"Organization","name":"RB Photos & Videos","url":"' . $d . '/"},"publisher":{"@type":"Organization","name":"RB Photos & Videos","url":"' . $d . '/"},"url":"' . $d . '/blog/priprava-na-svatebni-foceni"}',
+    'schema_json' => '{"@context":"https://schema.org","@type":"BlogPosting","headline":"10 tipů jak se připravit na dokonalé svatební focení | RB Photos & Videos","datePublished":"2025-04-12","dateModified":"2025-04-12","author":{"@type":"Organization","name":"RB Photos & Videos","url":"' . $d . '/"},"publisher":{"@type":"Organization","name":"RB Photos & Videos","url":"' . $d . '/"},"url":"' . $d . '/priprava-na-svatebni-foceni"}',
 ]);
 
 seo($pdo, $pidArt2, [
     'title'       => 'Rodinné focení s dětmi — tipy pro přirozené snímky | RB Photos & Videos',
     'desc'        => 'Jak nafotit přirozené rodinné fotografie i s malými dětmi? Tipy profesionálního fotografa z Olomouce — správný čas, lokace, oblečení.',
     'kw'          => 'rodinné focení Olomouc, focení s dětmi, přirozené rodinné fotografie',
-    'canonical'   => '/blog/rodinne-foceni-s-detmi',
+    'canonical'   => '/rodinne-foceni-s-detmi',
     'schema_type' => 'BlogPosting',
-    'schema_json' => '{"@context":"https://schema.org","@type":"BlogPosting","headline":"Rodinné focení s dětmi — tipy pro přirozené snímky | RB Photos & Videos","datePublished":"2025-03-28","dateModified":"2025-03-28","author":{"@type":"Organization","name":"RB Photos & Videos","url":"' . $d . '/"},"publisher":{"@type":"Organization","name":"RB Photos & Videos","url":"' . $d . '/"},"url":"' . $d . '/blog/rodinne-foceni-s-detmi"}',
+    'schema_json' => '{"@context":"https://schema.org","@type":"BlogPosting","headline":"Rodinné focení s dětmi — tipy pro přirozené snímky | RB Photos & Videos","datePublished":"2025-03-28","dateModified":"2025-03-28","author":{"@type":"Organization","name":"RB Photos & Videos","url":"' . $d . '/"},"publisher":{"@type":"Organization","name":"RB Photos & Videos","url":"' . $d . '/"},"url":"' . $d . '/rodinne-foceni-s-detmi"}',
 ]);
 
 // ─── Publish ──────────────────────────────────────────────────────────────────

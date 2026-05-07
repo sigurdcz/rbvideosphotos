@@ -234,7 +234,28 @@ function renderPortfolioNav(string $siteName, string $active = 'portfolio'): str
 HTML;
 }
 
-function tryServePortfolioPage(string $uri): bool
+function tryRedirectLegacyContentPath(string $uri): bool
+{
+    if (str_starts_with($uri, '/blog/')) {
+        $slug = trim(substr($uri, strlen('/blog/')), '/');
+        if ($slug !== '') {
+            header('Location: /' . rawurlencode($slug), true, 301);
+            return true;
+        }
+    }
+
+    if (str_starts_with($uri, '/nase-prace/')) {
+        $slug = trim(substr($uri, strlen('/nase-prace/')), '/');
+        if ($slug !== '') {
+            header('Location: /' . rawurlencode($slug), true, 301);
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function tryServePortfolioPage(string $uri, bool $detailOnly = false): bool
 {
     $site = (new SiteRepository())->findFirst();
     if (!$site) {
@@ -245,7 +266,7 @@ function tryServePortfolioPage(string $uri): bool
     $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
     $siteName = (string)($site['name'] ?? 'Muj web');
 
-    if ($uri === '/nase-prace') {
+    if (!$detailOnly && $uri === '/nase-prace') {
         $entries = $repo->allPublished((int)$site['id']);
         $tiles = '';
 
@@ -267,7 +288,7 @@ function tryServePortfolioPage(string $uri): bool
             $playIcon = !empty($entry['video_url']) ? '<span class="pt-play">&#9654;</span>' : '';
 
             $tiles .= <<<HTML
-<a class="pt-tile" href="/nase-prace/{$h($entry['slug'])}">
+<a class="pt-tile" href="/{$h($entry['slug'])}">
   <div class="pt-thumb">{$thumbHtml}{$playIcon}</div>
   <div class="pt-photos">{$extraHtml}</div>
   <div class="pt-caption">{$h($entry['title'])}</div>
@@ -338,12 +359,8 @@ HTML;
         return true;
     }
 
-    if (str_starts_with($uri, '/nase-prace/')) {
-        $slug = trim(substr($uri, strlen('/nase-prace/')), '/');
-        if ($slug === '') {
-            return false;
-        }
-
+    $slug = trim($uri, '/');
+    if ($slug !== '' && $slug !== 'nase-prace') {
         $entry = $repo->findBySlug($slug);
         if (!$entry) {
             return false;
@@ -476,7 +493,11 @@ try {
         }
     }
 
-    if ($uri === '/nase-prace' || str_starts_with($uri, '/nase-prace/')) {
+    if (tryRedirectLegacyContentPath($uri)) {
+        exit;
+    }
+
+    if ($uri === '/nase-prace') {
         if (tryServePortfolioPage($uri)) {
             exit;
         }
@@ -484,6 +505,10 @@ try {
 
     $previewMode = Auth::check() && isset($_GET['cms_preview']);
     if (tryServeDatabasePage($uri, Auth::check(), $previewMode)) {
+        exit;
+    }
+
+    if (tryServePortfolioPage($uri, true)) {
         exit;
     }
 

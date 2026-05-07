@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Přihlášení — SEO Mini CMS</title>
+  <title>Přihlášení - SEO Mini CMS</title>
   <link rel="stylesheet" href="/admin/assets/admin.css">
 </head>
 <body>
@@ -25,8 +25,8 @@
       </div>
       <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">Přihlásit se</button>
     </form>
-    <div style="text-align:center;margin-top:20px">
-      <a href="/" style="font-size:13px;color:var(--c-muted);text-decoration:none">&#8592; Zpět na web</a>
+    <div style="display:flex;justify-content:center;margin-top:20px">
+      <a href="/" class="btn btn-secondary">&#8592; Zpět na homepage</a>
     </div>
   </div>
 </div>

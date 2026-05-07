@@ -34,7 +34,9 @@ ob_start();
           <a href="/admin/pages/edit?id=<?= $p['id'] ?>" class="btn btn-sm btn-secondary">Upravit</a>
           <a href="/admin/seo/edit?page_id=<?= $p['id'] ?>" class="btn btn-sm btn-secondary">SEO</a>
           <?php $frontUrl = '/' . ltrim($p['url_path'] ?? '', '/'); ?>
-          <a href="<?= htmlspecialchars($frontUrl) ?>" target="_blank" class="btn btn-sm btn-inline-edit" title="Otevrit stranku ve frontendu a editovat inline">&#9998; Na webu</a>
+          <?php $previewUrl = $frontUrl . (strpos($frontUrl, '?') === false ? '?' : '&') . 'cms_preview=1'; ?>
+          <a href="<?= htmlspecialchars($previewUrl) ?>" target="_blank" class="btn btn-sm btn-secondary" title="Otevrit cisty nahled stranky">&#128065; Nahled</a>
+          <a href="<?= htmlspecialchars($frontUrl) ?>" target="_blank" class="btn btn-sm btn-inline-edit" title="Otevrit stranku ve frontendu a editovat inline">&#9998; Editace</a>
           <form method="POST" action="/admin/publish/page" data-confirm="Publikovat tuto stranku?">
             <input type="hidden" name="_csrf" value="<?= htmlspecialchars($_csrfToken) ?>">
             <input type="hidden" name="page_id" value="<?= $p['id'] ?>">

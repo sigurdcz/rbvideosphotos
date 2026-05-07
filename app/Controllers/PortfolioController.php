@@ -273,7 +273,7 @@ HTML;
                 $thumb = $this->publicMediaUrl((string)($media['storage_path'] ?? ''));
             }
             $imgHtml = $thumb ? "<img src=\"{$h($thumb)}\" alt=\"{$h($e['title'])}\" loading=\"lazy\">" : "<div class=\"pl-no-thumb\">▶</div>";
-            $tilesHtml .= "<a class=\"pl-tile\" href=\"/nase-prace/{$h($e['slug'])}\"><div class=\"pl-thumb\">{$imgHtml}</div><div class=\"pl-caption\">{$h($e['title'])}</div></a>";
+            $tilesHtml .= "<a class=\"pl-tile\" href=\"/{$h($e['slug'])}\"><div class=\"pl-thumb\">{$imgHtml}</div><div class=\"pl-caption\">{$h($e['title'])}</div></a>";
         }
 
         $html = <<<HTML
@@ -373,7 +373,7 @@ HTML;
             }
 
             $tiles .= <<<TILE
-<a class="pt-tile" href="/nase-prace/{$h($e['slug'])}">
+<a class="pt-tile" href="/{$h($e['slug'])}">
   <div class="pt-thumb">{$thumbHtml}{$playIcon}</div>
   <div class="pt-photos">{$extraHtml}</div>
   <div class="pt-caption">{$h($e['title'])}</div>

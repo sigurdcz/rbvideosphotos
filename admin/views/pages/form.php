@@ -117,10 +117,12 @@ ob_start();
 
     <?php if ($isEdit): ?>
     <?php $frontUrl = '/' . ltrim($page['url_path'] ?? '', '/'); ?>
+    <?php $previewUrl = $frontUrl . (strpos($frontUrl, '?') === false ? '?' : '&') . 'cms_preview=1'; ?>
     <div style="display:flex;gap:10px;margin-top:4px;flex-wrap:wrap">
       <button type="submit" class="btn btn-primary">Ulozit zmeny</button>
       <a href="/admin/seo/edit?page_id=<?= (int)$page['id'] ?>" class="btn btn-secondary">SEO nastaveni</a>
-      <a href="<?= htmlspecialchars($frontUrl) ?>" target="_blank" class="btn btn-inline-edit">&#9998; Editovat na webu</a>
+      <a href="<?= htmlspecialchars($previewUrl) ?>" target="_blank" class="btn btn-secondary">&#128065; Nahled stranky</a>
+      <a href="<?= htmlspecialchars($frontUrl) ?>" target="_blank" class="btn btn-inline-edit">&#9998; Editovat inline</a>
       <button type="submit" form="publish-form" class="btn btn-success">Publikovat</button>
     </div>
     <?php endif; ?>
