@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\SlugTrait;
 use App\Repositories\BlockRepository;
 use App\Repositories\MediaRepository;
 use App\Repositories\PageRepository;
@@ -12,6 +13,7 @@ use App\Repositories\TemplateRepository;
 
 class PortfolioController extends Controller
 {
+    use SlugTrait;
     public function index(array $params): void
     {
         $this->requireAuth();
@@ -393,15 +395,6 @@ TILE;
         return $site ? (new MediaRepository())->allBySite($site['id']) : [];
     }
 
-    private function makeSlug(string $slug, string $title): string
-    {
-        $src = trim($slug) !== '' ? $slug : $title;
-        $map = ['á'=>'a','č'=>'c','ď'=>'d','é'=>'e','ě'=>'e','í'=>'i','ň'=>'n','ó'=>'o','ř'=>'r','š'=>'s','ť'=>'t','ú'=>'u','ů'=>'u','ý'=>'y','ž'=>'z'];
-        $s   = mb_strtolower(strtr($src, $map));
-        $s   = preg_replace('/[^a-z0-9\s-]/', '', $s);
-        $s   = preg_replace('/[\s-]+/', '-', trim($s));
-        return $s;
-    }
     private function publicMediaUrl(string $storagePath): string
     {
         $normalized = str_replace('\\', '/', trim($storagePath));

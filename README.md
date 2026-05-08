@@ -1,4 +1,4 @@
-﻿# SEO Mini CMS
+# SEO Mini CMS
 
 Jednoduche SEO CMS pro male staticke weby v cistem PHP 8. Aplikace ma admin rozhrani pro spravu obsahu, SEO a medii, ale verejny web se servira bez frameworku a bez buildu.
 
@@ -27,11 +27,17 @@ Jednoduche SEO CMS pro male staticke weby v cistem PHP 8. Aplikace ma admin rozh
 
 ## Konfigurace
 
-Projekt cte nastaveni z `.env`:
+Projekt cte nastaveni z `.env`. Zkopiruj `.env.example` jako `.env` a vyplň hodnoty:
 
 ```env
 APP_URL=http://localhost:8000
 APP_DEBUG=true
+
+# Vygeneruj: php -r "echo bin2hex(random_bytes(20));"
+MIGRATE_TOKEN=
+
+# Vygeneruj: php -r "echo bin2hex(random_bytes(32));"
+API_KEY=
 
 DB_DRIVER=mysql
 DB_HOST=127.0.0.1
@@ -41,14 +47,21 @@ DB_USER=root
 DB_PASS=
 ```
 
+### Dulezite env promenne
+
+| Promenna | Popis |
+|---|---|
+| `APP_URL` | Verejná URL aplikace. Pokud zacina `https://`, session cookie dostane `Secure` flag automaticky. |
+| `MIGRATE_TOKEN` | Token pro `migrate-util.php`. Nesmí byt hardcoded — generuj nahodne. |
+| `API_KEY` | Klic pro `/api/v1/*` endpointy. |
+
 ## Prvotni spusteni
 
 1. Vytvor databazi.
-2. Spust migrace.
-3. Volitelne nacti seed.
-4. Spust lokalni PHP server.
-
-Priklady:
+2. Nastav `.env`.
+3. Spust migrace.
+4. Volitelne nacti seed.
+5. Spust lokalni PHP server.
 
 ```bash
 php -S localhost:8000 router.php
@@ -57,7 +70,7 @@ php -S localhost:8000 router.php
 Migrace pres URL utility:
 
 ```text
-http://localhost:8000/migrate-util.php?token=rbpv-migrate-2026-05-02-t7K9mQ4sX2
+http://localhost:8000/migrate-util.php?token=<MIGRATE_TOKEN>
 ```
 
 Seed z adminu:
@@ -100,6 +113,10 @@ Pro media a interni odkazy nepouzivej natvrdo ulozenou domenu tam, kde to neni n
 ```text
 seo-editor/
 |- app/                aplikacni logika
+|  |- Core/            jadro (Router, Auth, Controller, SlugTrait, ...)
+|  |- Controllers/     controllery
+|  |- Repositories/    DB pristup
+|  `- Services/        business logika
 |- admin/              admin panel
 |- config/             konfigurace
 |- database/           migrace, schema, seedy
@@ -111,8 +128,40 @@ seo-editor/
 |- vendor/             autoload
 |- router.php          router pro lokalni PHP server
 |- index.php           vstup pro hosting
-`- migrate-util.php    tokenova migracni utilita
+`- migrate-util.php    tokenova migracni utilita (token z .env)
 ```
+
+## Role a autorizace
+
+Aplikace ma dve role:
+
+| Role | Popis |
+|---|---|
+| `admin` | Plny pristup vcetne Nastaveni a Setup/Armagedon |
+| `editor` | Sprava obsahu (stranky, blog, portfolio, media) |
+
+Endpointy `SetupController` a `SettingsController` vyzaduji roli `admin`.
+
+## Bezpecnost
+
+- **Path traversal**: vsechny `readfile()` bloky pouzivaji `realpath()` + kontrolu prefixu
+- **CSRF**: tokeny na vsech POST formularich pres `hash_equals()`
+- **Session cookie**: `Secure` flag se nastavuje automaticky dle `APP_URL`
+- **Tajemstvi**: `MIGRATE_TOKEN` a `API_KEY` musi byt v `.env`, nikdy v kodu
+- **SQL injection**: PDO prepared statements vsude
+
+## API
+
+REST API je dostupne na `/api/v1/*` s autentizaci pres `X-Api-Key` nebo `Authorization: Bearer` header.
+
+```text
+GET /api/v1/articles
+GET /api/v1/articles/{slug}
+GET /api/v1/portfolio
+GET /api/v1/portfolio/{slug}
+```
+
+`API_KEY` se nastavuje v `.env`.
 
 ## Nasazeni
 

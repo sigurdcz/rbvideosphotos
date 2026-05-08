@@ -457,8 +457,9 @@ try {
     }
 
     if (str_starts_with($uri, '/assets/')) {
-        $file = __DIR__ . $uri;
-        if (is_file($file)) {
+        $assetsBase = realpath(__DIR__ . '/assets');
+        $file       = realpath(__DIR__ . $uri);
+        if ($assetsBase !== false && $file !== false && str_starts_with($file, $assetsBase . DIRECTORY_SEPARATOR)) {
             $ext  = strtolower(pathinfo($file, PATHINFO_EXTENSION));
             $mime = match ($ext) {
                 'css'         => 'text/css',
@@ -476,8 +477,9 @@ try {
     }
 
     if (str_starts_with($uri, '/storage/media/')) {
-        $file = dirname(__DIR__) . $uri;
-        if (is_file($file)) {
+        $mediaBase = realpath(dirname(__DIR__) . '/storage/media');
+        $file      = realpath(dirname(__DIR__) . $uri);
+        if ($mediaBase !== false && $file !== false && str_starts_with($file, $mediaBase . DIRECTORY_SEPARATOR)) {
             $ext  = strtolower(pathinfo($file, PATHINFO_EXTENSION));
             $mime = match ($ext) {
                 'png'         => 'image/png',
@@ -513,24 +515,27 @@ try {
     }
 
     $path = ltrim($uri, '/');
-    $rootFile = $publishedDir . '/' . $path;
-    if ($path !== '' && pathinfo($path, PATHINFO_EXTENSION) !== '' && is_file($rootFile)) {
-        $ext  = strtolower(pathinfo($rootFile, PATHINFO_EXTENSION));
-        $mime = match ($ext) {
-            'ico'         => 'image/x-icon',
-            'png'         => 'image/png',
-            'jpg', 'jpeg' => 'image/jpeg',
-            'webp'        => 'image/webp',
-            'svg'         => 'image/svg+xml',
-            'webmanifest' => 'application/manifest+json',
-            'json'        => 'application/json',
-            'xml'         => 'application/xml',
-            'txt'         => 'text/plain',
-            default       => 'application/octet-stream',
-        };
-        header('Content-Type: ' . $mime);
-        readfile($rootFile);
-        exit;
+    if ($path !== '' && pathinfo($path, PATHINFO_EXTENSION) !== '') {
+        $publishedBase = realpath($publishedDir);
+        $rootFile      = realpath($publishedDir . '/' . $path);
+        if ($publishedBase !== false && $rootFile !== false && str_starts_with($rootFile, $publishedBase . DIRECTORY_SEPARATOR)) {
+            $ext  = strtolower(pathinfo($rootFile, PATHINFO_EXTENSION));
+            $mime = match ($ext) {
+                'ico'         => 'image/x-icon',
+                'png'         => 'image/png',
+                'jpg', 'jpeg' => 'image/jpeg',
+                'webp'        => 'image/webp',
+                'svg'         => 'image/svg+xml',
+                'webmanifest' => 'application/manifest+json',
+                'json'        => 'application/json',
+                'xml'         => 'application/xml',
+                'txt'         => 'text/plain',
+                default       => 'application/octet-stream',
+            };
+            header('Content-Type: ' . $mime);
+            readfile($rootFile);
+            exit;
+        }
     }
 
     http_response_code(404);

@@ -23,3 +23,4 @@ Tento soubor slouzi jako pracovni log a dohoda o tom, jak v repu postupuji.
 - 2026-05-07: Zalozen `WORKFLOW.md`.
 - 2026-05-07: Opraven render portfolio medii tak, aby generoval verejne root-relative URL pro obrazky.
 - 2026-05-07: Aktualizovany vsechny `.md` soubory podle skutecneho stavu projektu.
+- 2026-05-07: Kompletni security refactoring — path traversal fix, migrate token do .env, API_KEY do .env, session cookie secure flag, requireAdmin(), SlugTrait, REFERER validace.

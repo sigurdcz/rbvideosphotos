@@ -30,6 +30,16 @@ abstract class Controller
         Auth::require();
     }
 
+    protected function requireAdmin(): void
+    {
+        Auth::require();
+        if ((Auth::user()['role'] ?? '') !== 'admin') {
+            http_response_code(403);
+            echo 'Přístup zamítnut. Tato akce vyžaduje roli admin.';
+            exit;
+        }
+    }
+
     protected function csrfCheck(): void
     {
         $token = $_POST['_csrf'] ?? '';

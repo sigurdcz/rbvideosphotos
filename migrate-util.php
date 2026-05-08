@@ -11,7 +11,10 @@ use App\Core\Logger;
 
 Env::load(BASE_PATH . '/.env');
 
-$token = 'rbpv-migrate-2026-05-02-t7K9mQ4sX2';
+$token = (string) getenv('MIGRATE_TOKEN');
+if ($token === '') {
+    renderPage('Chyba konfigurace', '500', '<h1>MIGRATE_TOKEN není nastaven.</h1><p>Přidej <code>MIGRATE_TOKEN=...</code> do <code>.env</code>.</p>', 500);
+}
 $providedToken = (string) ($_GET['token'] ?? '');
 date_default_timezone_set(getenv('APP_TZ') ?: 'Europe/Prague');
 

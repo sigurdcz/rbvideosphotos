@@ -9,12 +9,11 @@ class SettingsController extends Controller
 {
     public function index(array $params): void
     {
-        $this->requireAuth();
+        $this->requireAdmin();
         $sites = new SiteRepository();
         $site  = $sites->findFirst();
 
-        $apiKeyFile = dirname(__DIR__, 2) . '/storage/api_key.txt';
-        $apiKey     = file_exists($apiKeyFile) ? trim(file_get_contents($apiKeyFile)) : null;
+        $apiKey = (string) getenv('API_KEY') ?: null;
 
         $this->view('settings.index', [
             'site'    => $site,
@@ -26,7 +25,7 @@ class SettingsController extends Controller
 
     public function update(array $params): void
     {
-        $this->requireAuth();
+        $this->requireAdmin();
         $this->csrfCheck();
 
         $sites = new SiteRepository();

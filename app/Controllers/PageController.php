@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\SlugTrait;
 use App\Repositories\BlockRepository;
 use App\Repositories\PageRepository;
 use App\Repositories\SeoRepository;
@@ -12,6 +13,7 @@ use App\Services\TemplateParser;
 
 class PageController extends Controller
 {
+    use SlugTrait;
     public function index(array $params): void
     {
         $this->requireAuth();
@@ -53,9 +55,9 @@ class PageController extends Controller
             $this->redirect('/admin/pages');
         }
 
-        $slug    = $this->makeSlug($_POST['slug'] ?? $_POST['title'] ?? '');
+        $slug    = $this->makeSlug($_POST['slug'] ?? '', $_POST['title'] ?? '', allowSlash: true);
         $rawUrl  = trim($_POST['url_path'] ?? '');
-        $urlPath = $rawUrl !== '' ? $this->makeSlug($rawUrl) : $slug;
+        $urlPath = $rawUrl !== '' ? $this->makeSlug($rawUrl, '', allowSlash: true) : $slug;
         $repo    = new PageRepository();
 
         if ($repo->slugExists($site['id'], $slug)) {
@@ -120,9 +122,9 @@ class PageController extends Controller
             $this->redirect('/admin/pages');
         }
 
-        $slug    = $this->makeSlug($_POST['slug'] ?? '');
+        $slug    = $this->makeSlug($_POST['slug'] ?? '', '', allowSlash: true);
         $rawUrl  = trim($_POST['url_path'] ?? '');
-        $urlPath = $rawUrl !== '' ? $this->makeSlug($rawUrl) : '';
+        $urlPath = $rawUrl !== '' ? $this->makeSlug($rawUrl, '', allowSlash: true) : '';
 
         if ($repo->slugExists($page['site_id'], $slug, $id)) {
             $this->flash('error', 'Slug již existuje.');
@@ -157,27 +159,6 @@ class PageController extends Controller
         (new PageRepository())->delete($id);
         $this->flash('success', 'Stránka smazána.');
         $this->redirect('/admin/pages');
-    }
-
-    private function makeSlug(string $value): string
-    {
-        $value = mb_strtolower(trim($value));
-        // transliterate Czech diacritics
-        $value = $this->removeDiacritics($value);
-        $value = preg_replace('/[^a-z0-9\-\/]/', '-', $value);
-        $value = preg_replace('/-+/', '-', $value);
-        return trim($value, '-/');
-    }
-
-    private function removeDiacritics(string $str): string
-    {
-        $map = [
-            'á'=>'a','č'=>'c','ď'=>'d','é'=>'e','ě'=>'e','í'=>'i','ň'=>'n',
-            'ó'=>'o','ř'=>'r','š'=>'s','ť'=>'t','ú'=>'u','ů'=>'u','ý'=>'y','ž'=>'z',
-            'Á'=>'a','Č'=>'c','Ď'=>'d','É'=>'e','Ě'=>'e','Í'=>'i','Ň'=>'n',
-            'Ó'=>'o','Ř'=>'r','Š'=>'s','Ť'=>'t','Ú'=>'u','Ů'=>'u','Ý'=>'y','Ž'=>'z',
-        ];
-        return strtr($str, $map);
     }
 
     private function initBlocksFromTemplate(int $pageId, int $templateId): void

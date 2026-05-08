@@ -1,4 +1,4 @@
-﻿# Architecture
+# Architecture
 
 Tento dokument popisuje aktualni technicky stav projektu podle skutecne implementace v repu.
 
@@ -51,7 +51,7 @@ storage/
 ### Admin
 
 ```text
-request -> admin/index.php -> Core\\Router -> Controller -> Repository/Service -> View
+request -> admin/index.php -> Core\Router -> Controller -> Repository/Service -> View
 ```
 
 ### Verejny web
@@ -59,7 +59,7 @@ request -> admin/index.php -> Core\\Router -> Controller -> Repository/Service -
 ```text
 request -> public/index.php
         -> API routing
-        -> asset/media passthrough
+        -> asset/media passthrough (path traversal ochrana pres realpath)
         -> portfolio static HTML
         -> DB render beznych stranek
         -> fallback na storage/published
@@ -97,6 +97,8 @@ Pouzite tabulky zahrnuji zejmena:
 - redirect
 - JSON odpovedi
 - CSRF kontrola pro POST
+- `requireAuth()` — overeni prihlaseni
+- `requireAdmin()` — overeni prihlaseni + role `admin`
 
 ### `app/Core/Database.php`
 
@@ -109,6 +111,14 @@ Pouzite tabulky zahrnuji zejmena:
 - session autentizace
 - role `admin` a `editor`
 - CSRF token per session
+- `secure` flag na session cookie se nastavuje automaticky podle `APP_URL` (https = true)
+
+### `app/Core/SlugTrait.php`
+
+- sdileny trait pro generovani slugu
+- pouzivan v `PageController`, `BlogController`, `PortfolioController`
+- parametr `allowSlash: true` povoluje lomitko (vnorene stranky)
+- transliterace ceskych diakritik (vcetne velkych pismen)
 
 ## Repository vrstva
 
@@ -165,13 +175,44 @@ To je dulezite hlavne proto, aby media fungovala stejne na produkci, stagingu i 
 `public/index.php` dnes dela tyto veci:
 
 1. obslouzi `/api/v1/*`
-2. obslouzi `/assets/*`
-3. obslouzi `/storage/media/*`
+2. obslouzi `/assets/*` — s ochranou pred path traversalem (realpath + prefix check)
+3. obslouzi `/storage/media/*` — s ochranou pred path traversalem
 4. obslouzi portfolio z `storage/published/nase-prace`
 5. pokusi se vyrenderovat beznou stranku z databaze
-6. pripadne spadne na export ve `storage/published`
+6. pripadne spadne na export ve `storage/published` — s ochranou pred path traversalem
 
 To znamena, ze neplati stare tvrzeni, ze cely web je servirovan jen z predgenerovanych HTML souboru.
+
+## Bezpecnost
+
+### Path traversal
+
+Vsechny tri `readfile()` bloky v `public/index.php` pouzivaji `realpath()` + kontrolu prefixu:
+
+```php
+$base = realpath($baseDir);
+$file = realpath($baseDir . $uri);
+if ($base !== false && $file !== false && str_starts_with($file, $base . DIRECTORY_SEPARATOR)) {
+    readfile($file);
+}
+```
+
+### Tajemstvi v .env
+
+- `MIGRATE_TOKEN` — token pro `migrate-util.php` nesmí byt hardcoded v kodu
+- `API_KEY` — klic pro `/api/v1/*` endpointy
+
+Oba musi byt nastaveny v `.env` (viz `.env.example`).
+
+### Role-based autorizace
+
+- `requireAuth()` — jakykoli prihlaseny uzivatel
+- `requireAdmin()` — pouze role `admin`
+- `SetupController` a `SettingsController` vyzaduji `admin`
+
+### Session cookie
+
+- `secure` flag se nastavuje automaticky: pokud `APP_URL` zacina `https://`, je `secure = true`
 
 ## Lokalni vyvoj
 
@@ -190,7 +231,7 @@ Dev router:
 Migrace:
 
 ```text
-/migrate-util.php?token=...
+/migrate-util.php?token=<MIGRATE_TOKEN z .env>
 ```
 
 Seed:

@@ -13,7 +13,7 @@ class SetupController extends Controller
 {
     public function index(array $params): void
     {
-        $this->requireAuth();
+        $this->requireAdmin();
 
         $pages = new PageRepository();
         $sites = new SiteRepository();
@@ -39,7 +39,7 @@ class SetupController extends Controller
 
     public function run(array $params): void
     {
-        $this->requireAuth();
+        $this->requireAdmin();
         $this->csrfCheck();
 
         try {
@@ -58,7 +58,7 @@ class SetupController extends Controller
 
     public function armageddon(array $params): void
     {
-        $this->requireAuth();
+        $this->requireAdmin();
         $this->csrfCheck();
 
         try {

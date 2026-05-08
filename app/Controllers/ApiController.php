@@ -9,12 +9,6 @@ use App\Repositories\SiteRepository;
 
 class ApiController
 {
-    private string $apiKeyFile;
-
-    public function __construct()
-    {
-        $this->apiKeyFile = dirname(__DIR__, 2) . '/storage/api_key.txt';
-    }
 
     public function dispatch(string $uri): void
     {
@@ -190,11 +184,6 @@ class ApiController
 
     private function getApiKey(): string
     {
-        if (file_exists($this->apiKeyFile)) {
-            return trim(file_get_contents($this->apiKeyFile));
-        }
-        $key = bin2hex(random_bytes(32));
-        file_put_contents($this->apiKeyFile, $key);
-        return $key;
+        return (string) getenv('API_KEY');
     }
 }

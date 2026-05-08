@@ -9,10 +9,12 @@ class Auth
         if (session_status() === PHP_SESSION_NONE) {
             $name = Config::get('app', 'session_name', 'seo_cms_session');
             session_name($name);
+            $appUrl = (string) getenv('APP_URL');
+            $secure = str_starts_with(strtolower($appUrl), 'https://');
             session_set_cookie_params([
                 'lifetime' => 0,
                 'path'     => '/',
-                'secure'   => false,
+                'secure'   => $secure,
                 'httponly' => true,
                 'samesite' => 'Lax',
             ]);
