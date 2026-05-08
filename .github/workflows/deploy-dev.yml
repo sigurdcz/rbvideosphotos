@@ -52,7 +52,9 @@ jobs:
           username: ${{ secrets.FTP_USER }}
           password: ${{ secrets.FTP_PASS }}
           port: 21
-          protocol: ftp
+          protocol: ftps
+          security: loose
+          timeout: 120000
           local-dir: ./_deploy/
           server-dir: /web/dev/
           exclude: |
