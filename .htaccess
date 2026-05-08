@@ -2,6 +2,7 @@ Options -Indexes
 AddDefaultCharset UTF-8
 RewriteEngine On
 RewriteBase /
+DirectoryIndex index.php index.html
 
 # Admin assets — serve directly
 RewriteRule ^admin/assets/(.*)$ admin/assets/$1 [L]
@@ -12,9 +13,9 @@ RewriteRule ^admin(/.*)?$ admin/index.php [L,QSA]
 # Storage media — serve directly
 RewriteRule ^storage/media/(.*)$ storage/media/$1 [L]
 
-# Everything else (non-file) → public front controller
-# NOTE: directories are intentionally included so that / and sub-paths
-# reach public/index.php (which serves storage/published/ or edit mode).
+# Everything else → public front controller.
+# Do not exclude directories here, because the document root itself is a
+# directory and we still want "/" to reach public/index.php.
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_URI} !^/index\.php
 RewriteRule ^(.*)$ public/index.php [L,QSA]
