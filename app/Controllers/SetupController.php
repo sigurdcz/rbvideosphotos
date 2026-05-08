@@ -62,7 +62,10 @@ class SetupController extends Controller
         $this->csrfCheck();
 
         try {
+            @unlink(dirname(__DIR__, 2) . '/storage/.migration-lock');
             $this->purgeDirectoryContents(dirname(__DIR__, 2) . '/storage/media');
+            $this->purgeDirectoryContents(dirname(__DIR__, 2) . '/storage/published');
+            $this->ensurePublishedFallbackIndex();
             $this->resetDatabase();
             $this->runMigrations();
             $output = $this->runSeed();
@@ -178,6 +181,23 @@ class SetupController extends Controller
             if (!unlink($path)) {
                 throw new \RuntimeException('Nepodařilo se smazat soubor: ' . $path);
             }
+        }
+    }
+
+    private function ensurePublishedFallbackIndex(): void
+    {
+        $dir = dirname(__DIR__, 2) . '/storage/published';
+        if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
+            throw new \RuntimeException('Nepodařilo se vytvořit storage/published.');
+        }
+
+        $fallback = <<<PHP
+<?php
+require dirname(__DIR__, 2) . '/public/index.php';
+PHP;
+
+        if (file_put_contents($dir . '/index.php', $fallback) === false) {
+            throw new \RuntimeException('Nepodařilo se vytvořit fallback index.php v storage/published.');
         }
     }
 }
