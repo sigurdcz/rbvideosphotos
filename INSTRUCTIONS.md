@@ -29,13 +29,18 @@
 
 6. Pokud není jasné, jaký je lepší postup, AI má zvolit jiný rozumný způsob nebo uživateli stručně vysvětlit, proč je vhodné postupovat jinak.
 
-7. Git commit zprávy pište v této struktuře:
-   - `type(scope): stručné shrnutí`
+7. Git commit zprávy pište tak, aby je AI pochopila na první přečtení bez dohledávání kontextu:
+   - `type(scope): co se změnilo a proč`
    - `type` má hned na první pohled říct, jestli jde o `feature`, `fix`, `refactor`, `docs`, `chore`, `test` nebo podobný typ změny.
    - `scope` má být krátká oblast změny, například `admin`, `blog`, `deploy`, `seo`.
-   - Shrnutí má být stručné, věcné a v přítomném čase.
-   - Když je to možné, napište commit tak, aby první přečtení okamžitě řeklo, co se změnilo.
+   - První část zprávy má shrnout samotnou změnu.
+   - Druhá část má říct důvod nebo dopad, aby AI chápala účel změny stejně jako člověk.
+   - Když je potřeba víc kontextu, přidejte krátké body do těla commitu:
+     - co přesně se upravilo
+     - proč to bylo potřeba
+     - jaký je dopad na chování
+   - Pište stručně, věcně a v přítomném čase.
    - Příklady:
-     - `fix(admin): add homepage preview button`
-     - `feature(blog): switch featured image picker to media grid`
-     - `docs: refresh architecture and workflow notes`
+     - `fix(admin): add homepage preview button so editors can inspect pages without inline mode`
+     - `feature(blog): switch featured image picker to media grid for faster selection`
+     - `docs: refresh architecture notes so AI and humans read the same project state`
