@@ -39,6 +39,9 @@ class SettingsController extends Controller
             'google_tag_manager_id' => trim($_POST['google_tag_manager_id'] ?? ''),
             'head_scripts'          => $_POST['head_scripts']               ?? '',
             'body_scripts'          => $_POST['body_scripts']               ?? '',
+            'layout_html'           => $_POST['layout_html']                ?? '',
+            'layout_css'            => $_POST['layout_css']                 ?? '',
+            'layout_js'             => $_POST['layout_js']                  ?? '',
         ];
 
         if ($site) {

@@ -77,7 +77,15 @@ class PublishService
 
         // Render
         $html = $this->renderer->render($template['html_source'], $blocks, $mediaMap);
-        $html = $this->renderer->injectAssets($html, $template['css_source'] ?? '', $template['js_source'] ?? '');
+        if (!empty($site['layout_html'])) {
+            $html = $this->renderer->applyLayout($site['layout_html'], $html, $site['name'] ?? '');
+            $css  = ($site['layout_css'] ?? '') . "\n" . ($template['css_source'] ?? '');
+            $js   = ($site['layout_js']  ?? '') . "\n" . ($template['js_source']  ?? '');
+        } else {
+            $css = $template['css_source'] ?? '';
+            $js  = $template['js_source']  ?? '';
+        }
+        $html = $this->renderer->injectAssets($html, $css, $js);
 
         $seoHead     = $this->seoRenderer->renderHead($seo, $site, $pageUrl, $ogImageUrl, $twImageUrl);
         $bodyScripts = $this->seoRenderer->renderBodyScripts($site);

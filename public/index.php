@@ -96,7 +96,15 @@ function tryServeDatabasePage(string $uri, bool $authenticated = false, bool $pr
             $mediaMap,
             $authenticated && !$previewMode
         );
-        $html = $renderer->injectAssets($html, $template['css_source'] ?? '', $template['js_source'] ?? '');
+        if (!empty($site['layout_html'])) {
+            $html = $renderer->applyLayout($site['layout_html'], $html, $site['name'] ?? '');
+            $css  = ($site['layout_css'] ?? '') . "\n" . ($template['css_source'] ?? '');
+            $js   = ($site['layout_js']  ?? '') . "\n" . ($template['js_source']  ?? '');
+        } else {
+            $css = $template['css_source'] ?? '';
+            $js  = $template['js_source']  ?? '';
+        }
+        $html = $renderer->injectAssets($html, $css, $js);
         $html = $renderer->injectSeo(
             $html,
             $seoRenderer->renderHead($seo, $site, $pageUrl, $ogImageUrl, $twImageUrl),

@@ -75,6 +75,28 @@ ob_start();
     </div>
   </div>
 
+  <div class="card">
+    <div class="card-title">Layout webu (spolecna hlavicka a paticka)</div>
+    <p class="help-text" style="margin-bottom:16px">
+      HTML layout obali kazdou stranku. Pouzij <code>{page_content}</code> pro vlozeni obsahu stranky
+      a <code>{site_name}</code> pro nazev webu. Ponech prazdne, pokud kazda sablona ma vlastni HTML.
+    </p>
+    <div class="form-group">
+      <label>Layout HTML</label>
+      <textarea class="code" name="layout_html" rows="14"><?= $h($site['layout_html'] ?? '') ?></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Layout CSS (spolecne styly — nav, paticka, zaklad)</label>
+        <textarea class="code" name="layout_css" rows="10"><?= $h($site['layout_css'] ?? '') ?></textarea>
+      </div>
+      <div class="form-group">
+        <label>Layout JS (spolecny skript — scroll, nav efekty)</label>
+        <textarea class="code" name="layout_js" rows="10"><?= $h($site['layout_js'] ?? '') ?></textarea>
+      </div>
+    </div>
+  </div>
+
   <button type="submit" class="btn btn-primary">Ulozit nastaveni</button>
 </form>
 

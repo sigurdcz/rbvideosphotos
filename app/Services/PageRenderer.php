@@ -112,6 +112,18 @@ class PageRenderer
     }
 
     /**
+     * Wrap rendered page content with the site-level layout.
+     * Replaces {page_content} with $content and {site_name} with the site name.
+     */
+    public function applyLayout(string $layoutHtml, string $content, string $siteName): string
+    {
+        $safeName = htmlspecialchars($siteName, ENT_QUOTES, 'UTF-8');
+        $result   = str_replace('{page_content}', $content, $layoutHtml);
+        $result   = str_replace('{site_name}', $safeName, $result);
+        return $result;
+    }
+
+    /**
      * Inject SEO tags into <head> and body scripts before </body>.
      */
     public function injectSeo(string $html, string $seoHead, string $bodyScripts): string
