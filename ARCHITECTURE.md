@@ -84,6 +84,39 @@ Pouzite tabulky zahrnuji zejmena:
 - `redirects`
 - `publish_history`
 
+## Site layout a navigace
+
+Layout je sdílen přes `sites.layout_html`. Podporované placeholdery:
+
+- `{page_content}` — obsah stránky ze šablony
+- `{site_name}` — název webu
+- `{nav}` — navigační panel (volitelný, viz níže)
+
+### Dvě varianty navigace
+
+| Pole v DB | Kdy se použije | Chování odkazů |
+|---|---|---|
+| `sites.layout_nav_home` | Homepage (`url_path = /`) | Hash anchory (`#sluzby`, `#cenik`…) pro One Page smooth scroll |
+| `sites.layout_nav_sub` | Všechny ostatní stránky + portfolio | Přímé URL (`/sluzby`, `/cenik`…) |
+
+Oba nav bloky mohou obsahovat `{site_name}`, který se nahradí názvem webu.
+
+Pokud `layout_nav_home`/`layout_nav_sub` nejsou vyplněny, `{nav}` se tiše odstraní a nav musí být součástí `layout_html` ručně.
+
+### Povinně seedované stránky
+
+Těchto 7 stránek je vždy naseedovaných:
+
+| URL | Šablona |
+|---|---|
+| `/` | Homepage |
+| `/sluzby` | Služby |
+| `/nase-prace` | Portfolio (dynamické, mimo DB pages) |
+| `/cenik` | Ceník |
+| `/faq` | FAQ |
+| `/blog` | Blog listing |
+| `/kontakt` | Kontakt |
+
 ## Core vrstva
 
 ### `app/Core/Router.php`

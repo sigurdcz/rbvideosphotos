@@ -42,6 +42,8 @@ class SettingsController extends Controller
             'layout_html'           => $_POST['layout_html']                ?? '',
             'layout_css'            => $_POST['layout_css']                 ?? '',
             'layout_js'             => $_POST['layout_js']                  ?? '',
+            'layout_nav_home'       => $_POST['layout_nav_home']            ?? '',
+            'layout_nav_sub'        => $_POST['layout_nav_sub']             ?? '',
         ];
 
         if ($site) {

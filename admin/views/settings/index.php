@@ -78,8 +78,10 @@ ob_start();
   <div class="card">
     <div class="card-title">Layout webu (spolecna hlavicka a paticka)</div>
     <p class="help-text" style="margin-bottom:16px">
-      HTML layout obali kazdou stranku. Pouzij <code>{page_content}</code> pro vlozeni obsahu stranky
-      a <code>{site_name}</code> pro nazev webu. Ponech prazdne, pokud kazda sablona ma vlastni HTML.
+      HTML layout obali kazdou stranku. Dostupne placeholdery:<br>
+      <code>{page_content}</code> — obsah stranky &nbsp;|&nbsp;
+      <code>{site_name}</code> — nazev webu &nbsp;|&nbsp;
+      <code>{nav}</code> — navigace (viz pole nav nize). Ponech prazdne, pokud kazda sablona ma vlastni HTML.
     </p>
     <div class="form-group">
       <label>Layout HTML</label>
@@ -93,6 +95,16 @@ ob_start();
       <div class="form-group">
         <label>Layout JS (spolecny skript — scroll, nav efekty)</label>
         <textarea class="code" name="layout_js" rows="10"><?= $h($site['layout_js'] ?? '') ?></textarea>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Nav — homepage (hash anchory pro One Page scroll)</label>
+        <textarea class="code" name="layout_nav_home" rows="8"><?= $h($site['layout_nav_home'] ?? '') ?></textarea>
+      </div>
+      <div class="form-group">
+        <label>Nav — subpages (prime URL na jednotlive stranky)</label>
+        <textarea class="code" name="layout_nav_sub" rows="8"><?= $h($site['layout_nav_sub'] ?? '') ?></textarea>
       </div>
     </div>
   </div>

@@ -31,7 +31,7 @@ class SiteRepository
 
     public function update(int $id, array $data): void
     {
-        $allowed = ['name','domain','default_language','google_analytics_id','google_tag_manager_id','head_scripts','body_scripts','layout_html','layout_css','layout_js'];
+        $allowed = ['name','domain','default_language','google_analytics_id','google_tag_manager_id','head_scripts','body_scripts','layout_html','layout_css','layout_js','layout_nav_home','layout_nav_sub'];
         $sets = [];
         $vals = [];
         foreach ($allowed as $col) {

@@ -113,13 +113,18 @@ class PageRenderer
 
     /**
      * Wrap rendered page content with the site-level layout.
-     * Replaces {page_content} with $content and {site_name} with the site name.
+     *
+     * Supported placeholders in $layoutHtml:
+     *   {page_content} — replaced with $content
+     *   {site_name}    — replaced with escaped site name
+     *   {nav}          — replaced with $nav HTML (pass '' to leave unreplaced)
      */
-    public function applyLayout(string $layoutHtml, string $content, string $siteName): string
+    public function applyLayout(string $layoutHtml, string $content, string $siteName, string $nav = ''): string
     {
         $safeName = htmlspecialchars($siteName, ENT_QUOTES, 'UTF-8');
-        $result   = str_replace('{page_content}', $content, $layoutHtml);
-        $result   = str_replace('{site_name}', $safeName, $result);
+        $result = str_replace('{page_content}', $content, $layoutHtml);
+        $result = str_replace('{nav}', $nav, $result);
+        $result = str_replace('{site_name}', $safeName, $result);
         return $result;
     }
 

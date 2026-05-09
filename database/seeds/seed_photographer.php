@@ -30,18 +30,18 @@ function upsertUser(PDO $pdo, string $email, string $pw, string $role = 'admin')
     return (int)$s->fetchColumn();
 }
 
-function upsertSite(PDO $pdo, string $name, string $domain, string $ga, string $gtm, string $bodyScript, string $layoutHtml, string $layoutCss, string $layoutJs): int
+function upsertSite(PDO $pdo, string $name, string $domain, string $ga, string $gtm, string $bodyScript, string $layoutHtml, string $layoutCss, string $layoutJs, string $layoutNavHome, string $layoutNavSub): int
 {
     $s = $pdo->prepare('SELECT id FROM sites WHERE domain=?');
     $s->execute([$domain]);
     $id = $s->fetchColumn();
     if ($id) {
-        $pdo->prepare('UPDATE sites SET name=?,google_analytics_id=?,google_tag_manager_id=?,body_scripts=?,layout_html=?,layout_css=?,layout_js=?,updated_at=NOW() WHERE id=?')
-            ->execute([$name,$ga,$gtm,$bodyScript,$layoutHtml,$layoutCss,$layoutJs,$id]);
+        $pdo->prepare('UPDATE sites SET name=?,google_analytics_id=?,google_tag_manager_id=?,body_scripts=?,layout_html=?,layout_css=?,layout_js=?,layout_nav_home=?,layout_nav_sub=?,updated_at=NOW() WHERE id=?')
+            ->execute([$name,$ga,$gtm,$bodyScript,$layoutHtml,$layoutCss,$layoutJs,$layoutNavHome,$layoutNavSub,$id]);
         return (int)$id;
     }
-    $pdo->prepare('INSERT INTO sites (name,domain,google_analytics_id,google_tag_manager_id,body_scripts,layout_html,layout_css,layout_js) VALUES (?,?,?,?,?,?,?,?)')
-        ->execute([$name,$domain,$ga,$gtm,$bodyScript,$layoutHtml,$layoutCss,$layoutJs]);
+    $pdo->prepare('INSERT INTO sites (name,domain,google_analytics_id,google_tag_manager_id,body_scripts,layout_html,layout_css,layout_js,layout_nav_home,layout_nav_sub) VALUES (?,?,?,?,?,?,?,?,?,?)')
+        ->execute([$name,$domain,$ga,$gtm,$bodyScript,$layoutHtml,$layoutCss,$layoutJs,$layoutNavHome,$layoutNavSub]);
     return (int)$pdo->lastInsertId();
 }
 
@@ -101,7 +101,7 @@ function seo(PDO $pdo, int $pid, array $d): void
 // ─── Site Layout ──────────────────────────────────────────────────────────────
 // Sdileny layout — nav + paticka + HTML obal pro vsechny stranky.
 // Sablony stranek obsahuji jen obsah (zadny <html>/<head>/<body>/nav/footer).
-// {page_content} se nahradi obsahem sablony, {site_name} nazvem webu.
+// Placeholdery: {page_content} = obsah, {site_name} = nazev webu, {nav} = varianta navu.
 
 $layoutHtml = <<<'HTML'
 <!DOCTYPE html>
@@ -115,19 +115,7 @@ $layoutHtml = <<<'HTML'
   <link rel="manifest" href="/site.webmanifest">
 </head>
 <body>
-<nav class="nav" id="sitenav">
-  <div class="container nav-inner">
-    <a href="/" class="brand">{site_name}</a>
-    <div class="nav-links">
-      <a href="/#sluzby">Slu&#382;by</a>
-      <a href="/nase-prace">Na&#353;e pr&#225;ce</a>
-      <a href="/cenik">Cen&#237;k</a>
-      <a href="/faq">FAQ</a>
-      <a href="/blog">Blog</a>
-      <a href="/#kontakt" class="nav-cta">Kontakt</a>
-    </div>
-  </div>
-</nav>
+{nav}
 {page_content}
 <footer class="footer">
   <p>&copy; 2025 {site_name} &mdash; Olomouc</p>
@@ -135,6 +123,40 @@ $layoutHtml = <<<'HTML'
 <button id="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">&#8593;</button>
 </body>
 </html>
+HTML;
+
+// Nav — homepage: hash anchory pro One Page smooth scroll
+$layoutNavHome = <<<'HTML'
+<nav class="nav" id="sitenav">
+  <div class="container nav-inner">
+    <a href="/" class="brand">{site_name}</a>
+    <div class="nav-links">
+      <a href="#sluzby">Slu&#382;by</a>
+      <a href="#nase-prace">Na&#353;e pr&#225;ce</a>
+      <a href="#cenik">Cen&#237;k</a>
+      <a href="#faq">FAQ</a>
+      <a href="#blog">Blog</a>
+      <a href="#kontakt" class="nav-cta">Kontakt</a>
+    </div>
+  </div>
+</nav>
+HTML;
+
+// Nav — subpages: prime URL na jednotlive stranky
+$layoutNavSub = <<<'HTML'
+<nav class="nav" id="sitenav">
+  <div class="container nav-inner">
+    <a href="/" class="brand">{site_name}</a>
+    <div class="nav-links">
+      <a href="/sluzby">Slu&#382;by</a>
+      <a href="/nase-prace">Na&#353;e pr&#225;ce</a>
+      <a href="/cenik">Cen&#237;k</a>
+      <a href="/faq">FAQ</a>
+      <a href="/blog">Blog</a>
+      <a href="/kontakt" class="nav-cta">Kontakt</a>
+    </div>
+  </div>
+</nav>
 HTML;
 
 $layoutCss = <<<'CSS'
@@ -202,7 +224,7 @@ JS;
 $gtmNoscript = '<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-542MMSL" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>';
 
 $userId = upsertUser($pdo, 'admin@rbphotos.cz', 'admin123');
-$siteId = upsertSite($pdo, 'RB Photos & Videos', 'https://rbvideosphotos.kvalitne.cz', 'G-BD4BS9R4JZ', 'GTM-542MMSL', $gtmNoscript, $layoutHtml, $layoutCss, $layoutJs);
+$siteId = upsertSite($pdo, 'RB Photos & Videos', 'https://rbvideosphotos.kvalitne.cz', 'G-BD4BS9R4JZ', 'GTM-542MMSL', $gtmNoscript, $layoutHtml, $layoutCss, $layoutJs, $layoutNavHome, $layoutNavSub);
 
 // ─── Template: Homepage ───────────────────────────────────────────────────────
 // Pouze obsah stranky — bez <html>/<head>/<body>/nav/footer (ty jsou v layoutu).
@@ -511,14 +533,103 @@ HTML;
 
 $tplArticle = tpl($pdo, $siteId, 'Blog article', $htmlArticle, $articleCss, $subpageJs);
 
+// ─── Template: Služby ─────────────────────────────────────────────────────────
+
+$serviceCss = $subpageCss . <<<'CSS'
+
+.svc-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:0;border:1px solid rgba(255,255,255,.08);margin-top:32px}
+.svc-card{padding:32px 24px;border-right:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.08)}
+.svc-card:nth-child(2n){border-right:none}
+.svc-card:nth-last-child(-n+2){border-bottom:none}
+.svc-card--dark{background:#111}
+.svc-num{display:block;font-size:10px;color:#c4963c;font-weight:700;letter-spacing:.12em;margin-bottom:14px}
+.svc-card h3{font-size:1rem;font-weight:700;margin-bottom:10px;color:#fff}
+.svc-card p{font-size:.87rem;color:rgba(255,255,255,.5);line-height:1.7}
+@media(max-width:640px){.svc-grid{grid-template-columns:1fr}.svc-card{border-right:none}}
+CSS;
+
+$htmlSluzby = <<<'HTML'
+<header class="hero">
+  <div class="container">
+    <h1 data-block="hero_heading"></h1>
+    <p data-block="hero_sub"></p>
+  </div>
+</header>
+<section class="section-dark">
+  <div class="container">
+    <div class="svc-grid">
+      <div class="svc-card svc-card--dark" data-block="service_1"></div>
+      <div class="svc-card svc-card--dark" data-block="service_2"></div>
+      <div class="svc-card svc-card--dark" data-block="service_3"></div>
+      <div class="svc-card svc-card--dark" data-block="service_4"></div>
+    </div>
+  </div>
+</section>
+<section class="section">
+  <div class="container">
+    <h2 data-block="cta_heading"></h2>
+    <p data-block="cta_sub"></p>
+    <a href="tel:792483583" class="btn">&#128222; 792&#160;483&#160;583</a>
+  </div>
+</section>
+HTML;
+
+$tplSluzby = tpl($pdo, $siteId, 'Služby', $htmlSluzby, $serviceCss, $subpageJs);
+
+// ─── Template: Kontakt ────────────────────────────────────────────────────────
+
+$kontaktCss = $subpageCss . <<<'CSS'
+
+.cta-2col{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:start;margin-top:32px}
+.cta-l h2{font-size:1.6rem;font-weight:900;margin-bottom:14px;color:#222}
+.cta-l p{color:#666;margin-bottom:20px;font-size:.95rem}
+.cta-info{margin-top:12px}
+.cta-info p{color:#333;font-size:.93rem;margin-bottom:6px}
+.cta-info a{color:#c4963c;font-weight:600}
+.cta-r{background:#111;padding:30px}
+.cta-r h3{color:#fff;font-size:1rem;font-weight:700;margin-bottom:6px}
+.cta-r-sub{color:rgba(255,255,255,.45);font-size:.85rem;margin-bottom:22px}
+.cta-btn{display:block;padding:13px 16px;text-align:center;font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;margin-bottom:10px;transition:all .2s;text-decoration:none}
+.cta-btn:last-child{margin-bottom:0}
+.cta-btn--gold{background:#c4963c;color:#fff}
+.cta-btn--gold:hover{background:#b5853a;color:#fff}
+.cta-btn--dark{border:1px solid rgba(255,255,255,.18);color:rgba(255,255,255,.8)}
+.cta-btn--dark:hover{background:rgba(255,255,255,.08);color:#fff}
+@media(max-width:720px){.cta-2col{grid-template-columns:1fr;gap:32px}}
+CSS;
+
+$htmlKontakt = <<<'HTML'
+<header class="hero">
+  <div class="container">
+    <h1 data-block="hero_heading"></h1>
+    <p data-block="hero_sub"></p>
+  </div>
+</header>
+<section class="section">
+  <div class="container">
+    <div class="cta-2col">
+      <div class="cta-l">
+        <h2 data-block="contact_heading"></h2>
+        <div data-block="contact_info"></div>
+      </div>
+      <div class="cta-r" data-block="contact_card"></div>
+    </div>
+  </div>
+</section>
+HTML;
+
+$tplKontakt = tpl($pdo, $siteId, 'Kontakt', $htmlKontakt, $kontaktCss, $subpageJs);
+
 // ─── Pages ────────────────────────────────────────────────────────────────────
 
-$pidHome  = addPage($pdo, $siteId, $tplHomeFull, 'Fotograf & Videograf Olomouc | RB Photos & Videos',                         '',                               '/');
-$pidCenik = addPage($pdo, $siteId, $tplCenik,   'Ceník fotografa Olomouc | RB Photos & Videos',                             'cenik',                          '/cenik');
-$pidFaq   = addPage($pdo, $siteId, $tplFaq,     'Časté otázky | Fotograf Olomouc — RB Photos & Videos',                     'faq',                            '/faq');
-$pidBlog  = addPage($pdo, $siteId, $tplBlog,    'Blog | RB Photos & Videos',                                                'blog',                           '/blog');
-$pidArt1  = addPage($pdo, $siteId, $tplArticle, '10 tipů jak se připravit na dokonalé svatební focení | RB Photos & Videos', 'priprava-na-svatebni-foceni',    '/priprava-na-svatebni-foceni');
-$pidArt2  = addPage($pdo, $siteId, $tplArticle, 'Rodinné focení s dětmi — tipy pro přirozené snímky | RB Photos & Videos',  'rodinne-foceni-s-detmi',         '/rodinne-foceni-s-detmi');
+$pidHome    = addPage($pdo, $siteId, $tplHomeFull, 'Fotograf & Videograf Olomouc | RB Photos & Videos',                         '',                               '/');
+$pidSluzby  = addPage($pdo, $siteId, $tplSluzby,  'Fotograf & Videograf Olomouc — naše služby | RB Photos & Videos',            'sluzby',                         '/sluzby');
+$pidCenik   = addPage($pdo, $siteId, $tplCenik,   'Ceník fotografa Olomouc | RB Photos & Videos',                              'cenik',                          '/cenik');
+$pidFaq     = addPage($pdo, $siteId, $tplFaq,     'Časté otázky | Fotograf Olomouc — RB Photos & Videos',                      'faq',                            '/faq');
+$pidBlog    = addPage($pdo, $siteId, $tplBlog,    'Blog | RB Photos & Videos',                                                 'blog',                           '/blog');
+$pidKontakt = addPage($pdo, $siteId, $tplKontakt, 'Kontakt | Fotograf Olomouc — RB Photos & Videos',                           'kontakt',                        '/kontakt');
+$pidArt1    = addPage($pdo, $siteId, $tplArticle, '10 tipů jak se připravit na dokonalé svatební focení | RB Photos & Videos',  'priprava-na-svatebni-foceni',    '/priprava-na-svatebni-foceni');
+$pidArt2    = addPage($pdo, $siteId, $tplArticle, 'Rodinné focení s dětmi — tipy pro přirozené snímky | RB Photos & Videos',   'rodinne-foceni-s-detmi',         '/rodinne-foceni-s-detmi');
 
 // ─── Content blocks: Homepage ─────────────────────────────────────────────────
 
@@ -624,6 +735,25 @@ block($pdo, $pidArt2, 'section_5_body','textarea',  'Sekce 5',     'S malými d�
 block($pdo, $pidArt2, 'cta_heading',   'text',     'CTA Nadpis',  'Rezervujte rodinné focení', 60);
 block($pdo, $pidArt2, 'cta_sub',       'textarea', 'CTA Sub',     'Přirozené, krásné rodinné snímky z Olomouce a okolí. Zavolejte nebo napište — domluvíme termín i lokaci přesně podle vás.', 61);
 
+// ─── Content blocks: Služby ───────────────────────────────────────────────────
+
+block($pdo, $pidSluzby, 'hero_heading', 'text',     'Hero Nadpis', 'Fotografie a videografie na míru', 1);
+block($pdo, $pidSluzby, 'hero_sub',     'textarea', 'Hero Sub',    'Ať jde o svatbu, portrét nebo firemní projekt — jsme tu pro vás. Profesionální výsledky, přátelský přístup.', 2);
+block($pdo, $pidSluzby, 'service_1', 'html', 'Služba 1', '<span class="svc-num">01</span><h3>Svatební foto &amp; video</h3><p>Zachytíme každý dotek, každý pohled, každou slzu štěstí. Přirozené reportážní fotografie a filmové video, které vám budou vyprávět příběh vašeho dne po celý život.</p>', 10);
+block($pdo, $pidSluzby, 'service_2', 'html', 'Služba 2', '<span class="svc-num">02</span><h3>Rodinné &amp; portrétní focení</h3><p>Rodinné vzpomínky, těhotenské focení, křtiny nebo portréty. Přirozené, nenucené a krásné snímky, na které budete hrdí.</p>', 11);
+block($pdo, $pidSluzby, 'service_3', 'html', 'Služba 3', '<span class="svc-num">03</span><h3>Reklamní foto &amp; video</h3><p>Profesionální vizuální obsah pro firmy, kapely, produkty nebo brand. Videoklipy, firemní prezentace a obsah, který prodává.</p>', 12);
+block($pdo, $pidSluzby, 'service_4', 'html', 'Služba 4', '<span class="svc-num">04</span><h3>Akce &amp; události</h3><p>Konference, kulturní akce, plesy, narozeniny. Každá událost si zaslouží být profesionálně zdokumentována.</p>', 13);
+block($pdo, $pidSluzby, 'cta_heading', 'text',     'CTA Nadpis', 'Připravme nezapomenutelný den', 20);
+block($pdo, $pidSluzby, 'cta_sub',     'textarea', 'CTA Sub',    'Zavolejte nebo napište — rádi odpovíme na vaše otázky a připravíme nabídku na míru.', 21);
+
+// ─── Content blocks: Kontakt ──────────────────────────────────────────────────
+
+block($pdo, $pidKontakt, 'hero_heading',   'text',     'Hero Nadpis',        'Kontaktujte nás', 1);
+block($pdo, $pidKontakt, 'hero_sub',       'textarea', 'Hero Sub',           'Zavolejte nebo napište na sociální sítě. Odpovídáme rychle — oblíbené termíny se obsazují rok dopředu.', 2);
+block($pdo, $pidKontakt, 'contact_heading','text',     'Kontakt — nadpis',   'Ozvěte se nám', 3);
+block($pdo, $pidKontakt, 'contact_info',   'html',     'Kontakt — info',     '<div class="cta-info"><p><strong>792&nbsp;483&nbsp;583</strong></p><p><strong>604&nbsp;225&nbsp;032</strong></p><p>Olomouc a celá ČR</p><p><a href="https://www.facebook.com/rbvideosandphotos" target="_blank" rel="noopener">Facebook: RB Videos &amp; Photos</a></p><p><a href="https://www.instagram.com/rb_videos_photos/" target="_blank" rel="noopener">Instagram: @rb_videos_photos</a></p><p><a href="https://www.youtube.com/@rbvideosandphotos" target="_blank" rel="noopener">YouTube kanál</a></p></div>', 4);
+block($pdo, $pidKontakt, 'contact_card',   'html',     'Kontakt — karta',    '<h3>Ozvěte se nám</h3><p class="cta-r-sub">Zavolejte nebo napište na sociální sítě. Odpovídáme rychle!</p><a href="tel:792483583" class="cta-btn cta-btn--gold">Zavolat: 792&nbsp;483&nbsp;583</a><a href="tel:604225032" class="cta-btn cta-btn--dark">Zavolat: 604&nbsp;225&nbsp;032</a><a href="https://www.instagram.com/rb_videos_photos/" target="_blank" rel="noopener" class="cta-btn cta-btn--dark">Instagram</a><a href="https://www.facebook.com/rbvideosandphotos" target="_blank" rel="noopener" class="cta-btn cta-btn--dark">Facebook</a>', 5);
+
 // ─── SEO settings ─────────────────────────────────────────────────────────────
 
 $d = 'https://rbvideosphotos.kvalitne.cz';
@@ -657,6 +787,20 @@ seo($pdo, $pidBlog, [
     'title'     => 'Blog | RB Photos & Videos — Fotograf Olomouc',
     'desc'      => 'Tipy a inspirace od profesionálního fotografa z Olomouce. Příprava na svatební focení, rodinné focení s dětmi a další rady.',
     'canonical' => '/blog',
+]);
+
+seo($pdo, $pidSluzby, [
+    'title'     => 'Naše služby | RB Photos & Videos — Fotograf Olomouc',
+    'desc'      => 'Svatební fotografie a video, rodinné focení, portréty, reklamní foto a akce. Profesionální fotograf a videograf z Olomouce. Volejte: 792 483 583.',
+    'kw'        => 'fotograf Olomouc služby, svatební fotograf, videograf, rodinné focení',
+    'canonical' => '/sluzby',
+]);
+
+seo($pdo, $pidKontakt, [
+    'title'     => 'Kontakt | RB Photos & Videos — Fotograf Olomouc',
+    'desc'      => 'Kontaktujte nás — volejte 792 483 583 nebo napište na sociální sítě. Olomouc a celá ČR.',
+    'kw'        => 'kontakt fotograf Olomouc, rezervace termínu fotograf',
+    'canonical' => '/kontakt',
 ]);
 
 seo($pdo, $pidArt1, [

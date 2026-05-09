@@ -97,7 +97,14 @@ function tryServeDatabasePage(string $uri, bool $authenticated = false, bool $pr
             $authenticated && !$previewMode
         );
         if (!empty($site['layout_html'])) {
-            $html = $renderer->applyLayout($site['layout_html'], $html, $site['name'] ?? '');
+            $isHome = ltrim((string)($page['url_path'] ?? ''), '/') === '';
+            $nav = '';
+            if ($isHome && !empty($site['layout_nav_home'])) {
+                $nav = (string)$site['layout_nav_home'];
+            } elseif (!$isHome && !empty($site['layout_nav_sub'])) {
+                $nav = (string)$site['layout_nav_sub'];
+            }
+            $html = $renderer->applyLayout($site['layout_html'], $html, $site['name'] ?? '', $nav);
             $css  = ($site['layout_css'] ?? '') . "\n" . ($template['css_source'] ?? '');
             $js   = ($site['layout_js']  ?? '') . "\n" . ($template['js_source']  ?? '');
         } else {
@@ -304,10 +311,52 @@ function tryServePortfolioPage(string $uri, bool $detailOnly = false): bool
 HTML;
         }
 
-        $tiles = $tiles !== '' ? $tiles : '<p class="pt-empty">Zatim zadne publikovane prace.</p>';
-        $nav = renderPortfolioNav($siteName, 'portfolio');
+        $tiles = $tiles !== '' ? $tiles : '<p class="pt-empty">Zat&#237;m &#382;&#225;dn&#233; publikovan&#233; pr&#225;ce.</p>';
         $siteNameEsc = $h($siteName);
-        $html = <<<HTML
+
+        // CSS specific to portfolio pages — nav/footer/base reset comes from layout_css when layout is active
+        $portfolioListingCss = <<<'CSS'
+body{background:#111;color:#fff}
+.pf-hero{background:#1a1a1a;color:#fff;padding:72px 0 46px;text-align:center}
+.pf-hero h1{font-size:clamp(2.4rem,5vw,4rem);color:#fff;margin-bottom:10px}
+.pf-hero p{color:rgba(255,255,255,.7);font-size:1.1rem;max-width:720px;margin:0 auto}
+.grid-wrap{padding:12px 0 72px}
+.pt-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:28px}
+.pt-tile{display:block;text-decoration:none;color:inherit;background:#1b1b1f;border-radius:14px;overflow:hidden;box-shadow:0 14px 30px rgba(0,0,0,.25);transition:transform .2s,box-shadow .2s}
+.pt-tile:hover{transform:translateY(-3px);box-shadow:0 20px 40px rgba(0,0,0,.4)}
+.pt-thumb{position:relative;height:220px;background:#0e0e11;overflow:hidden}
+.pt-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.pt-thumb-empty{height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;color:rgba(255,255,255,.25)}
+.pt-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:68px;height:68px;border-radius:999px;background:rgba(196,150,60,.92);display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:#fff;box-shadow:0 12px 28px rgba(0,0,0,.32)}
+.pt-photos{display:flex;gap:4px;height:84px;padding:4px;background:#17171a}
+.pt-photos img{flex:1;min-width:0;height:100%;object-fit:cover}
+.pt-caption{padding:16px 18px 18px;font-weight:700;font-size:1rem;color:#fff;background:#17171a}
+.pt-empty{color:rgba(255,255,255,.72);padding:32px 0;text-align:center}
+@media(max-width:720px){.pt-grid{grid-template-columns:1fr}}
+CSS;
+
+        if (!empty($site['layout_html'])) {
+            $renderer   = new PageRenderer();
+            $nav = (string)($site['layout_nav_sub'] ?? '');
+            $pageContent = <<<HTML
+<section class="pf-hero">
+  <div class="container">
+    <h1>Na&#353;e pr&#225;ce</h1>
+    <p>Uk&#225;zka vide&#237; a galer&#237; z na&#353;&#237; pr&#225;ce.</p>
+  </div>
+</section>
+<section class="grid-wrap">
+  <div class="container">
+    <div class="pt-grid">{$tiles}</div>
+  </div>
+</section>
+HTML;
+            $html = $renderer->applyLayout($site['layout_html'], $pageContent, $siteName, $nav);
+            $html = str_replace('</head>', "\n<title>" . $h("Na\u{161}e pr\u{E1}ce | {$siteName}") . "</title>\n</head>", $html);
+            $html = $renderer->injectAssets($html, ($site['layout_css'] ?? '') . "\n" . $portfolioListingCss, $site['layout_js'] ?? '');
+        } else {
+            $nav = renderPortfolioNav($siteName, 'portfolio');
+            $html = <<<HTML
 <!DOCTYPE html>
 <html lang="cs">
 <head>
@@ -326,27 +375,13 @@ HTML;
     .nav-links a{opacity:.76;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
     .nav-links a:hover,.nav-links .nav-active{opacity:1}
     .nav-cta{background:#c4963c;padding:12px 18px;border-radius:2px;opacity:1!important}
-    .hero{padding:88px 0 54px;text-align:center}
-    .hero h1{font-size:clamp(2.4rem,5vw,4rem);margin-bottom:10px}
-    .hero p{max-width:720px;margin:0 auto;color:rgba(255,255,255,.7);font-size:1.1rem}
-    .grid-wrap{padding:12px 0 72px}
-    .pt-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:28px}
-    .pt-tile{display:block;text-decoration:none;color:inherit;background:#1b1b1f;border-radius:14px;overflow:hidden;box-shadow:0 14px 30px rgba(0,0,0,.25)}
-    .pt-thumb{position:relative;height:220px;background:#0e0e11;overflow:hidden}
-    .pt-thumb img,.pt-photos img{width:100%;height:100%;object-fit:cover;display:block}
-    .pt-thumb-empty{height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;color:rgba(255,255,255,.25)}
-    .pt-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:68px;height:68px;border-radius:999px;background:rgba(196,150,60,.92);display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:#fff;box-shadow:0 12px 28px rgba(0,0,0,.32)}
-    .pt-photos{display:flex;gap:4px;height:84px;padding:4px;background:#17171a}
-    .pt-photos img{flex:1;min-width:0}
-    .pt-caption{padding:16px 18px 18px;font-weight:700;font-size:1rem}
-    .pt-empty{color:rgba(255,255,255,.72);padding:32px 0}
+    {$portfolioListingCss}
     footer{padding:28px 24px;border-top:1px solid rgba(255,255,255,.08);text-align:center;color:rgba(255,255,255,.46)}
-    @media (max-width: 720px){.nav-inner{flex-direction:column;align-items:flex-start;padding:14px 24px}.nav-links{flex-wrap:wrap;gap:14px}.hero{padding-top:56px}}
   </style>
 </head>
 <body>
 {$nav}
-<section class="hero">
+<section class="pf-hero">
   <div class="container">
     <h1>Nase prace</h1>
     <p>Ukazka videi a galerii, ktere jste vybrali v administraci.</p>
@@ -361,6 +396,7 @@ HTML;
 </body>
 </html>
 HTML;
+        }
 
         header('Content-Type: text/html; charset=UTF-8');
         echo sanitizeFrontendHtml($html);
@@ -386,13 +422,53 @@ HTML;
             $videoHtml = '<div class="pf-video-wrap"><iframe src="' . $h($embedUrl) . '" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen loading="lazy" title="' . $h($entry['title']) . '"></iframe></div>';
         }
 
-        $nav = renderPortfolioNav($siteName, 'portfolio');
         $title = $h($entry['title']);
         $siteNameEsc = $h($siteName);
         $description = (string)($entry['description'] ?? '');
         $metaDescription = $h($entry['meta_description'] ?? strip_tags(substr($description, 0, 160)));
 
-        $html = <<<HTML
+        // CSS specific to portfolio detail — nav/footer/base reset comes from layout_css when layout is active
+        $portfolioDetailCss = <<<'CSS'
+body{background:#111;color:#fff}
+.pf-detail-hero{background:#111;color:#fff;padding:72px 0 46px}
+.pf-detail-hero h1{font-size:clamp(2rem,4.2vw,3.4rem);color:#fff;margin-bottom:12px}
+.pf-detail-hero p{color:rgba(255,255,255,.72)}
+.pf-main{padding:42px 0 72px}
+.pf-video-wrap{position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:14px;margin-bottom:34px;background:#000}
+.pf-video-wrap iframe{position:absolute;top:0;left:0;width:100%;height:100%}
+.pf-description{max-width:760px;color:#aaa;margin-bottom:34px}
+.pf-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.pf-photo img{width:100%;height:240px;object-fit:cover;border-radius:10px;display:block}
+.pf-back{margin-top:28px}
+.pf-back a{display:inline-flex;background:#c4963c;color:#fff;text-decoration:none;padding:12px 18px;border-radius:6px;font-weight:700}
+CSS;
+
+        if (!empty($site['layout_html'])) {
+            $renderer = new PageRenderer();
+            $nav = (string)($site['layout_nav_sub'] ?? '');
+            $pageContent = <<<HTML
+<section class="pf-detail-hero">
+  <div class="container">
+    <h1>{$title}</h1>
+  </div>
+</section>
+<main class="pf-main">
+  <div class="container">
+    {$videoHtml}
+    <div class="pf-description">{$description}</div>
+    <div class="pf-gallery">{$galleryHtml}</div>
+    <div class="pf-back"><a href="/nase-prace">&larr; Zp&#283;t na v&#353;echny pr&#225;ce</a></div>
+  </div>
+</main>
+HTML;
+            $html = $renderer->applyLayout($site['layout_html'], $pageContent, $siteName, $nav);
+            $titleTag = '<title>' . $h("{$entry['title']} | {$siteName}") . '</title>';
+            $metaDesc = '<meta name="description" content="' . $metaDescription . '">';
+            $html = str_replace('</head>', "\n{$titleTag}\n{$metaDesc}\n</head>", $html);
+            $html = $renderer->injectAssets($html, ($site['layout_css'] ?? '') . "\n" . $portfolioDetailCss, $site['layout_js'] ?? '');
+        } else {
+            $nav = renderPortfolioNav($siteName, 'portfolio');
+            $html = <<<HTML
 <!DOCTYPE html>
 <html lang="cs">
 <head>
@@ -402,7 +478,7 @@ HTML;
   <meta name="description" content="{$metaDescription}">
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:system-ui,-apple-system,sans-serif;background:#fff;color:#17171a;line-height:1.6}
+    body{font-family:system-ui,-apple-system,sans-serif;background:#111;color:#fff;line-height:1.6}
     .container{max-width:1180px;margin:0 auto;padding:0 24px}
     .nav{position:sticky;top:0;z-index:30;background:#111;border-bottom:1px solid rgba(255,255,255,.08)}
     .nav-inner{display:flex;align-items:center;justify-content:space-between;min-height:78px;gap:20px}
@@ -412,30 +488,19 @@ HTML;
     .nav-links a{opacity:.76;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
     .nav-links a:hover,.nav-links .nav-active{opacity:1}
     .nav-cta{background:#c4963c;padding:12px 18px;border-radius:2px;opacity:1!important}
-    .hero{background:#111;color:#fff;padding:72px 0 46px}
-    .hero h1{font-size:clamp(2rem,4.2vw,3.4rem);margin-bottom:12px}
-    .hero p{max-width:760px;color:rgba(255,255,255,.72)}
-    .main{padding:42px 0 72px}
-    .pf-video-wrap{position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:14px;margin-bottom:34px;background:#000}
-    .pf-video-wrap iframe{position:absolute;top:0;left:0;width:100%;height:100%}
-    .pf-description{max-width:760px;color:#444;margin-bottom:34px}
-    .pf-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
-    .pf-photo img{width:100%;height:240px;object-fit:cover;border-radius:10px;display:block}
-    .pf-back{margin-top:28px}
-    .pf-back a{display:inline-flex;background:#c4963c;color:#fff;text-decoration:none;padding:12px 18px;border-radius:6px;font-weight:700}
-    footer{padding:28px 24px;background:#111;text-align:center;color:rgba(255,255,255,.46)}
-    @media (max-width: 720px){.nav-inner{flex-direction:column;align-items:flex-start;padding:14px 24px}.nav-links{flex-wrap:wrap;gap:14px}}
+    {$portfolioDetailCss}
+    footer{padding:28px 24px;background:#0e0e0e;text-align:center;color:rgba(255,255,255,.46)}
   </style>
 </head>
 <body>
 {$nav}
-<section class="hero">
+<section class="pf-detail-hero">
   <div class="container">
     <h1>{$title}</h1>
     <p>Detail vybrane prace a galerie z administrace.</p>
   </div>
 </section>
-<main class="main">
+<main class="pf-main">
   <div class="container">
     {$videoHtml}
     <div class="pf-description">{$description}</div>
@@ -447,6 +512,7 @@ HTML;
 </body>
 </html>
 HTML;
+        }
 
         header('Content-Type: text/html; charset=UTF-8');
         echo sanitizeFrontendHtml($html);
