@@ -16,6 +16,7 @@ use App\Core\Logger;
 use App\Core\Runtime;
 use App\Core\Version;
 use App\Repositories\BlockRepository;
+use App\Repositories\BlogRepository;
 use App\Repositories\MediaRepository;
 use App\Repositories\PageRepository;
 use App\Repositories\PortfolioRepository;
@@ -521,6 +522,216 @@ HTML;
 
     return false;
 }
+function tryServeBlogListingPage(): bool
+{
+    $site = (new SiteRepository())->findFirst();
+    if (!$site) {
+        return false;
+    }
+
+    $posts     = (new BlogRepository())->allPublished((int)$site['id']);
+    $mediaRepo = new MediaRepository();
+    $h         = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
+    $siteName  = (string)($site['name'] ?? 'Muj web');
+
+    $cardsHtml = '';
+    foreach ($posts as $post) {
+        $imgHtml = '';
+        if (!empty($post['featured_image_id'])) {
+            $media = $mediaRepo->findById((int)$post['featured_image_id']);
+            if ($media) {
+                $src = publicMediaUrl((string)$media['storage_path']);
+                $imgHtml = '<div class="bl-thumb"><img src="' . $h($src) . '" alt="' . $h($post['title']) . '" loading="lazy"></div>';
+            }
+        }
+        if ($imgHtml === '') {
+            $imgHtml = '<div class="bl-thumb bl-thumb--empty"></div>';
+        }
+
+        $date = !empty($post['published_at']) ? date('j. n. Y', strtotime($post['published_at'])) : '';
+        $slug    = $h($post['slug']);
+        $title   = $h($post['title']);
+        $excerpt = $h($post['excerpt'] ?? '');
+
+        $cardsHtml .= <<<HTML
+<a class="bl-card" href="/{$slug}">
+  {$imgHtml}
+  <div class="bl-body">
+    <div class="bl-date">{$date}</div>
+    <h2 class="bl-title">{$title}</h2>
+    <p class="bl-excerpt">{$excerpt}</p>
+    <span class="bl-more">&#268;&#237;st d&#225;l &rarr;</span>
+  </div>
+</a>
+HTML;
+    }
+
+    if ($cardsHtml === '') {
+        $cardsHtml = '<p class="bl-empty">Zat&#237;m &#382;&#225;dn&#233; &#269;l&#225;nky.</p>';
+    }
+
+    $blogCss = <<<'CSS'
+body{background:#111;color:#fff}
+.bl-hero{background:#1a1a1a;padding:72px 0 46px;text-align:center}
+.bl-hero h1{font-size:clamp(2.4rem,5vw,4rem);color:#fff;margin-bottom:10px}
+.bl-hero p{color:rgba(255,255,255,.7);font-size:1.1rem;max-width:720px;margin:0 auto}
+.bl-grid-wrap{padding:48px 0 80px}
+.bl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:28px}
+.bl-card{display:flex;flex-direction:column;background:#1b1b1f;border-radius:14px;overflow:hidden;text-decoration:none;color:inherit;box-shadow:0 14px 30px rgba(0,0,0,.25);transition:transform .2s,box-shadow .2s}
+.bl-card:hover{transform:translateY(-3px);box-shadow:0 20px 40px rgba(0,0,0,.4)}
+.bl-thumb{height:210px;overflow:hidden;background:#0e0e11}
+.bl-thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s}
+.bl-card:hover .bl-thumb img{transform:scale(1.04)}
+.bl-thumb--empty{height:210px;background:#16161a}
+.bl-body{padding:22px 22px 26px;display:flex;flex-direction:column;flex:1}
+.bl-date{font-size:.8rem;color:rgba(255,255,255,.4);margin-bottom:8px}
+.bl-title{font-size:1.15rem;font-weight:800;color:#fff;margin:0 0 10px;line-height:1.35}
+.bl-excerpt{font-size:.9rem;color:rgba(255,255,255,.6);line-height:1.55;flex:1;margin-bottom:16px}
+.bl-more{display:inline-block;color:#c4963c;font-weight:700;font-size:.9rem;margin-top:auto}
+.bl-empty{color:rgba(255,255,255,.5);padding:40px 0;text-align:center}
+@media(max-width:720px){.bl-grid{grid-template-columns:1fr}}
+CSS;
+
+    if (!empty($site['layout_html'])) {
+        $renderer = new PageRenderer();
+        $nav = (string)($site['layout_nav_sub'] ?? '');
+        $pageContent = <<<HTML
+<section class="bl-hero">
+  <div class="container">
+    <h1>Blog &amp; Inspirace</h1>
+    <p>Tipy a rady od profesion&#225;ln&#237;ho fotografa z Olomouce.</p>
+  </div>
+</section>
+<section class="bl-grid-wrap">
+  <div class="container">
+    <div class="bl-grid">{$cardsHtml}</div>
+  </div>
+</section>
+HTML;
+        $html = $renderer->applyLayout($site['layout_html'], $pageContent, $siteName, $nav);
+        $titleTag = '<title>' . $h("Blog | {$siteName}") . '</title>';
+        $metaTag  = '<meta name="description" content="' . $h('Tipy a inspirace od fotografa z Olomouce.') . '">';
+        $html = str_replace('</head>', "\n{$titleTag}\n{$metaTag}\n</head>", $html);
+        $html = $renderer->injectAssets($html, ($site['layout_css'] ?? '') . "\n" . $blogCss, $site['layout_js'] ?? '');
+    } else {
+        $siteNameEsc = $h($siteName);
+        $html = <<<HTML
+<!DOCTYPE html><html lang="cs"><head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Blog | {$siteNameEsc}</title>
+  <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:system-ui,-apple-system,sans-serif;line-height:1.6}.container{max-width:1180px;margin:0 auto;padding:0 24px}{$blogCss}footer{padding:28px 24px;border-top:1px solid rgba(255,255,255,.08);text-align:center;color:rgba(255,255,255,.46)}</style>
+</head><body>
+<section class="bl-hero"><div class="container"><h1>Blog &amp; Inspirace</h1><p>Tipy a rady od profesion&#225;ln&#237;ho fotografa z Olomouce.</p></div></section>
+<section class="bl-grid-wrap"><div class="container"><div class="bl-grid">{$cardsHtml}</div></div></section>
+<footer>{$siteNameEsc}</footer></body></html>
+HTML;
+    }
+
+    header('Content-Type: text/html; charset=UTF-8');
+    echo sanitizeFrontendHtml($html);
+    return true;
+}
+
+function tryServeBlogPostPage(string $uri): bool
+{
+    $slug = trim($uri, '/');
+    if ($slug === '') {
+        return false;
+    }
+
+    $post = (new BlogRepository())->findBySlug($slug);
+    if (!$post) {
+        return false;
+    }
+
+    $site = (new SiteRepository())->findFirst();
+    if (!$site) {
+        return false;
+    }
+
+    $h        = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
+    $siteName = (string)($site['name'] ?? 'Muj web');
+
+    $imgHtml = '';
+    if (!empty($post['featured_image_id'])) {
+        $media = (new MediaRepository())->findById((int)$post['featured_image_id']);
+        if ($media) {
+            $src     = publicMediaUrl((string)$media['storage_path']);
+            $imgHtml = '<div class="bp-featured"><img src="' . $h($src) . '" alt="' . $h($post['title']) . '"></div>';
+        }
+    }
+
+    $date      = !empty($post['published_at']) ? date('j. n. Y', strtotime($post['published_at'])) : '';
+    $title     = $h($post['title']);
+    $excerpt   = $h($post['excerpt'] ?? '');
+    $content   = (string)($post['content'] ?? '');
+    $metaTitle = $h($post['meta_title'] ?: $post['title']);
+    $metaDesc  = $h($post['meta_description'] ?: $post['excerpt'] ?: '');
+
+    $blogPostCss = <<<'CSS'
+body{background:#111;color:#fff}
+.bp-hero{background:#1a1a1a;padding:64px 0 40px}
+.bp-hero .bp-date{color:rgba(255,255,255,.45);font-size:.9rem;margin-bottom:14px}
+.bp-hero h1{font-size:clamp(2rem,4vw,3.2rem);color:#fff;margin-bottom:14px;line-height:1.2}
+.bp-hero .bp-excerpt{color:rgba(255,255,255,.72);font-size:1.1rem;max-width:760px;line-height:1.6}
+.bp-featured{width:100%;max-height:480px;overflow:hidden;background:#0e0e11}
+.bp-featured img{width:100%;max-height:480px;object-fit:cover;display:block}
+.bp-content-wrap{padding:48px 0 80px}
+.bp-content{max-width:760px}
+.bp-content h2{font-size:1.5rem;color:#fff;margin:32px 0 12px}
+.bp-content h3{font-size:1.2rem;color:#e0e0e0;margin:24px 0 10px}
+.bp-content p{color:rgba(255,255,255,.78);line-height:1.7;margin-bottom:16px}
+.bp-content ul,.bp-content ol{color:rgba(255,255,255,.78);padding-left:1.5em;margin-bottom:16px;line-height:1.7}
+.bp-content img{max-width:100%;border-radius:10px;margin:16px 0}
+.bp-back{margin-top:36px}
+.bp-back a{color:#c4963c;text-decoration:none;font-weight:700}
+.bp-back a:hover{text-decoration:underline}
+CSS;
+
+    if (!empty($site['layout_html'])) {
+        $renderer = new PageRenderer();
+        $nav = (string)($site['layout_nav_sub'] ?? '');
+        $pageContent = <<<HTML
+<section class="bp-hero">
+  <div class="container">
+    <div class="bp-date">{$date}</div>
+    <h1>{$title}</h1>
+    <p class="bp-excerpt">{$excerpt}</p>
+  </div>
+</section>{$imgHtml}
+<section class="bp-content-wrap">
+  <div class="container">
+    <div class="bp-content">{$content}</div>
+    <div class="bp-back"><a href="/blog">&larr; Zp&#283;t na v&#353;echny &#269;l&#225;nky</a></div>
+  </div>
+</section>
+HTML;
+        $html = $renderer->applyLayout($site['layout_html'], $pageContent, $siteName, $nav);
+        $titleTag    = '<title>' . $metaTitle . ' | ' . $h($siteName) . '</title>';
+        $metaDescTag = '<meta name="description" content="' . $metaDesc . '">';
+        $html = str_replace('</head>', "\n{$titleTag}\n{$metaDescTag}\n</head>", $html);
+        $html = $renderer->injectAssets($html, ($site['layout_css'] ?? '') . "\n" . $blogPostCss, $site['layout_js'] ?? '');
+    } else {
+        $siteNameEsc = $h($siteName);
+        $html = <<<HTML
+<!DOCTYPE html><html lang="cs"><head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>{$metaTitle} | {$siteNameEsc}</title>
+  <meta name="description" content="{$metaDesc}">
+  <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:system-ui,-apple-system,sans-serif;line-height:1.6}.container{max-width:1180px;margin:0 auto;padding:0 24px}{$blogPostCss}footer{padding:28px 24px;border-top:1px solid rgba(255,255,255,.08);text-align:center;color:rgba(255,255,255,.46)}</style>
+</head><body>
+<section class="bp-hero"><div class="container"><div class="bp-date">{$date}</div><h1>{$title}</h1><p class="bp-excerpt">{$excerpt}</p></div></section>
+{$imgHtml}
+<section class="bp-content-wrap"><div class="container"><div class="bp-content">{$content}</div><div class="bp-back"><a href="/blog">&larr; Zp&#283;t na v&#353;echny &#269;l&#225;nky</a></div></div></section>
+<footer>{$siteNameEsc}</footer></body></html>
+HTML;
+    }
+
+    header('Content-Type: text/html; charset=UTF-8');
+    echo sanitizeFrontendHtml($html);
+    return true;
+}
+
 try {
     $publishedDir = dirname(__DIR__) . '/storage/published';
     $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
@@ -579,8 +790,18 @@ try {
         }
     }
 
+    if ($uri === '/blog') {
+        if (tryServeBlogListingPage()) {
+            exit;
+        }
+    }
+
     $previewMode = Auth::check() && isset($_GET['cms_preview']);
     if (tryServeDatabasePage($uri, Auth::check(), $previewMode)) {
+        exit;
+    }
+
+    if (tryServeBlogPostPage($uri)) {
         exit;
     }
 

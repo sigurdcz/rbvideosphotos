@@ -10,7 +10,7 @@ use App\Services\PublishService;
 $pdo = Database::getInstance();
 
 if (in_array('--fresh', $argv ?? [], true)) {
-    foreach (['publish_history','seo_settings','content_blocks','media_variants','media','pages','templates','redirects','sites','users'] as $t) {
+    foreach (['publish_history','seo_settings','content_blocks','media_variants','portfolio_media','blog_posts','media','portfolio_entries','pages','templates','redirects','sites','users'] as $t) {
         $pdo->exec("DELETE FROM $t");
     }
     echo "Tables cleared.\n";
@@ -94,6 +94,77 @@ function seo(PDO $pdo, int $pid, array $d): void
             $d['schema_type']?? null,
             $d['schema_json']?? null,
         ]);
+}
+
+function fetchMedia(PDO $pdo, int $siteId, string $url, string $key, string $altText = ''): int
+{
+    $year  = date('Y');
+    $month = date('m');
+    $dir   = BASE_PATH . "/storage/media/{$year}/{$month}";
+    if (!is_dir($dir)) mkdir($dir, 0755, true);
+
+    $filename    = "seed-{$key}.png";
+    $filepath    = "{$dir}/{$filename}";
+    $storagePath = "storage/media/{$year}/{$month}/{$filename}";
+
+    $s = $pdo->prepare('SELECT id FROM media WHERE site_id=? AND storage_path=?');
+    $s->execute([$siteId, $storagePath]);
+    if ($id = $s->fetchColumn()) {
+        return (int)$id;
+    }
+
+    if (!is_file($filepath)) {
+        $ctx  = stream_context_create(['http' => ['timeout' => 20, 'user_agent' => 'SeedBot/1.0']]);
+        $data = @file_get_contents($url, false, $ctx);
+        if ($data === false) {
+            echo "  Warning: could not fetch {$url}\n";
+            return 0;
+        }
+        file_put_contents($filepath, $data);
+    }
+
+    $pdo->prepare('INSERT INTO media (site_id, original_filename, storage_path, alt_text, title, mime_type) VALUES (?,?,?,?,?,?)')
+        ->execute([$siteId, $filename, $storagePath, $altText, $altText, 'image/png']);
+    return (int)$pdo->lastInsertId();
+}
+
+function upsertBlogPost(PDO $pdo, int $siteId, string $slug, string $title, string $excerpt, string $content, ?int $featuredImageId, string $publishedAt): int
+{
+    $s = $pdo->prepare('SELECT id FROM blog_posts WHERE site_id=? AND slug=?');
+    $s->execute([$siteId, $slug]);
+    $id = $s->fetchColumn();
+    if ($id) {
+        $pdo->prepare('UPDATE blog_posts SET title=?,excerpt=?,content=?,featured_image_id=?,status=\'published\',published_at=?,updated_at=NOW() WHERE id=?')
+            ->execute([$title, $excerpt, $content, $featuredImageId, $publishedAt, (int)$id]);
+        return (int)$id;
+    }
+    $pdo->prepare('INSERT INTO blog_posts (site_id, title, slug, excerpt, content, featured_image_id, status, published_at) VALUES (?,?,?,?,?,?,\'published\',?)')
+        ->execute([$siteId, $title, $slug, $excerpt, $content, $featuredImageId, $publishedAt]);
+    return (int)$pdo->lastInsertId();
+}
+
+function upsertPortfolioEntry(PDO $pdo, int $siteId, string $slug, string $title, string $description, ?string $videoUrl, string $publishedAt, int $sortOrder = 0): int
+{
+    $s = $pdo->prepare('SELECT id FROM portfolio_entries WHERE site_id=? AND slug=?');
+    $s->execute([$siteId, $slug]);
+    $id = $s->fetchColumn();
+    if ($id) {
+        $pdo->prepare('UPDATE portfolio_entries SET title=?,description=?,video_url=?,status=\'published\',published_at=?,sort_order=?,updated_at=NOW() WHERE id=?')
+            ->execute([$title, $description, $videoUrl, $publishedAt, $sortOrder, (int)$id]);
+        return (int)$id;
+    }
+    $pdo->prepare('INSERT INTO portfolio_entries (site_id, title, slug, description, video_url, status, published_at, sort_order) VALUES (?,?,?,?,?,\'published\',?,?)')
+        ->execute([$siteId, $title, $slug, $description, $videoUrl, $publishedAt, $sortOrder]);
+    return (int)$pdo->lastInsertId();
+}
+
+function linkPortfolioMedia(PDO $pdo, int $portfolioId, array $mediaIds): void
+{
+    $pdo->prepare('DELETE FROM portfolio_media WHERE portfolio_id=?')->execute([$portfolioId]);
+    $stmt = $pdo->prepare('INSERT INTO portfolio_media (portfolio_id, media_id, sort_order) VALUES (?,?,?)');
+    foreach ($mediaIds as $i => $mid) {
+        if ($mid) $stmt->execute([$portfolioId, (int)$mid, $i]);
+    }
 }
 
 } // end if (!function_exists('upsertUser'))
@@ -683,8 +754,54 @@ $pidCenik   = addPage($pdo, $siteId, $tplCenik,   'Ceník fotografa Olomouc | RB
 $pidFaq     = addPage($pdo, $siteId, $tplFaq,     'Časté otázky | Fotograf Olomouc — RB Photos & Videos',                      'faq',                            '/faq');
 $pidBlog    = addPage($pdo, $siteId, $tplBlog,    'Blog | RB Photos & Videos',                                                 'blog',                           '/blog');
 $pidKontakt = addPage($pdo, $siteId, $tplKontakt, 'Kontakt | Fotograf Olomouc — RB Photos & Videos',                           'kontakt',                        '/kontakt');
-$pidArt1    = addPage($pdo, $siteId, $tplArticle, '10 tipů jak se připravit na dokonalé svatební focení | RB Photos & Videos',  'priprava-na-svatebni-foceni',    '/priprava-na-svatebni-foceni');
-$pidArt2    = addPage($pdo, $siteId, $tplArticle, 'Rodinné focení s dětmi — tipy pro přirozené snímky | RB Photos & Videos',   'rodinne-foceni-s-detmi',         '/rodinne-foceni-s-detmi');
+// Remove old CMS article pages — now served as blog_posts
+$pdo->prepare("DELETE FROM pages WHERE site_id=? AND slug IN ('priprava-na-svatebni-foceni','rodinne-foceni-s-detmi')")
+    ->execute([$siteId]);
+
+// ─── Placeholder media ────────────────────────────────────────────────────────
+echo "Fetching placeholder images...\n";
+$imgBlog1 = fetchMedia($pdo, $siteId, 'https://placehold.co/800x500/1a1a2e/c4963c.png', 'blog-1', 'Příprava na svatební focení');
+$imgBlog2 = fetchMedia($pdo, $siteId, 'https://placehold.co/800x500/0e1a0e/c4963c.png', 'blog-2', 'Rodinné focení s dětmi');
+$imgBlog3 = fetchMedia($pdo, $siteId, 'https://placehold.co/800x500/1a0e0e/c4963c.png', 'blog-3', 'Jak vybrat fotografa');
+$imgPf1   = fetchMedia($pdo, $siteId, 'https://placehold.co/900x600/0a0a1a/c4963c.png', 'pf-1',   'Svatba — obřad');
+$imgPf2   = fetchMedia($pdo, $siteId, 'https://placehold.co/900x600/111827/e5c07b.png', 'pf-2',   'Svatba — pár');
+$imgPf3   = fetchMedia($pdo, $siteId, 'https://placehold.co/900x600/1a1008/c4963c.png', 'pf-3',   'Svatba — detail');
+echo "Done.\n";
+
+// ─── Blog posts ───────────────────────────────────────────────────────────────
+$art1Content = '<h2>1. Konzultace s fotografem — co nejdříve</h2><p>Osobní schůzka ještě před svatbou je základ. Promluvte si o místě obřadu, harmonogramu a vašich přáních. Dobrý fotograf vám pomůže sestavit realistický časový plán a doporučí nejlepší místa pro párové fotografie.</p><h2>2. Naplánujte harmonogram s rezervou</h2><p>Podceňování času je nejčastější chyba. Vlasy a make-up trvají déle, hosté přicházejí postupně a skupinové fotografie s celou rodinou zaberou 20–30 minut. Vždy počítejte se zálohou.</p><h2>3. Připravte detaily s láskou</h2><p>Prsteny, kytice, pozvánky, šperky, parfém — tyto detaily dělají snímky výjimečnými. Připravte je ráno na neutrální povrch dřív, než začne chaos příprav.</p><h2>4. Využijte zlatou hodinu</h2><p>Hodina před západem slunce je čas nejkrásnějšího světla — teplého, měkkého, kinematografického. V Olomouci máme nádherná místa pro zlatou hodinu — naplánujte párové focení právě na tento čas.</p><h2>5. Zůstaňte sami sebou</h2><p>Nehledejte do objektivu, hýbejte se, smějte se, šeptejte si. Zkušený fotograf zachytí skutečné emoce — ty se nedají naplánovat ani zrežírovat.</p>';
+
+$art2Content = '<h2>1. Správný čas je základ</h2><p>S malými dětmi je načasování vše. Focení plánujte na dobu, kdy jsou děti nejvíce odpočaté — typicky dopoledne po snídani nebo krátce po odpoledním spánku. Nikdy ne těsně před jídlem nebo spaním.</p><h2>2. Oblečení v harmonických barvách</h2><p>Nemusíte mít všichni stejné tričko. Stačí dva–tři harmonické tóny a kombinovat je volně. Neutrální barvy — béžová, terakota, modrá — ve spojení s přírodním prostředím fungují vždy skvěle.</p><h2>3. Hrajte si, ignorujte fotoaparát</h2><p>Říkat dětem „koukej a usměj se" způsobí nucené úsměvy a strnulé pózy. Místo toho se jim přirozeně věnujte — šimrejte, čtěte pohádku. Zkušený fotograf zachytí opravdové momenty.</p><h2>4. Příroda je nejlepší kulisa</h2><p>Parky, lesy, louky nebo zahrada — příroda je ideální prostředí. Děti mají prostor, světlo je přirozené. V Olomouci: Smetanovy sady, Tabulový vrch nebo les u Bystřice jsou skvělé lokace.</p><h2>5. Krátká session — méně je více</h2><p>45–60 minut je optimum pro rodinné focení s malými dětmi. Kratší čas znamená svěží, spolupracující děti. Začněte s nejmenšími — mají nejkratší výdrž.</p>';
+
+$art3Content = '<h2>1. Prohlédněte si portfolio</h2><p>Portfolio je nejdůležitější kritérium. Podívejte se, zda má fotograf zkušenosti s vaším typem akce a zda se vám líbí jeho styl. Velký rozdíl je mezi reportážním a pózeným stylem fotografie.</p><h2>2. Přečtěte si recenze</h2><p>Recenze na Googlu, Facebooku nebo doporučení od přátel odhalí, jak fotograf skutečně pracuje — dochvilnost, komunikace, dodání materiálu a profesionalita na místě.</p><h2>3. Proberte podmínky předem</h2><p>Cena, termín dodání, forma výstupu (online galerie, tisk, USB), práva na fotografie — to vše by mělo být jasně domluveno před podpisem smlouvy. Vyvarujte se překvapením.</p><h2>4. Osobní chemistry je důležitá</h2><p>Strávíte s fotografem celý den nebo při focení hodiny. Musí vám být příjemný. Dobrý fotograf vás uvolní, nezíská strnulé záběry. Schůzka nebo telefonát předem hodně napoví.</p><h2>5. Rezervujte včas</h2><p>Oblíbení fotografové mají termíny obsazené měsíce dopředu. Pro letní svatby a akce se doporučuje rezervace rok napřed. Čím dříve, tím větší výběr termínů.</p>';
+
+upsertBlogPost($pdo, $siteId, 'priprava-na-svatebni-foceni', '10 tipů, jak se připravit na dokonalé svatební focení', 'Váš svatební den si zaslouží dokonalou přípravu. Přečtěte si, co udělat jinak než ostatní, a zajistěte si snímky, na které budete hrdí celý život.', $art1Content, $imgBlog1, '2025-04-12 10:00:00');
+upsertBlogPost($pdo, $siteId, 'rodinne-foceni-s-detmi', 'Rodinné focení: jak dostat přirozené snímky i s malými dětmi', 'Malé děti a fotoaparát? Přesně v tom chaosu se skrývají ty nejkrásnější momenty. Zde je návod, jak z rodinného focení udělat zábavný zážitek.', $art2Content, $imgBlog2, '2025-03-28 10:00:00');
+upsertBlogPost($pdo, $siteId, 'jak-vybrat-fotografa', 'Jak vybrat správného fotografa pro vaši akci?', 'Na co se zaměřit při výběru fotografa — portfolio, styl, komunikace a podmínky spolupráce. Poradíme, na co se neptat zapomenout.', $art3Content, $imgBlog3, '2025-05-01 10:00:00');
+
+// ─── Portfolio entry ──────────────────────────────────────────────────────────
+$pfId = upsertPortfolioEntry($pdo, $siteId, 'svatba-martin-helena', 'Svatba Martin & Helena — Olomouc 2025', 'Přirozené záběry z krásného svatebního dne v Olomouci. Zlatá hodina v Smetanových sadech, večerní obřad a nezapomenutelné detaily.', null, '2025-05-03 10:00:00', 0);
+if ($pfId && $imgPf1 && $imgPf2 && $imgPf3) {
+    linkPortfolioMedia($pdo, $pfId, [$imgPf1, $imgPf2, $imgPf3]);
+}
+
+// Regenerate portfolio-tiles block on homepage
+if ($pfId) {
+    $pfPage = (new \App\Repositories\PageRepository())->findByUrlPath('');
+    if ($pfPage) {
+        $ym = date('Y/m');
+        $h  = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
+        $p1 = "/storage/media/{$ym}/seed-pf-1.png";
+        $p2 = "/storage/media/{$ym}/seed-pf-2.png";
+        $tileHtml = '<div class="pt-grid"><a class="pt-tile" href="/svatba-martin-helena">'
+            . '<div class="pt-thumb"><img src="' . $p1 . '" alt="Svatba Martin &amp; Helena" loading="lazy"></div>'
+            . '<div class="pt-photos"><img src="' . $p2 . '" alt="" loading="lazy"><img src="/storage/media/' . $ym . '/seed-pf-3.png" alt="" loading="lazy"></div>'
+            . '<div class="pt-caption">Svatba Martin &amp; Helena — Olomouc 2025</div>'
+            . '</a></div>';
+        $pdo->prepare('REPLACE INTO content_blocks (page_id,block_key,block_type,label,content,sort_order) VALUES (?,?,?,?,?,?)')
+            ->execute([$pfPage['id'], 'portfolio-tiles', 'html', 'Naše práce — dlaždice', $tileHtml, 38]);
+    }
+}
 
 // ─── Content blocks: Homepage ─────────────────────────────────────────────────
 
@@ -733,7 +850,7 @@ block($pdo, $pidHome, 'blog_title', 'text',     'Blog — nadpis', 'Tipy a inspi
 block($pdo, $pidHome, 'blog_intro', 'textarea', 'Blog — intro',  'Rady od profesionálního fotografa — jak se připravit, co očekávat a jak dostat ty nejkrásnější snímky.', 81);
 block($pdo, $pidHome, 'blog_1',     'html',     'Článek 1',      '<span class="blog-cat">Svatební fotografie</span><h3>10 tipů, jak se připravit na dokonalé svatební focení</h3><p>Váš svatební den si zaslouží dokonalou přípravu. Přečtěte si, co udělat jinak než ostatní.</p><a href="/priprava-na-svatebni-foceni">&#268;&#237;st d&#225;l &rarr;</a>', 82);
 block($pdo, $pidHome, 'blog_2',     'html',     'Článek 2',      '<span class="blog-cat">Rodinné focení</span><h3>Rodinné focení: jak dostat přirozené snímky i s malými dětmi</h3><p>Malé děti a fotoaparát? Přesně v tom chaosu se skrývají ty nejkrásnější momenty.</p><a href="/rodinne-foceni-s-detmi">&#268;&#237;st d&#225;l &rarr;</a>', 83);
-block($pdo, $pidHome, 'blog_3',     'html',     'Článek 3',      '<span class="blog-cat">Tipy</span><h3>Jak vybrat správného fotografa pro vaši akci?</h3><p>Na co se zaměřit při výběru fotografa — portfolio, styl, komunikace a podmínky spolupráce.</p><a href="/blog">&#268;&#237;st d&#225;l &rarr;</a>', 84);
+block($pdo, $pidHome, 'blog_3',     'html',     'Článek 3',      '<span class="blog-cat">Tipy</span><h3>Jak vybrat správného fotografa pro vaši akci?</h3><p>Na co se zaměřit při výběru fotografa — portfolio, styl, komunikace a podmínky spolupráce.</p><a href="/jak-vybrat-fotografa">&#268;&#237;st d&#225;l &rarr;</a>', 84);
 block($pdo, $pidHome, 'blog_cta',   'html',     'Blog — tlačítko', '<a href="/blog" class="btn-od">V&#353;echny &#269;l&#225;nky</a>', 85);
 
 block($pdo, $pidHome, 'faq_title', 'text',     'FAQ — nadpis', 'Nejčastější otázky', 90);
@@ -769,45 +886,6 @@ block($pdo, $pidFaq, 'hero_sub',     'textarea', 'Hero Sub',    'Vše, co potře
 block($pdo, $pidBlog, 'hero_heading', 'text',     'Hero Nadpis', 'Tipy a inspirace', 1);
 block($pdo, $pidBlog, 'hero_sub',     'textarea', 'Hero Sub',    'Rady od profesionálního fotografa — příprava na focení, tipy pro klienty a pohled do naší práce.', 2);
 
-// ─── Content blocks: Article 1 ───────────────────────────────────────────────
-
-block($pdo, $pidArt1, 'article_cat',    'text',     'Kategorie',   'Svatební fotografie', 1);
-block($pdo, $pidArt1, 'article_date',   'text',     'Datum',       '12. dubna 2025', 2);
-block($pdo, $pidArt1, 'article_h1',     'text',     'Titulek',     '10 tipů, jak se připravit na dokonalé svatební focení', 3);
-block($pdo, $pidArt1, 'article_lead',   'textarea', 'Perex',       'Váš svatební den je jedním z nejdůležitějších okamžiků života. S těmito tipy zajistíte, že každý záběr bude dokonalý — a vy si ten den budete užívat bez zbytečného stresu.', 4);
-block($pdo, $pidArt1, 'article_thumb',  'html',     'Video',       '<iframe src="https://player.vimeo.com/video/1133996815?wmode=opaque" allowfullscreen="allowfullscreen" loading="lazy" title="Uk&#225;zka na&#353;&#237; pr&#225;ce"></iframe>', 5);
-block($pdo, $pidArt1, 'section_1_h2',  'text',     'Sekce 1 H2',  '1. Konzultace s fotografem — co nejdříve', 10);
-block($pdo, $pidArt1, 'section_1_body','textarea',  'Sekce 1',     'Osobní schůzka s fotografem ještě před svatbou je absolutní základ. Promluvte si o místě obřadu, harmonogramu dne a vašich přáních. Dobrý fotograf vám pomůže sestavit realistický časový plán a doporučí nejlepší místa pro párové fotografie.', 11);
-block($pdo, $pidArt1, 'section_2_h2',  'text',     'Sekce 2 H2',  '2. Naplánujte harmonogram s rezervou', 20);
-block($pdo, $pidArt1, 'section_2_body','textarea',  'Sekce 2',     'Jednou z nejčastějších chyb je podceňování času. Přidejte ke každé části dne záložní čas — vlasy a make-up trvají déle, než čekáte, hosté přicházejí postupně a skupinové fotografie s celou rodinou zaberou alespoň 20–30 minut.', 21);
-block($pdo, $pidArt1, 'section_3_h2',  'text',     'Sekce 3 H2',  '3. Připravte detaily s láskou', 30);
-block($pdo, $pidArt1, 'section_3_body','textarea',  'Sekce 3',     'Prsteny, kytice, pozvánky, šperky, parfém — to jsou detaily, které dělají snímky výjimečnými. Připravte je na pevnou podložku nebo neutrální povrch ráno, než začne chaos příprav.', 31);
-block($pdo, $pidArt1, 'section_4_h2',  'text',     'Sekce 4 H2',  '4. Využijte zlatou hodinu — tajemství krásného světla', 40);
-block($pdo, $pidArt1, 'section_4_body','textarea',  'Sekce 4',     'Hodina před západem slunce je čas, kdy je světlo nejkrásnější — teplé, měkké, kinematografické. Pokud je to možné, naplánujte párové focení právě na tento čas. V Olomouci máme spoustu míst, kde zlatá hodinka vypadá úchvatně.', 41);
-block($pdo, $pidArt1, 'section_5_h2',  'text',     'Sekce 5 H2',  '5. Zůstaňte sami sebou — přirozenost je základ', 50);
-block($pdo, $pidArt1, 'section_5_body','textarea',  'Sekce 5',     'Nejkrásnější fotografie jsou ty přirozené. Nehledejte do objektivu, hýbejte se, smějte se, šeptejte si. Zkušený fotograf zachytí skutečné emoce — ty se nedají režírovat.', 51);
-block($pdo, $pidArt1, 'cta_heading',   'text',     'CTA Nadpis',  'Chcete dokonalé svatební fotografie?', 60);
-block($pdo, $pidArt1, 'cta_sub',       'textarea', 'CTA Sub',     'Oblíbené soboty se obsazují rok i více dopředu. Kontaktujte nás co nejdříve a zajistěte si váš termín.', 61);
-
-// ─── Content blocks: Article 2 ───────────────────────────────────────────────
-
-block($pdo, $pidArt2, 'article_cat',    'text',     'Kategorie',   'Rodinné focení', 1);
-block($pdo, $pidArt2, 'article_date',   'text',     'Datum',       '28. března 2025', 2);
-block($pdo, $pidArt2, 'article_h1',     'text',     'Titulek',     'Rodinné focení: jak dostat přirozené snímky i s malými dětmi', 3);
-block($pdo, $pidArt2, 'article_lead',   'textarea', 'Perex',       'Malé děti a fotoaparát? Zní to jako recept na chaos. Ale přesně v tom chaosu se skrývají ty nejkrásnější momenty. Přečtěte si, jak z rodinného focení udělat zábavný zážitek.', 4);
-block($pdo, $pidArt2, 'article_thumb',  'html',     'Video',       '<iframe src="https://player.vimeo.com/video/1122538281?wmode=opaque" allowfullscreen="allowfullscreen" loading="lazy" title="Uk&#225;zka na&#353;&#237; pr&#225;ce"></iframe>', 5);
-block($pdo, $pidArt2, 'section_1_h2',  'text',     'Sekce 1 H2',  '1. Správný čas je základ', 10);
-block($pdo, $pidArt2, 'section_1_body','textarea',  'Sekce 1',     'S malými dětmi je načasování vše. Naplánujte focení na dobu, kdy jsou děti nejvíce odpočaté — typicky dopoledne po snídani nebo krátce po odpoledním spánku. Nikdy ne těsně před jídlem nebo spaním.', 11);
-block($pdo, $pidArt2, 'section_2_h2',  'text',     'Sekce 2 H2',  '2. Oblečení v harmonických barvách', 20);
-block($pdo, $pidArt2, 'section_2_body','textarea',  'Sekce 2',     'Nemusíte mít všichni stejné tričko. Stačí zvolit dva nebo tři harmonické tóny a kombinovat je volně. Vyhněte se agresivním vzorům a nápisům. Neutrální barvy (béžová, terakota, modrá) ve spojení s přírodním prostředím fungují vždy skvěle.', 21);
-block($pdo, $pidArt2, 'section_3_h2',  'text',     'Sekce 3 H2',  '3. Hrajte si — ignorujte fotoaparát', 30);
-block($pdo, $pidArt2, 'section_3_body','textarea',  'Sekce 3',     'Nejhorší, co rodiče dělají, je říkat dětem: „Koukej na pana fotografa a usměj se." Výsledek je nucený úsměv a strnulé pózy. Místo toho se věnujte dětem přirozeně — šimrejte, honiček, čtěte pohádku.', 31);
-block($pdo, $pidArt2, 'section_4_h2',  'text',     'Sekce 4 H2',  '4. Příroda je nejlepší kulisa', 40);
-block($pdo, $pidArt2, 'section_4_body','textarea',  'Sekce 4',     'Parky, lesy, louky nebo zahrada — příroda je pro rodinné focení ideální prostředí. Děti mají prostor k pohybu, přirozené světlo je krásné. V Olomouci máme nádherné lokace: Smetanovy sady, Tabulový vrch, Bystřice pod Hostýnem.', 41);
-block($pdo, $pidArt2, 'section_5_h2',  'text',     'Sekce 5 H2',  '5. Krátká session — méně je více', 50);
-block($pdo, $pidArt2, 'section_5_body','textarea',  'Sekce 5',     'S malými dětmi plánujte focení na 45–60 minut, ne na celé odpoledne. Kratší čas znamená, že děti jsou svěží a spolupracují. Pokud máte více dětí různého věku, začněte s nejmenšími — jejich výdrž je nejkratší.', 51);
-block($pdo, $pidArt2, 'cta_heading',   'text',     'CTA Nadpis',  'Rezervujte rodinné focení', 60);
-block($pdo, $pidArt2, 'cta_sub',       'textarea', 'CTA Sub',     'Přirozené, krásné rodinné snímky z Olomouce a okolí. Zavolejte nebo napište — domluvíme termín i lokaci přesně podle vás.', 61);
 
 // ─── Content blocks: Služby ───────────────────────────────────────────────────
 
@@ -877,23 +955,6 @@ seo($pdo, $pidKontakt, [
     'canonical' => '/kontakt',
 ]);
 
-seo($pdo, $pidArt1, [
-    'title'       => '10 tipů jak se připravit na dokonalé svatební focení | RB Photos & Videos',
-    'desc'        => 'Profesionální fotograf z Olomouce sdílí 10 klíčových tipů, jak se připravit na svatební focení. Od harmonogramu až po zlatou hodinu.',
-    'kw'          => 'příprava na svatební focení, tipy od fotografa, svatební fotografie Olomouc',
-    'canonical'   => '/priprava-na-svatebni-foceni',
-    'schema_type' => 'BlogPosting',
-    'schema_json' => '{"@context":"https://schema.org","@type":"BlogPosting","headline":"10 tipů jak se připravit na dokonalé svatební focení | RB Photos & Videos","datePublished":"2025-04-12","dateModified":"2025-04-12","author":{"@type":"Organization","name":"RB Photos & Videos","url":"' . $d . '/"},"publisher":{"@type":"Organization","name":"RB Photos & Videos","url":"' . $d . '/"},"url":"' . $d . '/priprava-na-svatebni-foceni"}',
-]);
-
-seo($pdo, $pidArt2, [
-    'title'       => 'Rodinné focení s dětmi — tipy pro přirozené snímky | RB Photos & Videos',
-    'desc'        => 'Jak nafotit přirozené rodinné fotografie i s malými dětmi? Tipy profesionálního fotografa z Olomouce — správný čas, lokace, oblečení.',
-    'kw'          => 'rodinné focení Olomouc, focení s dětmi, přirozené rodinné fotografie',
-    'canonical'   => '/rodinne-foceni-s-detmi',
-    'schema_type' => 'BlogPosting',
-    'schema_json' => '{"@context":"https://schema.org","@type":"BlogPosting","headline":"Rodinné focení s dětmi — tipy pro přirozené snímky | RB Photos & Videos","datePublished":"2025-03-28","dateModified":"2025-03-28","author":{"@type":"Organization","name":"RB Photos & Videos","url":"' . $d . '/"},"publisher":{"@type":"Organization","name":"RB Photos & Videos","url":"' . $d . '/"},"url":"' . $d . '/rodinne-foceni-s-detmi"}',
-]);
 
 // ─── Publish ──────────────────────────────────────────────────────────────────
 
