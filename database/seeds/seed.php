@@ -1,0 +1,637 @@
+<?php
+
+/**
+ * Generický seed — SEO Editor CMS
+ *
+ * Vytvoří:
+ *   - admin uživatele
+ *   - výchozí web se sdíleným layoutem a navigací
+ *   - 7 šablon (homepage, sluzby, cenik, faq, kontakt, blog-listing, portfolio-listing)
+ *   - 7 stránek (/, /sluzby, /cenik, /faq, /kontakt, /blog, /nase-prace)
+ *   - placeholder obsahové bloky na každé stránce
+ *
+ * Spuštění:
+ *   - přes admin: /admin/setup → „Spustit seed"
+ *   - přes CLI:   php database/seeds/seed.php
+ */
+
+declare(strict_types=1);
+
+if (php_sapi_name() === 'cli') {
+    define('BASE_PATH', dirname(__DIR__, 2));
+    require BASE_PATH . '/vendor/autoload.php';
+    \App\Core\Env::load(BASE_PATH . '/.env');
+}
+
+use App\Core\Database;
+use App\Services\PublishService;
+
+$pdo = Database::getInstance();
+
+// ─── Pomocné funkce ───────────────────────────────────────────────────────────
+
+if (!function_exists('seedUpsertUser')) {
+    function seedUpsertUser(PDO $pdo, string $email, string $password, string $role = 'admin'): int
+    {
+        $hash = password_hash($password, PASSWORD_BCRYPT);
+        $stmt = $pdo->prepare('SELECT id FROM users WHERE email = ? LIMIT 1');
+        $stmt->execute([$email]);
+        $row = $stmt->fetch();
+        if ($row) {
+            $pdo->prepare('UPDATE users SET password_hash=?, role=? WHERE id=?')
+                ->execute([$hash, $role, $row['id']]);
+            return (int) $row['id'];
+        }
+        $pdo->prepare('INSERT INTO users (email, password_hash, role) VALUES (?,?,?)')
+            ->execute([$email, $hash, $role]);
+        return (int) $pdo->lastInsertId();
+    }
+}
+
+if (!function_exists('seedUpsertSite')) {
+    function seedUpsertSite(PDO $pdo, string $name, string $domain): int
+    {
+        $stmt = $pdo->prepare('SELECT id FROM sites WHERE domain = ? LIMIT 1');
+        $stmt->execute([$domain]);
+        $row = $stmt->fetch();
+        if ($row) {
+            return (int) $row['id'];
+        }
+        $pdo->prepare('INSERT INTO sites (name, domain) VALUES (?,?)')
+            ->execute([$name, $domain]);
+        return (int) $pdo->lastInsertId();
+    }
+}
+
+if (!function_exists('seedUpdateSiteLayout')) {
+    function seedUpdateSiteLayout(PDO $pdo, int $siteId, string $html, string $css, string $js, string $navHome, string $navSub): void
+    {
+        $pdo->prepare(
+            'UPDATE sites SET layout_html=?, layout_css=?, layout_js=?, layout_nav_home=?, layout_nav_sub=? WHERE id=?'
+        )->execute([$html, $css, $js, $navHome, $navSub, $siteId]);
+    }
+}
+
+if (!function_exists('seedUpsertTemplate')) {
+    function seedUpsertTemplate(PDO $pdo, int $siteId, string $name, string $html, string $css = '', string $js = ''): int
+    {
+        $stmt = $pdo->prepare('SELECT id FROM templates WHERE site_id=? AND name=? LIMIT 1');
+        $stmt->execute([$siteId, $name]);
+        $row = $stmt->fetch();
+        if ($row) {
+            $pdo->prepare('UPDATE templates SET html_source=?, css_source=?, js_source=? WHERE id=?')
+                ->execute([$html, $css, $js, $row['id']]);
+            return (int) $row['id'];
+        }
+        $pdo->prepare('INSERT INTO templates (site_id, name, html_source, css_source, js_source) VALUES (?,?,?,?,?)')
+            ->execute([$siteId, $name, $html, $css, $js]);
+        return (int) $pdo->lastInsertId();
+    }
+}
+
+if (!function_exists('seedUpsertPage')) {
+    function seedUpsertPage(PDO $pdo, int $siteId, int $templateId, string $title, string $slug, string $urlPath): int
+    {
+        $stmt = $pdo->prepare('SELECT id FROM pages WHERE site_id=? AND slug=? LIMIT 1');
+        $stmt->execute([$siteId, $slug]);
+        $row = $stmt->fetch();
+        if ($row) {
+            $pdo->prepare('UPDATE pages SET template_id=?, title=?, url_path=?, status=?, published_at=NOW() WHERE id=?')
+                ->execute([$templateId, $title, $urlPath, 'published', $row['id']]);
+            return (int) $row['id'];
+        }
+        $pdo->prepare(
+            'INSERT INTO pages (site_id, template_id, title, slug, url_path, status, published_at) VALUES (?,?,?,?,?,?,NOW())'
+        )->execute([$siteId, $templateId, $title, $slug, $urlPath, 'published']);
+        return (int) $pdo->lastInsertId();
+    }
+}
+
+if (!function_exists('seedBlock')) {
+    function seedBlock(PDO $pdo, int $pageId, string $key, string $type, string $label, string $content, int $order = 0): void
+    {
+        $stmt = $pdo->prepare('SELECT id FROM content_blocks WHERE page_id=? AND block_key=? LIMIT 1');
+        $stmt->execute([$pageId, $key]);
+        $row = $stmt->fetch();
+        if ($row) {
+            $pdo->prepare('UPDATE content_blocks SET block_type=?, label=?, content=?, sort_order=? WHERE id=?')
+                ->execute([$type, $label, $content, $order, $row['id']]);
+        } else {
+            $pdo->prepare(
+                'INSERT INTO content_blocks (page_id, block_key, block_type, label, content, sort_order) VALUES (?,?,?,?,?,?)'
+            )->execute([$pageId, $key, $type, $label, $content, $order]);
+        }
+    }
+}
+
+// ─── Vyčistit stará data ──────────────────────────────────────────────────────
+
+foreach ([
+    'publish_history', 'seo_settings', 'content_blocks', 'media_variants',
+    'portfolio_media', 'blog_posts', 'media', 'portfolio_entries',
+    'pages', 'templates', 'redirects', 'sites', 'users',
+] as $table) {
+    $pdo->exec("DELETE FROM `{$table}`");
+}
+$pdo->exec('ALTER TABLE users AUTO_INCREMENT = 1');
+
+// ─── Uživatel ─────────────────────────────────────────────────────────────────
+
+$userId = seedUpsertUser($pdo, 'admin@example.com', 'admin123', 'admin');
+echo "Uživatel: admin@example.com / admin123\n";
+
+// ─── Web ──────────────────────────────────────────────────────────────────────
+
+$siteId = seedUpsertSite($pdo, 'Můj web', 'http://localhost:8000');
+
+// ─── Sdílený layout ───────────────────────────────────────────────────────────
+
+$layoutNavHome = <<<'NAV'
+<nav class="site-nav" id="sitenav">
+  <div class="container nav-inner">
+    <a href="/" class="brand">{site_name}</a>
+    <input type="checkbox" id="nav-toggle" class="nav-toggle-input">
+    <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu"><span></span></label>
+    <div class="nav-links">
+      <a href="#sluzby">Služby</a>
+      <a href="#nase-prace">Naše práce</a>
+      <a href="#blog">Blog</a>
+      <a href="#cenik">Ceník</a>
+      <a href="#faq">FAQ</a>
+      <a href="#kontakt" class="nav-cta">Kontakt</a>
+    </div>
+  </div>
+</nav>
+NAV;
+
+$layoutNavSub = <<<'NAV'
+<nav class="site-nav" id="sitenav">
+  <div class="container nav-inner">
+    <a href="/" class="brand">{site_name}</a>
+    <input type="checkbox" id="nav-toggle" class="nav-toggle-input">
+    <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu"><span></span></label>
+    <div class="nav-links">
+      <a href="/sluzby">Služby</a>
+      <a href="/nase-prace">Naše práce</a>
+      <a href="/blog">Blog</a>
+      <a href="/cenik">Ceník</a>
+      <a href="/faq">FAQ</a>
+      <a href="/kontakt" class="nav-cta">Kontakt</a>
+    </div>
+  </div>
+</nav>
+NAV;
+
+$layoutHtml = <<<'LAYOUT'
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{site_name}</title>
+</head>
+<body>
+{nav}
+<main id="page-content">
+  {page_content}
+</main>
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <p class="footer-copy">&copy; <span data-site-name></span>{site_name}</p>
+  </div>
+</footer>
+</body>
+</html>
+LAYOUT;
+
+$layoutCss = <<<'CSS'
+/* ── Reset & základy ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:16px}
+body{font-family:"Inter",system-ui,-apple-system,sans-serif;background:#111;color:#e8e8e8;line-height:1.65;-webkit-font-smoothing:antialiased}
+img{max-width:100%;height:auto;display:block}
+a{color:inherit;text-decoration:none}
+/* ── Layout ── */
+.container{max-width:1180px;margin:0 auto;padding:0 24px}
+.section{padding:80px 0}
+.section--alt{background:#18181c}
+.section--dark{background:#0d0d10}
+/* ── Navigace ── */
+.site-nav{position:sticky;top:0;z-index:100;background:#111;border-bottom:1px solid rgba(255,255,255,.07);backdrop-filter:blur(10px)}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;min-height:72px;gap:20px}
+.brand{font-weight:800;font-size:1.1rem;letter-spacing:.06em;text-transform:uppercase;color:#fff}
+.nav-links{display:flex;align-items:center;gap:28px}
+.nav-links a{font-size:.85rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.72);transition:color .2s}
+.nav-links a:hover{color:#fff}
+.nav-cta{background:#c4963c;color:#fff!important;padding:10px 18px;border-radius:4px;opacity:1!important}
+.nav-cta:hover{background:#d4a64c!important}
+/* Hamburger */
+.nav-toggle-input{display:none}
+.nav-toggle-label{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:8px}
+.nav-toggle-label span,.nav-toggle-label::before,.nav-toggle-label::after{content:'';display:block;width:24px;height:2px;background:#fff;transition:transform .25s}
+@media(max-width:768px){
+  .nav-toggle-label{display:flex}
+  .nav-links{display:none;position:absolute;top:72px;left:0;right:0;flex-direction:column;align-items:flex-start;background:#111;border-bottom:1px solid rgba(255,255,255,.07);padding:16px 24px;gap:16px}
+  .nav-toggle-input:checked ~ .nav-links{display:flex}
+  .nav-cta{align-self:flex-start}
+}
+/* ── Tlačítka ── */
+.btn-primary{display:inline-block;background:#c4963c;color:#fff;padding:14px 28px;border-radius:6px;font-weight:700;font-size:.95rem;transition:background .2s}
+.btn-primary:hover{background:#d4a64c}
+.btn-secondary{display:inline-block;border:1px solid rgba(196,150,60,.5);color:#c4963c;padding:12px 24px;border-radius:6px;font-weight:600;font-size:.9rem;transition:all .2s}
+.btn-secondary:hover{background:rgba(196,150,60,.1);border-color:#c4963c}
+/* ── Nadpisy sekcí ── */
+.section-label{font-size:.75rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#c4963c;margin-bottom:12px}
+.section-title{font-size:clamp(1.8rem,3.5vw,3rem);font-weight:800;color:#fff;margin-bottom:16px;line-height:1.15}
+.section-intro{color:rgba(255,255,255,.65);font-size:1.05rem;max-width:640px;margin-bottom:40px;line-height:1.7}
+/* ── Hero ── */
+.page-hero{padding:80px 0 64px;background:#0d0d10;text-align:center}
+.page-hero h1{font-size:clamp(2rem,5vw,3.8rem);font-weight:900;color:#fff;margin-bottom:16px;line-height:1.1}
+.page-hero .hero-sub{color:rgba(255,255,255,.65);font-size:1.1rem;max-width:680px;margin:0 auto}
+/* ── Patička ── */
+.site-footer{padding:36px 0;background:#0a0a0d;border-top:1px solid rgba(255,255,255,.06)}
+.footer-inner{display:flex;align-items:center;justify-content:center}
+.footer-copy{color:rgba(255,255,255,.36);font-size:.88rem}
+CSS;
+
+$layoutJs = <<<'JS'
+// Smooth scroll pro hash linky
+document.querySelectorAll('a[href^="#"]').forEach(function(a){
+  a.addEventListener('click',function(e){
+    var id=this.getAttribute('href').slice(1);
+    var el=document.getElementById(id);
+    if(el){e.preventDefault();el.scrollIntoView({behavior:'smooth',block:'start'});}
+  });
+});
+JS;
+
+seedUpdateSiteLayout($pdo, $siteId, $layoutHtml, $layoutCss, $layoutJs, $layoutNavHome, $layoutNavSub);
+echo "Layout webu nastaven.\n";
+
+// ─── Šablony ──────────────────────────────────────────────────────────────────
+
+// ── Homepage ──────────────────────────────────────────────────────────────────
+
+$tplHomepageHtml = <<<'HTML'
+<section class="hp-hero" id="uvod">
+  <div class="container">
+    <p data-block="hero_label" class="section-label">Vítejte</p>
+    <h1 data-block="hero_h1">Váš nadpis zde</h1>
+    <p data-block="hero_sub" class="hero-sub">Krátký popis toho, co děláte a co nabízíte. Zaujměte návštěvníka na první pohled.</p>
+    <div data-block="hero_cta" class="hero-cta-wrap"><a href="#kontakt" class="btn-primary">Kontaktujte nás</a></div>
+  </div>
+</section>
+
+<section class="section section--alt" id="sluzby">
+  <div class="container">
+    <p class="section-label">Co nabízíme</p>
+    <h2 data-block="sluzby_title" class="section-title">Naše služby</h2>
+    <p data-block="sluzby_intro" class="section-intro">Stručný popis vaší nabídky. Co konkrétně klienti od vás dostanou.</p>
+    <div data-block="sluzby_items" class="hp-services-grid">
+      <!-- Doplňte karty služeb -->
+    </div>
+    <div data-block="sluzby_cta"><a href="/sluzby" class="btn-secondary">Všechny služby</a></div>
+  </div>
+</section>
+
+<section class="section section--dark" id="nase-prace">
+  <div class="container">
+    <p class="section-label">Reference</p>
+    <h2 data-block="portfolio_title" class="section-title">Naše práce</h2>
+    <p data-block="portfolio_intro" class="section-intro">Ukázka projektů a realizací. Přidejte první práci v sekci Naše práce.</p>
+    <div data-block="portfolio-tiles" class="hp-portfolio-placeholder">
+      <p style="color:rgba(255,255,255,.4);text-align:center;padding:48px 0">Přidejte první práci v administraci — dlaždice se zobrazí automaticky.</p>
+    </div>
+    <div data-block="portfolio_cta"><a href="/nase-prace" class="btn-secondary">Všechny práce</a></div>
+  </div>
+</section>
+
+<section class="section" id="blog">
+  <div class="container">
+    <p class="section-label">Tipy a inspirace</p>
+    <h2 data-block="blog_title" class="section-title">Nejnovější články</h2>
+    <p data-block="blog_intro" class="section-intro">Rady a novinky z naší praxe.</p>
+    <div class="hp-blog-grid">
+      <div data-block="blog_1" class="hp-blog-card"><!-- Článek 1: doplňte v adminu --></div>
+      <div data-block="blog_2" class="hp-blog-card"><!-- Článek 2: doplňte v adminu --></div>
+      <div data-block="blog_3" class="hp-blog-card"><!-- Článek 3: doplňte v adminu --></div>
+    </div>
+    <div data-block="blog_cta"><a href="/blog" class="btn-secondary">Všechny články</a></div>
+  </div>
+</section>
+
+<section class="section section--alt" id="cenik">
+  <div class="container">
+    <p class="section-label">Ceny</p>
+    <h2 data-block="cenik_title" class="section-title">Ceník</h2>
+    <p data-block="cenik_intro" class="section-intro">Orientační přehled cen. Každá zakázka je individuální.</p>
+    <div data-block="cenik_body" class="hp-pricing"><!-- Doplňte přehled cen --></div>
+    <div data-block="cenik_cta"><a href="/cenik" class="btn-secondary">Celý ceník</a></div>
+  </div>
+</section>
+
+<section class="section section--dark" id="faq">
+  <div class="container">
+    <p class="section-label">Otázky</p>
+    <h2 data-block="faq_title" class="section-title">Časté dotazy</h2>
+    <div class="hp-faq">
+      <div data-block="faq_1" class="hp-faq-item"><!-- FAQ 1 --></div>
+      <div data-block="faq_2" class="hp-faq-item"><!-- FAQ 2 --></div>
+      <div data-block="faq_3" class="hp-faq-item"><!-- FAQ 3 --></div>
+    </div>
+    <div data-block="faq_cta"><a href="/faq" class="btn-secondary">Všechny otázky</a></div>
+  </div>
+</section>
+
+<section class="section" id="kontakt">
+  <div class="container">
+    <p class="section-label">Kontakt</p>
+    <h2 data-block="kontakt_title" class="section-title">Ozvěte se nám</h2>
+    <p data-block="kontakt_sub" class="section-intro">Rádi odpovíme na vaše otázky.</p>
+    <div data-block="kontakt_info"><!-- Doplňte kontaktní informace --></div>
+  </div>
+</section>
+HTML;
+
+$tplHomepageCss = <<<'CSS'
+.hp-hero{padding:120px 0 100px;background:#0d0d10;text-align:center}
+.hp-hero h1{font-size:clamp(2.8rem,6vw,5rem);font-weight:900;color:#fff;margin-bottom:20px;line-height:1.05}
+.hp-hero .hero-sub{color:rgba(255,255,255,.65);font-size:1.15rem;max-width:680px;margin:0 auto 36px}
+.hero-cta-wrap{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+.hp-services-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px;margin-bottom:36px}
+.hp-portfolio-placeholder{margin-bottom:32px}
+.hp-blog-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:24px;margin-bottom:36px}
+.hp-blog-card{background:#1b1b1f;border-radius:12px;padding:28px;color:rgba(255,255,255,.8)}
+.hp-pricing{margin-bottom:32px}
+.hp-faq{display:flex;flex-direction:column;gap:16px;margin-bottom:32px}
+.hp-faq-item{padding:20px 24px;background:#18181c;border-radius:10px;border-left:3px solid #c4963c}
+@media(max-width:600px){.hp-hero{padding:80px 0 64px}}
+CSS;
+
+$tplHomepageJs = <<<'JS'
+// Aktivní odkaz v navigaci podle scrollu
+(function(){
+  var sections=document.querySelectorAll('section[id]');
+  var navLinks=document.querySelectorAll('.nav-links a[href^="#"]');
+  if(!sections.length||!navLinks.length) return;
+  var io=new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){
+        navLinks.forEach(function(a){a.classList.remove('nav-active')});
+        var active=document.querySelector('.nav-links a[href="#'+e.target.id+'"]');
+        if(active) active.classList.add('nav-active');
+      }
+    });
+  },{rootMargin:'-40% 0px -40% 0px'});
+  sections.forEach(function(s){io.observe(s)});
+})();
+JS;
+
+$tplHomepage = seedUpsertTemplate($pdo, $siteId, 'Homepage', $tplHomepageHtml, $tplHomepageCss, $tplHomepageJs);
+
+// ── Služby ────────────────────────────────────────────────────────────────────
+
+$tplSluzbyHtml = <<<'HTML'
+<section class="page-hero">
+  <div class="container">
+    <h1 data-block="hero_h1">Naše služby</h1>
+    <p data-block="hero_sub" class="hero-sub">Stručný popis toho, co nabízíme.</p>
+  </div>
+</section>
+<section class="section">
+  <div class="container">
+    <div data-block="sluzby_grid" class="svc-grid"><!-- Doplňte karty služeb --></div>
+    <div data-block="cta_wrap" class="svc-cta"><a href="/kontakt" class="btn-primary">Kontaktujte nás</a></div>
+  </div>
+</section>
+HTML;
+
+$tplSluzbyCss = <<<'CSS'
+.svc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:24px;margin-bottom:40px}
+.svc-cta{text-align:center;margin-top:16px}
+CSS;
+
+$tplSluzby = seedUpsertTemplate($pdo, $siteId, 'Služby', $tplSluzbyHtml, $tplSluzbyCss, '');
+
+// ── Ceník ─────────────────────────────────────────────────────────────────────
+
+$tplCenikHtml = <<<'HTML'
+<section class="page-hero">
+  <div class="container">
+    <h1 data-block="hero_h1">Ceník</h1>
+    <p data-block="hero_sub" class="hero-sub">Transparentní přehled cen bez překvapení.</p>
+  </div>
+</section>
+<section class="section">
+  <div class="container">
+    <div data-block="cenik_body" class="cenik-body"><!-- Doplňte ceník --></div>
+    <div data-block="cta_wrap"><a href="/kontakt" class="btn-primary">Nezávazná poptávka</a></div>
+  </div>
+</section>
+HTML;
+
+$tplCenikCss = <<<'CSS'
+.cenik-body{max-width:780px;margin:0 auto 40px;color:rgba(255,255,255,.82);line-height:1.8}
+CSS;
+
+$tplCenik = seedUpsertTemplate($pdo, $siteId, 'Ceník', $tplCenikHtml, $tplCenikCss, '');
+
+// ── FAQ ───────────────────────────────────────────────────────────────────────
+
+$tplFaqHtml = <<<'HTML'
+<section class="page-hero">
+  <div class="container">
+    <h1 data-block="hero_h1">Časté otázky</h1>
+    <p data-block="hero_sub" class="hero-sub">Odpovědi na nejčastější dotazy.</p>
+  </div>
+</section>
+<section class="section">
+  <div class="container">
+    <div class="faq-list">
+      <div data-block="faq_1" class="faq-item"><!-- Otázka 1 --></div>
+      <div data-block="faq_2" class="faq-item"><!-- Otázka 2 --></div>
+      <div data-block="faq_3" class="faq-item"><!-- Otázka 3 --></div>
+      <div data-block="faq_4" class="faq-item"><!-- Otázka 4 --></div>
+      <div data-block="faq_5" class="faq-item"><!-- Otázka 5 --></div>
+    </div>
+    <div data-block="cta_wrap" style="margin-top:40px"><a href="/kontakt" class="btn-primary">Máte další otázku?</a></div>
+  </div>
+</section>
+HTML;
+
+$tplFaqCss = <<<'CSS'
+.faq-list{display:flex;flex-direction:column;gap:16px;max-width:820px;margin:0 auto}
+.faq-item{padding:24px 28px;background:#18181c;border-radius:12px;border-left:3px solid #c4963c}
+.faq-item:empty{display:none}
+CSS;
+
+$tplFaq = seedUpsertTemplate($pdo, $siteId, 'FAQ', $tplFaqHtml, $tplFaqCss, '');
+
+// ── Kontakt ───────────────────────────────────────────────────────────────────
+
+$tplKontaktHtml = <<<'HTML'
+<section class="page-hero">
+  <div class="container">
+    <h1 data-block="hero_h1">Kontakt</h1>
+    <p data-block="hero_sub" class="hero-sub">Ozvěte se nám. Odpovídáme rychle.</p>
+  </div>
+</section>
+<section class="section">
+  <div class="container">
+    <div class="kontakt-grid">
+      <div data-block="kontakt_info" class="kontakt-info"><!-- Kontaktní informace --></div>
+      <div data-block="kontakt_card" class="kontakt-card"><!-- CTA karta / formulář --></div>
+    </div>
+  </div>
+</section>
+HTML;
+
+$tplKontaktCss = <<<'CSS'
+.kontakt-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start}
+.kontakt-info{color:rgba(255,255,255,.82);line-height:2}
+.kontakt-card{background:#18181c;border-radius:16px;padding:36px}
+@media(max-width:680px){.kontakt-grid{grid-template-columns:1fr;gap:32px}}
+CSS;
+
+$tplKontakt = seedUpsertTemplate($pdo, $siteId, 'Kontakt', $tplKontaktHtml, $tplKontaktCss, '');
+
+// ── Blog listing ──────────────────────────────────────────────────────────────
+// Dynamický seznam článků renderuje public/index.php (tryServeBlogListingPage).
+// Tato šablona slouží jako CMS stránka /blog — hero a intro text.
+
+$tplBlogHtml = <<<'HTML'
+<section class="page-hero">
+  <div class="container">
+    <h1 data-block="hero_h1">Blog</h1>
+    <p data-block="hero_sub" class="hero-sub">Tipy, inspirace a novinky z naší praxe.</p>
+  </div>
+</section>
+HTML;
+
+$tplBlogListing = seedUpsertTemplate($pdo, $siteId, 'Blog — přehled', $tplBlogHtml, '', '');
+
+// ── Portfolio listing (Naše práce) ────────────────────────────────────────────
+// Dynamický grid renderuje public/index.php (tryServePortfolioPage).
+// Tato šablona slouží jako CMS stránka /nase-prace — hero a intro text.
+
+$tplPortfolioHtml = <<<'HTML'
+<section class="page-hero">
+  <div class="container">
+    <h1 data-block="hero_h1">Naše práce</h1>
+    <p data-block="hero_sub" class="hero-sub">Ukázka projektů a realizací.</p>
+  </div>
+</section>
+HTML;
+
+$tplPortfolioListing = seedUpsertTemplate($pdo, $siteId, 'Naše práce — přehled', $tplPortfolioHtml, '', '');
+
+echo "Šablony vytvořeny.\n";
+
+// ─── Stránky ──────────────────────────────────────────────────────────────────
+
+$pidHome      = seedUpsertPage($pdo, $siteId, $tplHomepage,        'Domů',         'homepage',   '');
+$pidSluzby    = seedUpsertPage($pdo, $siteId, $tplSluzby,          'Služby',        'sluzby',     'sluzby');
+$pidCenik     = seedUpsertPage($pdo, $siteId, $tplCenik,           'Ceník',         'cenik',      'cenik');
+$pidFaq       = seedUpsertPage($pdo, $siteId, $tplFaq,             'FAQ',           'faq',        'faq');
+$pidKontakt   = seedUpsertPage($pdo, $siteId, $tplKontakt,         'Kontakt',       'kontakt',    'kontakt');
+$pidBlog      = seedUpsertPage($pdo, $siteId, $tplBlogListing,     'Blog',          'blog',       'blog');
+$pidPortfolio = seedUpsertPage($pdo, $siteId, $tplPortfolioListing,'Naše práce',    'nase-prace', 'nase-prace');
+
+echo "Stránky vytvořeny.\n";
+
+// ─── Obsahové bloky — Homepage ────────────────────────────────────────────────
+
+seedBlock($pdo, $pidHome, 'hero_label',     'text',     'Hero — štítek',       'Vítejte',                                                         1);
+seedBlock($pdo, $pidHome, 'hero_h1',        'text',     'Hero — nadpis',       'Doplňte váš hlavní nadpis',                                       2);
+seedBlock($pdo, $pidHome, 'hero_sub',       'textarea', 'Hero — podnadpis',    'Krátký popis toho, co děláte a co nabízíte klientům.',            3);
+seedBlock($pdo, $pidHome, 'hero_cta',       'html',     'Hero — CTA',          '<a href="#kontakt" class="btn-primary">Kontaktujte n&#225;s</a>', 4);
+
+seedBlock($pdo, $pidHome, 'sluzby_title',   'text',     'Služby — nadpis',     'Naše služby',                                                     10);
+seedBlock($pdo, $pidHome, 'sluzby_intro',   'textarea', 'Služby — intro',      'Stručný popis toho, co nabízíme.',                                11);
+seedBlock($pdo, $pidHome, 'sluzby_items',   'html',     'Služby — karty',      '<p style="color:rgba(255,255,255,.45);padding:32px 0;text-align:center">Doplňte karty služeb v administraci.</p>', 12);
+seedBlock($pdo, $pidHome, 'sluzby_cta',     'html',     'Služby — tlačítko',   '<a href="/sluzby" class="btn-secondary">V&#353;echny slu&#382;by</a>', 13);
+
+seedBlock($pdo, $pidHome, 'portfolio_title','text',     'Portfolio — nadpis',  'Naše práce',                                                      20);
+seedBlock($pdo, $pidHome, 'portfolio_intro','textarea', 'Portfolio — intro',   'Ukázka projektů a realizací.',                                    21);
+seedBlock($pdo, $pidHome, 'portfolio-tiles','html',     'Portfolio — dlaždice','<p style="color:rgba(255,255,255,.4);text-align:center;padding:48px 0">P&#345;idejte prvn&#237; pr&#225;ci v administraci — dla&#382;dice se zobraz&#237; automaticky.</p>', 22);
+seedBlock($pdo, $pidHome, 'portfolio_cta',  'html',     'Portfolio — tlačítko','<a href="/nase-prace" class="btn-secondary">V&#353;echny pr&#225;ce</a>', 23);
+
+seedBlock($pdo, $pidHome, 'blog_title',     'text',     'Blog — nadpis',       'Nejnovější články',                                               30);
+seedBlock($pdo, $pidHome, 'blog_intro',     'textarea', 'Blog — intro',        'Rady a novinky z naší praxe.',                                    31);
+seedBlock($pdo, $pidHome, 'blog_1',         'html',     'Článek 1',            '<p style="color:rgba(255,255,255,.45)">Doplňte první článek.</p>', 32);
+seedBlock($pdo, $pidHome, 'blog_2',         'html',     'Článek 2',            '<p style="color:rgba(255,255,255,.45)">Doplňte druhý článek.</p>', 33);
+seedBlock($pdo, $pidHome, 'blog_3',         'html',     'Článek 3',            '<p style="color:rgba(255,255,255,.45)">Doplňte třetí článek.</p>', 34);
+seedBlock($pdo, $pidHome, 'blog_cta',       'html',     'Blog — tlačítko',     '<a href="/blog" class="btn-secondary">V&#353;echny &#269;l&#225;nky</a>', 35);
+
+seedBlock($pdo, $pidHome, 'cenik_title',    'text',     'Ceník — nadpis',      'Ceník',                                                           40);
+seedBlock($pdo, $pidHome, 'cenik_intro',    'textarea', 'Ceník — intro',       'Orientační přehled cen. Každá zakázka je individuální.',           41);
+seedBlock($pdo, $pidHome, 'cenik_body',     'html',     'Ceník — obsah',       '<p style="color:rgba(255,255,255,.45)">Doplňte přehled cen v administraci.</p>', 42);
+seedBlock($pdo, $pidHome, 'cenik_cta',      'html',     'Ceník — tlačítko',    '<a href="/cenik" class="btn-secondary">Cel&#253; cen&#237;k</a>', 43);
+
+seedBlock($pdo, $pidHome, 'faq_title',      'text',     'FAQ — nadpis',        'Časté dotazy',                                                    50);
+seedBlock($pdo, $pidHome, 'faq_1',          'html',     'FAQ 1',               '<p style="color:rgba(255,255,255,.45)">Doplňte první otázku.</p>', 51);
+seedBlock($pdo, $pidHome, 'faq_2',          'html',     'FAQ 2',               '<p style="color:rgba(255,255,255,.45)">Doplňte druhou otázku.</p>',52);
+seedBlock($pdo, $pidHome, 'faq_3',          'html',     'FAQ 3',               '<p style="color:rgba(255,255,255,.45)">Doplňte třetí otázku.</p>', 53);
+seedBlock($pdo, $pidHome, 'faq_cta',        'html',     'FAQ — tlačítko',      '<a href="/faq" class="btn-secondary">V&#353;echny ot&#225;zky</a>',54);
+
+seedBlock($pdo, $pidHome, 'kontakt_title',  'text',     'Kontakt — nadpis',    'Ozvěte se nám',                                                   60);
+seedBlock($pdo, $pidHome, 'kontakt_sub',    'textarea', 'Kontakt — podnadpis', 'Rádi odpovíme na vaše otázky.',                                   61);
+seedBlock($pdo, $pidHome, 'kontakt_info',   'html',     'Kontakt — info',      '<p style="color:rgba(255,255,255,.45)">Doplňte kontaktní informace v administraci.</p>', 62);
+
+// ─── Obsahové bloky — Služby ──────────────────────────────────────────────────
+
+seedBlock($pdo, $pidSluzby, 'hero_h1',   'text',     'Hero — nadpis',  'Naše služby',                                             1);
+seedBlock($pdo, $pidSluzby, 'hero_sub',  'textarea', 'Hero — intro',   'Co konkrétně nabízíme a v čem jsme nejlepší.',            2);
+seedBlock($pdo, $pidSluzby, 'sluzby_grid','html',    'Služby — karty', '<p style="color:rgba(255,255,255,.45)">Doplňte karty služeb.</p>', 3);
+seedBlock($pdo, $pidSluzby, 'cta_wrap',  'html',     'CTA',            '<a href="/kontakt" class="btn-primary">Kontaktujte n&#225;s</a>', 4);
+
+// ─── Obsahové bloky — Ceník ───────────────────────────────────────────────────
+
+seedBlock($pdo, $pidCenik, 'hero_h1',    'text',     'Hero — nadpis', 'Ceník',                                                            1);
+seedBlock($pdo, $pidCenik, 'hero_sub',   'textarea', 'Hero — intro',  'Transparentní přehled cen.',                                       2);
+seedBlock($pdo, $pidCenik, 'cenik_body', 'html',     'Ceník — obsah', '<p style="color:rgba(255,255,255,.45)">Doplňte ceník.</p>',        3);
+seedBlock($pdo, $pidCenik, 'cta_wrap',   'html',     'CTA',           '<a href="/kontakt" class="btn-primary">Nezávaznáa popt&#225;vka</a>', 4);
+
+// ─── Obsahové bloky — FAQ ─────────────────────────────────────────────────────
+
+seedBlock($pdo, $pidFaq, 'hero_h1',  'text',     'Hero — nadpis', 'Časté otázky',                                                           1);
+seedBlock($pdo, $pidFaq, 'hero_sub', 'textarea', 'Hero — intro',  'Odpovědi na nejčastější dotazy.',                                        2);
+seedBlock($pdo, $pidFaq, 'faq_1',   'html',     'Otázka 1',      '<p style="color:rgba(255,255,255,.45)">Doplňte první otázku a odpověď.</p>', 3);
+seedBlock($pdo, $pidFaq, 'faq_2',   'html',     'Otázka 2',      '',                                                                        4);
+seedBlock($pdo, $pidFaq, 'faq_3',   'html',     'Otázka 3',      '',                                                                        5);
+seedBlock($pdo, $pidFaq, 'faq_4',   'html',     'Otázka 4',      '',                                                                        6);
+seedBlock($pdo, $pidFaq, 'faq_5',   'html',     'Otázka 5',      '',                                                                        7);
+seedBlock($pdo, $pidFaq, 'cta_wrap','html',     'CTA',           '<a href="/kontakt" class="btn-primary">M&#225;te dal&#353;&#237; ot&#225;zku?</a>', 8);
+
+// ─── Obsahové bloky — Kontakt ─────────────────────────────────────────────────
+
+seedBlock($pdo, $pidKontakt, 'hero_h1',      'text',     'Hero — nadpis',   'Kontakt',                                                           1);
+seedBlock($pdo, $pidKontakt, 'hero_sub',     'textarea', 'Hero — intro',    'Ozvěte se nám. Odpovídáme rychle.',                                 2);
+seedBlock($pdo, $pidKontakt, 'kontakt_info', 'html',     'Kontakt — info',  '<p style="color:rgba(255,255,255,.45)">Doplňte kontaktní informace.</p>', 3);
+seedBlock($pdo, $pidKontakt, 'kontakt_card', 'html',     'Kontakt — karta', '',                                                                  4);
+
+// ─── Obsahové bloky — Blog ────────────────────────────────────────────────────
+
+seedBlock($pdo, $pidBlog, 'hero_h1',  'text',     'Hero — nadpis', 'Blog',                                      1);
+seedBlock($pdo, $pidBlog, 'hero_sub', 'textarea', 'Hero — intro',  'Tipy, inspirace a novinky z naší praxe.',   2);
+
+// ─── Obsahové bloky — Naše práce ─────────────────────────────────────────────
+
+seedBlock($pdo, $pidPortfolio, 'hero_h1',  'text',     'Hero — nadpis', 'Naše práce',                           1);
+seedBlock($pdo, $pidPortfolio, 'hero_sub', 'textarea', 'Hero — intro',  'Ukázka projektů a realizací.',          2);
+
+echo "Obsahové bloky vytvořeny.\n";
+
+// ─── Publikovat ───────────────────────────────────────────────────────────────
+
+try {
+    $pub = new PublishService();
+    $pub->publishSite($siteId, $userId);
+    echo "Stránky publikovány.\n";
+} catch (\Throwable $e) {
+    echo "Varování při publikování: " . $e->getMessage() . "\n";
+}
+
+echo "\n✓ Seed dokončen.\n";
+echo "  Přihlášení: admin@example.com / admin123\n";
+echo "  Změňte heslo po prvním přihlášení!\n";

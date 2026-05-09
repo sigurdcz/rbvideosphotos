@@ -84,7 +84,7 @@ class SetupController extends Controller
 
     private function runSeed(): string
     {
-        $seedFile = dirname(__DIR__, 2) . '/database/seeds/seed_photographer.php';
+        $seedFile = dirname(__DIR__, 2) . '/database/seeds/seed.php';
         if (!file_exists($seedFile)) {
             throw new \RuntimeException('Seed soubor nenalezen.');
         }

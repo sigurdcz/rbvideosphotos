@@ -1,295 +1,293 @@
-# Architecture
+# Architektura — SEO Editor CMS
 
-Tento dokument popisuje aktualni technicky stav projektu podle skutecne implementace v repu.
+Tento dokument popisuje aktuální technický stav a záměr projektu.
 
-## Prehled
+## Záměr projektu
 
-SEO Editor je male CMS pro spravu obsahu a SEO nad statickym nebo skoro statickym webem.
+SEO Editor je **univerzální CMS pro tvorbu webových stránek** s důrazem na SEO. Umožňuje:
 
-Aktualni model:
+- Vytvářet a spravovat vlastní substránky s volbou layoutu
+- Provozovat dva paralelní blogové systémy (Články a Naše práce)
+- Sdílet jednotný layout (navigace, patička, styly) napříč celým webem
+- Editovat obsah inline přímo na frontendu
+- Exportovat SEO metadata, sitemap a robots.txt
 
-1. Admin cast zapisuje data do MySQL nebo MariaDB.
-2. Bezne verejne stranky se renderuji z databaze pres `public/index.php`.
-3. Vybrane casti vystupu se pri publishi generuji do `storage/published`.
-4. Portfolio listing a detail se serviruji jako predgenerovane HTML soubory.
+---
 
 ## Stack
 
 - PHP 8+
-- MySQL nebo MariaDB
-- PDO
-- Vanilla JS
-- Bez frontend buildu
-- Composer autoload pro namespace `App\\`
+- MySQL / MariaDB
+- PDO (bez ORM)
+- Vanilla JS (bez frameworku)
+- Composer autoload pro namespace `App\`
 
-## Adresare
+---
+
+## Adresáře
 
 ```text
 app/
-  Core/           jadro aplikace
-  Controllers/    controllery
-  Repositories/   DB pristup
-  Services/       business logika
+  Core/           jádro aplikace (Router, Auth, Database, …)
+  Controllers/    řadiče
+  Repositories/   přístup k DB (PDO, připravené dotazy)
+  Services/       business logika (PageRenderer, SeoRenderer, PublishService, …)
 admin/
   index.php       admin router
-  views/          PHP sablony adminu
+  views/          PHP šablony adminu
   assets/         CSS a JS pro admin
 public/
-  index.php       front controller pro verejny web
-  assets/         assety inline editoru a verejne assety
+  index.php       front controller veřejného webu
+  assets/         assety inline editoru
 database/
-  migrations/     SQL migrace
+  migrations/     SQL migrace (jedno konsolidované schema)
   seeds/          PHP seedy
 storage/
-  media/          nahrana media
-  published/      portfolio HTML, sitemap, robots a dalsi exporty
+  media/          nahraná média
+  published/      staticky exportované soubory (sitemap, robots, …)
   logs/           logy
 ```
+
+---
+
+## Dva paralelní blogové systémy
+
+Oba systémy jsou rovnocenné. Sdílejí layout, navigaci a styly — liší se pouze strukturou záznamu a layoutem detailu.
+
+| Vlastnost          | Blog (Články)                      | Naše práce (Portfolio)                          |
+|--------------------|------------------------------------|-------------------------------------------------|
+| DB tabulka         | `blog_posts`                       | `portfolio_entries` + `portfolio_media`         |
+| URL výpisu         | `/blog`                            | `/nase-prace`                                   |
+| URL detailu        | `/{slug}` (bez prefixu)            | `/{slug}` (bez prefixu)                         |
+| Pole záznamu       | title, slug, excerpt, content, featured_image | title, slug, description, video_url, media[] |
+| Admin sekce        | Blog — články                      | Naše práce                                      |
+| Rendering výpisu   | `tryServeBlogListingPage()` v public/index.php | `tryServePortfolioPage()` v public/index.php |
+| Rendering detailu  | `tryServeBlogPostPage()` v public/index.php    | `tryServePortfolioPage()` v public/index.php |
+
+### Pravidlo URL: žádný prefix
+
+Slugy blogů i portfolia jsou přímé — **neobsahují** `/blog/` ani `/nase-prace/` prefix:
+
+```
+✓ /priprava-na-svatebni-foceni     (blog post)
+✓ /svatba-martin-helena            (portfolio entry)
+✗ /blog/priprava-na-svatebni-foceni
+✗ /nase-prace/svatba-martin-helena
+```
+
+Při přístupu na `/blog/something` nebo `/nase-prace/something` provede
+`tryRedirectLegacyContentPath()` 301 redirect na `/{something}`.
+
+---
+
+## Substránky (CMS stránky)
+
+Uživatel si může vytvářet vlastní substránky (ceník, FAQ, o nás, …). Při zakládání si vybere layout (**šablonu**). Šablony jsou předpřipraveny seedem.
+
+### Předpřipravené šablony (seedované automaticky)
+
+| Název šablony        | URL               | Poznámka                                      |
+|----------------------|-------------------|-----------------------------------------------|
+| Homepage             | `/`               | Neměnná, vždy existuje; obsahuje anchor sekce |
+| Služby               | `/sluzby`         | Výčet služeb                                  |
+| Ceník                | `/cenik`          | Přehled cen                                   |
+| FAQ                  | `/faq`            | Otázky a odpovědi                             |
+| Kontakt              | `/kontakt`        | Kontaktní informace                           |
+| Blog — přehled       | `/blog`           | Hero text; seznam článků renderuje PHP        |
+| Naše práce — přehled | `/nase-prace`     | Hero text; grid portfolia renderuje PHP       |
+
+Nové substránky mohou používat libovolnou z dostupných šablon.
+
+---
+
+## Navigace — dvě varianty
+
+| Pole v DB             | Kde se použije       | Chování odkazů                              |
+|-----------------------|----------------------|---------------------------------------------|
+| `sites.layout_nav_home` | Homepage (`url_path = ''`) | Hash anchory (`#sluzby`, `#cenik`, …) pro smooth scroll |
+| `sites.layout_nav_sub`  | Všechny ostatní stránky, blog, portfolio | Přímé URL (`/sluzby`, `/cenik`, …) |
+
+Každá anchor sekce na homepage má vlastní CTA tlačítko odkazující na příslušnou substránku (`#sluzby` → tlačítko „Všechny služby" → `/sluzby`).
+
+Pokud `layout_nav_home`/`layout_nav_sub` nejsou vyplněny, placeholder `{nav}` se tiše odstraní.
+
+---
+
+## Sdílený layout webu
+
+Layout je uložen v `sites.layout_html` a obsahuje placeholder `{page_content}`, `{site_name}` a `{nav}`.
+
+```
+{nav}             →  sites.layout_nav_home  (homepage)
+                  →  sites.layout_nav_sub   (ostatní stránky)
+{page_content}    →  vyrendrovaný obsah šablony (PageRenderer::render())
+{site_name}       →  sites.name
+```
+
+Globální CSS je v `sites.layout_css`, JS v `sites.layout_js`.
+
+---
 
 ## Request flow
 
 ### Admin
 
-```text
-request -> admin/index.php -> Core\Router -> Controller -> Repository/Service -> View
+```
+request → admin/index.php → Core\Router → Controller → Repository/Service → View
 ```
 
-### Verejny web
+### Veřejný web (public/index.php)
 
-```text
-request -> public/index.php
-        -> API routing
-        -> asset/media passthrough (path traversal ochrana pres realpath)
-        -> portfolio static HTML
-        -> DB render beznych stranek
-        -> fallback na storage/published
+```
+request → public/index.php
+        1. /api/v1/*              → ApiController::dispatch()
+        2. /assets/*              → readfile (ochrana realpath)
+        3. /storage/media/*       → readfile (ochrana realpath)
+        4. 301 redirect pro legacy /blog/* a /nase-prace/* cesty
+        5. /nase-prace            → tryServePortfolioPage()     (výpis)
+        6. /blog                  → tryServeBlogListingPage()    (výpis)
+        7. CMS stránka z DB       → tryServeDatabasePage()
+        8. Blog detail            → tryServeBlogPostPage()       (fallback po CMS)
+        9. Portfolio detail       → tryServePortfolioPage()      (fallback po CMS)
+       10. Statický soubor        → storage/published (realpath ochrana)
+       11. 404
 ```
 
-## Databaze
+---
 
-Projekt je aktualne `MySQL/MariaDB only`.
+## Databázové schéma
 
-Pouzite tabulky zahrnuji zejmena:
+Jedno konsolidované schema: `database/migrations/001_schema.sql`.
 
-- `users`
-- `sites`
-- `templates`
-- `pages`
-- `content_blocks`
-- `seo_settings`
-- `media`
-- `media_variants`
-- `portfolio_entries`
-- `portfolio_media`
-- `redirects`
-- `publish_history`
+### Tabulky
 
-## Site layout a navigace
+| Tabulka             | Popis                                           |
+|---------------------|-------------------------------------------------|
+| `users`             | Uživatelé (admin / editor)                      |
+| `sites`             | Konfigurace webu vč. layout HTML/CSS/JS a nav   |
+| `templates`         | Šablony stránek (layout pro CMS stránky)        |
+| `pages`             | CMS stránky napojené na šablonu                 |
+| `content_blocks`    | Editovatelné bloky (`data-block="key"`)         |
+| `seo_settings`      | SEO metadata per stránka                        |
+| `media`             | Nahraná média                                   |
+| `media_variants`    | Varianty médií (rozlišení, formát)              |
+| `blog_posts`        | Blogové příspěvky                               |
+| `portfolio_entries` | Záznamy portfolia (Naše práce)                  |
+| `portfolio_media`   | Média přiřazená k záznamu portfolia             |
+| `redirects`         | URL přesměrování                                |
+| `publish_history`   | Historie publishování                           |
 
-Layout je sdílen přes `sites.layout_html`. Podporované placeholdery:
+---
 
-- `{page_content}` — obsah stránky ze šablony
-- `{site_name}` — název webu
-- `{nav}` — navigační panel (volitelný, viz níže)
+## Media URL
 
-### Dvě varianty navigace
+- Vždy root-relative: `/storage/media/YYYY/MM/soubor.webp`
+- Nikdy hardcoded doména ze `sites.domain` (kvůli staging/prod kompatibilitě)
+- Výjimka: sitemap.xml a absolutní OG tagy musí obsahovat absolutní URL
 
-| Pole v DB | Kdy se použije | Chování odkazů |
-|---|---|---|
-| `sites.layout_nav_home` | Homepage (`url_path = /`) | Hash anchory (`#sluzby`, `#cenik`…) pro One Page smooth scroll |
-| `sites.layout_nav_sub` | Všechny ostatní stránky + portfolio | Přímé URL (`/sluzby`, `/cenik`…) |
+---
 
-Oba nav bloky mohou obsahovat `{site_name}`, který se nahradí názvem webu.
+## Inline editor
 
-Pokud `layout_nav_home`/`layout_nav_sub` nejsou vyplněny, `{nav}` se tiše odstraní a nav musí být součástí `layout_html` ručně.
+Přihlášený uživatel vidí na frontendu admin bar a může editovat bloky přímo na stránce:
 
-### Povinně seedované stránky
+- `data-block="key"` → editor ví, který blok edituje
+- AJAX PATCH na `/admin/inline/update`
+- Nahrávání médií přes `/admin/inline/upload`
 
-Těchto 7 stránek je vždy naseedovaných:
+---
 
-| URL | Šablona |
-|---|---|
-| `/` | Homepage |
-| `/sluzby` | Služby |
-| `/nase-prace` | Portfolio (dynamické, mimo DB pages) |
-| `/cenik` | Ceník |
-| `/faq` | FAQ |
-| `/blog` | Blog listing |
-| `/kontakt` | Kontakt |
-
-## Core vrstva
-
-### `app/Core/Router.php`
-
-- jednoduche path routing pro admin
-
-### `app/Core/Controller.php`
-
-- render view
-- flash messages
-- redirect
-- JSON odpovedi
-- CSRF kontrola pro POST
-- `requireAuth()` — overeni prihlaseni
-- `requireAdmin()` — overeni prihlaseni + role `admin`
-
-### `app/Core/Database.php`
-
-- PDO singleton
-- cte konfiguraci z `.env` a `config/database.php`
-- ocekava MySQL nebo MariaDB
-
-### `app/Core/Auth.php`
-
-- session autentizace
-- role `admin` a `editor`
-- CSRF token per session
-- `secure` flag na session cookie se nastavuje automaticky podle `APP_URL` (https = true)
-
-### `app/Core/SlugTrait.php`
-
-- sdileny trait pro generovani slugu
-- pouzivan v `PageController`, `BlogController`, `PortfolioController`
-- parametr `allowSlash: true` povoluje lomitko (vnorene stranky)
-- transliterace ceskych diakritik (vcetne velkych pismen)
-
-## Repository vrstva
-
-Repozitare vraceji pole a pouzivaji pripravene PDO dotazy. Neni zde ORM.
-
-Klicove repozitare:
-
-- `PageRepository`
-- `TemplateRepository`
-- `SeoRepository`
-- `MediaRepository`
-- `PortfolioRepository`
-
-## Service vrstva
-
-### `PageRenderer`
-
-- vklada `data-block` obsah do HTML sablon
-- umi media mapu a inline edit rezim
-
-### `SeoRenderer`
-
-- generuje title, meta description, canonical, OG a Twitter tagy
-
-### `PublishService`
-
-- publikuje klasicke stranky do `storage/published`
-- regeneruje sitemap, robots a dalsi doprovodne soubory
-
-### `ImageVariantService`
-
-- vytvari varianty obrazku, pokud je k dispozici GD
-
-## Portfolio
-
-Portfolio ma vlastni workflow mimo bezny page render:
-
-- admin formular uklada zaznam do `portfolio_entries`
-- vybrane obrazky se ukladaji do `portfolio_media`
-- detail zakazky se publikuje do `storage/published/nase-prace/{slug}/index.html`
-- listing se publikuje do `storage/published/nase-prace/index.html`
-- homepage blok `portfolio-tiles` se synchronizuje do `content_blocks`
-
-### Aktualni pravidlo pro media URL v portfoliu
-
-- nepouzivat natvrdo ulozenou domenu ze `sites.domain`
-- pouzivat root-relative cestu odvozenou ze `storage_path`
-- priklad: `/storage/media/2026/05/fotka.webp`
-
-To je dulezite hlavne proto, aby media fungovala stejne na produkci, stagingu i lokalne.
-
-## Verejny rendering
-
-`public/index.php` dnes dela tyto veci:
-
-1. obslouzi `/api/v1/*`
-2. obslouzi `/assets/*` — s ochranou pred path traversalem (realpath + prefix check)
-3. obslouzi `/storage/media/*` — s ochranou pred path traversalem
-4. obslouzi portfolio z `storage/published/nase-prace`
-5. pokusi se vyrenderovat beznou stranku z databaze
-6. pripadne spadne na export ve `storage/published` — s ochranou pred path traversalem
-
-To znamena, ze neplati stare tvrzeni, ze cely web je servirovan jen z predgenerovanych HTML souboru.
-
-## Bezpecnost
+## Bezpečnost
 
 ### Path traversal
+Všechny `readfile()` bloky v `public/index.php` používají `realpath()` + kontrolu prefixu.
 
-Vsechny tri `readfile()` bloky v `public/index.php` pouzivaji `realpath()` + kontrolu prefixu:
-
-```php
-$base = realpath($baseDir);
-$file = realpath($baseDir . $uri);
-if ($base !== false && $file !== false && str_starts_with($file, $base . DIRECTORY_SEPARATOR)) {
-    readfile($file);
-}
-```
-
-### Tajemstvi v .env
-
-- `MIGRATE_TOKEN` — token pro `migrate-util.php` nesmí byt hardcoded v kodu
-- `API_KEY` — klic pro `/api/v1/*` endpointy
-
-Oba musi byt nastaveny v `.env` (viz `.env.example`).
-
-### Role-based autorizace
-
-- `requireAuth()` — jakykoli prihlaseny uzivatel
+### Autorizace
+- `requireAuth()` — jakýkoliv přihlášený uživatel
 - `requireAdmin()` — pouze role `admin`
-- `SetupController` a `SettingsController` vyzaduji `admin`
 
 ### Session cookie
+`secure` flag se nastavuje automaticky: pokud `APP_URL` začíná `https://`, je `secure = true`.
 
-- `secure` flag se nastavuje automaticky: pokud `APP_URL` zacina `https://`, je `secure = true`
+### Tajemství v .env
+- `MIGRATE_TOKEN` — token pro `migrate-util.php`
+- `API_KEY` — klíč pro `/api/v1/*` endpointy
 
-## Lokalni vyvoj
+---
 
-Spusteni:
+## Seed
+
+Seed (`database/seeds/seed.php`) je generický a idempotentní:
+
+1. Vyčistí data (DELETE, ne DROP — schema zůstane)
+2. Vytvoří admin uživatele (`admin@example.com` / `admin123`)
+3. Vytvoří výchozí web s layoutem a navigačními variantami
+4. Vytvoří 7 šablon + 7 stránek s placeholder bloky
+5. Publikuje web
+
+Spuštění:
+- Admin: `/admin/setup` → „Spustit seed"  
+- Admin: `/admin/setup` → „Armagedon" (reset DB + seed)
+- CLI: `php database/seeds/seed.php`
+
+Seed pro konkrétního klienta (`seed_photographer.php`) zůstává jako příklad. Výchozí seed je `seed.php`.
+
+---
+
+## Migrace
+
+Jedno konsolidované schema: `database/migrations/001_schema.sql`.
+
+Spuštění:
+```
+/migrate-util.php?token=<MIGRATE_TOKEN>
+```
+
+Migrace je idempotentní (`CREATE TABLE IF NOT EXISTS`). Po prvním spuštění vznikne `storage/.migration-lock` — ten zabrání opakovanému spuštění. Smaž ho, pokud potřebuješ migraci znovu.
+
+`migrate-util.php` sleduje aplicované migrace v tabulce `schema_migrations`.
+
+---
+
+## Lokální vývoj
 
 ```bash
 php -S localhost:8000 router.php
 ```
 
 Dev router:
+- `/admin/*` → `admin/index.php`
+- existující soubory → přímé servírování
+- vše ostatní → `public/index.php`
 
-- `/admin/*` -> `admin/index.php`
-- existujici soubory -> prime servirovani
-- vse ostatni -> `public/index.php`
+---
 
-Migrace:
+## Deploy (CI/CD)
 
-```text
-/migrate-util.php?token=<MIGRATE_TOKEN z .env>
-```
+- `master` branch → produkce (webzdarma `/web/`)
+- `dev` branch → staging (webzdarma `/web/dev/`)
+- GitHub Actions buildí Composer no-dev artifact a deployuje přes FTPS
 
-Seed:
+### Požadované GitHub Secrets
 
-- `/admin/setup`
-- nebo `php database/seeds/seed_photographer.php`
+| Secret          | Popis                              |
+|-----------------|------------------------------------|
+| `FTP_HOST`      | Hostitel FTP serveru               |
+| `FTP_USER`      | FTP uživatel                       |
+| `FTP_PASS`      | FTP heslo                          |
+| `PROD_APP_URL`  | Produkční URL (`https://…`)        |
+| `PROD_DB_HOST`  | MySQL host                         |
+| `PROD_DB_PORT`  | MySQL port (default 3306)          |
+| `PROD_DB_NAME`  | Název databáze                     |
+| `PROD_DB_USER`  | DB uživatel                        |
+| `PROD_DB_PASS`  | DB heslo                           |
+| `PROD_MIGRATE_TOKEN` | Token pro migrate-util.php    |
+| `PROD_API_KEY`  | Klíč pro API endpointy             |
 
-## SEO a URL konvence
+---
 
-- interni odkazy drzet relativni
-- media URL drzet root-relative, pokud neni nutna absolutni domena
-- absolutni domena je vhodna pro `sitemap.xml` a podobne SEO exporty
+## Zdroje pravdy (při rozporu)
 
-## Deploy
-
-- `master` -> production
-- `dev` -> staging
-- GitHub Actions pripravi deploy balicek
-- `.env` se nedeployuje
-- `storage/media` neni soucast standardniho deploy artefaktu
-
-## Zname zdroje pravdy
-
-Kdyz je rozpor mezi dokumentaci a kodem, prednost ma:
-
-1. aktualni kod
+1. Aktuální kód
 2. `.env` a runtime konfigurace
-3. novejsi dokumentace
+3. Novější dokumentace

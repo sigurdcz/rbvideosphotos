@@ -45,17 +45,41 @@ jobs:
           mkdir -p _deploy/storage/published
           mkdir -p _deploy/storage/templates
 
+      - name: Write dev .env from GitHub secrets
+        env:
+          DEV_APP_URL:       ${{ secrets.DEV_APP_URL }}
+          DEV_DB_HOST:       ${{ secrets.DEV_DB_HOST }}
+          DEV_DB_PORT:       ${{ secrets.DEV_DB_PORT }}
+          DEV_DB_NAME:       ${{ secrets.DEV_DB_NAME }}
+          DEV_DB_USER:       ${{ secrets.DEV_DB_USER }}
+          DEV_DB_PASS:       ${{ secrets.DEV_DB_PASS }}
+          DEV_MIGRATE_TOKEN: ${{ secrets.DEV_MIGRATE_TOKEN }}
+          DEV_API_KEY:       ${{ secrets.DEV_API_KEY }}
+        run: |
+          {
+            echo "APP_URL=${DEV_APP_URL:-http://localhost:8000}"
+            echo "APP_DEBUG=true"
+            echo "DB_DRIVER=mysql"
+            echo "DB_HOST=${DEV_DB_HOST}"
+            echo "DB_PORT=${DEV_DB_PORT:-3306}"
+            echo "DB_NAME=${DEV_DB_NAME}"
+            echo "DB_USER=${DEV_DB_USER}"
+            echo "DB_PASS=${DEV_DB_PASS}"
+            echo "MIGRATE_TOKEN=${DEV_MIGRATE_TOKEN}"
+            echo "API_KEY=${DEV_API_KEY}"
+          } > _deploy/.env
+
       - name: Deploy via FTP (dev)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server: ${{ secrets.FTP_HOST }}
-          username: ${{ secrets.FTP_USER }}
-          password: ${{ secrets.FTP_PASS }}
-          port: 21
-          protocol: ftps
-          security: loose
-          timeout: 120000
-          local-dir: ./_deploy/
+          server:     ${{ secrets.FTP_HOST }}
+          username:   ${{ secrets.FTP_USER }}
+          password:   ${{ secrets.FTP_PASS }}
+          port:       21
+          protocol:   ftps
+          security:   loose
+          timeout:    120000
+          local-dir:  ./_deploy/
           server-dir: /web/dev/
           exclude: |
             **/.git*
