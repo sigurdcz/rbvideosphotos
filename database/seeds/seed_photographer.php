@@ -304,6 +304,44 @@ $htmlHomeFull = <<<'HTML'
     <div class="sec-btns" data-block="reviews_cta"></div>
   </div>
 </section>
+<section class="section" id="cenik">
+  <div class="container">
+    <div class="sec-hdr">
+      <h2 data-block="pricing_title"></h2>
+      <p data-block="pricing_intro"></p>
+    </div>
+    <div data-block="pricing_body"></div>
+    <div class="sec-btns" data-block="pricing_cta"></div>
+  </div>
+</section>
+<section class="section section-dark" id="blog">
+  <div class="container">
+    <div class="sec-hdr">
+      <h2 data-block="blog_title"></h2>
+      <p data-block="blog_intro"></p>
+    </div>
+    <div class="blog-grid">
+      <div class="blog-card" data-block="blog_1"></div>
+      <div class="blog-card" data-block="blog_2"></div>
+      <div class="blog-card" data-block="blog_3"></div>
+    </div>
+    <div class="sec-btns" data-block="blog_cta"></div>
+  </div>
+</section>
+<section class="section section-light" id="faq">
+  <div class="container">
+    <div class="sec-hdr">
+      <h2 data-block="faq_title"></h2>
+      <p data-block="faq_intro"></p>
+    </div>
+    <div class="faq-list">
+      <div class="faq-item" data-block="faq_1"></div>
+      <div class="faq-item" data-block="faq_2"></div>
+      <div class="faq-item" data-block="faq_3"></div>
+    </div>
+    <div class="sec-btns" data-block="faq_cta"></div>
+  </div>
+</section>
 <section class="section" id="kontakt">
   <div class="container cta-2col">
     <div class="cta-l">
@@ -400,9 +438,26 @@ body{padding-top:0}
 .pt-photos{display:flex;gap:4px;height:64px;overflow:hidden}
 .pt-photos img{flex:1;min-width:0;height:100%;object-fit:cover}
 .pt-caption{padding:12px 14px;font-size:.9rem;font-weight:700;color:#fff;background:#1a1a2e}
-@media(max-width:1024px){.svc-grid{grid-template-columns:1fr 1fr}.feat-grid{grid-template-columns:1fr 1fr}.svc-card{border-bottom:1px solid #e5e5e5}.feat{border-bottom:1px solid rgba(255,255,255,.07)}}
+/* Pricing section */
+.pricing-body{background:#f8f6f2;border-left:4px solid #c4963c;padding:28px 32px;font-size:.97rem;color:#333;line-height:1.8;margin-bottom:8px}
+.pricing-body strong{color:#111}
+/* Blog section */
+.blog-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-bottom:8px}
+.blog-card{background:#1e1e2e;padding:28px 24px;text-decoration:none;display:block;transition:transform .2s}
+.blog-card:hover{transform:translateY(-3px)}
+.blog-cat{display:inline-block;font-size:10px;color:#c4963c;text-transform:uppercase;letter-spacing:.15em;border:1px solid rgba(196,150,60,.5);padding:3px 10px;margin-bottom:14px}
+.blog-card h3{font-size:1rem;font-weight:700;color:#fff;margin-bottom:8px;line-height:1.4}
+.blog-card p{font-size:.85rem;color:rgba(255,255,255,.45);line-height:1.6}
+.blog-card a{color:#c4963c;font-size:.82rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;text-decoration:none;margin-top:12px;display:inline-block}
+/* FAQ section */
+.faq-list{max-width:780px;margin:0 auto 8px}
+.faq-item{border-bottom:1px solid #e0dcd5;padding:22px 0}
+.faq-item:first-child{border-top:1px solid #e0dcd5}
+.faq-q{font-size:1rem;font-weight:700;color:#111;margin-bottom:8px}
+.faq-a{font-size:.9rem;color:#555;line-height:1.75}
+@media(max-width:1024px){.svc-grid{grid-template-columns:1fr 1fr}.feat-grid{grid-template-columns:1fr 1fr}.blog-grid{grid-template-columns:1fr 1fr}.svc-card{border-bottom:1px solid #e5e5e5}.feat{border-bottom:1px solid rgba(255,255,255,.07)}}
 @media(max-width:900px){.cta-2col{grid-template-columns:1fr;gap:32px}.stats-row{grid-template-columns:repeat(2,1fr)}.rev-grid{grid-template-columns:1fr 1fr}}
-@media(max-width:640px){.rev-grid{grid-template-columns:1fr}.hero h1{font-size:2.2rem}.pt-grid{grid-template-columns:1fr}}
+@media(max-width:640px){.rev-grid{grid-template-columns:1fr}.hero h1{font-size:2.2rem}.pt-grid{grid-template-columns:1fr}.blog-grid{grid-template-columns:1fr}}
 CSS;
 
 $jsHomeFull = <<<'JS'
@@ -657,7 +712,7 @@ block($pdo, $pidHome, 'why_2', 'html', 'Důvod 2', '<span class="feat-num">02</s
 block($pdo, $pidHome, 'why_3', 'html', 'Důvod 3', '<span class="feat-num">03</span><h3>5 let zálohy zdarma</h3><p>Vaše fotografie a videa bezpečně zálohujeme po dobu 5 let. Nikdy o vzpomínky nepřijdete.</p>', 34);
 block($pdo, $pidHome, 'why_4', 'html', 'Důvod 4', '<span class="feat-num">04</span><h3>Celá ČR i zahraničí</h3><p>Sídlíme v Olomouci, ale fotografujeme po celé České republice i v zahraničí. Přijedeme za vámi.</p>', 35);
 
-block($pdo, $pidHome, 'portfolio_title', 'text',     'Práce — nadpis',    'Ukázka naší práce', 40);
+block($pdo, $pidHome, 'portfolio_title', 'text',     'Práce — nadpis',    'To nejlepší od nás', 40);
 block($pdo, $pidHome, 'portfolio_intro', 'textarea', 'Práce — intro',     'Svatební filmy, klipy a reportáže — podívejte se jak pracujeme.', 41);
 block($pdo, $pidHome, 'portfolio_btns',  'html',     'Práce — tlačítka',  '<a href="/nase-prace" class="btn-g">V&#353;echny pr&#225;ce</a>', 46);
 block($pdo, $pidHome, 'portfolio-tiles', 'html', 'Naše práce — dlaždice', '<p style="color:rgba(255,255,255,.5);text-align:center;padding:40px 0">Přidejte první práci v sekci <strong>Naše práce</strong> a dlaždice se zde zobrazí automaticky.</p>', 38);
@@ -668,6 +723,25 @@ block($pdo, $pidHome, 'review_1', 'html', 'Recenze 1', '<div class="rev-stars">&
 block($pdo, $pidHome, 'review_2', 'html', 'Recenze 2', '<div class="rev-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><blockquote>"Super domluva, milý a profesionální přístup k focení. Zdena nám nafotil svatební obřad s poobřadním focením v zámeckém parku. Z kvality fotek jsme nadšení a byly dodány dříve než jsme byli domluveni. Velká spokojenost. Doporučuji."</blockquote><div class="rev-name">Václav Konopka</div><div class="rev-type">Svatební focení</div>', 53);
 block($pdo, $pidHome, 'review_3', 'html', 'Recenze 3', '<div class="rev-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><blockquote>"Moc doporučuji, pan fotograf nám vyčaroval ty nejkrásnější rodinné fotky i s dětmi, co neměly zrovna fotící náladu. Profesionální přístup a špičková kvalita. Už se těším na další focení!"</blockquote><div class="rev-name">Jana Dudková</div><div class="rev-type">Rodinné focení</div>', 54);
 block($pdo, $pidHome, 'reviews_cta', 'html', 'Recenze — tlačítko', '<a href="https://www.facebook.com/rbvideosandphotos/reviews" target="_blank" rel="noopener" class="btn-od">Všechny recenze na Facebooku</a>', 55);
+
+block($pdo, $pidHome, 'pricing_title', 'text',     'Ceník — nadpis',   'Transparentní ceník bez překvapení', 70);
+block($pdo, $pidHome, 'pricing_intro', 'textarea', 'Ceník — intro',   'Každá zakázka je individuální. Níže najdete orientační ceny — přesnou nabídku připravíme vždy na míru.', 71);
+block($pdo, $pidHome, 'pricing_body',  'html',     'Ceník — obsah',   '<div class="pricing-body"><strong>Svatební foto &amp; video</strong> — od 13 000 Kč (základní, do 4 h) &nbsp;·&nbsp; od 22 000 Kč (celý den)<br><strong>Rodinné &amp; portrétní focení</strong> — od 4 500 Kč<br><strong>Firemní fotografie &amp; video</strong> — od 6 000 Kč<br><strong>Videografie, videoklipy</strong> — od 8 000 Kč<br><em>Ceny jsou orientační. Rádi připravíme nabídku přesně pro vás.</em></div>', 72);
+block($pdo, $pidHome, 'pricing_cta',   'html',     'Ceník — tlačítko', '<a href="/cenik" class="btn-g">Cel&#253; cen&#237;k</a>', 73);
+
+block($pdo, $pidHome, 'blog_title', 'text',     'Blog — nadpis', 'Tipy a inspirace', 80);
+block($pdo, $pidHome, 'blog_intro', 'textarea', 'Blog — intro',  'Rady od profesionálního fotografa — jak se připravit, co očekávat a jak dostat ty nejkrásnější snímky.', 81);
+block($pdo, $pidHome, 'blog_1',     'html',     'Článek 1',      '<span class="blog-cat">Svatební fotografie</span><h3>10 tipů, jak se připravit na dokonalé svatební focení</h3><p>Váš svatební den si zaslouží dokonalou přípravu. Přečtěte si, co udělat jinak než ostatní.</p><a href="/priprava-na-svatebni-foceni">&#268;&#237;st d&#225;l &rarr;</a>', 82);
+block($pdo, $pidHome, 'blog_2',     'html',     'Článek 2',      '<span class="blog-cat">Rodinné focení</span><h3>Rodinné focení: jak dostat přirozené snímky i s malými dětmi</h3><p>Malé děti a fotoaparát? Přesně v tom chaosu se skrývají ty nejkrásnější momenty.</p><a href="/rodinne-foceni-s-detmi">&#268;&#237;st d&#225;l &rarr;</a>', 83);
+block($pdo, $pidHome, 'blog_3',     'html',     'Článek 3',      '<span class="blog-cat">Tipy</span><h3>Jak vybrat správného fotografa pro vaši akci?</h3><p>Na co se zaměřit při výběru fotografa — portfolio, styl, komunikace a podmínky spolupráce.</p><a href="/blog">&#268;&#237;st d&#225;l &rarr;</a>', 84);
+block($pdo, $pidHome, 'blog_cta',   'html',     'Blog — tlačítko', '<a href="/blog" class="btn-od">V&#353;echny &#269;l&#225;nky</a>', 85);
+
+block($pdo, $pidHome, 'faq_title', 'text',     'FAQ — nadpis', 'Nejčastější otázky', 90);
+block($pdo, $pidHome, 'faq_intro', 'textarea', 'FAQ — intro',  'Vše, co potřebujete vědět před rezervací.', 91);
+block($pdo, $pidHome, 'faq_1',     'html',     'FAQ 1',        '<div class="faq-q">Jak brzy si mám rezervovat fotografie na svatbu?</div><div class="faq-a">Oblíbené soboty se obsazují rok i více dopředu. Doporučujeme rezervovat co nejdříve po zasnoubení, aby byl váš termín volný.</div>', 92);
+block($pdo, $pidHome, 'faq_2',     'html',     'FAQ 2',        '<div class="faq-q">Za jak dlouho dostaneme fotografie?</div><div class="faq-a">Editované fotografie ze svatby dodáváme do 4–6 týdnů. Rodinné a portrétní focení zpravidla do 2 týdnů. Video do 8 týdnů. Vždy se domluvíme předem.</div>', 93);
+block($pdo, $pidHome, 'faq_3',     'html',     'FAQ 3',        '<div class="faq-q">Fotografujete i mimo Olomouc?</div><div class="faq-a">Ano, fotografujeme po celé České republice i v zahraničí. Cestovní náklady závisí na vzdálenosti — vše si vždy předem domluvíme.</div>', 94);
+block($pdo, $pidHome, 'faq_cta',   'html',     'FAQ — tlačítko', '<a href="/faq" class="btn-od">V&#353;echny ot&#225;zky</a>', 95);
 
 block($pdo, $pidHome, 'cta_title',    'text',     'CTA — nadpis',     'Pojďme vytvořit něco krásného', 60);
 block($pdo, $pidHome, 'cta_sub',      'textarea', 'CTA — podnadpis',  'Nezávazně se nám ozvěte — rádi odpovíme na vaše otázky a připravíme nabídku na míru pro váš den.', 61);

@@ -365,10 +365,10 @@ HTML;
                 : "<div style=\"height:100%;background:#222;display:flex;align-items:center;justify-content:center;font-size:2rem;color:rgba(255,255,255,.3)\">&#9654;</div>";
             $playIcon  = $hasVideo ? '<span class="pt-play">&#9654;</span>' : '';
 
-            // Up to 3 extra photos
+            // Up to 3 strip photos; for photo-only entries skip photos[0] (already the main thumb)
             $extraHtml = '';
-            $extraPhotos = array_slice($photos, 0, 3);
-            foreach ($extraPhotos as $p) {
+            $stripPhotos = $hasVideo ? array_slice($photos, 0, 3) : array_slice($photos, 1, 3);
+            foreach ($stripPhotos as $p) {
                 $psrc = $h($this->publicMediaUrl((string)($p['storage_path'] ?? '')));
                 $palt = $h($p['alt_text'] ?? '');
                 $extraHtml .= "<img src=\"{$psrc}\" alt=\"{$palt}\" loading=\"lazy\">";
@@ -383,8 +383,7 @@ HTML;
 TILE;
         }
 
-        return '<div class="pt-grid">' . $tiles . '</div>'
-            . '<div style="text-align:center;margin-top:32px"><a href="/nase-prace" class="btn-g">Zobrazit všechny práce</a></div>';
+        return '<div class="pt-grid">' . $tiles . '</div>';
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
