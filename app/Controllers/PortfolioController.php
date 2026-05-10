@@ -357,7 +357,8 @@ HTML;
             $thumb    = $e['video_url'] ? PortfolioRepository::youtubeThumbnail($e['video_url']) : '';
             $hasVideo = (bool)$e['video_url'];
             if (!$thumb && !empty($photos)) {
-                $thumb = $this->publicMediaUrl((string)($photos[0]['storage_path'] ?? ''));
+                $thumbFile = $photos[0]['thumb_path'] ?? $photos[0]['medium_path'] ?? $photos[0]['storage_path'] ?? '';
+                $thumb = $this->publicMediaUrl((string)$thumbFile);
             }
 
             $thumbHtml = $thumb
@@ -369,8 +370,9 @@ HTML;
             $extraHtml = '';
             $stripPhotos = $hasVideo ? array_slice($photos, 0, 3) : array_slice($photos, 1, 3);
             foreach ($stripPhotos as $p) {
-                $psrc = $h($this->publicMediaUrl((string)($p['storage_path'] ?? '')));
-                $palt = $h($p['alt_text'] ?? '');
+                $pfile = $p['thumb_path'] ?? $p['storage_path'] ?? '';
+                $psrc  = $h($this->publicMediaUrl((string)$pfile));
+                $palt  = $h($p['alt_text'] ?? '');
                 $extraHtml .= "<img src=\"{$psrc}\" alt=\"{$palt}\" loading=\"lazy\">";
             }
 

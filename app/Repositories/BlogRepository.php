@@ -84,6 +84,31 @@ class BlogRepository
 
     public function delete(int $id): void
     {
+        $this->db->prepare('DELETE FROM blog_media WHERE blog_post_id = ?')->execute([$id]);
         $this->db->prepare('DELETE FROM blog_posts WHERE id = ?')->execute([$id]);
+    }
+
+    public function setGallery(int $postId, array $mediaIds): void
+    {
+        $this->db->prepare('DELETE FROM blog_media WHERE blog_post_id = ?')->execute([$postId]);
+        $stmt = $this->db->prepare('INSERT INTO blog_media (blog_post_id, media_id, sort_order) VALUES (?, ?, ?)');
+        foreach ($mediaIds as $i => $mid) {
+            $stmt->execute([$postId, (int)$mid, $i]);
+        }
+    }
+
+    public function getGallery(int $postId): array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT m.*, bm.sort_order AS bm_sort,
+                    (SELECT mv.path FROM media_variants mv WHERE mv.media_id = m.id AND mv.format = ? LIMIT 1) AS thumb_path,
+                    (SELECT mv.path FROM media_variants mv WHERE mv.media_id = m.id AND mv.format = ? LIMIT 1) AS medium_path
+             FROM blog_media bm
+             JOIN media m ON m.id = bm.media_id
+             WHERE bm.blog_post_id = ?
+             ORDER BY bm.sort_order ASC'
+        );
+        $stmt->execute(['thumb', 'medium', $postId]);
+        return $stmt->fetchAll();
     }
 }

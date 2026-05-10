@@ -29,6 +29,19 @@ class MediaRepository
         return $row ?: null;
     }
 
+    public function findByIdWithThumb(int $id): ?array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT m.*,
+                    (SELECT mv.path FROM media_variants mv WHERE mv.media_id = m.id AND mv.format = ? LIMIT 1) AS thumb_path,
+                    (SELECT mv.path FROM media_variants mv WHERE mv.media_id = m.id AND mv.format = ? LIMIT 1) AS medium_path
+             FROM media m WHERE m.id = ? LIMIT 1'
+        );
+        $stmt->execute(['thumb', 'medium', $id]);
+        $row = $stmt->fetch();
+        return $row ?: null;
+    }
+
     public function create(array $data): int
     {
         $stmt = $this->db->prepare(

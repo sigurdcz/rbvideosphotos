@@ -1,8 +1,9 @@
-﻿<?php
+<?php
 $isEdit    = $post !== null;
 $pageTitle = $isEdit ? 'Upravit clanek' : 'Novy clanek';
 $h = fn($v) => htmlspecialchars((string)($v ?? ''));
 $selectedFeaturedId = (int)($post['featured_image_id'] ?? 0);
+$selectedGallery    = array_map('intval', $gallery ?? []);
 ob_start();
 ?>
 <div class="page-header">
@@ -17,6 +18,7 @@ ob_start();
   <div data-tabs-container>
     <div class="tabs">
       <button type="button" class="tab-btn" data-tab="content">Obsah</button>
+      <button type="button" class="tab-btn" data-tab="media">Média</button>
       <button type="button" class="tab-btn" data-tab="meta">SEO &amp; Meta</button>
     </div>
 
@@ -74,6 +76,75 @@ ob_start();
       </div>
     </div>
 
+    <div class="tab-pane" id="tab-media">
+      <?php if (!empty($media)): ?>
+      <!-- ── Hlavní obrázek ─────────────────────────────── -->
+      <div class="card">
+        <div class="card-title">Hlavni obrazek</div>
+        <p style="font-size:13px;color:var(--c-muted);margin-bottom:12px">
+          Kliknete na obrazek pro vyber hlavniho obrazku clanku. Opakovanym kliknutim odeberete.
+          <span id="fi-status" style="font-weight:600;color:var(--c-primary)">
+            <?= $selectedFeaturedId > 0 ? '1 vybran' : 'bez obrazku' ?>
+          </span>
+        </p>
+        <input type="hidden" name="featured_image_id" id="fi-input" value="<?= $selectedFeaturedId > 0 ? $selectedFeaturedId : '' ?>">
+        <div class="media-grid" id="fi-grid">
+          <?php foreach ($media as $m): ?>
+          <?php $mediaId = (int)$m['id']; ?>
+          <div class="media-card fi-item <?= $selectedFeaturedId === $mediaId ? 'fi-selected' : '' ?>"
+               data-media-id="<?= $mediaId ?>"
+               data-media-src="<?= $h('/' . ltrim((string)$m['storage_path'], '/')) ?>"
+               data-media-name="<?= $h($m['original_filename']) ?>"
+               style="cursor:pointer">
+            <img src="/<?= $h($m['storage_path']) ?>" alt="<?= $h($m['alt_text']) ?>" loading="lazy" style="height:90px;object-fit:cover;display:block;width:100%">
+            <div class="media-card-info" style="display:flex;justify-content:space-between;padding:5px 8px">
+              <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><?= $h($m['original_filename']) ?></span>
+              <span class="fi-check" style="flex-shrink:0;font-size:14px;color:#16a34a">&#10003;</span>
+            </div>
+          </div>
+          <?php endforeach; ?>
+        </div>
+        <div id="fi-preview-wrap" style="display:<?= $selectedFeaturedId > 0 ? 'flex' : 'none' ?>;gap:12px;align-items:center;margin-top:12px">
+          <img id="fi-preview" src="" alt="" style="height:64px;width:88px;object-fit:cover;border-radius:6px;display:block;border:1px solid var(--c-border)">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div id="fi-preview-name" style="font-size:13px;color:var(--c-text);font-weight:600"></div>
+            <button type="button" id="fi-clear" class="btn btn-secondary" style="width:max-content">Odebrat obrazek</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Galerie ─────────────────────────────────────── -->
+      <div class="card">
+        <div class="card-title">Galerie</div>
+        <p style="font-size:13px;color:var(--c-muted);margin-bottom:12px">
+          Vyberte dalsi obrazky pro galerii clanku. Kliknete pro vybrani/odebrání.
+          <span id="gl-status" style="font-weight:600;color:var(--c-primary)">
+            <?= count($selectedGallery) > 0 ? count($selectedGallery) . ' vybrano' : 'zadne' ?>
+          </span>
+        </p>
+        <div id="gallery-ids-wrap"></div>
+        <div class="media-grid" id="gl-grid">
+          <?php foreach ($media as $m): ?>
+          <?php $mediaId = (int)$m['id']; ?>
+          <div class="media-card gl-item <?= in_array($mediaId, $selectedGallery, true) ? 'gl-selected' : '' ?>"
+               data-media-id="<?= $mediaId ?>"
+               style="cursor:pointer">
+            <img src="/<?= $h($m['storage_path']) ?>" alt="<?= $h($m['alt_text']) ?>" loading="lazy" style="height:90px;object-fit:cover;display:block;width:100%">
+            <div class="media-card-info" style="display:flex;justify-content:space-between;padding:5px 8px">
+              <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><?= $h($m['original_filename']) ?></span>
+              <span class="gl-check" style="flex-shrink:0;font-size:14px;color:#16a34a">&#10003;</span>
+            </div>
+          </div>
+          <?php endforeach; ?>
+        </div>
+      </div>
+      <?php else: ?>
+      <div class="card">
+        <p style="color:var(--c-muted)">Nahrajte nejprve média v sekci <a href="/admin/media">Média</a>.</p>
+      </div>
+      <?php endif; ?>
+    </div>
+
     <div class="tab-pane" id="tab-meta">
       <div class="card">
         <div class="form-group">
@@ -85,41 +156,6 @@ ob_start();
           <label>Meta description</label>
           <textarea name="meta_description" style="min-height:80px"><?= $h($post['meta_description'] ?? '') ?></textarea>
         </div>
-        <?php if (!empty($media)): ?>
-        <div class="form-group">
-          <label>Nahledovy obrazek (featured image)</label>
-          <p style="font-size:13px;color:var(--c-muted);margin-bottom:12px">
-            Kliknete na obrazek pro vyber. Opakovanym kliknutim jej odeberete.
-            <span id="fi-status" style="font-weight:600;color:var(--c-primary)">
-              <?= $selectedFeaturedId > 0 ? '1 vybran' : 'bez obrazku' ?>
-            </span>
-          </p>
-          <input type="hidden" name="featured_image_id" id="fi-input" value="<?= $selectedFeaturedId > 0 ? $selectedFeaturedId : '' ?>">
-          <div class="media-grid" id="fi-grid">
-            <?php foreach ($media as $m): ?>
-            <?php $mediaId = (int)$m['id']; ?>
-            <div class="media-card fi-item <?= $selectedFeaturedId === $mediaId ? 'fi-selected' : '' ?>"
-                 data-media-id="<?= $mediaId ?>"
-                 data-media-src="<?= $h('/' . ltrim((string)$m['storage_path'], '/')) ?>"
-                 data-media-name="<?= $h($m['original_filename']) ?>"
-                 style="cursor:pointer">
-              <img src="/<?= $h($m['storage_path']) ?>" alt="<?= $h($m['alt_text']) ?>" loading="lazy" style="height:90px;object-fit:cover;display:block;width:100%">
-              <div class="media-card-info" style="display:flex;justify-content:space-between;padding:5px 8px">
-                <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><?= $h($m['original_filename']) ?></span>
-                <span class="fi-check" style="flex-shrink:0;font-size:14px;color:#16a34a">&#10003;</span>
-              </div>
-            </div>
-            <?php endforeach; ?>
-          </div>
-          <div id="fi-preview-wrap" style="display:<?= $selectedFeaturedId > 0 ? 'flex' : 'none' ?>;gap:12px;align-items:center;margin-top:12px">
-            <img id="fi-preview" src="" alt="" style="height:64px;width:88px;object-fit:cover;border-radius:6px;display:block;border:1px solid var(--c-border)">
-            <div style="display:flex;flex-direction:column;gap:6px">
-              <div id="fi-preview-name" style="font-size:13px;color:var(--c-text);font-weight:600"></div>
-              <button type="button" id="fi-clear" class="btn btn-secondary" style="width:max-content">Odebrat obrazek</button>
-            </div>
-          </div>
-        </div>
-        <?php endif; ?>
       </div>
     </div>
   </div>
@@ -131,13 +167,14 @@ ob_start();
 </form>
 
 <style>
-.fi-item { transition: box-shadow .15s, outline .1s; outline: 3px solid transparent; }
-.fi-item .fi-check { display: none; }
-.fi-item.fi-selected { outline-color: #6366f1; }
-.fi-item.fi-selected .fi-check { display: inline; }
+.fi-item,.gl-item { transition: box-shadow .15s, outline .1s; outline: 3px solid transparent; }
+.fi-item .fi-check,.gl-item .gl-check { display: none; }
+.fi-item.fi-selected,.gl-item.gl-selected { outline-color: #6366f1; }
+.fi-item.fi-selected .fi-check,.gl-item.gl-selected .gl-check { display: inline; }
 </style>
 
 <script>
+// ── Hlavni obrazek ────────────────────────────────────────────────────────────
 (function() {
   const grid = document.getElementById('fi-grid');
   const input = document.getElementById('fi-input');
@@ -150,23 +187,17 @@ ob_start();
 
   let selectedId = input.value ? parseInt(input.value, 10) : null;
 
-  function renderFeaturedImage() {
+  function render() {
     grid.querySelectorAll('.fi-item').forEach(item => {
-      const id = parseInt(item.dataset.mediaId, 10);
-      item.classList.toggle('fi-selected', selectedId === id);
+      item.classList.toggle('fi-selected', selectedId === parseInt(item.dataset.mediaId, 10));
     });
-
-    const selectedItem = selectedId
-      ? grid.querySelector('.fi-item[data-media-id="' + selectedId + '"]')
-      : null;
-
+    const sel = selectedId ? grid.querySelector('.fi-item[data-media-id="' + selectedId + '"]') : null;
     input.value = selectedId ? String(selectedId) : '';
-
-    if (selectedItem) {
+    if (sel) {
       if (status) status.textContent = '1 vybran';
       if (previewWrap) previewWrap.style.display = 'flex';
-      if (preview) preview.src = selectedItem.dataset.mediaSrc || '';
-      if (previewName) previewName.textContent = selectedItem.dataset.mediaName || '';
+      if (preview) preview.src = sel.dataset.mediaSrc || '';
+      if (previewName) previewName.textContent = sel.dataset.mediaName || '';
     } else {
       if (status) status.textContent = 'bez obrazku';
       if (previewWrap) previewWrap.style.display = 'none';
@@ -179,36 +210,54 @@ ob_start();
     item.addEventListener('click', () => {
       const id = parseInt(item.dataset.mediaId, 10);
       selectedId = selectedId === id ? null : id;
-      renderFeaturedImage();
+      render();
+    });
+  });
+  if (clearBtn) clearBtn.addEventListener('click', () => { selectedId = null; render(); });
+  render();
+})();
+
+// ── Galerie (multi-select) ────────────────────────────────────────────────────
+(function() {
+  const grid   = document.getElementById('gl-grid');
+  const wrap   = document.getElementById('gallery-ids-wrap');
+  const status = document.getElementById('gl-status');
+  if (!grid || !wrap) return;
+
+  const initial = <?= json_encode($selectedGallery) ?>;
+  let selected  = [...initial];
+
+  function syncInputs() {
+    wrap.innerHTML = '';
+    selected.forEach(id => {
+      const inp = document.createElement('input');
+      inp.type = 'hidden'; inp.name = 'gallery_ids[]'; inp.value = id;
+      wrap.appendChild(inp);
+    });
+    if (status) status.textContent = selected.length ? selected.length + ' vybrano' : 'zadne';
+  }
+
+  grid.querySelectorAll('.gl-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const id = parseInt(item.dataset.mediaId, 10);
+      const idx = selected.indexOf(id);
+      if (idx === -1) { selected.push(id); item.classList.add('gl-selected'); }
+      else            { selected.splice(idx, 1); item.classList.remove('gl-selected'); }
+      syncInputs();
     });
   });
 
-  if (clearBtn) {
-    clearBtn.addEventListener('click', () => {
-      selectedId = null;
-      renderFeaturedImage();
-    });
-  }
-
-  renderFeaturedImage();
+  syncInputs();
 })();
 
+// ── Slug z nazvu ──────────────────────────────────────────────────────────────
 (function() {
   const title = document.getElementById('blog-title');
   const slug  = document.getElementById('blog-slug');
   if (!title || !slug || slug.value) return;
-  title.addEventListener('input', () => {
-    slug.value = slugify(title.value);
-  });
+  title.addEventListener('input', () => { slug.value = slugify(title.value); });
   function slugify(str) {
-    const map = {a:'a',c:'c',d:'d',e:'e',i:'i',n:'n',o:'o',r:'r',s:'s',t:'t',u:'u',y:'y',z:'z'};
-    return str.toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9\s-]/g,'')
-      .trim()
-      .replace(/\s+/g,'-')
-      .replace(/-+/g,'-');
+    return str.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9\s-]/g,'').trim().replace(/\s+/g,'-').replace(/-+/g,'-');
   }
 })();
 </script>

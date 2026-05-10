@@ -255,4 +255,18 @@ CREATE TABLE IF NOT EXISTS `portfolio_media` (
   CONSTRAINT `fk_portfolio_media_media` FOREIGN KEY (`media_id`) REFERENCES `media` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- ─── Galerie blogu ────────────────────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS `blog_media` (
+  `id`           INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `blog_post_id` INT UNSIGNED NOT NULL,
+  `media_id`     INT UNSIGNED NOT NULL,
+  `sort_order`   INT UNSIGNED NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY `fk_blog_media_post` (`blog_post_id`),
+  KEY `fk_blog_media_media` (`media_id`),
+  CONSTRAINT `fk_blog_media_post` FOREIGN KEY (`blog_post_id`) REFERENCES `blog_posts` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_blog_media_media` FOREIGN KEY (`media_id`) REFERENCES `media` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 SET FOREIGN_KEY_CHECKS = 1;

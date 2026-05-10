@@ -10,7 +10,7 @@ use App\Services\PublishService;
 $pdo = Database::getInstance();
 
 if (in_array('--fresh', $argv ?? [], true)) {
-    foreach (['publish_history','seo_settings','content_blocks','media_variants','portfolio_media','blog_posts','media','portfolio_entries','pages','templates','redirects','sites','users'] as $t) {
+    foreach (['publish_history','seo_settings','content_blocks','media_variants','blog_media','portfolio_media','blog_posts','media','portfolio_entries','pages','templates','redirects','sites','users'] as $t) {
         $pdo->exec("DELETE FROM $t");
     }
     echo "Tables cleared.\n";

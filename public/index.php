@@ -287,15 +287,19 @@ function tryServePortfolioPage(string $uri, bool $detailOnly = false): bool
         $tiles = '';
 
         foreach ($entries as $entry) {
-            $photos = $repo->getMedia((int)$entry['id']);
-            $thumb = !empty($entry['video_url']) ? PortfolioRepository::youtubeThumbnail((string)$entry['video_url']) : '';
+            $photos   = $repo->getMedia((int)$entry['id']);
+            $hasVideo = !empty($entry['video_url']);
+            $thumb    = $hasVideo ? PortfolioRepository::youtubeThumbnail((string)$entry['video_url']) : '';
             if ($thumb === '' && !empty($photos)) {
-                $thumb = publicMediaUrl((string)($photos[0]['storage_path'] ?? ''));
+                $thumbFile = $photos[0]['thumb_path'] ?? $photos[0]['medium_path'] ?? $photos[0]['storage_path'] ?? '';
+                $thumb = publicMediaUrl((string)$thumbFile);
             }
 
-            $extraHtml = '';
-            foreach (array_slice($photos, 0, 3) as $photo) {
-                $extraHtml .= '<img src="' . $h(publicMediaUrl((string)($photo['storage_path'] ?? ''))) . '" alt="' . $h($photo['alt_text'] ?? $entry['title']) . '" loading="lazy">';
+            $extraHtml   = '';
+            $stripPhotos = $hasVideo ? array_slice($photos, 0, 3) : array_slice($photos, 1, 3);
+            foreach ($stripPhotos as $photo) {
+                $pfile = $photo['thumb_path'] ?? $photo['storage_path'] ?? '';
+                $extraHtml .= '<img src="' . $h(publicMediaUrl((string)$pfile)) . '" alt="' . $h($photo['alt_text'] ?? $entry['title']) . '" loading="lazy">';
             }
 
             $thumbHtml = $thumb !== ''
@@ -538,9 +542,9 @@ function tryServeBlogListingPage(): bool
     foreach ($posts as $post) {
         $imgHtml = '';
         if (!empty($post['featured_image_id'])) {
-            $media = $mediaRepo->findById((int)$post['featured_image_id']);
+            $media = $mediaRepo->findByIdWithThumb((int)$post['featured_image_id']);
             if ($media) {
-                $src = publicMediaUrl((string)$media['storage_path']);
+                $src = publicMediaUrl((string)($media['thumb_path'] ?? $media['medium_path'] ?? $media['storage_path']));
                 $imgHtml = '<div class="bl-thumb"><img src="' . $h($src) . '" alt="' . $h($post['title']) . '" loading="lazy"></div>';
             }
         }
@@ -654,11 +658,26 @@ function tryServeBlogPostPage(string $uri): bool
 
     $imgHtml = '';
     if (!empty($post['featured_image_id'])) {
-        $media = (new MediaRepository())->findById((int)$post['featured_image_id']);
+        $media = (new MediaRepository())->findByIdWithThumb((int)$post['featured_image_id']);
         if ($media) {
-            $src     = publicMediaUrl((string)$media['storage_path']);
+            $src     = publicMediaUrl((string)($media['medium_path'] ?? $media['storage_path']));
             $imgHtml = '<div class="bp-featured"><img src="' . $h($src) . '" alt="' . $h($post['title']) . '"></div>';
         }
+    }
+
+    try {
+        $galleryItems = (new BlogRepository())->getGallery((int)$post['id']);
+    } catch (\Throwable $e) {
+        $galleryItems = [];
+    }
+    $galleryHtml  = '';
+    foreach ($galleryItems as $idx => $gItem) {
+        $tSrc = publicMediaUrl((string)($gItem['thumb_path'] ?? $gItem['medium_path'] ?? $gItem['storage_path'] ?? ''));
+        $fSrc = publicMediaUrl((string)($gItem['storage_path'] ?? ''));
+        $alt  = $h($gItem['alt_text'] ?? '');
+        $galleryHtml .= '<div class="bg-item" data-full="' . $h($fSrc) . '" data-idx="' . $idx . '">'
+            . '<img src="' . $h($tSrc) . '" alt="' . $alt . '" loading="lazy">'
+            . '</div>';
     }
 
     $date      = !empty($post['published_at']) ? date('j. n. Y', strtotime($post['published_at'])) : '';
@@ -686,7 +705,50 @@ body{background:#111;color:#fff}
 .bp-back{margin-top:36px}
 .bp-back a{color:#c4963c;text-decoration:none;font-weight:700}
 .bp-back a:hover{text-decoration:underline}
+.bg-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin:40px 0}
+.bg-item{cursor:pointer;border-radius:10px;overflow:hidden;background:#1b1b1f}
+.bg-item img{width:100%;height:160px;object-fit:cover;display:block;transition:transform .2s}
+.bg-item:hover img{transform:scale(1.04)}
+.bp-lightbox{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.92);align-items:center;justify-content:center}
+.bp-lightbox.active{display:flex}
+.bp-lb-img{max-width:92vw;max-height:88vh;object-fit:contain;border-radius:8px}
+.bp-lb-close{position:absolute;top:20px;right:24px;font-size:2rem;color:#fff;cursor:pointer;line-height:1;opacity:.7}
+.bp-lb-close:hover{opacity:1}
+.bp-lb-prev,.bp-lb-next{position:absolute;top:50%;transform:translateY(-50%);font-size:2.5rem;color:#fff;cursor:pointer;padding:12px;opacity:.6;user-select:none}
+.bp-lb-prev:hover,.bp-lb-next:hover{opacity:1}
+.bp-lb-prev{left:16px}
+.bp-lb-next{right:16px}
 CSS;
+
+    $gallerySection = '';
+    if ($galleryHtml !== '') {
+        $gallerySection = '<div class="bg-gallery">' . $galleryHtml . '</div>';
+    }
+
+    $lightboxHtml = $galleryHtml !== '' ? <<<'HTML'
+<div class="bp-lightbox" id="bp-lightbox">
+  <span class="bp-lb-close" id="bp-lb-close">&times;</span>
+  <span class="bp-lb-prev" id="bp-lb-prev">&#8249;</span>
+  <img class="bp-lb-img" id="bp-lb-img" src="" alt="">
+  <span class="bp-lb-next" id="bp-lb-next">&#8250;</span>
+</div>
+<script>
+(function(){
+  var lb=document.getElementById('bp-lightbox'),img=document.getElementById('bp-lb-img'),items=Array.from(document.querySelectorAll('.bg-item')),idx=0;
+  if(!lb||!items.length)return;
+  function open(i){idx=i;img.src=items[i].dataset.full||'';lb.classList.add('active');}
+  function close(){lb.classList.remove('active');img.src='';}
+  function prev(){open((idx-1+items.length)%items.length);}
+  function next(){open((idx+1)%items.length);}
+  items.forEach(function(el,i){el.addEventListener('click',function(){open(i);});});
+  document.getElementById('bp-lb-close').addEventListener('click',close);
+  document.getElementById('bp-lb-prev').addEventListener('click',prev);
+  document.getElementById('bp-lb-next').addEventListener('click',next);
+  lb.addEventListener('click',function(e){if(e.target===lb)close();});
+  document.addEventListener('keydown',function(e){if(!lb.classList.contains('active'))return;if(e.key==='Escape')close();if(e.key==='ArrowLeft')prev();if(e.key==='ArrowRight')next();});
+})();
+</script>
+HTML : '';
 
     if (!empty($site['layout_html'])) {
         $renderer = new PageRenderer();
@@ -702,9 +764,11 @@ CSS;
 <section class="bp-content-wrap">
   <div class="container">
     <div class="bp-content">{$content}</div>
+    {$gallerySection}
     <div class="bp-back"><a href="/blog">&larr; Zp&#283;t na v&#353;echny &#269;l&#225;nky</a></div>
   </div>
 </section>
+{$lightboxHtml}
 HTML;
         $html = $renderer->applyLayout($site['layout_html'], $pageContent, $siteName, $nav);
         $titleTag    = '<title>' . $metaTitle . ' | ' . $h($siteName) . '</title>';
@@ -722,7 +786,8 @@ HTML;
 </head><body>
 <section class="bp-hero"><div class="container"><div class="bp-date">{$date}</div><h1>{$title}</h1><p class="bp-excerpt">{$excerpt}</p></div></section>
 {$imgHtml}
-<section class="bp-content-wrap"><div class="container"><div class="bp-content">{$content}</div><div class="bp-back"><a href="/blog">&larr; Zp&#283;t na v&#353;echny &#269;l&#225;nky</a></div></div></section>
+<section class="bp-content-wrap"><div class="container"><div class="bp-content">{$content}</div>{$gallerySection}<div class="bp-back"><a href="/blog">&larr; Zp&#283;t na v&#353;echny &#269;l&#225;nky</a></div></div></section>
+{$lightboxHtml}
 <footer>{$siteNameEsc}</footer></body></html>
 HTML;
     }

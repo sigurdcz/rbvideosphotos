@@ -128,7 +128,7 @@ if (!function_exists('seedBlock')) {
 
 foreach ([
     'publish_history', 'seo_settings', 'content_blocks', 'media_variants',
-    'portfolio_media', 'blog_posts', 'media', 'portfolio_entries',
+    'blog_media', 'portfolio_media', 'blog_posts', 'media', 'portfolio_entries',
     'pages', 'templates', 'redirects', 'sites', 'users',
 ] as $table) {
     $pdo->exec("DELETE FROM `{$table}`");
@@ -142,7 +142,8 @@ echo "Uživatel: admin@example.com / admin123\n";
 
 // ─── Web ──────────────────────────────────────────────────────────────────────
 
-$siteId = seedUpsertSite($pdo, 'Můj web', 'http://localhost:8000');
+$appUrl = rtrim((string)(getenv('APP_URL') ?: 'http://localhost:8000'), '/');
+$siteId = seedUpsertSite($pdo, 'Můj web', $appUrl);
 
 // ─── Sdílený layout ───────────────────────────────────────────────────────────
 

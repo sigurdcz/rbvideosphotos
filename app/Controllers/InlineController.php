@@ -36,6 +36,8 @@ class InlineController extends Controller
         $blocks = new BlockRepository();
         $blocks->updateContent($pageId, $key, $content);
 
+        $this->maybeSyncFaqToHomepage($page, $key, $content);
+
         $user   = Auth::user();
         $result = (new PublishService())->publishPage($pageId, $user['id']);
 
@@ -44,6 +46,22 @@ class InlineController extends Controller
         }
 
         $this->json(['ok' => true]);
+    }
+
+    private function maybeSyncFaqToHomepage(array $page, string $key, string $content): void
+    {
+        if (!in_array($key, ['faq_1', 'faq_2', 'faq_3'], true)) return;
+        if (ltrim((string)($page['url_path'] ?? ''), '/') !== 'faq') return;
+
+        $homePage = (new PageRepository())->findByUrlPath('');
+        if (!$homePage) return;
+
+        (new BlockRepository())->upsert((int)$homePage['id'], $key, [
+            'block_type' => 'html',
+            'label'      => $key,
+            'content'    => $content,
+            'sort_order' => 0,
+        ]);
     }
 
     public function upload(array $params): void

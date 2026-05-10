@@ -98,17 +98,20 @@ class PortfolioRepository
         }
     }
 
-    /** Return media rows joined with media table, ordered by sort_order. */
+    /** Return media rows joined with media table, ordered by sort_order.
+     *  Includes thumb_path (≤300 px) and medium_path (≤900 px) variant paths when available. */
     public function getMedia(int $portfolioId): array
     {
         $stmt = $this->db->prepare(
-            'SELECT m.*, pm.sort_order AS pm_sort
+            'SELECT m.*, pm.sort_order AS pm_sort,
+                    (SELECT mv.path FROM media_variants mv WHERE mv.media_id = m.id AND mv.format = ? LIMIT 1) AS thumb_path,
+                    (SELECT mv.path FROM media_variants mv WHERE mv.media_id = m.id AND mv.format = ? LIMIT 1) AS medium_path
              FROM portfolio_media pm
              JOIN media m ON m.id = pm.media_id
              WHERE pm.portfolio_id = ?
              ORDER BY pm.sort_order ASC'
         );
-        $stmt->execute([$portfolioId]);
+        $stmt->execute(['thumb', 'medium', $portfolioId]);
         return $stmt->fetchAll();
     }
 
