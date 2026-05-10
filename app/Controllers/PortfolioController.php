@@ -346,7 +346,7 @@ HTML;
     private function buildTilesHtml(array $entries, PortfolioRepository $repo): string
     {
         if (empty($entries)) {
-            return '<p style="color:#888;text-align:center;padding:40px 0">Zatím žádné publikované práce.</p>';
+            return '<p style="color:rgba(255,255,255,.45);text-align:center;padding:40px 0">Zatím žádné publikované práce.</p>';
         }
 
         $h    = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
@@ -363,10 +363,9 @@ HTML;
 
             $thumbHtml = $thumb
                 ? "<img src=\"{$h($thumb)}\" alt=\"{$h($e['title'])}\" loading=\"lazy\">"
-                : "<div style=\"height:100%;background:#222;display:flex;align-items:center;justify-content:center;font-size:2rem;color:rgba(255,255,255,.3)\">&#9654;</div>";
+                : '<div style="height:100%;background:#222;display:flex;align-items:center;justify-content:center;font-size:2rem;color:rgba(255,255,255,.3)">&#9654;</div>';
             $playIcon  = $hasVideo ? '<span class="pt-play">&#9654;</span>' : '';
 
-            // Up to 3 strip photos; for photo-only entries skip photos[0] (already the main thumb)
             $extraHtml = '';
             $stripPhotos = $hasVideo ? array_slice($photos, 0, 3) : array_slice($photos, 1, 3);
             foreach ($stripPhotos as $p) {
@@ -376,8 +375,9 @@ HTML;
                 $extraHtml .= "<img src=\"{$psrc}\" alt=\"{$palt}\" loading=\"lazy\">";
             }
 
+            // Homepage tiles link to /nase-prace listing, not the individual entry
             $tiles .= <<<TILE
-<a class="pt-tile" href="/{$h($e['slug'])}">
+<a class="pt-tile" href="/nase-prace">
   <div class="pt-thumb">{$thumbHtml}{$playIcon}</div>
   <div class="pt-photos">{$extraHtml}</div>
   <div class="pt-caption">{$h($e['title'])}</div>
@@ -385,7 +385,21 @@ HTML;
 TILE;
         }
 
-        return '<div class="pt-grid">' . $tiles . '</div>';
+        // CSS is embedded so tiles render correctly wherever the block appears (homepage has no pt-* classes)
+        $css = '<style>'
+            . '.pt-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px}'
+            . '.pt-tile{display:block;text-decoration:none;color:inherit;background:#1b1b1f;border-radius:14px;overflow:hidden;box-shadow:0 14px 30px rgba(0,0,0,.25);transition:transform .2s,box-shadow .2s}'
+            . '.pt-tile:hover{transform:translateY(-3px);box-shadow:0 20px 40px rgba(0,0,0,.4)}'
+            . '.pt-thumb{position:relative;height:200px;background:#0e0e11;overflow:hidden}'
+            . '.pt-thumb img{width:100%;height:100%;object-fit:cover;display:block}'
+            . '.pt-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:56px;height:56px;border-radius:50%;background:rgba(196,150,60,.92);display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:#fff}'
+            . '.pt-photos{display:flex;gap:3px;height:72px;background:#17171a;padding:3px}'
+            . '.pt-photos img{flex:1;min-width:0;height:100%;object-fit:cover;display:block}'
+            . '.pt-caption{padding:14px 16px 16px;font-weight:700;font-size:.95rem;color:#fff;background:#17171a}'
+            . '@media(max-width:600px){.pt-grid{grid-template-columns:1fr}}'
+            . '</style>';
+
+        return $css . '<div class="pt-grid">' . $tiles . '</div>';
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
