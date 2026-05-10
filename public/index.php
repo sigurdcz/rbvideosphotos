@@ -17,6 +17,8 @@ use App\Core\Runtime;
 use App\Core\Version;
 use App\Repositories\BlockRepository;
 use App\Repositories\BlogRepository;
+use App\Repositories\ContactRepository;
+use App\Repositories\FaqRepository;
 use App\Repositories\MediaRepository;
 use App\Repositories\PageRepository;
 use App\Repositories\PortfolioRepository;
@@ -526,6 +528,259 @@ HTML;
 
     return false;
 }
+function tryServeFaqPage(): bool
+{
+    $site = (new SiteRepository())->findFirst();
+    if (!$site) return false;
+
+    try {
+        $items = (new FaqRepository())->allActive((int)$site['id']);
+    } catch (\Throwable $e) {
+        return false;
+    }
+
+    $h        = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
+    $siteName = (string)($site['name'] ?? 'Muj web');
+
+    $page       = (new PageRepository())->findPublishedByUrlPath('faq');
+    $heroTitle  = 'Časté dotazy';
+    $heroSub    = 'Odpovědi na nejčastější dotazy.';
+    if ($page) {
+        $pageBlocks = (new BlockRepository())->allByPage((int)$page['id']);
+        foreach ($pageBlocks as $b) {
+            if ($b['block_key'] === 'hero_h1' && $b['content']) $heroTitle = (string)$b['content'];
+            if ($b['block_key'] === 'hero_sub' && $b['content']) $heroSub  = (string)$b['content'];
+        }
+    }
+
+    $faqHtml = '';
+    foreach ($items as $item) {
+        $faqHtml .= '<div class="faq-item">'
+            . '<h3 class="faq-q">' . $h($item['question']) . '</h3>'
+            . '<div class="faq-a">' . nl2br($h($item['answer'])) . '</div>'
+            . '</div>';
+    }
+    if ($faqHtml === '') {
+        $faqHtml = '<p style="color:rgba(255,255,255,.45)">Zatím žádné otázky.</p>';
+    }
+
+    $faqCss = <<<'CSS'
+body{background:#111;color:#fff}
+.fq-hero{background:#1a1a1a;padding:64px 0 40px;text-align:center}
+.fq-hero h1{font-size:clamp(2rem,4vw,3.2rem);color:#fff;margin-bottom:12px}
+.fq-hero p{color:rgba(255,255,255,.7);font-size:1.05rem;max-width:680px;margin:0 auto}
+.fq-wrap{padding:56px 0 80px}
+.faq-list{display:flex;flex-direction:column;gap:16px;max-width:820px;margin:0 auto}
+.faq-item{padding:24px 28px;background:#18181c;border-radius:12px;border-left:3px solid #c4963c;cursor:pointer}
+.faq-q{font-size:1.05rem;color:#fff;margin:0 0 0;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:16px;line-height:1.4}
+.faq-q::after{content:"＋";flex-shrink:0;font-size:1.2rem;color:#c4963c;transition:transform .2s}
+.faq-item.open .faq-q::after{transform:rotate(45deg)}
+.faq-a{color:rgba(255,255,255,.75);line-height:1.65;margin-top:14px;display:none}
+.faq-item.open .faq-a{display:block}
+CSS;
+
+    if (!empty($site['layout_html'])) {
+        $renderer   = new PageRenderer();
+        $nav        = (string)($site['layout_nav_sub'] ?? '');
+        $pageContent = <<<HTML
+<section class="fq-hero">
+  <div class="container">
+    <h1>{$h($heroTitle)}</h1>
+    <p>{$h($heroSub)}</p>
+  </div>
+</section>
+<section class="fq-wrap">
+  <div class="container">
+    <div class="faq-list">{$faqHtml}</div>
+  </div>
+</section>
+<script>
+document.querySelectorAll('.faq-item').forEach(function(el){
+  el.addEventListener('click',function(){el.classList.toggle('open');});
+});
+</script>
+HTML;
+        $html = $renderer->applyLayout($site['layout_html'], $pageContent, $siteName, $nav);
+        $html = str_replace('</head>', "\n<title>" . $h('FAQ | ' . $siteName) . "</title>\n</head>", $html);
+        $html = $renderer->injectAssets($html, ($site['layout_css'] ?? '') . "\n" . $faqCss, $site['layout_js'] ?? '');
+    } else {
+        $html = '<!DOCTYPE html><html lang="cs"><head><meta charset="UTF-8"><title>FAQ | ' . $h($siteName) . '</title>'
+            . '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:system-ui,sans-serif;line-height:1.6}.container{max-width:960px;margin:0 auto;padding:0 24px}'
+            . $faqCss . '</style></head><body>'
+            . '<section class="fq-hero"><div class="container"><h1>' . $h($heroTitle) . '</h1><p>' . $h($heroSub) . '</p></div></section>'
+            . '<section class="fq-wrap"><div class="container"><div class="faq-list">' . $faqHtml . '</div></div></section>'
+            . '<script>document.querySelectorAll(".faq-item").forEach(function(el){el.addEventListener("click",function(){el.classList.toggle("open");});});</script>'
+            . '</body></html>';
+    }
+
+    header('Content-Type: text/html; charset=UTF-8');
+    echo sanitizeFrontendHtml($html);
+    return true;
+}
+
+function tryServeKontaktPage(): bool
+{
+    $site = (new SiteRepository())->findFirst();
+    if (!$site) return false;
+
+    try {
+        $contact = (new ContactRepository())->findBySite((int)$site['id']) ?: [];
+    } catch (\Throwable $e) {
+        return false;
+    }
+
+    $h        = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
+    $siteName = (string)($site['name'] ?? 'Muj web');
+
+    $socialIcons = [
+        'instagram' => '&#x1F4F7;', 'facebook' => '&#x1F426;', 'youtube'   => '&#x25B6;',
+        'tiktok'    => '&#x1F3B5;', 'linkedin'  => '&#x1F4BC;', 'twitter'   => '&#x1D54F;',
+        'pinterest' => '&#x1F4CC;', 'whatsapp'  => '&#x1F4AC;', 'telegram'  => '&#x2708;',
+    ];
+
+    // Contact details block
+    $detailsHtml = '';
+    if (!empty($contact['phone_1'])) {
+        $tel = preg_replace('/\s+/', '', $contact['phone_1']);
+        $detailsHtml .= '<div class="ci-row"><span class="ci-label">Telefon</span>'
+            . '<a href="tel:' . $h($tel) . '">' . $h($contact['phone_1']) . '</a></div>';
+    }
+    if (!empty($contact['phone_2'])) {
+        $tel = preg_replace('/\s+/', '', $contact['phone_2']);
+        $detailsHtml .= '<div class="ci-row"><span class="ci-label">&nbsp;</span>'
+            . '<a href="tel:' . $h($tel) . '">' . $h($contact['phone_2']) . '</a></div>';
+    }
+    if (!empty($contact['phone_3'])) {
+        $tel = preg_replace('/\s+/', '', $contact['phone_3']);
+        $detailsHtml .= '<div class="ci-row"><span class="ci-label">&nbsp;</span>'
+            . '<a href="tel:' . $h($tel) . '">' . $h($contact['phone_3']) . '</a></div>';
+    }
+    if (!empty($contact['email'])) {
+        $detailsHtml .= '<div class="ci-row"><span class="ci-label">E-mail</span>'
+            . '<a href="mailto:' . $h($contact['email']) . '">' . $h($contact['email']) . '</a></div>';
+    }
+    if (!empty($contact['address_1'])) {
+        $detailsHtml .= '<div class="ci-row"><span class="ci-label">Adresa</span>'
+            . '<span>' . nl2br($h($contact['address_1'])) . '</span></div>';
+    }
+    if (!empty($contact['address_2'])) {
+        $detailsHtml .= '<div class="ci-row"><span class="ci-label">&nbsp;</span>'
+            . '<span>' . nl2br($h($contact['address_2'])) . '</span></div>';
+    }
+
+    // Social links
+    $socialsHtml = '';
+    for ($i = 1; $i <= 5; $i++) {
+        $type = $contact['social_' . $i . '_type'] ?? '';
+        $url  = $contact['social_' . $i . '_url']  ?? '';
+        if ($type && $url) {
+            $icon = $socialIcons[$type] ?? '&#128279;';
+            $socialsHtml .= '<a href="' . $h($url) . '" target="_blank" rel="noopener" class="ci-social">'
+                . $icon . ' ' . ucfirst($h($type)) . '</a>';
+        }
+    }
+    if ($socialsHtml) {
+        $detailsHtml .= '<div class="ci-socials">' . $socialsHtml . '</div>';
+    }
+
+    if (!$detailsHtml) {
+        $detailsHtml = '<p style="color:rgba(255,255,255,.4)">Kontaktní informace zatím nejsou vyplněny.</p>';
+    }
+
+    // Maps link
+    $mapsHtml = '';
+    if (!empty($contact['maps_url'])) {
+        $mapsHtml = '<a href="' . $h($contact['maps_url']) . '" target="_blank" rel="noopener" class="btn-maps">&#128506; Otevřít v Google Maps</a>';
+    }
+
+    $kontaktCss = <<<'CSS'
+body{background:#111;color:#fff}
+.kt-hero{background:#1a1a1a;padding:64px 0 40px;text-align:center}
+.kt-hero h1{font-size:clamp(2rem,4vw,3.2rem);color:#fff;margin-bottom:10px}
+.kt-hero p{color:rgba(255,255,255,.7);max-width:640px;margin:0 auto}
+.kt-wrap{padding:56px 0 80px}
+.kt-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start;max-width:1000px;margin:0 auto}
+.ci-block{background:#18181c;border-radius:14px;padding:32px}
+.ci-title{font-size:1.15rem;font-weight:700;color:#fff;margin-bottom:20px}
+.ci-row{display:flex;gap:12px;margin-bottom:14px;line-height:1.55;color:rgba(255,255,255,.82)}
+.ci-row a{color:#c4963c;text-decoration:none}.ci-row a:hover{text-decoration:underline}
+.ci-label{flex:0 0 80px;font-size:.82rem;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.04em;padding-top:2px}
+.ci-socials{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+.ci-social{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#1f1f26;border-radius:8px;color:#fff;text-decoration:none;font-size:.9rem}
+.ci-social:hover{background:#c4963c}
+.btn-maps{display:inline-flex;align-items:center;gap:8px;margin-top:20px;padding:12px 22px;background:#c4963c;color:#fff;border-radius:8px;text-decoration:none;font-weight:700}
+.btn-maps:hover{opacity:.9}
+.kt-form-block{background:#18181c;border-radius:14px;padding:32px}
+.kt-form-block input,.kt-form-block textarea,.kt-form-block select{width:100%;background:#111;border:1px solid rgba(255,255,255,.12);color:#fff;padding:12px 14px;border-radius:8px;font-size:.95rem;font-family:inherit;margin-bottom:14px}
+.kt-form-block textarea{min-height:120px;resize:vertical}
+.kt-form-block input::placeholder,.kt-form-block textarea::placeholder{color:rgba(255,255,255,.35)}
+.kt-form-block label{display:block;font-size:.82rem;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px}
+.kt-form-btn{width:100%;padding:14px;background:#c4963c;color:#fff;border:none;border-radius:8px;font-size:1rem;font-weight:700;cursor:pointer}
+.kt-form-btn:hover{opacity:.9}
+.kt-success{background:#18181c;border-radius:10px;padding:20px;text-align:center;color:#4ade80;margin-bottom:16px}
+@media(max-width:700px){.kt-grid{grid-template-columns:1fr}}
+CSS;
+
+    // Contact form HTML
+    $formSent    = isset($_GET['sent']) && $_GET['sent'] === '1';
+    $formHtml    = '';
+    if ($formSent) {
+        $formHtml = '<div class="kt-success">&#10003; Zpráva odeslána. Ozveme se co nejdříve.</div>';
+    }
+    $formHtml .= '<form method="POST" action="/kontakt/odeslat">'
+        . '<input type="hidden" name="_csrf" value="' . $h(\App\Core\Auth::csrfToken()) . '">'
+        . '<div><label>Jméno *</label><input type="text" name="name" required placeholder="Vaše jméno"></div>'
+        . '<div><label>E-mail nebo telefon *</label><input type="text" name="contact_value" required placeholder="email@domena.cz nebo +420..."></div>'
+        . '<div><label>Zpráva *</label><textarea name="message" required placeholder="Napište nám…"></textarea></div>'
+        . '<input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off">'
+        . '<button type="submit" class="kt-form-btn">Odeslat zprávu</button>'
+        . '</form>';
+
+    if (!empty($site['layout_html'])) {
+        $renderer   = new PageRenderer();
+        $nav        = (string)($site['layout_nav_sub'] ?? '');
+        $pageContent = <<<HTML
+<section class="kt-hero">
+  <div class="container">
+    <h1>Kontakt</h1>
+    <p>Ozvěte se nám. Rádi odpovíme na vaše otázky.</p>
+  </div>
+</section>
+<section class="kt-wrap">
+  <div class="container">
+    <div class="kt-grid">
+      <div class="ci-block">
+        <div class="ci-title">Kontaktní informace</div>
+        {$detailsHtml}
+        {$mapsHtml}
+      </div>
+      <div class="kt-form-block">
+        <div class="ci-title">Napište nám</div>
+        {$formHtml}
+      </div>
+    </div>
+  </div>
+</section>
+HTML;
+        $html = $renderer->applyLayout($site['layout_html'], $pageContent, $siteName, $nav);
+        $html = str_replace('</head>', "\n<title>" . $h('Kontakt | ' . $siteName) . "</title>\n</head>", $html);
+        $html = $renderer->injectAssets($html, ($site['layout_css'] ?? '') . "\n" . $kontaktCss, $site['layout_js'] ?? '');
+    } else {
+        $html = '<!DOCTYPE html><html lang="cs"><head><meta charset="UTF-8"><title>Kontakt | ' . $h($siteName) . '</title>'
+            . '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:system-ui,sans-serif;line-height:1.6}.container{max-width:1100px;margin:0 auto;padding:0 24px}' . $kontaktCss . '</style>'
+            . '</head><body>'
+            . '<section class="kt-hero"><div class="container"><h1>Kontakt</h1><p>Ozvěte se nám.</p></div></section>'
+            . '<section class="kt-wrap"><div class="container"><div class="kt-grid">'
+            . '<div class="ci-block"><div class="ci-title">Kontaktní informace</div>' . $detailsHtml . $mapsHtml . '</div>'
+            . '<div class="kt-form-block"><div class="ci-title">Napište nám</div>' . $formHtml . '</div>'
+            . '</div></div></section></body></html>';
+    }
+
+    header('Content-Type: text/html; charset=UTF-8');
+    echo sanitizeFrontendHtml($html);
+    return true;
+}
+
 function tryServeBlogListingPage(): bool
 {
     $site = (new SiteRepository())->findFirst();
@@ -859,6 +1114,45 @@ try {
         if (tryServeBlogListingPage()) {
             exit;
         }
+    }
+
+    if ($uri === '/faq') {
+        if (tryServeFaqPage()) {
+            exit;
+        }
+    }
+
+    if ($uri === '/kontakt') {
+        if (tryServeKontaktPage()) {
+            exit;
+        }
+    }
+
+    if ($uri === '/kontakt/odeslat' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        \App\Core\Auth::start();
+        // Honeypot spam check
+        if (!empty($_POST['website'])) {
+            header('Location: /kontakt');
+            exit;
+        }
+        $site = (new SiteRepository())->findFirst();
+        $formEmail = null;
+        if ($site) {
+            try {
+                $ci = (new ContactRepository())->findBySite((int)$site['id']);
+                $formEmail = $ci['form_email'] ?? null;
+            } catch (\Throwable $e) {}
+        }
+        $name    = trim($_POST['name']          ?? '');
+        $contact = trim($_POST['contact_value'] ?? '');
+        $message = trim($_POST['message']       ?? '');
+        if ($name && $contact && $message && $formEmail) {
+            $subject = 'Nová zpráva z webu — ' . $name;
+            $body    = "Jméno: {$name}\nKontakt: {$contact}\n\nZpráva:\n{$message}";
+            @mail($formEmail, $subject, $body, "From: noreply@{$_SERVER['HTTP_HOST']}\r\nContent-Type: text/plain; charset=UTF-8");
+        }
+        header('Location: /kontakt?sent=1');
+        exit;
     }
 
     $previewMode = Auth::check() && isset($_GET['cms_preview']);

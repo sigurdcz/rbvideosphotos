@@ -129,6 +129,7 @@ if (!function_exists('seedBlock')) {
 foreach ([
     'publish_history', 'seo_settings', 'content_blocks', 'media_variants',
     'blog_media', 'portfolio_media', 'blog_posts', 'media', 'portfolio_entries',
+    'faq_items', 'contact_info',
     'pages', 'templates', 'redirects', 'sites', 'users',
 ] as $table) {
     $pdo->exec("DELETE FROM `{$table}`");
@@ -425,14 +426,47 @@ $tplCenikHtml = <<<'HTML'
 </section>
 <section class="section">
   <div class="container">
-    <div data-block="cenik_body" class="cenik-body"><!-- Doplňte ceník --></div>
-    <div data-block="cta_wrap"><a href="/kontakt" class="btn-primary">Nezávazná poptávka</a></div>
+    <div class="cenik-grid">
+
+      <div class="cenik-card">
+        <div class="cenik-card-body">
+          <h3 data-block="cenik_card_1_title" class="cenik-card-title">Základní</h3>
+          <div data-block="cenik_card_1_desc" class="cenik-card-desc">Popis tohoto balíčku.</div>
+        </div>
+        <div data-block="cenik_card_1_price" class="cenik-card-price">od 5 000 Kč</div>
+      </div>
+
+      <div class="cenik-card cenik-card--featured">
+        <div class="cenik-card-body">
+          <h3 data-block="cenik_card_2_title" class="cenik-card-title">Standardní</h3>
+          <div data-block="cenik_card_2_desc" class="cenik-card-desc">Popis tohoto balíčku.</div>
+        </div>
+        <div data-block="cenik_card_2_price" class="cenik-card-price">od 10 000 Kč</div>
+      </div>
+
+      <div class="cenik-card">
+        <div class="cenik-card-body">
+          <h3 data-block="cenik_card_3_title" class="cenik-card-title">Prémiový</h3>
+          <div data-block="cenik_card_3_desc" class="cenik-card-desc">Popis tohoto balíčku.</div>
+        </div>
+        <div data-block="cenik_card_3_price" class="cenik-card-price">od 20 000 Kč</div>
+      </div>
+
+    </div>
+    <div data-block="cta_wrap" class="section-cta"><a href="/kontakt" class="btn-primary">Nezávazná poptávka</a></div>
   </div>
 </section>
 HTML;
 
 $tplCenikCss = <<<'CSS'
-.cenik-body{max-width:780px;margin:0 auto 40px;color:rgba(255,255,255,.82);line-height:1.8}
+.cenik-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;margin-bottom:48px}
+.cenik-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:32px;display:flex;flex-direction:column;gap:24px}
+.cenik-card--featured{border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.09)}
+.cenik-card-body{flex:1}
+.cenik-card-title{font-size:1.25rem;font-weight:700;color:#fff;margin-bottom:12px}
+.cenik-card-desc{color:rgba(255,255,255,.65);line-height:1.7;font-size:.95rem;white-space:pre-line}
+.cenik-card-price{font-size:1.3rem;font-weight:800;color:#fff;padding-top:20px;border-top:1px solid rgba(255,255,255,.1)}
+.section-cta{text-align:center;margin-top:16px}
 CSS;
 
 $tplCenik = seedUpsertTemplate($pdo, $siteId, 'Ceník', $tplCenikHtml, $tplCenikCss, '');
@@ -588,10 +622,18 @@ seedBlock($pdo, $pidSluzby, 'cta_wrap',  'html',     'CTA',            '<a href=
 
 // ─── Obsahové bloky — Ceník ───────────────────────────────────────────────────
 
-seedBlock($pdo, $pidCenik, 'hero_h1',    'text',     'Hero — nadpis', 'Ceník',                                                            1);
-seedBlock($pdo, $pidCenik, 'hero_sub',   'textarea', 'Hero — intro',  'Transparentní přehled cen.',                                       2);
-seedBlock($pdo, $pidCenik, 'cenik_body', 'html',     'Ceník — obsah', '<p style="color:rgba(255,255,255,.45)">Doplňte ceník.</p>',        3);
-seedBlock($pdo, $pidCenik, 'cta_wrap',   'html',     'CTA',           '<a href="/kontakt" class="btn-primary">Nezávaznáa popt&#225;vka</a>', 4);
+seedBlock($pdo, $pidCenik, 'hero_h1',           'text',     'Hero — nadpis',             'Ceník',                                      1);
+seedBlock($pdo, $pidCenik, 'hero_sub',          'textarea', 'Hero — intro',              'Transparentní přehled cen bez překvapení.',   2);
+seedBlock($pdo, $pidCenik, 'cenik_card_1_title','text',     'Karta 1 — nadpis',          'Základní',                                   3);
+seedBlock($pdo, $pidCenik, 'cenik_card_1_desc', 'textarea', 'Karta 1 — popis',           'Ideální pro menší projekty a začínající klienty.',  4);
+seedBlock($pdo, $pidCenik, 'cenik_card_1_price','text',     'Karta 1 — cena / patička',  'od 5 000 Kč',                                5);
+seedBlock($pdo, $pidCenik, 'cenik_card_2_title','text',     'Karta 2 — nadpis',          'Standardní',                                 6);
+seedBlock($pdo, $pidCenik, 'cenik_card_2_desc', 'textarea', 'Karta 2 — popis',           'Nejoblíbenější volba pro většinu klientů.',  7);
+seedBlock($pdo, $pidCenik, 'cenik_card_2_price','text',     'Karta 2 — cena / patička',  'od 10 000 Kč',                               8);
+seedBlock($pdo, $pidCenik, 'cenik_card_3_title','text',     'Karta 3 — nadpis',          'Prémiový',                                   9);
+seedBlock($pdo, $pidCenik, 'cenik_card_3_desc', 'textarea', 'Karta 3 — popis',           'Komplexní řešení na míru bez kompromisů.',  10);
+seedBlock($pdo, $pidCenik, 'cenik_card_3_price','text',     'Karta 3 — cena / patička',  'od 20 000 Kč',                              11);
+seedBlock($pdo, $pidCenik, 'cta_wrap',          'html',     'CTA',                       '<a href="/kontakt" class="btn-primary">Nez&#225;vazn&#225; popt&#225;vka</a>', 12);
 
 // ─── Obsahové bloky — FAQ ─────────────────────────────────────────────────────
 
@@ -622,6 +664,24 @@ seedBlock($pdo, $pidPortfolio, 'hero_h1',  'text',     'Hero — nadpis', 'Naše
 seedBlock($pdo, $pidPortfolio, 'hero_sub', 'textarea', 'Hero — intro',  'Ukázka projektů a realizací.',          2);
 
 echo "Obsahové bloky vytvořeny.\n";
+
+// ─── FAQ položky ──────────────────────────────────────────────────────────────
+
+$pdo->exec("DELETE FROM faq_items WHERE site_id = {$siteId}");
+$faqStmt = $pdo->prepare('INSERT INTO faq_items (site_id, question, answer, sort_order, is_active) VALUES (?, ?, ?, ?, 1)');
+$faqStmt->execute([$siteId, 'Jak probíhá první konzultace?',      'První konzultace probíhá zdarma a trvá přibližně 30 minut. Probereme vaše potřeby a navrhneme optimální řešení.', 1]);
+$faqStmt->execute([$siteId, 'Jaká je typická doba realizace?',    'Záleží na rozsahu projektu. Jednodušší zakázky zvládáme do 1–2 týdnů, komplexní projekty do 4–6 týdnů.', 2]);
+$faqStmt->execute([$siteId, 'Jak mohu uhradit objednávku?',       'Přijímáme platby bankovním převodem nebo hotově. Po dohodě je možná i platba na splátky.', 3]);
+$faqStmt->execute([$siteId, 'Poskytujete záruku na práci?',       'Ano, na všechny naše práce poskytujeme záruku. Podmínky záruky upřesníme při konzultaci.', 4]);
+$faqStmt->execute([$siteId, 'Kde vás mohu kontaktovat?',          'Nejrychlejší odpověď dostanete přes kontaktní formulář nebo telefonicky. Odpovídáme obvykle do 24 hodin.', 5]);
+echo "FAQ položky vytvořeny.\n";
+
+// ─── Kontaktní informace ──────────────────────────────────────────────────────
+
+$pdo->exec("DELETE FROM contact_info WHERE site_id = {$siteId}");
+$pdo->prepare('INSERT INTO contact_info (site_id, email, form_email) VALUES (?, ?, ?)')
+    ->execute([$siteId, 'info@priklad.cz', 'info@priklad.cz']);
+echo "Kontaktní informace vytvořeny.\n";
 
 // ─── Publikovat ───────────────────────────────────────────────────────────────
 

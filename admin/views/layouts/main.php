@@ -20,6 +20,8 @@
       <li><a href="/admin/media" class="<?= strpos($requestUri, '/admin/media') === 0 ? 'active' : '' ?>">Media</a></li>
       <li><a href="/admin/blog" class="<?= strpos($requestUri, '/admin/blog') === 0 ? 'active' : '' ?>">Blog - clanky</a></li>
       <li><a href="/admin/portfolio" class="<?= strpos($requestUri, '/admin/portfolio') === 0 ? 'active' : '' ?>">Nase prace</a></li>
+      <li><a href="/admin/faq" class="<?= strpos($requestUri, '/admin/faq') === 0 ? 'active' : '' ?>">FAQ</a></li>
+      <li><a href="/admin/contact" class="<?= strpos($requestUri, '/admin/contact') === 0 ? 'active' : '' ?>">Kontakt</a></li>
       <li><a href="/admin/redirects" class="<?= strpos($requestUri, '/admin/redirects') === 0 ? 'active' : '' ?>">Redirecty</a></li>
       <li><a href="/admin/publish" class="<?= strpos($requestUri, '/admin/publish') === 0 ? 'active' : '' ?>">Publikovani</a></li>
       <li><a href="/admin/settings" class="<?= strpos($requestUri, '/admin/settings') === 0 ? 'active' : '' ?>">Nastaveni</a></li>

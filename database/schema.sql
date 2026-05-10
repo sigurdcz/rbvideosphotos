@@ -273,4 +273,48 @@ CREATE TABLE IF NOT EXISTS `blog_media` (
   CONSTRAINT `fk_blog_media_media` FOREIGN KEY (`media_id`) REFERENCES `media` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- --------------------------------------------------------
+-- faq_items
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `faq_items` (
+  `id`         INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `site_id`    INT UNSIGNED NOT NULL,
+  `question`   VARCHAR(500) NOT NULL DEFAULT '',
+  `answer`     TEXT NOT NULL,
+  `sort_order` SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  `is_active`  TINYINT(1) NOT NULL DEFAULT 1,
+  PRIMARY KEY (`id`),
+  KEY `fk_faq_items_site` (`site_id`),
+  CONSTRAINT `fk_faq_items_site` FOREIGN KEY (`site_id`) REFERENCES `sites` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+-- contact_info
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `contact_info` (
+  `id`            INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `site_id`       INT UNSIGNED NOT NULL,
+  `phone_1`       VARCHAR(60) DEFAULT NULL,
+  `phone_2`       VARCHAR(60) DEFAULT NULL,
+  `phone_3`       VARCHAR(60) DEFAULT NULL,
+  `email`         VARCHAR(255) DEFAULT NULL,
+  `address_1`     VARCHAR(500) DEFAULT NULL,
+  `address_2`     VARCHAR(500) DEFAULT NULL,
+  `maps_url`      VARCHAR(1000) DEFAULT NULL,
+  `social_1_type` VARCHAR(30) DEFAULT NULL,
+  `social_1_url`  VARCHAR(500) DEFAULT NULL,
+  `social_2_type` VARCHAR(30) DEFAULT NULL,
+  `social_2_url`  VARCHAR(500) DEFAULT NULL,
+  `social_3_type` VARCHAR(30) DEFAULT NULL,
+  `social_3_url`  VARCHAR(500) DEFAULT NULL,
+  `social_4_type` VARCHAR(30) DEFAULT NULL,
+  `social_4_url`  VARCHAR(500) DEFAULT NULL,
+  `social_5_type` VARCHAR(30) DEFAULT NULL,
+  `social_5_url`  VARCHAR(500) DEFAULT NULL,
+  `form_email`    VARCHAR(255) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_contact_info_site` (`site_id`),
+  CONSTRAINT `fk_contact_info_site` FOREIGN KEY (`site_id`) REFERENCES `sites` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 SET FOREIGN_KEY_CHECKS = 1;
