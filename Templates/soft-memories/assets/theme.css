@@ -153,3 +153,85 @@ body.theme-soft-memories {
     box-shadow: none;
   }
 }
+
+.theme-soft-memories .theme-homepage-shell {
+  padding: 0;
+}
+
+.theme-soft-memories .theme-homepage-shell__inner {
+  width: min(1360px, calc(100% - 48px));
+  margin: 0 auto;
+}
+
+.theme-soft-memories .hero,
+.theme-soft-memories .hp-hero,
+.theme-soft-memories .pf-hero,
+.theme-soft-memories .bl-hero,
+.theme-soft-memories .fq-hero,
+.theme-soft-memories .kt-hero,
+.theme-soft-memories .bp-hero,
+.theme-soft-memories .bp-detail-hero,
+.theme-soft-memories .pf-detail-hero {
+  position: relative;
+  overflow: hidden;
+}
+
+.theme-soft-memories .hero-video,
+.theme-soft-memories .hero-bg,
+.theme-soft-memories .hero__media video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: .26;
+  pointer-events: none;
+}
+
+.theme-soft-memories .hero > .container,
+.theme-soft-memories .hp-hero > .container,
+.theme-soft-memories .pf-hero > .container,
+.theme-soft-memories .bl-hero > .container,
+.theme-soft-memories .fq-hero > .container,
+.theme-soft-memories .kt-hero > .container,
+.theme-soft-memories .bp-hero > .container,
+.theme-soft-memories .bp-detail-hero > .container,
+.theme-soft-memories .pf-detail-hero > .container {
+  position: relative;
+  z-index: 2;
+}
+
+.theme-soft-memories .hp-services-grid,
+.theme-soft-memories .svc-grid,
+.theme-soft-memories .hp-blog-grid,
+.theme-soft-memories .bl-grid,
+.theme-soft-memories .hp-cenik-grid,
+.theme-soft-memories .faq-list,
+.theme-soft-memories .kt-grid,
+.theme-soft-memories .hp-contact-grid,
+.theme-soft-memories .pt-grid {
+  display: grid;
+  gap: 24px;
+}
+
+.theme-soft-memories .hp-services-grid,
+.theme-soft-memories .svc-grid,
+.theme-soft-memories .hp-blog-grid,
+.theme-soft-memories .bl-grid,
+.theme-soft-memories .hp-cenik-grid,
+.theme-soft-memories .hp-contact-grid,
+.theme-soft-memories .pt-grid {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.theme-soft-memories .hp-svc-card,
+.theme-soft-memories .svc-card,
+.theme-soft-memories .hp-blog-card,
+.theme-soft-memories .hp-cenik-card,
+.theme-soft-memories .hp-faq-item,
+.theme-soft-memories .bl-card,
+.theme-soft-memories .pt-tile,
+.theme-soft-memories .ci-block,
+.theme-soft-memories .kt-form-block {
+  border-radius: 20px;
+}

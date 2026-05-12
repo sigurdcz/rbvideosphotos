@@ -51,6 +51,13 @@ class PageRenderer
                     continue;
                 }
 
+                if (($block['block_type'] ?? '') === 'video' && $node->nodeName === 'video') {
+                    if ($content !== '') {
+                        $node->setAttribute('src', $content);
+                    }
+                    continue;
+                }
+
                 while ($node->firstChild) {
                     $node->removeChild($node->firstChild);
                 }
@@ -98,6 +105,8 @@ class PageRenderer
                     if (!empty($mediaInfo['alt'])) {
                         $node->setAttribute('alt', $mediaInfo['alt']);
                     }
+                } elseif ($node->tagName === 'video') {
+                    $node->setAttribute('poster', $mediaInfo['url']);
                 }
             }
         }

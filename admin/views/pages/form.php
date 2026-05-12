@@ -40,6 +40,8 @@ $renderBlockField = function (string $key, string $label, string $type = 'text',
         <input type="text" name="block_content[]" value="<?= $h($value) ?>">
       <?php elseif ($inputType === 'image'): ?>
         <input type="text" name="block_content[]" value="<?= $h($value) ?>" placeholder="/storage/media/...">
+      <?php elseif ($inputType === 'video'): ?>
+        <input type="url" name="block_content[]" value="<?= $h($value) ?>" placeholder="https://... nebo /storage/media/...">
       <?php else: ?>
         <textarea name="block_content[]" class="<?= $inputType === 'html' ? 'code' : '' ?>"><?= $h($value) ?></textarea>
       <?php endif; ?>
@@ -425,6 +427,9 @@ ob_start();
               <?php elseif ($block['block_type'] === 'image'): ?>
                 <input type="text" name="block_content[]" value="<?= $h($block['content'] ?? '') ?>" placeholder="/storage/media/..."<?= $autofillEnabled ? ' disabled' : '' ?>>
                 <div class="form-hint">URL nebo cesta k obrazku</div>
+              <?php elseif ($block['block_type'] === 'video'): ?>
+                <input type="url" name="block_content[]" value="<?= $h($block['content'] ?? '') ?>" placeholder="https://... nebo /storage/media/..."<?= $autofillEnabled ? ' disabled' : '' ?>>
+                <div class="form-hint">URL videa pro pozadí v hero sekci homepage.</div>
               <?php else: ?>
                 <textarea name="block_content[]" class="<?= $block['block_type'] === 'html' ? 'code' : '' ?>"<?= $autofillEnabled ? ' disabled' : '' ?>><?= $h($block['content'] ?? '') ?></textarea>
               <?php endif; ?>

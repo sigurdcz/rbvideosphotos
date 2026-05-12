@@ -26,6 +26,12 @@ class ThemeTemplateRegistry
         }
 
         usort($items, static function (array $a, array $b): int {
+            $orderA = (int)($a['sort_order'] ?? 0);
+            $orderB = (int)($b['sort_order'] ?? 0);
+            if ($orderA !== $orderB) {
+                return $orderA <=> $orderB;
+            }
+
             return strcmp((string)($a['name'] ?? ''), (string)($b['name'] ?? ''));
         });
 
@@ -110,6 +116,7 @@ class ThemeTemplateRegistry
             'description' => (string)($theme['description'] ?? ''),
             'version' => (string)($theme['version'] ?? ''),
             'author' => (string)($theme['author'] ?? ''),
+            'sort_order' => (int)($theme['sort_order'] ?? 0),
             'pages' => array_values(array_filter((array)($theme['pages'] ?? []), static fn($v) => trim((string)$v) !== '')),
             'asset_css' => count($this->assetList($theme, 'css')),
             'asset_js' => count($this->assetList($theme, 'js')),
@@ -167,6 +174,7 @@ class ThemeTemplateRegistry
             'description' => trim((string)($json['description'] ?? '')),
             'version' => trim((string)($json['version'] ?? '')),
             'author' => trim((string)($json['author'] ?? '')),
+            'sort_order' => (int)($json['sort_order'] ?? 0),
             'preview_image' => trim((string)($json['preview_image'] ?? '')),
             'pages' => array_values(array_map('strval', (array)($json['pages'] ?? []))),
             'assets' => [

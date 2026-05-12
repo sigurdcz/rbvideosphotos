@@ -4,6 +4,7 @@
   "description": "Cernozlata editorial sablona inspirovana luxusnim svatebnim webem. Dava duraz na velke hero sekce, vyrazne nadpisy, hranice a gridy.",
   "version": "1.0.0",
   "author": "SEO CMS",
+  "sort_order": 40,
   "layout_html": "layout.html",
   "layout_css": "assets/theme.css",
   "pages": [

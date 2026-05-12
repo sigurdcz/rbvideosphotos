@@ -303,7 +303,7 @@ $siteId = upsertSite($pdo, 'RB Photos & Videos', 'https://rbvideosphotos.kvalitn
 
 $htmlHomeFull = <<<'HTML'
 <header class="hero" id="hero">
-  <img data-block="hero_bg" class="hero-bg" src="" alt="">
+  <video data-block="hero_video" class="hero-bg hero-video" autoplay muted loop playsinline preload="metadata" data-media="hero_bg"></video>
   <div class="hero-overlay"></div>
   <div class="container hero-body">
     <span class="hero-tag" data-block="hero_tag"></span>
@@ -806,9 +806,10 @@ if ($pfId) {
 // ─── Content blocks: Homepage ─────────────────────────────────────────────────
 
 block($pdo, $pidHome, 'hero_bg',         'image',    'Hero — pozadí (foto)',    '', 1);
-block($pdo, $pidHome, 'hero_tag',        'text',     'Hero — tag',              'Fotograf & Videograf — Olomouc', 2);
-block($pdo, $pidHome, 'hero_h1',         'text',     'Hero — nadpis',           'Zachytíme váš příběh. Na vždy....', 3);
-block($pdo, $pidHome, 'hero_sub',        'textarea', 'Hero — podnadpis',        'Profesionální svatební fotografie a videografie v Olomouci a celé České republice. Každý okamžik si zaslouží být nezapomenutelný.', 4);
+block($pdo, $pidHome, 'hero_video',      'video',    'Hero — video (URL)',      '', 2);
+block($pdo, $pidHome, 'hero_tag',        'text',     'Hero — tag',              'Fotograf & Videograf — Olomouc', 3);
+block($pdo, $pidHome, 'hero_h1',         'text',     'Hero — nadpis',           'Zachytíme váš příběh. Na vždy....', 4);
+block($pdo, $pidHome, 'hero_sub',        'textarea', 'Hero — podnadpis',        'Profesionální svatební fotografie a videografie v Olomouci a celé České republice. Každý okamžik si zaslouží být nezapomenutelný.', 5);
 
 block($pdo, $pidHome, 'stat_1', 'html', 'Statistika 1', '<span class="stat-num">150+</span><span class="stat-lbl">Spokojených klientů</span>', 10);
 block($pdo, $pidHome, 'stat_2', 'html', 'Statistika 2', '<span class="stat-num">8+</span><span class="stat-lbl">Let zkušeností</span>', 11);

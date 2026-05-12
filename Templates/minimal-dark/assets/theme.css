@@ -47,3 +47,112 @@ body.theme-minimal-dark body {
 .theme-minimal-dark .section {
   border-color: rgba(255,255,255,.04);
 }
+
+.theme-minimal-dark .theme-homepage-shell {
+  padding: 0;
+}
+
+.theme-minimal-dark .theme-homepage-shell__inner {
+  width: min(1360px, calc(100% - 48px));
+  margin: 0 auto;
+}
+
+.theme-minimal-dark .hero,
+.theme-minimal-dark .hp-hero,
+.theme-minimal-dark .pf-hero,
+.theme-minimal-dark .bl-hero,
+.theme-minimal-dark .fq-hero,
+.theme-minimal-dark .kt-hero,
+.theme-minimal-dark .bp-hero,
+.theme-minimal-dark .bp-detail-hero,
+.theme-minimal-dark .pf-detail-hero {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 15% 0%, rgba(143,106,43,.18), transparent 28%),
+    linear-gradient(180deg, #101218 0%, #0b0c10 100%);
+}
+
+.theme-minimal-dark .hero-video,
+.theme-minimal-dark .hero-bg,
+.theme-minimal-dark .hero__media video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: .32;
+  pointer-events: none;
+}
+
+.theme-minimal-dark .hero > .container,
+.theme-minimal-dark .hp-hero > .container,
+.theme-minimal-dark .pf-hero > .container,
+.theme-minimal-dark .bl-hero > .container,
+.theme-minimal-dark .fq-hero > .container,
+.theme-minimal-dark .kt-hero > .container,
+.theme-minimal-dark .bp-hero > .container,
+.theme-minimal-dark .bp-detail-hero > .container,
+.theme-minimal-dark .pf-detail-hero > .container {
+  position: relative;
+  z-index: 2;
+}
+
+.theme-minimal-dark .hp-services-grid,
+.theme-minimal-dark .svc-grid,
+.theme-minimal-dark .hp-blog-grid,
+.theme-minimal-dark .bl-grid,
+.theme-minimal-dark .hp-cenik-grid,
+.theme-minimal-dark .hp-faq-list,
+.theme-minimal-dark .faq-list,
+.theme-minimal-dark .kt-grid,
+.theme-minimal-dark .hp-contact-grid,
+.theme-minimal-dark .pt-grid {
+  display: grid;
+  gap: 24px;
+}
+
+.theme-minimal-dark .hp-services-grid,
+.theme-minimal-dark .svc-grid,
+.theme-minimal-dark .hp-blog-grid,
+.theme-minimal-dark .bl-grid,
+.theme-minimal-dark .hp-cenik-grid,
+.theme-minimal-dark .hp-contact-grid,
+.theme-minimal-dark .pt-grid {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.theme-minimal-dark .hp-svc-card,
+.theme-minimal-dark .svc-card,
+.theme-minimal-dark .hp-blog-card,
+.theme-minimal-dark .hp-cenik-card,
+.theme-minimal-dark .hp-faq-item,
+.theme-minimal-dark .bl-card,
+.theme-minimal-dark .pt-tile,
+.theme-minimal-dark .ci-block,
+.theme-minimal-dark .kt-form-block,
+.theme-minimal-dark .card,
+.theme-minimal-dark .block-item {
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.08);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01)),
+    #15161b;
+  box-shadow: 0 24px 70px rgba(0,0,0,.28);
+}
+
+.theme-minimal-dark .hp-svc-card__btn,
+.theme-minimal-dark .hp-contact-cta .btn-secondary,
+.theme-minimal-dark .hp-section-cta .btn-secondary,
+.theme-minimal-dark .btn-maps {
+  background: #8f6a2b;
+  border-color: #8f6a2b;
+}
+
+.theme-minimal-dark .hp-svc-card__btn:hover,
+.theme-minimal-dark .hp-contact-cta .btn-secondary:hover,
+.theme-minimal-dark .hp-section-cta .btn-secondary:hover,
+.theme-minimal-dark .btn-maps:hover {
+  background: #a77d32;
+  border-color: #a77d32;
+}

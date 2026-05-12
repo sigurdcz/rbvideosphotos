@@ -4,6 +4,7 @@
   "description": "Tmava sablona s jemne upravenou homepage, kontaktni sekci a globalnimi barvami.",
   "version": "1.0.0",
   "author": "SEO CMS",
+  "sort_order": 30,
   "layout_html": "layout.html",
   "layout_css": "assets/theme.css",
   "pages": [

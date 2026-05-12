@@ -63,6 +63,7 @@ class TemplateParser
     private function guessType(string $tag, \DOMElement $node): string
     {
         if ($tag === 'img') return 'image';
+        if ($tag === 'video') return 'video';
         if ($tag === 'a')   return 'link';
         if (in_array($tag, ['div','section','article'])) return 'html';
         if (in_array($tag, ['textarea','p'])) return 'textarea';

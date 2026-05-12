@@ -188,3 +188,86 @@ body.theme-modern-atelier {
     box-shadow: none;
   }
 }
+
+.theme-modern-atelier .theme-homepage-shell {
+  padding: 0;
+}
+
+.theme-modern-atelier .theme-homepage-shell__inner {
+  width: min(1360px, calc(100% - 48px));
+  margin: 0 auto;
+}
+
+.theme-modern-atelier .hero,
+.theme-modern-atelier .hp-hero,
+.theme-modern-atelier .pf-hero,
+.theme-modern-atelier .bl-hero,
+.theme-modern-atelier .fq-hero,
+.theme-modern-atelier .kt-hero,
+.theme-modern-atelier .bp-hero,
+.theme-modern-atelier .bp-detail-hero,
+.theme-modern-atelier .pf-detail-hero {
+  position: relative;
+  overflow: hidden;
+  background: transparent;
+}
+
+.theme-modern-atelier .hero-video,
+.theme-modern-atelier .hero-bg,
+.theme-modern-atelier .hero__media video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: .34;
+  pointer-events: none;
+}
+
+.theme-modern-atelier .hero > .container,
+.theme-modern-atelier .hp-hero > .container,
+.theme-modern-atelier .pf-hero > .container,
+.theme-modern-atelier .bl-hero > .container,
+.theme-modern-atelier .fq-hero > .container,
+.theme-modern-atelier .kt-hero > .container,
+.theme-modern-atelier .bp-hero > .container,
+.theme-modern-atelier .bp-detail-hero > .container,
+.theme-modern-atelier .pf-detail-hero > .container {
+  position: relative;
+  z-index: 2;
+}
+
+.theme-modern-atelier .hp-services-grid,
+.theme-modern-atelier .svc-grid,
+.theme-modern-atelier .hp-blog-grid,
+.theme-modern-atelier .bl-grid,
+.theme-modern-atelier .hp-cenik-grid,
+.theme-modern-atelier .faq-list,
+.theme-modern-atelier .kt-grid,
+.theme-modern-atelier .hp-contact-grid,
+.theme-modern-atelier .pt-grid {
+  display: grid;
+  gap: 24px;
+}
+
+.theme-modern-atelier .hp-services-grid,
+.theme-modern-atelier .svc-grid,
+.theme-modern-atelier .hp-blog-grid,
+.theme-modern-atelier .bl-grid,
+.theme-modern-atelier .hp-cenik-grid,
+.theme-modern-atelier .hp-contact-grid,
+.theme-modern-atelier .pt-grid {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.theme-modern-atelier .hp-svc-card,
+.theme-modern-atelier .svc-card,
+.theme-modern-atelier .hp-blog-card,
+.theme-modern-atelier .hp-cenik-card,
+.theme-modern-atelier .hp-faq-item,
+.theme-modern-atelier .bl-card,
+.theme-modern-atelier .pt-tile,
+.theme-modern-atelier .ci-block,
+.theme-modern-atelier .kt-form-block {
+  border-radius: 20px;
+}

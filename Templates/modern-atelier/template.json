@@ -4,6 +4,7 @@
   "description": "Svetla, moderni a seriozni sablona pro profesionalniho fotografa. Zamerena na cisty minimalismus, spickovou typografii a pruzracny vizual.",
   "version": "1.0.0",
   "author": "SEO CMS",
+  "sort_order": 20,
   "layout_html": "layout.html",
   "layout_css": "assets/theme.css",
   "pages": [

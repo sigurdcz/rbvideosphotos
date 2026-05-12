@@ -278,6 +278,7 @@ $tplHomepageHtml = <<<'HTML'
 <section class="hp-hero" id="uvod">
   <div class="container">
     <p data-block="hero_label" class="section-label">Vítejte</p>
+    <video data-block="hero_video" class="hero-video" autoplay muted loop playsinline preload="metadata"></video>
     <h1 data-block="hero_h1">Váš nadpis zde</h1>
     <p data-block="hero_sub" class="hero-sub">Krátký popis toho, co děláte a co nabízíte. Zaujměte návštěvníka na první pohled.</p>
     <div data-block="hero_cta" class="hero-cta-wrap"><a href="#kontakt" class="btn-primary">Kontaktujte nás</a></div>
@@ -577,9 +578,10 @@ echo "Stránky vytvořeny.\n";
 // ─── Obsahové bloky — Homepage ────────────────────────────────────────────────
 
 seedBlock($pdo, $pidHome, 'hero_label',     'text',     'Hero — štítek',       'Vítejte',                                                         1);
-seedBlock($pdo, $pidHome, 'hero_h1',        'text',     'Hero — nadpis',       'Doplňte váš hlavní nadpis',                                       2);
-seedBlock($pdo, $pidHome, 'hero_sub',       'textarea', 'Hero — podnadpis',    'Krátký popis toho, co děláte a co nabízíte klientům.',            3);
-seedBlock($pdo, $pidHome, 'hero_cta',       'html',     'Hero — CTA',          '<a href="#kontakt" class="btn-primary">Kontaktujte n&#225;s</a>', 4);
+seedBlock($pdo, $pidHome, 'hero_video',     'video',    'Hero — video (URL)',  '', 2);
+seedBlock($pdo, $pidHome, 'hero_h1',        'text',     'Hero — nadpis',       'Doplňte váš hlavní nadpis',                                       3);
+seedBlock($pdo, $pidHome, 'hero_sub',       'textarea', 'Hero — podnadpis',    'Krátký popis toho, co děláte a co nabízíte klientům.',            4);
+seedBlock($pdo, $pidHome, 'hero_cta',       'html',     'Hero — CTA',          '<a href="#kontakt" class="btn-primary">Kontaktujte nás</a>', 5);
 
 seedBlock($pdo, $pidHome, 'sluzby_title',   'text',     'Služby — nadpis',     'Naše služby',                                                     10);
 seedBlock($pdo, $pidHome, 'sluzby_intro',   'textarea', 'Služby — intro',      'Stručný popis toho, co nabízíme.',                                11);
