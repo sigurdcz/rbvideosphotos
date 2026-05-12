@@ -16,22 +16,30 @@ class ServiceRepository
 
     public function allBySite(int $siteId): array
     {
-        $stmt = $this->db->prepare('SELECT * FROM service_items WHERE site_id = ? ORDER BY sort_order ASC, id ASC');
-        $stmt->execute([$siteId]);
-        return $stmt->fetchAll();
+        try {
+            $stmt = $this->db->prepare('SELECT * FROM service_items WHERE site_id = ? ORDER BY sort_order ASC, id ASC');
+            $stmt->execute([$siteId]);
+            return $stmt->fetchAll();
+        } catch (\Throwable $e) {
+            return [];
+        }
     }
 
     public function allActive(int $siteId): array
     {
-        $stmt = $this->db->prepare('SELECT * FROM service_items WHERE site_id = ? AND is_active = 1 ORDER BY sort_order ASC, id ASC');
-        $stmt->execute([$siteId]);
-        return $stmt->fetchAll();
+        try {
+            $stmt = $this->db->prepare('SELECT * FROM service_items WHERE site_id = ? AND is_active = 1 ORDER BY sort_order ASC, id ASC');
+            $stmt->execute([$siteId]);
+            return $stmt->fetchAll();
+        } catch (\Throwable $e) {
+            return [];
+        }
     }
 
     public function upsertMany(int $siteId, array $items): void
     {
-        $this->db->beginTransaction();
         try {
+            $this->db->beginTransaction();
             $this->db->prepare('DELETE FROM service_items WHERE site_id = ?')->execute([$siteId]);
             $stmt = $this->db->prepare(
                 'INSERT INTO service_items
@@ -60,8 +68,9 @@ class ServiceRepository
 
             $this->db->commit();
         } catch (\Throwable $e) {
-            $this->db->rollBack();
-            throw $e;
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
         }
     }
 }
