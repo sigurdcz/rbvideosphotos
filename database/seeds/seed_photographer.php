@@ -832,7 +832,7 @@ block($pdo, $pidHome, 'why_4', 'html', 'Důvod 4', '<span class="feat-num">04</s
 block($pdo, $pidHome, 'portfolio_title', 'text',     'Práce — nadpis',    'To nejlepší od nás', 40);
 block($pdo, $pidHome, 'portfolio_intro', 'textarea', 'Práce — intro',     'Svatební filmy, klipy a reportáže — podívejte se jak pracujeme.', 41);
 block($pdo, $pidHome, 'portfolio_btns',  'html',     'Práce — tlačítka',  '<a href="/nase-prace" class="btn-g">V&#353;echny pr&#225;ce</a>', 46);
-block($pdo, $pidHome, 'portfolio-tiles', 'html', 'Naše práce — dlaždice', '<p style="color:rgba(255,255,255,.5);text-align:center;padding:40px 0">Přidejte první práci v sekci <strong>Naše práce</strong> a dlaždice se zde zobrazí automaticky.</p>', 38);
+block($pdo, $pidHome, 'portfolio-tiles', 'html', 'Naše práce — dlaždice', '', 38);
 
 block($pdo, $pidHome, 'reviews_title', 'text',     'Recenze — nadpis', 'Co říkají naši klienti', 50);
 block($pdo, $pidHome, 'reviews_intro', 'textarea', 'Recenze — intro',  'Přes 150 spokojených klientů — jejich slova mluví za nás.', 51);
@@ -843,26 +843,26 @@ block($pdo, $pidHome, 'reviews_cta', 'html', 'Recenze — tlačítko', '<a href=
 
 block($pdo, $pidHome, 'pricing_title', 'text',     'Ceník — nadpis',   'Transparentní ceník bez překvapení', 70);
 block($pdo, $pidHome, 'pricing_intro', 'textarea', 'Ceník — intro',   'Každá zakázka je individuální. Níže najdete orientační ceny — přesnou nabídku připravíme vždy na míru.', 71);
-block($pdo, $pidHome, 'pricing_body',  'html',     'Ceník — obsah',   '<div class="pricing-body"><strong>Svatební foto &amp; video</strong> — od 13 000 Kč (základní, do 4 h) &nbsp;·&nbsp; od 22 000 Kč (celý den)<br><strong>Rodinné &amp; portrétní focení</strong> — od 4 500 Kč<br><strong>Firemní fotografie &amp; video</strong> — od 6 000 Kč<br><strong>Videografie, videoklipy</strong> — od 8 000 Kč<br><em>Ceny jsou orientační. Rádi připravíme nabídku přesně pro vás.</em></div>', 72);
+block($pdo, $pidHome, 'pricing_body',  'html',     'Ceník — obsah',   '', 72);
 block($pdo, $pidHome, 'pricing_cta',   'html',     'Ceník — tlačítko', '<a href="/cenik" class="btn-g">Cel&#253; cen&#237;k</a>', 73);
 
 block($pdo, $pidHome, 'blog_title', 'text',     'Blog — nadpis', 'Tipy a inspirace', 80);
 block($pdo, $pidHome, 'blog_intro', 'textarea', 'Blog — intro',  'Rady od profesionálního fotografa — jak se připravit, co očekávat a jak dostat ty nejkrásnější snímky.', 81);
-block($pdo, $pidHome, 'blog_1',     'html',     'Článek 1',      '<span class="blog-cat">Svatební fotografie</span><h3>10 tipů, jak se připravit na dokonalé svatební focení</h3><p>Váš svatební den si zaslouží dokonalou přípravu. Přečtěte si, co udělat jinak než ostatní.</p><a href="/priprava-na-svatebni-foceni">&#268;&#237;st d&#225;l &rarr;</a>', 82);
-block($pdo, $pidHome, 'blog_2',     'html',     'Článek 2',      '<span class="blog-cat">Rodinné focení</span><h3>Rodinné focení: jak dostat přirozené snímky i s malými dětmi</h3><p>Malé děti a fotoaparát? Přesně v tom chaosu se skrývají ty nejkrásnější momenty.</p><a href="/rodinne-foceni-s-detmi">&#268;&#237;st d&#225;l &rarr;</a>', 83);
-block($pdo, $pidHome, 'blog_3',     'html',     'Článek 3',      '<span class="blog-cat">Tipy</span><h3>Jak vybrat správného fotografa pro vaši akci?</h3><p>Na co se zaměřit při výběru fotografa — portfolio, styl, komunikace a podmínky spolupráce.</p><a href="/jak-vybrat-fotografa">&#268;&#237;st d&#225;l &rarr;</a>', 84);
+block($pdo, $pidHome, 'blog_1',     'html',     'Článek 1',      '', 82);
+block($pdo, $pidHome, 'blog_2',     'html',     'Článek 2',      '', 83);
+block($pdo, $pidHome, 'blog_3',     'html',     'Článek 3',      '', 84);
 block($pdo, $pidHome, 'blog_cta',   'html',     'Blog — tlačítko', '<a href="/blog" class="btn-od">V&#353;echny &#269;l&#225;nky</a>', 85);
 
 block($pdo, $pidHome, 'faq_title', 'text',     'FAQ — nadpis', 'Nejčastější otázky', 90);
 block($pdo, $pidHome, 'faq_intro', 'textarea', 'FAQ — intro',  'Vše, co potřebujete vědět před rezervací.', 91);
-block($pdo, $pidHome, 'faq_1',     'html',     'FAQ 1',        '<div class="faq-q">Jak brzy si mám rezervovat fotografie na svatbu?</div><div class="faq-a">Oblíbené soboty se obsazují rok i více dopředu. Doporučujeme rezervovat co nejdříve po zasnoubení, aby byl váš termín volný.</div>', 92);
-block($pdo, $pidHome, 'faq_2',     'html',     'FAQ 2',        '<div class="faq-q">Za jak dlouho dostaneme fotografie?</div><div class="faq-a">Editované fotografie ze svatby dodáváme do 4–6 týdnů. Rodinné a portrétní focení zpravidla do 2 týdnů. Video do 8 týdnů. Vždy se domluvíme předem.</div>', 93);
-block($pdo, $pidHome, 'faq_3',     'html',     'FAQ 3',        '<div class="faq-q">Fotografujete i mimo Olomouc?</div><div class="faq-a">Ano, fotografujeme po celé České republice i v zahraničí. Cestovní náklady závisí na vzdálenosti — vše si vždy předem domluvíme.</div>', 94);
+block($pdo, $pidHome, 'faq_1',     'html',     'FAQ 1',        '', 92);
+block($pdo, $pidHome, 'faq_2',     'html',     'FAQ 2',        '', 93);
+block($pdo, $pidHome, 'faq_3',     'html',     'FAQ 3',        '', 94);
 block($pdo, $pidHome, 'faq_cta',   'html',     'FAQ — tlačítko', '<a href="/faq" class="btn-od">V&#353;echny ot&#225;zky</a>', 95);
 
 block($pdo, $pidHome, 'cta_title',    'text',     'CTA — nadpis',     'Pojďme vytvořit něco krásného', 60);
 block($pdo, $pidHome, 'cta_sub',      'textarea', 'CTA — podnadpis',  'Nezávazně se nám ozvěte — rádi odpovíme na vaše otázky a připravíme nabídku na míru pro váš den.', 61);
-block($pdo, $pidHome, 'contact_info', 'html',     'Kontakt — info',   '<div class="cta-info"><p><strong>792&nbsp;483&nbsp;583</strong></p><p><strong>604&nbsp;225&nbsp;032</strong></p><p>Olomouc a celá ČR</p><p><a href="https://www.facebook.com/rbvideosandphotos" target="_blank" rel="noopener">Facebook: RB Videos &amp; Photos</a></p><p><a href="https://www.instagram.com/rb_videos_photos/" target="_blank" rel="noopener">Instagram: @rb_videos_photos</a></p><p><a href="https://www.youtube.com/@rbvideosandphotos" target="_blank" rel="noopener">YouTube kanál</a></p></div>', 62);
+block($pdo, $pidHome, 'contact_info', 'html',     'Kontakt — info',   '', 62);
 block($pdo, $pidHome, 'contact_card', 'html',     'Kontakt — karta',  '<h3>Ozvěte se nám</h3><p class="cta-r-sub">Zavolejte nebo napište na sociální sítě. Odpovídáme rychle!</p><a href="tel:792483583" class="cta-btn cta-btn--gold">Zavolat: 792&nbsp;483&nbsp;583</a><a href="tel:604225032" class="cta-btn cta-btn--dark">Zavolat: 604&nbsp;225&nbsp;032</a><a href="https://www.instagram.com/rb_videos_photos/" target="_blank" rel="noopener" class="cta-btn cta-btn--dark">Instagram</a><a href="https://www.facebook.com/rbvideosandphotos" target="_blank" rel="noopener" class="cta-btn cta-btn--dark">Facebook</a>', 63);
 
 // ─── Content blocks: Ceník ───────────────────────────────────────────────────

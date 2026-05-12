@@ -583,35 +583,35 @@ seedBlock($pdo, $pidHome, 'hero_cta',       'html',     'Hero — CTA',         
 
 seedBlock($pdo, $pidHome, 'sluzby_title',   'text',     'Služby — nadpis',     'Naše služby',                                                     10);
 seedBlock($pdo, $pidHome, 'sluzby_intro',   'textarea', 'Služby — intro',      'Stručný popis toho, co nabízíme.',                                11);
-seedBlock($pdo, $pidHome, 'sluzby_items',   'html',     'Služby — karty',      '<p style="color:rgba(255,255,255,.45);padding:32px 0;text-align:center">Doplňte karty služeb v administraci.</p>', 12);
+seedBlock($pdo, $pidHome, 'sluzby_items',   'html',     'Služby — karty',      '', 12);
 seedBlock($pdo, $pidHome, 'sluzby_cta',     'html',     'Služby — tlačítko',   '<a href="/sluzby" class="btn-secondary">V&#353;echny slu&#382;by</a>', 13);
 
 seedBlock($pdo, $pidHome, 'portfolio_title','text',     'Portfolio — nadpis',  'Naše práce',                                                      20);
 seedBlock($pdo, $pidHome, 'portfolio_intro','textarea', 'Portfolio — intro',   'Ukázka projektů a realizací.',                                    21);
-seedBlock($pdo, $pidHome, 'portfolio-tiles','html',     'Portfolio — dlaždice','<p style="color:rgba(255,255,255,.4);text-align:center;padding:48px 0">P&#345;idejte prvn&#237; pr&#225;ci v administraci — dla&#382;dice se zobraz&#237; automaticky.</p>', 22);
+seedBlock($pdo, $pidHome, 'portfolio-tiles','html',     'Portfolio — dlaždice','', 22);
 seedBlock($pdo, $pidHome, 'portfolio_cta',  'html',     'Portfolio — tlačítko','<a href="/nase-prace" class="btn-secondary">V&#353;echny pr&#225;ce</a>', 23);
 
 seedBlock($pdo, $pidHome, 'blog_title',     'text',     'Blog — nadpis',       'Nejnovější články',                                               30);
 seedBlock($pdo, $pidHome, 'blog_intro',     'textarea', 'Blog — intro',        'Rady a novinky z naší praxe.',                                    31);
-seedBlock($pdo, $pidHome, 'blog_1',         'html',     'Článek 1',            '<p style="color:rgba(255,255,255,.45)">Doplňte první článek.</p>', 32);
-seedBlock($pdo, $pidHome, 'blog_2',         'html',     'Článek 2',            '<p style="color:rgba(255,255,255,.45)">Doplňte druhý článek.</p>', 33);
-seedBlock($pdo, $pidHome, 'blog_3',         'html',     'Článek 3',            '<p style="color:rgba(255,255,255,.45)">Doplňte třetí článek.</p>', 34);
+seedBlock($pdo, $pidHome, 'blog_1',         'html',     'Článek 1',            '', 32);
+seedBlock($pdo, $pidHome, 'blog_2',         'html',     'Článek 2',            '', 33);
+seedBlock($pdo, $pidHome, 'blog_3',         'html',     'Článek 3',            '', 34);
 seedBlock($pdo, $pidHome, 'blog_cta',       'html',     'Blog — tlačítko',     '<a href="/blog" class="btn-secondary">V&#353;echny &#269;l&#225;nky</a>', 35);
 
 seedBlock($pdo, $pidHome, 'cenik_title',    'text',     'Ceník — nadpis',      'Ceník',                                                           40);
 seedBlock($pdo, $pidHome, 'cenik_intro',    'textarea', 'Ceník — intro',       'Orientační přehled cen. Každá zakázka je individuální.',           41);
-seedBlock($pdo, $pidHome, 'cenik_body',     'html',     'Ceník — obsah',       '<p style="color:rgba(255,255,255,.45)">Doplňte přehled cen v administraci.</p>', 42);
+seedBlock($pdo, $pidHome, 'cenik_body',     'html',     'Ceník — obsah',       '', 42);
 seedBlock($pdo, $pidHome, 'cenik_cta',      'html',     'Ceník — tlačítko',    '<a href="/cenik" class="btn-secondary">Cel&#253; cen&#237;k</a>', 43);
 
 seedBlock($pdo, $pidHome, 'faq_title',      'text',     'FAQ — nadpis',        'Časté dotazy',                                                    50);
-seedBlock($pdo, $pidHome, 'faq_1',          'html',     'FAQ 1',               '<p style="color:rgba(255,255,255,.45)">Doplňte první otázku.</p>', 51);
-seedBlock($pdo, $pidHome, 'faq_2',          'html',     'FAQ 2',               '<p style="color:rgba(255,255,255,.45)">Doplňte druhou otázku.</p>',52);
-seedBlock($pdo, $pidHome, 'faq_3',          'html',     'FAQ 3',               '<p style="color:rgba(255,255,255,.45)">Doplňte třetí otázku.</p>', 53);
+seedBlock($pdo, $pidHome, 'faq_1',          'html',     'FAQ 1',               '', 51);
+seedBlock($pdo, $pidHome, 'faq_2',          'html',     'FAQ 2',               '', 52);
+seedBlock($pdo, $pidHome, 'faq_3',          'html',     'FAQ 3',               '', 53);
 seedBlock($pdo, $pidHome, 'faq_cta',        'html',     'FAQ — tlačítko',      '<a href="/faq" class="btn-secondary">V&#353;echny ot&#225;zky</a>',54);
 
 seedBlock($pdo, $pidHome, 'kontakt_title',  'text',     'Kontakt — nadpis',    'Ozvěte se nám',                                                   60);
 seedBlock($pdo, $pidHome, 'kontakt_sub',    'textarea', 'Kontakt — podnadpis', 'Rádi odpovíme na vaše otázky.',                                   61);
-seedBlock($pdo, $pidHome, 'kontakt_info',   'html',     'Kontakt — info',      '<p style="color:rgba(255,255,255,.45)">Doplňte kontaktní informace v administraci.</p>', 62);
+seedBlock($pdo, $pidHome, 'kontakt_info',   'html',     'Kontakt — info',      '', 62);
 
 // ─── Obsahové bloky — Služby ──────────────────────────────────────────────────
 

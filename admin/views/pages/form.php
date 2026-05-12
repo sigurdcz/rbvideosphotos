@@ -349,11 +349,11 @@ ob_start();
             <?php endif; ?>
             <?php if ($autofillBlock): ?>
               <label style="display:flex;align-items:flex-start;gap:8px;margin-top:10px;font-size:.9rem;color:var(--c-muted)">
-                <input type="checkbox" name="block_autofill_disabled[<?= $h($block['block_key']) ?>]" value="1" <?= !empty($block['autofill_disabled']) ? 'checked' : '' ?>>
+                <input type="checkbox" name="block_autofill_enabled[<?= $h($block['block_key']) ?>]" value="1" <?= empty($block['autofill_disabled']) ? 'checked' : '' ?>>
                 <span>
-                  Vypnout automaticke doplnovani teto sekce
+                  Povolit automaticke doplnovani teto sekce
                   <span style="display:block;margin-top:4px;font-size:.82rem;line-height:1.45">
-                    <?= $h($autofillBlock['hint'] ?? 'Po vypnuti zustane pole prazdne i pri publikaci.') ?>
+                    <?= $h($autofillBlock['hint'] ?? 'Kdyz je zapnuto, sekce se pri publikaci doplni z aktualnich dat.') ?>
                   </span>
                 </span>
               </label>

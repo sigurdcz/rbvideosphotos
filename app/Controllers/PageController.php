@@ -228,7 +228,7 @@ class PageController extends Controller
         $blockRepo = new BlockRepository();
         $keys      = $_POST['block_key'] ?? [];
         $contents  = $_POST['block_content'] ?? [];
-        $autofillDisabled = $_POST['block_autofill_disabled'] ?? [];
+        $autofillEnabled = $_POST['block_autofill_enabled'] ?? [];
         $autofillKeys = $isHomepage
             ? array_fill_keys(array_keys((new HomepageContentService())->getAutofillDefinitions()), true)
             : [];
@@ -241,11 +241,10 @@ class PageController extends Controller
 
             $existing = $blockRepo->findByKey($pageId, $key);
             $isAutofillBlock = $isHomepage && isset($autofillKeys[$key]);
-            $disabled = $isAutofillBlock
-                ? !empty($autofillDisabled[$key])
-                : (int)($existing['autofill_disabled'] ?? 0);
+            $enabled = $isAutofillBlock ? !empty($autofillEnabled[$key]) : true;
+            $disabled = $isAutofillBlock ? ($enabled ? 0 : 1) : (int)($existing['autofill_disabled'] ?? 0);
             $content = (string)($contents[$i] ?? '');
-            if ($isAutofillBlock && $disabled) {
+            if ($isAutofillBlock) {
                 $content = '';
             }
 
