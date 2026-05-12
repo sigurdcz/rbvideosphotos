@@ -308,8 +308,7 @@ class HomepageContentService
         }
 
         $css = '<style>'
-            . '.hp-svc-grid,.svc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px}'
-            . '.hp-svc-card,.svc-card{background:#1b1b1f;border-radius:14px;overflow:hidden;box-shadow:0 14px 30px rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column}'
+            . '.hp-svc-card,.svc-card{background:#1b1b1f;border-radius:14px;overflow:hidden;box-shadow:0 14px 30px rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;width:100%;min-width:0}'
             . '.hp-svc-card__media{height:190px;background:#0e0e11;overflow:hidden}'
             . '.hp-svc-card__media img{width:100%;height:100%;object-fit:cover;display:block}'
             . '.hp-svc-card__body{padding:20px;display:flex;flex-direction:column;gap:12px;flex:1}'
@@ -318,10 +317,9 @@ class HomepageContentService
             . '.hp-svc-card__desc{color:rgba(255,255,255,.68);line-height:1.65;font-size:.95rem;white-space:pre-line}'
             . '.hp-svc-card__btn{display:inline-flex;align-self:flex-start;margin-top:auto;padding:11px 16px;border-radius:6px;background:#c4963c;color:#fff;text-decoration:none;font-weight:700;font-size:.86rem}'
             . '.hp-svc-card__btn:hover{background:#d4a64c}'
-            . '@media(max-width:640px){.hp-svc-grid,.svc-grid{grid-template-columns:1fr}}'
             . '</style>';
 
-        return $css . '<div class="hp-svc-grid">' . $cards . '</div>';
+        return $css . $cards;
     }
 
     private function buildServiceCardHtml(?array $service, int $index = 0): string

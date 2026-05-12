@@ -95,8 +95,9 @@ class PublishService
                 $html = $this->renderer->applyLayout($themeLayout, $html, $site['name'] ?? '', '');
             }
             $html = $this->themes->injectBodyClass($html, (string)($theme['key'] ?? ''));
-        }
-        if (!empty($site['layout_html'])) {
+            $css = ($template['css_source'] ?? '') . "\n" . $themeCss;
+            $js  = ($template['js_source']  ?? '') . "\n" . $themeJs;
+        } elseif (!empty($site['layout_html'])) {
             $html = $this->renderer->applyLayout($site['layout_html'], $html, $site['name'] ?? '');
             $css  = ($site['layout_css'] ?? '') . "\n" . ($template['css_source'] ?? '') . "\n" . $themeCss;
             $js   = ($site['layout_js']  ?? '') . "\n" . ($template['js_source']  ?? '') . "\n" . $themeJs;

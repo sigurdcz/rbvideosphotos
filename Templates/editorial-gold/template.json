@@ -1,0 +1,24 @@
+{
+  "key": "editorial-gold",
+  "name": "Editorial Gold",
+  "description": "Cernozlata editorial sablona inspirovana luxusnim svatebnim webem. Dava duraz na velke hero sekce, vyrazne nadpisy, hranice a gridy.",
+  "version": "1.0.0",
+  "author": "SEO CMS",
+  "layout_html": "layout.html",
+  "layout_css": "assets/theme.css",
+  "pages": [
+    "homepage",
+    "sluzby",
+    "portfolio",
+    "portfolio-detail",
+    "blog",
+    "blog-post",
+    "pricing",
+    "faq",
+    "contact"
+  ],
+  "assets": {
+    "css": [],
+    "js": []
+  }
+}
