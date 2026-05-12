@@ -12,6 +12,7 @@ use App\Repositories\RedirectRepository;
 use App\Repositories\SeoRepository;
 use App\Repositories\SiteRepository;
 use App\Repositories\TemplateRepository;
+use App\Services\ThemeTemplateRegistry;
 
 class PublishService
 {
@@ -28,6 +29,7 @@ class PublishService
     private MediaRepository $media;
     private RedirectRepository $redirects;
     private PublishHistoryRepository $history;
+    private ThemeTemplateRegistry $themes;
 
     private string $publishedDir;
 
@@ -46,6 +48,7 @@ class PublishService
         $this->media      = new MediaRepository();
         $this->redirects  = new RedirectRepository();
         $this->history    = new PublishHistoryRepository();
+        $this->themes     = new ThemeTemplateRegistry();
         $this->publishedDir = dirname(__DIR__, 2) . '/storage/published';
     }
 
@@ -70,6 +73,7 @@ class PublishService
         $blocks   = $this->homepageContent->applyFallbacks($page, $blocks);
         $seo      = $this->seo->findByPage($pageId) ?? [];
         $mediaMap = $this->buildMediaMap($blocks, $site);
+        $pageKey  = $this->themes->normalizePageKey((string)($page['url_path'] ?? ''));
 
         // Build page URL
         $pageUrl = rtrim($site['domain'], '/') . '/' . ltrim($page['url_path'], '/');
@@ -80,13 +84,24 @@ class PublishService
 
         // Render
         $html = $this->renderer->render($template['html_source'], $blocks, $mediaMap);
+        $theme = $this->themes->resolveForSite($site);
+        $themeCss = '';
+        $themeJs = '';
+        if ($theme) {
+            $themeCss = $this->themes->getCssForPage($theme, $pageKey);
+            $themeJs = $this->themes->getJsForPage($theme, $pageKey);
+            $themeLayout = $this->themes->getLayoutHtmlForPage($theme, $pageKey);
+            if ($themeLayout !== '') {
+                $html = $this->renderer->applyLayout($themeLayout, $html, $site['name'] ?? '', '');
+            }
+        }
         if (!empty($site['layout_html'])) {
             $html = $this->renderer->applyLayout($site['layout_html'], $html, $site['name'] ?? '');
-            $css  = ($site['layout_css'] ?? '') . "\n" . ($template['css_source'] ?? '');
-            $js   = ($site['layout_js']  ?? '') . "\n" . ($template['js_source']  ?? '');
+            $css  = ($site['layout_css'] ?? '') . "\n" . ($template['css_source'] ?? '') . "\n" . $themeCss;
+            $js   = ($site['layout_js']  ?? '') . "\n" . ($template['js_source']  ?? '') . "\n" . $themeJs;
         } else {
-            $css = $template['css_source'] ?? '';
-            $js  = $template['js_source']  ?? '';
+            $css = ($template['css_source'] ?? '') . "\n" . $themeCss;
+            $js  = ($template['js_source']  ?? '') . "\n" . $themeJs;
         }
         $html = $this->renderer->injectAssets($html, $css, $js);
 

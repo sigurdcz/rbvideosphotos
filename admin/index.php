@@ -51,6 +51,12 @@ try {
     $router->post('/admin/layouts/delete', 'TemplateController', 'delete');
     $router->get('/admin/layouts/parse',   'TemplateController', 'parse');
 
+    // Sablony webu
+    $router->get('/admin/shablony',        'ThemeController', 'index');
+    $router->post('/admin/shablony/activate', 'ThemeController', 'activate');
+    $router->get('/admin/themes',          'ThemeController', 'index');
+    $router->post('/admin/themes/activate', 'ThemeController', 'activate');
+
     // Templates (legacy aliases)
     $router->get('/admin/templates',         'TemplateController', 'index');
     $router->get('/admin/templates/create',  'TemplateController', 'create');

@@ -1,0 +1,49 @@
+body.theme-minimal-dark,
+body.theme-minimal-dark body {
+  background: #0c0d10;
+}
+
+.theme-minimal-dark .nav,
+.theme-minimal-dark .topbar,
+.theme-minimal-dark .sidebar {
+  background: #101217;
+}
+
+.theme-minimal-dark .btn-primary,
+.theme-minimal-dark .btn-success,
+.theme-minimal-dark .nav-cta {
+  background: #8f6a2b;
+  border-color: #8f6a2b;
+}
+
+.theme-minimal-dark .btn-primary:hover,
+.theme-minimal-dark .btn-success:hover,
+.theme-minimal-dark .nav-cta:hover {
+  background: #a77d32;
+  border-color: #a77d32;
+}
+
+.theme-minimal-dark .section-title,
+.theme-minimal-dark h1,
+.theme-minimal-dark h2,
+.theme-minimal-dark h3 {
+  letter-spacing: -0.02em;
+}
+
+.theme-minimal-dark .section-label {
+  color: #d8aa54;
+}
+
+.theme-minimal-dark .card,
+.theme-minimal-dark .block-item,
+.theme-minimal-dark .hp-svc-card,
+.theme-minimal-dark .hp-blog-card,
+.theme-minimal-dark .hp-cenik-card,
+.theme-minimal-dark .hp-faq-item {
+  background: rgba(255,255,255,.04);
+  border-color: rgba(255,255,255,.08);
+}
+
+.theme-minimal-dark .section {
+  border-color: rgba(255,255,255,.04);
+}

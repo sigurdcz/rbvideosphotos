@@ -29,8 +29,10 @@ CREATE TABLE IF NOT EXISTS `sites` (
   `google_tag_manager_id` VARCHAR(50) DEFAULT NULL,
   `head_scripts`          TEXT DEFAULT NULL,
   `body_scripts`          TEXT DEFAULT NULL,
+  `active_theme_key`      VARCHAR(120) DEFAULT NULL,
   `created_at`            DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at`            DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  KEY `idx_sites_active_theme_key` (`active_theme_key`),
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

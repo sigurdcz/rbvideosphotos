@@ -1,0 +1,21 @@
+.theme-minimal-dark .hero {
+  background:
+    radial-gradient(circle at top left, rgba(196, 150, 60, 0.14), transparent 34%),
+    linear-gradient(180deg, #11131a 0%, #0b0c0f 100%);
+}
+
+.theme-minimal-dark .hero__content {
+  max-width: 760px;
+}
+
+.theme-minimal-dark .hero__title {
+  text-shadow: 0 10px 36px rgba(0,0,0,.25);
+}
+
+.theme-minimal-dark .hp-section-cta .btn-secondary {
+  background: transparent;
+}
+
+.theme-minimal-dark .hp-section-cta .btn-secondary:hover {
+  color: #111;
+}

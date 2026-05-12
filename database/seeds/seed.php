@@ -57,8 +57,8 @@ if (!function_exists('seedUpsertSite')) {
         if ($row) {
             return (int) $row['id'];
         }
-        $pdo->prepare('INSERT INTO sites (name, domain) VALUES (?,?)')
-            ->execute([$name, $domain]);
+        $pdo->prepare('INSERT INTO sites (name, domain, active_theme_key) VALUES (?, ?, ?)')
+            ->execute([$name, $domain, null]);
         return (int) $pdo->lastInsertId();
     }
 }

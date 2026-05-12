@@ -1,0 +1,9 @@
+.theme-minimal-dark .kt-grid {
+  align-items: stretch;
+}
+
+.theme-minimal-dark .ci-block,
+.theme-minimal-dark .kt-form-block {
+  background: rgba(255,255,255,.035);
+  border: 1px solid rgba(255,255,255,.08);
+}

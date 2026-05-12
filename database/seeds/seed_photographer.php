@@ -40,8 +40,8 @@ function upsertSite(PDO $pdo, string $name, string $domain, string $ga, string $
             ->execute([$name,$ga,$gtm,$bodyScript,$layoutHtml,$layoutCss,$layoutJs,$layoutNavHome,$layoutNavSub,$id]);
         return (int)$id;
     }
-    $pdo->prepare('INSERT INTO sites (name,domain,google_analytics_id,google_tag_manager_id,body_scripts,layout_html,layout_css,layout_js,layout_nav_home,layout_nav_sub) VALUES (?,?,?,?,?,?,?,?,?,?)')
-        ->execute([$name,$domain,$ga,$gtm,$bodyScript,$layoutHtml,$layoutCss,$layoutJs,$layoutNavHome,$layoutNavSub]);
+    $pdo->prepare('INSERT INTO sites (name,domain,google_analytics_id,google_tag_manager_id,body_scripts,layout_html,layout_css,layout_js,layout_nav_home,layout_nav_sub,active_theme_key) VALUES (?,?,?,?,?,?,?,?,?,?,?)')
+        ->execute([$name,$domain,$ga,$gtm,$bodyScript,$layoutHtml,$layoutCss,$layoutJs,$layoutNavHome,$layoutNavSub,null]);
     return (int)$pdo->lastInsertId();
 }
 

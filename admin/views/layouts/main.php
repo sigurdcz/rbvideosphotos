@@ -17,6 +17,7 @@
       <li><a href="/admin" class="<?= $requestUri === '/admin' ? 'active' : '' ?>">Dashboard</a></li>
       <li><a href="/admin/pages" class="<?= strpos($requestUri, '/admin/pages') === 0 ? 'active' : '' ?>">Stranky</a></li>
       <li><a href="/admin/layouts" class="<?= (strpos($requestUri, '/admin/layouts') === 0 || strpos($requestUri, '/admin/templates') === 0) ? 'active' : '' ?>">Layouty stranek</a></li>
+      <li><a href="/admin/shablony" class="<?= (strpos($requestUri, '/admin/shablony') === 0 || strpos($requestUri, '/admin/themes') === 0) ? 'active' : '' ?>">Sablony</a></li>
       <li><a href="/admin/media" class="<?= strpos($requestUri, '/admin/media') === 0 ? 'active' : '' ?>">Media</a></li>
       <li><a href="/admin/blog" class="<?= strpos($requestUri, '/admin/blog') === 0 ? 'active' : '' ?>">Blog - clanky</a></li>
       <li><a href="/admin/portfolio" class="<?= strpos($requestUri, '/admin/portfolio') === 0 ? 'active' : '' ?>">Nase prace</a></li>

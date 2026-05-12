@@ -1,0 +1,39 @@
+{
+  "key": "minimal-dark",
+  "name": "Minimal Dark",
+  "description": "Tmava sablona s jemne upravenou homepage, kontaktni sekci a globalnimi barvami.",
+  "version": "1.0.0",
+  "author": "SEO CMS",
+  "pages": [
+    "homepage",
+    "services",
+    "portfolio",
+    "blog",
+    "pricing",
+    "faq",
+    "contact"
+  ],
+  "assets": {
+    "css": [
+      "assets/theme.css"
+    ],
+    "js": []
+  },
+  "overrides": {
+    "homepage": {
+      "layout_html": "overrides/homepage.html",
+      "assets": {
+        "css": [
+          "assets/homepage.css"
+        ]
+      }
+    },
+    "contact": {
+      "assets": {
+        "css": [
+          "assets/contact.css"
+        ]
+      }
+    }
+  }
+}
