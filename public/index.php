@@ -698,7 +698,7 @@ function tryServeKontaktPage(): bool
     }
 
     $h         = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
-    $siteName  = (string)($site['name'] ?? 'Muj web');
+    $siteName  = (string)($site['name'] ?? 'Erbez Photos Videos');
     $heroTitle = 'Kontakt';
     $heroSub   = 'Ozvěte se nám. Rádi odpovíme na vaše otázky.';
 
@@ -722,7 +722,11 @@ function tryServeKontaktPage(): bool
     ];
 
     // Contact details block
-    $detailsHtml = '';
+    $detailsHtml = '<div class="ci-brand">'
+        . '<div class="ci-brand__label">Ozvěte se</div>'
+        . '<div class="ci-brand__name">Erbez Photos Videos</div>'
+        . '<div class="ci-brand__sub">Svatební fotografie a video • Olomouc • celá ČR</div>'
+        . '</div>';
     if (!empty($contact['phone_1'])) {
         $tel = preg_replace('/\s+/', '', $contact['phone_1']);
         $detailsHtml .= '<div class="ci-row"><span class="ci-label">Telefon</span>'
@@ -766,6 +770,10 @@ function tryServeKontaktPage(): bool
         $detailsHtml .= '<div class="ci-socials">' . $socialsHtml . '</div>';
     }
 
+    $detailsHtml .= '<div class="ci-links">'
+        . '<a href="/kontakt" class="ci-link-btn">Kontakt</a>'
+        . '</div>';
+
     if (!$detailsHtml) {
         $detailsHtml = '<p style="color:rgba(255,255,255,.4)">Kontaktní informace zatím nejsou vyplněny.</p>';
     }
@@ -784,6 +792,10 @@ body{background:#111;color:#fff}
 .kt-wrap{padding:32px 0 72px}
 .kt-grid{display:grid;grid-template-columns:1fr;gap:20px;align-items:start;max-width:1000px;margin:0 auto}
 .ci-block,.kt-form-block{background:#18181c;border-radius:14px;padding:20px;min-width:0}
+.ci-brand{display:flex;flex-direction:column;gap:8px;margin-bottom:24px}
+.ci-brand__label{font-size:.76rem;letter-spacing:.18em;text-transform:uppercase;color:#c4963c;font-weight:800}
+.ci-brand__name{font-size:clamp(1.7rem,4vw,2.6rem);line-height:1.05;font-weight:800;color:#fff;font-family:Georgia,serif}
+.ci-brand__sub{font-size:1.05rem;color:rgba(255,255,255,.82);line-height:1.5}
 .ci-title{font-size:1.15rem;font-weight:700;color:#fff;margin-bottom:20px}
 .ci-row{display:flex;flex-direction:column;gap:4px;margin-bottom:14px;line-height:1.55;color:rgba(255,255,255,.82)}
 .ci-row a{color:#c4963c;text-decoration:none}.ci-row a:hover{text-decoration:underline}
@@ -791,6 +803,9 @@ body{background:#111;color:#fff}
 .ci-socials{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
 .ci-social{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#1f1f26;border-radius:8px;color:#fff;text-decoration:none;font-size:.9rem}
 .ci-social:hover{background:#c4963c}
+.ci-links{margin-top:18px;display:flex;flex-wrap:wrap;gap:10px}
+.ci-link-btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 16px;border:1px solid rgba(196,150,60,.5);border-radius:8px;color:#fff;text-decoration:none;font-weight:700}
+.ci-link-btn:hover{background:#c4963c;color:#111}
 .btn-maps{display:inline-flex;align-items:center;gap:8px;margin-top:20px;padding:12px 22px;background:#c4963c;color:#fff;border-radius:8px;text-decoration:none;font-weight:700}
 .btn-maps:hover{opacity:.9}
 .kt-form-block input,.kt-form-block textarea,.kt-form-block select{width:100%;background:#111;border:1px solid rgba(255,255,255,.12);color:#fff;padding:12px 14px;border-radius:8px;font-size:.95rem;font-family:inherit;margin-bottom:14px}
@@ -813,6 +828,7 @@ CSS;
         . '<input type="hidden" name="_csrf" value="' . $h(\App\Core\Auth::csrfToken()) . '">'
         . '<div><label>Jméno *</label><input type="text" name="name" required placeholder="Vaše jméno"></div>'
         . '<div><label>E-mail nebo telefon *</label><input type="text" name="contact_value" required placeholder="email@domena.cz nebo +420..."></div>'
+        . '<div><label>Typ focení *</label><select name="shooting_type" required><option value="">Vyberte typ focení</option><option value="svatebni">Svatební foto a video</option><option value="portret">Portrét</option><option value="rodinne">Rodinné focení</option><option value="firemni">Firemní focení</option><option value="jine">Jiné</option></select></div>'
         . '<div><label>Zpráva *</label><textarea name="message" required placeholder="Napište nám…"></textarea></div>'
         . '<input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off">'
         . '<button type="submit" class="kt-form-btn">Odeslat zprávu</button>'
@@ -1230,10 +1246,11 @@ try {
         }
         $name    = trim($_POST['name']          ?? '');
         $contact = trim($_POST['contact_value'] ?? '');
+        $shootingType = trim($_POST['shooting_type'] ?? '');
         $message = trim($_POST['message']       ?? '');
         if ($name && $contact && $message && $formEmail) {
             $subject = 'Nová zpráva z webu — ' . $name;
-            $body    = "Jméno: {$name}\nKontakt: {$contact}\n\nZpráva:\n{$message}";
+            $body    = "Jméno: {$name}\nKontakt: {$contact}\nTyp focení: {$shootingType}\n\nZpráva:\n{$message}";
             @mail($formEmail, $subject, $body, "From: noreply@{$_SERVER['HTTP_HOST']}\r\nContent-Type: text/plain; charset=UTF-8");
         }
         header('Location: /kontakt?sent=1');
