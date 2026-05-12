@@ -102,6 +102,30 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  const syncAutofillPanel = panel => {
+    if (!panel) return;
+    const toggle = panel.querySelector('[data-autofill-toggle]');
+    const enabled = !!(toggle && toggle.checked);
+    panel.classList.toggle('is-autofill-enabled', enabled);
+    const fields = panel.querySelector('.autofill-panel__fields');
+    if (fields) {
+      fields.hidden = enabled;
+      fields.setAttribute('aria-hidden', enabled ? 'true' : 'false');
+    }
+    panel.querySelectorAll('.autofill-panel__fields input:not([type=hidden]), .autofill-panel__fields textarea, .autofill-panel__fields select').forEach(field => {
+      if (field === toggle) return;
+      field.disabled = enabled;
+    });
+  };
+
+  document.querySelectorAll('[data-autofill-panel]').forEach(panel => {
+    const toggle = panel.querySelector('[data-autofill-toggle]');
+    if (toggle) {
+      toggle.addEventListener('change', () => syncAutofillPanel(panel));
+    }
+    syncAutofillPanel(panel);
+  });
+
   // FAQ repeater in page editor
   const faqList = document.getElementById('faq-items-list');
   const faqTemplate = document.getElementById('faq-item-template');
@@ -135,6 +159,41 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     syncFaqIndices();
+  }
+
+  const serviceList = document.getElementById('service-items-list');
+  const serviceTemplate = document.getElementById('service-item-template');
+  const serviceAddButton = document.querySelector('[data-add-service-item]');
+  if (serviceList && serviceTemplate && serviceAddButton) {
+    const syncServiceIndices = () => {
+      serviceList.querySelectorAll('[data-service-item]').forEach((item, index) => {
+        item.querySelectorAll('[data-service-name]').forEach(field => {
+          const name = field.dataset.serviceName;
+          field.name = `service_items[${index}][${name}]`;
+        });
+        const hiddenActive = item.querySelector('[data-service-hidden-active]');
+        if (hiddenActive) hiddenActive.name = `service_items[${index}][is_active]`;
+      });
+
+      const emptyState = document.getElementById('service-empty-state');
+      if (emptyState) emptyState.style.display = serviceList.children.length ? 'none' : '';
+    };
+
+    serviceAddButton.addEventListener('click', () => {
+      const fragment = serviceTemplate.content.cloneNode(true);
+      serviceList.appendChild(fragment);
+      syncServiceIndices();
+    });
+
+    serviceList.addEventListener('click', e => {
+      const removeBtn = e.target.closest('[data-remove-service-item]');
+      if (!removeBtn) return;
+      const item = removeBtn.closest('[data-service-item]');
+      if (item) item.remove();
+      syncServiceIndices();
+    });
+
+    syncServiceIndices();
   }
 });
 

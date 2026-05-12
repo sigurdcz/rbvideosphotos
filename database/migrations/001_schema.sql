@@ -284,6 +284,23 @@ CREATE TABLE IF NOT EXISTS `faq_items` (
   CONSTRAINT `fk_faq_items_site` FOREIGN KEY (`site_id`) REFERENCES `sites` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS `service_items` (
+  `id`           INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `site_id`      INT UNSIGNED NOT NULL,
+  `title`        VARCHAR(255) NOT NULL DEFAULT '',
+  `description`  TEXT DEFAULT NULL,
+  `image_url`    VARCHAR(1000) DEFAULT NULL,
+  `button_text`  VARCHAR(255) DEFAULT NULL,
+  `button_url`   VARCHAR(1000) DEFAULT NULL,
+  `sort_order`   SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  `is_active`    TINYINT(1) NOT NULL DEFAULT 1,
+  `created_at`   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at`   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `fk_service_items_site` (`site_id`),
+  CONSTRAINT `fk_service_items_site` FOREIGN KEY (`site_id`) REFERENCES `sites` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- ─── Kontaktní informace ──────────────────────────────────────────────────────
 
 CREATE TABLE IF NOT EXISTS `contact_info` (

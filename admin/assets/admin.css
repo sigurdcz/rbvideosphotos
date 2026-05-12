@@ -298,8 +298,63 @@ textarea.code { font-family: 'Courier New', monospace; font-size: 13px; min-heig
   border: 1px solid var(--c-border); border-radius: var(--radius);
   padding: 14px; background: var(--c-surface);
 }
+.block-item.autofill-panel {
+  position: relative;
+  overflow: hidden;
+}
+.block-item.autofill-panel.is-autofill-enabled {
+  background: #e9edf3;
+  border-color: #cfd8e5;
+}
+.block-item.autofill-panel.is-autofill-enabled .autofill-panel__fields {
+  display: none;
+}
+.block-item.autofill-panel.is-autofill-enabled .autofill-panel__note {
+  display: block;
+  font-weight: 600;
+}
+.autofill-panel__fields { transition: opacity .2s ease, filter .2s ease; }
+.autofill-panel__overlay {
+  display: none;
+  position: absolute;
+  inset: 34px 12px 48px;
+  border: 1px dashed rgba(52, 64, 84, .28);
+  border-radius: 10px;
+  background: rgba(248, 250, 252, .88);
+  color: #344054;
+  padding: 18px;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  pointer-events: none;
+  z-index: 1;
+}
+.block-item.autofill-panel.is-autofill-enabled .autofill-panel__overlay { display: flex; flex-direction: column; gap: 8px; }
+.autofill-panel__overlay-title { font-weight: 800; font-size: .95rem; }
+.autofill-panel__overlay-text { font-size: .86rem; line-height: 1.5; color: #475467; max-width: 42ch; }
+.autofill-panel__toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: .9rem;
+  color: var(--c-muted);
+  position: relative;
+  z-index: 2;
+}
+.autofill-panel__toggle input { margin-top: 3px; }
+.autofill-panel__note {
+  display: none;
+  margin-top: 6px;
+  padding-left: 24px;
+  font-size: .84rem;
+  line-height: 1.45;
+  color: #475467;
+}
 .block-label { font-size: 12px; font-weight: 600; color: var(--c-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .4px; }
 .block-type-badge { font-size: 10px; background: var(--c-bg); border: 1px solid var(--c-border); border-radius: 4px; padding: 2px 6px; margin-left: 6px; }
+
+.service-item-tools { display:flex; align-items:center; justify-content:space-between; gap:12px; }
 
 /* Upload drop zone */
 .drop-zone {

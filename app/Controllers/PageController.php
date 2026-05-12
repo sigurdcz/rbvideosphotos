@@ -8,6 +8,7 @@ use App\Repositories\BlockRepository;
 use App\Repositories\ContactRepository;
 use App\Repositories\FaqRepository;
 use App\Repositories\PageRepository;
+use App\Repositories\ServiceRepository;
 use App\Repositories\SiteRepository;
 use App\Repositories\TemplateRepository;
 use App\Services\HomepageContentService;
@@ -48,6 +49,7 @@ class PageController extends Controller
             'layoutType' => 'generic',
             'faqItems'   => [],
             'contact'    => [],
+            'serviceItems' => [],
             'isHomepage' => false,
             'homepageAutofillBlocks' => [],
         ]);
@@ -114,6 +116,7 @@ class PageController extends Controller
         $homepageAutofillBlocks = $isHomepage
             ? (new HomepageContentService())->getAutofillDefinitions()
             : [];
+        $serviceItems = $layout === 'services' ? (new ServiceRepository())->allBySite((int)$page['site_id']) : [];
 
         $this->view('pages.form', [
             'page'       => $page,
@@ -123,6 +126,7 @@ class PageController extends Controller
             'layoutType' => $layout,
             'faqItems'   => $layout === 'faq' ? (new FaqRepository())->allBySite((int)$page['site_id']) : [],
             'contact'    => $layout === 'contact' ? (new ContactRepository())->findBySiteSafe((int)$page['site_id']) : [],
+            'serviceItems' => $serviceItems,
             'site'       => $sites->findById($page['site_id']),
             'isHomepage' => $isHomepage,
             'homepageAutofillBlocks' => $homepageAutofillBlocks,
@@ -179,6 +183,11 @@ class PageController extends Controller
         if ($layoutType === 'contact') {
             (new ContactRepository())->upsert((int)$page['site_id'], $_POST);
             $this->syncHomepageContactBlocks((int)$page['site_id']);
+        }
+
+        if ($layoutType === 'services') {
+            $this->saveSubmittedServiceItems((int)$page['site_id']);
+            $this->refreshServicesPageBlock((int)$page['site_id']);
         }
 
         if (isset($_POST['publish_after_save'])) {
@@ -318,6 +327,64 @@ class PageController extends Controller
             'label'      => 'Kontakt — info',
             'content'    => $content,
             'sort_order' => 62,
+        ]);
+    }
+
+    private function saveSubmittedServiceItems(int $siteId): void
+    {
+        $items = $_POST['service_items'] ?? [];
+        (new ServiceRepository())->upsertMany($siteId, $items);
+    }
+
+    private function syncServicesGridBlock(int $siteId): void
+    {
+        $page = (new PageRepository())->findByUrlPath('sluzby');
+        if (!$page) {
+            return;
+        }
+
+        $serviceItems = (new ServiceRepository())->allActive($siteId);
+        $serviceHtml  = (new HomepageContentService())->applyFallbacks(
+            $page,
+            [['block_key' => 'sluzby_grid', 'block_type' => 'html', 'label' => 'Služby', 'content' => '', 'sort_order' => 0]]
+        );
+
+        $content = '';
+        foreach ($serviceHtml as $block) {
+            if (($block['block_key'] ?? '') === 'sluzby_grid') {
+                $content = (string)($block['content'] ?? '');
+                break;
+            }
+        }
+
+        if ($content === '' && $serviceItems !== []) {
+            $content = (new HomepageContentService())->applyFallbacks(
+                ['url_path' => '', 'site_id' => $siteId],
+                [['block_key' => 'sluzby_items', 'block_type' => 'html', 'label' => 'Služby', 'content' => '', 'sort_order' => 0]]
+            )[0]['content'] ?? '';
+        }
+
+        (new BlockRepository())->upsert((int)$page['id'], 'sluzby_grid', [
+            'block_type' => 'html',
+            'label'      => 'Služby â€” karty',
+            'content'    => $content,
+            'sort_order' => 3,
+        ]);
+    }
+
+    private function refreshServicesPageBlock(int $siteId): void
+    {
+        $page = (new PageRepository())->findByUrlPath('sluzby');
+        if (!$page) {
+            return;
+        }
+
+        $content = (new HomepageContentService())->buildServicesHtml($siteId, 0);
+        (new BlockRepository())->upsert((int)$page['id'], 'sluzby_grid', [
+            'block_type' => 'html',
+            'label' => 'Služby — karty',
+            'content' => $content,
+            'sort_order' => 3,
         ]);
     }
 

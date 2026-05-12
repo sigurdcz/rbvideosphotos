@@ -6,69 +6,54 @@ use App\Repositories\BlockRepository;
 use App\Repositories\BlogRepository;
 use App\Repositories\ContactRepository;
 use App\Repositories\FaqRepository;
+use App\Repositories\MediaRepository;
 use App\Repositories\PageRepository;
 use App\Repositories\PortfolioRepository;
+use App\Repositories\ServiceRepository;
 
 class HomepageContentService
 {
     private const AUTOFILL_BLOCKS = [
-        'sluzby_items' => [
-            'label' => 'Služby',
-            'hint'  => 'Automaticky doplnit z layoutu stránky Služby.',
-        ],
-        'portfolio-tiles' => [
-            'label' => 'Naše práce',
-            'hint'  => 'Automaticky doplnit z publikovaných prací.',
-        ],
-        'blog_1' => [
-            'label' => 'Blog 1',
-            'hint'  => 'Automaticky doplnit nejnovější článek.',
-        ],
-        'blog_2' => [
-            'label' => 'Blog 2',
-            'hint'  => 'Automaticky doplnit druhý nejnovější článek.',
-        ],
-        'blog_3' => [
-            'label' => 'Blog 3',
-            'hint'  => 'Automaticky doplnit třetí nejnovější článek.',
-        ],
-        'cenik_body' => [
-            'label' => 'Ceník',
-            'hint'  => 'Automaticky doplnit z aktuální stránky Ceník.',
-        ],
-        'faq_1' => [
-            'label' => 'FAQ 1',
-            'hint'  => 'Automaticky doplnit z aktivních FAQ položek.',
-        ],
-        'faq_2' => [
-            'label' => 'FAQ 2',
-            'hint'  => 'Automaticky doplnit z aktivních FAQ položek.',
-        ],
-        'faq_3' => [
-            'label' => 'FAQ 3',
-            'hint'  => 'Automaticky doplnit z aktivních FAQ položek.',
-        ],
-        'kontakt_info' => [
-            'label' => 'Kontakt',
-            'hint'  => 'Automaticky doplnit z kontaktních údajů.',
-        ],
+        'sluzby_items' => ['label' => 'Služby', 'hint' => 'Automaticky doplnit z dat služby.'],
+        'sluzby_grid' => ['label' => 'Služby grid', 'hint' => 'Automaticky doplnit z dat služby.'],
+        'service_1' => ['label' => 'Služba 1', 'hint' => 'Automaticky doplnit první službu.'],
+        'service_2' => ['label' => 'Služba 2', 'hint' => 'Automaticky doplnit druhou službu.'],
+        'service_3' => ['label' => 'Služba 3', 'hint' => 'Automaticky doplnit třetí službu.'],
+        'service_4' => ['label' => 'Služba 4', 'hint' => 'Automaticky doplnit čtvrtou službu.'],
+        'portfolio-tiles' => ['label' => 'Naše práce', 'hint' => 'Automaticky doplnit z publikovaných prací.'],
+        'blog_1' => ['label' => 'Blog 1', 'hint' => 'Automaticky doplnit nejnovější článek.'],
+        'blog_2' => ['label' => 'Blog 2', 'hint' => 'Automaticky doplnit druhý nejnovější článek.'],
+        'blog_3' => ['label' => 'Blog 3', 'hint' => 'Automaticky doplnit třetí nejnovější článek.'],
+        'cenik_body' => ['label' => 'Ceník', 'hint' => 'Automaticky doplnit z aktuálního nastavení ceníku.'],
+        'pricing_body' => ['label' => 'Pricing', 'hint' => 'Automaticky doplnit z aktuálního nastavení ceníku.'],
+        'faq_1' => ['label' => 'FAQ 1', 'hint' => 'Automaticky doplnit z aktivních FAQ položek.'],
+        'faq_2' => ['label' => 'FAQ 2', 'hint' => 'Automaticky doplnit z aktivních FAQ položek.'],
+        'faq_3' => ['label' => 'FAQ 3', 'hint' => 'Automaticky doplnit z aktivních FAQ položek.'],
+        'faq_4' => ['label' => 'FAQ 4', 'hint' => 'Automaticky doplnit z aktivních FAQ položek.'],
+        'faq_5' => ['label' => 'FAQ 5', 'hint' => 'Automaticky doplnit z aktivních FAQ položek.'],
+        'kontakt_info' => ['label' => 'Kontakt', 'hint' => 'Automaticky doplnit z kontaktních údajů.'],
+        'contact_info' => ['label' => 'Kontakt', 'hint' => 'Automaticky doplnit z kontaktních údajů.'],
     ];
 
     private PageRepository $pages;
     private BlockRepository $blocks;
     private BlogRepository $blog;
     private PortfolioRepository $portfolio;
+    private ServiceRepository $services;
     private FaqRepository $faq;
     private ContactRepository $contact;
+    private MediaRepository $media;
 
     public function __construct()
     {
-        $this->pages     = new PageRepository();
-        $this->blocks    = new BlockRepository();
-        $this->blog      = new BlogRepository();
+        $this->pages = new PageRepository();
+        $this->blocks = new BlockRepository();
+        $this->blog = new BlogRepository();
         $this->portfolio = new PortfolioRepository();
-        $this->faq       = new FaqRepository();
-        $this->contact   = new ContactRepository();
+        $this->services = new ServiceRepository();
+        $this->faq = new FaqRepository();
+        $this->contact = new ContactRepository();
+        $this->media = new MediaRepository();
     }
 
     public function getAutofillDefinitions(): array
@@ -76,44 +61,96 @@ class HomepageContentService
         return self::AUTOFILL_BLOCKS;
     }
 
+    public function buildServicesHtml(int $siteId, int $limit = 0): string
+    {
+        return $this->buildServicesGridHtml($siteId, $limit);
+    }
+
     public function applyFallbacks(array $page, array $blocks): array
     {
-        if (trim((string)($page['url_path'] ?? ''), '/') !== '') {
-            return $blocks;
+        $path = trim((string)($page['url_path'] ?? ''), '/');
+        $siteId = (int)($page['site_id'] ?? 0);
+
+        if ($path === '') {
+            $this->fillHomepageFallbacks($blocks, $siteId);
         }
 
-        $this->applyBlockFallback($blocks, 'sluzby_items', function () {
-            return $this->buildServicesHtml();
-        });
-        $this->applyBlockFallback($blocks, 'portfolio-tiles', function () use ($page) {
-            return $this->buildPortfolioHtml((int)$page['site_id']);
-        });
-        $this->applyBlockFallback($blocks, 'blog_1', function () use ($page) {
-            return $this->buildBlogCardHtml((int)$page['site_id'], 0);
-        });
-        $this->applyBlockFallback($blocks, 'blog_2', function () use ($page) {
-            return $this->buildBlogCardHtml((int)$page['site_id'], 1);
-        });
-        $this->applyBlockFallback($blocks, 'blog_3', function () use ($page) {
-            return $this->buildBlogCardHtml((int)$page['site_id'], 2);
-        });
-        $this->applyBlockFallback($blocks, 'cenik_body', function () {
-            return $this->buildPricingHtml();
-        });
-        $this->applyBlockFallback($blocks, 'faq_1', function () use ($page) {
-            return $this->buildFaqItemHtml((int)$page['site_id'], 0);
-        });
-        $this->applyBlockFallback($blocks, 'faq_2', function () use ($page) {
-            return $this->buildFaqItemHtml((int)$page['site_id'], 1);
-        });
-        $this->applyBlockFallback($blocks, 'faq_3', function () use ($page) {
-            return $this->buildFaqItemHtml((int)$page['site_id'], 2);
-        });
-        $this->applyBlockFallback($blocks, 'kontakt_info', function () use ($page) {
-            return $this->buildContactHtml((int)$page['site_id']);
-        });
+        if ($path === '' || $path === 'sluzby') {
+            $this->fillServiceFallbacks($blocks, $siteId, $path === '');
+        }
+
+        if ($path === '' || $path === 'cenik') {
+            $this->fillPricingFallbacks($blocks);
+        }
+
+        if ($path === '' || $path === 'faq') {
+            $this->fillFaqFallbacks($blocks, $siteId);
+        }
+
+        if ($path === '' || $path === 'kontakt') {
+            $this->fillContactFallbacks($blocks, $siteId);
+        }
+
+        if ($path === '') {
+            $this->fillBlogFallbacks($blocks, $siteId);
+            $this->fillPortfolioFallbacks($blocks, $siteId);
+        }
 
         return $blocks;
+    }
+
+    private function fillHomepageFallbacks(array &$blocks, int $siteId): void
+    {
+        $this->applyBlockFallback($blocks, 'sluzby_items', fn() => $this->buildServicesGridHtml($siteId, 3));
+        $this->applyBlockFallback($blocks, 'portfolio-tiles', fn() => $this->buildPortfolioHtml($siteId));
+        $this->applyBlockFallback($blocks, 'cenik_body', fn() => $this->buildPricingHtml());
+        $this->applyBlockFallback($blocks, 'kontakt_info', fn() => $this->buildContactHtml($siteId));
+        $this->applyBlockFallback($blocks, 'contact_info', fn() => $this->buildContactHtml($siteId));
+    }
+
+    private function fillPortfolioFallbacks(array &$blocks, int $siteId): void
+    {
+        $this->applyBlockFallback($blocks, 'portfolio-tiles', fn() => $this->buildPortfolioHtml($siteId));
+    }
+
+    private function fillBlogFallbacks(array &$blocks, int $siteId): void
+    {
+        for ($i = 1; $i <= 3; $i++) {
+            $this->applyBlockFallback($blocks, 'blog_' . $i, fn() => $this->buildBlogCardHtml($siteId, $i - 1));
+        }
+    }
+
+    private function fillServiceFallbacks(array &$blocks, int $siteId, bool $isHomepage): void
+    {
+        $this->applyBlockFallback(
+            $blocks,
+            'sluzby_grid',
+            fn() => $this->buildServicesGridHtml($siteId, $isHomepage ? 3 : 0)
+        );
+
+        $items = array_slice($this->services->allActive($siteId), 0, 4);
+        for ($i = 1; $i <= 4; $i++) {
+            $this->applyBlockFallback($blocks, 'service_' . $i, fn() => $this->buildServiceCardHtml($items[$i - 1] ?? null, $i));
+        }
+    }
+
+    private function fillPricingFallbacks(array &$blocks): void
+    {
+        $this->applyBlockFallback($blocks, 'cenik_body', fn() => $this->buildPricingHtml());
+        $this->applyBlockFallback($blocks, 'pricing_body', fn() => $this->buildPricingHtml());
+    }
+
+    private function fillFaqFallbacks(array &$blocks, int $siteId): void
+    {
+        for ($i = 1; $i <= 5; $i++) {
+            $this->applyBlockFallback($blocks, 'faq_' . $i, fn() => $this->buildFaqItemHtml($siteId, $i - 1));
+        }
+    }
+
+    private function fillContactFallbacks(array &$blocks, int $siteId): void
+    {
+        $this->applyBlockFallback($blocks, 'kontakt_info', fn() => $this->buildContactHtml($siteId));
+        $this->applyBlockFallback($blocks, 'contact_info', fn() => $this->buildContactHtml($siteId));
     }
 
     private function applyBlockFallback(array &$blocks, string $key, callable $builder): void
@@ -140,10 +177,10 @@ class HomepageContentService
         }
 
         $blocks[] = [
-            'block_key'  => $key,
+            'block_key' => $key,
             'block_type' => 'html',
-            'label'      => $key,
-            'content'    => $content,
+            'label' => $key,
+            'content' => $content,
             'sort_order' => 0,
             'autofill_disabled' => 0,
         ];
@@ -156,30 +193,118 @@ class HomepageContentService
         return trim(strip_tags($decoded)) === '';
     }
 
-    private function buildServicesHtml(): string
+    private function looksLikePlaceholder(string $content): bool
     {
-        $page = $this->pages->findByUrlPath('sluzby');
-        if (!$page) {
+        $text = mb_strtolower(trim(strip_tags(html_entity_decode($content, ENT_QUOTES | ENT_HTML5, 'UTF-8'))));
+        if ($text === '') {
+            return true;
+        }
+
+        return str_contains($text, 'dopln') || str_contains($text, 'placeholder') || str_contains($text, 'vyplnte');
+    }
+
+    private function buildServicesGridHtml(int $siteId, int $limit = 0): string
+    {
+        $items = $this->services->allActive($siteId);
+        if ($limit > 0) {
+            $items = array_slice($items, 0, $limit);
+        }
+
+        if (empty($items)) {
+            $legacyPage = $this->pages->findByUrlPath('sluzby');
+            if ($legacyPage) {
+                $legacyBlocks = $this->blocks->allByPage((int)$legacyPage['id']);
+                foreach ($legacyBlocks as $block) {
+                    if (($block['block_key'] ?? '') !== 'sluzby_grid') {
+                        continue;
+                    }
+                    $content = (string)($block['content'] ?? '');
+                    if ($content !== '' && !$this->isBlankHtml($content) && !$this->looksLikePlaceholder($content)) {
+                        return $content;
+                    }
+                }
+            }
+
+            $homePage = $this->pages->findByUrlPath('');
+            if ($homePage) {
+                $homeBlocks = $this->blocks->allByPage((int)$homePage['id']);
+                foreach ($homeBlocks as $block) {
+                    if (($block['block_key'] ?? '') !== 'sluzby_items') {
+                        continue;
+                    }
+                    $content = (string)($block['content'] ?? '');
+                    if ($content !== '' && !$this->isBlankHtml($content) && !$this->looksLikePlaceholder($content)) {
+                        return $content;
+                    }
+                }
+            }
+
             return '';
         }
 
-        $block = $this->blocks->findByKey((int)$page['id'], 'sluzby_grid');
-        return trim((string)($block['content'] ?? ''));
+        $cards = '';
+        foreach ($items as $idx => $item) {
+            $cards .= $this->buildServiceCardHtml($item, $idx + 1);
+        }
+
+        $css = '<style>'
+            . '.hp-svc-grid,.svc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px}'
+            . '.hp-svc-card,.svc-card{background:#1b1b1f;border-radius:14px;overflow:hidden;box-shadow:0 14px 30px rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column}'
+            . '.hp-svc-card__media{height:190px;background:#0e0e11;overflow:hidden}'
+            . '.hp-svc-card__media img{width:100%;height:100%;object-fit:cover;display:block}'
+            . '.hp-svc-card__body{padding:20px;display:flex;flex-direction:column;gap:12px;flex:1}'
+            . '.hp-svc-card__num{font-size:.72rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#c4963c}'
+            . '.hp-svc-card__title{font-size:1.15rem;font-weight:800;color:#fff;line-height:1.25}'
+            . '.hp-svc-card__desc{color:rgba(255,255,255,.68);line-height:1.65;font-size:.95rem;white-space:pre-line}'
+            . '.hp-svc-card__btn{display:inline-flex;align-self:flex-start;margin-top:auto;padding:11px 16px;border-radius:6px;background:#c4963c;color:#fff;text-decoration:none;font-weight:700;font-size:.86rem}'
+            . '.hp-svc-card__btn:hover{background:#d4a64c}'
+            . '@media(max-width:640px){.hp-svc-grid,.svc-grid{grid-template-columns:1fr}}'
+            . '</style>';
+
+        return $css . '<div class="hp-svc-grid">' . $cards . '</div>';
+    }
+
+    private function buildServiceCardHtml(?array $service, int $index = 0): string
+    {
+        if (!$service) {
+            return '';
+        }
+
+        $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
+        $title = (string)($service['title'] ?? '');
+        $description = (string)($service['description'] ?? '');
+        $imageUrl = $this->publicMediaUrl((string)($service['image_url'] ?? ''));
+        $buttonText = trim((string)($service['button_text'] ?? '')) ?: 'Poptat službu';
+        $buttonUrl = trim((string)($service['button_url'] ?? '')) ?: '/kontakt';
+        $num = $index > 0 ? str_pad((string)$index, 2, '0', STR_PAD_LEFT) : '';
+
+        $media = $imageUrl !== ''
+            ? '<div class="hp-svc-card__media"><img src="' . $h($imageUrl) . '" alt="' . $h($title) . '" loading="lazy"></div>'
+            : '<div class="hp-svc-card__media"></div>';
+
+        return '<article class="hp-svc-card">'
+            . $media
+            . '<div class="hp-svc-card__body">'
+            . ($num !== '' ? '<div class="hp-svc-card__num">' . $h($num) . '</div>' : '')
+            . '<h3 class="hp-svc-card__title">' . $h($title) . '</h3>'
+            . '<div class="hp-svc-card__desc">' . nl2br($h($description)) . '</div>'
+            . '<a href="' . $h($buttonUrl) . '" class="hp-svc-card__btn">' . $h($buttonText) . '</a>'
+            . '</div></article>';
     }
 
     private function buildPortfolioHtml(int $siteId): string
     {
         $entries = $this->portfolio->allPublished($siteId);
         if (empty($entries)) {
-            return '<p style="color:rgba(255,255,255,.45);text-align:center;padding:40px 0">Zatím žádné publikované práce.</p>';
+            return '';
         }
 
         $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
         $tiles = '';
 
         foreach ($entries as $entry) {
-            $photos   = $this->portfolio->getMedia((int)$entry['id']);
-            $thumb    = !empty($entry['video_url']) ? PortfolioRepository::youtubeThumbnail((string)$entry['video_url']) : '';
+            $photos = $this->portfolio->getMedia((int)$entry['id']);
+            $thumb = !empty($entry['video_url']) ? PortfolioRepository::youtubeThumbnail((string)$entry['video_url']) : '';
             $hasVideo = !empty($entry['video_url']);
 
             if ($thumb === '' && !empty($photos)) {
@@ -234,13 +359,42 @@ HTML;
         $post = $posts[$index];
         $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
         $excerpt = mb_strimwidth(strip_tags((string)($post['excerpt'] ?? '')), 0, 120, '…');
+        $imageHtml = '';
+        $media = null;
+        if (!empty($post['featured_image_id'])) {
+            $media = $this->media->findByIdWithThumb((int)$post['featured_image_id']);
+        }
+        if (!$media) {
+            $gallery = $this->blog->getGallery((int)$post['id']);
+            if (!empty($gallery)) {
+                $media = $gallery[0];
+            }
+        }
+        if ($media) {
+            $src = $this->publicMediaUrl((string)($media['thumb_path'] ?? $media['medium_path'] ?? $media['storage_path'] ?? ''));
+            if ($src !== '') {
+                $imageHtml = '<div class="hp-blog-thumb"><img src="' . $h($src) . '" alt="' . $h($post['title']) . '" loading="lazy"></div>';
+            }
+        }
 
-        return '<h3 style="margin:0 0 10px;font-size:1rem;color:#fff;line-height:1.35">'
-            . '<a href="/' . $h($post['slug']) . '" style="color:inherit;text-decoration:none">'
+        $css = '<style>'
+            . '.hp-blog-card{background:#1b1b1f;border-radius:14px;overflow:hidden;box-shadow:0 14px 30px rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.06)}'
+            . '.hp-blog-thumb{height:200px;background:#0e0e11;overflow:hidden}'
+            . '.hp-blog-thumb img{width:100%;height:100%;object-fit:cover;display:block}'
+            . '.hp-blog-body{padding:20px}'
+            . '.hp-blog-title{margin:0 0 10px;font-size:1rem;color:#fff;line-height:1.35}'
+            . '.hp-blog-excerpt{color:rgba(255,255,255,.65);font-size:.875rem;line-height:1.55;margin:0 0 16px}'
+            . '.hp-blog-link{color:#c4963c;font-weight:700;font-size:.875rem;text-decoration:none}'
+            . '</style>';
+
+        return $css . '<article class="hp-blog-card">'
+            . $imageHtml
+            . '<div class="hp-blog-body">'
+            . '<h3 class="hp-blog-title"><a href="/' . $h($post['slug']) . '" style="color:inherit;text-decoration:none">'
             . $h($post['title']) . '</a></h3>'
-            . '<p style="color:rgba(255,255,255,.65);font-size:.875rem;line-height:1.55;margin:0 0 16px">'
-            . $h($excerpt) . '</p>'
-            . '<a href="/' . $h($post['slug']) . '" style="color:#c4963c;font-weight:700;font-size:.875rem">&#268;&#237;st d&#225;l &rarr;</a>';
+            . '<p class="hp-blog-excerpt">' . $h($excerpt) . '</p>'
+            . '<a class="hp-blog-link" href="/' . $h($post['slug']) . '">&#268;&#237;st d&#225;l &rarr;</a>'
+            . '</div></article>';
     }
 
     private function buildPricingHtml(): string
@@ -260,31 +414,91 @@ HTML;
         $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
         for ($i = 1; $i <= 3; $i++) {
             $featured = $i === 2 ? ' hp-cenik-card--featured' : '';
-            $cards .= '<div class="hp-cenik-card' . $featured . '">'
+            $plan = trim((string)($map['cenik_card_' . $i . '_title'] ?? '')) ?: ('Balíček ' . $i);
+            $cards .= '<button type="button" class="hp-cenik-card' . $featured . '" data-cenik-open data-plan="' . $h($plan) . '">'
                 . '<div class="hp-cenik-card-body">'
                 . '<h3 class="hp-cenik-card-title">' . $h($map['cenik_card_' . $i . '_title'] ?? '') . '</h3>'
                 . '<div class="hp-cenik-card-desc">' . nl2br($h($map['cenik_card_' . $i . '_desc'] ?? '')) . '</div>'
                 . '</div>'
                 . '<div class="hp-cenik-card-price">' . $h($map['cenik_card_' . $i . '_price'] ?? '') . '</div>'
-                . '</div>';
+                . '</button>';
         }
 
         $css = '<style>'
             . '.hp-cenik-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px}'
-            . '.hp-cenik-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:32px;display:flex;flex-direction:column;gap:24px}'
+            . '.hp-cenik-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:32px;display:flex;flex-direction:column;gap:24px;text-align:left;width:100%;cursor:pointer;color:inherit;transition:transform .2s,border-color .2s}'
+            . '.hp-cenik-card:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.24)}'
             . '.hp-cenik-card--featured{border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.09)}'
             . '.hp-cenik-card-body{flex:1}'
             . '.hp-cenik-card-title{font-size:1.25rem;font-weight:700;color:#fff;margin-bottom:12px}'
             . '.hp-cenik-card-desc{color:rgba(255,255,255,.65);line-height:1.7;font-size:.95rem;white-space:pre-line}'
             . '.hp-cenik-card-price{font-size:1.3rem;font-weight:800;color:#fff;padding-top:20px;border-top:1px solid rgba(255,255,255,.1)}'
+            . '.hp-cenik-modal{position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.72)}'
+            . '.hp-cenik-modal.is-open{display:flex}'
+            . '.hp-cenik-modal__dialog{position:relative;max-width:560px;width:100%;background:#151518;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:28px;box-shadow:0 30px 80px rgba(0,0,0,.5)}'
+            . '.hp-cenik-modal__title{font-size:1.5rem;font-weight:900;color:#fff;margin-bottom:8px}'
+            . '.hp-cenik-modal__plan{color:#c4963c;font-weight:800;margin-bottom:20px}'
+            . '.hp-cenik-modal__close{position:absolute;top:12px;right:12px;background:transparent;border:none;color:#fff;font-size:2rem;line-height:1;cursor:pointer}'
+            . '.hp-cenik-modal form{display:grid;gap:12px}'
+            . '.hp-cenik-modal label{font-size:.82rem;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.04em}'
+            . '.hp-cenik-modal input,.hp-cenik-modal textarea{width:100%;background:#0f0f12;border:1px solid rgba(255,255,255,.12);color:#fff;padding:12px 14px;border-radius:8px;font-size:.95rem;font-family:inherit}'
+            . '.hp-cenik-modal textarea{min-height:120px;resize:vertical}'
+            . '.hp-cenik-modal input::placeholder,.hp-cenik-modal textarea::placeholder{color:rgba(255,255,255,.35)}'
+            . '.hp-cenik-modal__submit{padding:14px 18px;background:#c4963c;color:#fff;border:none;border-radius:8px;font-weight:800;cursor:pointer}'
+            . '.hp-cenik-modal__submit:hover{background:#d4a64c}'
             . '</style>';
 
-        return $css . '<div class="hp-cenik-grid">' . $cards . '</div>';
+        $csrf = htmlspecialchars(\App\Core\Auth::csrfToken(), ENT_QUOTES);
+        $modal = <<<HTML
+<div class="hp-cenik-modal" data-cenik-modal aria-hidden="true">
+  <div class="hp-cenik-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="cenik-modal-title">
+    <button type="button" class="hp-cenik-modal__close" data-cenik-close aria-label="Zavřít">&times;</button>
+    <h3 id="cenik-modal-title" class="hp-cenik-modal__title">Nezávazně poptat</h3>
+    <div class="hp-cenik-modal__plan" data-cenik-plan></div>
+    <form method="POST" action="/kontakt/odeslat">
+      <input type="hidden" name="_csrf" value="{$csrf}">
+      <input type="hidden" name="website" value="" autocomplete="off">
+      <label>Jméno *</label>
+      <input type="text" name="name" required placeholder="Vaše jméno">
+      <label>E-mail nebo telefon *</label>
+      <input type="text" name="contact_value" required placeholder="email nebo telefon">
+      <label>Zpráva *</label>
+      <textarea name="message" required placeholder="Napište nám co nejvíce detailů"></textarea>
+      <button type="submit" class="hp-cenik-modal__submit">Odeslat poptávku</button>
+    </form>
+  </div>
+</div>
+<script>
+(function(){
+  var modal = document.querySelector('[data-cenik-modal]');
+  if(!modal) return;
+  var planEl = modal.querySelector('[data-cenik-plan]');
+  var message = modal.querySelector('textarea[name="message"]');
+  var buttons = document.querySelectorAll('[data-cenik-open]');
+  function openModal(plan){
+    if(planEl) planEl.textContent = plan ? plan : 'Nezávazně poptat';
+    if(message) message.value = plan ? ('Mám zájem o službu: ' + plan + '\\n\\nProsím o nezávaznou nabídku.') : '';
+    modal.classList.add('is-open');
+    modal.setAttribute('aria-hidden', 'false');
+  }
+  function closeModal(){
+    modal.classList.remove('is-open');
+    modal.setAttribute('aria-hidden', 'true');
+  }
+  buttons.forEach(function(btn){ btn.addEventListener('click', function(){ openModal(btn.dataset.plan || ''); }); });
+  modal.querySelectorAll('[data-cenik-close]').forEach(function(el){ el.addEventListener('click', closeModal); });
+  modal.addEventListener('click', function(e){ if(e.target === modal) closeModal(); });
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeModal(); });
+})();
+</script>
+HTML;
+
+        return $css . '<div class="hp-cenik-grid">' . $cards . '</div>' . $modal;
     }
 
     private function buildFaqItemHtml(int $siteId, int $index): string
     {
-        $items = array_slice($this->faq->allActive($siteId), 0, 3);
+        $items = array_slice($this->faq->allActive($siteId), 0, 5);
         if (!isset($items[$index])) {
             return '';
         }
@@ -300,6 +514,34 @@ HTML;
 
     private function buildContactHtml(int $siteId): string
     {
+        $contactPage = $this->pages->findByUrlPath('kontakt');
+        if ($contactPage) {
+            $pageBlocks = $this->blocks->allByPage((int)$contactPage['id']);
+            $pageMap = [];
+            foreach ($pageBlocks as $block) {
+                $pageMap[$block['block_key']] = (string)($block['content'] ?? '');
+            }
+
+            $infoHtml = trim((string)($pageMap['kontakt_info'] ?? $pageMap['contact_info'] ?? ''));
+            $cardHtml = trim((string)($pageMap['kontakt_card'] ?? $pageMap['contact_card'] ?? ''));
+            $hasInfoHtml = $infoHtml !== '' && !$this->isBlankHtml($infoHtml) && !$this->looksLikePlaceholder($infoHtml);
+            $hasCardHtml = $cardHtml !== '' && !$this->isBlankHtml($cardHtml) && !$this->looksLikePlaceholder($cardHtml);
+            if ($hasInfoHtml || $hasCardHtml) {
+                $css = '<style>'
+                    . '.hp-contact-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:24px}'
+                    . '.hp-contact-box{background:#18181c;border-radius:14px;padding:24px}'
+                    . '.hp-contact-box > :first-child{margin-top:0}'
+                    . '.hp-contact-box > :last-child{margin-bottom:0}'
+                    . '@media(max-width:720px){.hp-contact-grid{grid-template-columns:1fr}}'
+                    . '</style>';
+                return $css
+                    . '<div class="hp-contact-grid">'
+                    . '<div class="hp-contact-box">' . ($hasInfoHtml ? $infoHtml : '<p style="color:rgba(255,255,255,.45)">Doplnte kontaktní informace v administraci.</p>') . '</div>'
+                    . '<div class="hp-contact-box">' . ($hasCardHtml ? $cardHtml : '<p style="color:rgba(255,255,255,.45)">Doplnte kontaktní kartu nebo formulář v administraci.</p>') . '</div>'
+                    . '</div>';
+            }
+        }
+
         $contact = $this->contact->findBySiteSafe($siteId);
         $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
         $lines = [];
@@ -308,34 +550,74 @@ HTML;
             if (!empty($contact[$phoneKey])) {
                 $phone = (string)$contact[$phoneKey];
                 $tel = preg_replace('/\s+/', '', $phone);
-                $lines[] = '<p><a href="tel:' . $h((string)$tel) . '">' . $h($phone) . '</a></p>';
+                $lines[] = '<div class="hp-contact-row"><span class="hp-contact-label">Telefon</span><a href="tel:' . $h((string)$tel) . '">' . $h($phone) . '</a></div>';
             }
         }
 
         if (!empty($contact['email'])) {
-            $lines[] = '<p><a href="mailto:' . $h($contact['email']) . '">' . $h($contact['email']) . '</a></p>';
+            $lines[] = '<div class="hp-contact-row"><span class="hp-contact-label">E-mail</span><a href="mailto:' . $h($contact['email']) . '">' . $h($contact['email']) . '</a></div>';
         }
 
         foreach (['address_1', 'address_2'] as $addressKey) {
             if (!empty($contact[$addressKey])) {
-                $lines[] = '<p>' . nl2br($h($contact[$addressKey])) . '</p>';
+                $lines[] = '<div class="hp-contact-row"><span class="hp-contact-label">Adresa</span><span>' . nl2br($h($contact[$addressKey])) . '</span></div>';
             }
         }
 
         for ($i = 1; $i <= 5; $i++) {
             $type = trim((string)($contact['social_' . $i . '_type'] ?? ''));
-            $url  = trim((string)($contact['social_' . $i . '_url'] ?? ''));
+            $url = trim((string)($contact['social_' . $i . '_url'] ?? ''));
             if ($type !== '' && $url !== '') {
-                $lines[] = '<p><a href="' . $h($url) . '" target="_blank" rel="noopener">'
-                    . ucfirst($h($type)) . '</a></p>';
+                $lines[] = '<div class="hp-contact-row"><span class="hp-contact-label">Sítě</span><a href="' . $h($url) . '" target="_blank" rel="noopener">' . ucfirst($h($type)) . '</a></div>';
             }
         }
 
         if ($lines === []) {
-            return '<p style="color:rgba(255,255,255,.45)">Doplňte kontaktní informace v administraci.</p>';
+            $lines[] = '<p style="color:rgba(255,255,255,.45)">Doplňte kontaktní informace v administraci.</p>';
         }
 
-        return '<div class="cta-info">' . implode('', $lines) . '</div>';
+        $map = '';
+        if (!empty($contact['maps_url'])) {
+            $map = '<a href="' . $h($contact['maps_url']) . '" target="_blank" rel="noopener" class="hp-contact-map">Otevřít mapu</a>';
+        }
+
+        $form = '';
+        if (!empty($contact['form_email'])) {
+            $csrf = htmlspecialchars(\App\Core\Auth::csrfToken(), ENT_QUOTES);
+            $form = '<form class="hp-contact-form" method="POST" action="/kontakt/odeslat">'
+                . '<input type="hidden" name="_csrf" value="' . $csrf . '">'
+                . '<input type="hidden" name="website" value="" autocomplete="off">'
+                . '<label>Jméno</label><input type="text" name="name" required placeholder="Vaše jméno">'
+                . '<label>E-mail / telefon</label><input type="text" name="contact_value" required placeholder="email nebo telefon">'
+                . '<label>Zpráva</label><textarea name="message" required placeholder="Napište nám..."></textarea>'
+                . '<button type="submit">Odeslat zprávu</button>'
+                . '</form>';
+        }
+
+        $css = '<style>'
+            . '.hp-contact-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:24px}'
+            . '.hp-contact-box{background:#18181c;border-radius:14px;padding:24px}'
+            . '.hp-contact-lines{display:flex;flex-direction:column;gap:10px}'
+            . '.hp-contact-row{display:flex;gap:12px;line-height:1.55;color:rgba(255,255,255,.86)}'
+            . '.hp-contact-label{flex:0 0 90px;font-size:.78rem;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.04em;padding-top:2px}'
+            . '.hp-contact-row a{color:#c4963c;text-decoration:none}'
+            . '.hp-contact-socials{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}'
+            . '.hp-contact-social{display:inline-flex;align-items:center;padding:8px 14px;border-radius:8px;background:#202028;color:#fff;text-decoration:none;font-size:.9rem}'
+            . '.hp-contact-map{display:inline-flex;margin-top:16px;padding:12px 18px;background:#c4963c;color:#fff;text-decoration:none;border-radius:8px;font-weight:800}'
+            . '.hp-contact-form{display:grid;gap:10px}'
+            . '.hp-contact-form label{font-size:.82rem;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.04em}'
+            . '.hp-contact-form input,.hp-contact-form textarea{width:100%;background:#111;border:1px solid rgba(255,255,255,.12);color:#fff;padding:12px 14px;border-radius:8px;font-size:.95rem;font-family:inherit}'
+            . '.hp-contact-form textarea{min-height:120px;resize:vertical}'
+            . '.hp-contact-form button{padding:14px 18px;background:#c4963c;color:#fff;border:none;border-radius:8px;font-weight:800;cursor:pointer}'
+            . '.hp-contact-form button:hover{background:#d4a64c}'
+            . '@media(max-width:720px){.hp-contact-grid{grid-template-columns:1fr}.hp-contact-label{flex-basis:70px}}'
+            . '</style>';
+
+        return $css
+            . '<div class="hp-contact-grid">'
+            . '<div class="hp-contact-box"><div class="hp-contact-lines">' . implode('', $lines) . '</div>' . $map . '</div>'
+            . '<div class="hp-contact-box">' . $form . '</div>'
+            . '</div>';
     }
 
     private function publicMediaUrl(string $storagePath): string

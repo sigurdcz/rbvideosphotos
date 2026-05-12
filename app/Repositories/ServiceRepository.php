@@ -1,0 +1,67 @@
+<?php
+
+namespace App\Repositories;
+
+use App\Core\Database;
+use PDO;
+
+class ServiceRepository
+{
+    private PDO $db;
+
+    public function __construct()
+    {
+        $this->db = Database::getInstance();
+    }
+
+    public function allBySite(int $siteId): array
+    {
+        $stmt = $this->db->prepare('SELECT * FROM service_items WHERE site_id = ? ORDER BY sort_order ASC, id ASC');
+        $stmt->execute([$siteId]);
+        return $stmt->fetchAll();
+    }
+
+    public function allActive(int $siteId): array
+    {
+        $stmt = $this->db->prepare('SELECT * FROM service_items WHERE site_id = ? AND is_active = 1 ORDER BY sort_order ASC, id ASC');
+        $stmt->execute([$siteId]);
+        return $stmt->fetchAll();
+    }
+
+    public function upsertMany(int $siteId, array $items): void
+    {
+        $this->db->beginTransaction();
+        try {
+            $this->db->prepare('DELETE FROM service_items WHERE site_id = ?')->execute([$siteId]);
+            $stmt = $this->db->prepare(
+                'INSERT INTO service_items
+                    (site_id, title, description, image_url, button_text, button_url, sort_order, is_active)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+            );
+
+            foreach ($items as $item) {
+                $title = trim((string)($item['title'] ?? ''));
+                $description = trim((string)($item['description'] ?? ''));
+                if ($title === '' && $description === '') {
+                    continue;
+                }
+
+                $stmt->execute([
+                    $siteId,
+                    $title,
+                    $description,
+                    trim((string)($item['image_url'] ?? '')),
+                    trim((string)($item['button_text'] ?? '')),
+                    trim((string)($item['button_url'] ?? '')),
+                    (int)($item['sort_order'] ?? 0),
+                    !empty($item['is_active']) ? 1 : 0,
+                ]);
+            }
+
+            $this->db->commit();
+        } catch (\Throwable $e) {
+            $this->db->rollBack();
+            throw $e;
+        }
+    }
+}

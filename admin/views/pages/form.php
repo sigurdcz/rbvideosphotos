@@ -7,6 +7,7 @@ $templateName = $template['name'] ?? '';
 $socialOptions = ['instagram','facebook','youtube','tiktok','linkedin','twitter','pinterest','whatsapp','telegram'];
 $blockMap = [];
 $homepageAutofillBlocks = $homepageAutofillBlocks ?? [];
+$serviceItems = $serviceItems ?? [];
 $isHomepage = !empty($isHomepage);
 
 foreach (($blocks ?? []) as $block) {
@@ -61,6 +62,7 @@ ob_start();
         <button type="button" class="tab-btn" data-tab="pricing-3">Karta 3</button>
       <?php elseif ($layoutType === 'services'): ?>
         <button type="button" class="tab-btn" data-tab="page-content">Obsah stranky</button>
+        <button type="button" class="tab-btn" data-tab="services-items">Polozky sluzeb</button>
         <button type="button" class="tab-btn" data-tab="services-grid">Sluzby</button>
       <?php else: ?>
         <button type="button" class="tab-btn" data-tab="blocks">Bloky obsahu <?= !empty($blocks) ? '(' . count($blocks) . ')' : '' ?></button>
@@ -168,21 +170,21 @@ ob_start();
             <div class="form-row">
               <div class="form-group">
                 <label>Otazka</label>
-                <input type="text" name="faq_items[<?= $index ?>][question]" value="<?= $h($item['question'] ?? '') ?>">
+                <input type="text" data-faq-name="question" value="<?= $h($item['question'] ?? '') ?>">
               </div>
               <div class="form-group">
                 <label>Razeni</label>
-                <input type="number" name="faq_items[<?= $index ?>][sort_order]" value="<?= (int)($item['sort_order'] ?? ($index + 1)) ?>">
+                <input type="number" data-faq-name="sort_order" value="<?= (int)($item['sort_order'] ?? ($index + 1)) ?>">
               </div>
             </div>
             <div class="form-group">
               <label>Odpoved</label>
-              <textarea name="faq_items[<?= $index ?>][answer]"><?= $h($item['answer'] ?? '') ?></textarea>
+              <textarea data-faq-name="answer"><?= $h($item['answer'] ?? '') ?></textarea>
             </div>
             <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
               <label style="display:flex;align-items:center;gap:8px">
-                <input type="hidden" name="faq_items[<?= $index ?>][is_active]" value="0">
-                <input type="checkbox" name="faq_items[<?= $index ?>][is_active]" value="1" <?= !empty($item['is_active']) ? 'checked' : '' ?>>
+                <input type="hidden" data-faq-hidden-active value="0">
+                <input type="checkbox" data-faq-name="is_active" value="1" <?= !empty($item['is_active']) ? 'checked' : '' ?>>
                 Aktivni
               </label>
               <button type="button" class="btn btn-sm btn-secondary" data-remove-faq-item>Odebrat</button>
@@ -317,9 +319,71 @@ ob_start();
         <?php $renderBlockField('cta_wrap', 'Spodni CTA', 'html'); ?>
       </div>
     </div>
+    <div class="tab-pane" id="tab-services-items">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px">
+          <div>
+            <div class="card-title">Polozky sluzeb</div>
+            <div class="form-hint">Polozky se zobrazi na strance Služby a prvni tri aktivni se propsi i na homepage.</div>
+          </div>
+          <button type="button" class="btn btn-secondary" data-add-service-item>+ Pridat sluzbu</button>
+        </div>
+
+        <div id="service-items-list" style="display:flex;flex-direction:column;gap:16px">
+          <?php foreach ($serviceItems as $index => $item): ?>
+          <div class="card" data-service-item style="padding:18px">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Nazev</label>
+                <input type="text" data-service-name="title" value="<?= $h($item['title'] ?? '') ?>">
+              </div>
+              <div class="form-group">
+                <label>Razeni</label>
+                <input type="number" data-service-name="sort_order" value="<?= (int)($item['sort_order'] ?? ($index + 1)) ?>">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Popis</label>
+              <textarea data-service-name="description"><?= $h($item['description'] ?? '') ?></textarea>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Obrazek / URL</label>
+                <input type="text" data-service-name="image_url" value="<?= $h($item['image_url'] ?? '') ?>" placeholder="/storage/media/...">
+              </div>
+              <div class="form-group">
+                <label>Tlacitko</label>
+                <input type="text" data-service-name="button_text" value="<?= $h($item['button_text'] ?? '') ?>" placeholder="Zjistit vice">
+              </div>
+              <div class="form-group">
+                <label>Odkaz tlacitka</label>
+                <input type="text" data-service-name="button_url" value="<?= $h($item['button_url'] ?? '') ?>" placeholder="/kontakt">
+              </div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+              <label style="display:flex;align-items:center;gap:8px">
+                <input type="hidden" data-service-hidden-active value="0">
+                <input type="checkbox" data-service-name="is_active" value="1" <?= !empty($item['is_active']) ? 'checked' : '' ?>>
+                Aktivni
+              </label>
+              <button type="button" class="btn btn-sm btn-secondary" data-remove-service-item>Odebrat</button>
+            </div>
+          </div>
+          <?php endforeach; ?>
+        </div>
+
+        <?php if (empty($serviceItems)): ?>
+        <p class="form-hint" id="service-empty-state">Zatim tu nejsou zadne sluzby. Pridate je tlacitkem nahore.</p>
+        <?php endif; ?>
+      </div>
+    </div>
     <div class="tab-pane" id="tab-services-grid">
       <div class="card">
-        <?php $renderBlockField('sluzby_grid', 'Obsah sluzeb', 'html', 'Sem patri strukturovane karty nebo HTML obsah sluzeb pro tuto stranku.'); ?>
+        <div class="card-title">Automaticky generovany obsah</div>
+        <p class="form-hint">Tento obsah se sklada z polozek sluzeb vyse a pri publikaci se doplni automaticky.</p>
+        <div style="padding:18px;border:1px dashed var(--c-border);border-radius:12px;background:var(--c-bg);color:var(--c-muted)">
+          Náhled obsahu je generován z položek služeb a nelze jej upravovat ručně.
+        </div>
       </div>
     </div>
     <?php endif; ?>
@@ -332,31 +396,36 @@ ob_start();
       <div class="card">
         <div class="blocks-list">
           <?php foreach ($blocks as $block): ?>
-          <div class="block-item">
+          <?php $autofillBlock = $isHomepage ? ($homepageAutofillBlocks[$block['block_key']] ?? null) : null; ?>
+          <?php $autofillEnabled = $autofillBlock ? empty($block['autofill_disabled']) : false; ?>
+          <div class="block-item<?= $autofillBlock ? ' autofill-panel' : '' ?><?= $autofillEnabled ? ' is-autofill-enabled' : '' ?>" data-autofill-panel="<?= $autofillBlock ? '1' : '0' ?>">
             <div class="block-label">
               <?= $h($block['label'] ?? $block['block_key']) ?>
               <span class="block-type-badge"><?= $h($block['block_type']) ?></span>
             </div>
-            <?php $autofillBlock = $isHomepage ? ($homepageAutofillBlocks[$block['block_key']] ?? null) : null; ?>
-            <input type="hidden" name="block_key[]" value="<?= $h($block['block_key']) ?>">
-            <?php if (in_array($block['block_type'], ['text','link'], true)): ?>
-              <input type="text" name="block_content[]" value="<?= $h($block['content'] ?? '') ?>">
-            <?php elseif ($block['block_type'] === 'image'): ?>
-              <input type="text" name="block_content[]" value="<?= $h($block['content'] ?? '') ?>" placeholder="/storage/media/...">
-              <div class="form-hint">URL nebo cesta k obrazku</div>
-            <?php else: ?>
-              <textarea name="block_content[]" class="<?= $block['block_type'] === 'html' ? 'code' : '' ?>"><?= $h($block['content'] ?? '') ?></textarea>
-            <?php endif; ?>
+            <div class="autofill-panel__fields"<?= $autofillEnabled ? ' hidden aria-hidden="true"' : '' ?>>
+              <input type="hidden" name="block_key[]" value="<?= $h($block['block_key']) ?>">
+              <?php if (in_array($block['block_type'], ['text','link'], true)): ?>
+                <input type="text" name="block_content[]" value="<?= $h($block['content'] ?? '') ?>"<?= $autofillEnabled ? ' disabled' : '' ?>>
+              <?php elseif ($block['block_type'] === 'image'): ?>
+                <input type="text" name="block_content[]" value="<?= $h($block['content'] ?? '') ?>" placeholder="/storage/media/..."<?= $autofillEnabled ? ' disabled' : '' ?>>
+                <div class="form-hint">URL nebo cesta k obrazku</div>
+              <?php else: ?>
+                <textarea name="block_content[]" class="<?= $block['block_type'] === 'html' ? 'code' : '' ?>"<?= $autofillEnabled ? ' disabled' : '' ?>><?= $h($block['content'] ?? '') ?></textarea>
+              <?php endif; ?>
+            </div>
             <?php if ($autofillBlock): ?>
-              <label style="display:flex;align-items:flex-start;gap:8px;margin-top:10px;font-size:.9rem;color:var(--c-muted)">
-                <input type="checkbox" name="block_autofill_enabled[<?= $h($block['block_key']) ?>]" value="1" <?= empty($block['autofill_disabled']) ? 'checked' : '' ?>>
-                <span>
-                  Povolit automaticke doplnovani teto sekce
-                  <span style="display:block;margin-top:4px;font-size:.82rem;line-height:1.45">
-                    <?= $h($autofillBlock['hint'] ?? 'Kdyz je zapnuto, sekce se pri publikaci doplni z aktualnich dat.') ?>
-                  </span>
-                </span>
+              <div class="autofill-panel__overlay">
+                <div class="autofill-panel__overlay-title">Sekce se doplní automaticky</div>
+                <div class="autofill-panel__overlay-text">
+                  <?= $h($autofillBlock['hint'] ?? 'Kdyz je zapnuto, sekce se pri publikaci doplni z aktualnich dat.') ?>
+                </div>
+              </div>
+              <label class="autofill-panel__toggle">
+                <input type="checkbox" name="block_autofill_enabled[<?= $h($block['block_key']) ?>]" value="1" data-autofill-toggle <?= empty($block['autofill_disabled']) ? 'checked' : '' ?>>
+                <span>Povolit automaticke doplnovani teto sekce</span>
               </label>
+              <div class="autofill-panel__note">Obsah se doplní automaticky z reálných dat a ruční pole je v tomto režimu vypnuté.</div>
             <?php endif; ?>
           </div>
           <?php endforeach; ?>
@@ -407,6 +476,48 @@ ob_start();
           Aktivni
         </label>
         <button type="button" class="btn btn-sm btn-secondary" data-remove-faq-item>Odebrat</button>
+      </div>
+    </div>
+  </template>
+  <?php endif; ?>
+  <?php if ($layoutType === 'services'): ?>
+  <template id="service-item-template">
+    <div class="card" data-service-item style="padding:18px">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nazev</label>
+          <input type="text" data-service-name="title">
+        </div>
+        <div class="form-group">
+          <label>Razeni</label>
+          <input type="number" data-service-name="sort_order" value="0">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Popis</label>
+        <textarea data-service-name="description"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Obrazek / URL</label>
+          <input type="text" data-service-name="image_url" placeholder="/storage/media/...">
+        </div>
+        <div class="form-group">
+          <label>Tlacitko</label>
+          <input type="text" data-service-name="button_text" placeholder="Zjistit vice">
+        </div>
+        <div class="form-group">
+          <label>Odkaz tlacitka</label>
+          <input type="text" data-service-name="button_url" placeholder="/kontakt">
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+        <label style="display:flex;align-items:center;gap:8px">
+          <input type="hidden" data-service-hidden-active value="0">
+          <input type="checkbox" data-service-name="is_active" value="1" checked>
+          Aktivni
+        </label>
+        <button type="button" class="btn btn-sm btn-secondary" data-remove-service-item>Odebrat</button>
       </div>
     </div>
   </template>
