@@ -9,6 +9,20 @@ $blockMap = [];
 $homepageAutofillBlocks = $homepageAutofillBlocks ?? [];
 $serviceItems = $serviceItems ?? [];
 $isHomepage = !empty($isHomepage);
+$hiddenHomepageBlockKeys = array_fill_keys([
+    'sluzby_cta',
+    'portfolio_cta',
+    'blog_cta',
+    'cenik_cta',
+    'faq_cta',
+    'kontakt_cta',
+], true);
+$visibleBlocks = $blocks ?? [];
+if ($isHomepage && !empty($visibleBlocks)) {
+    $visibleBlocks = array_values(array_filter($visibleBlocks, static function (array $block) use ($hiddenHomepageBlockKeys): bool {
+        return !isset($hiddenHomepageBlockKeys[$block['block_key'] ?? '']);
+    }));
+}
 
 foreach (($blocks ?? []) as $block) {
     $blockMap[$block['block_key']] = $block;
@@ -65,7 +79,7 @@ ob_start();
         <button type="button" class="tab-btn" data-tab="services-items">Polozky sluzeb</button>
         <button type="button" class="tab-btn" data-tab="services-grid">Sluzby</button>
       <?php else: ?>
-        <button type="button" class="tab-btn" data-tab="blocks">Bloky obsahu <?= !empty($blocks) ? '(' . count($blocks) . ')' : '' ?></button>
+        <button type="button" class="tab-btn" data-tab="blocks">Bloky obsahu <?= !empty($visibleBlocks) ? '(' . count($visibleBlocks) . ')' : '' ?></button>
       <?php endif; ?>
     <?php endif; ?>
   </div>
@@ -396,6 +410,7 @@ ob_start();
       <div class="card">
         <div class="blocks-list">
           <?php foreach ($blocks as $block): ?>
+          <?php if ($isHomepage && isset($hiddenHomepageBlockKeys[$block['block_key'] ?? ''])) continue; ?>
           <?php $autofillBlock = $isHomepage ? ($homepageAutofillBlocks[$block['block_key']] ?? null) : null; ?>
           <?php $autofillEnabled = $autofillBlock ? empty($block['autofill_disabled']) : false; ?>
           <div class="block-item<?= $autofillBlock ? ' autofill-panel' : '' ?><?= $autofillEnabled ? ' is-autofill-enabled' : '' ?>" data-autofill-panel="<?= $autofillBlock ? '1' : '0' ?>">

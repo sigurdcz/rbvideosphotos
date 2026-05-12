@@ -103,10 +103,16 @@ class HomepageContentService
     {
         $this->fillHomepageTextDefaults($blocks);
         $this->applyBlockFallback($blocks, 'sluzby_items', fn() => $this->buildServicesGridHtml($siteId, 3));
+        $this->applyBlockFallback($blocks, 'sluzby_cta', fn() => $this->buildSectionCtaHtml('/sluzby', 'Všechny služby'));
         $this->applyBlockFallback($blocks, 'portfolio-tiles', fn() => $this->buildPortfolioHtml($siteId));
+        $this->applyBlockFallback($blocks, 'portfolio_cta', fn() => $this->buildSectionCtaHtml('/nase-prace', 'Všechny práce'));
         $this->applyBlockFallback($blocks, 'cenik_body', fn() => $this->buildPricingHtml());
+        $this->applyBlockFallback($blocks, 'cenik_cta', fn() => $this->buildSectionCtaHtml('/cenik', 'Celý ceník'));
         $this->applyBlockFallback($blocks, 'kontakt_info', fn() => $this->buildContactHtml($siteId));
         $this->applyBlockFallback($blocks, 'contact_info', fn() => $this->buildContactHtml($siteId));
+        $this->applyBlockFallback($blocks, 'faq_cta', fn() => $this->buildSectionCtaHtml('/faq', 'Všechny otázky'));
+        $this->applyBlockFallback($blocks, 'blog_cta', fn() => $this->buildSectionCtaHtml('/blog', 'Všechny články'));
+        $this->applyBlockFallback($blocks, 'kontakt_cta', fn() => $this->buildSectionCtaHtml('/kontakt', 'Kontakt'));
     }
 
     private function fillHomepageTextDefaults(array &$blocks): void
@@ -550,6 +556,17 @@ HTML;
         return $css . '<div class="hp-cenik-grid">' . $cards . '</div>' . $modal;
     }
 
+    private function buildSectionCtaHtml(string $url, string $label): string
+    {
+        $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
+        return '<style>'
+            . '.hp-section-cta{margin-top:22px;display:flex;justify-content:flex-start}'
+            . '.hp-section-cta .btn-secondary{display:inline-flex;align-items:center;justify-content:center;padding:12px 18px;border:1px solid rgba(255,255,255,.18);border-radius:8px;color:#fff;text-decoration:none;font-weight:700}'
+            . '.hp-section-cta .btn-secondary:hover{background:#c4963c;border-color:#c4963c;color:#111}'
+            . '</style>'
+            . '<div class="hp-section-cta"><a href="' . $h($url) . '" class="btn-secondary">' . $h($label) . '</a></div>';
+    }
+
     private function buildFaqItemHtml(int $siteId, int $index): string
     {
         $items = array_slice($this->faq->allActive($siteId), 0, 5);
@@ -643,6 +660,9 @@ HTML;
             . '.hp-contact-social{display:inline-flex;align-items:center;padding:8px 14px;border-radius:8px;background:#202028;color:#fff;text-decoration:none;font-size:.9rem}'
             . '.hp-contact-map{display:inline-flex;margin-top:16px;padding:12px 18px;background:#c4963c;color:#fff;text-decoration:none;border-radius:8px;font-weight:800}'
             . '.hp-contact-map-embed{display:block;width:100%;aspect-ratio:4/3;min-height:260px;border:0;border-radius:12px;margin-top:16px;background:#0f0f12}'
+            . '.hp-contact-cta{margin-top:20px}'
+            . '.hp-contact-cta .btn-secondary{display:inline-flex;align-items:center;justify-content:center;padding:12px 18px;border:1px solid rgba(255,255,255,.18);border-radius:8px;color:#fff;text-decoration:none;font-weight:700}'
+            . '.hp-contact-cta .btn-secondary:hover{background:#c4963c;border-color:#c4963c;color:#111}'
             . '.hp-contact-form{display:grid;gap:10px}'
             . '.hp-contact-form label{font-size:.82rem;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.04em}'
             . '.hp-contact-form input,.hp-contact-form textarea{width:100%;background:#111;border:1px solid rgba(255,255,255,.12);color:#fff;padding:12px 14px;border-radius:8px;font-size:.95rem;font-family:inherit}'
@@ -654,7 +674,7 @@ HTML;
 
         return $css
             . '<div class="hp-contact-grid">'
-            . '<div class="hp-contact-box"><div class="hp-contact-lines">' . implode('', $lines) . '</div>' . $map . '</div>'
+            . '<div class="hp-contact-box"><div class="hp-contact-lines">' . implode('', $lines) . '</div>' . $map . '<div class="hp-contact-cta"><a href="/kontakt" class="btn-secondary">Kontakt</a></div></div>'
             . '<div class="hp-contact-box">' . $form . '</div>'
             . '</div>';
     }
