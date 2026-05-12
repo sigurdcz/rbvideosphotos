@@ -10,6 +10,7 @@ use App\Repositories\FaqRepository;
 use App\Repositories\PageRepository;
 use App\Repositories\SiteRepository;
 use App\Repositories\TemplateRepository;
+use App\Services\PublishService;
 use App\Services\TemplateParser;
 
 class PageController extends Controller
@@ -168,6 +169,19 @@ class PageController extends Controller
         if ($layoutType === 'contact') {
             (new ContactRepository())->upsert((int)$page['site_id'], $_POST);
             $this->syncHomepageContactBlocks((int)$page['site_id']);
+        }
+
+        if (isset($_POST['publish_after_save'])) {
+            $user = \App\Core\Auth::user();
+            $result = (new PublishService())->publishPage($id, (int)($user['id'] ?? 0));
+
+            if ($result['success']) {
+                $this->flash('success', 'Stránka byla uložena a publikována.');
+            } else {
+                $this->flash('error', $result['message']);
+            }
+
+            $this->redirect('/admin/pages/edit?id=' . $id);
         }
 
         $this->flash('success', 'Stránka uložena.');

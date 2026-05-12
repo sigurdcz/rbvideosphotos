@@ -16,6 +16,7 @@ use App\Repositories\TemplateRepository;
 class PublishService
 {
     private PageRenderer $renderer;
+    private HomepageContentService $homepageContent;
     private SeoRenderer $seoRenderer;
     private SitemapGenerator $sitemap;
     private RobotsGenerator $robots;
@@ -33,6 +34,7 @@ class PublishService
     public function __construct()
     {
         $this->renderer   = new PageRenderer();
+        $this->homepageContent = new HomepageContentService();
         $this->seoRenderer= new SeoRenderer();
         $this->sitemap    = new SitemapGenerator();
         $this->robots     = new RobotsGenerator();
@@ -65,6 +67,7 @@ class PublishService
         }
 
         $blocks   = $this->blocks->allByPage($pageId);
+        $blocks   = $this->homepageContent->applyFallbacks($page, $blocks);
         $seo      = $this->seo->findByPage($pageId) ?? [];
         $mediaMap = $this->buildMediaMap($blocks, $site);
 

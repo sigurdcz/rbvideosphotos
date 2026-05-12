@@ -25,6 +25,7 @@ use App\Repositories\PortfolioRepository;
 use App\Repositories\SeoRepository;
 use App\Repositories\SiteRepository;
 use App\Repositories\TemplateRepository;
+use App\Services\HomepageContentService;
 use App\Services\PageRenderer;
 use App\Services\SeoRenderer;
 
@@ -59,6 +60,7 @@ function tryServeDatabasePage(string $uri, bool $authenticated = false, bool $pr
         }
 
         $blocks = (new BlockRepository())->allByPage((int)$page['id']);
+        $blocks = (new HomepageContentService())->applyFallbacks($page, $blocks);
         $seo = (new SeoRepository())->findByPage((int)$page['id']) ?? [];
         $mediaRepo = new MediaRepository();
         $renderer = new PageRenderer();

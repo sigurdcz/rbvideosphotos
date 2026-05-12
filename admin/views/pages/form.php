@@ -359,7 +359,7 @@ ob_start();
       <a href="/admin/seo/edit?page_id=<?= (int)$page['id'] ?>" class="btn btn-secondary">SEO nastaveni</a>
       <a href="<?= htmlspecialchars($previewUrl) ?>" target="_blank" class="btn btn-secondary">&#128065; Nahled stranky</a>
       <a href="<?= htmlspecialchars($frontUrl) ?>" target="_blank" class="btn btn-inline-edit">&#9998; Editovat inline</a>
-      <button type="submit" form="publish-form" class="btn btn-success">Publikovat</button>
+      <button type="submit" name="publish_after_save" value="1" class="btn btn-success" onclick="return confirm('Ulozit zmeny a publikovat stranku?')">Publikovat</button>
     </div>
     <?php endif; ?>
   </form>
@@ -369,11 +369,6 @@ ob_start();
     <input type="hidden" name="_csrf" value="<?= $h($_csrfToken) ?>">
     <input type="hidden" name="page_id" value="<?= (int)$page['id'] ?>">
   </form>
-  <form id="publish-form" method="POST" action="/admin/publish/page" data-confirm="Publikovat stranku?">
-    <input type="hidden" name="_csrf" value="<?= $h($_csrfToken) ?>">
-    <input type="hidden" name="page_id" value="<?= (int)$page['id'] ?>">
-  </form>
-
   <?php if ($layoutType === 'faq'): ?>
   <template id="faq-item-template">
     <div class="card" data-faq-item style="padding:18px">

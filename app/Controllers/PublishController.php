@@ -41,8 +41,16 @@ class PublishController extends Controller
             $this->flash('error', $result['message']);
         }
 
-        $refererPath = parse_url($_SERVER['HTTP_REFERER'] ?? '', PHP_URL_PATH) ?? '';
-        $this->redirect(str_starts_with($refererPath, '/admin/') ? $refererPath : '/admin/pages');
+        $referer = $_SERVER['HTTP_REFERER'] ?? '';
+        $refererPath = parse_url($referer, PHP_URL_PATH) ?? '';
+        $refererQuery = parse_url($referer, PHP_URL_QUERY) ?? '';
+
+        if (str_starts_with($refererPath, '/admin/')) {
+            $target = $refererPath . ($refererQuery !== '' ? '?' . $refererQuery : '');
+            $this->redirect($target);
+        }
+
+        $this->redirect('/admin/pages');
     }
 
     public function publishSite(array $params): void
