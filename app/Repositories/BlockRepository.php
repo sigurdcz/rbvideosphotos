@@ -36,21 +36,25 @@ class BlockRepository
     public function upsert(int $pageId, string $key, array $data): void
     {
         $existing = $this->findByKey($pageId, $key);
+        $autofillDisabled = array_key_exists('autofill_disabled', $data)
+            ? (int)!empty($data['autofill_disabled'])
+            : (int)($existing['autofill_disabled'] ?? 0);
         if ($existing) {
             $stmt = $this->db->prepare(
-                'UPDATE content_blocks SET block_type = ?, label = ?, content = ?, sort_order = ? WHERE id = ?'
+                'UPDATE content_blocks SET block_type = ?, label = ?, content = ?, sort_order = ?, autofill_disabled = ? WHERE id = ?'
             );
             $stmt->execute([
                 $data['block_type'] ?? 'text',
                 $data['label']      ?? $key,
                 $data['content']    ?? '',
                 $data['sort_order'] ?? 0,
+                $autofillDisabled,
                 $existing['id'],
             ]);
         } else {
             $stmt = $this->db->prepare(
-                'INSERT INTO content_blocks (page_id, block_key, block_type, label, content, sort_order)
-                 VALUES (?, ?, ?, ?, ?, ?)'
+                'INSERT INTO content_blocks (page_id, block_key, block_type, label, content, sort_order, autofill_disabled)
+                 VALUES (?, ?, ?, ?, ?, ?, ?)'
             );
             $stmt->execute([
                 $pageId,
@@ -59,6 +63,7 @@ class BlockRepository
                 $data['label']      ?? $key,
                 $data['content']    ?? '',
                 $data['sort_order'] ?? 0,
+                $autofillDisabled,
             ]);
         }
     }

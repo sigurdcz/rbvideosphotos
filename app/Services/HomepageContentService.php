@@ -11,6 +11,49 @@ use App\Repositories\PortfolioRepository;
 
 class HomepageContentService
 {
+    private const AUTOFILL_BLOCKS = [
+        'sluzby_items' => [
+            'label' => 'Služby',
+            'hint'  => 'Automaticky doplnit z layoutu stránky Služby.',
+        ],
+        'portfolio-tiles' => [
+            'label' => 'Naše práce',
+            'hint'  => 'Automaticky doplnit z publikovaných prací.',
+        ],
+        'blog_1' => [
+            'label' => 'Blog 1',
+            'hint'  => 'Automaticky doplnit nejnovější článek.',
+        ],
+        'blog_2' => [
+            'label' => 'Blog 2',
+            'hint'  => 'Automaticky doplnit druhý nejnovější článek.',
+        ],
+        'blog_3' => [
+            'label' => 'Blog 3',
+            'hint'  => 'Automaticky doplnit třetí nejnovější článek.',
+        ],
+        'cenik_body' => [
+            'label' => 'Ceník',
+            'hint'  => 'Automaticky doplnit z aktuální stránky Ceník.',
+        ],
+        'faq_1' => [
+            'label' => 'FAQ 1',
+            'hint'  => 'Automaticky doplnit z aktivních FAQ položek.',
+        ],
+        'faq_2' => [
+            'label' => 'FAQ 2',
+            'hint'  => 'Automaticky doplnit z aktivních FAQ položek.',
+        ],
+        'faq_3' => [
+            'label' => 'FAQ 3',
+            'hint'  => 'Automaticky doplnit z aktivních FAQ položek.',
+        ],
+        'kontakt_info' => [
+            'label' => 'Kontakt',
+            'hint'  => 'Automaticky doplnit z kontaktních údajů.',
+        ],
+    ];
+
     private PageRepository $pages;
     private BlockRepository $blocks;
     private BlogRepository $blog;
@@ -26,6 +69,11 @@ class HomepageContentService
         $this->portfolio = new PortfolioRepository();
         $this->faq       = new FaqRepository();
         $this->contact   = new ContactRepository();
+    }
+
+    public function getAutofillDefinitions(): array
+    {
+        return self::AUTOFILL_BLOCKS;
     }
 
     public function applyFallbacks(array $page, array $blocks): array
@@ -75,6 +123,10 @@ class HomepageContentService
                 continue;
             }
 
+            if (!empty($block['autofill_disabled'])) {
+                return;
+            }
+
             if ($this->isBlankHtml($block['content'] ?? '')) {
                 $block['content'] = $builder();
             }
@@ -93,6 +145,7 @@ class HomepageContentService
             'label'      => $key,
             'content'    => $content,
             'sort_order' => 0,
+            'autofill_disabled' => 0,
         ];
     }
 

@@ -10,6 +10,7 @@ use App\Repositories\FaqRepository;
 use App\Repositories\PageRepository;
 use App\Repositories\SiteRepository;
 use App\Repositories\TemplateRepository;
+use App\Services\HomepageContentService;
 use App\Services\PublishService;
 use App\Services\TemplateParser;
 
@@ -47,6 +48,8 @@ class PageController extends Controller
             'layoutType' => 'generic',
             'faqItems'   => [],
             'contact'    => [],
+            'isHomepage' => false,
+            'homepageAutofillBlocks' => [],
         ]);
     }
 
@@ -107,6 +110,10 @@ class PageController extends Controller
         $templates = (new TemplateRepository())->allForAdmin();
         $template  = $page['template_id'] ? (new TemplateRepository())->findById((int)$page['template_id']) : null;
         $layout    = $this->resolveLayoutType($template['name'] ?? '');
+        $isHomepage = trim((string)($page['url_path'] ?? ''), '/') === '';
+        $homepageAutofillBlocks = $isHomepage
+            ? (new HomepageContentService())->getAutofillDefinitions()
+            : [];
 
         $this->view('pages.form', [
             'page'       => $page,
@@ -117,6 +124,8 @@ class PageController extends Controller
             'faqItems'   => $layout === 'faq' ? (new FaqRepository())->allBySite((int)$page['site_id']) : [],
             'contact'    => $layout === 'contact' ? (new ContactRepository())->findBySiteSafe((int)$page['site_id']) : [],
             'site'       => $sites->findById($page['site_id']),
+            'isHomepage' => $isHomepage,
+            'homepageAutofillBlocks' => $homepageAutofillBlocks,
             'success'    => $this->getFlash('success'),
             'error'      => $this->getFlash('error'),
         ]);
@@ -158,7 +167,8 @@ class PageController extends Controller
             $this->initBlocksFromTemplate($id, $templateId);
         }
 
-        $this->saveSubmittedBlocks($id);
+        $isHomepage = trim((string)($page['url_path'] ?? ''), '/') === '';
+        $this->saveSubmittedBlocks($id, $isHomepage);
 
         if ($layoutType === 'faq') {
             $faqRepo = new FaqRepository();
@@ -213,11 +223,15 @@ class PageController extends Controller
         }
     }
 
-    private function saveSubmittedBlocks(int $pageId): void
+    private function saveSubmittedBlocks(int $pageId, bool $isHomepage = false): void
     {
         $blockRepo = new BlockRepository();
         $keys      = $_POST['block_key'] ?? [];
         $contents  = $_POST['block_content'] ?? [];
+        $autofillDisabled = $_POST['block_autofill_disabled'] ?? [];
+        $autofillKeys = $isHomepage
+            ? array_fill_keys(array_keys((new HomepageContentService())->getAutofillDefinitions()), true)
+            : [];
 
         foreach ($keys as $i => $key) {
             $key = trim((string)$key);
@@ -226,11 +240,21 @@ class PageController extends Controller
             }
 
             $existing = $blockRepo->findByKey($pageId, $key);
+            $isAutofillBlock = $isHomepage && isset($autofillKeys[$key]);
+            $disabled = $isAutofillBlock
+                ? !empty($autofillDisabled[$key])
+                : (int)($existing['autofill_disabled'] ?? 0);
+            $content = (string)($contents[$i] ?? '');
+            if ($isAutofillBlock && $disabled) {
+                $content = '';
+            }
+
             $blockRepo->upsert($pageId, $key, [
                 'block_type' => $existing['block_type'] ?? 'textarea',
                 'label'      => $existing['label'] ?? $key,
-                'content'    => (string)($contents[$i] ?? ''),
+                'content'    => $content,
                 'sort_order' => $existing['sort_order'] ?? ($i + 1),
+                'autofill_disabled' => $disabled,
             ]);
         }
     }

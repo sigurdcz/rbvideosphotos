@@ -84,6 +84,7 @@ CREATE TABLE IF NOT EXISTS `content_blocks` (
   `block_type` ENUM('text','textarea','richtext','image','link','html') NOT NULL DEFAULT 'text',
   `label`      VARCHAR(255) DEFAULT NULL,
   `content`    LONGTEXT DEFAULT NULL,
+  `autofill_disabled` TINYINT(1) NOT NULL DEFAULT 0,
   `sort_order` SMALLINT UNSIGNED NOT NULL DEFAULT 0,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

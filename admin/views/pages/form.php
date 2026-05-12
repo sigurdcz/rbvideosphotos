@@ -6,6 +6,8 @@ $layoutType = $layoutType ?? 'generic';
 $templateName = $template['name'] ?? '';
 $socialOptions = ['instagram','facebook','youtube','tiktok','linkedin','twitter','pinterest','whatsapp','telegram'];
 $blockMap = [];
+$homepageAutofillBlocks = $homepageAutofillBlocks ?? [];
+$isHomepage = !empty($isHomepage);
 
 foreach (($blocks ?? []) as $block) {
     $blockMap[$block['block_key']] = $block;
@@ -335,6 +337,7 @@ ob_start();
               <?= $h($block['label'] ?? $block['block_key']) ?>
               <span class="block-type-badge"><?= $h($block['block_type']) ?></span>
             </div>
+            <?php $autofillBlock = $isHomepage ? ($homepageAutofillBlocks[$block['block_key']] ?? null) : null; ?>
             <input type="hidden" name="block_key[]" value="<?= $h($block['block_key']) ?>">
             <?php if (in_array($block['block_type'], ['text','link'], true)): ?>
               <input type="text" name="block_content[]" value="<?= $h($block['content'] ?? '') ?>">
@@ -343,6 +346,17 @@ ob_start();
               <div class="form-hint">URL nebo cesta k obrazku</div>
             <?php else: ?>
               <textarea name="block_content[]" class="<?= $block['block_type'] === 'html' ? 'code' : '' ?>"><?= $h($block['content'] ?? '') ?></textarea>
+            <?php endif; ?>
+            <?php if ($autofillBlock): ?>
+              <label style="display:flex;align-items:flex-start;gap:8px;margin-top:10px;font-size:.9rem;color:var(--c-muted)">
+                <input type="checkbox" name="block_autofill_disabled[<?= $h($block['block_key']) ?>]" value="1" <?= !empty($block['autofill_disabled']) ? 'checked' : '' ?>>
+                <span>
+                  Vypnout automaticke doplnovani teto sekce
+                  <span style="display:block;margin-top:4px;font-size:.82rem;line-height:1.45">
+                    <?= $h($autofillBlock['hint'] ?? 'Po vypnuti zustane pole prazdne i pri publikaci.') ?>
+                  </span>
+                </span>
+              </label>
             <?php endif; ?>
           </div>
           <?php endforeach; ?>
