@@ -94,6 +94,7 @@ class PublishService
             if ($themeLayout !== '') {
                 $html = $this->renderer->applyLayout($themeLayout, $html, $site['name'] ?? '', '');
             }
+            $html = $this->themes->injectBodyClass($html, (string)($theme['key'] ?? ''));
         }
         if (!empty($site['layout_html'])) {
             $html = $this->renderer->applyLayout($site['layout_html'], $html, $site['name'] ?? '');

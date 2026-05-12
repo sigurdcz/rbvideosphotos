@@ -118,6 +118,31 @@ class ThemeTemplateRegistry
         ];
     }
 
+    public function injectBodyClass(string $html, string $themeKey): string
+    {
+        $themeClass = 'theme-' . preg_replace('~[^a-z0-9_-]+~i', '-', trim($themeKey));
+        if ($themeClass === 'theme-') {
+            return $html;
+        }
+
+        return preg_replace_callback('~<body\b([^>]*)>~i', static function (array $matches) use ($themeClass): string {
+            $attrs = $matches[1] ?? '';
+            if (preg_match('~\bclass=(["\'])(.*?)\1~i', $attrs, $classMatch)) {
+                $existing = trim($classMatch[2]);
+                $classes = preg_split('~\s+~', $existing, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+                if (!in_array($themeClass, $classes, true)) {
+                    $classes[] = $themeClass;
+                }
+                $replacement = 'class="' . htmlspecialchars(implode(' ', $classes), ENT_QUOTES, 'UTF-8') . '"';
+                $attrs = preg_replace('~\bclass=(["\'])(.*?)\1~i', $replacement, $attrs, 1);
+            } else {
+                $attrs .= ' class="' . htmlspecialchars($themeClass, ENT_QUOTES, 'UTF-8') . '"';
+            }
+
+            return '<body' . $attrs . '>';
+        }, $html, 1) ?? $html;
+    }
+
     private function loadTheme(string $dir): ?array
     {
         $manifestPath = rtrim($dir, '/\\') . '/template.json';

@@ -1,0 +1,24 @@
+{
+  "key": "modern-atelier",
+  "name": "Modern Atelier",
+  "description": "Svetla, moderni a seriozni sablona pro profesionalniho fotografa. Zamerena na cisty minimalismus, spickovou typografii a pruzracny vizual.",
+  "version": "1.0.0",
+  "author": "SEO CMS",
+  "pages": [
+    "homepage",
+    "sluzby",
+    "portfolio",
+    "portfolio-detail",
+    "blog",
+    "blog-post",
+    "cenik",
+    "faq",
+    "contact"
+  ],
+  "assets": {
+    "css": [
+      "assets/theme.css"
+    ],
+    "js": []
+  }
+}

@@ -1,0 +1,155 @@
+:root {
+  --theme-bg: #fbf6f0;
+  --theme-surface: rgba(255,255,255,.9);
+  --theme-text: #1b1b1b;
+  --theme-muted: rgba(27,27,27,.66);
+  --theme-border: rgba(27,27,27,.08);
+  --theme-accent: #c38a79;
+  --theme-accent-soft: #e2b7aa;
+  --theme-accent-strong: #b56f5f;
+  --theme-shadow: 0 22px 56px rgba(98, 62, 49, .08);
+}
+
+html, body,
+body.theme-soft-memories {
+  background:
+    radial-gradient(circle at top right, rgba(195,138,121,.13), transparent 28%),
+    radial-gradient(circle at left center, rgba(227,194,168,.14), transparent 26%),
+    linear-gradient(180deg, #fffaf6 0%, var(--theme-bg) 100%);
+  color: var(--theme-text);
+}
+
+.theme-soft-memories .section,
+.theme-soft-memories .hero,
+.theme-soft-memories .pf-hero,
+.theme-soft-memories .bp-hero,
+.theme-soft-memories .fq-hero,
+.theme-soft-memories .kt-hero,
+.theme-soft-memories .bl-hero,
+.theme-soft-memories .bp-detail-hero,
+.theme-soft-memories .pf-detail-hero {
+  background: transparent;
+}
+
+.theme-soft-memories .section-label,
+.theme-soft-memories .hero__eyebrow,
+.theme-soft-memories .hp-svc-card__num,
+.theme-soft-memories .ci-brand__label {
+  color: var(--theme-accent);
+}
+
+.theme-soft-memories h1,
+.theme-soft-memories h2,
+.theme-soft-memories h3,
+.theme-soft-memories .hero__title,
+.theme-soft-memories .section-title {
+  color: var(--theme-text);
+  letter-spacing: -0.03em;
+}
+
+.theme-soft-memories p,
+.theme-soft-memories .section-intro,
+.theme-soft-memories .hero__subtitle,
+.theme-soft-memories .bl-excerpt,
+.theme-soft-memories .bp-excerpt,
+.theme-soft-memories .faq-a,
+.theme-soft-memories .ci-row {
+  color: var(--theme-muted);
+}
+
+.theme-soft-memories .card,
+.theme-soft-memories .block-item,
+.theme-soft-memories .hp-svc-card,
+.theme-soft-memories .hp-blog-card,
+.theme-soft-memories .hp-cenik-card,
+.theme-soft-memories .hp-faq-item,
+.theme-soft-memories .bl-card,
+.theme-soft-memories .pt-tile,
+.theme-soft-memories .ci-block,
+.theme-soft-memories .kt-form-block {
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
+  box-shadow: var(--theme-shadow);
+  border-radius: 18px;
+}
+
+.theme-soft-memories .btn-primary,
+.theme-soft-memories .btn-success,
+.theme-soft-memories .btn-h--gold,
+.theme-soft-memories .nav-cta,
+.theme-soft-memories .kt-form-btn,
+.theme-soft-memories .ci-link-btn,
+.theme-soft-memories .hp-section-cta .btn-secondary,
+.theme-soft-memories .hp-contact-cta .btn-secondary,
+.theme-soft-memories .hp-svc-card__btn,
+.theme-soft-memories .hp-cenik-card__btn,
+.theme-soft-memories .btn-maps {
+  background: linear-gradient(135deg, var(--theme-accent), var(--theme-accent-strong));
+  border-color: transparent;
+  color: #fff;
+}
+
+.theme-soft-memories .btn-primary:hover,
+.theme-soft-memories .btn-success:hover,
+.theme-soft-memories .btn-h--gold:hover,
+.theme-soft-memories .nav-cta:hover,
+.theme-soft-memories .kt-form-btn:hover,
+.theme-soft-memories .ci-link-btn:hover,
+.theme-soft-memories .hp-section-cta .btn-secondary:hover,
+.theme-soft-memories .hp-contact-cta .btn-secondary:hover,
+.theme-soft-memories .hp-svc-card__btn:hover,
+.theme-soft-memories .hp-cenik-card__btn:hover,
+.theme-soft-memories .btn-maps:hover {
+  opacity: .95;
+  color: #fff;
+}
+
+.theme-soft-memories .nav,
+.theme-soft-memories .topbar,
+.theme-soft-memories .sidebar {
+  background: rgba(255, 251, 248, .82);
+  backdrop-filter: blur(10px);
+  border-color: rgba(195,138,121,.12);
+}
+
+.theme-soft-memories .hero {
+  padding-top: clamp(56px, 8vw, 100px);
+}
+
+.theme-soft-memories .ci-brand__name {
+  font-family: "Georgia", "Times New Roman", serif;
+  font-weight: 700;
+  letter-spacing: -.02em;
+}
+
+.theme-soft-memories .ci-social {
+  background: rgba(195,138,121,.12);
+  color: var(--theme-text);
+}
+
+.theme-soft-memories .ci-social:hover {
+  background: var(--theme-accent);
+  color: #fff;
+}
+
+.theme-soft-memories .faq-item {
+  border-left-color: var(--theme-accent);
+}
+
+.theme-soft-memories .bl-card:hover,
+.theme-soft-memories .pt-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 30px 72px rgba(98,62,49,.12);
+}
+
+@media (max-width: 720px) {
+  .theme-soft-memories .card,
+  .theme-soft-memories .block-item,
+  .theme-soft-memories .hp-svc-card,
+  .theme-soft-memories .bl-card,
+  .theme-soft-memories .pt-tile,
+  .theme-soft-memories .ci-block,
+  .theme-soft-memories .kt-form-block {
+    box-shadow: none;
+  }
+}

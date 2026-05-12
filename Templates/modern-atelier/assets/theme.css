@@ -1,0 +1,190 @@
+:root {
+  --theme-bg: #f6f4ef;
+  --theme-surface: rgba(255,255,255,.88);
+  --theme-surface-strong: #ffffff;
+  --theme-text: #131313;
+  --theme-muted: rgba(19,19,19,.64);
+  --theme-border: rgba(19,19,19,.09);
+  --theme-accent: #a86f32;
+  --theme-accent-strong: #87571d;
+  --theme-shadow: 0 24px 70px rgba(28, 24, 18, .08);
+}
+
+html, body {
+  background:
+    radial-gradient(circle at top left, rgba(168,111,50,.08), transparent 30%),
+    linear-gradient(180deg, #fbfaf7 0%, var(--theme-bg) 100%);
+  color: var(--theme-text);
+}
+
+.theme-modern-atelier body,
+body.theme-modern-atelier {
+  background:
+    radial-gradient(circle at top left, rgba(168,111,50,.08), transparent 30%),
+    linear-gradient(180deg, #fbfaf7 0%, var(--theme-bg) 100%);
+  color: var(--theme-text);
+}
+
+.theme-modern-atelier .section,
+.theme-modern-atelier .hero,
+.theme-modern-atelier .pf-hero,
+.theme-modern-atelier .bp-hero,
+.theme-modern-atelier .fq-hero,
+.theme-modern-atelier .kt-hero,
+.theme-modern-atelier .bl-hero,
+.theme-modern-atelier .bp-detail-hero,
+.theme-modern-atelier .pf-detail-hero {
+  background: transparent;
+  color: var(--theme-text);
+}
+
+.theme-modern-atelier .container {
+  max-width: 1180px;
+}
+
+.theme-modern-atelier .section-label,
+.theme-modern-atelier .hero__eyebrow,
+.theme-modern-atelier .hp-svc-card__num,
+.theme-modern-atelier .hp-cenik-card__price,
+.theme-modern-atelier .ci-brand__label {
+  color: var(--theme-accent);
+}
+
+.theme-modern-atelier h1,
+.theme-modern-atelier h2,
+.theme-modern-atelier h3,
+.theme-modern-atelier .hero__title,
+.theme-modern-atelier .section-title {
+  color: var(--theme-text);
+  letter-spacing: -0.04em;
+}
+
+.theme-modern-atelier p,
+.theme-modern-atelier .section-intro,
+.theme-modern-atelier .hero__subtitle,
+.theme-modern-atelier .bl-excerpt,
+.theme-modern-atelier .bp-excerpt,
+.theme-modern-atelier .ci-row,
+.theme-modern-atelier .faq-a {
+  color: var(--theme-muted);
+}
+
+.theme-modern-atelier .card,
+.theme-modern-atelier .block-item,
+.theme-modern-atelier .hp-svc-card,
+.theme-modern-atelier .hp-blog-card,
+.theme-modern-atelier .hp-cenik-card,
+.theme-modern-atelier .hp-faq-item,
+.theme-modern-atelier .bl-card,
+.theme-modern-atelier .pt-tile,
+.theme-modern-atelier .ci-block,
+.theme-modern-atelier .kt-form-block {
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
+  box-shadow: var(--theme-shadow);
+  backdrop-filter: blur(10px);
+}
+
+.theme-modern-atelier .btn-primary,
+.theme-modern-atelier .btn-success,
+.theme-modern-atelier .btn-h--gold,
+.theme-modern-atelier .nav-cta,
+.theme-modern-atelier .kt-form-btn,
+.theme-modern-atelier .ci-link-btn,
+.theme-modern-atelier .hp-section-cta .btn-secondary,
+.theme-modern-atelier .hp-contact-cta .btn-secondary,
+.theme-modern-atelier .hp-svc-card__btn,
+.theme-modern-atelier .hp-cenik-card__btn,
+.theme-modern-atelier .btn-maps {
+  background: var(--theme-accent);
+  border-color: var(--theme-accent);
+  color: #fff;
+}
+
+.theme-modern-atelier .btn-primary:hover,
+.theme-modern-atelier .btn-success:hover,
+.theme-modern-atelier .btn-h--gold:hover,
+.theme-modern-atelier .nav-cta:hover,
+.theme-modern-atelier .kt-form-btn:hover,
+.theme-modern-atelier .ci-link-btn:hover,
+.theme-modern-atelier .hp-section-cta .btn-secondary:hover,
+.theme-modern-atelier .hp-contact-cta .btn-secondary:hover,
+.theme-modern-atelier .hp-svc-card__btn:hover,
+.theme-modern-atelier .hp-cenik-card__btn:hover,
+.theme-modern-atelier .btn-maps:hover {
+  background: var(--theme-accent-strong);
+  border-color: var(--theme-accent-strong);
+  color: #fff;
+}
+
+.theme-modern-atelier .nav,
+.theme-modern-atelier .topbar,
+.theme-modern-atelier .sidebar {
+  background: rgba(255,255,255,.75);
+  backdrop-filter: blur(12px);
+  border-color: var(--theme-border);
+}
+
+.theme-modern-atelier .nav-links a,
+.theme-modern-atelier .nav a,
+.theme-modern-atelier .sidebar a {
+  color: rgba(19,19,19,.72);
+}
+
+.theme-modern-atelier .nav-links a:hover,
+.theme-modern-atelier .nav a:hover,
+.theme-modern-atelier .sidebar a:hover,
+.theme-modern-atelier .nav-links .nav-active,
+.theme-modern-atelier .sidebar a.active {
+  color: var(--theme-text);
+}
+
+.theme-modern-atelier .hero {
+  padding-top: clamp(48px, 7vw, 88px);
+}
+
+.theme-modern-atelier .hero__content,
+.theme-modern-atelier .section .container,
+.theme-modern-atelier .pf-hero .container,
+.theme-modern-atelier .bp-hero .container,
+.theme-modern-atelier .fq-hero .container,
+.theme-modern-atelier .kt-hero .container,
+.theme-modern-atelier .bl-hero .container {
+  position: relative;
+}
+
+.theme-modern-atelier .hero::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(168,111,50,.22), transparent);
+}
+
+.theme-modern-atelier .section {
+  border-top: 1px solid rgba(19,19,19,.05);
+}
+
+.theme-modern-atelier .ci-brand__name {
+  font-family: Georgia, 'Times New Roman', serif;
+  letter-spacing: -.03em;
+}
+
+.theme-modern-atelier .ci-social:hover,
+.theme-modern-atelier .bl-more,
+.theme-modern-atelier .bp-back a,
+.theme-modern-atelier .pt-caption {
+  color: var(--theme-text);
+}
+
+@media (max-width: 720px) {
+  .theme-modern-atelier .card,
+  .theme-modern-atelier .block-item,
+  .theme-modern-atelier .hp-svc-card,
+  .theme-modern-atelier .bl-card,
+  .theme-modern-atelier .pt-tile,
+  .theme-modern-atelier .ci-block,
+  .theme-modern-atelier .kt-form-block {
+    box-shadow: none;
+  }
+}

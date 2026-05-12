@@ -315,13 +315,14 @@ function applyThemeTemplate(PageRenderer $renderer, array $site, string $pageKey
     $themeJs = $registry->getJsForPage($theme, $pageKey);
     $themeLayout = $registry->getLayoutHtmlForPage($theme, $pageKey);
 
-    if ($themeLayout !== '') {
-        $html = $renderer->applyLayout($themeLayout, $html, $siteName, $nav);
-    }
+        if ($themeLayout !== '') {
+            $html = $renderer->applyLayout($themeLayout, $html, $siteName, $nav);
+        }
+        $html = $registry->injectBodyClass($html, (string)($theme['key'] ?? ''));
 
-    if ($themeCss !== '') {
-        $css = trim($css . "\n" . $themeCss);
-    }
+        if ($themeCss !== '') {
+            $css = trim($css . "\n" . $themeCss);
+        }
 
     if ($themeJs !== '') {
         $js = trim($js . "\n" . $themeJs);

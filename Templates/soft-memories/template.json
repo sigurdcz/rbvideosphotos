@@ -1,0 +1,24 @@
+{
+  "key": "soft-memories",
+  "name": "Soft Memories",
+  "description": "Jemna, vrelna a priatelska sablona pro rodinne a svatebni foceni. Pusobi lehce, pohodove a velmi lidsky.",
+  "version": "1.0.0",
+  "author": "SEO CMS",
+  "pages": [
+    "homepage",
+    "sluzby",
+    "portfolio",
+    "portfolio-detail",
+    "blog",
+    "blog-post",
+    "cenik",
+    "faq",
+    "contact"
+  ],
+  "assets": {
+    "css": [
+      "assets/theme.css"
+    ],
+    "js": []
+  }
+}
