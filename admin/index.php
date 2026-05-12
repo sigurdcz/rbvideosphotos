@@ -91,18 +91,6 @@ try {
     $router->get('/admin/settings',        'SettingsController', 'index');
     $router->post('/admin/settings/update','SettingsController', 'update');
 
-    // FAQ
-    $router->get('/admin/faq',          'FaqController', 'index');
-    $router->get('/admin/faq/create',   'FaqController', 'create');
-    $router->post('/admin/faq/store',   'FaqController', 'store');
-    $router->get('/admin/faq/edit',     'FaqController', 'edit');
-    $router->post('/admin/faq/update',  'FaqController', 'update');
-    $router->post('/admin/faq/delete',  'FaqController', 'delete');
-
-    // Kontakt
-    $router->get('/admin/contact',         'ContactController', 'edit');
-    $router->post('/admin/contact/update', 'ContactController', 'update');
-
     // Blog articles
     $router->get('/admin/blog',          'BlogController', 'index');
     $router->get('/admin/blog/create',   'BlogController', 'create');

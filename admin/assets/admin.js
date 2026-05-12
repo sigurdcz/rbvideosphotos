@@ -101,6 +101,41 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
   }
+
+  // FAQ repeater in page editor
+  const faqList = document.getElementById('faq-items-list');
+  const faqTemplate = document.getElementById('faq-item-template');
+  const faqAddButton = document.querySelector('[data-add-faq-item]');
+  if (faqList && faqTemplate && faqAddButton) {
+    const syncFaqIndices = () => {
+      faqList.querySelectorAll('[data-faq-item]').forEach((item, index) => {
+        item.querySelectorAll('[data-faq-name]').forEach(field => {
+          field.name = `faq_items[${index}][${field.dataset.faqName}]`;
+        });
+        const hiddenActive = item.querySelector('[data-faq-hidden-active]');
+        if (hiddenActive) hiddenActive.name = `faq_items[${index}][is_active]`;
+      });
+
+      const emptyState = document.getElementById('faq-empty-state');
+      if (emptyState) emptyState.style.display = faqList.children.length ? 'none' : '';
+    };
+
+    faqAddButton.addEventListener('click', () => {
+      const fragment = faqTemplate.content.cloneNode(true);
+      faqList.appendChild(fragment);
+      syncFaqIndices();
+    });
+
+    faqList.addEventListener('click', e => {
+      const removeBtn = e.target.closest('[data-remove-faq-item]');
+      if (!removeBtn) return;
+      const item = removeBtn.closest('[data-faq-item]');
+      if (item) item.remove();
+      syncFaqIndices();
+    });
+
+    syncFaqIndices();
+  }
 });
 
 // ── Article WYSIWYG editor ───────────────────────────────────────────────────

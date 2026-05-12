@@ -5,8 +5,9 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Core\SlugTrait;
 use App\Repositories\BlockRepository;
+use App\Repositories\ContactRepository;
+use App\Repositories\FaqRepository;
 use App\Repositories\PageRepository;
-use App\Repositories\SeoRepository;
 use App\Repositories\SiteRepository;
 use App\Repositories\TemplateRepository;
 use App\Services\TemplateParser;
@@ -14,6 +15,7 @@ use App\Services\TemplateParser;
 class PageController extends Controller
 {
     use SlugTrait;
+
     public function index(array $params): void
     {
         $this->requireAuth();
@@ -37,9 +39,13 @@ class PageController extends Controller
         $templates = (new TemplateRepository())->allForAdmin();
 
         $this->view('pages.form', [
-            'page'      => null,
-            'site'      => $site,
-            'templates' => $templates,
+            'page'       => null,
+            'site'       => $site,
+            'templates'  => $templates,
+            'template'   => null,
+            'layoutType' => 'generic',
+            'faqItems'   => [],
+            'contact'    => [],
         ]);
     }
 
@@ -75,7 +81,6 @@ class PageController extends Controller
             'status'      => 'draft',
         ]);
 
-        // Parse blocks from template
         $templateId = (int)($_POST['template_id'] ?? 0);
         if ($templateId) {
             $this->initBlocksFromTemplate($pageId, $templateId);
@@ -99,14 +104,20 @@ class PageController extends Controller
         $sites     = new SiteRepository();
         $blocks    = (new BlockRepository())->allByPage($id);
         $templates = (new TemplateRepository())->allForAdmin();
+        $template  = $page['template_id'] ? (new TemplateRepository())->findById((int)$page['template_id']) : null;
+        $layout    = $this->resolveLayoutType($template['name'] ?? '');
 
         $this->view('pages.form', [
-            'page'      => $page,
-            'blocks'    => $blocks,
-            'templates' => $templates,
-            'site'      => $sites->findById($page['site_id']),
-            'success'   => $this->getFlash('success'),
-            'error'     => $this->getFlash('error'),
+            'page'       => $page,
+            'blocks'     => $blocks,
+            'templates'  => $templates,
+            'template'   => $template,
+            'layoutType' => $layout,
+            'faqItems'   => $layout === 'faq' ? (new FaqRepository())->allBySite((int)$page['site_id']) : [],
+            'contact'    => $layout === 'contact' ? (new ContactRepository())->findBySiteSafe((int)$page['site_id']) : [],
+            'site'       => $sites->findById($page['site_id']),
+            'success'    => $this->getFlash('success'),
+            'error'      => $this->getFlash('error'),
         ]);
     }
 
@@ -122,9 +133,12 @@ class PageController extends Controller
             $this->redirect('/admin/pages');
         }
 
-        $slug    = $this->makeSlug($_POST['slug'] ?? '', '', allowSlash: true);
-        $rawUrl  = trim($_POST['url_path'] ?? '');
-        $urlPath = $rawUrl !== '' ? $this->makeSlug($rawUrl, '', allowSlash: true) : '';
+        $slug       = $this->makeSlug($_POST['slug'] ?? '', '', allowSlash: true);
+        $rawUrl     = trim($_POST['url_path'] ?? '');
+        $urlPath    = $rawUrl !== '' ? $this->makeSlug($rawUrl, '', allowSlash: true) : '';
+        $templateId = (int)($_POST['template_id'] ?? 0) ?: null;
+        $template   = $templateId ? (new TemplateRepository())->findById($templateId) : null;
+        $layoutType = $this->resolveLayoutType($template['name'] ?? '');
 
         if ($repo->slugExists($page['site_id'], $slug, $id)) {
             $this->flash('error', 'Slug již existuje.');
@@ -136,15 +150,24 @@ class PageController extends Controller
             'slug'        => $slug,
             'url_path'    => $urlPath,
             'language'    => $_POST['language'] ?? 'cs',
-            'template_id' => (int)($_POST['template_id'] ?? 0) ?: null,
+            'template_id' => $templateId,
         ]);
 
-        // Save blocks
-        $blockRepo = new BlockRepository();
-        $keys      = $_POST['block_key']     ?? [];
-        $contents  = $_POST['block_content'] ?? [];
-        foreach ($keys as $i => $key) {
-            $blockRepo->updateContent($id, $key, $contents[$i] ?? '');
+        if ($templateId && (int)$page['template_id'] !== $templateId) {
+            $this->initBlocksFromTemplate($id, $templateId);
+        }
+
+        $this->saveSubmittedBlocks($id);
+
+        if ($layoutType === 'faq') {
+            $faqRepo = new FaqRepository();
+            $faqRepo->replaceAllBySite((int)$page['site_id'], $_POST['faq_items'] ?? []);
+            $this->syncHomepageFaqBlocks($faqRepo, (int)$page['site_id']);
+        }
+
+        if ($layoutType === 'contact') {
+            (new ContactRepository())->upsert((int)$page['site_id'], $_POST);
+            $this->syncHomepageContactBlocks((int)$page['site_id']);
         }
 
         $this->flash('success', 'Stránka uložena.');
@@ -164,7 +187,9 @@ class PageController extends Controller
     private function initBlocksFromTemplate(int $pageId, int $templateId): void
     {
         $tmpl = (new TemplateRepository())->findById($templateId);
-        if (!$tmpl) return;
+        if (!$tmpl) {
+            return;
+        }
 
         $parser = new TemplateParser();
         $blocks = $parser->parseBlocks($tmpl['html_source']);
@@ -172,5 +197,130 @@ class PageController extends Controller
         foreach ($blocks as $block) {
             $repo->upsert($pageId, $block['block_key'], $block);
         }
+    }
+
+    private function saveSubmittedBlocks(int $pageId): void
+    {
+        $blockRepo = new BlockRepository();
+        $keys      = $_POST['block_key'] ?? [];
+        $contents  = $_POST['block_content'] ?? [];
+
+        foreach ($keys as $i => $key) {
+            $key = trim((string)$key);
+            if ($key === '') {
+                continue;
+            }
+
+            $existing = $blockRepo->findByKey($pageId, $key);
+            $blockRepo->upsert($pageId, $key, [
+                'block_type' => $existing['block_type'] ?? 'textarea',
+                'label'      => $existing['label'] ?? $key,
+                'content'    => (string)($contents[$i] ?? ''),
+                'sort_order' => $existing['sort_order'] ?? ($i + 1),
+            ]);
+        }
+    }
+
+    private function resolveLayoutType(string $templateName): string
+    {
+        $name = mb_strtolower($templateName);
+
+        return match (true) {
+            str_contains($name, 'faq') => 'faq',
+            str_contains($name, 'kontakt') => 'contact',
+            str_contains($name, 'ceník'), str_contains($name, 'cenik') => 'pricing',
+            str_contains($name, 'služby'), str_contains($name, 'sluzby') => 'services',
+            default => 'generic',
+        };
+    }
+
+    private function syncHomepageFaqBlocks(FaqRepository $repo, int $siteId): void
+    {
+        $page = (new PageRepository())->findByUrlPath('');
+        if (!$page) {
+            return;
+        }
+
+        $items  = array_slice($repo->allActive($siteId), 0, 3);
+        $blocks = new BlockRepository();
+        $h      = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
+
+        for ($i = 0; $i < 3; $i++) {
+            $key = 'faq_' . ($i + 1);
+            if (isset($items[$i])) {
+                $item    = $items[$i];
+                $content = '<strong style="display:block;color:#fff;margin-bottom:8px">'
+                    . $h($item['question']) . '</strong>'
+                    . '<p style="color:rgba(255,255,255,.72);line-height:1.6;margin:0">'
+                    . nl2br($h($item['answer'])) . '</p>';
+            } else {
+                $content = '';
+            }
+
+            $blocks->upsert((int)$page['id'], $key, [
+                'block_type' => 'html',
+                'label'      => 'FAQ ' . ($i + 1),
+                'content'    => $content,
+                'sort_order' => 51 + $i,
+            ]);
+        }
+    }
+
+    private function syncHomepageContactBlocks(int $siteId): void
+    {
+        $page = (new PageRepository())->findByUrlPath('');
+        if (!$page) {
+            return;
+        }
+
+        $contact = (new ContactRepository())->findBySiteSafe($siteId);
+        $content = $this->buildHomepageContactHtml($contact);
+
+        (new BlockRepository())->upsert((int)$page['id'], 'kontakt_info', [
+            'block_type' => 'html',
+            'label'      => 'Kontakt — info',
+            'content'    => $content,
+            'sort_order' => 62,
+        ]);
+    }
+
+    private function buildHomepageContactHtml(array $contact): string
+    {
+        $h     = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
+        $lines = [];
+
+        foreach (['phone_1', 'phone_2', 'phone_3'] as $phoneKey) {
+            if (!empty($contact[$phoneKey])) {
+                $phone   = (string)$contact[$phoneKey];
+                $telLink = preg_replace('/\s+/', '', $phone);
+                $lines[] = '<p><a href="tel:' . $h((string)$telLink) . '">' . $h($phone) . '</a></p>';
+            }
+        }
+
+        if (!empty($contact['email'])) {
+            $lines[] = '<p><a href="mailto:' . $h($contact['email']) . '">' . $h($contact['email']) . '</a></p>';
+        }
+
+        foreach (['address_1', 'address_2'] as $addressKey) {
+            if (!empty($contact[$addressKey])) {
+                $lines[] = '<p>' . nl2br($h($contact[$addressKey])) . '</p>';
+            }
+        }
+
+        for ($i = 1; $i <= 5; $i++) {
+            $type = trim((string)($contact['social_' . $i . '_type'] ?? ''));
+            $url  = trim((string)($contact['social_' . $i . '_url'] ?? ''));
+
+            if ($type !== '' && $url !== '') {
+                $lines[] = '<p><a href="' . $h($url) . '" target="_blank" rel="noopener">'
+                    . ucfirst($h($type)) . '</a></p>';
+            }
+        }
+
+        if ($lines === []) {
+            return '<p style="color:rgba(255,255,255,.45)">Doplňte kontaktní informace v administraci.</p>';
+        }
+
+        return '<div class="cta-info">' . implode('', $lines) . '</div>';
     }
 }

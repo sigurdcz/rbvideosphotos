@@ -68,4 +68,39 @@ class FaqRepository
     {
         $this->db->prepare('DELETE FROM faq_items WHERE id = ?')->execute([$id]);
     }
+
+    public function replaceAllBySite(int $siteId, array $items): void
+    {
+        $this->db->beginTransaction();
+
+        try {
+            $this->db->prepare('DELETE FROM faq_items WHERE site_id = ?')->execute([$siteId]);
+
+            $stmt = $this->db->prepare(
+                'INSERT INTO faq_items (site_id, question, answer, sort_order, is_active) VALUES (?, ?, ?, ?, ?)'
+            );
+
+            foreach ($items as $item) {
+                $question = trim((string)($item['question'] ?? ''));
+                $answer   = trim((string)($item['answer'] ?? ''));
+
+                if ($question === '' && $answer === '') {
+                    continue;
+                }
+
+                $stmt->execute([
+                    $siteId,
+                    $question,
+                    $answer,
+                    (int)($item['sort_order'] ?? 0),
+                    !empty($item['is_active']) ? 1 : 0,
+                ]);
+            }
+
+            $this->db->commit();
+        } catch (\Throwable $e) {
+            $this->db->rollBack();
+            throw $e;
+        }
+    }
 }

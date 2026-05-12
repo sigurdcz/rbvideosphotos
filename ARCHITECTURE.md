@@ -98,6 +98,17 @@ Uživatel si může vytvářet vlastní substránky (ceník, FAQ, o nás, …). 
 
 Nové substránky mohou používat libovolnou z dostupných šablon.
 
+### Speciální layouty v administraci
+
+Některé layouty mají v editoru stránky vlastní specializované UI místo generického seznamu bloků:
+
+- `FAQ` spravuje hero bloky stránky a zároveň položky z tabulky `faq_items`
+- `Kontakt` spravuje hero bloky stránky a zároveň strukturovaná pole z tabulky `contact_info`
+- `Ceník` zobrazuje pevné karty jako samostatná pole
+- `Služby` seskupuje obsah podle layoutu stránky
+
+FAQ ani Kontakt nejsou v administraci samostatné sekce v sidebaru. Spravují se přes `Stránky` podle vybraného layoutu.
+
 ---
 
 ## Navigace — dvě varianty

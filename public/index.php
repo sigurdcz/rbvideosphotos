@@ -541,7 +541,6 @@ function tryServeFaqPage(): bool
 
     $h        = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
     $siteName = (string)($site['name'] ?? 'Muj web');
-
     $page       = (new PageRepository())->findPublishedByUrlPath('faq');
     $heroTitle  = 'Časté dotazy';
     $heroSub    = 'Odpovědi na nejčastější dotazy.';
@@ -629,8 +628,23 @@ function tryServeKontaktPage(): bool
         return false;
     }
 
-    $h        = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
-    $siteName = (string)($site['name'] ?? 'Muj web');
+    $h         = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
+    $siteName  = (string)($site['name'] ?? 'Muj web');
+    $heroTitle = 'Kontakt';
+    $heroSub   = 'Ozvěte se nám. Rádi odpovíme na vaše otázky.';
+
+    $page = (new PageRepository())->findPublishedByUrlPath('kontakt');
+    if ($page) {
+        $pageBlocks = (new BlockRepository())->allByPage((int)$page['id']);
+        foreach ($pageBlocks as $b) {
+            if ($b['block_key'] === 'hero_h1' && $b['content']) {
+                $heroTitle = (string)$b['content'];
+            }
+            if ($b['block_key'] === 'hero_sub' && $b['content']) {
+                $heroSub = (string)$b['content'];
+            }
+        }
+    }
 
     $socialIcons = [
         'instagram' => '&#x1F4F7;', 'facebook' => '&#x1F426;', 'youtube'   => '&#x25B6;',
@@ -742,8 +756,8 @@ CSS;
         $pageContent = <<<HTML
 <section class="kt-hero">
   <div class="container">
-    <h1>Kontakt</h1>
-    <p>Ozvěte se nám. Rádi odpovíme na vaše otázky.</p>
+    <h1>{$h($heroTitle)}</h1>
+    <p>{$h($heroSub)}</p>
   </div>
 </section>
 <section class="kt-wrap">
@@ -769,7 +783,7 @@ HTML;
         $html = '<!DOCTYPE html><html lang="cs"><head><meta charset="UTF-8"><title>Kontakt | ' . $h($siteName) . '</title>'
             . '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:system-ui,sans-serif;line-height:1.6}.container{max-width:1100px;margin:0 auto;padding:0 24px}' . $kontaktCss . '</style>'
             . '</head><body>'
-            . '<section class="kt-hero"><div class="container"><h1>Kontakt</h1><p>Ozvěte se nám.</p></div></section>'
+            . '<section class="kt-hero"><div class="container"><h1>' . $h($heroTitle) . '</h1><p>' . $h($heroSub) . '</p></div></section>'
             . '<section class="kt-wrap"><div class="container"><div class="kt-grid">'
             . '<div class="ci-block"><div class="ci-title">Kontaktní informace</div>' . $detailsHtml . $mapsHtml . '</div>'
             . '<div class="kt-form-block"><div class="ci-title">Napište nám</div>' . $formHtml . '</div>'
