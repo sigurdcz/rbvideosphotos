@@ -122,6 +122,7 @@ function tryServeDatabasePage(string $uri, bool $authenticated = false, bool $pr
             $seoRenderer->renderHead($seo, $site, $pageUrl, $ogImageUrl, $twImageUrl),
             $seoRenderer->renderBodyScripts($site)
         );
+        $html = injectFooterSocials($html, (int)$site['id']);
         $html = sanitizeFrontendHtml($html);
 
         if ($authenticated) {
@@ -209,6 +210,72 @@ HTML;
 function sanitizeFrontendHtml(string $html): string
 {
     return preg_replace('~https?://localhost(?::\d+)?/storage/media/~i', '/storage/media/', $html) ?? $html;
+}
+
+function buildFooterSocialsHtml(int $siteId): string
+{
+    $contact = (new ContactRepository())->findBySiteSafe($siteId);
+    $socialIcons = [
+        'instagram' => '&#x1F4F7;',
+        'facebook' => '&#x1F426;',
+        'youtube' => '&#x25B6;',
+        'tiktok' => '&#x1F3B5;',
+        'linkedin' => '&#x1F4BC;',
+        'twitter' => '&#x1D54F;',
+        'pinterest' => '&#x1F4CC;',
+        'whatsapp' => '&#x1F4AC;',
+        'telegram' => '&#x2708;',
+    ];
+
+    $items = [];
+    for ($i = 1; $i <= 5; $i++) {
+        $type = trim((string)($contact['social_' . $i . '_type'] ?? ''));
+        $url = trim((string)($contact['social_' . $i . '_url'] ?? ''));
+        if ($type === '' || $url === '') {
+            continue;
+        }
+
+        $icon = $socialIcons[$type] ?? '&#128279;';
+        $items[] = '<a class="site-footer-social" href="' . htmlspecialchars($url, ENT_QUOTES) . '" target="_blank" rel="noopener">'
+            . '<span class="site-footer-social__icon">' . $icon . '</span>'
+            . '<span class="site-footer-social__text">' . htmlspecialchars(ucfirst($type), ENT_QUOTES) . '</span>'
+            . '</a>';
+    }
+
+    if ($items === []) {
+        return '';
+    }
+
+    return '<style>'
+        . '.site-footer-socials{margin-top:24px;padding-top:24px;border-top:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;gap:14px;align-items:center}'
+        . '.site-footer-socials__label{font-size:.76rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.45)}'
+        . '.site-footer-socials__list{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}'
+        . '.site-footer-social{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;background:#1c1c22;color:#fff;text-decoration:none;font-size:.9rem;font-weight:700;transition:transform .2s,background .2s}'
+        . '.site-footer-social:hover{transform:translateY(-1px);background:#c4963c;color:#111}'
+        . '.site-footer-social__icon{font-size:1rem;line-height:1}'
+        . '</style>'
+        . '<div class="site-footer-socials">'
+        . '<div class="site-footer-socials__label">Sociální sítě</div>'
+        . '<div class="site-footer-socials__list">' . implode('', $items) . '</div>'
+        . '</div>';
+}
+
+function injectFooterSocials(string $html, int $siteId): string
+{
+    $socials = buildFooterSocialsHtml($siteId);
+    if ($socials === '') {
+        return $html;
+    }
+
+    if (str_contains($html, '</footer>')) {
+        return str_replace('</footer>', $socials . '</footer>', $html);
+    }
+
+    if (str_contains($html, '</body>')) {
+        return str_replace('</body>', $socials . '</body>', $html);
+    }
+
+    return $html . $socials;
 }
 
 function publicMediaUrl(string $storagePath): string
@@ -408,7 +475,7 @@ HTML;
         }
 
         header('Content-Type: text/html; charset=UTF-8');
-        echo sanitizeFrontendHtml($html);
+        echo sanitizeFrontendHtml(injectFooterSocials($html, (int)$site['id']));
         return true;
     }
 
@@ -524,7 +591,7 @@ HTML;
         }
 
         header('Content-Type: text/html; charset=UTF-8');
-        echo sanitizeFrontendHtml($html);
+        echo sanitizeFrontendHtml(injectFooterSocials($html, (int)$site['id']));
         return true;
     }
 
@@ -615,7 +682,7 @@ HTML;
     }
 
     header('Content-Type: text/html; charset=UTF-8');
-    echo sanitizeFrontendHtml($html);
+    echo sanitizeFrontendHtml(injectFooterSocials($html, (int)$site['id']));
     return true;
 }
 
@@ -711,22 +778,21 @@ function tryServeKontaktPage(): bool
 
     $kontaktCss = <<<'CSS'
 body{background:#111;color:#fff}
-.kt-hero{background:#1a1a1a;padding:64px 0 40px;text-align:center}
+.kt-hero{background:#1a1a1a;padding:56px 0 32px;text-align:center}
 .kt-hero h1{font-size:clamp(2rem,4vw,3.2rem);color:#fff;margin-bottom:10px}
 .kt-hero p{color:rgba(255,255,255,.7);max-width:640px;margin:0 auto}
-.kt-wrap{padding:56px 0 80px}
-.kt-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start;max-width:1000px;margin:0 auto}
-.ci-block{background:#18181c;border-radius:14px;padding:32px}
+.kt-wrap{padding:32px 0 72px}
+.kt-grid{display:grid;grid-template-columns:1fr;gap:20px;align-items:start;max-width:1000px;margin:0 auto}
+.ci-block,.kt-form-block{background:#18181c;border-radius:14px;padding:20px;min-width:0}
 .ci-title{font-size:1.15rem;font-weight:700;color:#fff;margin-bottom:20px}
-.ci-row{display:flex;gap:12px;margin-bottom:14px;line-height:1.55;color:rgba(255,255,255,.82)}
+.ci-row{display:flex;flex-direction:column;gap:4px;margin-bottom:14px;line-height:1.55;color:rgba(255,255,255,.82)}
 .ci-row a{color:#c4963c;text-decoration:none}.ci-row a:hover{text-decoration:underline}
-.ci-label{flex:0 0 80px;font-size:.82rem;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.04em;padding-top:2px}
+.ci-label{font-size:.82rem;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.04em}
 .ci-socials{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
 .ci-social{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#1f1f26;border-radius:8px;color:#fff;text-decoration:none;font-size:.9rem}
 .ci-social:hover{background:#c4963c}
 .btn-maps{display:inline-flex;align-items:center;gap:8px;margin-top:20px;padding:12px 22px;background:#c4963c;color:#fff;border-radius:8px;text-decoration:none;font-weight:700}
 .btn-maps:hover{opacity:.9}
-.kt-form-block{background:#18181c;border-radius:14px;padding:32px}
 .kt-form-block input,.kt-form-block textarea,.kt-form-block select{width:100%;background:#111;border:1px solid rgba(255,255,255,.12);color:#fff;padding:12px 14px;border-radius:8px;font-size:.95rem;font-family:inherit;margin-bottom:14px}
 .kt-form-block textarea{min-height:120px;resize:vertical}
 .kt-form-block input::placeholder,.kt-form-block textarea::placeholder{color:rgba(255,255,255,.35)}
@@ -734,7 +800,7 @@ body{background:#111;color:#fff}
 .kt-form-btn{width:100%;padding:14px;background:#c4963c;color:#fff;border:none;border-radius:8px;font-size:1rem;font-weight:700;cursor:pointer}
 .kt-form-btn:hover{opacity:.9}
 .kt-success{background:#18181c;border-radius:10px;padding:20px;text-align:center;color:#4ade80;margin-bottom:16px}
-@media(max-width:700px){.kt-grid{grid-template-columns:1fr}}
+@media(min-width:900px){.kt-hero{padding:64px 0 40px}.kt-wrap{padding:56px 0 80px}.kt-grid{grid-template-columns:1fr 1fr;gap:40px}.ci-block,.kt-form-block{padding:32px}.ci-row{flex-direction:row;gap:12px}.ci-label{flex:0 0 80px;padding-top:2px}}
 CSS;
 
     // Contact form HTML
@@ -782,18 +848,18 @@ HTML;
         $html = str_replace('</head>', "\n<title>" . $h('Kontakt | ' . $siteName) . "</title>\n</head>", $html);
         $html = $renderer->injectAssets($html, ($site['layout_css'] ?? '') . "\n" . $kontaktCss, $site['layout_js'] ?? '');
     } else {
-        $html = '<!DOCTYPE html><html lang="cs"><head><meta charset="UTF-8"><title>Kontakt | ' . $h($siteName) . '</title>'
-            . '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:system-ui,sans-serif;line-height:1.6}.container{max-width:1100px;margin:0 auto;padding:0 24px}' . $kontaktCss . '</style>'
+        $html = '<!DOCTYPE html><html lang="cs"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Kontakt | ' . $h($siteName) . '</title>'
+            . '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:system-ui,sans-serif;line-height:1.6;background:#111;color:#fff}.container{max-width:1100px;margin:0 auto;padding:0 16px}' . $kontaktCss . '</style>'
             . '</head><body>'
             . '<section class="kt-hero"><div class="container"><h1>' . $h($heroTitle) . '</h1><p>' . $h($heroSub) . '</p></div></section>'
             . '<section class="kt-wrap"><div class="container"><div class="kt-grid">'
             . '<div class="ci-block"><div class="ci-title">Kontaktní informace</div>' . $detailsHtml . $mapsHtml . '</div>'
             . '<div class="kt-form-block"><div class="ci-title">Napište nám</div>' . $formHtml . '</div>'
-            . '</div></div></section></body></html>';
+            . '</div></div></section><footer><div class="container">' . $h($siteName) . '</div></footer></body></html>';
     }
 
     header('Content-Type: text/html; charset=UTF-8');
-    echo sanitizeFrontendHtml($html);
+    echo sanitizeFrontendHtml(injectFooterSocials($html, (int)$site['id']));
     return true;
 }
 
@@ -903,7 +969,7 @@ HTML;
     }
 
     header('Content-Type: text/html; charset=UTF-8');
-    echo sanitizeFrontendHtml($html);
+    echo sanitizeFrontendHtml(injectFooterSocials($html, (int)$site['id']));
     return true;
 }
 
@@ -1064,7 +1130,7 @@ HTML;
     }
 
     header('Content-Type: text/html; charset=UTF-8');
-    echo sanitizeFrontendHtml($html);
+    echo sanitizeFrontendHtml(injectFooterSocials($html, (int)$site['id']));
     return true;
 }
 
@@ -1156,7 +1222,10 @@ try {
         if ($site) {
             try {
                 $ci = (new ContactRepository())->findBySite((int)$site['id']);
-                $formEmail = $ci['form_email'] ?? null;
+                $formEmail = trim((string)($ci['form_email'] ?? ''));
+                if ($formEmail === '') {
+                    $formEmail = trim((string)($ci['email'] ?? ''));
+                }
             } catch (\Throwable $e) {}
         }
         $name    = trim($_POST['name']          ?? '');

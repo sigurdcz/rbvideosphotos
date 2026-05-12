@@ -101,11 +101,65 @@ class HomepageContentService
 
     private function fillHomepageFallbacks(array &$blocks, int $siteId): void
     {
+        $this->fillHomepageTextDefaults($blocks);
         $this->applyBlockFallback($blocks, 'sluzby_items', fn() => $this->buildServicesGridHtml($siteId, 3));
         $this->applyBlockFallback($blocks, 'portfolio-tiles', fn() => $this->buildPortfolioHtml($siteId));
         $this->applyBlockFallback($blocks, 'cenik_body', fn() => $this->buildPricingHtml());
         $this->applyBlockFallback($blocks, 'kontakt_info', fn() => $this->buildContactHtml($siteId));
         $this->applyBlockFallback($blocks, 'contact_info', fn() => $this->buildContactHtml($siteId));
+    }
+
+    private function fillHomepageTextDefaults(array &$blocks): void
+    {
+        $defaults = [
+            'hero_label' => 'Vítejte',
+            'hero_h1' => 'Doplňte váš hlavní nadpis',
+            'hero_sub' => 'Krátký popis toho, co děláte a co nabízíte klientům.',
+            'sluzby_title' => 'Naše služby',
+            'sluzby_intro' => 'Stručný popis toho, co nabízíme.',
+            'portfolio_title' => 'Naše práce',
+            'portfolio_intro' => 'Ukázka projektů a realizací.',
+            'blog_title' => 'Nejnovější články',
+            'blog_intro' => 'Rady a novinky z naší praxe.',
+            'cenik_title' => 'Ceník',
+            'cenik_intro' => 'Orientační přehled cen. Každá zakázka je individuální.',
+            'faq_title' => 'Časté dotazy',
+            'kontakt_title' => 'Kontakt',
+            'kontakt_sub' => 'Ozvěte se nám. Rádi odpovíme na vaše otázky.',
+        ];
+
+        foreach ($blocks as &$block) {
+            $key = (string)($block['block_key'] ?? '');
+            if ($key === '' || !array_key_exists($key, $defaults)) {
+                continue;
+            }
+
+            if ($this->isBlankHtml($block['content'] ?? '')) {
+                $block['content'] = $defaults[$key];
+            }
+        }
+        unset($block);
+
+        foreach ($defaults as $key => $content) {
+            $found = false;
+            foreach ($blocks as $block) {
+                if (($block['block_key'] ?? '') === $key) {
+                    $found = true;
+                    break;
+                }
+            }
+
+            if (!$found) {
+                $blocks[] = [
+                    'block_key' => $key,
+                    'block_type' => 'text',
+                    'label' => $key,
+                    'content' => $content,
+                    'sort_order' => 0,
+                    'autofill_disabled' => 0,
+                ];
+            }
+        }
     }
 
     private function fillPortfolioFallbacks(array &$blocks, int $siteId): void
@@ -514,34 +568,6 @@ HTML;
 
     private function buildContactHtml(int $siteId): string
     {
-        $contactPage = $this->pages->findByUrlPath('kontakt');
-        if ($contactPage) {
-            $pageBlocks = $this->blocks->allByPage((int)$contactPage['id']);
-            $pageMap = [];
-            foreach ($pageBlocks as $block) {
-                $pageMap[$block['block_key']] = (string)($block['content'] ?? '');
-            }
-
-            $infoHtml = trim((string)($pageMap['kontakt_info'] ?? $pageMap['contact_info'] ?? ''));
-            $cardHtml = trim((string)($pageMap['kontakt_card'] ?? $pageMap['contact_card'] ?? ''));
-            $hasInfoHtml = $infoHtml !== '' && !$this->isBlankHtml($infoHtml) && !$this->looksLikePlaceholder($infoHtml);
-            $hasCardHtml = $cardHtml !== '' && !$this->isBlankHtml($cardHtml) && !$this->looksLikePlaceholder($cardHtml);
-            if ($hasInfoHtml || $hasCardHtml) {
-                $css = '<style>'
-                    . '.hp-contact-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:24px}'
-                    . '.hp-contact-box{background:#18181c;border-radius:14px;padding:24px}'
-                    . '.hp-contact-box > :first-child{margin-top:0}'
-                    . '.hp-contact-box > :last-child{margin-bottom:0}'
-                    . '@media(max-width:720px){.hp-contact-grid{grid-template-columns:1fr}}'
-                    . '</style>';
-                return $css
-                    . '<div class="hp-contact-grid">'
-                    . '<div class="hp-contact-box">' . ($hasInfoHtml ? $infoHtml : '<p style="color:rgba(255,255,255,.45)">Doplnte kontaktní informace v administraci.</p>') . '</div>'
-                    . '<div class="hp-contact-box">' . ($hasCardHtml ? $cardHtml : '<p style="color:rgba(255,255,255,.45)">Doplnte kontaktní kartu nebo formulář v administraci.</p>') . '</div>'
-                    . '</div>';
-            }
-        }
-
         $contact = $this->contact->findBySiteSafe($siteId);
         $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
         $lines = [];
@@ -578,39 +604,52 @@ HTML;
 
         $map = '';
         if (!empty($contact['maps_url'])) {
-            $map = '<a href="' . $h($contact['maps_url']) . '" target="_blank" rel="noopener" class="hp-contact-map">Otevřít mapu</a>';
+            $mapsUrl = trim((string)$contact['maps_url']);
+            if (preg_match('~^https?://~i', $mapsUrl)) {
+                $map = '<iframe class="hp-contact-map-embed" src="' . $h($mapsUrl) . '" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>';
+            } else {
+                $map = '<a href="' . $h($mapsUrl) . '" target="_blank" rel="noopener" class="hp-contact-map">Otevřít mapu</a>';
+            }
         }
 
-        $form = '';
-        if (!empty($contact['form_email'])) {
-            $csrf = htmlspecialchars(\App\Core\Auth::csrfToken(), ENT_QUOTES);
-            $form = '<form class="hp-contact-form" method="POST" action="/kontakt/odeslat">'
-                . '<input type="hidden" name="_csrf" value="' . $csrf . '">'
-                . '<input type="hidden" name="website" value="" autocomplete="off">'
-                . '<label>Jméno</label><input type="text" name="name" required placeholder="Vaše jméno">'
-                . '<label>E-mail / telefon</label><input type="text" name="contact_value" required placeholder="email nebo telefon">'
-                . '<label>Zpráva</label><textarea name="message" required placeholder="Napište nám..."></textarea>'
-                . '<button type="submit">Odeslat zprávu</button>'
-                . '</form>';
+        $recipient = trim((string)($contact['form_email'] ?? ''));
+        if ($recipient === '') {
+            $recipient = trim((string)($contact['email'] ?? ''));
+        }
+
+        $csrf = htmlspecialchars(\App\Core\Auth::csrfToken(), ENT_QUOTES);
+        $form = '<form class="hp-contact-form" method="POST" action="/kontakt/odeslat">'
+            . '<input type="hidden" name="_csrf" value="' . $csrf . '">'
+            . '<input type="hidden" name="website" value="" autocomplete="off">'
+            . '<label>Jméno</label><input type="text" name="name" required placeholder="Vaše jméno">'
+            . '<label>E-mail / telefon</label><input type="text" name="contact_value" required placeholder="email nebo telefon">'
+            . '<label>Zpráva</label><textarea name="message" required placeholder="Napište nám..."></textarea>'
+            . '<button type="submit">Odeslat zprávu</button>'
+            . '</form>';
+        if ($recipient === '') {
+            $form = '<p style="color:rgba(255,255,255,.45);margin-bottom:12px">Formulář je připravený, ale chybí cílový e-mail pro odeslání.</p>' . $form;
         }
 
         $css = '<style>'
-            . '.hp-contact-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:24px}'
-            . '.hp-contact-box{background:#18181c;border-radius:14px;padding:24px}'
-            . '.hp-contact-lines{display:flex;flex-direction:column;gap:10px}'
-            . '.hp-contact-row{display:flex;gap:12px;line-height:1.55;color:rgba(255,255,255,.86)}'
-            . '.hp-contact-label{flex:0 0 90px;font-size:.78rem;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.04em;padding-top:2px}'
+            . '.hp-contact-grid{display:grid;grid-template-columns:1fr;gap:20px}'
+            . '.hp-contact-grid > :first-child{order:2}'
+            . '.hp-contact-grid > :last-child{order:1}'
+            . '.hp-contact-box{background:#18181c;border-radius:14px;padding:20px;min-width:0}'
+            . '.hp-contact-lines{display:flex;flex-direction:column;gap:12px}'
+            . '.hp-contact-row{display:flex;flex-direction:column;gap:4px;line-height:1.55;color:rgba(255,255,255,.86)}'
+            . '.hp-contact-label{font-size:.78rem;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.04em}'
             . '.hp-contact-row a{color:#c4963c;text-decoration:none}'
             . '.hp-contact-socials{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}'
             . '.hp-contact-social{display:inline-flex;align-items:center;padding:8px 14px;border-radius:8px;background:#202028;color:#fff;text-decoration:none;font-size:.9rem}'
             . '.hp-contact-map{display:inline-flex;margin-top:16px;padding:12px 18px;background:#c4963c;color:#fff;text-decoration:none;border-radius:8px;font-weight:800}'
+            . '.hp-contact-map-embed{display:block;width:100%;aspect-ratio:4/3;min-height:260px;border:0;border-radius:12px;margin-top:16px;background:#0f0f12}'
             . '.hp-contact-form{display:grid;gap:10px}'
             . '.hp-contact-form label{font-size:.82rem;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.04em}'
             . '.hp-contact-form input,.hp-contact-form textarea{width:100%;background:#111;border:1px solid rgba(255,255,255,.12);color:#fff;padding:12px 14px;border-radius:8px;font-size:.95rem;font-family:inherit}'
             . '.hp-contact-form textarea{min-height:120px;resize:vertical}'
             . '.hp-contact-form button{padding:14px 18px;background:#c4963c;color:#fff;border:none;border-radius:8px;font-weight:800;cursor:pointer}'
             . '.hp-contact-form button:hover{background:#d4a64c}'
-            . '@media(max-width:720px){.hp-contact-grid{grid-template-columns:1fr}.hp-contact-label{flex-basis:70px}}'
+            . '@media(min-width:760px){.hp-contact-grid{grid-template-columns:1.2fr .8fr;gap:24px}.hp-contact-grid > :first-child{order:1}.hp-contact-grid > :last-child{order:2}.hp-contact-box{padding:24px}.hp-contact-row{flex-direction:row;gap:12px}.hp-contact-label{flex:0 0 90px;padding-top:2px}}'
             . '</style>';
 
         return $css
