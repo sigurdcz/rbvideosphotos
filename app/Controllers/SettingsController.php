@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Repositories\MediaRepository;
 use App\Repositories\SiteRepository;
 
 class SettingsController extends Controller
@@ -12,11 +13,13 @@ class SettingsController extends Controller
         $this->requireAdmin();
         $sites = new SiteRepository();
         $site  = $sites->findFirst();
+        $media = $site ? (new MediaRepository())->allBySiteWithVariants((int)$site['id']) : [];
 
         $apiKey = (string) getenv('API_KEY') ?: null;
 
         $this->view('settings.index', [
             'site'    => $site,
+            'media'   => $media,
             'apiKey'  => $apiKey,
             'success' => $this->getFlash('success'),
             'error'   => $this->getFlash('error'),
