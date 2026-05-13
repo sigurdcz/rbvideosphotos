@@ -51,7 +51,8 @@ class PageRenderer
                     continue;
                 }
 
-                if (($block['block_type'] ?? '') === 'video' && $node->nodeName === 'video') {
+                $isVideoBlock = (($block['block_type'] ?? '') === 'video') || $key === 'hero_video';
+                if ($isVideoBlock && $node->nodeName === 'video') {
                     if ($content !== '') {
                         $node->setAttribute('src', $content);
                     }

@@ -246,7 +246,7 @@ class PageController extends Controller
         }
 
         $blockRepo->upsert($pageId, 'hero_video', [
-            'block_type' => 'video',
+            'block_type' => 'link',
             'label' => 'Hero — video (URL)',
             'content' => '',
             'sort_order' => 2,

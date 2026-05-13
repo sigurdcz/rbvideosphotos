@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Repositories\SiteRepository;
+use App\Services\PublishService;
 use App\Services\ThemeTemplateRegistry;
 
 class ThemeController extends Controller
@@ -58,7 +59,14 @@ class ThemeController extends Controller
             'active_theme_key' => $key === '' ? null : $key,
         ]);
 
-        $this->flash('success', $key === '' ? 'Sablona byla deaktivovana.' : 'Sablona byla aktivovana.');
+        $user = \App\Core\Auth::user();
+        $publishResult = (new PublishService())->publishSite((int)$site['id'], (int)($user['id'] ?? 0));
+        if (!empty($publishResult['errors'])) {
+            $this->flash('error', 'Sablona byla ulozena, ale publikace webu mela chyby: ' . implode(' | ', $publishResult['errors']));
+            $this->redirect('/admin/shablony');
+        }
+
+        $this->flash('success', $key === '' ? 'Sablona byla deaktivovana a web byl znovu publikovan.' : 'Sablona byla aktivovana a web byl znovu publikovan.');
         $this->redirect('/admin/shablony');
     }
 }

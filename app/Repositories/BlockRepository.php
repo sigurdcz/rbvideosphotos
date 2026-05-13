@@ -9,6 +9,8 @@ class BlockRepository
 {
     private PDO $db;
 
+    private const ALLOWED_BLOCK_TYPES = ['text', 'textarea', 'richtext', 'image', 'link', 'html'];
+
     public function __construct()
     {
         $this->db = Database::getInstance();
@@ -36,6 +38,7 @@ class BlockRepository
     public function upsert(int $pageId, string $key, array $data): void
     {
         $existing = $this->findByKey($pageId, $key);
+        $blockType = $this->normalizeBlockType((string)($data['block_type'] ?? ($existing['block_type'] ?? 'text')));
         $autofillDisabled = array_key_exists('autofill_disabled', $data)
             ? (int)!empty($data['autofill_disabled'])
             : (int)($existing['autofill_disabled'] ?? 0);
@@ -44,7 +47,7 @@ class BlockRepository
                 'UPDATE content_blocks SET block_type = ?, label = ?, content = ?, sort_order = ?, autofill_disabled = ? WHERE id = ?'
             );
             $stmt->execute([
-                $data['block_type'] ?? 'text',
+                $blockType,
                 $data['label']      ?? $key,
                 $data['content']    ?? '',
                 $data['sort_order'] ?? 0,
@@ -59,13 +62,23 @@ class BlockRepository
             $stmt->execute([
                 $pageId,
                 $key,
-                $data['block_type'] ?? 'text',
+                $blockType,
                 $data['label']      ?? $key,
                 $data['content']    ?? '',
                 $data['sort_order'] ?? 0,
                 $autofillDisabled,
             ]);
         }
+    }
+
+    private function normalizeBlockType(string $blockType): string
+    {
+        $blockType = trim($blockType);
+        if ($blockType === 'video') {
+            return 'link';
+        }
+
+        return in_array($blockType, self::ALLOWED_BLOCK_TYPES, true) ? $blockType : 'text';
     }
 
     public function updateContent(int $pageId, string $key, string $content): void

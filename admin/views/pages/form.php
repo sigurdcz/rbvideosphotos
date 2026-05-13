@@ -31,7 +31,9 @@ foreach (($blocks ?? []) as $block) {
 $renderBlockField = function (string $key, string $label, string $type = 'text', string $hint = '') use ($blockMap, $h): void {
     $block = $blockMap[$key] ?? ['content' => '', 'block_type' => $type];
     $value = $block['content'] ?? '';
-    $inputType = $type === 'html' ? 'html' : ($block['block_type'] ?? $type);
+    $inputType = $key === 'hero_video'
+      ? 'video'
+      : ($type === 'html' ? 'html' : ($block['block_type'] ?? $type));
     ?>
     <div class="form-group">
       <label><?= $h($label) ?></label>
@@ -427,7 +429,7 @@ ob_start();
               <?php elseif ($block['block_type'] === 'image'): ?>
                 <input type="text" name="block_content[]" value="<?= $h($block['content'] ?? '') ?>" placeholder="/storage/media/..."<?= $autofillEnabled ? ' disabled' : '' ?>>
                 <div class="form-hint">URL nebo cesta k obrazku</div>
-              <?php elseif ($block['block_type'] === 'video'): ?>
+              <?php elseif (($block['block_type'] === 'video') || $block['block_key'] === 'hero_video'): ?>
                 <input type="url" name="block_content[]" value="<?= $h($block['content'] ?? '') ?>" placeholder="https://... nebo /storage/media/..."<?= $autofillEnabled ? ' disabled' : '' ?>>
                 <div class="form-hint">URL videa pro pozadí v hero sekci homepage.</div>
               <?php else: ?>
