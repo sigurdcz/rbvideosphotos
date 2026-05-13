@@ -53,6 +53,14 @@ class PageRenderer
 
                 $isVideoBlock = (($block['block_type'] ?? '') === 'video') || $key === 'hero_video';
                 if ($isVideoBlock && $node->nodeName === 'video') {
+                    foreach (['autoplay' => 'autoplay', 'muted' => 'muted', 'loop' => 'loop', 'playsinline' => 'playsinline'] as $attr => $value) {
+                        if (!$node->hasAttribute($attr)) {
+                            $node->setAttribute($attr, $value);
+                        }
+                    }
+                    if (!$node->hasAttribute('preload')) {
+                        $node->setAttribute('preload', 'metadata');
+                    }
                     if ($content !== '') {
                         $node->setAttribute('src', $content);
                     }
@@ -119,6 +127,14 @@ class PageRenderer
         $html = preg_replace('/ data-media="[^"]*"/', '', $html);
 
         return $html;
+    }
+
+    /**
+     * Remove inline style blocks from rendered HTML so active themes can fully control presentation.
+     */
+    public function stripInlineStyles(string $html): string
+    {
+        return preg_replace('~<style\b[^>]*>.*?</style>~is', '', $html) ?? $html;
     }
 
     /**

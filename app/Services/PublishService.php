@@ -98,6 +98,7 @@ class PublishService
             if ($themeLayout !== '') {
                 $html = $this->renderer->applyLayout($themeLayout, $html, $site['name'] ?? '', $themeNav);
             }
+            $html = $this->renderer->stripInlineStyles($html);
             $html = $this->themes->injectBodyClass($html, (string)($theme['key'] ?? ''));
             $css = ($template['css_source'] ?? '') . "\n" . $themeCss;
             $js  = ($template['js_source']  ?? '') . "\n" . $themeJs;

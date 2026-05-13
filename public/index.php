@@ -316,6 +316,7 @@ function applyThemeTemplate(PageRenderer $renderer, array $site, string $pageKey
     if ($themeLayout !== '') {
         $html = $renderer->applyLayout($themeLayout, $html, $siteName, $nav);
     }
+    $html = $renderer->stripInlineStyles($html);
     $html = $registry->injectBodyClass($html, (string)($theme['key'] ?? ''));
 
     if ($themeCss !== '') {
