@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Core\Config;
+use App\Core\Logger;
 use App\Core\Version;
 use App\Repositories\BlockRepository;
 use App\Repositories\MediaRepository;
@@ -85,6 +86,14 @@ class PublishService
         // Render
         $html = $this->renderer->render($template['html_source'], $blocks, $mediaMap);
         $theme = $this->themes->resolveForSite($site);
+        Logger::infoTo('theme-debug', 'theme.publish.request', [
+            'site_id' => $site['id'] ?? null,
+            'site_name' => $site['name'] ?? null,
+            'page_id' => $page['id'] ?? null,
+            'page_key' => $pageKey,
+            'resolved_theme_key' => $theme['key'] ?? null,
+            'theme_found' => $theme !== null,
+        ]);
         $themeCss = '';
         $themeJs = '';
         $isHome = trim((string)($page['url_path'] ?? ''), '/') === '';
@@ -102,13 +111,36 @@ class PublishService
             $html = $this->themes->injectBodyClass($html, (string)($theme['key'] ?? ''));
             $css = ($template['css_source'] ?? '') . "\n" . $themeCss;
             $js  = ($template['js_source']  ?? '') . "\n" . $themeJs;
+            Logger::infoTo('theme-debug', 'theme.publish.applied', [
+                'site_id' => $site['id'] ?? null,
+                'site_name' => $site['name'] ?? null,
+                'page_id' => $page['id'] ?? null,
+                'page_key' => $pageKey,
+                'theme_key' => $theme['key'] ?? null,
+                'layout_applied' => $themeLayout !== '',
+                'css_len' => strlen($css),
+                'js_len' => strlen($js),
+                'html_len' => strlen($html),
+            ]);
         } elseif (!empty($site['layout_html'])) {
             $html = $this->renderer->applyLayout($site['layout_html'], $html, $site['name'] ?? '', $themeNav);
             $css  = ($site['layout_css'] ?? '') . "\n" . ($template['css_source'] ?? '') . "\n" . $themeCss;
             $js   = ($site['layout_js']  ?? '') . "\n" . ($template['js_source']  ?? '') . "\n" . $themeJs;
+            Logger::infoTo('theme-debug', 'theme.publish.default_layout', [
+                'site_id' => $site['id'] ?? null,
+                'site_name' => $site['name'] ?? null,
+                'page_id' => $page['id'] ?? null,
+                'page_key' => $pageKey,
+            ]);
         } else {
             $css = ($template['css_source'] ?? '') . "\n" . $themeCss;
             $js  = ($template['js_source']  ?? '') . "\n" . $themeJs;
+            Logger::infoTo('theme-debug', 'theme.publish.raw', [
+                'site_id' => $site['id'] ?? null,
+                'site_name' => $site['name'] ?? null,
+                'page_id' => $page['id'] ?? null,
+                'page_key' => $pageKey,
+            ]);
         }
         $html = $this->renderer->injectAssets($html, $css, $js);
 

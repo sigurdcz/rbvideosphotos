@@ -304,8 +304,23 @@ function getThemeTemplateRegistry(): ThemeTemplateRegistry
 function applyThemeTemplate(PageRenderer $renderer, array $site, string $pageKey, string $siteName, string $html, string $css, string $js, string $nav = '', ?string $previewKey = null): array
 {
     $registry = getThemeTemplateRegistry();
+    Logger::infoTo('theme-debug', 'theme.frontend.apply.request', [
+        'site_id' => $site['id'] ?? null,
+        'site_name' => $site['name'] ?? null,
+        'page_key' => $pageKey,
+        'preview_key' => $previewKey !== null && trim($previewKey) !== '' ? trim($previewKey) : null,
+        'html_before_len' => strlen($html),
+        'css_before_len' => strlen($css),
+        'js_before_len' => strlen($js),
+    ]);
     $theme = $registry->resolveForSite($site, $previewKey);
     if (!$theme) {
+        Logger::infoTo('theme-debug', 'theme.frontend.apply.default', [
+            'site_id' => $site['id'] ?? null,
+            'site_name' => $site['name'] ?? null,
+            'page_key' => $pageKey,
+            'reason' => 'no resolved theme',
+        ]);
         return [$html, $css, $js, false];
     }
 
@@ -326,6 +341,18 @@ function applyThemeTemplate(PageRenderer $renderer, array $site, string $pageKey
     if ($themeJs !== '') {
         $js = trim($js . "\n" . $themeJs);
     }
+
+    Logger::infoTo('theme-debug', 'theme.frontend.apply.result', [
+        'site_id' => $site['id'] ?? null,
+        'site_name' => $site['name'] ?? null,
+        'page_key' => $pageKey,
+        'resolved_theme_key' => $theme['key'] ?? null,
+        'resolved_theme_name' => $theme['name'] ?? null,
+        'layout_applied' => $themeLayout !== '',
+        'css_len' => strlen($css),
+        'js_len' => strlen($js),
+        'html_len' => strlen($html),
+    ]);
 
     return [$html, $css, $js, true];
 }

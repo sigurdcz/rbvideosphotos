@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\Logger;
 use App\Repositories\SiteRepository;
 use App\Services\PublishService;
 use App\Services\ThemeTemplateRegistry;
@@ -58,13 +59,30 @@ class ThemeController extends Controller
             $this->redirect('/admin/shablony');
         }
 
+        Logger::infoTo('theme-debug', 'theme.activate.request', [
+            'site_id' => $site['id'] ?? null,
+            'site_name' => $site['name'] ?? null,
+            'requested_key' => $key === '' ? null : $key,
+            'current_db_key' => $site['active_theme_key'] ?? null,
+        ]);
+
         $sites->update((int)$site['id'], [
             'active_theme_key' => $key === '' ? null : $key,
         ]);
         $registry->persistActiveThemeKey($key === '' ? null : $key);
+        Logger::infoTo('theme-debug', 'theme.activate.persisted', [
+            'site_id' => $site['id'] ?? null,
+            'site_name' => $site['name'] ?? null,
+            'persisted_key' => $key === '' ? null : $key,
+        ]);
 
         $user = \App\Core\Auth::user();
         $publishResult = (new PublishService())->publishSite((int)$site['id'], (int)($user['id'] ?? 0));
+        Logger::infoTo('theme-debug', 'theme.activate.publish', [
+            'site_id' => $site['id'] ?? null,
+            'site_name' => $site['name'] ?? null,
+            'publish_errors' => $publishResult['errors'] ?? [],
+        ]);
         if (!empty($publishResult['errors'])) {
             $this->flash('error', 'Sablona byla ulozena, ale publikace webu mela chyby: ' . implode(' | ', $publishResult['errors']));
             $this->redirect('/admin/shablony');
