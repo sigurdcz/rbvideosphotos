@@ -68,6 +68,7 @@ ob_start();
     <div class="form-row">
       <div class="form-group">
         <label>Logo webu</label>
+        <div class="help-text" style="margin-bottom:8px">Doporuceni: SVG nebo PNG/WebP, sirka 320-600 px, vyska 80-160 px. Pro retina displeje idealne 2x vetsi.</div>
         <div class="brand-asset-picker">
           <input type="hidden" name="logo_url" id="brand-logo-url" value="<?= $h($site['logo_url'] ?? '') ?>">
           <div class="brand-asset-preview" data-brand-preview for="brand-logo-url">
@@ -82,6 +83,7 @@ ob_start();
       </div>
       <div class="form-group">
         <label>Favicon ICO</label>
+        <div class="help-text" style="margin-bottom:8px">Doporuceni: soubor .ico obsahujici 16x16, 32x32 a 48x48 px.</div>
         <div class="brand-asset-picker">
           <input type="hidden" name="favicon_ico_url" id="brand-favicon-ico-url" value="<?= $h($site['favicon_ico_url'] ?? '') ?>">
           <div class="brand-asset-preview brand-asset-preview--icon" data-brand-preview for="brand-favicon-ico-url">
@@ -98,6 +100,7 @@ ob_start();
     <div class="form-row">
       <div class="form-group">
         <label>Favicon PNG/SVG</label>
+        <div class="help-text" style="margin-bottom:8px">Doporuceni: PNG 32x32 px nebo SVG s ctvercovym viewBoxem. Pro moderni prohlizece je vhodne i 192x192 px.</div>
         <div class="brand-asset-picker">
           <input type="hidden" name="favicon_png_url" id="brand-favicon-png-url" value="<?= $h($site['favicon_png_url'] ?? '') ?>">
           <div class="brand-asset-preview brand-asset-preview--icon" data-brand-preview for="brand-favicon-png-url">
@@ -112,6 +115,7 @@ ob_start();
       </div>
       <div class="form-group">
         <label>Apple touch icon</label>
+        <div class="help-text" style="margin-bottom:8px">Doporuceni: PNG 180x180 px bez pruhlednosti, ctverec s dostatecnym okrajem kolem loga.</div>
         <div class="brand-asset-picker">
           <input type="hidden" name="apple_touch_icon_url" id="brand-apple-touch-icon-url" value="<?= $h($site['apple_touch_icon_url'] ?? '') ?>">
           <div class="brand-asset-preview brand-asset-preview--icon" data-brand-preview for="brand-apple-touch-icon-url">
