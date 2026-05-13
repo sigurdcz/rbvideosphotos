@@ -262,11 +262,27 @@ function injectHomepageHeroImage(string $html, int $siteId, bool $isHome): strin
 
 function resolveHomepageHeroImageUrl(int $siteId): string
 {
+    $pages = new PageRepository();
+    $blocks = new BlockRepository();
     $portfolioRepo = new PortfolioRepository();
     $blogRepo = new BlogRepository();
     $mediaRepo = new MediaRepository();
 
     try {
+        $homePage = $pages->findByUrlPath('');
+        if ($homePage) {
+            foreach ($blocks->allByPage((int)$homePage['id']) as $block) {
+                if (($block['block_key'] ?? '') !== 'hero_bg') {
+                    continue;
+                }
+
+                $candidate = publicMediaUrl((string)($block['content'] ?? ''));
+                if ($candidate !== '') {
+                    return $candidate;
+                }
+            }
+        }
+
         $entries = $portfolioRepo->allPublished($siteId);
         foreach (array_slice($entries, 0, 3) as $entry) {
             $mediaItems = $portfolioRepo->getMedia((int)$entry['id']);
