@@ -16,7 +16,8 @@
    - Verejny web neni jen ciste staticky export. Bezne stranky se renderuji z databaze a cast vystupu se stale publikuje do `storage/published`.
    - Portfolio listing a detail jsou generovane HTML soubory.
    - Portfolio media maji pouzivat root-relative cesty ze `storage_path`, ne skladani pres ulozenou domenu webu.
-   - Jakakoliv zmena databazove struktury nebo obsahu v databazi musi jit pres novou migraci. Nikdy neupravuj existujici migraci zpetne a nikdy nedelat zmenu DB bez nove migrační verze.
+   - Jakakoliv zmena databazove struktury nebo obsahu v databazi musi jit pres novou migraci.
+   - Stare migrace se nesmeji upravovat ani mazat. I mala oprava, bugfix nebo datova zmena musi vzniknout jako nova migrace.
 
 4. Po dokonceni prace se AI vzdy zastavi a polozi si tyto otazky:
    - Je to, co udelala, spravne?
@@ -40,7 +41,7 @@
      - co presne se upravilo
      - proc to bylo potreba
      - jaky je dopad na chovani
-   - Piste strucne, vecne a v pritomném case.
+   - Piste strucne, vecne a v pritomnem case.
    - Priklady:
      - `fix(admin): add homepage preview button so editors can inspect pages without inline mode`
      - `feature(blog): switch featured image picker to media grid for faster selection`

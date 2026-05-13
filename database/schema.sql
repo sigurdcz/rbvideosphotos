@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS `content_blocks` (
   `id`         INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `page_id`    INT UNSIGNED NOT NULL,
   `block_key`  VARCHAR(100) NOT NULL,
-  `block_type` ENUM('text','textarea','richtext','image','link','html') NOT NULL DEFAULT 'text',
+  `block_type` ENUM('text','textarea','richtext','image','link','html','video') NOT NULL DEFAULT 'text',
   `label`      VARCHAR(255) DEFAULT NULL,
   `content`    LONGTEXT DEFAULT NULL,
   `autofill_disabled` TINYINT(1) NOT NULL DEFAULT 0,
