@@ -8,6 +8,7 @@ use App\Core\Logger;
 use App\Repositories\MediaRepository;
 use App\Repositories\SiteRepository;
 use App\Services\ImageVariantService;
+use App\Services\MediaIngestionService;
 
 class MediaController extends Controller
 {
@@ -55,6 +56,7 @@ class MediaController extends Controller
         }
 
         $results = [];
+        $ingest  = new MediaIngestionService();
         $repo    = new MediaRepository();
         $svc     = new ImageVariantService();
 
@@ -69,7 +71,7 @@ class MediaController extends Controller
             }
 
             $ext      = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-            $mime     = $this->getMimeType($file['tmp_name'], $ext);
+            $mime     = $ingest->detectMimeType($file['tmp_name'], $ext);
             $isVideo  = in_array($mime, $appCfg['allowed_video_types']) || in_array($ext, $appCfg['allowed_video_extensions']);
             $maxSize  = $isVideo ? $appCfg['upload_video_max_size'] : $appCfg['upload_max_size'];
 

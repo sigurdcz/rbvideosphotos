@@ -305,6 +305,7 @@ CREATE TABLE IF NOT EXISTS `service_items` (
   `title`        VARCHAR(255) NOT NULL DEFAULT '',
   `description`  TEXT DEFAULT NULL,
   `image_url`    VARCHAR(1000) DEFAULT NULL,
+  `icon_url`     VARCHAR(1000) DEFAULT NULL,
   `button_text`  VARCHAR(255) DEFAULT NULL,
   `button_url`   VARCHAR(1000) DEFAULT NULL,
   `sort_order`   SMALLINT UNSIGNED NOT NULL DEFAULT 0,

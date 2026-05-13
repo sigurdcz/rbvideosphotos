@@ -7,6 +7,7 @@
   "sort_order": 40,
   "layout_html": "layout.html",
   "layout_css": "assets/theme.css",
+  "layout_js": "assets/theme.js",
   "pages": [
     "homepage",
     "sluzby",

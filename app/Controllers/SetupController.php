@@ -4,9 +4,11 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Core\Database;
+use App\Core\Auth;
 use App\Core\Version;
 use App\Repositories\PageRepository;
 use App\Repositories\SiteRepository;
+use App\Services\DemoContentSeeder;
 use PDO;
 
 class SetupController extends Controller
@@ -76,6 +78,35 @@ class SetupController extends Controller
             $this->flash('success', $message);
         } catch (\Throwable $e) {
             $this->flash('error', 'Armagedon selhal: ' . $e->getMessage());
+        }
+
+        $this->redirect('/admin/setup');
+    }
+
+    public function demoContent(array $params): void
+    {
+        $this->requireAdmin();
+        $this->csrfCheck();
+
+        try {
+            $site = (new SiteRepository())->findFirst();
+            $user = Auth::user();
+            $result = (new DemoContentSeeder())->run(
+                $site ? (int)$site['id'] : null,
+                $user ? (int)$user['id'] : null,
+                true
+            );
+
+            $message = 'Demo obsah byl načten: '
+                . (int)$result['blog_posts'] . ' článků, '
+                . (int)$result['portfolio_entries'] . ' prací, '
+                . (int)$result['reviews'] . ' recenzí.';
+            if (!empty($result['published'])) {
+                $message .= ' Web byl znovu publikován.';
+            }
+            $this->flash('success', $message);
+        } catch (\Throwable $e) {
+            $this->flash('error', 'Demo content seed selhal: ' . $e->getMessage());
         }
 
         $this->redirect('/admin/setup');

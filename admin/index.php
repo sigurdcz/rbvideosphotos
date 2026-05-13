@@ -116,6 +116,7 @@ try {
     // Setup / seed
     $router->get('/admin/setup',      'SetupController', 'index');
     $router->post('/admin/setup/run', 'SetupController', 'run');
+    $router->post('/admin/setup/demo-content', 'SetupController', 'demoContent');
     $router->post('/admin/setup/armageddon', 'SetupController', 'armageddon');
 
     $router->dispatch();

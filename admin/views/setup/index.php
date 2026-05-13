@@ -32,6 +32,19 @@ $d = $diag ?? [];
 </div>
 
 <div class="card">
+  <div class="card-title">Doplnit demo obsah</div>
+  <p style="color:var(--c-muted);margin-bottom:16px;font-size:13.5px">
+    Doplní 5 článků, 5 položek Naše práce a 10 recenzí. Obrázky stáhne z placehold.co
+    a uloží je přes stejný mediální proces jako běžný upload v administraci včetně ALTů, titulků a variant.
+    Existující záznamy se najdou podle slugů a aktualizují se, nebudou se duplikovat.
+  </p>
+  <form method="POST" action="/admin/setup/demo-content" data-confirm="Doplnit demo články, práce, recenze a média?">
+    <input type="hidden" name="_csrf" value="<?= $h($_csrfToken) ?>">
+    <button type="submit" class="btn btn-primary">Doplnit demo obsah</button>
+  </form>
+</div>
+
+<div class="card">
   <div class="card-title">Armagedon</div>
   <p style="color:var(--c-muted);margin-bottom:16px;font-size:13.5px">
     Provede kompletní reset: smaže všechna média ve <code>storage/media</code>, shodí celou databázi,

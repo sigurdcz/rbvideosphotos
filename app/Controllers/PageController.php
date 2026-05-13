@@ -7,6 +7,7 @@ use App\Core\SlugTrait;
 use App\Repositories\BlockRepository;
 use App\Repositories\ContactRepository;
 use App\Repositories\FaqRepository;
+use App\Repositories\MediaRepository;
 use App\Repositories\PageRepository;
 use App\Repositories\ServiceRepository;
 use App\Repositories\SiteRepository;
@@ -50,6 +51,7 @@ class PageController extends Controller
             'faqItems'   => [],
             'contact'    => [],
             'serviceItems' => [],
+            'media'      => $site ? (new MediaRepository())->allBySiteWithVariants((int)$site['id']) : [],
             'isHomepage' => false,
             'homepageAutofillBlocks' => [],
         ]);
@@ -123,6 +125,7 @@ class PageController extends Controller
             ? (new HomepageContentService())->getAutofillDefinitions()
             : [];
         $serviceItems = $layout === 'services' ? (new ServiceRepository())->allBySite((int)$page['site_id']) : [];
+        $media = (new MediaRepository())->allBySiteWithVariants((int)$page['site_id']);
 
         $this->view('pages.form', [
             'page'       => $page,
@@ -133,6 +136,7 @@ class PageController extends Controller
             'faqItems'   => $layout === 'faq' ? (new FaqRepository())->allBySite((int)$page['site_id']) : [],
             'contact'    => $layout === 'contact' ? (new ContactRepository())->findBySiteSafe((int)$page['site_id']) : [],
             'serviceItems' => $serviceItems,
+            'media'      => $media,
             'site'       => $sites->findById($page['site_id']),
             'isHomepage' => $isHomepage,
             'homepageAutofillBlocks' => $homepageAutofillBlocks,
@@ -363,8 +367,7 @@ class PageController extends Controller
             return;
         }
 
-        $contact = (new ContactRepository())->findBySiteSafe($siteId);
-        $content = $this->buildHomepageContactHtml($contact);
+        $content = (new HomepageContentService())->buildContactHtml($siteId);
 
         (new BlockRepository())->upsert((int)$page['id'], 'kontakt_info', [
             'block_type' => 'html',

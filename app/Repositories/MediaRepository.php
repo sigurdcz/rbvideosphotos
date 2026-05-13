@@ -29,6 +29,14 @@ class MediaRepository
         return $row ?: null;
     }
 
+    public function findByStoragePath(int $siteId, string $storagePath): ?array
+    {
+        $stmt = $this->db->prepare('SELECT * FROM media WHERE site_id = ? AND storage_path = ? LIMIT 1');
+        $stmt->execute([$siteId, $storagePath]);
+        $row = $stmt->fetch();
+        return $row ?: null;
+    }
+
     public function findByIdWithThumb(int $id): ?array
     {
         $stmt = $this->db->prepare(

@@ -437,7 +437,7 @@ HTML;
         ) ?? $html;
 
         if (!str_contains($html, 'data-cms-site-logo')) {
-            $html = str_replace('</head>', "\n<style data-cms-site-logo>.site-logo-img{display:block;max-height:44px;max-width:240px;width:auto;height:auto;object-fit:contain}.site-logo-text{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}</style>\n</head>", $html);
+            $html = str_replace('</head>', "\n<style data-cms-site-logo>.site-logo-img{display:block;max-height:44px;max-width:120px;width:auto;height:auto;object-fit:contain}.site-logo-text{display:inline-block;margin-left:10px;color:inherit;font:inherit;letter-spacing:inherit;text-transform:inherit;line-height:1}</style>\n</head>", $html);
         }
 
         return $html;

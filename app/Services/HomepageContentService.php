@@ -313,6 +313,8 @@ class HomepageContentService
             . '.hp-svc-card__media{height:190px;background:#0e0e11;overflow:hidden}'
             . '.hp-svc-card__media img{width:100%;height:100%;object-fit:cover;display:block}'
             . '.hp-svc-card__body{padding:20px;display:flex;flex-direction:column;gap:12px;flex:1}'
+            . '.hp-svc-card__icon{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;overflow:hidden;background:rgba(196,150,60,.14);border:1px solid rgba(196,150,60,.45)}'
+            . '.hp-svc-card__icon img{width:100%;height:100%;object-fit:contain;padding:7px}'
             . '.hp-svc-card__num{font-size:.72rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#c4963c}'
             . '.hp-svc-card__title{font-size:1.15rem;font-weight:800;color:#fff;line-height:1.25}'
             . '.hp-svc-card__desc{color:rgba(255,255,255,.68);line-height:1.65;font-size:.95rem;white-space:pre-line}'
@@ -333,17 +335,22 @@ class HomepageContentService
         $title = (string)($service['title'] ?? '');
         $description = (string)($service['description'] ?? '');
         $imageUrl = $this->publicMediaUrl((string)($service['image_url'] ?? ''));
+        $iconUrl = $this->publicMediaUrl((string)($service['icon_url'] ?? ''));
         $buttonText = trim((string)($service['button_text'] ?? '')) ?: 'Poptat službu';
         $buttonUrl = trim((string)($service['button_url'] ?? '')) ?: '/kontakt';
         $num = $index > 0 ? str_pad((string)$index, 2, '0', STR_PAD_LEFT) : '';
+        $icon = $iconUrl !== ''
+            ? '<div class="hp-svc-card__icon"><img src="' . $h($iconUrl) . '" alt="" loading="lazy"></div>'
+            : '';
 
         $media = $imageUrl !== ''
             ? '<div class="hp-svc-card__media"><img src="' . $h($imageUrl) . '" alt="' . $h($title) . '" loading="lazy"></div>'
             : '<div class="hp-svc-card__media"></div>';
 
-        return '<article class="hp-svc-card">'
+        return '<article class="hp-svc-card' . ($icon !== '' ? ' has-icon' : '') . '">'
             . $media
             . '<div class="hp-svc-card__body">'
+            . $icon
             . ($num !== '' ? '<div class="hp-svc-card__num">' . $h($num) . '</div>' : '')
             . '<h3 class="hp-svc-card__title">' . $h($title) . '</h3>'
             . '<div class="hp-svc-card__desc">' . nl2br($h($description)) . '</div>'
@@ -582,7 +589,7 @@ HTML;
             . nl2br($h($item['answer'])) . '</p>';
     }
 
-    private function buildContactHtml(int $siteId): string
+    public function buildContactHtml(int $siteId): string
     {
         $contact = $this->contact->findBySiteSafe($siteId);
         $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);

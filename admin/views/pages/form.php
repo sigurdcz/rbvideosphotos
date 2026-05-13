@@ -5,6 +5,23 @@ $h = fn($v) => htmlspecialchars((string)$v);
 $layoutType = $layoutType ?? 'generic';
 $templateName = $template['name'] ?? '';
 $socialOptions = ['instagram','facebook','youtube','tiktok','linkedin','twitter','pinterest','whatsapp','telegram'];
+$fixedSocials = [
+    1 => ['key' => 'instagram', 'label' => 'Instagram'],
+    2 => ['key' => 'facebook', 'label' => 'Facebook'],
+    3 => ['key' => 'youtube', 'label' => 'YouTube'],
+    4 => ['key' => 'tiktok', 'label' => 'TikTok'],
+    5 => ['key' => 'linkedin', 'label' => 'LinkedIn'],
+];
+$media = $media ?? [];
+$mediaUrl = fn(array $m): string => '/' . ltrim((string)($m['storage_path'] ?? ''), '/');
+$mediaThumb = function(array $m) use ($mediaUrl): string {
+    foreach (($m['variants'] ?? []) as $variant) {
+        if (($variant['format'] ?? '') === 'thumb' && !empty($variant['path'])) {
+            return '/' . ltrim((string)$variant['path'], '/');
+        }
+    }
+    return $mediaUrl($m);
+};
 $blockMap = [];
 $homepageAutofillBlocks = $homepageAutofillBlocks ?? [];
 $serviceItems = $serviceItems ?? [];
@@ -267,26 +284,20 @@ ob_start();
 
     <div class="tab-pane" id="tab-contact-social">
       <div class="card">
-        <p class="form-hint" style="margin-bottom:18px">Vyplnte az 5 socialnich siti. Typ urcuje nazev odkazu na webu.</p>
-        <?php for ($i = 1; $i <= 5; $i++): ?>
+        <p class="form-hint" style="margin-bottom:18px">Kazda socialni sit ma vlastni URL pole. Pokud ji nepouzivas, nech pole prazdne.</p>
+        <?php foreach ($fixedSocials as $i => $social): ?>
         <div class="form-row" style="align-items:flex-end;margin-bottom:16px">
           <div class="form-group" style="flex:0 0 180px">
-            <label>Sit <?= $i ?></label>
-            <select name="social_<?= $i ?>_type">
-              <option value="">- nevyplneno -</option>
-              <?php foreach ($socialOptions as $social): ?>
-              <option value="<?= $h($social) ?>" <?= ($contact['social_' . $i . '_type'] ?? '') === $social ? 'selected' : '' ?>>
-                <?= ucfirst($h($social)) ?>
-              </option>
-              <?php endforeach; ?>
-            </select>
+            <label><?= $h($social['label']) ?></label>
+            <input type="hidden" name="social_<?= $i ?>_type" value="<?= $h($social['key']) ?>">
+            <input type="text" value="<?= $h(strtoupper(substr($social['key'], 0, 2))) ?>" disabled>
           </div>
           <div class="form-group" style="flex:1">
             <label>URL profilu</label>
             <input type="url" name="social_<?= $i ?>_url" value="<?= $h($contact['social_' . $i . '_url'] ?? '') ?>" placeholder="https://...">
           </div>
         </div>
-        <?php endfor; ?>
+        <?php endforeach; ?>
       </div>
     </div>
 
@@ -370,6 +381,16 @@ ob_start();
                 <label>Obrazek / URL</label>
                 <input type="text" data-service-name="image_url" value="<?= $h($item['image_url'] ?? '') ?>" placeholder="/storage/media/...">
               </div>
+              <div class="form-group">
+                <label>Ikona / medium</label>
+                <div style="display:flex;gap:8px">
+                  <input type="text" data-service-name="icon_url" value="<?= $h($item['icon_url'] ?? '') ?>" placeholder="/storage/media/..." style="flex:1">
+                  <button type="button" class="btn btn-sm btn-secondary" data-service-media-open data-target-name="icon_url">Vybrat</button>
+                </div>
+                <div class="form-hint">Doporuceni: jednoducha SVG/PNG ikona, idealne 96x96 px.</div>
+              </div>
+            </div>
+            <div class="form-row">
               <div class="form-group">
                 <label>Tlacitko</label>
                 <input type="text" data-service-name="button_text" value="<?= $h($item['button_text'] ?? '') ?>" placeholder="Zjistit vice">
@@ -502,6 +523,85 @@ ob_start();
       </div>
     </div>
   </template>
+  <style>
+  .service-media-modal{position:fixed;inset:0;z-index:1000;display:none;align-items:flex-start;justify-content:center;padding:7vh 24px;background:rgba(15,23,42,.62)}
+  .service-media-modal.is-open{display:flex}
+  .service-media-dialog{width:min(980px,100%);max-height:86vh;overflow:auto;background:var(--c-surface);border-radius:14px;border:1px solid var(--c-border);box-shadow:0 24px 70px rgba(15,23,42,.25);padding:18px}
+  .service-media-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:14px}
+  .service-media-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+  .service-media-item{border:1px solid var(--c-border);border-radius:10px;background:var(--c-bg);overflow:hidden;text-align:left;cursor:pointer;padding:0}
+  .service-media-item:hover{box-shadow:0 10px 24px rgba(15,23,42,.12);border-color:var(--c-primary)}
+  .service-media-thumb{height:104px;display:flex;align-items:center;justify-content:center;background:#fff}
+  .service-media-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .service-media-name{padding:8px;font-size:11px;color:var(--c-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  </style>
+  <div class="service-media-modal" id="service-media-modal" aria-hidden="true">
+    <div class="service-media-dialog" role="dialog" aria-modal="true" aria-label="Vyber media">
+      <div class="service-media-head">
+        <div>
+          <div class="card-title" style="margin:0">Vyber ikonu z medii</div>
+          <div class="form-hint">Kliknutim se cesta vlozi do aktualni sluzby.</div>
+        </div>
+        <button type="button" class="btn btn-secondary" data-service-media-close>Zavrit</button>
+      </div>
+      <?php if (empty($media)): ?>
+        <p class="form-hint">Zatim nejsou nahrana zadna media. Nejdrive je nahraj v sekci <a href="/admin/media">Media</a>.</p>
+      <?php else: ?>
+        <div class="service-media-list">
+          <?php foreach ($media as $m): ?>
+            <?php
+              $url = $mediaUrl($m);
+              $thumb = $mediaThumb($m);
+              $mime = (string)($m['mime_type'] ?? '');
+              $isImage = str_starts_with($mime, 'image/');
+            ?>
+            <button type="button" class="service-media-item" data-service-media-item data-url="<?= $h($url) ?>" title="<?= $h($m['original_filename'] ?? '') ?>">
+              <div class="service-media-thumb">
+                <?php if ($isImage): ?>
+                  <img src="<?= $h($thumb) ?>" alt="<?= $h($m['alt_text'] ?? $m['original_filename'] ?? '') ?>" loading="lazy">
+                <?php else: ?>
+                  <span>FILE</span>
+                <?php endif; ?>
+              </div>
+              <div class="service-media-name"><?= $h($m['original_filename'] ?? $url) ?></div>
+            </button>
+          <?php endforeach; ?>
+        </div>
+      <?php endif; ?>
+    </div>
+  </div>
+  <script>
+  (function(){
+    const modal = document.getElementById('service-media-modal');
+    if (!modal) return;
+    let activeInput = null;
+    const close = () => {
+      modal.classList.remove('is-open');
+      modal.setAttribute('aria-hidden', 'true');
+      activeInput = null;
+    };
+    document.addEventListener('click', event => {
+      const openBtn = event.target.closest('[data-service-media-open]');
+      if (openBtn) {
+        const item = openBtn.closest('[data-service-item]');
+        activeInput = item ? item.querySelector('[data-service-name="' + (openBtn.dataset.targetName || 'icon_url') + '"]') : null;
+        modal.classList.add('is-open');
+        modal.setAttribute('aria-hidden', 'false');
+      }
+      const mediaItem = event.target.closest('[data-service-media-item]');
+      if (mediaItem && activeInput) {
+        activeInput.value = mediaItem.dataset.url || '';
+        close();
+      }
+      if (event.target.closest('[data-service-media-close]') || event.target === modal) {
+        close();
+      }
+    });
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && modal.classList.contains('is-open')) close();
+    });
+  })();
+  </script>
   <?php endif; ?>
   <?php if ($layoutType === 'services'): ?>
   <template id="service-item-template">
@@ -525,6 +625,16 @@ ob_start();
           <label>Obrazek / URL</label>
           <input type="text" data-service-name="image_url" placeholder="/storage/media/...">
         </div>
+        <div class="form-group">
+          <label>Ikona / medium</label>
+          <div style="display:flex;gap:8px">
+            <input type="text" data-service-name="icon_url" placeholder="/storage/media/..." style="flex:1">
+            <button type="button" class="btn btn-sm btn-secondary" data-service-media-open data-target-name="icon_url">Vybrat</button>
+          </div>
+          <div class="form-hint">Doporuceni: jednoducha SVG/PNG ikona, idealne 96x96 px.</div>
+        </div>
+      </div>
+      <div class="form-row">
         <div class="form-group">
           <label>Tlacitko</label>
           <input type="text" data-service-name="button_text" placeholder="Zjistit vice">
