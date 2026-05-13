@@ -139,7 +139,7 @@ function tryServeDatabasePage(string $uri, bool $authenticated = false, bool $pr
         $html = injectSiteLogo($html, $site);
         $html = injectPageHeroImage($html, (int)$page['id']);
         $html = injectHomepageHeroImage($html, (int)$site['id'], $isHome);
-        $html = injectHomepageHeroVideo($html, (int)$site['id'], $isHome);
+        $html = injectPageHeroVideo($html, $site, (int)$page['id'], $themeKey);
         $html = sanitizeFrontendHtml($html);
 
         if ($authenticated) {
@@ -386,30 +386,35 @@ function resolveHomepageHeroImageUrl(int $siteId): string
     return '';
 }
 
-function injectHomepageHeroVideo(string $html, int $siteId, bool $isHome): string
+function injectPageHeroVideo(string $html, array $site, ?int $pageId, string $pageKey): string
 {
-    if (!$isHome || str_contains($html, 'theme-hero-video')) {
+    $siteId = (int)($site['id'] ?? 0);
+    $pageKey = getThemeTemplateRegistry()->normalizePageKey($pageKey);
+    $supported = ['', 'homepage', 'sluzby', 'services', 'nase-prace', 'portfolio', 'blog', 'cenik', 'pricing'];
+    if (!in_array($pageKey, $supported, true) || str_contains($html, 'theme-hero-video')) {
         return $html;
     }
 
-    $videoUrl = resolveHomepageHeroVideoUrl($siteId);
+    $videoUrl = resolvePageHeroVideoUrl($siteId, $pageId, $site);
     if ($videoUrl === '') {
         return $html;
     }
 
-    $videoHtml = buildHomepageHeroVideoHtml($videoUrl);
+    $posterUrl = normalizePublicAssetUrl((string)($site['default_hero_poster_url'] ?? ''));
+    $videoHtml = buildHeroVideoHtml($videoUrl, $posterUrl);
     if ($videoHtml === '') {
         return $html;
     }
 
     $style = <<<'HTML'
 <style data-cms-hero-video>
-.hp-hero,.hero{position:relative;overflow:hidden}
-.hp-hero::before,.hero::before{z-index:0!important}
-.theme-hero-video{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;pointer-events:none;background:#050505}
-.theme-hero-video--embed{overflow:hidden}
+.hp-hero,.hero,.pf-hero,.bl-hero,.kt-hero,.bp-hero,.pf-detail-hero{position:relative;overflow:hidden}
+.hp-hero::before,.hero::before,.pf-hero::before,.bl-hero::before,.kt-hero::before,.bp-hero::before,.pf-detail-hero::before{z-index:0!important}
+.theme-hero-video{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;pointer-events:none;background:#050505;background-size:cover;background-position:center}
+.theme-hero-video--embed{overflow:hidden;background-size:cover;background-position:center}
 .theme-hero-video--embed iframe{position:absolute;top:50%;left:50%;width:120vw;height:67.5vw;min-width:213.33vh;min-height:120vh;transform:translate(-50%,-50%);border:0;pointer-events:none}
-.hp-hero>.container,.hero>.container,.hero-content{position:relative;z-index:3}
+.theme-hero-video::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.62),rgba(0,0,0,.22),rgba(0,0,0,.58))}
+.hp-hero>.container,.hero>.container,.pf-hero>.container,.bl-hero>.container,.kt-hero>.container,.bp-hero>.container,.pf-detail-hero>.container,.hero-content{position:relative;z-index:3}
 </style>
 HTML;
 
@@ -438,28 +443,37 @@ HTML;
     ) ?? $html;
 }
 
-function resolveHomepageHeroVideoUrl(int $siteId): string
+function resolvePageHeroVideoUrl(int $siteId, ?int $pageId, array $site): string
 {
     try {
-        $homePage = (new PageRepository())->findByUrlPath('');
-        if (!$homePage || (int)($homePage['site_id'] ?? 0) !== $siteId) {
-            return '';
+        if ($pageId !== null && $pageId > 0) {
+            foreach ((new BlockRepository())->allByPage($pageId) as $block) {
+                if (($block['block_key'] ?? '') !== 'hero_video') {
+                    continue;
+                }
+
+                $url = normalizePublicAssetUrl((string)($block['content'] ?? ''));
+                if ($url !== '') {
+                    Logger::infoTo('theme-debug', 'theme.hero.video', 'Page hero video resolved', [
+                        'site_id' => $siteId,
+                        'page_id' => $pageId,
+                        'source' => 'page_block',
+                        'video_url' => $url,
+                    ]);
+                    return $url;
+                }
+            }
         }
 
-        foreach ((new BlockRepository())->allByPage((int)$homePage['id']) as $block) {
-            if (($block['block_key'] ?? '') !== 'hero_video') {
-                continue;
-            }
-
-            $url = normalizePublicAssetUrl((string)($block['content'] ?? ''));
-            if ($url !== '') {
-                Logger::infoTo('theme-debug', 'theme.hero.video', 'Homepage hero video resolved', [
+        $defaultUrl = normalizePublicAssetUrl((string)($site['default_hero_video_url'] ?? ''));
+        if ($defaultUrl !== '') {
+            Logger::infoTo('theme-debug', 'theme.hero.video', 'Default hero video resolved', [
                     'site_id' => $siteId,
-                    'page_id' => $homePage['id'] ?? null,
-                    'video_url' => $url,
-                ]);
-                return $url;
-            }
+                    'page_id' => $pageId,
+                    'source' => 'site_default',
+                    'video_url' => $defaultUrl,
+            ]);
+            return $defaultUrl;
         }
     } catch (\Throwable $e) {
         Logger::infoTo('theme-debug', 'theme.hero.video.error', 'Failed to resolve homepage hero video', [
@@ -471,16 +485,18 @@ function resolveHomepageHeroVideoUrl(int $siteId): string
     return '';
 }
 
-function buildHomepageHeroVideoHtml(string $videoUrl): string
+function buildHeroVideoHtml(string $videoUrl, string $posterUrl = ''): string
 {
     $embedUrl = buildVideoEmbedUrl($videoUrl);
+    $posterStyle = $posterUrl !== '' ? ' style="background-image:url(\'' . htmlspecialchars($posterUrl, ENT_QUOTES) . '\')"' : '';
     if ($embedUrl !== '') {
         $safeEmbed = htmlspecialchars($embedUrl, ENT_QUOTES);
-        return '<div class="theme-hero-video theme-hero-video--embed" aria-hidden="true"><iframe src="' . $safeEmbed . '" title="Homepage hero video" allow="autoplay; fullscreen; picture-in-picture" loading="eager"></iframe></div>';
+        return '<div class="theme-hero-video theme-hero-video--embed" aria-hidden="true"' . $posterStyle . '><iframe src="' . $safeEmbed . '" title="Hero video" allow="autoplay; fullscreen; picture-in-picture" loading="eager"></iframe></div>';
     }
 
     $safeUrl = htmlspecialchars($videoUrl, ENT_QUOTES);
-    return '<video class="theme-hero-video" src="' . $safeUrl . '" autoplay muted loop playsinline preload="auto" aria-hidden="true"></video>';
+    $posterAttr = $posterUrl !== '' ? ' poster="' . htmlspecialchars($posterUrl, ENT_QUOTES) . '"' : '';
+    return '<video class="theme-hero-video" src="' . $safeUrl . '"' . $posterAttr . ' autoplay muted loop playsinline preload="auto" aria-hidden="true"></video>';
 }
 
 function buildVideoEmbedUrl(string $videoUrl): string
@@ -840,6 +856,19 @@ function resolveThemeNav(array $site, bool $isHome): string
     return '';
 }
 
+function findPageIdForHeroPath(string $path, int $siteId): ?int
+{
+    try {
+        $page = (new PageRepository())->findByUrlPath(trim($path, '/'));
+        if (!$page || (int)($page['site_id'] ?? 0) !== $siteId) {
+            return null;
+        }
+        return (int)$page['id'];
+    } catch (\Throwable $e) {
+        return null;
+    }
+}
+
 function publicMediaUrl(string $storagePath): string
 {
     $normalized = str_replace('\\', '/', trim($storagePath));
@@ -1054,6 +1083,7 @@ HTML;
         }
 
         header('Content-Type: text/html; charset=UTF-8');
+        $html = injectPageHeroVideo($html, $site, findPageIdForHeroPath('nase-prace', (int)$site['id']), 'portfolio');
         echo sanitizeFrontendHtml(injectFooterSocials($html, (int)$site['id']));
         return true;
     }
@@ -1293,6 +1323,7 @@ HTML;
     }
 
     header('Content-Type: text/html; charset=UTF-8');
+    $html = injectPageHeroVideo($html, $site, findPageIdForHeroPath('blog', (int)$site['id']), 'blog');
     echo sanitizeFrontendHtml(injectFooterSocials($html, (int)$site['id']));
     return true;
 }
