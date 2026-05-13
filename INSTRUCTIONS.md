@@ -18,6 +18,8 @@
    - Portfolio media maji pouzivat root-relative cesty ze `storage_path`, ne skladani pres ulozenou domenu webu.
    - Jakakoliv zmena databazove struktury nebo obsahu v databazi musi jit pres novou migraci.
    - Stare migrace se nesmeji upravovat ani mazat. I mala oprava, bugfix nebo datova zmena musi vzniknout jako nova migrace.
+   - Nove migrace se cisluji vzdy podle nejvyssi uz existujici migrace a musi jit vzestupne po sobe.
+   - Nikdy nevytvarejte novou migraci s nizsim cislem, nez ma aktualni posledni migrace, ani neskakujte zbytecne daleko dopredu.
 
 4. Po dokonceni prace se AI vzdy zastavi a polozi si tyto otazky:
    - Je to, co udelala, spravne?
