@@ -97,8 +97,15 @@ class SiteRepository
             return $this->columnSupport[$column];
         }
 
-        $stmt = $this->db->prepare("SHOW COLUMNS FROM sites LIKE ?");
-        $stmt->execute([$column]);
+        $stmt = $this->db->prepare(
+            'SELECT 1
+             FROM information_schema.columns
+             WHERE table_schema = DATABASE()
+               AND table_name = ?
+               AND column_name = ?
+             LIMIT 1'
+        );
+        $stmt->execute(['sites', $column]);
         $this->columnSupport[$column] = (bool)$stmt->fetch();
         return $this->columnSupport[$column];
     }
