@@ -96,6 +96,7 @@ class PublishService
         ]);
         $themeCss = '';
         $themeJs = '';
+        $sharedCss = '';
         $isHome = trim((string)($page['url_path'] ?? ''), '/') === '';
         $themeNav = $isHome && !empty($site['layout_nav_home'])
             ? (string)$site['layout_nav_home']
@@ -103,13 +104,14 @@ class PublishService
         if ($theme) {
             $themeCss = $this->themes->getCssForPage($theme, $pageKey);
             $themeJs = $this->themes->getJsForPage($theme, $pageKey);
+            $sharedCss = $this->themes->getSharedComponentCss();
             $themeLayout = $this->themes->getLayoutHtmlForPage($theme, $pageKey);
             if ($themeLayout !== '') {
                 $html = $this->renderer->applyLayout($themeLayout, $html, $site['name'] ?? '', $themeNav);
             }
             $html = $this->renderer->stripInlineStyles($html);
             $html = $this->themes->injectBodyClass($html, (string)($theme['key'] ?? ''));
-            $css = ($template['css_source'] ?? '') . "\n" . $themeCss;
+            $css = ($template['css_source'] ?? '') . "\n" . $sharedCss . "\n" . $themeCss;
             $js  = ($template['js_source']  ?? '') . "\n" . $themeJs;
             Logger::infoTo('theme-debug', 'theme.publish.applied', 'Publish theme applied', [
                 'site_id' => $site['id'] ?? null,

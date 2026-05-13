@@ -329,6 +329,7 @@ function applyThemeTemplate(PageRenderer $renderer, array $site, string $pageKey
     $themeCss = $registry->getCssForPage($theme, $pageKey);
     $themeJs = $registry->getJsForPage($theme, $pageKey);
     $themeLayout = $registry->getLayoutHtmlForPage($theme, $pageKey);
+    $sharedCss = $registry->getSharedComponentCss();
 
     if ($themeLayout !== '') {
         $html = $renderer->applyLayout($themeLayout, $html, $siteName, $nav);
@@ -337,7 +338,9 @@ function applyThemeTemplate(PageRenderer $renderer, array $site, string $pageKey
     $html = $registry->injectBodyClass($html, (string)($theme['key'] ?? ''));
 
     if ($themeCss !== '') {
-        $css = trim($css . "\n" . $themeCss);
+        $css = trim($css . "\n" . $sharedCss . "\n" . $themeCss);
+    } elseif ($sharedCss !== '') {
+        $css = trim($css . "\n" . $sharedCss);
     }
 
     if ($themeJs !== '') {
