@@ -136,6 +136,7 @@ function tryServeDatabasePage(string $uri, bool $authenticated = false, bool $pr
             $seoRenderer->renderBodyScripts($site)
         );
         $html = injectFooterSocials($html, (int)$site['id']);
+        $html = injectHomepageHeroImage($html, (int)$site['id'], $isHome);
         $html = sanitizeFrontendHtml($html);
 
         if ($authenticated) {
@@ -223,6 +224,92 @@ HTML;
 function sanitizeFrontendHtml(string $html): string
 {
     return preg_replace('~https?://localhost(?::\d+)?/storage/media/~i', '/storage/media/', $html) ?? $html;
+}
+
+function injectHomepageHeroImage(string $html, int $siteId, bool $isHome): string
+{
+    if (!$isHome) {
+        return $html;
+    }
+
+    $heroImage = resolveHomepageHeroImageUrl($siteId);
+    if ($heroImage === '') {
+        return $html;
+    }
+
+    $styleValue = '--theme-hero-image:url(\'' . str_replace("'", '%27', $heroImage) . '\')';
+
+    if (preg_match('/<body([^>]*)>/i', $html, $m)) {
+        $attrs = $m[1];
+        $styleAttr = ' style="' . htmlspecialchars($styleValue . ';', ENT_QUOTES) . '"';
+        if (preg_match('/\sstyle=(["\'])(.*?)\1/i', $attrs, $styleMatch)) {
+            $existing = html_entity_decode($styleMatch[2], ENT_QUOTES, 'UTF-8');
+            if (str_contains($existing, '--theme-hero-image')) {
+                $existing = preg_replace('/--theme-hero-image\s*:\s*[^;]+;?/i', $styleValue . ';', $existing) ?? $existing;
+            } else {
+                $existing = rtrim($existing, '; ') . ';' . $styleValue . ';';
+            }
+            $attrs = preg_replace('/\sstyle=(["\'])(.*?)\1/i', ' style="' . htmlspecialchars($existing, ENT_QUOTES) . '"', $attrs, 1) ?? $attrs;
+        } else {
+            $attrs .= $styleAttr;
+        }
+
+        return preg_replace('/<body([^>]*)>/i', '<body' . $attrs . '>', $html, 1) ?? $html;
+    }
+
+    return $html;
+}
+
+function resolveHomepageHeroImageUrl(int $siteId): string
+{
+    $portfolioRepo = new PortfolioRepository();
+    $blogRepo = new BlogRepository();
+    $mediaRepo = new MediaRepository();
+
+    try {
+        $entries = $portfolioRepo->allPublished($siteId);
+        foreach (array_slice($entries, 0, 3) as $entry) {
+            $mediaItems = $portfolioRepo->getMedia((int)$entry['id']);
+            if (!empty($mediaItems)) {
+                $candidate = (string)($mediaItems[0]['medium_path'] ?? $mediaItems[0]['thumb_path'] ?? $mediaItems[0]['storage_path'] ?? '');
+                $url = publicMediaUrl($candidate);
+                if ($url !== '') {
+                    return $url;
+                }
+            }
+
+            $thumb = !empty($entry['video_url']) ? PortfolioRepository::youtubeThumbnail((string)$entry['video_url']) : '';
+            if ($thumb !== '') {
+                return $thumb;
+            }
+        }
+
+        $posts = $blogRepo->allPublished($siteId);
+        foreach (array_slice($posts, 0, 3) as $post) {
+            $imageId = (int)($post['featured_image_id'] ?? 0);
+            if ($imageId <= 0) {
+                continue;
+            }
+
+            $media = $mediaRepo->findById($imageId);
+            if (!$media) {
+                continue;
+            }
+
+            $candidate = (string)($media['medium_path'] ?? $media['thumb_path'] ?? $media['storage_path'] ?? '');
+            $url = publicMediaUrl($candidate);
+            if ($url !== '') {
+                return $url;
+            }
+        }
+    } catch (\Throwable $e) {
+        Logger::infoTo('theme-debug', 'theme.hero.image', 'Failed to resolve homepage hero image', [
+            'site_id' => $siteId,
+            'error' => $e->getMessage(),
+        ]);
+    }
+
+    return '';
 }
 
 function buildFooterSocialsHtml(int $siteId): string

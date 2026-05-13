@@ -214,11 +214,51 @@ class ThemeTemplateRegistry
   flex-direction: column;
 }
 
+.theme-shell .hp-svc-card:empty,
+.theme-shell .hp-blog-card:empty,
+.theme-shell .hp-cenik-card:empty,
+.theme-shell .hp-faq-item:empty,
+.theme-shell .pt-tile:empty {
+  display: none;
+}
+
 .theme-shell .hp-svc-card__media,
 .theme-shell .pt-thumb,
 .theme-shell .hp-blog-thumb {
   background: rgba(0,0,0,.22);
   overflow: hidden;
+}
+
+.theme-shell .hp-svc-card__media:empty {
+  position: relative;
+  min-height: 130px;
+  background:
+    radial-gradient(circle at 22% 20%, rgba(196,150,60,.18), transparent 18%),
+    radial-gradient(circle at 78% 18%, rgba(255,255,255,.10), transparent 15%),
+    linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.01));
+}
+
+.theme-shell .hp-svc-card__media:empty::before {
+  content: "";
+  position: absolute;
+  inset: 14px 14px auto auto;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  border: 1px solid rgba(196,150,60,.28);
+  background: rgba(0,0,0,.24);
+  box-shadow: 0 10px 28px rgba(0,0,0,.24);
+}
+
+.theme-shell .hp-svc-card__media:empty::after {
+  content: "";
+  position: absolute;
+  left: 18px;
+  bottom: 18px;
+  width: 56px;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--theme-accent, #c4963c), rgba(255,255,255,.04));
 }
 
 .theme-shell .hp-svc-card__media img,
