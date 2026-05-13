@@ -11,6 +11,10 @@ Jednoduche SEO CMS pro male staticke weby v cistem PHP 8. Aplikace ma admin rozh
 - Media: `storage/media/*`
 - Publikovane exporty: `storage/published/*`
 
+## Brand a hero media
+
+V admin sekci `Nastaveni` lze vybrat logo, favicony, vychozi hero video a poster obrazek primo z medii. Vlastni hero video stranky ma prednost; pokud neni vyplnene, podporovane stranky pouziji vychozi video a poster z nastaveni webu.
+
 ## Dokumentace pro vyvoj
 
 - `INSTRUCTIONS.md` obsahuje obecna pracovni pravidla pro vsechny AI asistenty i vyvojare.

@@ -137,6 +137,17 @@ Layout je uložen v `sites.layout_html` a obsahuje placeholder `{page_content}`,
 
 Globální CSS je v `sites.layout_css`, JS v `sites.layout_js`.
 
+### Globální brand a hero média
+
+Tabulka `sites` zároveň drží globální brand assety a fallback média pro hero sekce:
+
+- `logo_url` pro logo v hlavičce a patičce
+- `favicon_ico_url`, `favicon_png_url`, `apple_touch_icon_url` pro ikony webu
+- `default_hero_video_url` jako fallback video pro stránky bez vlastního hero videa
+- `default_hero_poster_url` jako poster/placeholder obrázek, který se zobrazí před načtením videa
+
+Stránka může mít vlastní blok `hero_video`. Pokud je prázdný, frontend pro podporované stránky použije globální `default_hero_video_url`.
+
 ---
 
 ## Request flow
