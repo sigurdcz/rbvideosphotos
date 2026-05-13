@@ -16,7 +16,10 @@ class ThemeController extends Controller
         $site = (new SiteRepository())->findFirst();
         $registry = new ThemeTemplateRegistry();
         $themes = array_map(static fn(array $theme): array => $registry->getThemeSummary($theme), $registry->all());
-        $activeKey = (string)($site['active_theme_key'] ?? '');
+        $activeKey = trim((string)($site['active_theme_key'] ?? ''));
+        if ($activeKey === '') {
+            $activeKey = $registry->getPersistedActiveThemeKey();
+        }
 
         $themes = array_map(static function (array $theme) use ($activeKey): array {
             $theme['active'] = $activeKey !== '' && ($theme['key'] ?? '') === $activeKey;
@@ -58,6 +61,7 @@ class ThemeController extends Controller
         $sites->update((int)$site['id'], [
             'active_theme_key' => $key === '' ? null : $key,
         ]);
+        $registry->persistActiveThemeKey($key === '' ? null : $key);
 
         $user = \App\Core\Auth::user();
         $publishResult = (new PublishService())->publishSite((int)$site['id'], (int)($user['id'] ?? 0));

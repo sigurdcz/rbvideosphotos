@@ -5,10 +5,12 @@ namespace App\Services;
 class ThemeTemplateRegistry
 {
     private string $rootPath;
+    private string $stateFile;
 
     public function __construct(?string $rootPath = null)
     {
         $this->rootPath = $rootPath ?: dirname(__DIR__, 2) . '/Templates';
+        $this->stateFile = dirname(__DIR__, 2) . '/storage/active-theme-key.txt';
     }
 
     public function all(): array
@@ -63,6 +65,9 @@ class ThemeTemplateRegistry
 
         $activeKey = trim((string)($site['active_theme_key'] ?? ''));
         if ($activeKey === '') {
+            $activeKey = $this->getPersistedActiveThemeKey();
+        }
+        if ($activeKey === '') {
             return null;
         }
 
@@ -73,6 +78,34 @@ class ThemeTemplateRegistry
     {
         $path = trim($urlPath, '/');
         return $path === '' ? 'homepage' : $path;
+    }
+
+    public function getPersistedActiveThemeKey(): string
+    {
+        if (!is_file($this->stateFile)) {
+            return '';
+        }
+
+        $value = trim((string)file_get_contents($this->stateFile));
+        return $value !== '' ? $value : '';
+    }
+
+    public function persistActiveThemeKey(?string $key): void
+    {
+        $key = trim((string)$key);
+        $dir = dirname($this->stateFile);
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0775, true);
+        }
+
+        if ($key === '') {
+            if (is_file($this->stateFile)) {
+                @unlink($this->stateFile);
+            }
+            return;
+        }
+
+        file_put_contents($this->stateFile, $key, LOCK_EX);
     }
 
     public function getCssForPage(array $theme, string $pageKey): string
