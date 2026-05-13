@@ -133,6 +133,46 @@ ob_start();
   </div>
 
   <div class="card">
+    <div class="card-title">Vychozi hero video</div>
+    <p class="help-text" style="margin-bottom:16px">
+      Toto video se pouzije jako fallback pro SluĹľby, NaĹˇe prĂˇce, Blog a Cenik, pokud konkretni stranka nema vlastni hero video.
+      Poster obrazek se zobrazi okamzite pri nacitani videa, aby uzivatel nevidel cernou plochu.
+    </p>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Defaultni hero video</label>
+        <div class="help-text" style="margin-bottom:8px">Doporuceni: MP4/WebM 1920x1080 px, komprimovane pro web, idealne do 8-15 MB podle delky.</div>
+        <div class="brand-asset-picker">
+          <input type="hidden" name="default_hero_video_url" id="default-hero-video-url" value="<?= $h($site['default_hero_video_url'] ?? '') ?>">
+          <div class="brand-asset-preview" data-brand-preview for="default-hero-video-url">
+            <?php if (!empty($site['default_hero_video_url'])): ?><span><?= $h($site['default_hero_video_url']) ?></span><?php else: ?><span>Neni vybrano</span><?php endif; ?>
+          </div>
+          <div class="brand-asset-actions">
+            <button type="button" class="btn btn-secondary" data-open-brand-media data-target="default-hero-video-url">Vybrat z medii</button>
+            <button type="button" class="btn btn-secondary" data-clear-brand-media data-target="default-hero-video-url">Odebrat</button>
+          </div>
+          <div class="help-text brand-asset-path" data-brand-path for="default-hero-video-url"><?= $h($site['default_hero_video_url'] ?? '') ?></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Placeholder / poster obrazek</label>
+        <div class="help-text" style="margin-bottom:8px">Doporuceni: WebP/JPG 1920x1080 px, do 300-600 kB, tmavsi varianta vhodna pod text v hero sekci.</div>
+        <div class="brand-asset-picker">
+          <input type="hidden" name="default_hero_poster_url" id="default-hero-poster-url" value="<?= $h($site['default_hero_poster_url'] ?? '') ?>">
+          <div class="brand-asset-preview" data-brand-preview for="default-hero-poster-url">
+            <?php if (!empty($site['default_hero_poster_url'])): ?><img src="<?= $h($site['default_hero_poster_url']) ?>" alt="Hero poster"><?php else: ?><span>Neni vybrano</span><?php endif; ?>
+          </div>
+          <div class="brand-asset-actions">
+            <button type="button" class="btn btn-secondary" data-open-brand-media data-target="default-hero-poster-url">Vybrat z medii</button>
+            <button type="button" class="btn btn-secondary" data-clear-brand-media data-target="default-hero-poster-url">Odebrat</button>
+          </div>
+          <div class="help-text brand-asset-path" data-brand-path for="default-hero-poster-url"><?= $h($site['default_hero_poster_url'] ?? '') ?></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
     <div class="card-title">Analytics</div>
     <div class="form-row">
       <div class="form-group">
@@ -261,7 +301,7 @@ ob_start();
             $mime = (string)($m['mime_type'] ?? '');
             $isImage = str_starts_with($mime, 'image/');
           ?>
-          <button type="button" class="brand-media-item" data-brand-media-item data-url="<?= $h($url) ?>" title="<?= $h($m['original_filename'] ?? '') ?>">
+          <button type="button" class="brand-media-item" data-brand-media-item data-url="<?= $h($url) ?>" data-mime="<?= $h($mime) ?>" title="<?= $h($m['original_filename'] ?? '') ?>">
             <div class="brand-media-thumb">
               <?php if ($isImage): ?>
                 <img src="<?= $h($thumb) ?>" alt="<?= $h($m['alt_text'] ?? $m['original_filename'] ?? '') ?>" loading="lazy">
@@ -296,7 +336,7 @@ ob_start();
     return document.querySelector('[data-brand-path][for="' + targetId + '"]');
   }
 
-  function setAsset(targetId, url) {
+  function setAsset(targetId, url, mime) {
     const input = document.getElementById(targetId);
     if (!input) return;
     input.value = url;
@@ -305,10 +345,16 @@ ob_start();
     if (preview) {
       preview.textContent = '';
       if (url) {
-        const img = document.createElement('img');
-        img.src = url;
-        img.alt = '';
-        preview.appendChild(img);
+        if ((mime || '').startsWith('image/')) {
+          const img = document.createElement('img');
+          img.src = url;
+          img.alt = '';
+          preview.appendChild(img);
+        } else {
+          const selected = document.createElement('span');
+          selected.textContent = url;
+          preview.appendChild(selected);
+        }
       } else {
         const empty = document.createElement('span');
         empty.textContent = 'Neni vybrano';
@@ -327,12 +373,12 @@ ob_start();
   });
 
   document.querySelectorAll('[data-clear-brand-media]').forEach(btn => {
-    btn.addEventListener('click', () => setAsset(btn.dataset.target || '', ''));
+    btn.addEventListener('click', () => setAsset(btn.dataset.target || '', '', ''));
   });
 
   modal.querySelectorAll('[data-brand-media-item]').forEach(item => {
     item.addEventListener('click', () => {
-      if (activeTarget) setAsset(activeTarget, item.dataset.url || '');
+      if (activeTarget) setAsset(activeTarget, item.dataset.url || '', item.dataset.mime || '');
       closeModal();
     });
   });

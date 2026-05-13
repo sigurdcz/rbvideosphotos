@@ -51,6 +51,8 @@ class SettingsController extends Controller
             'favicon_ico_url'       => trim($_POST['favicon_ico_url']       ?? ''),
             'favicon_png_url'       => trim($_POST['favicon_png_url']       ?? ''),
             'apple_touch_icon_url'  => trim($_POST['apple_touch_icon_url']  ?? ''),
+            'default_hero_video_url' => trim($_POST['default_hero_video_url'] ?? ''),
+            'default_hero_poster_url'=> trim($_POST['default_hero_poster_url'] ?? ''),
         ];
 
         if ($site) {
