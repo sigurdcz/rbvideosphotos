@@ -25,6 +25,18 @@ class SeoRenderer
         $canonical = !empty($seo['canonical_url']) ? $seo['canonical_url'] : $pageUrl;
         $lines[] = '<link rel="canonical" href="' . $this->e($canonical) . '">';
 
+        if (!empty($site['favicon_ico_url'])) {
+            $lines[] = '<link rel="icon" type="image/x-icon" href="' . $this->e($site['favicon_ico_url']) . '">';
+        }
+        if (!empty($site['favicon_png_url'])) {
+            $favicon = (string)$site['favicon_png_url'];
+            $type = str_ends_with(strtolower(parse_url($favicon, PHP_URL_PATH) ?: $favicon), '.svg') ? 'image/svg+xml' : 'image/png';
+            $lines[] = '<link rel="icon" type="' . $type . '" href="' . $this->e($favicon) . '">';
+        }
+        if (!empty($site['apple_touch_icon_url'])) {
+            $lines[] = '<link rel="apple-touch-icon" href="' . $this->e($site['apple_touch_icon_url']) . '">';
+        }
+
         // Open Graph
         $ogTitle = $seo['og_title'] ?? ($seo['meta_title'] ?? '');
         $ogDesc  = $seo['og_description'] ?? ($seo['meta_description'] ?? '');

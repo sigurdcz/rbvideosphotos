@@ -136,7 +136,9 @@ function tryServeDatabasePage(string $uri, bool $authenticated = false, bool $pr
             $seoRenderer->renderBodyScripts($site)
         );
         $html = injectFooterSocials($html, (int)$site['id']);
+        $html = injectSiteLogo($html, $site);
         $html = injectHomepageHeroImage($html, (int)$site['id'], $isHome);
+        $html = injectHomepageHeroVideo($html, (int)$site['id'], $isHome);
         $html = sanitizeFrontendHtml($html);
 
         if ($authenticated) {
@@ -326,6 +328,180 @@ function resolveHomepageHeroImageUrl(int $siteId): string
     }
 
     return '';
+}
+
+function injectHomepageHeroVideo(string $html, int $siteId, bool $isHome): string
+{
+    if (!$isHome || str_contains($html, 'theme-hero-video')) {
+        return $html;
+    }
+
+    $videoUrl = resolveHomepageHeroVideoUrl($siteId);
+    if ($videoUrl === '') {
+        return $html;
+    }
+
+    $videoHtml = buildHomepageHeroVideoHtml($videoUrl);
+    if ($videoHtml === '') {
+        return $html;
+    }
+
+    $style = <<<'HTML'
+<style data-cms-hero-video>
+.hp-hero,.hero{position:relative;overflow:hidden}
+.hp-hero::before,.hero::before{z-index:0!important}
+.theme-hero-video{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;pointer-events:none;background:#050505}
+.theme-hero-video--embed{overflow:hidden}
+.theme-hero-video--embed iframe{position:absolute;top:50%;left:50%;width:120vw;height:67.5vw;min-width:213.33vh;min-height:120vh;transform:translate(-50%,-50%);border:0;pointer-events:none}
+.hp-hero>.container,.hero>.container,.hero-content{position:relative;z-index:3}
+</style>
+HTML;
+
+    if (!str_contains($html, 'data-cms-hero-video')) {
+        $html = str_replace('</head>', "\n" . $style . "\n</head>", $html);
+    }
+
+    $count = 0;
+    $html = preg_replace_callback(
+        '/(<section\b(?=[^>]*\bclass=(["\'])(?=[^"\']*(?:hp-hero|hero))[^"\']*\2)[^>]*>)/i',
+        static fn(array $m): string => $m[1] . $videoHtml,
+        $html,
+        1,
+        $count
+    ) ?? $html;
+
+    if ($count > 0) {
+        return $html;
+    }
+
+    return preg_replace_callback(
+        '/(<main\b[^>]*>)/i',
+        static fn(array $m): string => $m[1] . $videoHtml,
+        $html,
+        1
+    ) ?? $html;
+}
+
+function resolveHomepageHeroVideoUrl(int $siteId): string
+{
+    try {
+        $homePage = (new PageRepository())->findByUrlPath('');
+        if (!$homePage || (int)($homePage['site_id'] ?? 0) !== $siteId) {
+            return '';
+        }
+
+        foreach ((new BlockRepository())->allByPage((int)$homePage['id']) as $block) {
+            if (($block['block_key'] ?? '') !== 'hero_video') {
+                continue;
+            }
+
+            $url = normalizePublicAssetUrl((string)($block['content'] ?? ''));
+            if ($url !== '') {
+                Logger::infoTo('theme-debug', 'theme.hero.video', 'Homepage hero video resolved', [
+                    'site_id' => $siteId,
+                    'page_id' => $homePage['id'] ?? null,
+                    'video_url' => $url,
+                ]);
+                return $url;
+            }
+        }
+    } catch (\Throwable $e) {
+        Logger::infoTo('theme-debug', 'theme.hero.video.error', 'Failed to resolve homepage hero video', [
+            'site_id' => $siteId,
+            'error' => $e->getMessage(),
+        ]);
+    }
+
+    return '';
+}
+
+function buildHomepageHeroVideoHtml(string $videoUrl): string
+{
+    $embedUrl = buildVideoEmbedUrl($videoUrl);
+    if ($embedUrl !== '') {
+        $safeEmbed = htmlspecialchars($embedUrl, ENT_QUOTES);
+        return '<div class="theme-hero-video theme-hero-video--embed" aria-hidden="true"><iframe src="' . $safeEmbed . '" title="Homepage hero video" allow="autoplay; fullscreen; picture-in-picture" loading="eager"></iframe></div>';
+    }
+
+    $safeUrl = htmlspecialchars($videoUrl, ENT_QUOTES);
+    return '<video class="theme-hero-video" src="' . $safeUrl . '" autoplay muted loop playsinline preload="auto" aria-hidden="true"></video>';
+}
+
+function buildVideoEmbedUrl(string $videoUrl): string
+{
+    $url = trim($videoUrl);
+    if ($url === '') {
+        return '';
+    }
+
+    if (preg_match('~vimeo\.com/(?:video/)?([0-9]+)~i', $url, $m)) {
+        return 'https://player.vimeo.com/video/' . $m[1] . '?background=1&autoplay=1&loop=1&muted=1&playsinline=1';
+    }
+
+    $youtubeId = '';
+    if (preg_match('~youtu\.be/([A-Za-z0-9_-]{6,})~i', $url, $m)) {
+        $youtubeId = $m[1];
+    } elseif (preg_match('~youtube\.com/(?:embed|shorts)/([A-Za-z0-9_-]{6,})~i', $url, $m)) {
+        $youtubeId = $m[1];
+    } elseif (preg_match('~[?&]v=([A-Za-z0-9_-]{6,})~i', $url, $m)) {
+        $youtubeId = $m[1];
+    }
+
+    if ($youtubeId !== '') {
+        return 'https://www.youtube.com/embed/' . $youtubeId . '?autoplay=1&mute=1&controls=0&loop=1&playlist=' . $youtubeId . '&playsinline=1&modestbranding=1&rel=0';
+    }
+
+    return '';
+}
+
+function injectSiteLogo(string $html, array $site): string
+{
+    $logoUrl = normalizePublicAssetUrl((string)($site['logo_url'] ?? ''));
+    if ($logoUrl === '') {
+        return $html;
+    }
+
+    $siteName = (string)($site['name'] ?? 'Web');
+    $safeUrl = htmlspecialchars($logoUrl, ENT_QUOTES);
+    $safeName = htmlspecialchars($siteName, ENT_QUOTES);
+    $brandHtml = '<img class="site-logo-img" src="' . $safeUrl . '" alt="' . $safeName . '"><span class="site-logo-text">' . $safeName . '</span>';
+
+    $html = preg_replace_callback(
+        '~(<a\b(?=[^>]*\bclass=(["\'])(?=[^"\']*(?:theme-brand|brand|pf-nav-logo|pl-nav-logo))[^"\']*\2)[^>]*>).*?(</a>)~is',
+        static fn(array $m): string => $m[1] . $brandHtml . $m[3],
+        $html
+    ) ?? $html;
+
+    $style = <<<'HTML'
+<style data-cms-site-logo>
+.site-logo-img{display:block;max-height:44px;max-width:240px;width:auto;height:auto;object-fit:contain}
+.site-logo-text{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+</style>
+HTML;
+
+    if (!str_contains($html, 'data-cms-site-logo')) {
+        $html = str_replace('</head>', "\n" . $style . "\n</head>", $html);
+    }
+
+    return $html;
+}
+
+function normalizePublicAssetUrl(string $value): string
+{
+    $normalized = str_replace('\\', '/', trim($value));
+    if ($normalized === '') {
+        return '';
+    }
+
+    if (preg_match('~^https?://~i', $normalized)) {
+        return $normalized;
+    }
+
+    if (str_starts_with($normalized, '/')) {
+        return $normalized;
+    }
+
+    return '/' . ltrim($normalized, '/');
 }
 
 function buildFooterSocialsHtml(int $siteId): string

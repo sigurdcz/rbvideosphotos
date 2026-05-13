@@ -50,6 +50,40 @@ ob_start();
   </div>
 
   <div class="card">
+    <div class="card-title">Logo a favicony</div>
+    <p class="help-text" style="margin-bottom:16px">
+      Vloz URL nebo cestu z Media knihovny, napr. <code>/storage/media/2026/05/logo.webp</code>.
+      Logo se pouzije ve verejne hlavicce webu, favicony se vlozi do <code>&lt;head&gt;</code>.
+    </p>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Logo webu</label>
+        <input type="text" name="logo_url" value="<?= $h($site['logo_url'] ?? '') ?>" placeholder="/storage/media/.../logo.svg">
+        <?php if (!empty($site['logo_url'])): ?>
+          <div style="margin-top:10px;display:inline-flex;align-items:center;padding:10px 12px;border:1px solid var(--c-border);border-radius:10px;background:var(--c-bg)">
+            <img src="<?= $h($site['logo_url']) ?>" alt="Logo" style="max-height:44px;max-width:220px;display:block">
+          </div>
+        <?php endif; ?>
+      </div>
+      <div class="form-group">
+        <label>Favicon ICO</label>
+        <input type="text" name="favicon_ico_url" value="<?= $h($site['favicon_ico_url'] ?? '') ?>" placeholder="/favicon.ico nebo /storage/media/.../favicon.ico">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Favicon PNG/SVG</label>
+        <input type="text" name="favicon_png_url" value="<?= $h($site['favicon_png_url'] ?? '') ?>" placeholder="/storage/media/.../favicon-32x32.png">
+      </div>
+      <div class="form-group">
+        <label>Apple touch icon</label>
+        <input type="text" name="apple_touch_icon_url" value="<?= $h($site['apple_touch_icon_url'] ?? '') ?>" placeholder="/storage/media/.../apple-touch-icon.png">
+      </div>
+    </div>
+    <p class="help-text">Pokud pole nechas prazdne, system zustane u vychoziho faviconu / sablony.</p>
+  </div>
+
+  <div class="card">
     <div class="card-title">Analytics</div>
     <div class="form-row">
       <div class="form-group">

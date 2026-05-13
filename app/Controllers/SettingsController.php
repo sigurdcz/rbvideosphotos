@@ -44,6 +44,10 @@ class SettingsController extends Controller
             'layout_js'             => $_POST['layout_js']                  ?? '',
             'layout_nav_home'       => $_POST['layout_nav_home']            ?? '',
             'layout_nav_sub'        => $_POST['layout_nav_sub']             ?? '',
+            'logo_url'              => trim($_POST['logo_url']              ?? ''),
+            'favicon_ico_url'       => trim($_POST['favicon_ico_url']       ?? ''),
+            'favicon_png_url'       => trim($_POST['favicon_png_url']       ?? ''),
+            'apple_touch_icon_url'  => trim($_POST['apple_touch_icon_url']  ?? ''),
         ];
 
         if ($site) {

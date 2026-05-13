@@ -9,6 +9,7 @@ class SiteRepository
 {
     private PDO $db;
     private ?bool $hasActiveThemeKeyColumn = null;
+    private array $columnSupport = [];
 
     public function __construct()
     {
@@ -32,10 +33,7 @@ class SiteRepository
 
     public function update(int $id, array $data): void
     {
-        $allowed = ['name','domain','default_language','google_analytics_id','google_tag_manager_id','head_scripts','body_scripts','layout_html','layout_css','layout_js','layout_nav_home','layout_nav_sub','active_theme_key'];
-        if (!$this->supportsActiveThemeKey()) {
-            $allowed = array_values(array_filter($allowed, static fn(string $col): bool => $col !== 'active_theme_key'));
-        }
+        $allowed = $this->writableColumns();
         $sets = [];
         $vals = [];
         foreach ($allowed as $col) {
@@ -51,29 +49,82 @@ class SiteRepository
 
     public function create(array $data): int
     {
-        if ($this->supportsActiveThemeKey()) {
-            $stmt = $this->db->prepare(
-                'INSERT INTO sites (name, domain, default_language, active_theme_key) VALUES (?, ?, ?, ?)'
-            );
-            $stmt->execute([$data['name'], $data['domain'], $data['default_language'] ?? 'cs', $data['active_theme_key'] ?? null]);
-        } else {
-            $stmt = $this->db->prepare(
-                'INSERT INTO sites (name, domain, default_language) VALUES (?, ?, ?)'
-            );
-            $stmt->execute([$data['name'], $data['domain'], $data['default_language'] ?? 'cs']);
+        $allowed = $this->writableColumns();
+        $fields = [];
+        $placeholders = [];
+        $values = [];
+
+        foreach ($allowed as $col) {
+            if (!array_key_exists($col, $data)) {
+                continue;
+            }
+            $fields[] = "`{$col}`";
+            $placeholders[] = '?';
+            $values[] = $data[$col];
         }
+
+        if (!in_array('`name`', $fields, true)) {
+            $fields[] = '`name`';
+            $placeholders[] = '?';
+            $values[] = $data['name'] ?? 'Muj web';
+        }
+        if (!in_array('`domain`', $fields, true)) {
+            $fields[] = '`domain`';
+            $placeholders[] = '?';
+            $values[] = $data['domain'] ?? '';
+        }
+        if (!in_array('`default_language`', $fields, true)) {
+            $fields[] = '`default_language`';
+            $placeholders[] = '?';
+            $values[] = $data['default_language'] ?? 'cs';
+        }
+
+        $sql = 'INSERT INTO sites (' . implode(', ', $fields) . ') VALUES (' . implode(', ', $placeholders) . ')';
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($values);
         return (int)$this->db->lastInsertId();
     }
 
     public function supportsActiveThemeKey(): bool
     {
-        if ($this->hasActiveThemeKeyColumn !== null) {
-            return $this->hasActiveThemeKeyColumn;
+        $this->hasActiveThemeKeyColumn = $this->supportsColumn('active_theme_key');
+        return $this->hasActiveThemeKeyColumn;
+    }
+
+    public function supportsColumn(string $column): bool
+    {
+        if (array_key_exists($column, $this->columnSupport)) {
+            return $this->columnSupport[$column];
         }
 
-        $stmt = $this->db->prepare("SHOW COLUMNS FROM sites LIKE 'active_theme_key'");
-        $stmt->execute();
-        $this->hasActiveThemeKeyColumn = (bool)$stmt->fetch();
-        return $this->hasActiveThemeKeyColumn;
+        $stmt = $this->db->prepare("SHOW COLUMNS FROM sites LIKE ?");
+        $stmt->execute([$column]);
+        $this->columnSupport[$column] = (bool)$stmt->fetch();
+        return $this->columnSupport[$column];
+    }
+
+    private function writableColumns(): array
+    {
+        $columns = [
+            'name',
+            'domain',
+            'default_language',
+            'google_analytics_id',
+            'google_tag_manager_id',
+            'head_scripts',
+            'body_scripts',
+            'layout_html',
+            'layout_css',
+            'layout_js',
+            'layout_nav_home',
+            'layout_nav_sub',
+            'active_theme_key',
+            'logo_url',
+            'favicon_ico_url',
+            'favicon_png_url',
+            'apple_touch_icon_url',
+        ];
+
+        return array_values(array_filter($columns, fn(string $col): bool => $this->supportsColumn($col)));
     }
 }
