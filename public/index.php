@@ -608,15 +608,85 @@ function buildFooterSocialsHtml(int $siteId): string
         . '</div>';
 }
 
+function buildRichFooterHtml(int $siteId): string
+{
+    $contact = (new ContactRepository())->findBySiteSafe($siteId);
+    $site = (new SiteRepository())->findById($siteId) ?? [];
+    $siteName = (string)($site['name'] ?? 'Muj web');
+    $logoUrl = normalizePublicAssetUrl((string)($site['logo_url'] ?? ''));
+    $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
+    $socialIcons = [
+        'instagram' => 'IG',
+        'facebook' => 'FB',
+        'youtube' => 'YT',
+        'tiktok' => 'TT',
+        'linkedin' => 'IN',
+        'twitter' => 'X',
+        'pinterest' => 'PI',
+        'whatsapp' => 'WA',
+        'telegram' => 'TG',
+    ];
+
+    $contactItems = [];
+    foreach (['phone_1', 'phone_2', 'phone_3'] as $phoneKey) {
+        $phone = trim((string)($contact[$phoneKey] ?? ''));
+        if ($phone === '') {
+            continue;
+        }
+        $tel = preg_replace('/\s+/', '', $phone);
+        $contactItems[] = '<a class="site-footer-contact__item" href="tel:' . $h($tel) . '"><span>Telefon</span><strong>' . $h($phone) . '</strong></a>';
+    }
+
+    $email = trim((string)($contact['email'] ?? ''));
+    if ($email !== '') {
+        $contactItems[] = '<a class="site-footer-contact__item" href="mailto:' . $h($email) . '"><span>E-mail</span><strong>' . $h($email) . '</strong></a>';
+    }
+
+    $address = trim((string)($contact['address_1'] ?? '')) ?: trim((string)($contact['address_2'] ?? ''));
+    if ($address !== '') {
+        $contactItems[] = '<div class="site-footer-contact__item"><span>Adresa</span><strong>' . nl2br($h($address)) . '</strong></div>';
+    }
+
+    $socialItems = [];
+    for ($i = 1; $i <= 5; $i++) {
+        $type = trim((string)($contact['social_' . $i . '_type'] ?? ''));
+        $url = trim((string)($contact['social_' . $i . '_url'] ?? ''));
+        if ($type === '' || $url === '') {
+            continue;
+        }
+        $icon = $socialIcons[$type] ?? 'URL';
+        $socialItems[] = '<a class="site-footer-social" href="' . $h($url) . '" target="_blank" rel="noopener"><span class="site-footer-social__icon">' . $icon . '</span><span class="site-footer-social__text">' . $h(ucfirst($type)) . '</span></a>';
+    }
+
+    $brand = $logoUrl !== ''
+        ? '<img class="site-footer-brand__logo" src="' . $h($logoUrl) . '" alt="' . $h($siteName) . '">'
+        : '<span class="site-footer-brand__mark">' . $h(mb_substr($siteName, 0, 2)) . '</span>';
+
+    return '<style data-cms-rich-footer>'
+        . 'html,body{min-height:100%}body{min-height:100vh;display:flex;flex-direction:column}.theme-shell{width:100%;flex:1 0 auto;display:flex;flex-direction:column}.theme-shell,.theme-shell__frame{min-height:100vh}.theme-shell__frame{display:flex;flex-direction:column;flex:1 0 auto}.theme-main,main,#page-content{flex:1 0 auto}footer,.theme-footer,.site-footer{margin-top:auto}'
+        . 'footer .site-footer-rich,.theme-footer .site-footer-rich,.site-footer .site-footer-rich{width:100%;max-width:1180px;margin:0 auto;padding:0;display:grid;grid-template-columns:minmax(220px,.85fr) minmax(260px,1fr) minmax(220px,.75fr);gap:34px;align-items:start;text-align:left}'
+        . '.site-footer-brand{display:flex;flex-direction:column;gap:12px;align-items:flex-start}.site-footer-brand__logo{max-height:52px;max-width:260px;width:auto;height:auto;object-fit:contain}.site-footer-brand__mark{display:inline-grid;place-items:center;width:54px;height:54px;border:1px solid rgba(198,148,61,.45);color:#c6943d;font-family:Georgia,serif;font-weight:800;font-size:20px;letter-spacing:.08em;text-transform:uppercase}.site-footer-brand__name{color:#f3efe7;font-family:Georgia,serif;font-size:22px;line-height:1.1}.site-footer-brand__note{color:rgba(255,255,255,.52);font-size:13px;line-height:1.65}'
+        . '.site-footer-contact{display:grid;gap:12px}.site-footer-title{margin:0 0 12px;color:#c6943d;font-size:11px;font-weight:900;letter-spacing:.18em;text-transform:uppercase}.site-footer-contact__item{display:grid;gap:4px;color:#f3efe7;text-decoration:none}.site-footer-contact__item span{color:rgba(255,255,255,.44);font-size:11px;text-transform:uppercase;letter-spacing:.12em}.site-footer-contact__item strong{font-size:14px;line-height:1.5;font-weight:700}'
+        . '.site-footer-socials{display:flex;flex-direction:column;gap:14px;align-items:flex-start}.site-footer-socials__list{display:flex;flex-wrap:wrap;gap:10px}.site-footer-social{display:inline-flex;align-items:center;gap:9px;padding:10px 13px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.03);color:#fff;text-decoration:none;font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;transition:transform .2s,border-color .2s,background .2s,color .2s}.site-footer-social:hover{transform:translateY(-1px);border-color:#c6943d;background:#c6943d;color:#080808}.site-footer-social__icon{display:grid;place-items:center;width:26px;height:26px;border:1px solid currentColor;border-radius:50%;font-size:10px;line-height:1}.site-footer-bottom{grid-column:1/-1;margin-top:4px;padding-top:20px;border-top:1px solid rgba(255,255,255,.09);color:rgba(255,255,255,.36);font-size:12px;text-align:left}'
+        . '@media(max-width:820px){footer .site-footer-rich,.theme-footer .site-footer-rich,.site-footer .site-footer-rich{grid-template-columns:1fr;gap:24px}.site-footer-bottom{text-align:left}}'
+        . '</style>'
+        . '<div class="site-footer-rich">'
+        . '<div class="site-footer-brand">' . $brand . '<div class="site-footer-brand__name">' . $h($siteName) . '</div><div class="site-footer-brand__note">Svatebni fotografie a video. Olomouc, Morava a cela CR.</div></div>'
+        . '<div class="site-footer-contact"><div class="site-footer-title">Kontakt</div>' . ($contactItems !== [] ? implode('', $contactItems) : '<div class="site-footer-contact__item"><span>Kontakt</span><strong>Doplnte kontaktni udaje v administraci.</strong></div>') . '</div>'
+        . '<div class="site-footer-socials"><div class="site-footer-title">Socialni site</div><div class="site-footer-socials__list">' . ($socialItems !== [] ? implode('', $socialItems) : '<span class="site-footer-brand__note">Doplnte socialni site v kontaktu.</span>') . '</div></div>'
+        . '<div class="site-footer-bottom">&copy; ' . date('Y') . ' ' . $h($siteName) . '</div>'
+        . '</div>';
+}
+
 function injectFooterSocials(string $html, int $siteId): string
 {
-    $socials = buildFooterSocialsHtml($siteId);
+    $socials = buildRichFooterHtml($siteId);
     if ($socials === '') {
         return $html;
     }
 
-    if (str_contains($html, '</footer>')) {
-        return str_replace('</footer>', $socials . '</footer>', $html);
+    if (preg_match('~<footer\b([^>]*)>.*?</footer>~is', $html)) {
+        return preg_replace('~<footer\b([^>]*)>.*?</footer>~is', '<footer$1>' . $socials . '</footer>', $html, 1) ?? $html;
     }
 
     if (str_contains($html, '</body>')) {
