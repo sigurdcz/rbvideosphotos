@@ -104,12 +104,24 @@ body.theme-soft-memories {
   color: #fff;
 }
 
+.theme-soft-memories .site-nav,
 .theme-soft-memories .nav,
 .theme-soft-memories .topbar,
 .theme-soft-memories .sidebar {
   background: rgba(255, 251, 248, .82);
   backdrop-filter: blur(10px);
   border-color: rgba(195,138,121,.12);
+}
+
+.theme-soft-memories .site-nav .brand,
+.theme-soft-memories .brand,
+.theme-soft-memories .theme-brand {
+  color: var(--theme-text);
+}
+
+.theme-soft-memories .site-nav .nav-links a,
+.theme-soft-memories .nav-links a {
+  color: rgba(27,27,27,.7);
 }
 
 .theme-soft-memories .hero {

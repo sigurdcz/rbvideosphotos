@@ -103,6 +103,8 @@ function tryServeDatabasePage(string $uri, bool $authenticated = false, bool $pr
             $authenticated && !$previewMode
         );
         $themeKey = getThemeTemplateRegistry()->normalizePageKey((string)($page['url_path'] ?? ''));
+        $isHome = ltrim((string)($page['url_path'] ?? ''), '/') === '';
+        $themeNav = resolveThemeNav($site, $isHome);
         $themePreviewKey = isset($_GET['theme_preview']) ? trim((string)$_GET['theme_preview']) : null;
         [$html, $themeCss, $themeJs, $themeActive] = applyThemeTemplate(
             $renderer,
@@ -113,21 +115,14 @@ function tryServeDatabasePage(string $uri, bool $authenticated = false, bool $pr
             '',
             '',
             '',
-            '',
+            $themeNav,
             $themePreviewKey
         );
         if ($themeActive) {
             $css = ($template['css_source'] ?? '') . "\n" . $themeCss;
             $js = ($template['js_source'] ?? '') . "\n" . $themeJs;
         } elseif (!empty($site['layout_html'])) {
-            $isHome = ltrim((string)($page['url_path'] ?? ''), '/') === '';
-            $nav = '';
-            if ($isHome && !empty($site['layout_nav_home'])) {
-                $nav = (string)$site['layout_nav_home'];
-            } elseif (!$isHome && !empty($site['layout_nav_sub'])) {
-                $nav = (string)$site['layout_nav_sub'];
-            }
-            $html = $renderer->applyLayout($site['layout_html'], $html, $site['name'] ?? '', $nav);
+            $html = $renderer->applyLayout($site['layout_html'], $html, $site['name'] ?? '', $themeNav);
             $css  = ($site['layout_css'] ?? '') . "\n" . ($template['css_source'] ?? '') . "\n" . $themeCss;
             $js   = ($site['layout_js']  ?? '') . "\n" . ($template['js_source']  ?? '') . "\n" . $themeJs;
         } else {
@@ -334,6 +329,19 @@ function applyThemeTemplate(PageRenderer $renderer, array $site, string $pageKey
     return [$html, $css, $js, true];
 }
 
+function resolveThemeNav(array $site, bool $isHome): string
+{
+    if ($isHome && !empty($site['layout_nav_home'])) {
+        return (string)$site['layout_nav_home'];
+    }
+
+    if (!empty($site['layout_nav_sub'])) {
+        return (string)$site['layout_nav_sub'];
+    }
+
+    return '';
+}
+
 function publicMediaUrl(string $storagePath): string
 {
     $normalized = str_replace('\\', '/', trim($storagePath));
@@ -469,7 +477,7 @@ CSS;
 
         if (!empty($site['layout_html'])) {
             $renderer   = new PageRenderer();
-            $nav = (string)($site['layout_nav_sub'] ?? '');
+            $nav = resolveThemeNav($site, false);
 $pageContent = <<<HTML
 <section class="pf-hero">
   <div class="container">
@@ -485,16 +493,16 @@ $pageContent = <<<HTML
 HTML;
             [$pageContent, $themeCss, $themeJs, $themeActive] = applyThemeTemplate(
                 $renderer,
-                $site,
-                'portfolio',
-                $siteName,
-                $pageContent,
-                '',
-                '',
-                '',
-                '',
-                isset($_GET['theme_preview']) ? trim((string)$_GET['theme_preview']) : null
-            );
+            $site,
+            'portfolio',
+            $siteName,
+            $pageContent,
+            '',
+            '',
+            '',
+            $nav,
+            isset($_GET['theme_preview']) ? trim((string)$_GET['theme_preview']) : null
+        );
             if ($themeActive) {
                 $html = $pageContent;
                 $html = str_replace('</head>', "\n<title>" . $h("Na\u{161}e pr\u{E1}ce | {$siteName}") . "</title>\n</head>", $html);
@@ -595,7 +603,7 @@ CSS;
 
         if (!empty($site['layout_html'])) {
             $renderer = new PageRenderer();
-            $nav = (string)($site['layout_nav_sub'] ?? '');
+            $nav = resolveThemeNav($site, false);
 $pageContent = <<<HTML
 <section class="pf-detail-hero">
   <div class="container">
@@ -620,7 +628,7 @@ HTML;
                 '',
                 '',
                 '',
-            '',
+            $nav,
             isset($_GET['theme_preview']) ? trim((string)$_GET['theme_preview']) : null
         );
         $titleTag = '<title>' . $h("{$entry['title']} | {$siteName}") . '</title>';
@@ -741,7 +749,7 @@ CSS;
 
     if (!empty($site['layout_html'])) {
         $renderer   = new PageRenderer();
-        $nav        = (string)($site['layout_nav_sub'] ?? '');
+        $nav        = resolveThemeNav($site, false);
 $pageContent = <<<HTML
 <section class="fq-hero">
   <div class="container">
@@ -769,7 +777,7 @@ HTML;
             '',
             '',
             '',
-            '',
+            $nav,
             isset($_GET['theme_preview']) ? trim((string)$_GET['theme_preview']) : null
         );
         if ($themeActive) {
@@ -946,7 +954,7 @@ CSS;
 
     if (!empty($site['layout_html'])) {
         $renderer   = new PageRenderer();
-        $nav        = (string)($site['layout_nav_sub'] ?? '');
+        $nav        = resolveThemeNav($site, false);
         $pageContent = <<<HTML
 <section class="kt-hero">
   <div class="container">
@@ -979,7 +987,7 @@ HTML;
             '',
             '',
             '',
-            '',
+            $nav,
             isset($_GET['theme_preview']) ? trim((string)$_GET['theme_preview']) : null
         );
         if ($themeActive) {
@@ -1079,7 +1087,7 @@ CSS;
 
     if (!empty($site['layout_html'])) {
         $renderer = new PageRenderer();
-        $nav = (string)($site['layout_nav_sub'] ?? '');
+        $nav = resolveThemeNav($site, false);
         $pageContent = <<<HTML
 <section class="bl-hero">
   <div class="container">
@@ -1102,7 +1110,7 @@ HTML;
             '',
             '',
             '',
-            '',
+            $nav,
             isset($_GET['theme_preview']) ? trim((string)$_GET['theme_preview']) : null
         );
         $titleTag = '<title>' . $h("Blog | {$siteName}") . '</title>';
@@ -1251,7 +1259,7 @@ HTML : '';
 
     if (!empty($site['layout_html'])) {
         $renderer = new PageRenderer();
-        $nav = (string)($site['layout_nav_sub'] ?? '');
+        $nav = resolveThemeNav($site, false);
         $pageContent = <<<HTML
 <section class="bp-hero">
   <div class="container">
@@ -1274,11 +1282,11 @@ HTML;
             $site,
             'blog-post',
             $siteName,
-            $pageContent,
-            '',
-            '',
-            '',
-            '',
+                $pageContent,
+                '',
+                '',
+                '',
+            $nav,
             isset($_GET['theme_preview']) ? trim((string)$_GET['theme_preview']) : null
         );
         $titleTag    = '<title>' . $metaTitle . ' | ' . $h($siteName) . '</title>';

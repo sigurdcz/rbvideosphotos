@@ -108,11 +108,14 @@ class PageController extends Controller
         }
 
         $sites     = new SiteRepository();
+        $isHomepage = trim((string)($page['url_path'] ?? ''), '/') === '';
+        if ($isHomepage) {
+            $this->ensureHomepageHeroVideoBlock($id);
+        }
         $blocks    = (new BlockRepository())->allByPage($id);
         $templates = (new TemplateRepository())->allForAdmin();
         $template  = $page['template_id'] ? (new TemplateRepository())->findById((int)$page['template_id']) : null;
         $layout    = $this->resolveLayoutType($template['name'] ?? '');
-        $isHomepage = trim((string)($page['url_path'] ?? ''), '/') === '';
         $homepageAutofillBlocks = $isHomepage
             ? (new HomepageContentService())->getAutofillDefinitions()
             : [];
@@ -172,6 +175,9 @@ class PageController extends Controller
         }
 
         $isHomepage = trim((string)($page['url_path'] ?? ''), '/') === '';
+        if ($isHomepage) {
+            $this->ensureHomepageHeroVideoBlock($id);
+        }
         $this->saveSubmittedBlocks($id, $isHomepage);
 
         if ($layoutType === 'faq') {
@@ -230,6 +236,22 @@ class PageController extends Controller
         foreach ($blocks as $block) {
             $repo->upsert($pageId, $block['block_key'], $block);
         }
+    }
+
+    private function ensureHomepageHeroVideoBlock(int $pageId): void
+    {
+        $blockRepo = new BlockRepository();
+        if ($blockRepo->findByKey($pageId, 'hero_video')) {
+            return;
+        }
+
+        $blockRepo->upsert($pageId, 'hero_video', [
+            'block_type' => 'video',
+            'label' => 'Hero — video (URL)',
+            'content' => '',
+            'sort_order' => 2,
+            'autofill_disabled' => 0,
+        ]);
     }
 
     private function saveSubmittedBlocks(int $pageId, bool $isHomepage = false): void

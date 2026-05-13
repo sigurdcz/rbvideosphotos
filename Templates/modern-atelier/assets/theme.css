@@ -117,12 +117,24 @@ body.theme-modern-atelier {
   color: #fff;
 }
 
+.theme-modern-atelier .site-nav,
 .theme-modern-atelier .nav,
 .theme-modern-atelier .topbar,
 .theme-modern-atelier .sidebar {
   background: rgba(255,255,255,.75);
   backdrop-filter: blur(12px);
   border-color: var(--theme-border);
+}
+
+.theme-modern-atelier .site-nav .brand,
+.theme-modern-atelier .brand,
+.theme-modern-atelier .theme-brand {
+  color: var(--theme-text);
+}
+
+.theme-modern-atelier .site-nav .nav-links a,
+.theme-modern-atelier .nav-links a {
+  color: rgba(19,19,19,.72);
 }
 
 .theme-modern-atelier .nav-links a,

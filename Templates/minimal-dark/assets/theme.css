@@ -3,6 +3,7 @@ body.theme-minimal-dark body {
   background: #0c0d10;
 }
 
+.theme-minimal-dark .site-nav,
 .theme-minimal-dark .nav,
 .theme-minimal-dark .topbar,
 .theme-minimal-dark .sidebar {
@@ -32,6 +33,16 @@ body.theme-minimal-dark body {
 
 .theme-minimal-dark .section-label {
   color: #d8aa54;
+}
+
+.theme-minimal-dark .site-nav .brand,
+.theme-minimal-dark .brand {
+  color: #fff;
+}
+
+.theme-minimal-dark .site-nav .nav-links a,
+.theme-minimal-dark .nav-links a {
+  color: rgba(255,255,255,.74);
 }
 
 .theme-minimal-dark .card,

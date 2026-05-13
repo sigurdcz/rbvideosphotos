@@ -87,18 +87,22 @@ class PublishService
         $theme = $this->themes->resolveForSite($site);
         $themeCss = '';
         $themeJs = '';
+        $isHome = trim((string)($page['url_path'] ?? ''), '/') === '';
+        $themeNav = $isHome && !empty($site['layout_nav_home'])
+            ? (string)$site['layout_nav_home']
+            : (!empty($site['layout_nav_sub']) ? (string)$site['layout_nav_sub'] : '');
         if ($theme) {
             $themeCss = $this->themes->getCssForPage($theme, $pageKey);
             $themeJs = $this->themes->getJsForPage($theme, $pageKey);
             $themeLayout = $this->themes->getLayoutHtmlForPage($theme, $pageKey);
             if ($themeLayout !== '') {
-                $html = $this->renderer->applyLayout($themeLayout, $html, $site['name'] ?? '', '');
+                $html = $this->renderer->applyLayout($themeLayout, $html, $site['name'] ?? '', $themeNav);
             }
             $html = $this->themes->injectBodyClass($html, (string)($theme['key'] ?? ''));
             $css = ($template['css_source'] ?? '') . "\n" . $themeCss;
             $js  = ($template['js_source']  ?? '') . "\n" . $themeJs;
         } elseif (!empty($site['layout_html'])) {
-            $html = $this->renderer->applyLayout($site['layout_html'], $html, $site['name'] ?? '');
+            $html = $this->renderer->applyLayout($site['layout_html'], $html, $site['name'] ?? '', $themeNav);
             $css  = ($site['layout_css'] ?? '') . "\n" . ($template['css_source'] ?? '') . "\n" . $themeCss;
             $js   = ($site['layout_js']  ?? '') . "\n" . ($template['js_source']  ?? '') . "\n" . $themeJs;
         } else {
