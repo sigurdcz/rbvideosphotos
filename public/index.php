@@ -143,72 +143,13 @@ function tryServeDatabasePage(string $uri, bool $authenticated = false, bool $pr
         $html = sanitizeFrontendHtml($html);
 
         if ($authenticated) {
-            $csrfToken  = Auth::csrfToken();
-            $user       = Auth::user();
-            $userEmail  = htmlspecialchars($user['email'] ?? '', ENT_QUOTES);
-            $pageTitle  = htmlspecialchars($page['title'] ?? '', ENT_QUOTES);
-            $pageId     = (int) $page['id'];
-            $appVersion = Version::APP;
-            $previewHref = htmlspecialchars($uri . '?cms_preview=1', ENT_QUOTES);
-            $editHref    = htmlspecialchars($uri, ENT_QUOTES);
-
-            if ($previewMode) {
-                $editorMeta = '<meta name="app-version" content="' . $appVersion . '">'
-                    . '<link rel="stylesheet" href="/assets/inline-editor.css">';
-
-                $adminBar = <<<HTML
-<div id="cms-adminbar">
-  <div class="cms-ab-left">
-    <a class="cms-ab-logo" href="/admin">&#9998;&nbsp;CMS</a>
-    <span class="cms-ab-sep"></span>
-    <span class="cms-ab-page">{$pageTitle}</span>
-    <span class="cms-ab-mode-badge cms-ab-mode-badge--preview">NAHLED</span>
-  </div>
-  <div class="cms-ab-right">
-    <span class="cms-ab-ver">{$appVersion}</span>
-    <a class="cms-ab-btn cms-ab-btn--active" href="{$editHref}">&#9998; Editace</a>
-    <a class="cms-ab-btn" href="/admin">Administrace</a>
-    <form method="POST" action="/admin/logout" style="margin:0;padding:0;display:inline">
-      <input type="hidden" name="_csrf" value="{$csrfToken}">
-      <button type="submit" class="cms-ab-btn cms-ab-logout">Odhlasit</button>
-    </form>
-  </div>
-</div>
-HTML;
-
-                $html = str_replace('</head>', "\n" . $editorMeta . "\n</head>", $html);
-                $html = str_replace('<body', $adminBar . "\n<body", $html);
-            } else {
-                $editorMeta = '<meta name="inline-page-id" content="' . $pageId . '">'
-                    . '<meta name="inline-csrf" content="' . htmlspecialchars($csrfToken, ENT_QUOTES) . '">'
-                    . '<meta name="app-version" content="' . $appVersion . '">'
-                    . '<link rel="stylesheet" href="/assets/inline-editor.css">';
-
-                $adminBar = <<<HTML
-<div id="cms-adminbar">
-  <div class="cms-ab-left">
-    <a class="cms-ab-logo" href="/admin">&#9998;&nbsp;CMS</a>
-    <span class="cms-ab-sep"></span>
-    <span class="cms-ab-page">{$pageTitle}</span>
-    <span class="cms-ab-mode-badge cms-ab-mode-badge--edit">EDITACE</span>
-  </div>
-  <div class="cms-ab-right">
-    <span class="cms-ab-ver">{$appVersion}</span>
-    <span class="cms-ab-email">{$userEmail}</span>
-    <a class="cms-ab-btn" href="{$previewHref}">&#128065; Nahled</a>
-    <a class="cms-ab-btn" href="/admin">Administrace</a>
-    <form method="POST" action="/admin/logout" style="margin:0;padding:0;display:inline">
-      <input type="hidden" name="_csrf" value="{$csrfToken}">
-      <button type="submit" class="cms-ab-btn cms-ab-logout">Odhlasit</button>
-    </form>
-  </div>
-</div>
-HTML;
-
-                $html = str_replace('</head>', "\n" . $editorMeta . "\n</head>", $html);
-                $html = str_replace('<body', $adminBar . "\n<body", $html);
-                $html = str_replace('</body>', "\n<script src=\"/assets/inline-editor.js\"></script>\n</body>", $html);
-            }
+            $html = injectCmsEditorChrome(
+                $html,
+                $uri,
+                (string)($page['title'] ?? ''),
+                (int)$page['id'],
+                $previewMode
+            );
         }
 
         header('Content-Type: text/html; charset=UTF-8');
@@ -227,6 +168,104 @@ HTML;
 function sanitizeFrontendHtml(string $html): string
 {
     return preg_replace('~https?://localhost(?::\d+)?/storage/media/~i', '/storage/media/', $html) ?? $html;
+}
+
+function injectCmsEditorChrome(string $html, string $uri, string $pageTitle, ?int $pageId, bool $previewMode = false): string
+{
+    if (!Auth::check()) {
+        return $html;
+    }
+
+    $csrfToken = htmlspecialchars(Auth::csrfToken(), ENT_QUOTES);
+    $user = Auth::user();
+    $userEmail = htmlspecialchars($user['email'] ?? '', ENT_QUOTES);
+    $safeTitle = htmlspecialchars($pageTitle, ENT_QUOTES);
+    $appVersion = htmlspecialchars(Version::APP, ENT_QUOTES);
+    $previewHref = htmlspecialchars($uri . '?cms_preview=1', ENT_QUOTES);
+    $editHref = htmlspecialchars($uri, ENT_QUOTES);
+    $modeClass = $previewMode ? 'cms-ab-mode-badge--preview' : 'cms-ab-mode-badge--edit';
+    $modeText = $previewMode ? 'NAHLED' : 'EDITACE';
+    $editorButton = $previewMode
+        ? '<a class="cms-ab-btn cms-ab-btn--active" href="' . $editHref . '">&#9998; Editace</a>'
+        : '<a class="cms-ab-btn" href="' . $previewHref . '">&#128065; Nahled</a>';
+
+    $editorMeta = '<meta name="app-version" content="' . $appVersion . '">'
+        . '<link rel="stylesheet" href="/assets/inline-editor.css">';
+    if (!$previewMode && $pageId !== null) {
+        $editorMeta = '<meta name="inline-page-id" content="' . (int)$pageId . '">'
+            . '<meta name="inline-csrf" content="' . $csrfToken . '">'
+            . $editorMeta;
+    }
+
+    $adminBar = <<<HTML
+<div id="cms-adminbar">
+  <div class="cms-ab-left">
+    <a class="cms-ab-logo" href="/admin">&#9998;&nbsp;CMS</a>
+    <span class="cms-ab-sep"></span>
+    <span class="cms-ab-page">{$safeTitle}</span>
+    <span class="cms-ab-mode-badge {$modeClass}">{$modeText}</span>
+  </div>
+  <div class="cms-ab-right">
+    <span class="cms-ab-ver">{$appVersion}</span>
+    <span class="cms-ab-email">{$userEmail}</span>
+    {$editorButton}
+    <a class="cms-ab-btn" href="/admin">Administrace</a>
+    <form method="POST" action="/admin/logout" style="margin:0;padding:0;display:inline">
+      <input type="hidden" name="_csrf" value="{$csrfToken}">
+      <button type="submit" class="cms-ab-btn cms-ab-logout">Odhlasit</button>
+    </form>
+  </div>
+</div>
+HTML;
+
+    $html = str_replace('</head>', "\n" . $editorMeta . "\n</head>", $html);
+    $html = preg_replace('/<body\b([^>]*)>/i', '<body$1>' . "\n" . $adminBar, $html, 1) ?? $html;
+    if (!$previewMode && $pageId !== null) {
+        $html = str_replace('</body>', "\n<script src=\"/assets/inline-editor.js\"></script>\n</body>", $html);
+    }
+
+    return $html;
+}
+
+function publicPageForPath(string $path): ?array
+{
+    $repo = new PageRepository();
+    $path = trim($path, '/');
+    return Auth::check() ? $repo->findByUrlPath($path) : $repo->findPublishedByUrlPath($path);
+}
+
+function pageBlockMap(?array $page): array
+{
+    if (!$page || empty($page['id'])) {
+        return [];
+    }
+
+    $map = [];
+    foreach ((new BlockRepository())->allByPage((int)$page['id']) as $block) {
+        $map[(string)$block['block_key']] = $block;
+    }
+
+    return $map;
+}
+
+function firstBlockValue(array $blocks, array $keys, string $fallback): array
+{
+    foreach ($keys as $key) {
+        if (isset($blocks[$key]) && trim((string)($blocks[$key]['content'] ?? '')) !== '') {
+            return [$key, (string)$blocks[$key]['content'], (string)($blocks[$key]['block_type'] ?? 'text')];
+        }
+    }
+
+    return [$keys[0] ?? '', $fallback, 'text'];
+}
+
+function inlineAttrs(?array $page, string $key, string $type = 'text'): string
+{
+    if (!Auth::check() || isset($_GET['cms_preview']) || !$page || $key === '') {
+        return '';
+    }
+
+    return ' data-inline-key="' . htmlspecialchars($key, ENT_QUOTES) . '" data-inline-type="' . htmlspecialchars($type, ENT_QUOTES) . '"';
 }
 
 function injectHomepageHeroImage(string $html, int $siteId, bool $isHome): string
@@ -671,9 +710,9 @@ function buildFooterSocialsHtml(int $siteId): string
 
         $canonicalType = normalizeSocialType($type, $url);
         $icon = socialIconSvg($canonicalType);
-        $items[] = '<a class="site-footer-social site-footer-social--' . htmlspecialchars($canonicalType, ENT_QUOTES) . '" href="' . htmlspecialchars($url, ENT_QUOTES) . '" target="_blank" rel="noopener">'
+        $label = htmlspecialchars(socialLabel($canonicalType), ENT_QUOTES);
+        $items[] = '<a class="site-footer-social site-footer-social--' . htmlspecialchars($canonicalType, ENT_QUOTES) . '" href="' . htmlspecialchars($url, ENT_QUOTES) . '" target="_blank" rel="noopener" aria-label="' . $label . '" title="' . $label . '">'
             . '<span class="site-footer-social__icon">' . $icon . '</span>'
-            . '<span class="site-footer-social__text">' . htmlspecialchars(socialLabel($canonicalType), ENT_QUOTES) . '</span>'
             . '</a>';
     }
 
@@ -685,9 +724,9 @@ function buildFooterSocialsHtml(int $siteId): string
         . '.site-footer-socials{margin-top:24px;padding-top:24px;border-top:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;gap:14px;align-items:center}'
         . '.site-footer-socials__label{font-size:.76rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.45)}'
         . '.site-footer-socials__list{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}'
-        . '.site-footer-social{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;background:#1c1c22;color:#fff;text-decoration:none;font-size:.9rem;font-weight:700;transition:transform .2s,background .2s}'
+        . '.site-footer-social{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;padding:0;border-radius:999px;background:#1c1c22;color:#fff;text-decoration:none;transition:transform .2s,background .2s}'
         . '.site-footer-social:hover{transform:translateY(-1px);background:#c4963c;color:#111}'
-        . '.site-footer-social__icon{font-size:1rem;line-height:1}'
+        . '.site-footer-social__icon{display:grid;place-items:center;line-height:1}.site-footer-social__icon svg{width:18px;height:18px;fill:currentColor;stroke:currentColor;stroke-width:1.6}'
         . '</style>'
         . '<div class="site-footer-socials">'
         . '<div class="site-footer-socials__label">Sociální sítě</div>'
@@ -731,7 +770,8 @@ function buildRichFooterHtml(int $siteId): string
             continue;
         }
         $canonicalType = normalizeSocialType($type, $url);
-        $socialItems[] = '<a class="site-footer-social site-footer-social--' . $h($canonicalType) . '" href="' . $h($url) . '" target="_blank" rel="noopener"><span class="site-footer-social__icon">' . socialIconSvg($canonicalType) . '</span><span class="site-footer-social__text">' . $h(socialLabel($canonicalType)) . '</span></a>';
+        $label = $h(socialLabel($canonicalType));
+        $socialItems[] = '<a class="site-footer-social site-footer-social--' . $h($canonicalType) . '" href="' . $h($url) . '" target="_blank" rel="noopener" aria-label="' . $label . '" title="' . $label . '"><span class="site-footer-social__icon">' . socialIconSvg($canonicalType) . '</span></a>';
     }
 
     $brand = $logoUrl !== ''
@@ -743,7 +783,7 @@ function buildRichFooterHtml(int $siteId): string
         . 'footer .site-footer-rich,.theme-footer .site-footer-rich,.site-footer .site-footer-rich{width:100%;max-width:1180px;margin:0 auto;padding:0;display:grid;grid-template-columns:minmax(220px,.85fr) minmax(300px,1fr) minmax(220px,.75fr);gap:34px;align-items:start;text-align:left}'
         . '.site-footer-brand{display:flex;flex-direction:column;gap:12px;align-items:flex-start}.site-footer-brand__logoBox{display:inline-flex;align-items:center;justify-content:center;min-width:74px;min-height:58px;padding:9px 12px;border:1px solid rgba(198,148,61,.7);background:rgba(0,0,0,.45);box-shadow:0 14px 32px rgba(198,148,61,.12)}.site-footer-brand__logo{max-height:42px;max-width:220px;width:auto;height:auto;object-fit:contain}.site-footer-brand__mark{display:inline-grid;place-items:center;width:54px;height:54px;border:1px solid rgba(198,148,61,.55);color:#c6943d;font-family:Georgia,serif;font-weight:800;font-size:20px;letter-spacing:.08em;text-transform:uppercase}.site-footer-brand__name{color:#f3efe7;font-family:Georgia,serif;font-size:22px;line-height:1.1}.site-footer-brand__note{color:rgba(255,255,255,.52);font-size:13px;line-height:1.65}'
         . '.site-footer-contact{display:grid;gap:9px}.site-footer-title{margin:0 0 12px;color:#c6943d;font-size:11px;font-weight:900;letter-spacing:.18em;text-transform:uppercase}.site-footer-contact__item{display:grid;grid-template-columns:86px minmax(0,1fr);gap:14px;align-items:baseline;color:#f3efe7;text-decoration:none}.site-footer-contact__item span{color:rgba(255,255,255,.44);font-size:11px;text-transform:uppercase;letter-spacing:.12em;white-space:nowrap}.site-footer-contact__item strong{min-width:0;font-size:14px;line-height:1.45;font-weight:800;word-break:break-word}'
-        . '.site-footer-socials{display:flex;flex-direction:column;gap:14px;align-items:flex-start}.site-footer-socials__list{display:flex;flex-wrap:wrap;gap:10px}.site-footer-social{--social:#c6943d;display:inline-flex;align-items:center;gap:9px;padding:10px 13px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.03);color:#fff;text-decoration:none;font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;transition:transform .2s,border-color .2s,background .2s,color .2s}.site-footer-social:hover{transform:translateY(-1px);border-color:var(--social);background:var(--social);color:#080808}.site-footer-social__icon{display:grid;place-items:center;width:26px;height:26px;border:1px solid currentColor;border-radius:50%;line-height:1}.site-footer-social__icon svg{width:14px;height:14px;fill:currentColor;stroke:currentColor;stroke-width:1.6}.site-footer-social--instagram{--social:#e4405f}.site-footer-social--facebook{--social:#1877f2}.site-footer-social--youtube{--social:#ff0033}.site-footer-social--tiktok{--social:#00f2ea}.site-footer-social--linkedin{--social:#0a66c2}.site-footer-social--twitter{--social:#fff}.site-footer-social--pinterest{--social:#bd081c}.site-footer-social--whatsapp{--social:#25d366}.site-footer-social--telegram{--social:#229ed9}.site-footer-bottom{grid-column:1/-1;margin-top:4px;padding-top:20px;border-top:1px solid rgba(255,255,255,.09);color:rgba(255,255,255,.36);font-size:12px;text-align:left}'
+        . '.site-footer-socials{display:flex;flex-direction:column;gap:14px;align-items:flex-start}.site-footer-socials__list{display:flex;flex-wrap:wrap;gap:10px}.site-footer-social{--social:#c6943d;display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;padding:0;border:1px solid rgba(255,255,255,.14);border-radius:999px;background:rgba(255,255,255,.03);color:#fff;text-decoration:none;transition:transform .2s,border-color .2s,background .2s,color .2s}.site-footer-social:hover{transform:translateY(-1px);border-color:var(--social);background:var(--social);color:#080808}.site-footer-social__icon{display:grid;place-items:center;line-height:1}.site-footer-social__icon svg{width:17px;height:17px;fill:currentColor;stroke:currentColor;stroke-width:1.6}.site-footer-social--instagram{--social:#e4405f}.site-footer-social--facebook{--social:#1877f2}.site-footer-social--youtube{--social:#ff0033}.site-footer-social--tiktok{--social:#00f2ea}.site-footer-social--linkedin{--social:#0a66c2}.site-footer-social--twitter{--social:#fff}.site-footer-social--pinterest{--social:#bd081c}.site-footer-social--whatsapp{--social:#25d366}.site-footer-social--telegram{--social:#229ed9}.site-footer-bottom{grid-column:1/-1;margin-top:4px;padding-top:20px;border-top:1px solid rgba(255,255,255,.09);color:rgba(255,255,255,.36);font-size:12px;text-align:left}'
         . '@media(max-width:820px){footer .site-footer-rich,.theme-footer .site-footer-rich,.site-footer .site-footer-rich{grid-template-columns:1fr;gap:24px}.site-footer-bottom{text-align:left}}'
         . '</style>'
         . '<div class="site-footer-rich">'
@@ -945,6 +985,12 @@ function tryServePortfolioPage(string $uri, bool $detailOnly = false): bool
     $siteName = (string)($site['name'] ?? 'Muj web');
 
     if (!$detailOnly && $uri === '/nase-prace') {
+        $page = publicPageForPath('nase-prace');
+        $pageBlocks = pageBlockMap($page);
+        [$heroTitleKey, $heroTitle, $heroTitleType] = firstBlockValue($pageBlocks, ['hero_h1', 'hero_heading'], 'Naše práce');
+        [$heroSubKey, $heroSub, $heroSubType] = firstBlockValue($pageBlocks, ['hero_sub', 'hero_intro'], 'Ukázka videí a galerií z naší práce.');
+        $heroTitleAttrs = inlineAttrs($page, $heroTitleKey, $heroTitleType);
+        $heroSubAttrs = inlineAttrs($page, $heroSubKey, $heroSubType);
         $entries = $repo->allPublished((int)$site['id']);
         $tiles = '';
 
@@ -968,12 +1014,13 @@ function tryServePortfolioPage(string $uri, bool $detailOnly = false): bool
                 ? '<img src="' . $h($thumb) . '" alt="' . $h($entry['title']) . '" loading="lazy">'
                 : '<div class="pt-thumb-empty">&#9654;</div>';
             $playIcon = !empty($entry['video_url']) ? '<span class="pt-play">&#9654;</span>' : '';
+            $titleAttrs = inlineAttrs($page, 'portfolio:' . (int)$entry['id'] . ':title', 'text');
 
             $tiles .= <<<HTML
 <a class="pt-tile" href="/{$h($entry['slug'])}">
   <div class="pt-thumb">{$thumbHtml}{$playIcon}</div>
   <div class="pt-photos">{$extraHtml}</div>
-  <div class="pt-caption">{$h($entry['title'])}</div>
+  <div class="pt-caption"{$titleAttrs}>{$h($entry['title'])}</div>
 </a>
 HTML;
         }
@@ -1007,8 +1054,8 @@ CSS;
 $pageContent = <<<HTML
 <section class="pf-hero">
   <div class="container">
-    <h1>Na&#353;e pr&#225;ce</h1>
-    <p>Uk&#225;zka vide&#237; a galer&#237; z na&#353;&#237; pr&#225;ce.</p>
+    <h1{$heroTitleAttrs}>{$h($heroTitle)}</h1>
+    <p{$heroSubAttrs}>{$h($heroSub)}</p>
   </div>
 </section>
 <section class="grid-wrap">
@@ -1084,7 +1131,9 @@ HTML;
 
         header('Content-Type: text/html; charset=UTF-8');
         $html = injectPageHeroVideo($html, $site, findPageIdForHeroPath('nase-prace', (int)$site['id']), 'portfolio');
-        echo sanitizeFrontendHtml(injectFooterSocials($html, (int)$site['id']));
+        $html = injectFooterSocials($html, (int)$site['id']);
+        $html = injectCmsEditorChrome($html, $uri, $heroTitle, isset($page['id']) ? (int)$page['id'] : null, Auth::check() && isset($_GET['cms_preview']));
+        echo sanitizeFrontendHtml($html);
         return true;
     }
 
@@ -1246,11 +1295,20 @@ function tryServeFaqPage(): bool
         }
     }
 
+    $page = publicPageForPath('faq');
+    $pageBlocks = pageBlockMap($page);
+    [$heroTitleKey, $heroTitle, $heroTitleType] = firstBlockValue($pageBlocks, ['hero_h1', 'hero_heading'], $heroTitle);
+    [$heroSubKey, $heroSub, $heroSubType] = firstBlockValue($pageBlocks, ['hero_sub', 'hero_intro'], $heroSub);
+    $heroTitleAttrs = inlineAttrs($page, $heroTitleKey, $heroTitleType);
+    $heroSubAttrs = inlineAttrs($page, $heroSubKey, $heroSubType);
+
     $faqHtml = '';
     foreach ($items as $item) {
+        $questionAttrs = inlineAttrs($page, 'faq:' . (int)$item['id'] . ':question', 'text');
+        $answerAttrs = inlineAttrs($page, 'faq:' . (int)$item['id'] . ':answer', 'text');
         $faqHtml .= '<div class="faq-item">'
-            . '<h3 class="faq-q">' . $h($item['question']) . '</h3>'
-            . '<div class="faq-a">' . nl2br($h($item['answer'])) . '</div>'
+            . '<h3 class="faq-q"' . $questionAttrs . '>' . $h($item['question']) . '</h3>'
+            . '<div class="faq-a"' . $answerAttrs . '>' . nl2br($h($item['answer'])) . '</div>'
             . '</div>';
     }
     if ($faqHtml === '') {
@@ -1277,8 +1335,8 @@ CSS;
 $pageContent = <<<HTML
 <section class="fq-hero">
   <div class="container">
-    <h1>{$h($heroTitle)}</h1>
-    <p>{$h($heroSub)}</p>
+    <h1{$heroTitleAttrs}>{$h($heroTitle)}</h1>
+    <p{$heroSubAttrs}>{$h($heroSub)}</p>
   </div>
 </section>
 <section class="fq-wrap">
@@ -1323,8 +1381,10 @@ HTML;
     }
 
     header('Content-Type: text/html; charset=UTF-8');
-    $html = injectPageHeroVideo($html, $site, findPageIdForHeroPath('blog', (int)$site['id']), 'blog');
-    echo sanitizeFrontendHtml(injectFooterSocials($html, (int)$site['id']));
+    $html = injectPageHeroVideo($html, $site, findPageIdForHeroPath('faq', (int)$site['id']), 'faq');
+    $html = injectFooterSocials($html, (int)$site['id']);
+    $html = injectCmsEditorChrome($html, '/faq', $heroTitle, isset($page['id']) ? (int)$page['id'] : null, Auth::check() && isset($_GET['cms_preview']));
+    echo sanitizeFrontendHtml($html);
     return true;
 }
 
@@ -1356,6 +1416,12 @@ function tryServeKontaktPage(): bool
             }
         }
     }
+    $page = publicPageForPath('kontakt');
+    $pageBlocks = pageBlockMap($page);
+    [$heroTitleKey, $heroTitle, $heroTitleType] = firstBlockValue($pageBlocks, ['hero_h1', 'hero_heading'], $heroTitle);
+    [$heroSubKey, $heroSub, $heroSubType] = firstBlockValue($pageBlocks, ['hero_sub', 'hero_intro'], $heroSub);
+    $heroTitleAttrs = inlineAttrs($page, $heroTitleKey, $heroTitleType);
+    $heroSubAttrs = inlineAttrs($page, $heroSubKey, $heroSubType);
 
     $socialIcons = [
         'instagram' => '&#x1F4F7;', 'facebook' => '&#x1F426;', 'youtube'   => '&#x25B6;',
@@ -1372,29 +1438,29 @@ function tryServeKontaktPage(): bool
     if (!empty($contact['phone_1'])) {
         $tel = preg_replace('/\s+/', '', $contact['phone_1']);
         $detailsHtml .= '<div class="ci-row"><span class="ci-label">Telefon</span>'
-            . '<a href="tel:' . $h($tel) . '">' . $h($contact['phone_1']) . '</a></div>';
+            . '<a href="tel:' . $h($tel) . '"' . inlineAttrs($page, 'contact:phone_1', 'text') . '>' . $h($contact['phone_1']) . '</a></div>';
     }
     if (!empty($contact['phone_2'])) {
         $tel = preg_replace('/\s+/', '', $contact['phone_2']);
         $detailsHtml .= '<div class="ci-row"><span class="ci-label">&nbsp;</span>'
-            . '<a href="tel:' . $h($tel) . '">' . $h($contact['phone_2']) . '</a></div>';
+            . '<a href="tel:' . $h($tel) . '"' . inlineAttrs($page, 'contact:phone_2', 'text') . '>' . $h($contact['phone_2']) . '</a></div>';
     }
     if (!empty($contact['phone_3'])) {
         $tel = preg_replace('/\s+/', '', $contact['phone_3']);
         $detailsHtml .= '<div class="ci-row"><span class="ci-label">&nbsp;</span>'
-            . '<a href="tel:' . $h($tel) . '">' . $h($contact['phone_3']) . '</a></div>';
+            . '<a href="tel:' . $h($tel) . '"' . inlineAttrs($page, 'contact:phone_3', 'text') . '>' . $h($contact['phone_3']) . '</a></div>';
     }
     if (!empty($contact['email'])) {
         $detailsHtml .= '<div class="ci-row"><span class="ci-label">E-mail</span>'
-            . '<a href="mailto:' . $h($contact['email']) . '">' . $h($contact['email']) . '</a></div>';
+            . '<a href="mailto:' . $h($contact['email']) . '"' . inlineAttrs($page, 'contact:email', 'text') . '>' . $h($contact['email']) . '</a></div>';
     }
     if (!empty($contact['address_1'])) {
         $detailsHtml .= '<div class="ci-row"><span class="ci-label">Adresa</span>'
-            . '<span>' . nl2br($h($contact['address_1'])) . '</span></div>';
+            . '<span' . inlineAttrs($page, 'contact:address_1', 'text') . '>' . nl2br($h($contact['address_1'])) . '</span></div>';
     }
     if (!empty($contact['address_2'])) {
         $detailsHtml .= '<div class="ci-row"><span class="ci-label">&nbsp;</span>'
-            . '<span>' . nl2br($h($contact['address_2'])) . '</span></div>';
+            . '<span' . inlineAttrs($page, 'contact:address_2', 'text') . '>' . nl2br($h($contact['address_2'])) . '</span></div>';
     }
 
     // Social links
@@ -1481,8 +1547,8 @@ CSS;
     $pageContent = <<<HTML
 <section class="kt-hero">
   <div class="container">
-    <h1>{$h($heroTitle)}</h1>
-    <p>{$h($heroSub)}</p>
+    <h1{$heroTitleAttrs}>{$h($heroTitle)}</h1>
+    <p{$heroSubAttrs}>{$h($heroSub)}</p>
   </div>
 </section>
 <section class="kt-wrap">
@@ -1533,7 +1599,9 @@ HTML;
     }
 
     header('Content-Type: text/html; charset=UTF-8');
-    echo sanitizeFrontendHtml(injectFooterSocials($html, (int)$site['id']));
+    $html = injectFooterSocials($html, (int)$site['id']);
+    $html = injectCmsEditorChrome($html, '/kontakt', $heroTitle, isset($page['id']) ? (int)$page['id'] : null, Auth::check() && isset($_GET['cms_preview']));
+    echo sanitizeFrontendHtml($html);
     return true;
 }
 
@@ -1548,6 +1616,12 @@ function tryServeBlogListingPage(): bool
     $mediaRepo = new MediaRepository();
     $h         = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
     $siteName  = (string)($site['name'] ?? 'Muj web');
+    $page = publicPageForPath('blog');
+    $pageBlocks = pageBlockMap($page);
+    [$heroTitleKey, $heroTitle, $heroTitleType] = firstBlockValue($pageBlocks, ['hero_h1', 'hero_heading'], 'Blog & Inspirace');
+    [$heroSubKey, $heroSub, $heroSubType] = firstBlockValue($pageBlocks, ['hero_sub', 'hero_intro'], 'Tipy a rady od profesionálního fotografa z Olomouce.');
+    $heroTitleAttrs = inlineAttrs($page, $heroTitleKey, $heroTitleType);
+    $heroSubAttrs = inlineAttrs($page, $heroSubKey, $heroSubType);
 
     $cardsHtml = '';
     foreach ($posts as $post) {
@@ -1567,14 +1641,16 @@ function tryServeBlogListingPage(): bool
         $slug    = $h($post['slug']);
         $title   = $h($post['title']);
         $excerpt = $h($post['excerpt'] ?? '');
+        $titleAttrs = inlineAttrs($page, 'blog:' . (int)$post['id'] . ':title', 'text');
+        $excerptAttrs = inlineAttrs($page, 'blog:' . (int)$post['id'] . ':excerpt', 'text');
 
         $cardsHtml .= <<<HTML
 <a class="bl-card" href="/{$slug}">
   {$imgHtml}
   <div class="bl-body">
     <div class="bl-date">{$date}</div>
-    <h2 class="bl-title">{$title}</h2>
-    <p class="bl-excerpt">{$excerpt}</p>
+    <h2 class="bl-title"{$titleAttrs}>{$title}</h2>
+    <p class="bl-excerpt"{$excerptAttrs}>{$excerpt}</p>
     <span class="bl-more">&#268;&#237;st d&#225;l &rarr;</span>
   </div>
 </a>
@@ -1612,8 +1688,8 @@ CSS;
     $pageContent = <<<HTML
 <section class="bl-hero">
   <div class="container">
-    <h1>Blog &amp; Inspirace</h1>
-    <p>Tipy a rady od profesion&#225;ln&#237;ho fotografa z Olomouce.</p>
+    <h1{$heroTitleAttrs}>{$h($heroTitle)}</h1>
+    <p{$heroSubAttrs}>{$h($heroSub)}</p>
   </div>
 </section>
 <section class="bl-grid-wrap">
@@ -1659,7 +1735,9 @@ HTML;
     }
 
     header('Content-Type: text/html; charset=UTF-8');
-    echo sanitizeFrontendHtml(injectFooterSocials($html, (int)$site['id']));
+    $html = injectFooterSocials($html, (int)$site['id']);
+    $html = injectCmsEditorChrome($html, '/blog', $heroTitle, isset($page['id']) ? (int)$page['id'] : null, Auth::check() && isset($_GET['cms_preview']));
+    echo sanitizeFrontendHtml($html);
     return true;
 }
 

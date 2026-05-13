@@ -319,3 +319,11 @@ Dev router:
 1. Aktuální kód
 2. `.env` a runtime konfigurace
 3. Novější dokumentace
+
+## Inline editor - special pages
+
+Specialni verejne stranky (`/blog`, `/nase-prace`, `/faq`, `/kontakt`) musi pri prihlasenem uzivateli dostat stejny editorovy obal jako bezne CMS stranky. Pokud specialni renderer sklada obsah proceduralne, musi napojit alespon strankove `content_blocks` (napr. `hero_h1`, `hero_sub`) pres `data-inline-key`.
+
+CMS admin bar se vklada do normalniho toku dokumentu za oteviraci `<body>`, nikdy jako fixed overlay nad webem.
+
+Inline editor podporuje i znama proceduralni data pres prefixovane klice: `faq:ID:question`, `blog:ID:title`, `portfolio:ID:title`, `contact:phone_1`. Tyto klice se ukladaji pres `/admin/inline/update` do odpovidajicich tabulek, ne do `content_blocks`.

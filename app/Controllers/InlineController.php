@@ -5,9 +5,13 @@ namespace App\Controllers;
 use App\Core\Auth;
 use App\Core\Config;
 use App\Core\Controller;
+use App\Repositories\BlogRepository;
 use App\Repositories\BlockRepository;
+use App\Repositories\ContactRepository;
+use App\Repositories\FaqRepository;
 use App\Repositories\MediaRepository;
 use App\Repositories\PageRepository;
+use App\Repositories\PortfolioRepository;
 use App\Repositories\SiteRepository;
 use App\Services\ImageVariantService;
 use App\Services\PublishService;
@@ -33,6 +37,17 @@ class InlineController extends Controller
             $this->json(['ok' => false, 'error' => 'Stránka nenalezena.'], 404);
         }
 
+        if ($this->updateKnownEntity($page, $key, $content)) {
+            $user   = Auth::user();
+            $result = (new PublishService())->publishPage($pageId, $user['id']);
+
+            if (!$result['success']) {
+                $this->json(['ok' => false, 'error' => $result['message']], 500);
+            }
+
+            $this->json(['ok' => true]);
+        }
+
         $blocks = new BlockRepository();
         $blocks->updateContent($pageId, $key, $content);
 
@@ -46,6 +61,93 @@ class InlineController extends Controller
         }
 
         $this->json(['ok' => true]);
+    }
+
+    private function updateKnownEntity(array $page, string $key, string $content): bool
+    {
+        if (str_starts_with($key, 'faq:')) {
+            return $this->updateFaqInline($page, $key, $content);
+        }
+        if (str_starts_with($key, 'blog:')) {
+            return $this->updateBlogInline($page, $key, $content);
+        }
+        if (str_starts_with($key, 'portfolio:')) {
+            return $this->updatePortfolioInline($page, $key, $content);
+        }
+        if (str_starts_with($key, 'contact:')) {
+            return $this->updateContactInline($page, $key, $content);
+        }
+
+        return false;
+    }
+
+    private function updateFaqInline(array $page, string $key, string $content): bool
+    {
+        $parts = explode(':', $key, 3);
+        if (count($parts) !== 3 || !in_array($parts[2], ['question', 'answer'], true)) {
+            return false;
+        }
+
+        $repo = new FaqRepository();
+        $item = $repo->findById((int)$parts[1]);
+        if (!$item || (int)$item['site_id'] !== (int)$page['site_id']) {
+            return false;
+        }
+
+        $item[$parts[2]] = $content;
+        $repo->update((int)$item['id'], $item);
+        return true;
+    }
+
+    private function updateBlogInline(array $page, string $key, string $content): bool
+    {
+        $parts = explode(':', $key, 3);
+        if (count($parts) !== 3 || !in_array($parts[2], ['title', 'excerpt', 'content'], true)) {
+            return false;
+        }
+
+        $repo = new BlogRepository();
+        $post = $repo->findById((int)$parts[1]);
+        if (!$post || (int)$post['site_id'] !== (int)$page['site_id']) {
+            return false;
+        }
+
+        $post[$parts[2]] = $content;
+        $repo->update((int)$post['id'], $post);
+        return true;
+    }
+
+    private function updatePortfolioInline(array $page, string $key, string $content): bool
+    {
+        $parts = explode(':', $key, 3);
+        if (count($parts) !== 3 || !in_array($parts[2], ['title', 'description'], true)) {
+            return false;
+        }
+
+        $repo = new PortfolioRepository();
+        $entry = $repo->findById((int)$parts[1]);
+        if (!$entry || (int)$entry['site_id'] !== (int)$page['site_id']) {
+            return false;
+        }
+
+        $entry[$parts[2]] = $content;
+        $repo->update((int)$entry['id'], $entry);
+        return true;
+    }
+
+    private function updateContactInline(array $page, string $key, string $content): bool
+    {
+        $field = substr($key, strlen('contact:'));
+        $allowed = ['phone_1', 'phone_2', 'phone_3', 'email', 'address_1', 'address_2'];
+        if (!in_array($field, $allowed, true)) {
+            return false;
+        }
+
+        $repo = new ContactRepository();
+        $current = $repo->findBySite((int)$page['site_id']) ?: [];
+        $current[$field] = $content;
+        $repo->upsert((int)$page['site_id'], $current);
+        return true;
     }
 
     private function maybeSyncFaqToHomepage(array $page, string $key, string $content): void

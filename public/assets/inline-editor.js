@@ -117,6 +117,8 @@
       return;
     }
 
+    e.preventDefault();
+
     const key  = el.dataset.inlineKey;
     const type = el.dataset.inlineType || 'text';
 
