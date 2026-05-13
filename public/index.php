@@ -560,20 +560,90 @@ function normalizePublicAssetUrl(string $value): string
     return '/' . ltrim($normalized, '/');
 }
 
+function normalizeSocialType(string $type, string $url = ''): string
+{
+    $value = strtolower(trim($type));
+    $value = preg_replace('~[^a-z0-9]+~', '', $value) ?? '';
+    $host = strtolower((string)(parse_url(trim($url), PHP_URL_HOST) ?: trim($url)));
+
+    $map = [
+        'ig' => 'instagram',
+        'in' => 'instagram',
+        'insta' => 'instagram',
+        'instagram' => 'instagram',
+        'fb' => 'facebook',
+        'fa' => 'facebook',
+        'facebook' => 'facebook',
+        'yt' => 'youtube',
+        'yo' => 'youtube',
+        'youtube' => 'youtube',
+        'tt' => 'tiktok',
+        'ti' => 'tiktok',
+        'tiktok' => 'tiktok',
+        'li' => 'linkedin',
+        'linkedin' => 'linkedin',
+        'x' => 'twitter',
+        'tw' => 'twitter',
+        'twitter' => 'twitter',
+        'pinterest' => 'pinterest',
+        'wa' => 'whatsapp',
+        'whatsapp' => 'whatsapp',
+        'telegram' => 'telegram',
+    ];
+
+    if (isset($map[$value])) {
+        return $map[$value];
+    }
+
+    foreach ($map as $needle => $canonical) {
+        if ($needle !== '' && str_contains($host, $needle)) {
+            return $canonical;
+        }
+    }
+
+    if (str_contains($host, 'youtu')) {
+        return 'youtube';
+    }
+
+    return $value !== '' ? $value : 'link';
+}
+
+function socialLabel(string $type): string
+{
+    return [
+        'instagram' => 'Instagram',
+        'facebook' => 'Facebook',
+        'youtube' => 'YouTube',
+        'tiktok' => 'TikTok',
+        'linkedin' => 'LinkedIn',
+        'twitter' => 'X',
+        'pinterest' => 'Pinterest',
+        'whatsapp' => 'WhatsApp',
+        'telegram' => 'Telegram',
+    ][$type] ?? 'Odkaz';
+}
+
+function socialIconSvg(string $type): string
+{
+    $icons = [
+        'instagram' => '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4.1"/><circle cx="17.2" cy="6.8" r="1.1"/></svg>',
+        'facebook' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.4 8.2h2.2V4.6c-.4-.1-1.7-.2-3.2-.2-3.2 0-5.3 1.9-5.3 5.5v3.1H4.8v4h3.3v6h4v-6h3.3l.6-4h-3.9V10.3c0-1.2.4-2.1 2.3-2.1z"/></svg>',
+        'youtube' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 8.2s-.2-1.6-.8-2.3c-.8-.8-1.7-.8-2.1-.9C16.2 4.8 12 4.8 12 4.8h0s-4.2 0-7.1.2c-.4.1-1.3.1-2.1.9C2.2 6.6 2 8.2 2 8.2S1.8 10 1.8 11.9v1.7c0 1.9.2 3.7.2 3.7s.2 1.6.8 2.3c.8.8 1.9.8 2.4.9 1.7.2 6.8.2 6.8.2s4.2 0 7.1-.2c.4-.1 1.3-.1 2.1-.9.6-.7.8-2.3.8-2.3s.2-1.9.2-3.7v-1.7c0-1.9-.2-3.7-.2-3.7zM9.9 15.6V8.9l5.9 3.4-5.9 3.3z"/></svg>',
+        'tiktok' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.2 3c.4 2.7 1.9 4.4 4.5 4.6v3.7c-1.5.1-2.9-.3-4.4-1.2v6.8c0 8.6-9.4 11.3-13.2 5.1-2.4-4 .1-9.6 4.7-10.5.9-.2 1.8-.1 2.8 0v3.9c-.3-.1-.7-.1-1-.1-4.4.3-4.2 6.8.6 6.1 1.8-.3 2.7-1.6 2.7-3.7V3h3.3z"/></svg>',
+        'linkedin' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.8 7.5H1.2V22h3.6V7.5zM3 1.5a2.1 2.1 0 1 0 0 4.2 2.1 2.1 0 0 0 0-4.2zM22.8 13.7c0-3.9-2.1-6.5-5.4-6.5-2.1 0-3.3 1.2-3.8 2h-.1V7.5H10V22h3.6v-7.2c0-1.9.4-3.8 2.8-3.8 2.3 0 2.4 2.2 2.4 3.9V22h3.6v-8.3z"/></svg>',
+        'twitter' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.3 10.2 22.7 1h-2l-7.3 8.1L7.6 1H1l8.8 12.2L1 23h2l7.7-8.6 6.2 8.6h6.6l-9.2-12.8zm-2.7 3-1-.1L3.5 2.6h3.1l5.7 8.1 1 .1 7.5 10.7h-3.1l-6.1-8.3z"/></svg>',
+        'pinterest' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.2 1.8C6.6 1.8 3 5.4 3 10.1c0 3.5 2 5.5 3.2 5.5.5 0 .8-1.4.8-1.8 0-.5-1.2-1.5-1.2-3.4 0-3.9 3-6.7 6.8-6.7 3.3 0 5.7 1.9 5.7 5.3 0 2.5-1 7.2-4.3 7.2-1.2 0-2.3-.9-2-2.2.4-1.5 1.2-3.2 1.2-4.8 0-2.8-4-2.3-4 1.1 0 .7.1 1.5.4 2.2-.6 2.4-1.8 6.1-1.8 8.6 0 .8.1 1.5.2 2.3.2.2.1.2.4.1 2.4-3.3 2.3-3.9 3.4-8.3.6 1.1 2.2 1.8 3.4 1.8 5.2 0 7.6-5.1 7.6-9.7 0-4.9-4.3-7.5-8.7-7.5z"/></svg>',
+        'whatsapp' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 3.5A11.8 11.8 0 0 0 1.9 17.7L.5 23.5l5.9-1.5A11.8 11.8 0 0 0 20.5 3.5zm-8.4 17a9.6 9.6 0 0 1-4.9-1.3l-.4-.2-3.5.9.9-3.4-.2-.4a9.6 9.6 0 1 1 8.1 4.4zm5.3-7.1c-.3-.2-1.8-.9-2.1-1s-.5-.2-.7.2-.8 1-1 1.2-.4.2-.7.1a7.9 7.9 0 0 1-3.9-3.4c-.3-.5.3-.5.8-1.7.1-.2 0-.4-.1-.6l-.9-2c-.2-.5-.5-.4-.7-.4h-.6c-.2 0-.6.1-.9.4-.3.3-1.2 1.1-1.2 2.8s1.2 3.2 1.4 3.4c.2.2 2.4 3.7 5.8 5.1 2.2.9 3.1 1 4.2.8.6-.1 1.8-.7 2-1.4.3-.7.3-1.3.2-1.4-.1-.1-.3-.2-.6-.3z"/></svg>',
+        'telegram' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22.2 2.6 1.6 10.5c-1.4.6-1.4 1.3-.3 1.7l5.3 1.7 2 6.1c.3.8.1 1.1.9 1.1.6 0 .9-.3 1.2-.6l2.9-2.8 5.9 4.3c1.1.6 1.8.3 2.1-1l3.8-17.9c.4-1.5-.6-2.2-1.8-1.7zM7.4 13.5 19.8 5.7c.6-.4 1.1-.2.7.2L9.9 15.5l-.4 4.2-2.1-6.2z"/></svg>',
+        'link' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.2 13.8a1.2 1.2 0 0 1 0-1.7l3.9-3.9a3 3 0 1 1 4.3 4.3l-2 2a1.2 1.2 0 1 0 1.7 1.7l2-2a5.4 5.4 0 1 0-7.6-7.6l-3.9 3.9a1.2 1.2 0 0 0 1.6 1.7z"/><path d="M13.8 10.2a1.2 1.2 0 0 1 0 1.7l-3.9 3.9a3 3 0 1 1-4.3-4.3l2-2a1.2 1.2 0 0 0-1.7-1.7l-2 2a5.4 5.4 0 0 0 7.6 7.6l3.9-3.9a1.2 1.2 0 0 0-1.6-1.7z"/></svg>',
+    ];
+
+    return $icons[$type] ?? $icons['link'];
+}
+
 function buildFooterSocialsHtml(int $siteId): string
 {
     $contact = (new ContactRepository())->findBySiteSafe($siteId);
-    $socialIcons = [
-        'instagram' => '&#x1F4F7;',
-        'facebook' => '&#x1F426;',
-        'youtube' => '&#x25B6;',
-        'tiktok' => '&#x1F3B5;',
-        'linkedin' => '&#x1F4BC;',
-        'twitter' => '&#x1D54F;',
-        'pinterest' => '&#x1F4CC;',
-        'whatsapp' => '&#x1F4AC;',
-        'telegram' => '&#x2708;',
-    ];
 
     $items = [];
     for ($i = 1; $i <= 5; $i++) {
@@ -583,10 +653,11 @@ function buildFooterSocialsHtml(int $siteId): string
             continue;
         }
 
-        $icon = $socialIcons[$type] ?? '&#128279;';
-        $items[] = '<a class="site-footer-social" href="' . htmlspecialchars($url, ENT_QUOTES) . '" target="_blank" rel="noopener">'
+        $canonicalType = normalizeSocialType($type, $url);
+        $icon = socialIconSvg($canonicalType);
+        $items[] = '<a class="site-footer-social site-footer-social--' . htmlspecialchars($canonicalType, ENT_QUOTES) . '" href="' . htmlspecialchars($url, ENT_QUOTES) . '" target="_blank" rel="noopener">'
             . '<span class="site-footer-social__icon">' . $icon . '</span>'
-            . '<span class="site-footer-social__text">' . htmlspecialchars(ucfirst($type), ENT_QUOTES) . '</span>'
+            . '<span class="site-footer-social__text">' . htmlspecialchars(socialLabel($canonicalType), ENT_QUOTES) . '</span>'
             . '</a>';
     }
 
@@ -615,17 +686,6 @@ function buildRichFooterHtml(int $siteId): string
     $siteName = (string)($site['name'] ?? 'Muj web');
     $logoUrl = normalizePublicAssetUrl((string)($site['logo_url'] ?? ''));
     $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
-    $socialIcons = [
-        'instagram' => 'IG',
-        'facebook' => 'FB',
-        'youtube' => 'YT',
-        'tiktok' => 'TT',
-        'linkedin' => 'IN',
-        'twitter' => 'X',
-        'pinterest' => 'PI',
-        'whatsapp' => 'WA',
-        'telegram' => 'TG',
-    ];
 
     $contactItems = [];
     foreach (['phone_1', 'phone_2', 'phone_3'] as $phoneKey) {
@@ -654,20 +714,20 @@ function buildRichFooterHtml(int $siteId): string
         if ($type === '' || $url === '') {
             continue;
         }
-        $icon = $socialIcons[$type] ?? 'URL';
-        $socialItems[] = '<a class="site-footer-social" href="' . $h($url) . '" target="_blank" rel="noopener"><span class="site-footer-social__icon">' . $icon . '</span><span class="site-footer-social__text">' . $h(ucfirst($type)) . '</span></a>';
+        $canonicalType = normalizeSocialType($type, $url);
+        $socialItems[] = '<a class="site-footer-social site-footer-social--' . $h($canonicalType) . '" href="' . $h($url) . '" target="_blank" rel="noopener"><span class="site-footer-social__icon">' . socialIconSvg($canonicalType) . '</span><span class="site-footer-social__text">' . $h(socialLabel($canonicalType)) . '</span></a>';
     }
 
     $brand = $logoUrl !== ''
-        ? '<img class="site-footer-brand__logo" src="' . $h($logoUrl) . '" alt="' . $h($siteName) . '">'
+        ? '<span class="site-footer-brand__logoBox"><img class="site-footer-brand__logo" src="' . $h($logoUrl) . '" alt="' . $h($siteName) . '"></span>'
         : '<span class="site-footer-brand__mark">' . $h(mb_substr($siteName, 0, 2)) . '</span>';
 
     return '<style data-cms-rich-footer>'
         . 'html,body{min-height:100%}body{min-height:100vh;display:flex;flex-direction:column}.theme-shell{width:100%;flex:1 0 auto;display:flex;flex-direction:column}.theme-shell,.theme-shell__frame{min-height:100vh}.theme-shell__frame{display:flex;flex-direction:column;flex:1 0 auto}.theme-main,main,#page-content{flex:1 0 auto}footer,.theme-footer,.site-footer{margin-top:auto}'
-        . 'footer .site-footer-rich,.theme-footer .site-footer-rich,.site-footer .site-footer-rich{width:100%;max-width:1180px;margin:0 auto;padding:0;display:grid;grid-template-columns:minmax(220px,.85fr) minmax(260px,1fr) minmax(220px,.75fr);gap:34px;align-items:start;text-align:left}'
-        . '.site-footer-brand{display:flex;flex-direction:column;gap:12px;align-items:flex-start}.site-footer-brand__logo{max-height:52px;max-width:260px;width:auto;height:auto;object-fit:contain}.site-footer-brand__mark{display:inline-grid;place-items:center;width:54px;height:54px;border:1px solid rgba(198,148,61,.45);color:#c6943d;font-family:Georgia,serif;font-weight:800;font-size:20px;letter-spacing:.08em;text-transform:uppercase}.site-footer-brand__name{color:#f3efe7;font-family:Georgia,serif;font-size:22px;line-height:1.1}.site-footer-brand__note{color:rgba(255,255,255,.52);font-size:13px;line-height:1.65}'
-        . '.site-footer-contact{display:grid;gap:12px}.site-footer-title{margin:0 0 12px;color:#c6943d;font-size:11px;font-weight:900;letter-spacing:.18em;text-transform:uppercase}.site-footer-contact__item{display:grid;gap:4px;color:#f3efe7;text-decoration:none}.site-footer-contact__item span{color:rgba(255,255,255,.44);font-size:11px;text-transform:uppercase;letter-spacing:.12em}.site-footer-contact__item strong{font-size:14px;line-height:1.5;font-weight:700}'
-        . '.site-footer-socials{display:flex;flex-direction:column;gap:14px;align-items:flex-start}.site-footer-socials__list{display:flex;flex-wrap:wrap;gap:10px}.site-footer-social{display:inline-flex;align-items:center;gap:9px;padding:10px 13px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.03);color:#fff;text-decoration:none;font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;transition:transform .2s,border-color .2s,background .2s,color .2s}.site-footer-social:hover{transform:translateY(-1px);border-color:#c6943d;background:#c6943d;color:#080808}.site-footer-social__icon{display:grid;place-items:center;width:26px;height:26px;border:1px solid currentColor;border-radius:50%;font-size:10px;line-height:1}.site-footer-bottom{grid-column:1/-1;margin-top:4px;padding-top:20px;border-top:1px solid rgba(255,255,255,.09);color:rgba(255,255,255,.36);font-size:12px;text-align:left}'
+        . 'footer .site-footer-rich,.theme-footer .site-footer-rich,.site-footer .site-footer-rich{width:100%;max-width:1180px;margin:0 auto;padding:0;display:grid;grid-template-columns:minmax(220px,.85fr) minmax(300px,1fr) minmax(220px,.75fr);gap:34px;align-items:start;text-align:left}'
+        . '.site-footer-brand{display:flex;flex-direction:column;gap:12px;align-items:flex-start}.site-footer-brand__logoBox{display:inline-flex;align-items:center;justify-content:center;min-width:74px;min-height:58px;padding:9px 12px;border:1px solid rgba(198,148,61,.7);background:rgba(0,0,0,.45);box-shadow:0 14px 32px rgba(198,148,61,.12)}.site-footer-brand__logo{max-height:42px;max-width:220px;width:auto;height:auto;object-fit:contain}.site-footer-brand__mark{display:inline-grid;place-items:center;width:54px;height:54px;border:1px solid rgba(198,148,61,.55);color:#c6943d;font-family:Georgia,serif;font-weight:800;font-size:20px;letter-spacing:.08em;text-transform:uppercase}.site-footer-brand__name{color:#f3efe7;font-family:Georgia,serif;font-size:22px;line-height:1.1}.site-footer-brand__note{color:rgba(255,255,255,.52);font-size:13px;line-height:1.65}'
+        . '.site-footer-contact{display:grid;gap:9px}.site-footer-title{margin:0 0 12px;color:#c6943d;font-size:11px;font-weight:900;letter-spacing:.18em;text-transform:uppercase}.site-footer-contact__item{display:grid;grid-template-columns:86px minmax(0,1fr);gap:14px;align-items:baseline;color:#f3efe7;text-decoration:none}.site-footer-contact__item span{color:rgba(255,255,255,.44);font-size:11px;text-transform:uppercase;letter-spacing:.12em;white-space:nowrap}.site-footer-contact__item strong{min-width:0;font-size:14px;line-height:1.45;font-weight:800;word-break:break-word}'
+        . '.site-footer-socials{display:flex;flex-direction:column;gap:14px;align-items:flex-start}.site-footer-socials__list{display:flex;flex-wrap:wrap;gap:10px}.site-footer-social{--social:#c6943d;display:inline-flex;align-items:center;gap:9px;padding:10px 13px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.03);color:#fff;text-decoration:none;font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;transition:transform .2s,border-color .2s,background .2s,color .2s}.site-footer-social:hover{transform:translateY(-1px);border-color:var(--social);background:var(--social);color:#080808}.site-footer-social__icon{display:grid;place-items:center;width:26px;height:26px;border:1px solid currentColor;border-radius:50%;line-height:1}.site-footer-social__icon svg{width:14px;height:14px;fill:currentColor;stroke:currentColor;stroke-width:1.6}.site-footer-social--instagram{--social:#e4405f}.site-footer-social--facebook{--social:#1877f2}.site-footer-social--youtube{--social:#ff0033}.site-footer-social--tiktok{--social:#00f2ea}.site-footer-social--linkedin{--social:#0a66c2}.site-footer-social--twitter{--social:#fff}.site-footer-social--pinterest{--social:#bd081c}.site-footer-social--whatsapp{--social:#25d366}.site-footer-social--telegram{--social:#229ed9}.site-footer-bottom{grid-column:1/-1;margin-top:4px;padding-top:20px;border-top:1px solid rgba(255,255,255,.09);color:rgba(255,255,255,.36);font-size:12px;text-align:left}'
         . '@media(max-width:820px){footer .site-footer-rich,.theme-footer .site-footer-rich,.site-footer .site-footer-rich{grid-template-columns:1fr;gap:24px}.site-footer-bottom{text-align:left}}'
         . '</style>'
         . '<div class="site-footer-rich">'
