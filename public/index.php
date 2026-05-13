@@ -301,7 +301,7 @@ function getThemeTemplateRegistry(): ThemeTemplateRegistry
     return $registry;
 }
 
-function applyThemeTemplate(PageRenderer $renderer, array $site, string $pageKey, string $siteName, string $html, string $css, string $js, string $nav = '', ?string $previewKey = null): array
+function applyThemeTemplate(PageRenderer $renderer, array $site, string $pageKey, string $siteName, string $html, string $css, string $js, string $unused = '', string $nav = '', ?string $previewKey = null): array
 {
     $registry = getThemeTemplateRegistry();
     Logger::infoTo('theme-debug', 'theme.frontend.apply.request', 'Frontend theme apply requested', [
@@ -309,6 +309,8 @@ function applyThemeTemplate(PageRenderer $renderer, array $site, string $pageKey
         'site_name' => $site['name'] ?? null,
         'page_key' => $pageKey,
         'preview_key' => $previewKey !== null && trim($previewKey) !== '' ? trim($previewKey) : null,
+        'nav_len' => strlen($nav),
+        'unused_len' => strlen($unused),
         'html_before_len' => strlen($html),
         'css_before_len' => strlen($css),
         'js_before_len' => strlen($js),

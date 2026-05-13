@@ -1,28 +1,166 @@
 :root {
-  --theme-bg: #f6f4ef;
-  --theme-surface: rgba(255,255,255,.88);
+  --theme-bg: #f6f1e9;
+  --theme-bg-soft: #fbf8f2;
+  --theme-surface: rgba(255, 255, 255, .78);
   --theme-surface-strong: #ffffff;
-  --theme-text: #131313;
-  --theme-muted: rgba(19,19,19,.64);
-  --theme-border: rgba(19,19,19,.09);
-  --theme-accent: #a86f32;
-  --theme-accent-strong: #87571d;
-  --theme-shadow: 0 24px 70px rgba(28, 24, 18, .08);
+  --theme-surface-dark: #141414;
+  --theme-text: #171411;
+  --theme-muted: rgba(23, 20, 17, .66);
+  --theme-border: rgba(23, 20, 17, .09);
+  --theme-accent: #af7a35;
+  --theme-accent-soft: rgba(175, 122, 53, .14);
+  --theme-accent-strong: #8f5f22;
+  --theme-shadow: 0 30px 80px rgba(70, 49, 27, .12);
+  --theme-radius: 24px;
 }
 
-html, body {
-  background:
-    radial-gradient(circle at top left, rgba(168,111,50,.08), transparent 30%),
-    linear-gradient(180deg, #fbfaf7 0%, var(--theme-bg) 100%);
-  color: var(--theme-text);
-}
-
-.theme-modern-atelier body,
+html, body,
 body.theme-modern-atelier {
+  min-height: 100%;
   background:
-    radial-gradient(circle at top left, rgba(168,111,50,.08), transparent 30%),
-    linear-gradient(180deg, #fbfaf7 0%, var(--theme-bg) 100%);
+    radial-gradient(circle at 10% 0%, rgba(175, 122, 53, .16), transparent 26%),
+    radial-gradient(circle at 90% 10%, rgba(23, 20, 17, .06), transparent 24%),
+    linear-gradient(180deg, #fcfaf6 0%, var(--theme-bg) 100%);
   color: var(--theme-text);
+}
+
+body.theme-modern-atelier {
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.theme-modern-atelier a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.theme-modern-atelier img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.theme-modern-atelier .theme-shell {
+  position: relative;
+  width: min(1440px, calc(100% - 32px));
+  margin: 16px auto 20px;
+  border: 1px solid rgba(23, 20, 17, .08);
+  border-radius: 28px;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .74), rgba(255, 255, 255, .54)),
+    rgba(255, 255, 255, .42);
+  box-shadow: 0 34px 100px rgba(71, 52, 27, .10);
+  backdrop-filter: blur(18px);
+}
+
+.theme-modern-atelier .theme-shell__backdrop {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 15% 15%, rgba(175, 122, 53, .12), transparent 26%),
+    radial-gradient(circle at 85% 30%, rgba(23, 20, 17, .05), transparent 30%);
+  opacity: .9;
+}
+
+.theme-modern-atelier .theme-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: rgba(252, 249, 243, .84);
+  border-bottom: 1px solid rgba(23, 20, 17, .06);
+  backdrop-filter: blur(18px);
+}
+
+.theme-modern-atelier .theme-header__inner {
+  min-height: 82px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.theme-modern-atelier .theme-brand {
+  position: relative;
+  z-index: 2;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.2rem, 1.6vw, 1.45rem);
+  font-weight: 800;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: var(--theme-text);
+  white-space: nowrap;
+}
+
+.theme-modern-atelier .theme-nav-wrap {
+  margin-left: auto;
+  position: relative;
+  z-index: 2;
+}
+
+.theme-modern-atelier .theme-nav-wrap .site-nav {
+  position: static;
+  top: auto;
+  z-index: auto;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.theme-modern-atelier .theme-nav-wrap .site-nav .container.nav-inner {
+  max-width: none;
+  padding: 0;
+  min-height: auto;
+  justify-content: flex-end;
+}
+
+.theme-modern-atelier .theme-nav-wrap .site-nav .brand {
+  display: none;
+}
+
+.theme-modern-atelier .theme-nav-wrap .nav-links {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.theme-modern-atelier .theme-nav-wrap .nav-links a {
+  font-size: .76rem;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: rgba(23, 20, 17, .72);
+  padding: 11px 14px;
+  border-radius: 999px;
+  transition: background .2s ease, color .2s ease, transform .2s ease, box-shadow .2s ease;
+}
+
+.theme-modern-atelier .theme-nav-wrap .nav-links a:hover,
+.theme-modern-atelier .theme-nav-wrap .nav-links a.nav-active {
+  color: var(--theme-text);
+  background: rgba(175, 122, 53, .12);
+}
+
+.theme-modern-atelier .theme-nav-wrap .nav-cta {
+  background: var(--theme-accent);
+  color: #fff !important;
+  box-shadow: 0 12px 28px rgba(175, 122, 53, .26);
+}
+
+.theme-modern-atelier .theme-nav-wrap .nav-cta:hover {
+  background: var(--theme-accent-strong) !important;
+  color: #fff !important;
+  transform: translateY(-1px);
+  box-shadow: 0 16px 32px rgba(175, 122, 53, .32);
+}
+
+.theme-modern-atelier .theme-main {
+  position: relative;
+  z-index: 1;
 }
 
 .theme-modern-atelier .section,
@@ -34,8 +172,26 @@ body.theme-modern-atelier {
 .theme-modern-atelier .bl-hero,
 .theme-modern-atelier .bp-detail-hero,
 .theme-modern-atelier .pf-detail-hero {
+  position: relative;
+  overflow: hidden;
   background: transparent;
-  color: var(--theme-text);
+}
+
+.theme-modern-atelier .section {
+  padding: clamp(72px, 8vw, 118px) 0;
+  border-top: 1px solid rgba(23, 20, 17, .05);
+}
+
+.theme-modern-atelier .section--alt {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.42), rgba(255,255,255,.24)),
+    rgba(255,255,255,.18);
+}
+
+.theme-modern-atelier .section--dark {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02)),
+    rgba(23, 20, 17, .02);
 }
 
 .theme-modern-atelier .container {
@@ -48,6 +204,10 @@ body.theme-modern-atelier {
 .theme-modern-atelier .hp-cenik-card__price,
 .theme-modern-atelier .ci-brand__label {
   color: var(--theme-accent);
+  font-size: .76rem;
+  font-weight: 800;
+  letter-spacing: .22em;
+  text-transform: uppercase;
 }
 
 .theme-modern-atelier h1,
@@ -56,7 +216,14 @@ body.theme-modern-atelier {
 .theme-modern-atelier .hero__title,
 .theme-modern-atelier .section-title {
   color: var(--theme-text);
-  letter-spacing: -0.04em;
+  letter-spacing: -0.045em;
+  line-height: 1.02;
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.theme-modern-atelier .section-title {
+  font-size: clamp(2rem, 4vw, 3.8rem);
+  margin-bottom: 16px;
 }
 
 .theme-modern-atelier p,
@@ -69,20 +236,95 @@ body.theme-modern-atelier {
   color: var(--theme-muted);
 }
 
-.theme-modern-atelier .card,
-.theme-modern-atelier .block-item,
-.theme-modern-atelier .hp-svc-card,
-.theme-modern-atelier .hp-blog-card,
-.theme-modern-atelier .hp-cenik-card,
-.theme-modern-atelier .hp-faq-item,
-.theme-modern-atelier .bl-card,
-.theme-modern-atelier .pt-tile,
-.theme-modern-atelier .ci-block,
-.theme-modern-atelier .kt-form-block {
-  background: var(--theme-surface);
-  border: 1px solid var(--theme-border);
-  box-shadow: var(--theme-shadow);
-  backdrop-filter: blur(10px);
+.theme-modern-atelier .section-intro {
+  max-width: 700px;
+  font-size: 1.04rem;
+  line-height: 1.75;
+}
+
+.theme-modern-atelier .hero,
+.theme-modern-atelier .hp-hero,
+.theme-modern-atelier .pf-hero,
+.theme-modern-atelier .bl-hero,
+.theme-modern-atelier .fq-hero,
+.theme-modern-atelier .kt-hero,
+.theme-modern-atelier .bp-hero,
+.theme-modern-atelier .bp-detail-hero,
+.theme-modern-atelier .pf-detail-hero {
+  min-height: clamp(620px, 86vh, 980px);
+  display: flex;
+  align-items: center;
+  padding: clamp(72px, 8vw, 120px) 0;
+  background:
+    radial-gradient(circle at 18% 20%, rgba(175, 122, 53, .12), transparent 28%),
+    radial-gradient(circle at 82% 16%, rgba(23, 20, 17, .05), transparent 24%),
+    linear-gradient(180deg, rgba(255,255,255,.5), rgba(255,255,255,.1));
+}
+
+.theme-modern-atelier .hero::after,
+.theme-modern-atelier .hp-hero::after,
+.theme-modern-atelier .pf-hero::after,
+.theme-modern-atelier .bl-hero::after,
+.theme-modern-atelier .fq-hero::after,
+.theme-modern-atelier .kt-hero::after,
+.theme-modern-atelier .bp-hero::after,
+.theme-modern-atelier .bp-detail-hero::after,
+.theme-modern-atelier .pf-detail-hero::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(175, 122, 53, .24), transparent);
+}
+
+.theme-modern-atelier .hero > .container,
+.theme-modern-atelier .hp-hero > .container,
+.theme-modern-atelier .pf-hero > .container,
+.theme-modern-atelier .bl-hero > .container,
+.theme-modern-atelier .fq-hero > .container,
+.theme-modern-atelier .kt-hero > .container,
+.theme-modern-atelier .bp-hero > .container,
+.theme-modern-atelier .bp-detail-hero > .container,
+.theme-modern-atelier .pf-detail-hero > .container {
+  position: relative;
+  z-index: 2;
+}
+
+.theme-modern-atelier .hp-hero {
+  text-align: center;
+}
+
+.theme-modern-atelier .hp-hero h1 {
+  font-size: clamp(3rem, 8vw, 6.4rem);
+  font-weight: 900;
+  line-height: .95;
+  margin: 18px auto 22px;
+  max-width: 10ch;
+}
+
+.theme-modern-atelier .hero__content,
+.theme-modern-atelier .hero__title,
+.theme-modern-atelier .hp-hero .container,
+.theme-modern-atelier .pf-hero .container,
+.theme-modern-atelier .bl-hero .container,
+.theme-modern-atelier .fq-hero .container,
+.theme-modern-atelier .kt-hero .container,
+.theme-modern-atelier .bp-hero .container {
+  max-width: 980px;
+}
+
+.theme-modern-atelier .hero-sub,
+.theme-modern-atelier .hp-hero .hero-sub {
+  font-size: 1.08rem;
+  max-width: 760px;
+  margin: 0 auto 34px;
+}
+
+.theme-modern-atelier .hero-cta-wrap {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
 }
 
 .theme-modern-atelier .btn-primary,
@@ -96,9 +338,17 @@ body.theme-modern-atelier {
 .theme-modern-atelier .hp-svc-card__btn,
 .theme-modern-atelier .hp-cenik-card__btn,
 .theme-modern-atelier .btn-maps {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 12px 20px;
+  border-radius: 999px;
   background: var(--theme-accent);
-  border-color: var(--theme-accent);
   color: #fff;
+  border: 1px solid var(--theme-accent);
+  box-shadow: 0 12px 28px rgba(175, 122, 53, .24);
+  transition: transform .2s ease, box-shadow .2s ease, background .2s ease, border-color .2s ease;
 }
 
 .theme-modern-atelier .btn-primary:hover,
@@ -115,138 +365,8 @@ body.theme-modern-atelier {
   background: var(--theme-accent-strong);
   border-color: var(--theme-accent-strong);
   color: #fff;
-}
-
-.theme-modern-atelier .site-nav,
-.theme-modern-atelier .nav,
-.theme-modern-atelier .topbar,
-.theme-modern-atelier .sidebar {
-  background: rgba(255,255,255,.75);
-  backdrop-filter: blur(12px);
-  border-color: var(--theme-border);
-}
-
-.theme-modern-atelier .site-nav .brand,
-.theme-modern-atelier .brand,
-.theme-modern-atelier .theme-brand {
-  color: var(--theme-text);
-}
-
-.theme-modern-atelier .site-nav .nav-links a,
-.theme-modern-atelier .nav-links a {
-  color: rgba(19,19,19,.72);
-}
-
-.theme-modern-atelier .nav-links a,
-.theme-modern-atelier .nav a,
-.theme-modern-atelier .sidebar a {
-  color: rgba(19,19,19,.72);
-}
-
-.theme-modern-atelier .nav-links a:hover,
-.theme-modern-atelier .nav a:hover,
-.theme-modern-atelier .sidebar a:hover,
-.theme-modern-atelier .nav-links .nav-active,
-.theme-modern-atelier .sidebar a.active {
-  color: var(--theme-text);
-}
-
-.theme-modern-atelier .hero {
-  padding-top: clamp(48px, 7vw, 88px);
-}
-
-.theme-modern-atelier .hero__content,
-.theme-modern-atelier .section .container,
-.theme-modern-atelier .pf-hero .container,
-.theme-modern-atelier .bp-hero .container,
-.theme-modern-atelier .fq-hero .container,
-.theme-modern-atelier .kt-hero .container,
-.theme-modern-atelier .bl-hero .container {
-  position: relative;
-}
-
-.theme-modern-atelier .hero::after {
-  content: "";
-  position: absolute;
-  inset: auto 0 0 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(168,111,50,.22), transparent);
-}
-
-.theme-modern-atelier .section {
-  border-top: 1px solid rgba(19,19,19,.05);
-}
-
-.theme-modern-atelier .ci-brand__name {
-  font-family: Georgia, 'Times New Roman', serif;
-  letter-spacing: -.03em;
-}
-
-.theme-modern-atelier .ci-social:hover,
-.theme-modern-atelier .bl-more,
-.theme-modern-atelier .bp-back a,
-.theme-modern-atelier .pt-caption {
-  color: var(--theme-text);
-}
-
-@media (max-width: 720px) {
-  .theme-modern-atelier .card,
-  .theme-modern-atelier .block-item,
-  .theme-modern-atelier .hp-svc-card,
-  .theme-modern-atelier .bl-card,
-  .theme-modern-atelier .pt-tile,
-  .theme-modern-atelier .ci-block,
-  .theme-modern-atelier .kt-form-block {
-    box-shadow: none;
-  }
-}
-
-.theme-modern-atelier .theme-homepage-shell {
-  padding: 0;
-}
-
-.theme-modern-atelier .theme-homepage-shell__inner {
-  width: min(1360px, calc(100% - 48px));
-  margin: 0 auto;
-}
-
-.theme-modern-atelier .hero,
-.theme-modern-atelier .hp-hero,
-.theme-modern-atelier .pf-hero,
-.theme-modern-atelier .bl-hero,
-.theme-modern-atelier .fq-hero,
-.theme-modern-atelier .kt-hero,
-.theme-modern-atelier .bp-hero,
-.theme-modern-atelier .bp-detail-hero,
-.theme-modern-atelier .pf-detail-hero {
-  position: relative;
-  overflow: hidden;
-  background: transparent;
-}
-
-.theme-modern-atelier .hero-video,
-.theme-modern-atelier .hero-bg,
-.theme-modern-atelier .hero__media video {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  opacity: .34;
-  pointer-events: none;
-}
-
-.theme-modern-atelier .hero > .container,
-.theme-modern-atelier .hp-hero > .container,
-.theme-modern-atelier .pf-hero > .container,
-.theme-modern-atelier .bl-hero > .container,
-.theme-modern-atelier .fq-hero > .container,
-.theme-modern-atelier .kt-hero > .container,
-.theme-modern-atelier .bp-hero > .container,
-.theme-modern-atelier .bp-detail-hero > .container,
-.theme-modern-atelier .pf-detail-hero > .container {
-  position: relative;
-  z-index: 2;
+  transform: translateY(-1px);
+  box-shadow: 0 16px 34px rgba(175, 122, 53, .30);
 }
 
 .theme-modern-atelier .hp-services-grid,
@@ -280,6 +400,713 @@ body.theme-modern-atelier {
 .theme-modern-atelier .bl-card,
 .theme-modern-atelier .pt-tile,
 .theme-modern-atelier .ci-block,
-.theme-modern-atelier .kt-form-block {
+.theme-modern-atelier .kt-form-block,
+.theme-modern-atelier .card,
+.theme-modern-atelier .block-item {
+  position: relative;
+  border-radius: 24px;
+  border: 1px solid rgba(23, 20, 17, .09);
+  background: var(--theme-surface-strong);
+  box-shadow: var(--theme-shadow);
+  overflow: hidden;
+}
+
+.theme-modern-atelier .hp-svc-card,
+.theme-modern-atelier .svc-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.theme-modern-atelier .hp-svc-card__media {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  height: auto;
+  background:
+    linear-gradient(145deg, rgba(175, 122, 53, .14), rgba(23, 20, 17, .02)),
+    #f3ede4;
+  overflow: hidden;
+}
+
+.theme-modern-atelier .hp-svc-card__media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.02), rgba(23,20,17,.08));
+  pointer-events: none;
+}
+
+.theme-modern-atelier .hp-svc-card__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.theme-modern-atelier .hp-svc-card__body {
+  padding: 24px 24px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+
+.theme-modern-atelier .hp-svc-card__num {
+  color: var(--theme-accent);
+}
+
+.theme-modern-atelier .hp-svc-card__title {
+  font-size: 1.3rem;
+  line-height: 1.2;
+  color: var(--theme-text);
+}
+
+.theme-modern-atelier .hp-svc-card__desc {
+  color: var(--theme-muted);
+  font-size: .98rem;
+  line-height: 1.7;
+  white-space: pre-line;
+}
+
+.theme-modern-atelier .hp-svc-card__btn {
+  align-self: flex-start;
+  margin-top: auto;
+  font-size: .84rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.theme-modern-atelier .hp-blog-grid {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.theme-modern-atelier .hp-blog-card,
+.theme-modern-atelier .bl-card {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+}
+
+.theme-modern-atelier .hp-blog-thumb,
+.theme-modern-atelier .bl-thumb {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  background:
+    linear-gradient(145deg, rgba(175, 122, 53, .13), rgba(23, 20, 17, .03)),
+    #f1ece3;
+}
+
+.theme-modern-atelier .hp-blog-thumb img,
+.theme-modern-atelier .bl-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform .35s ease;
+}
+
+.theme-modern-atelier .hp-blog-card:hover .hp-blog-thumb img,
+.theme-modern-atelier .bl-card:hover .bl-thumb img {
+  transform: scale(1.04);
+}
+
+.theme-modern-atelier .hp-blog-body,
+.theme-modern-atelier .bl-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.theme-modern-atelier .hp-blog-title,
+.theme-modern-atelier .bl-title {
+  margin: 0 0 10px;
+  font-size: 1.28rem;
+  line-height: 1.22;
+  color: var(--theme-text);
+}
+
+.theme-modern-atelier .hp-blog-excerpt,
+.theme-modern-atelier .bl-excerpt {
+  margin: 0 0 18px;
+  color: var(--theme-muted);
+  font-size: .96rem;
+  line-height: 1.65;
+  flex: 1;
+}
+
+.theme-modern-atelier .hp-blog-link,
+.theme-modern-atelier .bl-more {
+  color: var(--theme-accent);
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  font-size: .76rem;
+}
+
+.theme-modern-atelier .hp-pricing {
+  margin-bottom: 34px;
+}
+
+.theme-modern-atelier .hp-cenik-grid {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.theme-modern-atelier .hp-cenik-card {
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+
+.theme-modern-atelier .hp-cenik-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(175, 122, 53, .24);
+  box-shadow: 0 32px 72px rgba(70, 49, 27, .16);
+}
+
+.theme-modern-atelier .hp-cenik-card--featured {
+  background:
+    linear-gradient(180deg, rgba(175, 122, 53, .10), rgba(255,255,255,.95)),
+    #fff;
+  border-color: rgba(175, 122, 53, .20);
+}
+
+.theme-modern-atelier .hp-cenik-card-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--theme-text);
+  margin-bottom: 12px;
+}
+
+.theme-modern-atelier .hp-cenik-card-desc {
+  color: var(--theme-muted);
+  line-height: 1.75;
+  font-size: .96rem;
+  white-space: pre-line;
+}
+
+.theme-modern-atelier .hp-cenik-card-price {
+  font-size: 1.38rem;
+  font-weight: 900;
+  color: var(--theme-text);
+  padding-top: 18px;
+  border-top: 1px solid var(--theme-border);
+}
+
+.theme-modern-atelier .hp-cenik-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(12, 10, 8, .72);
+  backdrop-filter: blur(10px);
+}
+
+.theme-modern-atelier .hp-cenik-modal.is-open {
+  display: flex;
+}
+
+.theme-modern-atelier .hp-cenik-modal__dialog {
+  position: relative;
+  width: min(560px, 100%);
+  padding: 30px;
+  border-radius: 26px;
+  border: 1px solid rgba(23, 20, 17, .08);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.98), rgba(255,255,255,.92)),
+    #fff;
+  box-shadow: 0 40px 110px rgba(0, 0, 0, .28);
+}
+
+.theme-modern-atelier .hp-cenik-modal__title {
+  color: var(--theme-text);
+  font-size: 1.9rem;
+  margin-bottom: 8px;
+}
+
+.theme-modern-atelier .hp-cenik-modal__plan {
+  color: var(--theme-accent);
+  font-weight: 800;
+  margin-bottom: 18px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  font-size: .8rem;
+}
+
+.theme-modern-atelier .hp-cenik-modal__close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  border: 1px solid var(--theme-border);
+  background: rgba(255,255,255,.92);
+  color: var(--theme-text);
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.theme-modern-atelier .hp-cenik-modal form {
+  display: grid;
+  gap: 12px;
+}
+
+.theme-modern-atelier .hp-cenik-modal label {
+  font-size: .78rem;
+  color: rgba(23, 20, 17, .54);
+  text-transform: uppercase;
+  letter-spacing: .10em;
+  font-weight: 700;
+}
+
+.theme-modern-atelier .hp-cenik-modal input,
+.theme-modern-atelier .hp-cenik-modal textarea,
+.theme-modern-atelier .hp-contact-form input,
+.theme-modern-atelier .hp-contact-form textarea,
+.theme-modern-atelier .kt-form-block input,
+.theme-modern-atelier .kt-form-block textarea {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid rgba(23, 20, 17, .12);
+  background: rgba(255,255,255,.9);
+  color: var(--theme-text);
+  padding: 13px 15px;
+  font-size: .98rem;
+  font-family: inherit;
+  transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+}
+
+.theme-modern-atelier .hp-cenik-modal textarea,
+.theme-modern-atelier .hp-contact-form textarea,
+.theme-modern-atelier .kt-form-block textarea {
+  min-height: 132px;
+  resize: vertical;
+}
+
+.theme-modern-atelier .hp-cenik-modal input:focus,
+.theme-modern-atelier .hp-cenik-modal textarea:focus,
+.theme-modern-atelier .hp-contact-form input:focus,
+.theme-modern-atelier .hp-contact-form textarea:focus,
+.theme-modern-atelier .kt-form-block input:focus,
+.theme-modern-atelier .kt-form-block textarea:focus {
+  outline: none;
+  border-color: rgba(175, 122, 53, .42);
+  box-shadow: 0 0 0 4px rgba(175, 122, 53, .10);
+}
+
+.theme-modern-atelier .hp-cenik-modal input::placeholder,
+.theme-modern-atelier .hp-cenik-modal textarea::placeholder,
+.theme-modern-atelier .hp-contact-form input::placeholder,
+.theme-modern-atelier .hp-contact-form textarea::placeholder,
+.theme-modern-atelier .kt-form-block input::placeholder,
+.theme-modern-atelier .kt-form-block textarea::placeholder {
+  color: rgba(23, 20, 17, .38);
+}
+
+.theme-modern-atelier .hp-cenik-modal__submit,
+.theme-modern-atelier .hp-contact-form button,
+.theme-modern-atelier .kt-form-btn {
+  border: 0;
+  border-radius: 999px;
+  min-height: 48px;
+  background: var(--theme-accent);
+  color: #fff;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform .2s ease, background .2s ease, box-shadow .2s ease;
+  box-shadow: 0 14px 30px rgba(175, 122, 53, .24);
+}
+
+.theme-modern-atelier .hp-cenik-modal__submit:hover,
+.theme-modern-atelier .hp-contact-form button:hover,
+.theme-modern-atelier .kt-form-btn:hover {
+  background: var(--theme-accent-strong);
+  transform: translateY(-1px);
+}
+
+.theme-modern-atelier .hp-faq {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.theme-modern-atelier .hp-faq-item {
+  padding: 22px 26px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.95), rgba(255,255,255,.86)),
+    #fff;
+  border-left: 4px solid var(--theme-accent);
+}
+
+.theme-modern-atelier .hp-faq-item strong {
+  color: var(--theme-text) !important;
+  font-size: 1.06rem;
+  letter-spacing: -.02em;
+}
+
+.theme-modern-atelier .hp-faq-item p {
+  color: var(--theme-muted) !important;
+}
+
+.theme-modern-atelier .hp-contact-grid {
+  grid-template-columns: 1.05fr .95fr;
+  gap: 24px;
+}
+
+.theme-modern-atelier .hp-contact-box {
+  min-width: 0;
+  padding: 28px;
+  border: 1px solid rgba(23, 20, 17, .09);
+  border-radius: 26px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.96), rgba(255,255,255,.88)),
+    #fff;
+  box-shadow: var(--theme-shadow);
+}
+
+.theme-modern-atelier .hp-contact-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.theme-modern-atelier .hp-contact-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  line-height: 1.55;
+  color: var(--theme-text);
+}
+
+.theme-modern-atelier .hp-contact-label {
+  font-size: .76rem;
+  font-weight: 800;
+  color: var(--theme-accent);
+  text-transform: uppercase;
+  letter-spacing: .16em;
+}
+
+.theme-modern-atelier .hp-contact-row a {
+  color: var(--theme-text);
+  font-weight: 700;
+}
+
+.theme-modern-atelier .hp-contact-socials {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.theme-modern-atelier .hp-contact-social {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border-radius: 999px;
+  background: rgba(175, 122, 53, .10);
+  color: var(--theme-text);
+  border: 1px solid rgba(175, 122, 53, .14);
+  font-size: .88rem;
+  font-weight: 700;
+}
+
+.theme-modern-atelier .hp-contact-social:hover {
+  background: rgba(175, 122, 53, .18);
+}
+
+.theme-modern-atelier .hp-contact-map {
+  display: inline-flex;
+  margin-top: 18px;
+  padding: 12px 18px;
+  border-radius: 999px;
+  background: var(--theme-accent);
+  color: #fff;
+  font-weight: 800;
+}
+
+.theme-modern-atelier .hp-contact-map-embed {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  min-height: 280px;
+  margin-top: 18px;
+  border: 0;
   border-radius: 20px;
+  background: #0f0f12;
+  box-shadow: 0 18px 40px rgba(23, 20, 17, .12);
+}
+
+.theme-modern-atelier .hp-contact-cta {
+  margin-top: 22px;
+}
+
+.theme-modern-atelier .hp-contact-cta .btn-secondary,
+.theme-modern-atelier .hp-section-cta .btn-secondary {
+  border-color: rgba(175, 122, 53, .18);
+  color: var(--theme-text);
+  background: rgba(255,255,255,.72);
+}
+
+.theme-modern-atelier .hp-contact-cta .btn-secondary:hover,
+.theme-modern-atelier .hp-section-cta .btn-secondary:hover {
+  color: #fff;
+  background: var(--theme-accent);
+  border-color: var(--theme-accent);
+}
+
+.theme-modern-atelier .pt-grid {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 28px;
+}
+
+.theme-modern-atelier .pt-tile {
+  display: block;
+  color: inherit;
+  transform: translateY(0);
+  transition: transform .24s ease, box-shadow .24s ease;
+}
+
+.theme-modern-atelier .pt-tile:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 34px 78px rgba(70, 49, 27, .16);
+}
+
+.theme-modern-atelier .pt-thumb {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  height: auto;
+  background:
+    linear-gradient(145deg, rgba(175, 122, 53, .12), rgba(23, 20, 17, .03)),
+    #efe8db;
+  overflow: hidden;
+}
+
+.theme-modern-atelier .pt-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.theme-modern-atelier .pt-play {
+  width: 60px;
+  height: 60px;
+  border-radius: 999px;
+  background: rgba(175, 122, 53, .92);
+  box-shadow: 0 14px 36px rgba(175, 122, 53, .28);
+}
+
+.theme-modern-atelier .pt-photos {
+  height: 84px;
+  padding: 4px;
+  gap: 4px;
+}
+
+.theme-modern-atelier .pt-caption {
+  padding: 16px 18px 18px;
+  color: var(--theme-text);
+  background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(255,255,255,.92));
+}
+
+.theme-modern-atelier .bl-back,
+.theme-modern-atelier .bp-back {
+  color: var(--theme-accent);
+  font-weight: 800;
+}
+
+.theme-modern-atelier .theme-footer {
+  border-top: 1px solid rgba(23, 20, 17, .08);
+  background: rgba(252, 249, 243, .84);
+  backdrop-filter: blur(16px);
+}
+
+.theme-modern-atelier .theme-footer__inner {
+  min-height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.theme-modern-atelier .theme-footer__brand {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.18rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--theme-text);
+}
+
+.theme-modern-atelier .theme-footer__meta {
+  color: var(--theme-muted);
+  font-size: .92rem;
+}
+
+.theme-modern-atelier .theme-homepage-shell {
+  padding: 0;
+}
+
+.theme-modern-atelier .theme-homepage-shell__inner {
+  width: min(1360px, calc(100% - 48px));
+  margin: 0 auto;
+}
+
+.theme-modern-atelier .hero-video,
+.theme-modern-atelier .hero-bg,
+.theme-modern-atelier .hero__media video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: .24;
+  pointer-events: none;
+}
+
+.theme-modern-atelier .hero > .container,
+.theme-modern-atelier .hp-hero > .container,
+.theme-modern-atelier .pf-hero > .container,
+.theme-modern-atelier .bl-hero > .container,
+.theme-modern-atelier .fq-hero > .container,
+.theme-modern-atelier .kt-hero > .container,
+.theme-modern-atelier .bp-hero > .container,
+.theme-modern-atelier .bp-detail-hero > .container,
+.theme-modern-atelier .pf-detail-hero > .container {
+  position: relative;
+  z-index: 2;
+}
+
+.theme-modern-atelier .ci-brand__name {
+  font-family: Georgia, "Times New Roman", serif;
+  letter-spacing: -.03em;
+}
+
+.theme-modern-atelier .ci-social:hover,
+.theme-modern-atelier .bp-back a,
+.theme-modern-atelier .bl-more,
+.theme-modern-atelier .pt-caption {
+  color: var(--theme-text);
+}
+
+.theme-modern-atelier .section .container {
+  position: relative;
+}
+
+.theme-modern-atelier .section .container::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: -18px;
+  width: 84px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--theme-accent), transparent);
+  opacity: .4;
+}
+
+@media (max-width: 980px) {
+  .theme-modern-atelier .theme-header__inner {
+    min-height: 76px;
+    gap: 16px;
+  }
+
+  .theme-modern-atelier .theme-nav-wrap .nav-links {
+    gap: 8px;
+  }
+
+  .theme-modern-atelier .theme-nav-wrap .nav-links a {
+    padding: 10px 12px;
+    letter-spacing: .10em;
+  }
+
+  .theme-modern-atelier .hp-hero h1 {
+    max-width: 11ch;
+  }
+
+  .theme-modern-atelier .hp-contact-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .theme-modern-atelier .theme-shell {
+    width: calc(100% - 16px);
+    margin: 8px auto 12px;
+    border-radius: 22px;
+  }
+
+  .theme-modern-atelier .theme-header__inner,
+  .theme-modern-atelier .theme-footer__inner {
+    flex-direction: column;
+    align-items: flex-start;
+    padding-block: 14px;
+  }
+
+  .theme-modern-atelier .theme-nav-wrap {
+    width: 100%;
+  }
+
+  .theme-modern-atelier .theme-nav-wrap .site-nav .container.nav-inner {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .theme-modern-atelier .theme-nav-wrap .nav-links {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
+  .theme-modern-atelier .theme-nav-wrap .nav-links a {
+    font-size: .73rem;
+    padding: 9px 11px;
+  }
+
+  .theme-modern-atelier .hero,
+  .theme-modern-atelier .hp-hero,
+  .theme-modern-atelier .pf-hero,
+  .theme-modern-atelier .bl-hero,
+  .theme-modern-atelier .fq-hero,
+  .theme-modern-atelier .kt-hero,
+  .theme-modern-atelier .bp-hero,
+  .theme-modern-atelier .bp-detail-hero,
+  .theme-modern-atelier .pf-detail-hero {
+    min-height: auto;
+    padding: 72px 0 64px;
+  }
+
+  .theme-modern-atelier .hp-hero h1 {
+    font-size: clamp(2.6rem, 14vw, 4.2rem);
+  }
+
+  .theme-modern-atelier .section {
+    padding: 64px 0;
+  }
+
+  .theme-modern-atelier .hp-cenik-modal__dialog {
+    padding: 24px;
+    border-radius: 22px;
+  }
+
+  .theme-modern-atelier .hp-contact-box {
+    padding: 22px;
+  }
+
+  .theme-modern-atelier .pt-grid {
+    grid-template-columns: 1fr;
+  }
 }

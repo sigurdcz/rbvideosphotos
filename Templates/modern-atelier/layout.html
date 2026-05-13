@@ -4,14 +4,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{site_name}</title>
-  <meta name="theme-color" content="#ffffff">
+  <meta name="theme-color" content="#f6f1e9">
 </head>
-<body>
-  <div class="theme-shell theme-modern-atelier">
+<body class="theme-modern-atelier">
+  <div class="theme-shell">
+    <div class="theme-shell__backdrop"></div>
     <header class="theme-header">
       <div class="container theme-header__inner">
         <a href="/" class="theme-brand">{site_name}</a>
-        {nav}
+        <div class="theme-nav-wrap">
+          {nav}
+        </div>
       </div>
     </header>
     <main class="theme-main">
@@ -20,7 +23,7 @@
     <footer class="theme-footer">
       <div class="container theme-footer__inner">
         <div class="theme-footer__brand">{site_name}</div>
-        <div class="theme-footer__meta">Modern Atelier • {site_name}</div>
+        <div class="theme-footer__meta">Modern Atelier &bull; {site_name}</div>
       </div>
     </footer>
   </div>
