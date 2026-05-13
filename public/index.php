@@ -475,9 +475,8 @@ body{background:#111;color:#fff}
 @media(max-width:720px){.pt-grid{grid-template-columns:1fr}}
 CSS;
 
-        if (!empty($site['layout_html'])) {
-            $renderer   = new PageRenderer();
-            $nav = resolveThemeNav($site, false);
+        $renderer   = new PageRenderer();
+        $nav = resolveThemeNav($site, false);
 $pageContent = <<<HTML
 <section class="pf-hero">
   <div class="container">
@@ -491,8 +490,8 @@ $pageContent = <<<HTML
   </div>
 </section>
 HTML;
-            [$pageContent, $themeCss, $themeJs, $themeActive] = applyThemeTemplate(
-                $renderer,
+        [$pageContent, $themeCss, $themeJs, $themeActive] = applyThemeTemplate(
+            $renderer,
             $site,
             'portfolio',
             $siteName,
@@ -503,15 +502,15 @@ HTML;
             $nav,
             isset($_GET['theme_preview']) ? trim((string)$_GET['theme_preview']) : null
         );
-            if ($themeActive) {
-                $html = $pageContent;
-                $html = str_replace('</head>', "\n<title>" . $h("Na\u{161}e pr\u{E1}ce | {$siteName}") . "</title>\n</head>", $html);
-                $html = $renderer->injectAssets($html, $portfolioListingCss . "\n" . $themeCss, $themeJs);
-            } else {
-                $html = $renderer->applyLayout($site['layout_html'], $pageContent, $siteName, $nav);
-                $html = str_replace('</head>', "\n<title>" . $h("Na\u{161}e pr\u{E1}ce | {$siteName}") . "</title>\n</head>", $html);
-                $html = $renderer->injectAssets($html, ($site['layout_css'] ?? '') . "\n" . $portfolioListingCss . "\n" . $themeCss, ($site['layout_js'] ?? '') . "\n" . $themeJs);
-            }
+        $titleTag = '<title>' . $h("Na\u{161}e pr\u{E1}ce | {$siteName}") . '</title>';
+        if ($themeActive) {
+            $html = $pageContent;
+            $html = str_replace('</head>', "\n{$titleTag}\n</head>", $html);
+            $html = $renderer->injectAssets($html, $portfolioListingCss . "\n" . $themeCss, $themeJs);
+        } elseif (!empty($site['layout_html'])) {
+            $html = $renderer->applyLayout($site['layout_html'], $pageContent, $siteName, $nav);
+            $html = str_replace('</head>', "\n{$titleTag}\n</head>", $html);
+            $html = $renderer->injectAssets($html, ($site['layout_css'] ?? '') . "\n" . $portfolioListingCss . "\n" . $themeCss, ($site['layout_js'] ?? '') . "\n" . $themeJs);
         } else {
             $nav = renderPortfolioNav($siteName, 'portfolio');
             $html = <<<HTML
@@ -601,9 +600,8 @@ body{background:#111;color:#fff}
 .pf-back a{display:inline-flex;background:#c4963c;color:#fff;text-decoration:none;padding:12px 18px;border-radius:6px;font-weight:700}
 CSS;
 
-        if (!empty($site['layout_html'])) {
-            $renderer = new PageRenderer();
-            $nav = resolveThemeNav($site, false);
+        $renderer = new PageRenderer();
+        $nav = resolveThemeNav($site, false);
 $pageContent = <<<HTML
 <section class="pf-detail-hero">
   <div class="container">
@@ -624,10 +622,10 @@ HTML;
             $site,
             'portfolio-detail',
             $siteName,
-                $pageContent,
-                '',
-                '',
-                '',
+            $pageContent,
+            '',
+            '',
+            '',
             $nav,
             isset($_GET['theme_preview']) ? trim((string)$_GET['theme_preview']) : null
         );
@@ -637,11 +635,10 @@ HTML;
             $html = $pageContent;
             $html = str_replace('</head>', "\n{$titleTag}\n{$metaDesc}\n</head>", $html);
             $html = $renderer->injectAssets($html, $portfolioDetailCss . "\n" . $themeCss, $themeJs);
-        } else {
+        } elseif (!empty($site['layout_html'])) {
             $html = $renderer->applyLayout($site['layout_html'], $pageContent, $siteName, $nav);
             $html = str_replace('</head>', "\n{$titleTag}\n{$metaDesc}\n</head>", $html);
             $html = $renderer->injectAssets($html, ($site['layout_css'] ?? '') . "\n" . $portfolioDetailCss . "\n" . $themeCss, ($site['layout_js'] ?? '') . "\n" . $themeJs);
-        }
         } else {
             $nav = renderPortfolioNav($siteName, 'portfolio');
             $html = <<<HTML
@@ -747,9 +744,8 @@ body{background:#111;color:#fff}
 .faq-item.open .faq-a{display:block}
 CSS;
 
-    if (!empty($site['layout_html'])) {
-        $renderer   = new PageRenderer();
-        $nav        = resolveThemeNav($site, false);
+    $renderer   = new PageRenderer();
+    $nav        = resolveThemeNav($site, false);
 $pageContent = <<<HTML
 <section class="fq-hero">
   <div class="container">
@@ -768,27 +764,26 @@ document.querySelectorAll('.faq-item').forEach(function(el){
 });
 </script>
 HTML;
-        [$pageContent, $themeCss, $themeJs, $themeActive] = applyThemeTemplate(
-            $renderer,
-            $site,
-            'faq',
-            $siteName,
-            $pageContent,
-            '',
-            '',
-            '',
-            $nav,
-            isset($_GET['theme_preview']) ? trim((string)$_GET['theme_preview']) : null
-        );
-        if ($themeActive) {
-            $html = $pageContent;
-            $html = str_replace('</head>', "\n<title>" . $h('FAQ | ' . $siteName) . "</title>\n</head>", $html);
-            $html = $renderer->injectAssets($html, $faqCss . "\n" . $themeCss, $themeJs);
-        } else {
-            $html = $renderer->applyLayout($site['layout_html'], $pageContent, $siteName, $nav);
-            $html = str_replace('</head>', "\n<title>" . $h('FAQ | ' . $siteName) . "</title>\n</head>", $html);
-            $html = $renderer->injectAssets($html, ($site['layout_css'] ?? '') . "\n" . $faqCss . "\n" . $themeCss, ($site['layout_js'] ?? '') . "\n" . $themeJs);
-        }
+    [$pageContent, $themeCss, $themeJs, $themeActive] = applyThemeTemplate(
+        $renderer,
+        $site,
+        'faq',
+        $siteName,
+        $pageContent,
+        '',
+        '',
+        '',
+        $nav,
+        isset($_GET['theme_preview']) ? trim((string)$_GET['theme_preview']) : null
+    );
+    if ($themeActive) {
+        $html = $pageContent;
+        $html = str_replace('</head>', "\n<title>" . $h('FAQ | ' . $siteName) . "</title>\n</head>", $html);
+        $html = $renderer->injectAssets($html, $faqCss . "\n" . $themeCss, $themeJs);
+    } elseif (!empty($site['layout_html'])) {
+        $html = $renderer->applyLayout($site['layout_html'], $pageContent, $siteName, $nav);
+        $html = str_replace('</head>', "\n<title>" . $h('FAQ | ' . $siteName) . "</title>\n</head>", $html);
+        $html = $renderer->injectAssets($html, ($site['layout_css'] ?? '') . "\n" . $faqCss . "\n" . $themeCss, ($site['layout_js'] ?? '') . "\n" . $themeJs);
     } else {
         $html = '<!DOCTYPE html><html lang="cs"><head><meta charset="UTF-8"><title>FAQ | ' . $h($siteName) . '</title>'
             . '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:system-ui,sans-serif;line-height:1.6}.container{max-width:960px;margin:0 auto;padding:0 24px}'
@@ -952,10 +947,9 @@ CSS;
         . '<button type="submit" class="kt-form-btn">Odeslat zprávu</button>'
         . '</form>';
 
-    if (!empty($site['layout_html'])) {
-        $renderer   = new PageRenderer();
-        $nav        = resolveThemeNav($site, false);
-        $pageContent = <<<HTML
+    $renderer   = new PageRenderer();
+    $nav        = resolveThemeNav($site, false);
+    $pageContent = <<<HTML
 <section class="kt-hero">
   <div class="container">
     <h1>{$h($heroTitle)}</h1>
@@ -978,27 +972,26 @@ CSS;
   </div>
 </section>
 HTML;
-        [$pageContent, $themeCss, $themeJs, $themeActive] = applyThemeTemplate(
-            $renderer,
-            $site,
-            'contact',
-            $siteName,
-            $pageContent,
-            '',
-            '',
-            '',
-            $nav,
-            isset($_GET['theme_preview']) ? trim((string)$_GET['theme_preview']) : null
-        );
-        if ($themeActive) {
-            $html = $pageContent;
-            $html = str_replace('</head>', "\n<title>" . $h('Kontakt | ' . $siteName) . "</title>\n</head>", $html);
-            $html = $renderer->injectAssets($html, $kontaktCss . "\n" . $themeCss, $themeJs);
-        } else {
-            $html = $renderer->applyLayout($site['layout_html'], $pageContent, $siteName, $nav);
-            $html = str_replace('</head>', "\n<title>" . $h('Kontakt | ' . $siteName) . "</title>\n</head>", $html);
-            $html = $renderer->injectAssets($html, ($site['layout_css'] ?? '') . "\n" . $kontaktCss . "\n" . $themeCss, ($site['layout_js'] ?? '') . "\n" . $themeJs);
-        }
+    [$pageContent, $themeCss, $themeJs, $themeActive] = applyThemeTemplate(
+        $renderer,
+        $site,
+        'contact',
+        $siteName,
+        $pageContent,
+        '',
+        '',
+        '',
+        $nav,
+        isset($_GET['theme_preview']) ? trim((string)$_GET['theme_preview']) : null
+    );
+    if ($themeActive) {
+        $html = $pageContent;
+        $html = str_replace('</head>', "\n<title>" . $h('Kontakt | ' . $siteName) . "</title>\n</head>", $html);
+        $html = $renderer->injectAssets($html, $kontaktCss . "\n" . $themeCss, $themeJs);
+    } elseif (!empty($site['layout_html'])) {
+        $html = $renderer->applyLayout($site['layout_html'], $pageContent, $siteName, $nav);
+        $html = str_replace('</head>', "\n<title>" . $h('Kontakt | ' . $siteName) . "</title>\n</head>", $html);
+        $html = $renderer->injectAssets($html, ($site['layout_css'] ?? '') . "\n" . $kontaktCss . "\n" . $themeCss, ($site['layout_js'] ?? '') . "\n" . $themeJs);
     } else {
         $html = '<!DOCTYPE html><html lang="cs"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Kontakt | ' . $h($siteName) . '</title>'
             . '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:system-ui,sans-serif;line-height:1.6;background:#111;color:#fff}.container{max-width:1100px;margin:0 auto;padding:0 16px}' . $kontaktCss . '</style>'
@@ -1085,10 +1078,9 @@ body{background:#111;color:#fff}
 @media(max-width:720px){.bl-grid{grid-template-columns:1fr}}
 CSS;
 
-    if (!empty($site['layout_html'])) {
-        $renderer = new PageRenderer();
-        $nav = resolveThemeNav($site, false);
-        $pageContent = <<<HTML
+    $renderer = new PageRenderer();
+    $nav = resolveThemeNav($site, false);
+    $pageContent = <<<HTML
 <section class="bl-hero">
   <div class="container">
     <h1>Blog &amp; Inspirace</h1>
@@ -1101,29 +1093,28 @@ CSS;
   </div>
 </section>
 HTML;
-        [$pageContent, $themeCss, $themeJs, $themeActive] = applyThemeTemplate(
-            $renderer,
-            $site,
-            'blog',
-            $siteName,
-            $pageContent,
-            '',
-            '',
-            '',
-            $nav,
-            isset($_GET['theme_preview']) ? trim((string)$_GET['theme_preview']) : null
-        );
-        $titleTag = '<title>' . $h("Blog | {$siteName}") . '</title>';
-        $metaTag  = '<meta name="description" content="' . $h('Tipy a inspirace od fotografa z Olomouce.') . '">';
-        if ($themeActive) {
-            $html = $pageContent;
-            $html = str_replace('</head>', "\n{$titleTag}\n{$metaTag}\n</head>", $html);
-            $html = $renderer->injectAssets($html, $blogCss . "\n" . $themeCss, $themeJs);
-        } else {
-            $html = $renderer->applyLayout($site['layout_html'], $pageContent, $siteName, $nav);
-            $html = str_replace('</head>', "\n{$titleTag}\n{$metaTag}\n</head>", $html);
-            $html = $renderer->injectAssets($html, ($site['layout_css'] ?? '') . "\n" . $blogCss . "\n" . $themeCss, ($site['layout_js'] ?? '') . "\n" . $themeJs);
-        }
+    [$pageContent, $themeCss, $themeJs, $themeActive] = applyThemeTemplate(
+        $renderer,
+        $site,
+        'blog',
+        $siteName,
+        $pageContent,
+        '',
+        '',
+        '',
+        $nav,
+        isset($_GET['theme_preview']) ? trim((string)$_GET['theme_preview']) : null
+    );
+    $titleTag = '<title>' . $h("Blog | {$siteName}") . '</title>';
+    $metaTag  = '<meta name="description" content="' . $h('Tipy a inspirace od fotografa z Olomouce.') . '">';
+    if ($themeActive) {
+        $html = $pageContent;
+        $html = str_replace('</head>', "\n{$titleTag}\n{$metaTag}\n</head>", $html);
+        $html = $renderer->injectAssets($html, $blogCss . "\n" . $themeCss, $themeJs);
+    } elseif (!empty($site['layout_html'])) {
+        $html = $renderer->applyLayout($site['layout_html'], $pageContent, $siteName, $nav);
+        $html = str_replace('</head>', "\n{$titleTag}\n{$metaTag}\n</head>", $html);
+        $html = $renderer->injectAssets($html, ($site['layout_css'] ?? '') . "\n" . $blogCss . "\n" . $themeCss, ($site['layout_js'] ?? '') . "\n" . $themeJs);
     } else {
         $siteNameEsc = $h($siteName);
         $html = <<<HTML
@@ -1257,10 +1248,9 @@ CSS;
 </script>
 HTML : '';
 
-    if (!empty($site['layout_html'])) {
-        $renderer = new PageRenderer();
-        $nav = resolveThemeNav($site, false);
-        $pageContent = <<<HTML
+    $renderer = new PageRenderer();
+    $nav = resolveThemeNav($site, false);
+    $pageContent = <<<HTML
 <section class="bp-hero">
   <div class="container">
     <div class="bp-date">{$date}</div>
@@ -1277,29 +1267,28 @@ HTML : '';
 </section>
 {$lightboxHtml}
 HTML;
-        [$pageContent, $themeCss, $themeJs, $themeActive] = applyThemeTemplate(
-            $renderer,
-            $site,
-            'blog-post',
-            $siteName,
-                $pageContent,
-                '',
-                '',
-                '',
-            $nav,
-            isset($_GET['theme_preview']) ? trim((string)$_GET['theme_preview']) : null
-        );
-        $titleTag    = '<title>' . $metaTitle . ' | ' . $h($siteName) . '</title>';
-        $metaDescTag = '<meta name="description" content="' . $metaDesc . '">';
-        if ($themeActive) {
-            $html = $pageContent;
-            $html = str_replace('</head>', "\n{$titleTag}\n{$metaDescTag}\n</head>", $html);
-            $html = $renderer->injectAssets($html, $blogPostCss . "\n" . $themeCss, $themeJs);
-        } else {
-            $html = $renderer->applyLayout($site['layout_html'], $pageContent, $siteName, $nav);
-            $html = str_replace('</head>', "\n{$titleTag}\n{$metaDescTag}\n</head>", $html);
-            $html = $renderer->injectAssets($html, ($site['layout_css'] ?? '') . "\n" . $blogPostCss . "\n" . $themeCss, ($site['layout_js'] ?? '') . "\n" . $themeJs);
-        }
+    [$pageContent, $themeCss, $themeJs, $themeActive] = applyThemeTemplate(
+        $renderer,
+        $site,
+        'blog-post',
+        $siteName,
+        $pageContent,
+        '',
+        '',
+        '',
+        $nav,
+        isset($_GET['theme_preview']) ? trim((string)$_GET['theme_preview']) : null
+    );
+    $titleTag    = '<title>' . $metaTitle . ' | ' . $h($siteName) . '</title>';
+    $metaDescTag = '<meta name="description" content="' . $metaDesc . '">';
+    if ($themeActive) {
+        $html = $pageContent;
+        $html = str_replace('</head>', "\n{$titleTag}\n{$metaDescTag}\n</head>", $html);
+        $html = $renderer->injectAssets($html, $blogPostCss . "\n" . $themeCss, $themeJs);
+    } elseif (!empty($site['layout_html'])) {
+        $html = $renderer->applyLayout($site['layout_html'], $pageContent, $siteName, $nav);
+        $html = str_replace('</head>', "\n{$titleTag}\n{$metaDescTag}\n</head>", $html);
+        $html = $renderer->injectAssets($html, ($site['layout_css'] ?? '') . "\n" . $blogPostCss . "\n" . $themeCss, ($site['layout_js'] ?? '') . "\n" . $themeJs);
     } else {
         $siteNameEsc = $h($siteName);
         $html = <<<HTML
