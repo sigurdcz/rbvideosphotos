@@ -254,9 +254,7 @@ Spuštění:
 /migrate-util.php?token=<MIGRATE_TOKEN>
 ```
 
-Migrace je idempotentní (`CREATE TABLE IF NOT EXISTS`). Po prvním spuštění vznikne `storage/.migration-lock` — ten zabrání opakovanému spuštění. Smaž ho, pokud potřebuješ migraci znovu.
-
-`migrate-util.php` sleduje aplicované migrace v tabulce `schema_migrations`.
+Migrace je idempotentní a stav drží tabulka `schema_migrations`. Migrátor můžeš spouštět opakovaně; nově aplikuje jen soubory, které v tabulce ještě nejsou.
 
 ---
 

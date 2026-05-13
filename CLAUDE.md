@@ -117,7 +117,7 @@ Jedno konsolidované schema: `database/migrations/001_schema.sql`.
 
 - Používej `CREATE TABLE IF NOT EXISTS` — migrace musí být idempotentní.
 - Nepiš separátní migrační soubory 002, 003, … — vše slij do `001_schema.sql`.
-- Po změně schématu smaž `storage/.migration-lock` a spusť migrace znovu.
+- Po změně schématu spusť migrace znovu; stav drží `schema_migrations` a utilita sama přeskočí už aplikované soubory.
 
 ---
 

@@ -23,7 +23,6 @@ header('X-Robots-Tag: noindex, nofollow, noarchive', true);
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
 
-$lockFile = BASE_PATH . '/storage/.migration-lock';
 $logDir = BASE_PATH . '/storage/logs';
 if (!is_dir($logDir)) {
     @mkdir($logDir, 0775, true);
@@ -52,10 +51,6 @@ if (!hash_equals($token, $providedToken)) {
     renderPage('Přístup zamítnut', '403', '<h1>Přístup zamítnut.</h1><p>Token v URL je neplatný nebo chybí.</p>', 403);
 }
 
-if (file_exists($lockFile)) {
-    renderPage('Migrace již proběhla', 'Locked', '<h1>Migrace již byla spuštěna.</h1><p>Lock soubor existuje, takže utilita již znovu nic nespustí. Pokud ji opravdu potřebuješ znovu, smaž <code>storage/.migration-lock</code>.</p>');
-}
-
 try {
     $host = getenv('DB_HOST') ?: '127.0.0.1';
     $port = getenv('DB_PORT') ?: '3306';
@@ -80,12 +75,33 @@ try {
     $files = glob(BASE_PATH . '/database/migrations/*.sql') ?: [];
     sort($files, SORT_NATURAL);
 
+    $pending = [];
+
     foreach ($files as $file) {
         $name = basename($file);
         if (in_array($name, $applied, true)) {
             continue;
         }
 
+        $pending[] = $name;
+    }
+
+    if ($pending === []) {
+        Logger::info('migration', 'Migration utility up to date', [
+            'driver' => 'mysql',
+            'database' => $db,
+            'applied' => count($applied),
+        ]);
+
+        renderPage(
+            'Migrace aktuální',
+            'Up to date',
+            '<h1>Žádné nové migrace nejsou k dispozici.</h1><p>Tabulka <code>schema_migrations</code> už obsahuje poslední verzi. Utility můžeš spouštět opakovaně bez mazání souborů.</p>'
+        );
+    }
+
+    foreach ($pending as $name) {
+        $file = BASE_PATH . '/database/migrations/' . $name;
         $sql = file_get_contents($file);
         if ($sql === false) {
             throw new RuntimeException('Nepodařilo se načíst migraci: ' . $name);
@@ -100,11 +116,10 @@ try {
             ->execute([$name]);
     }
 
-    file_put_contents($lockFile, 'Applied at ' . date('Y-m-d H:i:s') . PHP_EOL);
     Logger::info('migration', 'Migration utility completed', [
         'driver' => 'mysql',
         'database' => $db,
-        'lock_file' => $lockFile,
+        'applied' => $pending,
     ]);
 
     renderPage(

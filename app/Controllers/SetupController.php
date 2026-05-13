@@ -62,7 +62,6 @@ class SetupController extends Controller
         $this->csrfCheck();
 
         try {
-            @unlink(dirname(__DIR__, 2) . '/storage/.migration-lock');
             $this->purgeDirectoryContents(dirname(__DIR__, 2) . '/storage/media');
             $this->purgeDirectoryContents(dirname(__DIR__, 2) . '/storage/published');
             $this->ensurePublishedFallbackIndex();
@@ -141,15 +140,22 @@ class SetupController extends Controller
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci'
         );
 
+        $applied = $pdo->query('SELECT migration FROM schema_migrations')->fetchAll(PDO::FETCH_COLUMN) ?: [];
+
         foreach ($files as $file) {
+            $migrationName = basename($file);
+            if (in_array($migrationName, $applied, true)) {
+                continue;
+            }
+
             $sql = file_get_contents($file);
             if ($sql === false) {
-                throw new \RuntimeException('Nepodařilo se načíst migraci: ' . basename($file));
+                throw new \RuntimeException('Nepodařilo se načíst migraci: ' . $migrationName);
             }
 
             $pdo->exec($sql);
             $pdo->prepare('INSERT INTO schema_migrations (migration) VALUES (?)')
-                ->execute([basename($file)]);
+                ->execute([$migrationName]);
         }
     }
 
