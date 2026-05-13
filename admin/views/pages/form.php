@@ -318,6 +318,7 @@ ob_start();
       <div class="card">
         <?php $renderBlockField('hero_h1', 'Hero nadpis'); ?>
         <?php $renderBlockField('hero_sub', 'Hero intro', 'textarea'); ?>
+        <?php $renderBlockField('hero_bg', 'Hero obrazek / medium', 'image'); ?>
         <?php $renderBlockField('cta_wrap', 'Spodni CTA', 'html'); ?>
       </div>
     </div>

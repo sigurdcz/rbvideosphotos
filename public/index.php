@@ -137,6 +137,7 @@ function tryServeDatabasePage(string $uri, bool $authenticated = false, bool $pr
         );
         $html = injectFooterSocials($html, (int)$site['id']);
         $html = injectSiteLogo($html, $site);
+        $html = injectPageHeroImage($html, (int)$page['id']);
         $html = injectHomepageHeroImage($html, (int)$site['id'], $isHome);
         $html = injectHomepageHeroVideo($html, (int)$site['id'], $isHome);
         $html = sanitizeFrontendHtml($html);
@@ -248,6 +249,61 @@ function injectHomepageHeroImage(string $html, int $siteId, bool $isHome): strin
             $existing = html_entity_decode($styleMatch[2], ENT_QUOTES, 'UTF-8');
             if (str_contains($existing, '--theme-hero-image')) {
                 $existing = preg_replace('/--theme-hero-image\s*:\s*[^;]+;?/i', $styleValue . ';', $existing) ?? $existing;
+            } else {
+                $existing = rtrim($existing, '; ') . ';' . $styleValue . ';';
+            }
+            $attrs = preg_replace('/\sstyle=(["\'])(.*?)\1/i', ' style="' . htmlspecialchars($existing, ENT_QUOTES) . '"', $attrs, 1) ?? $attrs;
+        } else {
+            $attrs .= $styleAttr;
+        }
+
+        return preg_replace('/<body([^>]*)>/i', '<body' . $attrs . '>', $html, 1) ?? $html;
+    }
+
+    return $html;
+}
+
+function injectPageHeroImage(string $html, int $pageId): string
+{
+    $heroImage = resolvePageHeroImageUrl($pageId);
+    if ($heroImage === '') {
+        return $html;
+    }
+
+    return injectBodyCssVariable($html, '--theme-page-hero-image', "url('" . str_replace("'", '%27', $heroImage) . "')");
+}
+
+function resolvePageHeroImageUrl(int $pageId): string
+{
+    try {
+        $block = (new BlockRepository())->findByKey($pageId, 'hero_bg');
+        if (!$block) {
+            return '';
+        }
+
+        return publicMediaUrl((string)($block['content'] ?? ''));
+    } catch (\Throwable $e) {
+        Logger::infoTo('theme-debug', 'theme.page.hero.image.error', 'Failed to resolve page hero image', [
+            'page_id' => $pageId,
+            'error' => $e->getMessage(),
+        ]);
+    }
+
+    return '';
+}
+
+function injectBodyCssVariable(string $html, string $name, string $value): string
+{
+    $styleValue = $name . ':' . $value;
+
+    if (preg_match('/<body([^>]*)>/i', $html, $m)) {
+        $attrs = $m[1];
+        $styleAttr = ' style="' . htmlspecialchars($styleValue . ';', ENT_QUOTES) . '"';
+        $pattern = '/' . preg_quote($name, '/') . '\s*:\s*[^;]+;?/i';
+        if (preg_match('/\sstyle=(["\'])(.*?)\1/i', $attrs, $styleMatch)) {
+            $existing = html_entity_decode($styleMatch[2], ENT_QUOTES, 'UTF-8');
+            if (preg_match($pattern, $existing)) {
+                $existing = preg_replace($pattern, $styleValue . ';', $existing) ?? $existing;
             } else {
                 $existing = rtrim($existing, '; ') . ';' . $styleValue . ';';
             }

@@ -112,10 +112,13 @@ class PageController extends Controller
         if ($isHomepage) {
             $this->ensureHomepageHeroVideoBlock($id);
         }
-        $blocks    = (new BlockRepository())->allByPage($id);
         $templates = (new TemplateRepository())->allForAdmin();
         $template  = $page['template_id'] ? (new TemplateRepository())->findById((int)$page['template_id']) : null;
         $layout    = $this->resolveLayoutType($template['name'] ?? '');
+        if ($layout === 'services') {
+            $this->ensureServicesHeroImageBlock($id);
+        }
+        $blocks    = (new BlockRepository())->allByPage($id);
         $homepageAutofillBlocks = $isHomepage
             ? (new HomepageContentService())->getAutofillDefinitions()
             : [];
@@ -177,6 +180,9 @@ class PageController extends Controller
         $isHomepage = trim((string)($page['url_path'] ?? ''), '/') === '';
         if ($isHomepage) {
             $this->ensureHomepageHeroVideoBlock($id);
+        }
+        if ($layoutType === 'services') {
+            $this->ensureServicesHeroImageBlock($id);
         }
         $this->saveSubmittedBlocks($id, $isHomepage);
 
@@ -250,6 +256,22 @@ class PageController extends Controller
             'label' => 'Hero — video (URL)',
             'content' => '',
             'sort_order' => 2,
+            'autofill_disabled' => 0,
+        ]);
+    }
+
+    private function ensureServicesHeroImageBlock(int $pageId): void
+    {
+        $blockRepo = new BlockRepository();
+        if ($blockRepo->findByKey($pageId, 'hero_bg')) {
+            return;
+        }
+
+        $blockRepo->upsert($pageId, 'hero_bg', [
+            'block_type' => 'image',
+            'label' => 'Hero — obrazek / medium',
+            'content' => '',
+            'sort_order' => 3,
             'autofill_disabled' => 0,
         ]);
     }

@@ -224,7 +224,8 @@ class HomepageContentService
                 return;
             }
 
-            if ($this->isBlankHtml($block['content'] ?? '')) {
+            $content = (string)($block['content'] ?? '');
+            if ($this->isBlankHtml($content) || $this->looksLikePlaceholder($content)) {
                 $block['content'] = $builder();
             }
             return;

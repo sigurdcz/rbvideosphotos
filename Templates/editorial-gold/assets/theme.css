@@ -60,6 +60,8 @@ body.theme-editorial-gold {
   position: relative;
   min-height: 100vh;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
   background: var(--eg-bg);
 }
 
@@ -190,6 +192,7 @@ body.theme-editorial-gold {
 .theme-editorial-gold .theme-main {
   position: relative;
   z-index: 1;
+  flex: 1 0 auto;
 }
 
 .theme-editorial-gold .container {
@@ -249,6 +252,101 @@ body.theme-editorial-gold {
   max-width: 850px;
   margin: 0;
   padding: 145px 0 80px 150px;
+}
+
+.theme-editorial-gold .page-hero,
+.theme-editorial-gold .pf-hero,
+.theme-editorial-gold .bp-hero,
+.theme-editorial-gold .fq-hero,
+.theme-editorial-gold .kt-hero,
+.theme-editorial-gold .bl-hero,
+.theme-editorial-gold .bp-detail-hero,
+.theme-editorial-gold .pf-detail-hero {
+  position: relative;
+  min-height: 520px;
+  overflow: hidden;
+  padding: 0;
+  background: #060606;
+}
+
+.theme-editorial-gold .page-hero::before,
+.theme-editorial-gold .pf-hero::before,
+.theme-editorial-gold .bp-hero::before,
+.theme-editorial-gold .fq-hero::before,
+.theme-editorial-gold .kt-hero::before,
+.theme-editorial-gold .bl-hero::before,
+.theme-editorial-gold .bp-detail-hero::before,
+.theme-editorial-gold .pf-detail-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    var(--theme-page-hero-image, var(--theme-hero-image, none)) center right / cover no-repeat,
+    radial-gradient(circle at 18% 20%, rgba(198, 148, 61, .16), transparent 30%),
+    linear-gradient(120deg, #17130d 0%, #080808 58%, #050505 100%);
+  filter: saturate(.74) contrast(1.08) brightness(.64);
+}
+
+.theme-editorial-gold .page-hero::after,
+.theme-editorial-gold .pf-hero::after,
+.theme-editorial-gold .bp-hero::after,
+.theme-editorial-gold .fq-hero::after,
+.theme-editorial-gold .kt-hero::after,
+.theme-editorial-gold .bl-hero::after,
+.theme-editorial-gold .bp-detail-hero::after,
+.theme-editorial-gold .pf-detail-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, .92), rgba(0, 0, 0, .52), rgba(0, 0, 0, .84)),
+    linear-gradient(180deg, rgba(0, 0, 0, .62), transparent 46%, rgba(0, 0, 0, .78));
+}
+
+.theme-editorial-gold .page-hero > .container,
+.theme-editorial-gold .pf-hero > .container,
+.theme-editorial-gold .bp-hero > .container,
+.theme-editorial-gold .fq-hero > .container,
+.theme-editorial-gold .kt-hero > .container,
+.theme-editorial-gold .bl-hero > .container,
+.theme-editorial-gold .bp-detail-hero > .container,
+.theme-editorial-gold .pf-detail-hero > .container {
+  position: relative;
+  z-index: 3;
+  max-width: 900px;
+  margin: 0;
+  padding: 150px 150px 80px;
+}
+
+.theme-editorial-gold .page-hero h1,
+.theme-editorial-gold .pf-hero h1,
+.theme-editorial-gold .bp-hero h1,
+.theme-editorial-gold .fq-hero h1,
+.theme-editorial-gold .kt-hero h1,
+.theme-editorial-gold .bl-hero h1,
+.theme-editorial-gold .bp-detail-hero h1,
+.theme-editorial-gold .pf-detail-hero h1 {
+  max-width: 760px;
+  font-size: 64px;
+  line-height: .98;
+}
+
+.theme-editorial-gold .page-hero .hero-sub,
+.theme-editorial-gold .pf-hero .hero-sub,
+.theme-editorial-gold .bp-hero .hero-sub,
+.theme-editorial-gold .fq-hero .hero-sub,
+.theme-editorial-gold .kt-hero .hero-sub,
+.theme-editorial-gold .bl-hero .hero-sub,
+.theme-editorial-gold .bp-detail-hero .hero-sub,
+.theme-editorial-gold .pf-detail-hero .hero-sub {
+  max-width: 700px;
+  margin-top: 22px;
+  color: #d5cec2;
+  font-size: 17px;
+  line-height: 1.6;
 }
 
 .theme-editorial-gold .section-label,
@@ -889,6 +987,7 @@ body.theme-editorial-gold {
   position: relative;
   z-index: 2;
   display: block;
+  flex-shrink: 0;
   padding: 34px 60px;
   border-top: 1px solid rgba(198, 148, 61, .26);
   background: #030303;
@@ -951,12 +1050,28 @@ body.theme-editorial-gold {
   }
 
   .theme-editorial-gold .section,
-  .theme-editorial-gold .hp-hero > .container {
+  .theme-editorial-gold .hp-hero > .container,
+  .theme-editorial-gold .page-hero > .container,
+  .theme-editorial-gold .pf-hero > .container,
+  .theme-editorial-gold .bp-hero > .container,
+  .theme-editorial-gold .fq-hero > .container,
+  .theme-editorial-gold .kt-hero > .container,
+  .theme-editorial-gold .bl-hero > .container,
+  .theme-editorial-gold .bp-detail-hero > .container,
+  .theme-editorial-gold .pf-detail-hero > .container {
     padding-left: 36px;
     padding-right: 36px;
   }
 
-  .theme-editorial-gold .hp-hero h1 {
+  .theme-editorial-gold .hp-hero h1,
+  .theme-editorial-gold .page-hero h1,
+  .theme-editorial-gold .pf-hero h1,
+  .theme-editorial-gold .bp-hero h1,
+  .theme-editorial-gold .fq-hero h1,
+  .theme-editorial-gold .kt-hero h1,
+  .theme-editorial-gold .bl-hero h1,
+  .theme-editorial-gold .bp-detail-hero h1,
+  .theme-editorial-gold .pf-detail-hero h1 {
     font-size: 54px;
   }
 
@@ -1041,11 +1156,38 @@ body.theme-editorial-gold {
     min-height: 720px;
   }
 
-  .theme-editorial-gold .hp-hero > .container {
+  .theme-editorial-gold .page-hero,
+  .theme-editorial-gold .pf-hero,
+  .theme-editorial-gold .bp-hero,
+  .theme-editorial-gold .fq-hero,
+  .theme-editorial-gold .kt-hero,
+  .theme-editorial-gold .bl-hero,
+  .theme-editorial-gold .bp-detail-hero,
+  .theme-editorial-gold .pf-detail-hero {
+    min-height: 460px;
+  }
+
+  .theme-editorial-gold .hp-hero > .container,
+  .theme-editorial-gold .page-hero > .container,
+  .theme-editorial-gold .pf-hero > .container,
+  .theme-editorial-gold .bp-hero > .container,
+  .theme-editorial-gold .fq-hero > .container,
+  .theme-editorial-gold .kt-hero > .container,
+  .theme-editorial-gold .bl-hero > .container,
+  .theme-editorial-gold .bp-detail-hero > .container,
+  .theme-editorial-gold .pf-detail-hero > .container {
     padding: 130px 24px 48px;
   }
 
-  .theme-editorial-gold .hp-hero h1 {
+  .theme-editorial-gold .hp-hero h1,
+  .theme-editorial-gold .page-hero h1,
+  .theme-editorial-gold .pf-hero h1,
+  .theme-editorial-gold .bp-hero h1,
+  .theme-editorial-gold .fq-hero h1,
+  .theme-editorial-gold .kt-hero h1,
+  .theme-editorial-gold .bl-hero h1,
+  .theme-editorial-gold .bp-detail-hero h1,
+  .theme-editorial-gold .pf-detail-hero h1 {
     font-size: 42px;
   }
 
