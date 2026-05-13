@@ -1110,3 +1110,127 @@ body.theme-modern-atelier {
     grid-template-columns: 1fr;
   }
 }
+
+.theme-modern-atelier .theme-shell {
+  width: min(1460px, calc(100% - 28px));
+  margin: 14px auto 18px;
+  border-radius: 30px;
+  box-shadow: 0 40px 120px rgba(71, 52, 27, .14);
+}
+
+.theme-modern-atelier .theme-header__inner {
+  min-height: 86px;
+}
+
+.theme-modern-atelier .theme-nav-wrap .nav-links a {
+  border: 1px solid transparent;
+}
+
+.theme-modern-atelier .theme-nav-wrap .nav-links a:hover,
+.theme-modern-atelier .theme-nav-wrap .nav-links a.nav-active {
+  border-color: rgba(175, 122, 53, .14);
+}
+
+.theme-modern-atelier .hp-hero {
+  text-align: left;
+  min-height: clamp(700px, 92vh, 1060px);
+  background:
+    radial-gradient(circle at 18% 16%, rgba(175, 122, 53, .16), transparent 22%),
+    radial-gradient(circle at 82% 10%, rgba(23, 20, 17, .06), transparent 24%),
+    linear-gradient(180deg, rgba(255,255,255,.62), rgba(255,255,255,.18));
+}
+
+.theme-modern-atelier .hp-hero::before {
+  content: "";
+  position: absolute;
+  right: -140px;
+  top: 10%;
+  width: 460px;
+  height: 460px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(175, 122, 53, .12), transparent 68%);
+  pointer-events: none;
+}
+
+.theme-modern-atelier .hp-hero::after {
+  content: "";
+  position: absolute;
+  left: -120px;
+  bottom: 0;
+  width: 360px;
+  height: 360px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(23, 20, 17, .05), transparent 68%);
+  pointer-events: none;
+}
+
+.theme-modern-atelier .hp-hero .container {
+  max-width: 920px;
+  margin-left: 0;
+}
+
+.theme-modern-atelier .hp-hero h1 {
+  font-size: clamp(3.3rem, 8vw, 6.8rem);
+  max-width: 10ch;
+  margin: 18px 0 24px;
+}
+
+.theme-modern-atelier .hero-sub,
+.theme-modern-atelier .hp-hero .hero-sub {
+  margin: 0 0 34px;
+  max-width: 640px;
+}
+
+.theme-modern-atelier .hero-cta-wrap {
+  justify-content: flex-start;
+}
+
+.theme-modern-atelier .hp-services-grid {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.theme-modern-atelier .hp-svc-card__media {
+  aspect-ratio: 16 / 11;
+  background:
+    radial-gradient(circle at 28% 16%, rgba(175, 122, 53, .14), transparent 28%),
+    #f0ebe2;
+}
+
+.theme-modern-atelier .hp-svc-card__body {
+  padding: 26px 26px 28px;
+}
+
+.theme-modern-atelier .hp-svc-card__title,
+.theme-modern-atelier .hp-blog-title,
+.theme-modern-atelier .hp-cenik-card-title {
+  letter-spacing: -.03em;
+}
+
+.theme-modern-atelier .hp-blog-grid {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.theme-modern-atelier .hp-cenik-card--featured {
+  box-shadow: 0 34px 78px rgba(70, 49, 27, .10);
+}
+
+.theme-modern-atelier .hp-contact-grid {
+  grid-template-columns: 1.08fr .92fr;
+}
+
+.theme-modern-atelier .hp-contact-box {
+  padding: 28px;
+  border-radius: 28px;
+}
+
+.theme-modern-atelier .hp-contact-row {
+  gap: 6px;
+}
+
+.theme-modern-atelier .hp-contact-social {
+  background: rgba(175, 122, 53, .10);
+}
+
+.theme-modern-atelier .theme-footer {
+  background: rgba(252, 249, 243, .90);
+}
