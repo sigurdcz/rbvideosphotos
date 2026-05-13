@@ -86,7 +86,7 @@ class PublishService
         // Render
         $html = $this->renderer->render($template['html_source'], $blocks, $mediaMap);
         $theme = $this->themes->resolveForSite($site);
-        Logger::infoTo('theme-debug', 'theme.publish.request', [
+        Logger::infoTo('theme-debug', 'theme.publish.request', 'Publish theme resolution requested', [
             'site_id' => $site['id'] ?? null,
             'site_name' => $site['name'] ?? null,
             'page_id' => $page['id'] ?? null,
@@ -111,7 +111,7 @@ class PublishService
             $html = $this->themes->injectBodyClass($html, (string)($theme['key'] ?? ''));
             $css = ($template['css_source'] ?? '') . "\n" . $themeCss;
             $js  = ($template['js_source']  ?? '') . "\n" . $themeJs;
-            Logger::infoTo('theme-debug', 'theme.publish.applied', [
+            Logger::infoTo('theme-debug', 'theme.publish.applied', 'Publish theme applied', [
                 'site_id' => $site['id'] ?? null,
                 'site_name' => $site['name'] ?? null,
                 'page_id' => $page['id'] ?? null,
@@ -126,7 +126,7 @@ class PublishService
             $html = $this->renderer->applyLayout($site['layout_html'], $html, $site['name'] ?? '', $themeNav);
             $css  = ($site['layout_css'] ?? '') . "\n" . ($template['css_source'] ?? '') . "\n" . $themeCss;
             $js   = ($site['layout_js']  ?? '') . "\n" . ($template['js_source']  ?? '') . "\n" . $themeJs;
-            Logger::infoTo('theme-debug', 'theme.publish.default_layout', [
+            Logger::infoTo('theme-debug', 'theme.publish.default_layout', 'Publish used site default layout', [
                 'site_id' => $site['id'] ?? null,
                 'site_name' => $site['name'] ?? null,
                 'page_id' => $page['id'] ?? null,
@@ -135,7 +135,7 @@ class PublishService
         } else {
             $css = ($template['css_source'] ?? '') . "\n" . $themeCss;
             $js  = ($template['js_source']  ?? '') . "\n" . $themeJs;
-            Logger::infoTo('theme-debug', 'theme.publish.raw', [
+            Logger::infoTo('theme-debug', 'theme.publish.raw', 'Publish used raw template output', [
                 'site_id' => $site['id'] ?? null,
                 'site_name' => $site['name'] ?? null,
                 'page_id' => $page['id'] ?? null,

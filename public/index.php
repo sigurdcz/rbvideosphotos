@@ -304,7 +304,7 @@ function getThemeTemplateRegistry(): ThemeTemplateRegistry
 function applyThemeTemplate(PageRenderer $renderer, array $site, string $pageKey, string $siteName, string $html, string $css, string $js, string $nav = '', ?string $previewKey = null): array
 {
     $registry = getThemeTemplateRegistry();
-    Logger::infoTo('theme-debug', 'theme.frontend.apply.request', [
+    Logger::infoTo('theme-debug', 'theme.frontend.apply.request', 'Frontend theme apply requested', [
         'site_id' => $site['id'] ?? null,
         'site_name' => $site['name'] ?? null,
         'page_key' => $pageKey,
@@ -315,7 +315,7 @@ function applyThemeTemplate(PageRenderer $renderer, array $site, string $pageKey
     ]);
     $theme = $registry->resolveForSite($site, $previewKey);
     if (!$theme) {
-        Logger::infoTo('theme-debug', 'theme.frontend.apply.default', [
+        Logger::infoTo('theme-debug', 'theme.frontend.apply.default', 'Frontend theme fell back to default', [
             'site_id' => $site['id'] ?? null,
             'site_name' => $site['name'] ?? null,
             'page_key' => $pageKey,
@@ -342,7 +342,7 @@ function applyThemeTemplate(PageRenderer $renderer, array $site, string $pageKey
         $js = trim($js . "\n" . $themeJs);
     }
 
-    Logger::infoTo('theme-debug', 'theme.frontend.apply.result', [
+    Logger::infoTo('theme-debug', 'theme.frontend.apply.result', 'Frontend theme apply resolved', [
         'site_id' => $site['id'] ?? null,
         'site_name' => $site['name'] ?? null,
         'page_key' => $pageKey,

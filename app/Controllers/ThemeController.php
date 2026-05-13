@@ -59,7 +59,7 @@ class ThemeController extends Controller
             $this->redirect('/admin/shablony');
         }
 
-        Logger::infoTo('theme-debug', 'theme.activate.request', [
+        Logger::infoTo('theme-debug', 'theme.activate.request', 'Theme activation requested', [
             'site_id' => $site['id'] ?? null,
             'site_name' => $site['name'] ?? null,
             'requested_key' => $key === '' ? null : $key,
@@ -70,7 +70,7 @@ class ThemeController extends Controller
             'active_theme_key' => $key === '' ? null : $key,
         ]);
         $registry->persistActiveThemeKey($key === '' ? null : $key);
-        Logger::infoTo('theme-debug', 'theme.activate.persisted', [
+        Logger::infoTo('theme-debug', 'theme.activate.persisted', 'Theme activation persisted', [
             'site_id' => $site['id'] ?? null,
             'site_name' => $site['name'] ?? null,
             'persisted_key' => $key === '' ? null : $key,
@@ -78,7 +78,7 @@ class ThemeController extends Controller
 
         $user = \App\Core\Auth::user();
         $publishResult = (new PublishService())->publishSite((int)$site['id'], (int)($user['id'] ?? 0));
-        Logger::infoTo('theme-debug', 'theme.activate.publish', [
+        Logger::infoTo('theme-debug', 'theme.activate.publish', 'Theme activation publish finished', [
             'site_id' => $site['id'] ?? null,
             'site_name' => $site['name'] ?? null,
             'publish_errors' => $publishResult['errors'] ?? [],

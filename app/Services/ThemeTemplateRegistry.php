@@ -63,7 +63,7 @@ class ThemeTemplateRegistry
         $previewKey = trim((string)$previewKey);
         if ($previewKey !== '') {
             $theme = $this->find($previewKey);
-            Logger::infoTo('theme-debug', 'theme.preview.resolve', [
+            Logger::infoTo('theme-debug', 'theme.preview.resolve', 'Preview theme resolution requested', [
                 'preview_key' => $previewKey,
                 'resolved' => $theme['key'] ?? null,
                 'site_id' => $site['id'] ?? null,
@@ -79,7 +79,7 @@ class ThemeTemplateRegistry
             $activeKeySource = 'state_file';
         }
 
-        Logger::infoTo('theme-debug', 'theme.resolve.request', [
+        Logger::infoTo('theme-debug', 'theme.resolve.request', 'Theme resolution requested', [
             'site_id' => $site['id'] ?? null,
             'site_name' => $site['name'] ?? null,
             'db_active_theme_key' => trim((string)($site['active_theme_key'] ?? '')) ?: null,
@@ -90,7 +90,7 @@ class ThemeTemplateRegistry
         ]);
 
         if ($activeKey === '') {
-            Logger::infoTo('theme-debug', 'theme.resolve.default', [
+            Logger::infoTo('theme-debug', 'theme.resolve.default', 'Theme resolution fell back to default', [
                 'site_id' => $site['id'] ?? null,
                 'site_name' => $site['name'] ?? null,
                 'reason' => 'no active key found',
@@ -99,7 +99,7 @@ class ThemeTemplateRegistry
         }
 
         $theme = $this->find($activeKey);
-        Logger::infoTo('theme-debug', 'theme.resolve.result', [
+        Logger::infoTo('theme-debug', 'theme.resolve.result', 'Theme resolution completed', [
             'site_id' => $site['id'] ?? null,
             'site_name' => $site['name'] ?? null,
             'resolved_active_theme_key' => $activeKey,
