@@ -11,6 +11,12 @@ Jednoduche SEO CMS pro male staticke weby v cistem PHP 8. Aplikace ma admin rozh
 - Media: `storage/media/*`
 - Publikovane exporty: `storage/published/*`
 
+## Dokumentace pro vyvoj
+
+- `INSTRUCTIONS.md` obsahuje obecna pracovni pravidla pro vsechny AI asistenty i vyvojare.
+- `ARCHITECTURE.md` popisuje technickou architekturu, request flow, databazove oblasti a systemove koncepty.
+- Projekt nepouziva specializovane instrukcni MD soubory pro konkretni AI nastroje.
+
 ## Lokalni databaze pro tento projekt
 
 - Host: `127.0.0.1`

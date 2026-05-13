@@ -40,7 +40,7 @@ public/
   index.php       front controller veřejného webu
   assets/         assety inline editoru
 database/
-  migrations/     SQL migrace (jedno konsolidované schema)
+  migrations/     SQL migrace aplikovane postupne pres schema_migrations
   seeds/          PHP seedy
 storage/
   media/          nahraná média
@@ -168,7 +168,7 @@ request → public/index.php
 
 ## Databázové schéma
 
-Jedno konsolidované schema: `database/migrations/001_schema.sql`.
+Databáze je řízena postupnými SQL migracemi v `database/migrations/`. Stav aplikovaných migrací drží tabulka `schema_migrations`, takže migrační utilitu lze spouštět opakovaně a aplikují se jen nové soubory.
 
 ### Tabulky
 
@@ -247,14 +247,22 @@ Seed pro konkrétního klienta (`seed_photographer.php`) zůstává jako příkl
 
 ## Migrace
 
-Jedno konsolidované schema: `database/migrations/001_schema.sql`.
+Migrace jsou verzované SQL soubory v `database/migrations/`.
 
 Spuštění:
 ```
 /migrate-util.php?token=<MIGRATE_TOKEN>
 ```
 
-Migrace je idempotentní a stav drží tabulka `schema_migrations`. Migrátor můžeš spouštět opakovaně; nově aplikuje jen soubory, které v tabulce ještě nejsou.
+Migrátor drží stav v tabulce `schema_migrations`. Lze ho spouštět opakovaně; nově aplikuje jen soubory, které v tabulce ještě nejsou.
+
+Pravidla pro změny databáze:
+
+- Nikdy neupravovat ani nemazat staré migrace.
+- Každá změna databázové struktury nebo dat vzniká jako nová migrace.
+- Nová migrace dostane další pořadové číslo podle nejvyšší existující migrace.
+- Číslování musí jít vzestupně po sobě a nesmí zbytečně skákat dopředu.
+- Migrace mají být idempotentní, pokud je to technicky možné.
 
 ---
 
