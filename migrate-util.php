@@ -125,14 +125,9 @@ try {
     renderPage(
         'Migrace dokoncena',
         'Success',
-        '<h1>Migrace probehla uspesne.</h1><p>Databazove schema bylo aktualizovano v MariaDB/MySQL databazi.</p><div class="panel"><pre><span class="ok">Databaze:</span> ' . htmlspecialchars($db, ENT_QUOTES, 'UTF-8') . '
-<span class="ok">Admin e-mail:</span> admin@example.com
-<span class="ok">Admin heslo:</span> admin123
-
-Doporuceni:
-1. Prihlas se do adminu.
-2. Zmen heslo.
-3. Smaz nebo zablokuj tento util soubor.</pre></div>'
+        '<h1>Migrace probehla uspesne.</h1><p>Nasazene migrace:</p><div class="panel"><pre>' .
+        htmlspecialchars(implode("\n", $executed), ENT_QUOTES, 'UTF-8') .
+        '</pre></div>'
     );
 } catch (Throwable $e) {
     Logger::criticalTo('exceptions', 'migration_failure', $e->getMessage(), [
