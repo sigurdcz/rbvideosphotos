@@ -13,7 +13,7 @@ Env::load(BASE_PATH . '/.env');
 
 $token = (string) getenv('MIGRATE_TOKEN');
 if ($token === '') {
-    renderPage('Chyba konfigurace', '500', '<h1>MIGRATE_TOKEN není nastaven.</h1><p>Přidej <code>MIGRATE_TOKEN=...</code> do <code>.env</code>.</p>', 500);
+    renderPage('Chyba konfigurace', '500', '<h1>MIGRATE_TOKEN neni nastaven.</h1><p>Pridej <code>MIGRATE_TOKEN=...</code> do <code>.env</code>.</p>', 500);
 }
 $providedToken = (string) ($_GET['token'] ?? '');
 date_default_timezone_set(getenv('APP_TZ') ?: 'Europe/Prague');
@@ -48,7 +48,7 @@ if (!hash_equals($token, $providedToken)) {
         'ip' => $_SERVER['REMOTE_ADDR'] ?? '',
         'uri' => $_SERVER['REQUEST_URI'] ?? '',
     ]);
-    renderPage('Přístup zamítnut', '403', '<h1>Přístup zamítnut.</h1><p>Token v URL je neplatný nebo chybí.</p>', 403);
+    renderPage('Pristup zamitnut', '403', '<h1>Pristup zamitnut.</h1><p>Token v URL je neplatny nebo chybi.</p>', 403);
 }
 
 try {
@@ -71,19 +71,16 @@ try {
 
     $pdo->exec('CREATE TABLE IF NOT EXISTS schema_migrations (id INT UNSIGNED NOT NULL AUTO_INCREMENT, migration VARCHAR(255) NOT NULL UNIQUE, applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
 
-    $applied = $pdo->query('SELECT migration FROM schema_migrations')->fetchAll(PDO::FETCH_COLUMN) ?: [];
     $files = glob(BASE_PATH . '/database/migrations/*.sql') ?: [];
     sort($files, SORT_NATURAL);
 
+    $applied = $pdo->query('SELECT migration FROM schema_migrations')->fetchAll(PDO::FETCH_COLUMN) ?: [];
     $pending = [];
-
-    foreach ($files as $file) {
-        $name = basename($file);
-        if (in_array($name, $applied, true)) {
-            continue;
+    foreach ($files as $filePath) {
+        $name = basename($filePath);
+        if (!in_array($name, $applied, true)) {
+            $pending[] = $name;
         }
-
-        $pending[] = $name;
     }
 
     if ($pending === []) {
@@ -94,45 +91,48 @@ try {
         ]);
 
         renderPage(
-            'Migrace aktuální',
+            'Migrace aktualni',
             'Up to date',
-            '<h1>Žádné nové migrace nejsou k dispozici.</h1><p>Tabulka <code>schema_migrations</code> už obsahuje poslední verzi. Utility můžeš spouštět opakovaně bez mazání souborů.</p>'
+            '<h1>Zadne nove migrace nejsou k dispozici.</h1><p>Tabulka <code>schema_migrations</code> uz obsahuje posledni verzi. Utility muzes spoustet opakovane bez mazani souboru.</p>'
         );
     }
 
-    foreach ($pending as $name) {
-        $file = BASE_PATH . '/database/migrations/' . $name;
-        $sql = file_get_contents($file);
-        if ($sql === false) {
-            throw new RuntimeException('Nepodařilo se načíst migraci: ' . $name);
+    $executed = [];
+    foreach ($files as $filePath) {
+        $name = basename($filePath);
+        $applied = $pdo->query('SELECT migration FROM schema_migrations')->fetchAll(PDO::FETCH_COLUMN) ?: [];
+        if (in_array($name, $applied, true)) {
+            continue;
         }
 
-        // MySQL DDL (CREATE TABLE etc.) causes an implicit commit,
-        // so wrapping schema migrations in a transaction doesn't work —
-        // beginTransaction/commit/rollBack would all throw "no active transaction".
-        // We run the SQL directly and record it in schema_migrations separately.
+        $sql = file_get_contents($filePath);
+        if ($sql === false) {
+            throw new RuntimeException('Nepodarilo se nacist migraci: ' . $name);
+        }
+
         $pdo->exec($sql);
         $pdo->prepare('INSERT INTO schema_migrations (migration) VALUES (?)')
             ->execute([$name]);
+        $executed[] = $name;
     }
 
     Logger::info('migration', 'Migration utility completed', [
         'driver' => 'mysql',
         'database' => $db,
-        'applied' => $pending,
+        'applied' => $executed,
     ]);
 
     renderPage(
-        'Migrace dokončena',
+        'Migrace dokoncena',
         'Success',
-        '<h1>Migrace proběhla úspěšně.</h1><p>Databázové schema bylo vytvořeno v MariaDB/MySQL databázi.</p><div class="panel"><pre><span class="ok">Databáze:</span> ' . htmlspecialchars($db, ENT_QUOTES, 'UTF-8') . '
+        '<h1>Migrace probehla uspesne.</h1><p>Databazove schema bylo aktualizovano v MariaDB/MySQL databazi.</p><div class="panel"><pre><span class="ok">Databaze:</span> ' . htmlspecialchars($db, ENT_QUOTES, 'UTF-8') . '
 <span class="ok">Admin e-mail:</span> admin@example.com
 <span class="ok">Admin heslo:</span> admin123
 
-Doporučení:
-1. Přihlas se do adminu.
-2. Změň heslo.
-3. Smaž nebo zablokuj tento util soubor.</pre></div>'
+Doporuceni:
+1. Prihlas se do adminu.
+2. Zmen heslo.
+3. Smaz nebo zablokuj tento util soubor.</pre></div>'
     );
 } catch (Throwable $e) {
     Logger::criticalTo('exceptions', 'migration_failure', $e->getMessage(), [
@@ -146,7 +146,7 @@ Doporučení:
     renderPage(
         'Migrace selhala',
         'Error',
-        '<h1>Migrace selhala.</h1><p>Zkontroluj prosím přihlašovací údaje k MariaDB/MySQL v <code>.env</code> a ověř, že databáze i uživatel existují. Detail chyby je zalogovaný do exception logu.</p><div class="panel"><pre><span class="warn">' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '</span></pre></div>',
+        '<h1>Migrace selhala.</h1><p>Zkontroluj prosim prihlasovaci udaje k MariaDB/MySQL v <code>.env</code> a over, ze databaze i uzivatel existuji. Detail chyby je zalogovany do exception logu.</p><div class="panel"><pre><span class="warn">' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '</span></pre></div>',
         500
     );
 }

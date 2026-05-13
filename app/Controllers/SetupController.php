@@ -140,10 +140,9 @@ class SetupController extends Controller
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci'
         );
 
-        $applied = $pdo->query('SELECT migration FROM schema_migrations')->fetchAll(PDO::FETCH_COLUMN) ?: [];
-
         foreach ($files as $file) {
             $migrationName = basename($file);
+            $applied = $pdo->query('SELECT migration FROM schema_migrations')->fetchAll(PDO::FETCH_COLUMN) ?: [];
             if (in_array($migrationName, $applied, true)) {
                 continue;
             }
