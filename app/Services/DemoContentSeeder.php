@@ -341,6 +341,7 @@ class DemoContentSeeder
     <p class="section-label">Co o nás říkají</p>
     <h2 class="section-title">Hodnocení našich párů</h2>
     <div data-block="reviews_demo"><!-- Demo recenze --></div>
+    <div data-block="reviews_cta" class="hp-section-cta"><a href="/hodnoceni" class="btn-secondary">Vsechny recenze</a></div>
   </div>
 </section>
 HTML;

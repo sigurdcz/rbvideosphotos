@@ -154,6 +154,7 @@ class PublishService
         $html        = $this->injectSiteLogo($html, $site);
         $html        = $this->injectPageHeroImage($html, (int)$page['id']);
         $html = $this->injectPageHeroVideo($html, $site, (int)$page['id']);
+        $html = $this->injectEditorialGoldOverrides($html);
 
         // Write HTML file
         $filePath = $this->resolveFilePath($page['url_path']);
@@ -471,6 +472,44 @@ HTML;
         }
 
         return $html . '<footer>' . $footer . '</footer>';
+    }
+
+    private function injectEditorialGoldOverrides(string $html): string
+    {
+        if (!str_contains($html, 'theme-editorial-gold') || str_contains($html, 'data-cms-editorial-gold-fixes')) {
+            return $html;
+        }
+
+        $style = <<<'HTML'
+<style data-cms-editorial-gold-fixes>
+.theme-editorial-gold [data-block="reviews_cta"]{display:flex;justify-content:flex-start;margin-top:22px!important}
+.theme-editorial-gold .eg-reviews__cta,
+.theme-editorial-gold .hp-section-cta,
+.theme-editorial-gold .hp-contact-cta{margin-top:22px!important}
+.theme-editorial-gold .hp-section-cta .btn-secondary,
+.theme-editorial-gold [data-block="reviews_cta"] > .btn-secondary,
+.theme-editorial-gold .eg-reviews__cta .btn-secondary,
+.theme-editorial-gold .hp-contact-cta .btn-secondary{
+  background:rgba(5,5,5,.72)!important;
+  border-color:rgba(224,184,102,.68)!important;
+  color:#f7f1e8!important;
+}
+.theme-editorial-gold .hp-section-cta .btn-secondary:hover,
+.theme-editorial-gold [data-block="reviews_cta"] > .btn-secondary:hover,
+.theme-editorial-gold .eg-reviews__cta .btn-secondary:hover,
+.theme-editorial-gold .hp-contact-cta .btn-secondary:hover{
+  background:var(--eg-gold,#c6943d)!important;
+  border-color:var(--eg-gold,#c6943d)!important;
+  color:#050505!important;
+}
+</style>
+HTML;
+
+        if (str_contains($html, '</head>')) {
+            return str_replace('</head>', "\n" . $style . "\n</head>", $html);
+        }
+
+        return $style . $html;
     }
 
     private function buildRichFooterHtml(array $site): string

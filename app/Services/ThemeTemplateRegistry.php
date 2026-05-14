@@ -312,6 +312,7 @@ class ThemeTemplateRegistry
 
 .theme-shell .hp-svc-card__btn,
 .theme-shell .hp-section-cta .btn-secondary,
+.theme-shell .eg-reviews__cta .btn-secondary,
 .theme-shell .hp-contact-cta .btn-secondary,
 .theme-shell .btn-primary,
 .theme-shell .btn-secondary,
@@ -338,6 +339,7 @@ class ThemeTemplateRegistry
 
 .theme-shell .hp-svc-card__btn,
 .theme-shell .hp-section-cta .btn-secondary,
+.theme-shell .eg-reviews__cta .btn-secondary,
 .theme-shell .hp-contact-cta .btn-secondary,
 .theme-shell .btn-primary,
 .theme-shell .btn-success,
@@ -354,6 +356,7 @@ class ThemeTemplateRegistry
 
 .theme-shell .hp-svc-card__btn:hover,
 .theme-shell .hp-section-cta .btn-secondary:hover,
+.theme-shell .eg-reviews__cta .btn-secondary:hover,
 .theme-shell .hp-contact-cta .btn-secondary:hover,
 .theme-shell .btn-primary:hover,
 .theme-shell .btn-success:hover,
@@ -369,8 +372,10 @@ class ThemeTemplateRegistry
 
 /* Homepage section CTA buttons must remain readable on dark sections. */
 .theme-shell .hp-section-cta .btn-secondary,
+.theme-shell .eg-reviews__cta .btn-secondary,
 .theme-shell .hp-contact-cta .btn-secondary,
 .theme-shell .hp-section-cta .btn-secondary:hover,
+.theme-shell .eg-reviews__cta .btn-secondary:hover,
 .theme-shell .hp-contact-cta .btn-secondary:hover {
   color: #fff !important;
 }

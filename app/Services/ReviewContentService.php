@@ -60,7 +60,7 @@ class ReviewContentService
     <h2 data-block="reviews_title" class="section-title">Hodnoceni klientu</h2>
     <p data-block="reviews_intro" class="section-intro">Vybrane reference klientu, kterym jsme dodali foto nebo video.</p>
     <div data-block="reviews_demo"><!-- Recenze --></div>
-    <div data-block="reviews_cta"><a href="/hodnoceni" class="btn-secondary">Vsechny recenze</a></div>
+    <div data-block="reviews_cta" class="hp-section-cta"><a href="/hodnoceni" class="btn-secondary">Vsechny recenze</a></div>
   </div>
 </section>
 HTML;
