@@ -186,8 +186,31 @@ function injectCookieConsent(string $html): string
     $consent = <<<'HTML'
 <style data-cookie-consent>
 .cookie-consent-backdrop[hidden],.cookie-consent[hidden]{display:none!important}
+.cookie-consent-backdrop:not([hidden]){display:block!important}
+.cookie-consent:not([hidden]){display:block!important}
 .cookie-consent-backdrop{position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,.56);backdrop-filter:blur(8px)}
-.cookie-consent{position:fixed;left:16px;right:16px;top:50%;z-index:99999;max-width:760px;margin:0 auto;padding:16px;border:1px solid rgba(198,148,61,.45);background:rgba(5,5,5,.96);color:#f7f1e8;box-shadow:0 24px 80px rgba(0,0,0,.38);backdrop-filter:blur(12px);transform:translateY(-50%)}
+.cookie-consent,.cookie-consent *{box-sizing:border-box}
+.cookie-consent{
+  position:fixed;
+  left:50%;
+  top:50%;
+  z-index:99999;
+  width:min(760px,calc(100vw - 32px));
+  max-width:min(760px,calc(100vw - 32px));
+  max-height:calc(100vh - 32px);
+  overflow:auto;
+  margin:0;
+  padding:16px;
+  border:1px solid rgba(198,148,61,.45);
+  background:rgba(5,5,5,.98);
+  color:#f7f1e8;
+  box-shadow:0 24px 80px rgba(0,0,0,.38);
+  backdrop-filter:blur(12px);
+  transform:translate(-50%,-50%);
+  font-family:Arial,Helvetica,sans-serif;
+  line-height:1.45;
+  isolation:isolate;
+}
 .cookie-consent__grid{display:grid;gap:14px}
 .cookie-consent__label{color:#e0b866;font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase}
 .cookie-consent__title{margin:0;color:#fff;font-family:Georgia,"Times New Roman",serif;font-size:22px;line-height:1.1}
@@ -203,7 +226,7 @@ function injectCookieConsent(string $html): string
 .cookie-consent__option p{margin:0;color:rgba(255,255,255,.62);font-size:12px;line-height:1.45}
 .cookie-consent__option input{width:auto}
 .cookie-consent-link{display:inline-flex;margin-top:12px;border:0;background:transparent;color:inherit;text-decoration:underline;cursor:pointer;font:inherit}
-@media(min-width:720px){.cookie-consent{width:min(620px,calc(100vw - 48px))}.cookie-consent__grid{grid-template-columns:1fr auto;align-items:end}.cookie-consent__settings{grid-column:1/-1}.cookie-consent__actions{justify-content:flex-end}}
+@media(min-width:720px){.cookie-consent{width:min(620px,calc(100vw - 48px));max-width:min(620px,calc(100vw - 48px))}.cookie-consent__grid{grid-template-columns:1fr auto;align-items:end}.cookie-consent__settings{grid-column:1/-1}.cookie-consent__actions{justify-content:flex-end}}
 </style>
 <div class="cookie-consent-backdrop" data-cookie-consent-backdrop hidden></div>
 <div class="cookie-consent" data-cookie-consent role="dialog" aria-live="polite" aria-label="Nastaveni cookies" data-mode="summary" hidden>
