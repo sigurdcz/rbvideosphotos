@@ -498,9 +498,9 @@ HTML;
 .theme-editorial-gold [data-block="reviews_cta"] > .btn-secondary:hover,
 .theme-editorial-gold .eg-reviews__cta .btn-secondary:hover,
 .theme-editorial-gold .hp-contact-cta .btn-secondary:hover{
-  background:var(--eg-gold,#c6943d)!important;
+  background:rgba(5,5,5,.88)!important;
   border-color:var(--eg-gold,#c6943d)!important;
-  color:#050505!important;
+  color:var(--eg-gold,#c6943d)!important;
 }
 </style>
 HTML;

@@ -355,9 +355,6 @@ class ThemeTemplateRegistry
 }
 
 .theme-shell .hp-svc-card__btn:hover,
-.theme-shell .hp-section-cta .btn-secondary:hover,
-.theme-shell .eg-reviews__cta .btn-secondary:hover,
-.theme-shell .hp-contact-cta .btn-secondary:hover,
 .theme-shell .btn-primary:hover,
 .theme-shell .btn-success:hover,
 .theme-shell .btn-h--gold:hover,
@@ -370,13 +367,19 @@ class ThemeTemplateRegistry
   color: #111 !important;
 }
 
-/* Homepage section CTA buttons must remain readable on dark sections. */
-.theme-shell .hp-section-cta .btn-secondary,
-.theme-shell .eg-reviews__cta .btn-secondary,
-.theme-shell .hp-contact-cta .btn-secondary,
 .theme-shell .hp-section-cta .btn-secondary:hover,
 .theme-shell .eg-reviews__cta .btn-secondary:hover,
 .theme-shell .hp-contact-cta .btn-secondary:hover {
+  transform: translateY(-1px);
+  background: rgba(0,0,0,.34);
+  border-color: var(--theme-accent, #c4963c);
+  color: var(--theme-accent, #c4963c) !important;
+}
+
+/* Homepage section CTA buttons must remain readable on dark sections. */
+.theme-shell .hp-section-cta .btn-secondary,
+.theme-shell .eg-reviews__cta .btn-secondary,
+.theme-shell .hp-contact-cta .btn-secondary {
   color: #fff !important;
 }
 
