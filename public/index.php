@@ -171,54 +171,148 @@ function injectCookieConsent(string $html): string
         return $html;
     }
 
+    $runtime = '';
+    if (!str_contains($html, 'cmsCookieConsentSettings')) {
+        try {
+            $site = (new SiteRepository())->findFirst();
+            if ($site) {
+                $runtime = (new SeoRenderer())->renderConsentRuntime($site) . "\n";
+            }
+        } catch (\Throwable $e) {
+            Logger::error('cookie-consent', $e->getMessage());
+        }
+    }
+
     $consent = <<<'HTML'
 <style data-cookie-consent>
-.cookie-consent{position:fixed;left:16px;right:16px;bottom:16px;z-index:99999;display:none;max-width:760px;margin:0 auto;padding:16px;border:1px solid rgba(198,148,61,.45);background:rgba(5,5,5,.94);color:#f7f1e8;box-shadow:0 24px 80px rgba(0,0,0,.38);backdrop-filter:blur(12px)}
+.cookie-consent{position:fixed;left:16px;right:16px;bottom:16px;z-index:99999;display:none;max-width:760px;margin:0 auto;padding:16px;border:1px solid rgba(198,148,61,.45);background:rgba(5,5,5,.95);color:#f7f1e8;box-shadow:0 24px 80px rgba(0,0,0,.38);backdrop-filter:blur(12px)}
 .cookie-consent.is-visible{display:block}
-.cookie-consent__grid{display:grid;gap:12px}
+.cookie-consent__grid{display:grid;gap:14px}
 .cookie-consent__label{color:#e0b866;font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase}
 .cookie-consent__title{margin:0;color:#fff;font-family:Georgia,"Times New Roman",serif;font-size:22px;line-height:1.1}
-.cookie-consent__text{margin:0;color:rgba(255,255,255,.72);font-size:14px;line-height:1.55}
+.cookie-consent__text{margin:8px 0 0;color:rgba(255,255,255,.72);font-size:14px;line-height:1.55}
 .cookie-consent__actions{display:flex;flex-wrap:wrap;gap:8px}
 .cookie-consent__btn{min-height:40px;padding:10px 16px;border:1px solid rgba(224,184,102,.62);background:transparent;color:#f7f1e8;font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
 .cookie-consent__btn--accept{background:#c6943d;border-color:#c6943d;color:#050505}
 .cookie-consent__btn:hover{transform:translateY(-1px)}
-@media(min-width:720px){.cookie-consent{left:auto;right:24px;bottom:24px;width:560px}.cookie-consent__grid{grid-template-columns:1fr auto;align-items:end}.cookie-consent__actions{justify-content:flex-end}}
+.cookie-consent__settings{display:none;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.12)}
+.cookie-consent.is-settings .cookie-consent__settings{display:grid;gap:10px}
+.cookie-consent__option{display:grid;gap:5px;padding:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03)}
+.cookie-consent__option label{display:flex;align-items:center;justify-content:space-between;gap:12px;color:#fff;font-size:13px;font-weight:800}
+.cookie-consent__option p{margin:0;color:rgba(255,255,255,.62);font-size:12px;line-height:1.45}
+.cookie-consent__option input{width:auto}
+.cookie-consent-link{display:inline-flex;margin-top:12px;border:0;background:transparent;color:inherit;text-decoration:underline;cursor:pointer;font:inherit}
+@media(min-width:720px){.cookie-consent{left:auto;right:24px;bottom:24px;width:620px}.cookie-consent__grid{grid-template-columns:1fr auto;align-items:end}.cookie-consent__settings{grid-column:1/-1}.cookie-consent__actions{justify-content:flex-end}}
 </style>
 <div class="cookie-consent" data-cookie-consent role="dialog" aria-live="polite" aria-label="Nastaveni cookies">
   <div class="cookie-consent__grid">
     <div>
       <div class="cookie-consent__label">Soukromi</div>
-      <h2 class="cookie-consent__title">Pomuzete nam zlepsovat web?</h2>
-      <p class="cookie-consent__text">Pouzivame jen zakladni analyticke cookies, abychom videli, ktere stranky a ukazky prace lidem opravdu pomahaji. Souhlas muzete odmitnout a web bude fungovat dal.</p>
+      <h2 class="cookie-consent__title">Pouzivame cookies</h2>
+      <p class="cookie-consent__text">Pouzivame cookies k zajisteni spravneho fungovani webu a se souhlasem take k mereni navstevnosti pomocí Google Analytics. Diky tomu vime, co navstevniky zajima, a muzeme web zlepsovat.</p>
     </div>
     <div class="cookie-consent__actions">
-      <button class="cookie-consent__btn" type="button" data-cookie-reject>Odmitnout</button>
-      <button class="cookie-consent__btn cookie-consent__btn--accept" type="button" data-cookie-accept>Povolit</button>
+      <button class="cookie-consent__btn cookie-consent__btn--accept" type="button" data-cookie-accept-all>Prijmout vse</button>
+      <button class="cookie-consent__btn" type="button" data-cookie-reject-all>Odmitnout vse</button>
+      <button class="cookie-consent__btn" type="button" data-cookie-settings>Nastaveni</button>
+    </div>
+    <div class="cookie-consent__settings" data-cookie-settings-panel>
+      <div class="cookie-consent__option">
+        <label>Nezbytne cookies <input type="checkbox" checked disabled></label>
+        <p>Vzdy aktivni. Jsou potreba pro zakladni fungovani webu.</p>
+      </div>
+      <div class="cookie-consent__option">
+        <label>Analyticke cookies <input type="checkbox" data-cookie-category="analytics"></label>
+        <p>Google Analytics a merici nastroje, pouze se souhlasem.</p>
+      </div>
+      <div class="cookie-consent__option">
+        <label>Marketingove cookies <input type="checkbox" data-cookie-category="marketing"></label>
+        <p>Reklamni a remarketingove nastroje, pouze pokud je pouzivame a povolite je.</p>
+      </div>
+      <div class="cookie-consent__actions">
+        <button class="cookie-consent__btn cookie-consent__btn--accept" type="button" data-cookie-save>Ulozit nastaveni</button>
+      </div>
     </div>
   </div>
 </div>
 <script data-cookie-consent>
 (function(){
-  var name='cms_cookie_consent';
-  function getChoice(){return document.cookie.split('; ').find(function(row){return row.indexOf(name+'=')===0;});}
-  function save(value){document.cookie=name+'='+value+'; Max-Age=31536000; Path=/; SameSite=Lax';}
+  var manager=window.cmsCookieConsent||null;
+  var settings=window.cmsCookieConsentSettings||{};
+  var enabled=settings.cookieConsentEnabled!==false;
+  if(!manager){
+    manager=(function(){
+      var key='cookie_consent_preferences';
+      var version='1.0';
+      function getPreferences(){
+        try{
+          var raw=window.localStorage?localStorage.getItem(key):'';
+          if(!raw)return null;
+          var parsed=JSON.parse(raw);
+          if(!parsed||parsed.version!==version)return null;
+          return {necessary:true,analytics:parsed.analytics===true,marketing:parsed.marketing===true,timestamp:parsed.timestamp||new Date().toISOString(),version:version};
+        }catch(e){return null;}
+      }
+      function savePreferences(data){
+        var normalized={necessary:true,analytics:data&&data.analytics===true,marketing:data&&data.marketing===true,timestamp:new Date().toISOString(),version:version};
+        try{if(window.localStorage)localStorage.setItem(key,JSON.stringify(normalized));}catch(e){}
+        document.dispatchEvent(new CustomEvent('cms-cookie-consent:updated',{detail:normalized}));
+        return normalized;
+      }
+      return {getPreferences:getPreferences,savePreferences:savePreferences};
+    })();
+    window.cmsCookieConsent=manager;
+  }
   var box=document.querySelector('[data-cookie-consent]');
-  if(!box||getChoice()) return;
-  box.classList.add('is-visible');
-  var accept=box.querySelector('[data-cookie-accept]');
-  var reject=box.querySelector('[data-cookie-reject]');
-  if(accept) accept.addEventListener('click',function(){save('accepted');box.classList.remove('is-visible');document.dispatchEvent(new CustomEvent('cms-cookie-consent:accepted'));});
-  if(reject) reject.addEventListener('click',function(){save('rejected');box.classList.remove('is-visible');});
+  function pref(){return manager&&manager.getPreferences?manager.getPreferences():null;}
+  function save(data){if(manager&&manager.savePreferences)manager.savePreferences(data);}
+  function hide(){if(box)box.classList.remove('is-visible','is-settings');}
+  function sync(){
+    var p=pref()||{analytics:false,marketing:false};
+    box.querySelectorAll('[data-cookie-category]').forEach(function(input){input.checked=p[input.dataset.cookieCategory]===true;});
+  }
+  function openSettings(){
+    if(!box||!enabled)return;
+    sync();
+    box.classList.add('is-visible','is-settings');
+  }
+  function addFooterLink(){
+    if(!enabled||document.querySelector('[data-cookie-open-settings]'))return;
+    var footer=document.querySelector('.site-footer-rich')||document.querySelector('footer');
+    if(!footer)return;
+    var button=document.createElement('button');
+    button.type='button';
+    button.className='cookie-consent-link';
+    button.dataset.cookieOpenSettings='1';
+    button.textContent='Nastaveni cookies';
+    button.addEventListener('click',openSettings);
+    footer.appendChild(button);
+  }
+  if(!box||!enabled){hide();return;}
+  addFooterLink();
+  if(!pref())box.classList.add('is-visible');
+  var acceptAll=box.querySelector('[data-cookie-accept-all]');
+  var rejectAll=box.querySelector('[data-cookie-reject-all]');
+  var settingsBtn=box.querySelector('[data-cookie-settings]');
+  var saveBtn=box.querySelector('[data-cookie-save]');
+  if(acceptAll)acceptAll.addEventListener('click',function(){save({necessary:true,analytics:true,marketing:true});hide();});
+  if(rejectAll)rejectAll.addEventListener('click',function(){save({necessary:true,analytics:false,marketing:false});hide();});
+  if(settingsBtn)settingsBtn.addEventListener('click',openSettings);
+  if(saveBtn)saveBtn.addEventListener('click',function(){
+    var data={necessary:true,analytics:false,marketing:false};
+    box.querySelectorAll('[data-cookie-category]').forEach(function(input){data[input.dataset.cookieCategory]=input.checked===true;});
+    save(data);
+    hide();
+  });
 })();
 </script>
 HTML;
 
     if (str_contains($html, '</body>')) {
-        return str_replace('</body>', $consent . "\n</body>", $html);
+        return str_replace('</body>', $runtime . $consent . "\n</body>", $html);
     }
 
-    return $html . $consent;
+    return $html . $runtime . $consent;
 }
 
 function sanitizeFrontendHtml(string $html): string

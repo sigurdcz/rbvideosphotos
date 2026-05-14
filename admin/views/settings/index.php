@@ -164,6 +164,16 @@ ob_start();
 
   <div class="card">
     <div class="card-title">Analytics</div>
+    <div class="form-group">
+      <label style="display:flex;align-items:center;gap:8px">
+        <input type="checkbox" name="cookie_consent_enabled" value="1" <?= (int)($site['cookie_consent_enabled'] ?? 1) === 1 ? 'checked' : '' ?> style="width:auto">
+        Cookie consent enabled
+      </label>
+      <p class="help-text" style="margin-top:6px">
+        Pokud je zapnuto, analyticke a marketingove skripty se spusti az po souhlasu uzivatele.
+        Pokud je vypnuto, consent lista se nezobrazi a analytics se nacita automaticky.
+      </p>
+    </div>
     <div class="form-row">
       <div class="form-group">
         <label>Google Analytics ID</label>
@@ -177,7 +187,11 @@ ob_start();
   </div>
 
   <div class="card">
-    <div class="card-title">Vlastni skripty</div>
+    <div class="card-title">Technicky nezbytne skripty</div>
+    <p class="help-text" style="margin-bottom:12px">
+      Sem patri pouze skripty nutne pro fungovani webu. Analytiku, pixely, remarketing,
+      heatmapy nebo podobne nastroje vkladej do sekci nize podle kategorie souhlasu.
+    </p>
     <div class="form-group">
       <label>Skript do &lt;head&gt;</label>
       <textarea class="code" name="head_scripts" rows="5"><?= $h($site['head_scripts'] ?? '') ?></textarea>
@@ -185,6 +199,38 @@ ob_start();
     <div class="form-group">
       <label>Skript pred &lt;/body&gt;</label>
       <textarea class="code" name="body_scripts" rows="5"><?= $h($site['body_scripts'] ?? '') ?></textarea>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Analyticke skripty</div>
+    <p class="help-text" style="margin-bottom:12px">
+      Google Analytics, Hotjar, Clarity nebo podobne merici nastroje. Pri zapnute consent liste
+      se spusti pouze po povoleni kategorie Analyticke cookies.
+    </p>
+    <div class="form-group">
+      <label>Analytika do &lt;head&gt;</label>
+      <textarea class="code" name="analytics_head_scripts" rows="5"><?= $h($site['analytics_head_scripts'] ?? '') ?></textarea>
+    </div>
+    <div class="form-group">
+      <label>Analytika pred &lt;/body&gt;</label>
+      <textarea class="code" name="analytics_body_scripts" rows="5"><?= $h($site['analytics_body_scripts'] ?? '') ?></textarea>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Marketingove skripty</div>
+    <p class="help-text" style="margin-bottom:12px">
+      Meta Pixel, Google Ads remarketing, TikTok Pixel a dalsi reklamni nebo remarketingove nastroje.
+      Pri zapnute consent liste se spusti pouze po povoleni kategorie Marketingove cookies.
+    </p>
+    <div class="form-group">
+      <label>Marketing do &lt;head&gt;</label>
+      <textarea class="code" name="marketing_head_scripts" rows="5"><?= $h($site['marketing_head_scripts'] ?? '') ?></textarea>
+    </div>
+    <div class="form-group">
+      <label>Marketing pred &lt;/body&gt;</label>
+      <textarea class="code" name="marketing_body_scripts" rows="5"><?= $h($site['marketing_body_scripts'] ?? '') ?></textarea>
     </div>
   </div>
 

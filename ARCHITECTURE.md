@@ -150,9 +150,13 @@ Každá stránka může mít vlastní blok `hero_video`. Do tohoto bloku se ukl�
 
 ### Cookie consent a analytika
 
-Verejny frontend injektuje cookie consent pres `public/index.php` pri sanitizaci vystupniho HTML. Volba se uklada do browser cookie `cms_cookie_consent` s hodnotou `accepted` nebo `rejected`.
+Verejny frontend injektuje cookie consent pres `public/index.php` pri sanitizaci vystupniho HTML. Globalni prepinac je `sites.cookie_consent_enabled`.
 
-`SeoRenderer` nesmi nacitat Google Analytics ani Google Tag Manager pred souhlasem uzivatele. GA/GTM skripty se proto vkladaji jako gated loader, ktery se spusti pouze pokud cookie obsahuje `cms_cookie_consent=accepted`, nebo po udalosti `cms-cookie-consent:accepted`.
+Rozhodnuti uzivatele se uklada do `localStorage` pod klicem `cookie_consent_preferences` ve strukturach `necessary`, `analytics`, `marketing`, `timestamp` a `version`. Kategorie `necessary` je vzdy aktivni. Kategorie `analytics` a `marketing` jsou pri zapnute consent liste vypnute, dokud je uzivatel nepovoli.
+
+`SeoRenderer` nesmi nacitat Google Analytics, Google Tag Manager ani kategorizovane analyticke/marketingove skripty pred souhlasem uzivatele. GA se spousti pouze po povoleni `analytics`. GTM a skripty v polich `marketing_head_scripts` / `marketing_body_scripts` se spousti po povoleni `marketing`. Puvodni `head_scripts` a `body_scripts` jsou urcene jen pro technicky nezbytne skripty.
+
+Pokud je `cookie_consent_enabled = 0`, consent modal se nezobrazi a analyticke/marketingove loadery se chovaji jako povolene podle globalniho nastaveni webu.
 
 ---
 
