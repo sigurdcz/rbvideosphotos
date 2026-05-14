@@ -90,16 +90,12 @@
     var infoBox = qs('.hp-contact-box', section);
     var lines = infoBox ? infoBox.innerHTML : '';
     var contactLink = qs('a[href="/kontakt"]', section);
-    var socials = Array.prototype.slice.call(document.querySelectorAll('.site-footer-social')).slice(0, 3).map(function (link) {
-      return link.outerHTML;
-    }).join('');
     var band = document.createElement('div');
     band.className = 'eg-contact-band';
     band.innerHTML =
       '<div class="eg-contact-band__photo" aria-hidden="true"></div>' +
-      '<div class="eg-contact-band__copy"><p class="section-label">Kontakt</p><h2>Pojdme vytvorit<br><span>neco krasneho</span></h2><p>Nevahajte se nam ozvat. Pripravime nabidku na miru.</p></div>' +
-      '<div class="eg-contact-band__info">' + lines + '</div>' +
-      '<div class="eg-contact-band__actions"><a class="btn-primary" href="' + (contactLink ? contactLink.href : '/kontakt') + '">Kontakt</a>' + socials + '</div>';
+      '<div class="eg-contact-band__copy"><p class="section-label">Kontakt</p><h2>Pojdme vytvorit<br><span>neco krasneho</span></h2><p>Nevahajte se nam ozvat. Pripravime nabidku na miru.</p>' +
+      '<div class="eg-contact-band__info">' + lines + '</div></div>';
     var container = qs('.container', section);
     if (container) {
       Array.prototype.slice.call(container.children).forEach(function (child) {

@@ -681,8 +681,26 @@ echo "FAQ položky vytvořeny.\n";
 // ─── Kontaktní informace ──────────────────────────────────────────────────────
 
 $pdo->exec("DELETE FROM contact_info WHERE site_id = {$siteId}");
-$pdo->prepare('INSERT INTO contact_info (site_id, email, form_email) VALUES (?, ?, ?)')
-    ->execute([$siteId, 'info@priklad.cz', 'info@priklad.cz']);
+$pdo->prepare('
+    INSERT INTO contact_info (
+        site_id, phone_1, phone_2, email, form_email,
+        social_1_type, social_1_url,
+        social_2_type, social_2_url,
+        social_3_type, social_3_url
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+')->execute([
+    $siteId,
+    '+420704182130',
+    '704182130',
+    'sigurd.gnezdilov@gmail.com',
+    'sigurd.gnezdilov@gmail.com',
+    'instagram',
+    'https://www.instagram.com/rb_videos_photos/',
+    'facebook',
+    'https://www.facebook.com/rbvideosandphotos',
+    'youtube',
+    'https://www.youtube.com/channel/UC5miHVzPxIs2MjEsoPAzGCw',
+]);
 echo "Kontaktní informace vytvořeny.\n";
 
 // ─── Publikovat ───────────────────────────────────────────────────────────────
