@@ -185,10 +185,9 @@ function injectCookieConsent(string $html): string
 
     $consent = <<<'HTML'
 <style data-cookie-consent>
-.cookie-consent-backdrop{position:fixed;inset:0;z-index:99998;display:none;background:rgba(0,0,0,.56);backdrop-filter:blur(8px)}
-.cookie-consent-backdrop.is-visible{display:block}
-.cookie-consent{position:fixed;left:16px;right:16px;top:50%;z-index:99999;display:none;max-width:760px;margin:0 auto;padding:16px;border:1px solid rgba(198,148,61,.45);background:rgba(5,5,5,.96);color:#f7f1e8;box-shadow:0 24px 80px rgba(0,0,0,.38);backdrop-filter:blur(12px);transform:translateY(-50%)}
-.cookie-consent.is-visible{display:block}
+.cookie-consent-backdrop[hidden],.cookie-consent[hidden]{display:none!important}
+.cookie-consent-backdrop{position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,.56);backdrop-filter:blur(8px)}
+.cookie-consent{position:fixed;left:16px;right:16px;top:50%;z-index:99999;max-width:760px;margin:0 auto;padding:16px;border:1px solid rgba(198,148,61,.45);background:rgba(5,5,5,.96);color:#f7f1e8;box-shadow:0 24px 80px rgba(0,0,0,.38);backdrop-filter:blur(12px);transform:translateY(-50%)}
 .cookie-consent__grid{display:grid;gap:14px}
 .cookie-consent__label{color:#e0b866;font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase}
 .cookie-consent__title{margin:0;color:#fff;font-family:Georgia,"Times New Roman",serif;font-size:22px;line-height:1.1}
@@ -198,7 +197,7 @@ function injectCookieConsent(string $html): string
 .cookie-consent__btn--accept{background:#c6943d;border-color:#c6943d;color:#050505}
 .cookie-consent__btn:hover{transform:translateY(-1px)}
 .cookie-consent__settings{display:none;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.12)}
-.cookie-consent.is-settings .cookie-consent__settings{display:grid;gap:10px}
+.cookie-consent[data-mode="settings"] .cookie-consent__settings{display:grid;gap:10px}
 .cookie-consent__option{display:grid;gap:5px;padding:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03)}
 .cookie-consent__option label{display:flex;align-items:center;justify-content:space-between;gap:12px;color:#fff;font-size:13px;font-weight:800}
 .cookie-consent__option p{margin:0;color:rgba(255,255,255,.62);font-size:12px;line-height:1.45}
@@ -206,8 +205,8 @@ function injectCookieConsent(string $html): string
 .cookie-consent-link{display:inline-flex;margin-top:12px;border:0;background:transparent;color:inherit;text-decoration:underline;cursor:pointer;font:inherit}
 @media(min-width:720px){.cookie-consent{width:min(620px,calc(100vw - 48px))}.cookie-consent__grid{grid-template-columns:1fr auto;align-items:end}.cookie-consent__settings{grid-column:1/-1}.cookie-consent__actions{justify-content:flex-end}}
 </style>
-<div class="cookie-consent-backdrop" data-cookie-consent-backdrop></div>
-<div class="cookie-consent" data-cookie-consent role="dialog" aria-live="polite" aria-label="Nastaveni cookies">
+<div class="cookie-consent-backdrop" data-cookie-consent-backdrop hidden></div>
+<div class="cookie-consent" data-cookie-consent role="dialog" aria-live="polite" aria-label="Nastaveni cookies" data-mode="summary" hidden>
   <div class="cookie-consent__grid">
     <div>
       <div class="cookie-consent__label">Soukromi</div>
@@ -240,98 +239,173 @@ function injectCookieConsent(string $html): string
 </div>
 <script data-cookie-consent>
 (function(){
-  var manager=window.cmsCookieConsent||null;
   var settings=window.cmsCookieConsentSettings||{};
   var enabled=settings.cookieConsentEnabled!==false;
   var analyticsCategoryEnabled=settings.analyticsCategoryEnabled!==false;
   var marketingCategoryEnabled=settings.marketingCategoryEnabled!==false;
-  if(!manager){
-    manager=(function(){
-      var key='cookie_consent_preferences';
-      var version='1.0';
-      function getPreferences(){
-        try{
-          var raw=window.localStorage?localStorage.getItem(key):'';
-          if(!raw)return null;
-          var parsed=JSON.parse(raw);
-          if(!parsed||parsed.version!==version)return null;
-          return {necessary:true,analytics:analyticsCategoryEnabled&&parsed.analytics===true,marketing:marketingCategoryEnabled&&parsed.marketing===true,timestamp:parsed.timestamp||new Date().toISOString(),version:version};
-        }catch(e){return null;}
-      }
-      function savePreferences(data){
-        var normalized={necessary:true,analytics:analyticsCategoryEnabled&&data&&data.analytics===true,marketing:marketingCategoryEnabled&&data&&data.marketing===true,timestamp:new Date().toISOString(),version:version};
-        try{if(window.localStorage)localStorage.setItem(key,JSON.stringify(normalized));}catch(e){}
-        document.dispatchEvent(new CustomEvent('cms-cookie-consent:updated',{detail:normalized}));
-        return normalized;
-      }
-      return {getPreferences:getPreferences,savePreferences:savePreferences};
-    })();
+
+  function createFallbackManager(){
+    var key='cookie_consent_preferences';
+    var version='1.0';
+    function getPreferences(){
+      try{
+        var raw=window.localStorage?window.localStorage.getItem(key):'';
+        if(!raw)return null;
+        var parsed=JSON.parse(raw);
+        if(!parsed||parsed.version!==version)return null;
+        return {
+          necessary:true,
+          analytics:analyticsCategoryEnabled&&parsed.analytics===true,
+          marketing:marketingCategoryEnabled&&parsed.marketing===true,
+          timestamp:parsed.timestamp||new Date().toISOString(),
+          version:version
+        };
+      }catch(e){return null;}
+    }
+    function savePreferences(data){
+      var normalized={
+        necessary:true,
+        analytics:analyticsCategoryEnabled&&data&&data.analytics===true,
+        marketing:marketingCategoryEnabled&&data&&data.marketing===true,
+        timestamp:new Date().toISOString(),
+        version:version
+      };
+      try{
+        if(window.localStorage)window.localStorage.setItem(key,JSON.stringify(normalized));
+      }catch(e){}
+      document.dispatchEvent(new CustomEvent('cms-cookie-consent:updated',{detail:normalized}));
+      return normalized;
+    }
+    return {getPreferences:getPreferences,savePreferences:savePreferences};
+  }
+
+  function initConsent(){
+    var manager=window.cmsCookieConsent||createFallbackManager();
     window.cmsCookieConsent=manager;
-  }
-  var box=document.querySelector('[data-cookie-consent]');
-  var backdrop=document.querySelector('[data-cookie-consent-backdrop]');
-  function pref(){return manager&&manager.getPreferences?manager.getPreferences():null;}
-  function save(data){if(manager&&manager.savePreferences)manager.savePreferences(data);}
-  function show(){if(box)box.classList.add('is-visible');if(backdrop)backdrop.classList.add('is-visible');}
-  function hide(){if(box)box.classList.remove('is-visible','is-settings');if(backdrop)backdrop.classList.remove('is-visible');}
-  function sync(){
-    var p=pref()||{analytics:false,marketing:false};
-    box.querySelectorAll('[data-cookie-category]').forEach(function(input){input.checked=p[input.dataset.cookieCategory]===true;});
-  }
-  function syncCategoryVisibility(){
-    var analyticsRow=box.querySelector('[data-cookie-option="analytics"]');
-    var marketingRow=box.querySelector('[data-cookie-option="marketing"]');
-    if(analyticsRow) analyticsRow.style.display=analyticsCategoryEnabled?'':'none';
-    if(marketingRow) marketingRow.style.display=marketingCategoryEnabled?'':'none';
-  }
-  function openSettings(){
-    if(!box||!enabled)return;
-    sync();
-    syncCategoryVisibility();
-    show();
-    box.classList.add('is-settings');
-  }
-  function bindOpeners(scope){
-    (scope||document).querySelectorAll('[data-cookie-open-settings]').forEach(function(el){
-      if(el.dataset.cookieBound==='1') return;
-      el.dataset.cookieBound='1';
-      el.addEventListener('click',function(e){
-        e.preventDefault();
+
+    var box=document.querySelector('[data-cookie-consent]');
+    var backdrop=document.querySelector('[data-cookie-consent-backdrop]');
+    if(!box||!backdrop||!enabled){
+      if(box)box.hidden=true;
+      if(backdrop)backdrop.hidden=true;
+      return;
+    }
+
+    var acceptAll=box.querySelector('[data-cookie-accept-all]');
+    var rejectAll=box.querySelector('[data-cookie-reject-all]');
+    var settingsBtn=box.querySelector('[data-cookie-settings]');
+    var saveBtn=box.querySelector('[data-cookie-save]');
+
+    function pref(){return manager&&manager.getPreferences?manager.getPreferences():null;}
+    function save(data){if(manager&&manager.savePreferences)manager.savePreferences(data);}
+    function sync(){
+      var p=pref()||{analytics:false,marketing:false};
+      box.querySelectorAll('[data-cookie-category]').forEach(function(input){
+        input.checked=p[input.dataset.cookieCategory]===true;
+      });
+    }
+    function syncCategoryVisibility(){
+      var analyticsRow=box.querySelector('[data-cookie-option="analytics"]');
+      var marketingRow=box.querySelector('[data-cookie-option="marketing"]');
+      if(analyticsRow) analyticsRow.hidden=!analyticsCategoryEnabled;
+      if(marketingRow) marketingRow.hidden=!marketingCategoryEnabled;
+    }
+    function show(mode){
+      sync();
+      syncCategoryVisibility();
+      box.dataset.mode=mode||'summary';
+      box.hidden=false;
+      backdrop.hidden=false;
+    }
+    function hide(){
+      box.hidden=true;
+      backdrop.hidden=true;
+      box.dataset.mode='summary';
+    }
+    function openSettings(){
+      show('settings');
+    }
+    function bindOpeners(scope){
+      (scope||document).querySelectorAll('[data-cookie-open-settings]').forEach(function(el){
+        if(el.dataset.cookieBound==='1') return;
+        el.dataset.cookieBound='1';
+        el.addEventListener('click',function(e){
+          e.preventDefault();
+          openSettings();
+        });
+      });
+    }
+    function addFooterLink(){
+      if(document.querySelector('.cookie-consent-link[data-cookie-open-settings]'))return;
+      var footer=document.querySelector('.site-footer-rich')||document.querySelector('footer');
+      if(!footer)return;
+      var button=document.createElement('button');
+      button.type='button';
+      button.className='cookie-consent-link';
+      button.dataset.cookieOpenSettings='1';
+      button.textContent='Nastaveni cookies';
+      footer.appendChild(button);
+      bindOpeners(footer);
+    }
+
+    addFooterLink();
+    bindOpeners(document);
+
+    if(backdrop.dataset.cookieBound!=='1'){
+      backdrop.dataset.cookieBound='1';
+      backdrop.addEventListener('click',hide);
+    }
+    if(acceptAll&&acceptAll.dataset.cookieBound!=='1'){
+      acceptAll.dataset.cookieBound='1';
+      acceptAll.addEventListener('click',function(){
+        save({necessary:true,analytics:true,marketing:true});
+        hide();
+      });
+    }
+    if(rejectAll&&rejectAll.dataset.cookieBound!=='1'){
+      rejectAll.dataset.cookieBound='1';
+      rejectAll.addEventListener('click',function(){
+        save({necessary:true,analytics:false,marketing:false});
+        hide();
+      });
+    }
+    if(settingsBtn&&settingsBtn.dataset.cookieBound!=='1'){
+      settingsBtn.dataset.cookieBound='1';
+      settingsBtn.addEventListener('click',function(){
         openSettings();
       });
-    });
+    }
+    if(saveBtn&&saveBtn.dataset.cookieBound!=='1'){
+      saveBtn.dataset.cookieBound='1';
+      saveBtn.addEventListener('click',function(){
+        var data={necessary:true,analytics:false,marketing:false};
+        box.querySelectorAll('[data-cookie-category]').forEach(function(input){
+          data[input.dataset.cookieCategory]=input.checked===true;
+        });
+        save(data);
+        hide();
+      });
+    }
+
+    if(document.documentElement.dataset.cookieEscBound!=='1'){
+      document.documentElement.dataset.cookieEscBound='1';
+      document.addEventListener('keydown',function(e){
+        if(e.key==='Escape'&&!box.hidden)hide();
+      });
+    }
+
+    if(!pref()){
+      openSettings();
+    } else {
+      hide();
+    }
   }
-  function addFooterLink(){
-    if(!enabled||document.querySelector('.cookie-consent-link[data-cookie-open-settings]'))return;
-    var footer=document.querySelector('.site-footer-rich')||document.querySelector('footer');
-    if(!footer)return;
-    var button=document.createElement('button');
-    button.type='button';
-    button.className='cookie-consent-link';
-    button.dataset.cookieOpenSettings='1';
-    button.textContent='Nastaveni cookies';
-    footer.appendChild(button);
-    bindOpeners(footer);
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded', initConsent, {once:true});
+  } else {
+    initConsent();
   }
-  if(!box||!enabled){hide();return;}
-  syncCategoryVisibility();
-  addFooterLink();
-  bindOpeners();
-  if(backdrop)backdrop.addEventListener('click',hide);
-  if(!pref())openSettings();
-  var acceptAll=box.querySelector('[data-cookie-accept-all]');
-  var rejectAll=box.querySelector('[data-cookie-reject-all]');
-  var settingsBtn=box.querySelector('[data-cookie-settings]');
-  var saveBtn=box.querySelector('[data-cookie-save]');
-  if(acceptAll)acceptAll.addEventListener('click',function(){save({necessary:true,analytics:true,marketing:true});hide();});
-  if(rejectAll)rejectAll.addEventListener('click',function(){save({necessary:true,analytics:false,marketing:false});hide();});
-  if(settingsBtn)settingsBtn.addEventListener('click',openSettings);
-  if(saveBtn)saveBtn.addEventListener('click',function(){
-    var data={necessary:true,analytics:false,marketing:false};
-    box.querySelectorAll('[data-cookie-category]').forEach(function(input){data[input.dataset.cookieCategory]=input.checked===true;});
-    save(data);
-    hide();
-  });
 })();
 </script>
 HTML;
