@@ -1928,7 +1928,10 @@ function tryServeKontaktPage(): bool
     }
 
     $h         = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
-    $siteName  = (string)($site['name'] ?? 'Erbez Photos Videos');
+    $siteName  = trim((string)($site['name'] ?? ''));
+    if ($siteName === '' || preg_match('~erbez~i', $siteName)) {
+        $siteName = 'RB Videos and Photos';
+    }
     $heroTitle = 'Kontakt';
     $heroSub   = 'Ozvěte se nám. Rádi odpovíme na vaše otázky.';
 
@@ -1960,7 +1963,7 @@ function tryServeKontaktPage(): bool
     // Contact details block
     $detailsHtml = '<div class="ci-brand">'
         . '<div class="ci-brand__label">Ozvěte se</div>'
-        . '<div class="ci-brand__name">Erbez Photos Videos</div>'
+        . '<div class="ci-brand__name">' . $h($siteName) . '</div>'
         . '<div class="ci-brand__sub">Svatební fotografie a video • Olomouc • celá ČR</div>'
         . '</div>';
     if (!empty($contact['phone_1'])) {
@@ -2006,10 +2009,6 @@ function tryServeKontaktPage(): bool
         $detailsHtml .= '<div class="ci-socials">' . $socialsHtml . '</div>';
     }
 
-    $detailsHtml .= '<div class="ci-links">'
-        . '<a href="/kontakt" class="ci-link-btn">Kontakt</a>'
-        . '</div>';
-
     if (!$detailsHtml) {
         $detailsHtml = '<p style="color:rgba(255,255,255,.4)">Kontaktní informace zatím nejsou vyplněny.</p>';
     }
@@ -2039,9 +2038,6 @@ body{background:#111;color:#fff}
 .ci-socials{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
 .ci-social{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#1f1f26;border-radius:8px;color:#fff;text-decoration:none;font-size:.9rem}
 .ci-social:hover{background:#c4963c}
-.ci-links{margin-top:18px;display:flex;flex-wrap:wrap;gap:10px}
-.ci-link-btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 16px;border:1px solid rgba(196,150,60,.5);border-radius:8px;color:#fff;text-decoration:none;font-weight:700}
-.ci-link-btn:hover{background:#c4963c;color:#111}
 .btn-maps{display:inline-flex;align-items:center;gap:8px;margin-top:20px;padding:12px 22px;background:#c4963c;color:#fff;border-radius:8px;text-decoration:none;font-weight:700}
 .btn-maps:hover{opacity:.9}
 .kt-form-block input,.kt-form-block textarea,.kt-form-block select{width:100%;background:#111;border:1px solid rgba(255,255,255,.12);color:#fff;padding:12px 14px;border-radius:8px;font-size:.95rem;font-family:inherit;margin-bottom:14px}
