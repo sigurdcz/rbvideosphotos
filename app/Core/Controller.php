@@ -6,6 +6,12 @@ abstract class Controller
 {
     protected function view(string $template, array $data = []): void
     {
+        if (!array_key_exists('success', $data)) {
+            $data['success'] = $this->getFlash('success');
+        }
+        if (!array_key_exists('error', $data)) {
+            $data['error'] = $this->getFlash('error');
+        }
         $data['_user']      = Auth::user();
         $data['_csrfToken'] = Auth::csrfToken();
         View::render($template, $data);

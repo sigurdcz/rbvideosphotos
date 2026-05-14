@@ -10,6 +10,9 @@
 <?php $requestUri = $_SERVER['REQUEST_URI'] ?? ''; ?>
 <?php $homepageEditUrl = '/'; ?>
 <?php $homepagePreviewUrl = '/?cms_preview=1'; ?>
+<div class="admin-loading-bar" data-admin-loading-bar aria-hidden="true">
+  <div class="admin-loading-bar__progress" data-admin-loading-bar-progress></div>
+</div>
 <div class="layout">
   <nav class="sidebar">
     <div class="sidebar-logo">SEO CMS</div>
@@ -50,12 +53,14 @@
       </div>
     </header>
     <main class="content">
-      <?php if (!empty($success)): ?>
-        <div class="alert alert-success"><?= htmlspecialchars($success) ?></div>
-      <?php endif; ?>
-      <?php if (!empty($error)): ?>
-        <div class="alert alert-error"><?= htmlspecialchars($error) ?></div>
-      <?php endif; ?>
+      <div class="flash-stack">
+        <?php if (!empty($success)): ?>
+          <div class="alert alert-success"><?= htmlspecialchars($success) ?></div>
+        <?php endif; ?>
+        <?php if (!empty($error)): ?>
+          <div class="alert alert-error"><?= htmlspecialchars($error) ?></div>
+        <?php endif; ?>
+      </div>
       <?= $slot ?? '' ?>
     </main>
   </div>

@@ -2,6 +2,72 @@
 
 // Tabs
 document.addEventListener('DOMContentLoaded', () => {
+  const loadingBar = document.querySelector('[data-admin-loading-bar]');
+  const loadingProgress = document.querySelector('[data-admin-loading-bar-progress]');
+  let loadingTimer = null;
+  let currentProgress = 0;
+
+  const setLoadingProgress = value => {
+    if (!loadingProgress) return;
+    currentProgress = Math.max(0, Math.min(100, value));
+    loadingProgress.style.width = currentProgress + '%';
+  };
+
+  const stopLoading = () => {
+    if (!loadingBar || !loadingProgress) return;
+    if (loadingTimer) {
+      window.clearInterval(loadingTimer);
+      loadingTimer = null;
+    }
+    setLoadingProgress(100);
+    window.setTimeout(() => {
+      loadingBar.classList.remove('is-active');
+      setLoadingProgress(0);
+    }, 180);
+  };
+
+  const startLoading = () => {
+    if (!loadingBar || !loadingProgress) return;
+    if (loadingTimer) {
+      window.clearInterval(loadingTimer);
+    }
+    loadingBar.classList.add('is-active');
+    setLoadingProgress(12);
+    loadingTimer = window.setInterval(() => {
+      if (currentProgress < 82) {
+        setLoadingProgress(currentProgress + (currentProgress < 40 ? 10 : 4));
+      }
+    }, 180);
+  };
+
+  document.querySelectorAll('form').forEach(form => {
+    form.addEventListener('submit', e => {
+      window.setTimeout(() => {
+        if (!e.defaultPrevented) startLoading();
+      }, 0);
+    });
+  });
+
+  document.querySelectorAll('a[href]').forEach(link => {
+    link.addEventListener('click', e => {
+      const href = link.getAttribute('href') || '';
+      if (
+        e.defaultPrevented ||
+        href === '' ||
+        href.startsWith('#') ||
+        link.hasAttribute('download') ||
+        link.getAttribute('target') === '_blank' ||
+        e.metaKey || e.ctrlKey || e.shiftKey || e.altKey
+      ) {
+        return;
+      }
+      startLoading();
+    });
+  });
+
+  window.addEventListener('pageshow', stopLoading);
+  window.addEventListener('load', stopLoading);
+
   document.querySelectorAll('.tabs').forEach(tabs => {
     tabs.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
