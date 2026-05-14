@@ -1820,3 +1820,27 @@ body.theme-editorial-gold {
   .theme-editorial-gold .eg-contact-band__copy{padding:30px 22px}
   .theme-editorial-gold .eg-contact-band__info{grid-template-columns:1fr}
 }
+
+/* Last safety override: generated section CTA buttons are outlined dark buttons, so text must stay light. */
+.theme-editorial-gold .hp-section-cta > a.btn-secondary,
+.theme-editorial-gold .hp-section-cta .btn-secondary,
+.theme-editorial-gold .hp-contact-cta > a.btn-secondary,
+.theme-editorial-gold .hp-contact-cta .btn-secondary,
+.theme-editorial-gold .eg-contact-band__info .hp-contact-cta > a.btn-secondary,
+.theme-editorial-gold .eg-contact-band__info .hp-contact-cta .btn-secondary {
+  background: rgba(5, 5, 5, .72) !important;
+  border-color: rgba(224, 184, 102, .68) !important;
+  color: #f7f1e8 !important;
+  text-shadow: none !important;
+}
+
+.theme-editorial-gold .hp-section-cta > a.btn-secondary:hover,
+.theme-editorial-gold .hp-section-cta .btn-secondary:hover,
+.theme-editorial-gold .hp-contact-cta > a.btn-secondary:hover,
+.theme-editorial-gold .hp-contact-cta .btn-secondary:hover,
+.theme-editorial-gold .eg-contact-band__info .hp-contact-cta > a.btn-secondary:hover,
+.theme-editorial-gold .eg-contact-band__info .hp-contact-cta .btn-secondary:hover {
+  background: var(--eg-gold) !important;
+  border-color: var(--eg-gold) !important;
+  color: #050505 !important;
+}
