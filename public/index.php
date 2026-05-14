@@ -915,9 +915,10 @@ function buildFooterSocialsHtml(int $siteId): string
         . '.site-footer-socials{margin-top:24px;padding-top:24px;border-top:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;gap:14px;align-items:center}'
         . '.site-footer-socials__label{font-size:.76rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.45)}'
         . '.site-footer-socials__list{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}'
-        . '.site-footer-social{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;padding:0;border-radius:999px;background:#1c1c22;color:#fff;text-decoration:none;transition:transform .2s,background .2s}'
-        . '.site-footer-social:hover{transform:translateY(-1px);background:#c4963c;color:#111}'
-        . '.site-footer-social__icon{display:grid;place-items:center;line-height:1}.site-footer-social__icon svg{width:18px;height:18px;fill:currentColor;stroke:currentColor;stroke-width:1.6}'
+        . '.site-footer-social{--social:#c6943d;display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;padding:0;border:1px solid rgba(255,255,255,.14);border-radius:999px;background:#1c1c22;color:#f3efe7;text-decoration:none;transition:transform .2s,border-color .2s,color .2s}'
+        . '.site-footer-social:hover{transform:translateY(-1px);border-color:rgba(255,255,255,.3);color:var(--social)}'
+        . '.site-footer-social__icon{display:grid;place-items:center;line-height:1;transition:color .2s,transform .2s}.site-footer-social:hover .site-footer-social__icon{transform:scale(1.06)}.site-footer-social__icon svg{width:18px;height:18px;fill:currentColor;stroke:currentColor;stroke-width:1.6}'
+        . '.site-footer-social--instagram{--social:#e4405f}.site-footer-social--facebook{--social:#1877f2}.site-footer-social--youtube{--social:#ff0033}.site-footer-social--tiktok{--social:#00f2ea}.site-footer-social--linkedin{--social:#0a66c2}.site-footer-social--twitter{--social:#fff}.site-footer-social--pinterest{--social:#bd081c}.site-footer-social--whatsapp{--social:#25d366}.site-footer-social--telegram{--social:#229ed9}'
         . '</style>'
         . '<div class="site-footer-socials">'
         . '<div class="site-footer-socials__label">Sociální sítě</div>'
@@ -929,7 +930,7 @@ function buildRichFooterHtml(int $siteId): string
 {
     $contact = (new ContactRepository())->findBySiteSafe($siteId);
     $site = (new SiteRepository())->findById($siteId) ?? [];
-    $siteName = (string)($site['name'] ?? 'Muj web');
+    $siteName = (string)($site['name'] ?? 'RB Videos & Photos');
     $logoUrl = normalizePublicAssetUrl((string)($site['logo_url'] ?? ''));
     $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
 
@@ -974,7 +975,7 @@ function buildRichFooterHtml(int $siteId): string
         . 'footer .site-footer-rich,.theme-footer .site-footer-rich,.site-footer .site-footer-rich{width:100%;max-width:1180px;margin:0 auto;padding:0;display:grid;grid-template-columns:minmax(220px,.85fr) minmax(300px,1fr) minmax(220px,.75fr);gap:34px;align-items:start;text-align:left}'
         . '.site-footer-brand{display:flex;flex-direction:column;gap:12px;align-items:flex-start}.site-footer-brand__logoBox{display:inline-flex;align-items:center;justify-content:center;min-width:74px;min-height:58px;padding:9px 12px;border:1px solid rgba(198,148,61,.7);background:rgba(0,0,0,.45);box-shadow:0 14px 32px rgba(198,148,61,.12)}.site-footer-brand__logo{max-height:42px;max-width:220px;width:auto;height:auto;object-fit:contain}.site-footer-brand__mark{display:inline-grid;place-items:center;width:54px;height:54px;border:1px solid rgba(198,148,61,.55);color:#c6943d;font-family:Georgia,serif;font-weight:800;font-size:20px;letter-spacing:.08em;text-transform:uppercase}.site-footer-brand__name{color:#f3efe7;font-family:Georgia,serif;font-size:22px;line-height:1.1}.site-footer-brand__note{color:rgba(255,255,255,.52);font-size:13px;line-height:1.65}'
         . '.site-footer-contact{display:grid;gap:9px}.site-footer-title{margin:0 0 12px;color:#c6943d;font-size:11px;font-weight:900;letter-spacing:.18em;text-transform:uppercase}.site-footer-contact__item{display:grid;grid-template-columns:86px minmax(0,1fr);gap:14px;align-items:baseline;color:#f3efe7;text-decoration:none}.site-footer-contact__item span{color:rgba(255,255,255,.44);font-size:11px;text-transform:uppercase;letter-spacing:.12em;white-space:nowrap}.site-footer-contact__item strong{min-width:0;font-size:14px;line-height:1.45;font-weight:800;word-break:break-word}'
-        . '.site-footer-socials{display:flex;flex-direction:column;gap:14px;align-items:flex-start}.site-footer-socials__list{display:flex;flex-wrap:wrap;gap:10px}.site-footer-social{--social:#c6943d;display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;padding:0;border:1px solid rgba(255,255,255,.14);border-radius:999px;background:rgba(255,255,255,.03);color:#fff;text-decoration:none;transition:transform .2s,border-color .2s,background .2s,color .2s}.site-footer-social:hover{transform:translateY(-1px);border-color:var(--social);background:var(--social);color:#080808}.site-footer-social__icon{display:grid;place-items:center;line-height:1}.site-footer-social__icon svg{width:17px;height:17px;fill:currentColor;stroke:currentColor;stroke-width:1.6}.site-footer-social--instagram{--social:#e4405f}.site-footer-social--facebook{--social:#1877f2}.site-footer-social--youtube{--social:#ff0033}.site-footer-social--tiktok{--social:#00f2ea}.site-footer-social--linkedin{--social:#0a66c2}.site-footer-social--twitter{--social:#fff}.site-footer-social--pinterest{--social:#bd081c}.site-footer-social--whatsapp{--social:#25d366}.site-footer-social--telegram{--social:#229ed9}.site-footer-bottom{grid-column:1/-1;margin-top:4px;padding-top:20px;border-top:1px solid rgba(255,255,255,.09);color:rgba(255,255,255,.36);font-size:12px;text-align:left}'
+        . '.site-footer-socials{display:flex;flex-direction:column;gap:14px;align-items:flex-start}.site-footer-socials__list{display:flex;flex-wrap:wrap;gap:10px}.site-footer-social{--social:#c6943d;display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;padding:0;border:1px solid rgba(255,255,255,.14);border-radius:999px;background:rgba(255,255,255,.03);color:#f3efe7;text-decoration:none;transition:transform .2s,border-color .2s,color .2s}.site-footer-social:hover{transform:translateY(-1px);border-color:rgba(255,255,255,.3);color:var(--social)}.site-footer-social__icon{display:grid;place-items:center;line-height:1;transition:color .2s,transform .2s}.site-footer-social:hover .site-footer-social__icon{transform:scale(1.06)}.site-footer-social__icon svg{width:17px;height:17px;fill:currentColor;stroke:currentColor;stroke-width:1.6}.site-footer-social--instagram{--social:#e4405f}.site-footer-social--facebook{--social:#1877f2}.site-footer-social--youtube{--social:#ff0033}.site-footer-social--tiktok{--social:#00f2ea}.site-footer-social--linkedin{--social:#0a66c2}.site-footer-social--twitter{--social:#fff}.site-footer-social--pinterest{--social:#bd081c}.site-footer-social--whatsapp{--social:#25d366}.site-footer-social--telegram{--social:#229ed9}.site-footer-bottom{grid-column:1/-1;margin-top:4px;padding-top:20px;border-top:1px solid rgba(255,255,255,.09);color:rgba(255,255,255,.36);font-size:12px;text-align:left}'
         . '@media(max-width:820px){footer .site-footer-rich,.theme-footer .site-footer-rich,.site-footer .site-footer-rich{grid-template-columns:1fr;gap:24px}.site-footer-bottom{text-align:left}}'
         . '</style>'
         . '<div class="site-footer-rich">'
@@ -1173,7 +1174,7 @@ function tryServePortfolioPage(string $uri, bool $detailOnly = false): bool
 
     $repo = new PortfolioRepository();
     $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
-    $siteName = (string)($site['name'] ?? 'Muj web');
+    $siteName = (string)($site['name'] ?? 'RB Videos & Photos');
 
     if (!$detailOnly && $uri === '/nase-prace') {
         $page = publicPageForPath('nase-prace');
@@ -1338,8 +1339,12 @@ HTML;
         $mediaItems = $repo->getMedia((int)$entry['id']);
         $embedUrl = !empty($entry['video_url']) ? PortfolioRepository::embedUrl((string)$entry['video_url']) : null;
         $galleryHtml = '';
-        foreach ($mediaItems as $media) {
-            $galleryHtml .= '<div class="pf-photo"><img src="' . $h(publicMediaUrl((string)($media['storage_path'] ?? ''))) . '" alt="' . $h($media['alt_text'] ?? $entry['title']) . '" loading="lazy"></div>';
+        foreach ($mediaItems as $idx => $media) {
+            $thumbSrc = publicMediaUrl((string)($media['thumb_path'] ?? $media['medium_path'] ?? $media['storage_path'] ?? ''));
+            $fullSrc = publicMediaUrl((string)($media['storage_path'] ?? ''));
+            $alt = $h($media['alt_text'] ?? $entry['title']);
+            $galleryHtml .= '<button type="button" class="pf-photo" data-pf-full="' . $h($fullSrc) . '" data-pf-idx="' . $idx . '" aria-label="Otevřít fotografii">'
+                . '<img src="' . $h($thumbSrc) . '" alt="' . $alt . '" loading="lazy"></button>';
         }
 
         $videoHtml = '';
@@ -1363,10 +1368,45 @@ body{background:#111;color:#fff}
 .pf-video-wrap iframe{position:absolute;top:0;left:0;width:100%;height:100%}
 .pf-description{max-width:760px;color:#aaa;margin-bottom:34px}
 .pf-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.pf-photo{padding:0;border:0;background:transparent;cursor:pointer}
 .pf-photo img{width:100%;height:240px;object-fit:cover;border-radius:10px;display:block}
+.pf-lightbox{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.92);align-items:center;justify-content:center}
+.pf-lightbox.active{display:flex}
+.pf-lb-img{max-width:92vw;max-height:88vh;object-fit:contain;border-radius:8px}
+.pf-lb-close{position:absolute;top:20px;right:24px;font-size:2rem;color:#fff;cursor:pointer;line-height:1;opacity:.7}
+.pf-lb-close:hover{opacity:1}
+.pf-lb-prev,.pf-lb-next{position:absolute;top:50%;transform:translateY(-50%);font-size:2.5rem;color:#fff;cursor:pointer;padding:12px;opacity:.6;user-select:none}
+.pf-lb-prev:hover,.pf-lb-next:hover{opacity:1}
+.pf-lb-prev{left:16px}
+.pf-lb-next{right:16px}
 .pf-back{margin-top:28px}
 .pf-back a{display:inline-flex;background:#c4963c;color:#fff;text-decoration:none;padding:12px 18px;border-radius:6px;font-weight:700}
 CSS;
+
+        $lightboxHtml = $galleryHtml !== '' ? <<<'HTML'
+<div class="pf-lightbox" id="pf-lightbox">
+  <span class="pf-lb-close" id="pf-lb-close">&times;</span>
+  <span class="pf-lb-prev" id="pf-lb-prev">&#8249;</span>
+  <img class="pf-lb-img" id="pf-lb-img" src="" alt="">
+  <span class="pf-lb-next" id="pf-lb-next">&#8250;</span>
+</div>
+<script>
+(function(){
+  var lb=document.getElementById('pf-lightbox'),img=document.getElementById('pf-lb-img'),items=Array.from(document.querySelectorAll('.pf-photo')),idx=0;
+  if(!lb||!items.length)return;
+  function open(i){idx=i;img.src=items[i].dataset.pfFull||'';lb.classList.add('active');}
+  function close(){lb.classList.remove('active');img.src='';}
+  function prev(){open((idx-1+items.length)%items.length);}
+  function next(){open((idx+1)%items.length);}
+  items.forEach(function(el,i){el.addEventListener('click',function(){open(i);});});
+  document.getElementById('pf-lb-close').addEventListener('click',close);
+  document.getElementById('pf-lb-prev').addEventListener('click',prev);
+  document.getElementById('pf-lb-next').addEventListener('click',next);
+  lb.addEventListener('click',function(e){if(e.target===lb)close();});
+  document.addEventListener('keydown',function(e){if(!lb.classList.contains('active'))return;if(e.key==='Escape')close();if(e.key==='ArrowLeft')prev();if(e.key==='ArrowRight')next();});
+})();
+</script>
+HTML : '';
 
         $renderer = new PageRenderer();
         $nav = resolveThemeNav($site, false);
@@ -1384,6 +1424,7 @@ $pageContent = <<<HTML
     <div class="pf-back"><a href="/nase-prace">&larr; Zp&#283;t na v&#353;echny pr&#225;ce</a></div>
   </div>
 </main>
+{$lightboxHtml}
 HTML;
         [$pageContent, $themeCss, $themeJs, $themeActive] = applyThemeTemplate(
             $renderer,
@@ -1449,6 +1490,7 @@ HTML;
     <div class="pf-back"><a href="/nase-prace">&larr; Zpet na vsechny prace</a></div>
   </div>
 </main>
+{$lightboxHtml}
 <footer>{$siteNameEsc}</footer>
 </body>
 </html>
@@ -1474,7 +1516,7 @@ function tryServeFaqPage(): bool
     }
 
     $h        = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
-    $siteName = (string)($site['name'] ?? 'Muj web');
+    $siteName = (string)($site['name'] ?? 'RB Videos & Photos');
     $page       = (new PageRepository())->findPublishedByUrlPath('faq');
     $heroTitle  = 'Časté dotazy';
     $heroSub    = 'Odpovědi na nejčastější dotazy.';
@@ -1807,7 +1849,7 @@ function tryServeBlogListingPage(): bool
     $posts     = (new BlogRepository())->allPublished((int)$site['id']);
     $mediaRepo = new MediaRepository();
     $h         = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
-    $siteName  = (string)($site['name'] ?? 'Muj web');
+    $siteName  = (string)($site['name'] ?? 'RB Videos & Photos');
     $page = publicPageForPath('blog');
     $pageBlocks = pageBlockMap($page);
     [$heroTitleKey, $heroTitle, $heroTitleType] = firstBlockValue($pageBlocks, ['hero_h1', 'hero_heading'], 'Blog & Inspirace');
@@ -1952,7 +1994,7 @@ function tryServeBlogPostPage(string $uri): bool
     }
 
     $h        = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
-    $siteName = (string)($site['name'] ?? 'Muj web');
+    $siteName = (string)($site['name'] ?? 'RB Videos & Photos');
 
     $imgHtml = '';
     if (!empty($post['featured_image_id'])) {

@@ -190,10 +190,11 @@ class PortfolioController extends Controller
 
         // Photo gallery HTML
         $galleryHtml = '';
-        foreach ($mediaItems as $m) {
-            $src = $h($this->publicMediaUrl((string)($m['storage_path'] ?? '')));
+        foreach ($mediaItems as $idx => $m) {
+            $thumbSrc = $h($this->publicMediaUrl((string)($m['thumb_path'] ?? $m['medium_path'] ?? $m['storage_path'] ?? '')));
+            $fullSrc = $h($this->publicMediaUrl((string)($m['storage_path'] ?? '')));
             $alt = $h($m['alt_text'] ?? $entry['title']);
-            $galleryHtml .= "<div class=\"pf-photo\"><img src=\"{$src}\" alt=\"{$alt}\" loading=\"lazy\"></div>";
+            $galleryHtml .= "<button type=\"button\" class=\"pf-photo\" data-pf-full=\"{$fullSrc}\" data-pf-idx=\"{$idx}\" aria-label=\"Otevřít fotografii\"><img src=\"{$thumbSrc}\" alt=\"{$alt}\" loading=\"lazy\"></button>";
         }
 
         // Video embed HTML
@@ -230,7 +231,17 @@ class PortfolioController extends Controller
     .pf-description p{margin-bottom:.8em}
     .pf-description ul,.pf-description ol{margin:.6em 0 .8em 1.5em}
     .pf-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-bottom:48px}
+    .pf-photo{padding:0;border:0;background:transparent;cursor:pointer}
     .pf-photo img{width:100%;height:220px;object-fit:cover;border-radius:8px;display:block}
+    .pf-lightbox{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.92);align-items:center;justify-content:center}
+    .pf-lightbox.active{display:flex}
+    .pf-lb-img{max-width:92vw;max-height:88vh;object-fit:contain;border-radius:8px}
+    .pf-lb-close{position:absolute;top:20px;right:24px;font-size:2rem;color:#fff;cursor:pointer;line-height:1;opacity:.7}
+    .pf-lb-close:hover{opacity:1}
+    .pf-lb-prev,.pf-lb-next{position:absolute;top:50%;transform:translateY(-50%);font-size:2.5rem;color:#fff;cursor:pointer;padding:12px;opacity:.6;user-select:none}
+    .pf-lb-prev:hover,.pf-lb-next:hover{opacity:1}
+    .pf-lb-prev{left:16px}
+    .pf-lb-next{right:16px}
     .pf-back{text-align:center;padding:24px 0 48px}
     .pf-back a{background:#c4963c;color:#fff;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:600}
     footer{background:#111;color:rgba(255,255,255,.4);text-align:center;padding:20px;font-size:13px}
@@ -248,7 +259,29 @@ class PortfolioController extends Controller
   <div class="pf-gallery">{$galleryHtml}</div>
   <div class="pf-back"><a href="/nase-prace">← Zpět na Naše práce</a></div>
 </div>
+<div class="pf-lightbox" id="pf-lightbox">
+  <span class="pf-lb-close" id="pf-lb-close">&times;</span>
+  <span class="pf-lb-prev" id="pf-lb-prev">&#8249;</span>
+  <img class="pf-lb-img" id="pf-lb-img" src="" alt="">
+  <span class="pf-lb-next" id="pf-lb-next">&#8250;</span>
+</div>
 <footer>{$sn}</footer>
+<script>
+(function(){
+  var lb=document.getElementById('pf-lightbox'),img=document.getElementById('pf-lb-img'),items=Array.from(document.querySelectorAll('.pf-photo')),idx=0;
+  if(!lb||!items.length)return;
+  function open(i){idx=i;img.src=items[i].dataset.pfFull||'';lb.classList.add('active');}
+  function close(){lb.classList.remove('active');img.src='';}
+  function prev(){open((idx-1+items.length)%items.length);}
+  function next(){open((idx+1)%items.length);}
+  items.forEach(function(el,i){el.addEventListener('click',function(){open(i);});});
+  document.getElementById('pf-lb-close').addEventListener('click',close);
+  document.getElementById('pf-lb-prev').addEventListener('click',prev);
+  document.getElementById('pf-lb-next').addEventListener('click',next);
+  lb.addEventListener('click',function(e){if(e.target===lb)close();});
+  document.addEventListener('keydown',function(e){if(!lb.classList.contains('active'))return;if(e.key==='Escape')close();if(e.key==='ArrowLeft')prev();if(e.key==='ArrowRight')next();});
+})();
+</script>
 </body>
 </html>
 HTML;

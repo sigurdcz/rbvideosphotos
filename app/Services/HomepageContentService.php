@@ -128,11 +128,11 @@ class HomepageContentService
     private function fillHomepageTextDefaults(array &$blocks): void
     {
         $defaults = [
-            'hero_label' => 'Vítejte',
-            'hero_h1' => 'Doplňte váš hlavní nadpis',
-            'hero_sub' => 'Krátký popis toho, co děláte a co nabízíte klientům.',
+            'hero_label' => 'Fotograf a kameraman - Olomouc, Praha',
+            'hero_h1' => 'Zachytíme váš příběh <span>navždy</span>.',
+            'hero_sub' => 'Profesionální svatební fotografie a videografie v Olomouci a po celé České republice. Každý okamžik si zaslouží být nezapomenutelný.',
             'sluzby_title' => 'Naše služby',
-            'sluzby_intro' => 'Stručný popis toho, co nabízíme.',
+            'sluzby_intro' => 'Každý příběh je jedinečný. Naše služby přizpůsobíme přesně vám.',
             'portfolio_title' => 'Naše práce',
             'portfolio_intro' => 'Ukázka projektů a realizací.',
             'blog_title' => 'Nejnovější články',

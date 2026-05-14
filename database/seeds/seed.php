@@ -55,6 +55,8 @@ if (!function_exists('seedUpsertSite')) {
         $stmt->execute([$domain]);
         $row = $stmt->fetch();
         if ($row) {
+            $pdo->prepare('UPDATE sites SET name=? WHERE id=?')
+                ->execute([$name, $row['id']]);
             return (int) $row['id'];
         }
         $pdo->prepare('INSERT INTO sites (name, domain, active_theme_key) VALUES (?, ?, ?)')
@@ -129,7 +131,7 @@ if (!function_exists('seedBlock')) {
 foreach ([
     'publish_history', 'seo_settings', 'content_blocks', 'media_variants',
     'blog_media', 'portfolio_media', 'blog_posts', 'media', 'portfolio_entries',
-    'faq_items', 'reviews', 'contact_info',
+    'faq_items', 'reviews', 'contact_info', 'service_items',
     'pages', 'templates', 'redirects', 'sites', 'users',
 ] as $table) {
     $pdo->exec("DELETE FROM `{$table}`");
@@ -144,7 +146,7 @@ echo "Uživatel: admin@example.com / admin123\n";
 // ─── Web ──────────────────────────────────────────────────────────────────────
 
 $appUrl = rtrim((string)(getenv('APP_URL') ?: 'http://localhost:8000'), '/');
-$siteId = seedUpsertSite($pdo, 'Můj web', $appUrl);
+$siteId = seedUpsertSite($pdo, 'RB Videos & Photos', $appUrl);
 
 // ─── Sdílený layout ───────────────────────────────────────────────────────────
 
@@ -277,10 +279,10 @@ echo "Layout webu nastaven.\n";
 $tplHomepageHtml = <<<'HTML'
 <section class="hp-hero" id="uvod">
   <div class="container">
-    <p data-block="hero_label" class="section-label">Vítejte</p>
+    <p data-block="hero_label" class="section-label">Fotograf a kameraman - Olomouc, Praha</p>
     <video data-block="hero_video" class="hero-video" autoplay muted loop playsinline preload="metadata"></video>
-    <h1 data-block="hero_h1">Váš nadpis zde</h1>
-    <p data-block="hero_sub" class="hero-sub">Krátký popis toho, co děláte a co nabízíte. Zaujměte návštěvníka na první pohled.</p>
+    <h1 data-block="hero_h1">Zachytíme váš příběh <span>navždy</span>.</h1>
+    <p data-block="hero_sub" class="hero-sub">Profesionální svatební fotografie a videografie v Olomouci a po celé České republice. Každý okamžik si zaslouží být nezapomenutelný.</p>
     <div data-block="hero_cta" class="hero-cta-wrap"><a href="#kontakt" class="btn-primary">Kontaktujte nás</a></div>
   </div>
 </section>
@@ -289,7 +291,7 @@ $tplHomepageHtml = <<<'HTML'
   <div class="container">
     <p class="section-label">Co nabízíme</p>
     <h2 data-block="sluzby_title" class="section-title">Naše služby</h2>
-    <p data-block="sluzby_intro" class="section-intro">Stručný popis vaší nabídky. Co konkrétně klienti od vás dostanou.</p>
+    <p data-block="sluzby_intro" class="section-intro">Každý příběh je jedinečný. Naše služby přizpůsobíme přesně vám.</p>
     <div data-block="sluzby_items" class="hp-services-grid">
       <!-- Doplňte karty služeb -->
     </div>
@@ -587,14 +589,14 @@ echo "Stránky vytvořeny.\n";
 
 // ─── Obsahové bloky — Homepage ────────────────────────────────────────────────
 
-seedBlock($pdo, $pidHome, 'hero_label',     'text',     'Hero — štítek',       'Vítejte',                                                         1);
+seedBlock($pdo, $pidHome, 'hero_label',     'text',     'Hero — štítek',       'Fotograf a kameraman - Olomouc, Praha',                            1);
 seedBlock($pdo, $pidHome, 'hero_video',     'video',    'Hero — video (URL)',  '', 2);
-seedBlock($pdo, $pidHome, 'hero_h1',        'text',     'Hero — nadpis',       'Doplňte váš hlavní nadpis',                                       3);
-seedBlock($pdo, $pidHome, 'hero_sub',       'textarea', 'Hero — podnadpis',    'Krátký popis toho, co děláte a co nabízíte klientům.',            4);
+seedBlock($pdo, $pidHome, 'hero_h1',        'text',     'Hero — nadpis',       'Zachytíme váš příběh <span>navždy</span>.',                        3);
+seedBlock($pdo, $pidHome, 'hero_sub',       'textarea', 'Hero — podnadpis',    'Profesionální svatební fotografie a videografie v Olomouci a po celé České republice. Každý okamžik si zaslouží být nezapomenutelný.', 4);
 seedBlock($pdo, $pidHome, 'hero_cta',       'html',     'Hero — CTA',          '<a href="#kontakt" class="btn-primary">Kontaktujte nás</a>', 5);
 
 seedBlock($pdo, $pidHome, 'sluzby_title',   'text',     'Služby — nadpis',     'Naše služby',                                                     10);
-seedBlock($pdo, $pidHome, 'sluzby_intro',   'textarea', 'Služby — intro',      'Stručný popis toho, co nabízíme.',                                11);
+seedBlock($pdo, $pidHome, 'sluzby_intro',   'textarea', 'Služby — intro',      'Každý příběh je jedinečný. Naše služby přizpůsobíme přesně vám.', 11);
 seedBlock($pdo, $pidHome, 'sluzby_items',   'html',     'Služby — karty',      '', 12);
 seedBlock($pdo, $pidHome, 'sluzby_cta',     'html',     'Služby — tlačítko',   '<a href="/sluzby" class="btn-secondary">V&#353;echny slu&#382;by</a>', 13);
 
@@ -678,6 +680,18 @@ seedBlock($pdo, $pidPortfolio, 'hero_sub', 'textarea', 'Hero — intro',  'Ukáz
 echo "Obsahové bloky vytvořeny.\n";
 
 // ─── FAQ položky ──────────────────────────────────────────────────────────────
+
+$pdo->exec("DELETE FROM service_items WHERE site_id = {$siteId}");
+$serviceStmt = $pdo->prepare('
+    INSERT INTO service_items (
+        site_id, title, description, image_url, icon_url, button_text, button_url, sort_order, is_active
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)
+');
+$serviceStmt->execute([$siteId, 'Svatební foto & video', 'Zachytíme každý slib, emoci i atmosféru vašeho dne s citem pro detail.', '', '', 'Více informací', '/sluzby', 1]);
+$serviceStmt->execute([$siteId, 'Rodinné & portrétní focení', 'Přirozené momenty, jemné vedení a fotografie, ke kterým se budete rádi vracet.', '', '', 'Více informací', '/sluzby', 2]);
+$serviceStmt->execute([$siteId, 'Reklamní foto & video', 'Profesionální vizuální obsah pro firmy, produkty, kampaně i sociální sítě.', '', '', 'Více informací', '/sluzby', 3]);
+$serviceStmt->execute([$siteId, 'Akce & události', 'Konference, koncerty, plesy i kulturní programy zachycené rychle, čistě a spolehlivě.', '', '', 'Více informací', '/sluzby', 4]);
+echo "Služby vytvořeny.\n";
 
 $pdo->exec("DELETE FROM faq_items WHERE site_id = {$siteId}");
 $faqStmt = $pdo->prepare('INSERT INTO faq_items (site_id, question, answer, sort_order, is_active) VALUES (?, ?, ?, ?, 1)');
