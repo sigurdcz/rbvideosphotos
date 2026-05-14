@@ -8,6 +8,7 @@ require BASE_PATH . '/vendor/autoload.php';
 
 use App\Core\Database;
 use App\Core\Env;
+use App\Services\ReviewContentService;
 
 Env::load(BASE_PATH . '/.env');
 
@@ -71,17 +72,10 @@ if ($page) {
     $pageId = (int)$pdo->lastInsertId();
 }
 
-$reviewsBody = '<div class="reviews-page-card"><div class="reviews-page-stars">*****</div><p>Kluci jsou naprosti profesionalove. Jsou peclivi a dokazou zachytit skutecne emoce.</p><strong>Jan Jungling</strong><span>Svatba M+H</span></div>'
-    . '<div class="reviews-page-card"><div class="reviews-page-stars">*****</div><p>Super domluva, mily a profesionalni pristup k foceni. Velka spokojenost.</p><strong>Vaclav Konopka</strong><span>Svatebni foceni</span></div>'
-    . '<div class="reviews-page-card"><div class="reviews-page-stars">*****</div><p>Moc doporucuji. Vse profesionalne nafocene, krasne barvy a skvela domluva.</p><strong>Jana Dudkova</strong><span>Rodinne foceni</span></div>'
-    . '<div class="reviews-page-card"><div class="reviews-page-stars">*****</div><p>Video vystihlo atmosferu dne do posledniho detailu. Vracime se k nemu porad dokola.</p><strong>Marketa a Tomas</strong><span>Svatebni video</span></div>'
-    . '<div class="reviews-page-card"><div class="reviews-page-stars">*****</div><p>Foceni bylo uvolnene a bez stresu. Vysledek pusobi prirozene a profesionalne.</p><strong>Lucie Novakova</strong><span>Portretni foceni</span></div>'
-    . '<div class="reviews-page-card"><div class="reviews-page-stars">*****</div><p>Rychla domluva, jistota na miste a vystupy pouzitelne rovnou na web i socialni site.</p><strong>Petr Maly</strong><span>Firemni akce</span></div>';
-
 $blocks = [
     ['hero_h1', 'text', 'Hero - nadpis', 'Hodnoceni klientu', 1],
     ['hero_sub', 'textarea', 'Hero - intro', 'Slova paru, rodin a firem, se kterymi jsme tvorili fotografie a video.', 2],
-    ['reviews_body', 'html', 'Recenze', $reviewsBody, 3],
+    ['reviews_body', 'html', 'Recenze', '', 3],
 ];
 
 foreach ($blocks as [$key, $type, $label, $content, $order]) {
@@ -96,5 +90,23 @@ foreach ($blocks as [$key, $type, $label, $content, $order]) {
     $pdo->prepare('INSERT INTO content_blocks (page_id, block_key, block_type, label, content, sort_order) VALUES (?,?,?,?,?,?)')
         ->execute([$pageId, $key, $type, $label, $content, $order]);
 }
+
+$pdo->exec("DELETE FROM reviews WHERE site_id = {$siteId}");
+$stmt = $pdo->prepare('INSERT INTO reviews (site_id, author_name, context_label, rating, review_text, sort_order, is_active) VALUES (?, ?, ?, ?, ?, ?, ?)');
+
+$reviews = [
+    ['Jan Jungling', 'Svatba M+H', 5, 'Kluci jsou naprosti profesionalove. Jsou peclivi a dokazou zachytit skutecne emoce.', 1, 1],
+    ['Vaclav Konopka', 'Svatebni foceni', 5, 'Super domluva, mily a profesionalni pristup k foceni. Velka spokojenost.', 2, 1],
+    ['Jana Dudkova', 'Rodinne foceni', 5, 'Moc doporucuji. Vse profesionalne nafocene, krasne barvy a skvela domluva.', 3, 1],
+    ['Marketa a Tomas', 'Svatebni video', 5, 'Video vystihlo atmosferu dne do posledniho detailu. Vracime se k nemu porad dokola.', 4, 1],
+    ['Lucie Novakova', 'Portretni foceni', 5, 'Foceni bylo uvolnene a bez stresu. Vysledek pusobi prirozene a profesionalne.', 5, 1],
+    ['Petr Maly', 'Firemni akce', 5, 'Rychla domluva, jistota na miste a vystupy pouzitelne rovnou na web i socialni site.', 6, 1],
+];
+
+foreach ($reviews as [$author, $context, $rating, $text, $sortOrder, $isActive]) {
+    $stmt->execute([$siteId, $author, $context, $rating, $text, $sortOrder, $isActive]);
+}
+
+(new ReviewContentService())->ensureHomepageSection($siteId);
 
 echo "Reviews page seeded at /hodnoceni\n";

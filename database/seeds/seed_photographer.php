@@ -367,11 +367,7 @@ $htmlHomeFull = <<<'HTML'
       <h2 data-block="reviews_title"></h2>
       <p data-block="reviews_intro"></p>
     </div>
-    <div class="rev-grid">
-      <div class="rev-card" data-block="review_1"></div>
-      <div class="rev-card" data-block="review_2"></div>
-      <div class="rev-card" data-block="review_3"></div>
-    </div>
+    <div data-block="reviews_demo" class="rev-grid"></div>
     <div class="sec-btns" data-block="reviews_cta"></div>
   </div>
 </section>
@@ -908,6 +904,12 @@ block($pdo, $pidKontakt, 'contact_info',   'html',     'Kontakt — info',     '
 block($pdo, $pidKontakt, 'contact_card',   'html',     'Kontakt — karta',    '<h3>Ozvěte se nám</h3><p class="cta-r-sub">Zavolejte nebo napište na sociální sítě. Odpovídáme rychle!</p><a href="tel:792483583" class="cta-btn cta-btn--gold">Zavolat: 792&nbsp;483&nbsp;583</a><a href="tel:604225032" class="cta-btn cta-btn--dark">Zavolat: 604&nbsp;225&nbsp;032</a><a href="https://www.instagram.com/rb_videos_photos/" target="_blank" rel="noopener" class="cta-btn cta-btn--dark">Instagram</a><a href="https://www.facebook.com/rbvideosandphotos" target="_blank" rel="noopener" class="cta-btn cta-btn--dark">Facebook</a>', 5);
 
 // ─── SEO settings ─────────────────────────────────────────────────────────────
+
+$pdo->exec("DELETE FROM reviews WHERE site_id = {$siteId}");
+$reviewStmt = $pdo->prepare('INSERT INTO reviews (site_id, author_name, context_label, rating, review_text, sort_order, is_active) VALUES (?, ?, ?, ?, ?, ?, ?)');
+$reviewStmt->execute([$siteId, 'Jan Jungling', 'Svatba M+H', 5, 'Kluci jsou naprosti profesionalove. Jsou to pratelski borci, kteri umi zachytit emoce a dodat fotky i video na vysoke urovni.', 1, 1]);
+$reviewStmt->execute([$siteId, 'Vaclav Konopka', 'Svatebni foceni', 5, 'Super domluva, mily a profesionalni pristup k foceni. Velka spokojenost.', 2, 1]);
+$reviewStmt->execute([$siteId, 'Jana Dudkova', 'Rodinne foceni', 5, 'Moc doporucuji. Profesionalni pristup a spickova kvalita. Uz se tesime na dalsi foceni.', 3, 1]);
 
 $d = 'https://rbvideosphotos.kvalitne.cz';
 

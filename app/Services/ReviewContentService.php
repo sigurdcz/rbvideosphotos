@@ -1,0 +1,118 @@
+<?php
+
+namespace App\Services;
+
+use App\Repositories\PageRepository;
+use App\Repositories\ReviewRepository;
+use App\Repositories\TemplateRepository;
+
+class ReviewContentService
+{
+    private ReviewRepository $reviews;
+    private PageRepository $pages;
+    private TemplateRepository $templates;
+
+    public function __construct()
+    {
+        $this->reviews = new ReviewRepository();
+        $this->pages = new PageRepository();
+        $this->templates = new TemplateRepository();
+    }
+
+    public function buildHomepageHtml(int $siteId, int $limit = 6): string
+    {
+        $items = $this->reviews->allActive($siteId);
+        if ($limit > 0) {
+            $items = array_slice($items, 0, $limit);
+        }
+
+        return $this->homepageCss() . $this->buildGridMarkup($items, 'hp-reviews-grid', 'hp-review-card', 'hp-review-stars');
+    }
+
+    public function buildListingHtml(int $siteId): string
+    {
+        $items = $this->reviews->allActive($siteId);
+        return $this->buildGridMarkup($items, 'reviews-page-grid', 'reviews-page-card', 'reviews-page-stars');
+    }
+
+    public function ensureHomepageSection(int $siteId): void
+    {
+        $homepage = $this->pages->findByUrlPath('');
+        if (!$homepage || empty($homepage['template_id'])) {
+            return;
+        }
+
+        $template = $this->templates->findById((int)$homepage['template_id']);
+        if (!$template) {
+            return;
+        }
+
+        $html = (string)($template['html_source'] ?? '');
+        if (str_contains($html, 'reviews_demo')) {
+            return;
+        }
+
+        $section = <<<'HTML'
+
+<section class="section section--dark hp-reviews-demo" id="hodnoceni">
+  <div class="container">
+    <p class="section-label">Co o nas rikaji</p>
+    <h2 data-block="reviews_title" class="section-title">Hodnoceni klientu</h2>
+    <p data-block="reviews_intro" class="section-intro">Vybrane reference klientu, kterym jsme dodali foto nebo video.</p>
+    <div data-block="reviews_demo"><!-- Recenze --></div>
+    <div data-block="reviews_cta"><a href="/hodnoceni" class="btn-secondary">Vsechny recenze</a></div>
+  </div>
+</section>
+HTML;
+
+        $updated = preg_replace('~(<section\b[^>]*id=(["\'])kontakt\2[^>]*>)~i', $section . "\n$1", $html, 1, $count);
+        if (!$updated || $count === 0) {
+            $updated = $html . $section;
+        }
+
+        $this->templates->update((int)$template['id'], [
+            'name' => $template['name'],
+            'html_source' => $updated,
+            'css_source' => $template['css_source'] ?? '',
+            'js_source' => $template['js_source'] ?? '',
+        ]);
+    }
+
+    private function buildGridMarkup(array $items, string $gridClass, string $cardClass, string $starsClass): string
+    {
+        if ($items === []) {
+            return '<p style="color:rgba(255,255,255,.45);text-align:center;padding:32px 0">Zatim zadne recenze.</p>';
+        }
+
+        $h = fn($value) => htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
+        $html = '<div class="' . $h($gridClass) . '">';
+
+        foreach ($items as $item) {
+            $rating = max(1, min(5, (int)($item['rating'] ?? 5)));
+            $stars = str_repeat('★', $rating) . str_repeat('☆', 5 - $rating);
+            $context = trim((string)($item['context_label'] ?? ''));
+
+            $html .= '<article class="' . $h($cardClass) . '">'
+                . '<div class="' . $h($starsClass) . '">' . $h($stars) . '</div>'
+                . '<p>' . nl2br($h((string)($item['review_text'] ?? ''))) . '</p>'
+                . '<strong>' . $h((string)($item['author_name'] ?? '')) . '</strong>'
+                . ($context !== '' ? '<span>' . $h($context) . '</span>' : '')
+                . '</article>';
+        }
+
+        $html .= '</div>';
+        return $html;
+    }
+
+    private function homepageCss(): string
+    {
+        return '<style>'
+            . '.hp-reviews-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;margin-top:22px}'
+            . '.hp-review-card{background:rgba(255,255,255,.04);border:1px solid rgba(196,150,60,.32);padding:22px;min-height:190px}'
+            . '.hp-review-stars{color:#d9a441;letter-spacing:.16em;margin-bottom:12px;font-size:.95rem}'
+            . '.hp-review-card p{color:rgba(255,255,255,.72);line-height:1.7;margin:0 0 18px}'
+            . '.hp-review-card strong{display:block;color:#fff;font-size:.95rem;margin-bottom:2px}'
+            . '.hp-review-card span{color:rgba(255,255,255,.48);font-size:.82rem}'
+            . '</style>';
+    }
+}

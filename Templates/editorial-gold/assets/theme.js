@@ -73,35 +73,8 @@
   function createReviews() {
     if (qs('.eg-reviews') || !qs('#kontakt')) return;
     var existing = qs('.hp-reviews-demo');
-    if (existing) {
-      enhanceExistingReviews(existing);
-      return;
-    }
-    var reviewItems = [
-      ['Jan Jungling', 'Svatba M+H', 'Kluci jsou naprosti profesionalove. Jsou peclivi a dokazou zachytit skutecne emoce.'],
-      ['Vaclav Konopka', 'Svatebni foceni', 'Super domluva, mily a profesionalni pristup k foceni. Velka spokojenost.'],
-      ['Jana Dudkova', 'Rodinne foceni', 'Moc doporucuji. Vse profesionalne nafocene, krasne barvy a skvela domluva.'],
-      ['Marketa a Tomas', 'Svatebni video', 'Video vystihlo atmosferu dne do posledniho detailu. Vracime se k nemu porad dokola.'],
-      ['Lucie Novakova', 'Portretni foceni', 'Foceni bylo uvolnene a bez stresu. Vysledek pusobi prirozene a profesionalne.'],
-      ['Petr Maly', 'Firemni akce', 'Rychla domluva, jistota na miste a vystupy pouzitelne rovnou na web i socialni site.']
-    ];
-    var cards = reviewItems.map(function (review) {
-      return '<article class="eg-review-card"><div class="eg-stars">*****</div><p>' + review[2] + '</p><strong>' + review[0] + '</strong><span>' + review[1] + '</span></article>';
-    }).join('');
-    var reviews = document.createElement('section');
-    reviews.className = 'section eg-reviews';
-    reviews.innerHTML =
-      '<div class="container eg-reviews__inner">' +
-      '<div class="eg-reviews__title"><p class="section-label">Co o nas rikaji</p><h2 class="section-title">Hodnoceni<br>nasich paru</h2></div>' +
-      '<div class="eg-reviews__body">' +
-      '<button class="eg-review-arrow eg-review-arrow--prev" type="button" aria-label="Predchozi recenze">&lsaquo;</button>' +
-      '<div class="eg-reviews__viewport"><div class="eg-reviews__track">' + cards + '</div></div>' +
-      '<button class="eg-review-arrow eg-review-arrow--next" type="button" aria-label="Dalsi recenze">&rsaquo;</button>' +
-      '</div>' +
-      '<div class="eg-reviews__cta"><a class="btn-secondary" href="/hodnoceni">Vsechny recenze</a><a class="btn-secondary" href="/hodnoceni">O vsech hodnocenich</a></div>' +
-      '</div>';
-    qs('#kontakt').insertAdjacentElement('beforebegin', reviews);
-    initReviewCarousel(reviews);
+    if (!existing) return;
+    enhanceExistingReviews(existing);
   }
 
   function enhanceExistingReviews(section) {

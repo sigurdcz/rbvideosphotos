@@ -7,6 +7,7 @@ use App\Repositories\BlockRepository;
 use App\Repositories\BlogRepository;
 use App\Repositories\PageRepository;
 use App\Repositories\PortfolioRepository;
+use App\Repositories\ReviewRepository;
 use App\Repositories\SiteRepository;
 use App\Repositories\TemplateRepository;
 use PDO;
@@ -43,7 +44,7 @@ class DemoContentSeeder
         $blogCount = $this->seedBlogPosts($siteId);
         $portfolioCount = $this->seedPortfolioEntries($siteId);
         $this->resetHomepageAutofillBlocks();
-        $reviewCount = $this->seedHomepageReviews($siteId);
+        $reviewCount = $this->seedReviewRows($siteId);
 
         $published = false;
         if ($publish && $userId) {
@@ -199,6 +200,27 @@ class DemoContentSeeder
             'sort_order' => 70,
             'autofill_disabled' => 1,
         ]);
+
+        return count($reviews);
+    }
+
+    private function seedReviewRows(int $siteId): int
+    {
+        $reviews = [
+            ['author_name' => 'Jan Jungling', 'context_label' => 'Svatba M+H', 'review_text' => 'Kluci jsou naprosti profesionalove. Jsou peclivi a zachytili presne atmosferu naseho dne.', 'rating' => 5, 'sort_order' => 1, 'is_active' => 1],
+            ['author_name' => 'Vaclav Konopka', 'context_label' => 'Svatebni foceni', 'review_text' => 'Super domluva, mily pristup a fotky dodane drive, nez jsme cekali. Velka spokojenost.', 'rating' => 5, 'sort_order' => 2, 'is_active' => 1],
+            ['author_name' => 'Jana Dudkova', 'context_label' => 'Rodinne foceni', 'review_text' => 'Moc doporucuji. Deti se citily prirozene a fotky maji krasne barvy i emoce.', 'rating' => 5, 'sort_order' => 3, 'is_active' => 1],
+            ['author_name' => 'Marketa a Tomas', 'context_label' => 'Svatebni video', 'review_text' => 'Video vystihlo atmosferu dne do posledniho detailu. Vracime se k nemu porad dokola.', 'rating' => 5, 'sort_order' => 4, 'is_active' => 1],
+            ['author_name' => 'Lucie Novakova', 'context_label' => 'Portretni foceni', 'review_text' => 'Foceni bylo uvolnene a bez stresu. Vysledek pusobi prirozene a profesionalne.', 'rating' => 5, 'sort_order' => 5, 'is_active' => 1],
+            ['author_name' => 'Petr Maly', 'context_label' => 'Firemni akce', 'review_text' => 'Rychla domluva, jistota na miste a vystupy pouzitelne rovnou na web i socialni site.', 'rating' => 5, 'sort_order' => 6, 'is_active' => 1],
+            ['author_name' => 'Anna a Michal', 'context_label' => 'Svatba', 'review_text' => 'Fotky maji nadhernou atmosferu. Ocenujeme hlavne klidny pristup behem celeho dne.', 'rating' => 5, 'sort_order' => 7, 'is_active' => 1],
+            ['author_name' => 'Katerina D.', 'context_label' => 'Rodinne foceni', 'review_text' => 'Deti nebyly strojene, vsechno probehlo hrave a vysledek je presne nas.', 'rating' => 5, 'sort_order' => 8, 'is_active' => 1],
+            ['author_name' => 'Dominik S.', 'context_label' => 'Reklamni video', 'review_text' => 'Skvela prace se svetlem, obrazem i strihem. Vystup pusobi draze a ciste.', 'rating' => 5, 'sort_order' => 9, 'is_active' => 1],
+            ['author_name' => 'Veronika a Pavel', 'context_label' => 'Svatba', 'review_text' => 'Vyborna komunikace pred svatbou i behem dne. Fotky i video jsou krasna vzpominka.', 'rating' => 5, 'sort_order' => 10, 'is_active' => 1],
+        ];
+
+        (new ReviewRepository())->replaceAllBySite($siteId, $reviews);
+        (new ReviewContentService())->ensureHomepageSection($siteId);
 
         return count($reviews);
     }

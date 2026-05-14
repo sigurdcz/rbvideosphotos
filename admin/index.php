@@ -113,6 +113,14 @@ try {
     $router->post('/admin/portfolio/update', 'PortfolioController', 'update');
     $router->post('/admin/portfolio/delete', 'PortfolioController', 'delete');
 
+    // Reviews
+    $router->get('/admin/reviews',         'ReviewController', 'index');
+    $router->get('/admin/reviews/create',  'ReviewController', 'create');
+    $router->post('/admin/reviews/store',  'ReviewController', 'store');
+    $router->get('/admin/reviews/edit',    'ReviewController', 'edit');
+    $router->post('/admin/reviews/update', 'ReviewController', 'update');
+    $router->post('/admin/reviews/delete', 'ReviewController', 'delete');
+
     // Setup / seed
     $router->get('/admin/setup',      'SetupController', 'index');
     $router->post('/admin/setup/run', 'SetupController', 'run');

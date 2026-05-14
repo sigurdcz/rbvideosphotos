@@ -33,6 +33,8 @@ class HomepageContentService
         'faq_5' => ['label' => 'FAQ 5', 'hint' => 'Automaticky doplnit z aktivních FAQ položek.'],
         'kontakt_info' => ['label' => 'Kontakt', 'hint' => 'Automaticky doplnit z kontaktních údajů.'],
         'contact_info' => ['label' => 'Kontakt', 'hint' => 'Automaticky doplnit z kontaktních údajů.'],
+        'reviews_demo' => ['label' => 'Recenze na homepage', 'hint' => 'Automaticky doplnit z aktivnich recenzi.'],
+        'reviews_body' => ['label' => 'Stranka recenzi', 'hint' => 'Automaticky doplnit z aktivnich recenzi.'],
     ];
 
     private PageRepository $pages;
@@ -43,6 +45,7 @@ class HomepageContentService
     private FaqRepository $faq;
     private ContactRepository $contact;
     private MediaRepository $media;
+    private ReviewContentService $reviewContent;
 
     public function __construct()
     {
@@ -54,6 +57,7 @@ class HomepageContentService
         $this->faq = new FaqRepository();
         $this->contact = new ContactRepository();
         $this->media = new MediaRepository();
+        $this->reviewContent = new ReviewContentService();
     }
 
     public function getAutofillDefinitions(): array
@@ -87,6 +91,10 @@ class HomepageContentService
             $this->fillFaqFallbacks($blocks, $siteId);
         }
 
+        if ($path === '' || $path === 'hodnoceni') {
+            $this->fillReviewFallbacks($blocks, $siteId, $path === '');
+        }
+
         if ($path === '' || $path === 'kontakt') {
             $this->fillContactFallbacks($blocks, $siteId);
         }
@@ -108,6 +116,8 @@ class HomepageContentService
         $this->applyBlockFallback($blocks, 'portfolio_cta', fn() => $this->buildSectionCtaHtml('/nase-prace', 'Všechny práce'));
         $this->applyBlockFallback($blocks, 'cenik_body', fn() => $this->buildPricingHtml());
         $this->applyBlockFallback($blocks, 'cenik_cta', fn() => $this->buildSectionCtaHtml('/cenik', 'Celý ceník'));
+        $this->applyBlockFallback($blocks, 'reviews_demo', fn() => $this->reviewContent->buildHomepageHtml($siteId, 6));
+        $this->applyBlockFallback($blocks, 'reviews_cta', fn() => $this->buildSectionCtaHtml('/hodnoceni', 'Vsechny recenze'));
         $this->applyBlockFallback($blocks, 'kontakt_info', fn() => $this->buildContactHtml($siteId));
         $this->applyBlockFallback($blocks, 'contact_info', fn() => $this->buildContactHtml($siteId));
         $this->applyBlockFallback($blocks, 'faq_cta', fn() => $this->buildSectionCtaHtml('/faq', 'Všechny otázky'));
@@ -130,6 +140,8 @@ class HomepageContentService
             'cenik_title' => 'Ceník',
             'cenik_intro' => 'Orientační přehled cen. Každá zakázka je individuální.',
             'faq_title' => 'Časté dotazy',
+            'reviews_title' => 'Co o nas rikaji klienti',
+            'reviews_intro' => 'Vybrane reference klientu, kterym jsme dodali fotografie nebo video.',
             'kontakt_title' => 'Kontakt',
             'kontakt_sub' => 'Ozvěte se nám. Rádi odpovíme na vaše otázky.',
         ];
@@ -205,6 +217,16 @@ class HomepageContentService
         for ($i = 1; $i <= 5; $i++) {
             $this->applyBlockFallback($blocks, 'faq_' . $i, fn() => $this->buildFaqItemHtml($siteId, $i - 1));
         }
+    }
+
+    private function fillReviewFallbacks(array &$blocks, int $siteId, bool $isHomepage): void
+    {
+        if ($isHomepage) {
+            $this->applyBlockFallback($blocks, 'reviews_demo', fn() => $this->reviewContent->buildHomepageHtml($siteId, 6));
+            return;
+        }
+
+        $this->applyBlockFallback($blocks, 'reviews_body', fn() => $this->reviewContent->buildListingHtml($siteId));
     }
 
     private function fillContactFallbacks(array &$blocks, int $siteId): void

@@ -129,7 +129,7 @@ if (!function_exists('seedBlock')) {
 foreach ([
     'publish_history', 'seo_settings', 'content_blocks', 'media_variants',
     'blog_media', 'portfolio_media', 'blog_posts', 'media', 'portfolio_entries',
-    'faq_items', 'contact_info',
+    'faq_items', 'reviews', 'contact_info',
     'pages', 'templates', 'redirects', 'sites', 'users',
 ] as $table) {
     $pdo->exec("DELETE FROM `{$table}`");
@@ -343,6 +343,16 @@ $tplHomepageHtml = <<<'HTML'
       <div data-block="faq_3" class="hp-faq-item"><!-- FAQ 3 --></div>
     </div>
     <div data-block="faq_cta"><a href="/faq" class="btn-secondary">Všechny otázky</a></div>
+  </div>
+</section>
+
+<section class="section section--dark hp-reviews-demo" id="hodnoceni">
+  <div class="container">
+    <p class="section-label">Co o nas rikaji</p>
+    <h2 data-block="reviews_title" class="section-title">Hodnoceni klientu</h2>
+    <p data-block="reviews_intro" class="section-intro">Vybrane reference klientu, kterym jsme dodali fotografie nebo video.</p>
+    <div data-block="reviews_demo"><!-- Recenze --></div>
+    <div data-block="reviews_cta"><a href="/hodnoceni" class="btn-secondary">Vsechny recenze</a></div>
   </div>
 </section>
 
@@ -704,6 +714,53 @@ $pdo->prepare('
 echo "Kontaktní informace vytvořeny.\n";
 
 // ─── Publikovat ───────────────────────────────────────────────────────────────
+
+$tplReviewsHtml = <<<'HTML'
+<section class="page-hero">
+  <div class="container">
+    <h1 data-block="hero_h1">Hodnoceni klientu</h1>
+    <p data-block="hero_sub" class="hero-sub">Slova paru, rodin a firem, se kterymi jsme tvorili fotografie a video.</p>
+  </div>
+</section>
+<section class="section">
+  <div class="container">
+    <div data-block="reviews_body" class="reviews-page-grid"><!-- Recenze --></div>
+  </div>
+</section>
+HTML;
+
+$tplReviewsCss = <<<'CSS'
+.reviews-page-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+.reviews-page-card{padding:22px;border:1px solid rgba(198,148,61,.35);background:rgba(255,255,255,.025)}
+.reviews-page-stars{color:#e0b866;letter-spacing:3px;margin-bottom:10px}
+.reviews-page-card p{color:rgba(255,255,255,.72);font-style:italic;line-height:1.65}
+.reviews-page-card strong{display:block;margin-top:16px;color:#fff}
+.reviews-page-card span{display:block;color:rgba(255,255,255,.5);font-size:12px}
+CSS;
+
+$tplReviews = seedUpsertTemplate($pdo, $siteId, 'Hodnoceni', $tplReviewsHtml, $tplReviewsCss, '');
+$pidReviews = seedUpsertPage($pdo, $siteId, $tplReviews, 'Hodnoceni', 'hodnoceni', 'hodnoceni');
+
+seedBlock($pdo, $pidHome, 'reviews_title', 'text', 'Recenze - nadpis', 'Co o nas rikaji klienti', 55);
+seedBlock($pdo, $pidHome, 'reviews_intro', 'textarea', 'Recenze - intro', 'Vybrane reference klientu, kterym jsme dodali fotografie nebo video.', 56);
+seedBlock($pdo, $pidHome, 'reviews_demo', 'html', 'Recenze - grid', '', 57);
+seedBlock($pdo, $pidHome, 'reviews_cta', 'html', 'Recenze - tlacitko', '<a href="/hodnoceni" class="btn-secondary">Vsechny recenze</a>', 58);
+
+seedBlock($pdo, $pidReviews, 'hero_h1', 'text', 'Hero - nadpis', 'Hodnoceni klientu', 1);
+seedBlock($pdo, $pidReviews, 'hero_sub', 'textarea', 'Hero - intro', 'Slova paru, rodin a firem, se kterymi jsme tvorili fotografie a video.', 2);
+seedBlock($pdo, $pidReviews, 'reviews_body', 'html', 'Recenze - grid', '', 3);
+
+$pdo->exec("DELETE FROM reviews WHERE site_id = {$siteId}");
+$reviewStmt = $pdo->prepare('INSERT INTO reviews (site_id, author_name, context_label, rating, review_text, sort_order, is_active) VALUES (?, ?, ?, ?, ?, ?, ?)');
+$reviewStmt->execute([$siteId, 'Jan Jungling', 'Svatba M+H', 5, 'Kluci jsou naprosti profesionalove. Jsou pecivi a dokazou zachytit skutecne emoce.', 1, 1]);
+$reviewStmt->execute([$siteId, 'Vaclav Konopka', 'Svatebni foceni', 5, 'Super domluva, mily a profesionalni pristup k foceni. Velka spokojenost.', 2, 1]);
+$reviewStmt->execute([$siteId, 'Jana Dudkova', 'Rodinne foceni', 5, 'Moc doporucuji. Vse profesionalne nafocene, krasne barvy a skvela domluva.', 3, 1]);
+$reviewStmt->execute([$siteId, 'Marketa a Tomas', 'Svatebni video', 5, 'Video vystihlo atmosferu dne do posledniho detailu. Vracime se k nemu porad dokola.', 4, 1]);
+$reviewStmt->execute([$siteId, 'Lucie Novakova', 'Portretni foceni', 5, 'Foceni bylo uvolnene a bez stresu. Vysledek pusobi prirozene a profesionalne.', 5, 1]);
+$reviewStmt->execute([$siteId, 'Petr Maly', 'Firemni akce', 5, 'Rychla domluva, jistota na miste a vystupy pouzitelne rovnou na web i socialni site.', 6, 1]);
+
+(new \App\Services\ReviewContentService())->ensureHomepageSection($siteId);
+echo "Recenze vytvoreny.\n";
 
 try {
     $pub = new PublishService();
