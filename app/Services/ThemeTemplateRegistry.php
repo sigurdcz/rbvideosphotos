@@ -510,6 +510,8 @@ class ThemeTemplateRegistry
 }
 
 .theme-shell .pt-tile {
+  display: flex;
+  flex-direction: column;
   transition: transform .24s ease, box-shadow .24s ease;
   text-decoration: none;
   color: inherit;
@@ -559,6 +561,12 @@ class ThemeTemplateRegistry
 }
 
 .theme-shell .pt-caption {
+  display: flex;
+  align-items: center;
+  min-height: 68px;
+  padding: 16px 18px;
+  line-height: 1.35;
+  border-bottom: 1px solid var(--theme-border, rgba(255,255,255,.08));
   background: rgba(255,255,255,.02);
   color: var(--theme-text, #fff);
   font-weight: 800;

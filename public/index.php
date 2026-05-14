@@ -1544,9 +1544,9 @@ function tryServePortfolioPage(string $uri, bool $detailOnly = false): bool
 
             $tiles .= <<<HTML
 <a class="pt-tile" href="/{$h($entry['slug'])}">
+  <div class="pt-caption"{$titleAttrs}>{$h($entry['title'])}</div>
   <div class="pt-thumb">{$thumbHtml}{$playIcon}</div>
   <div class="pt-photos">{$extraHtml}</div>
-  <div class="pt-caption"{$titleAttrs}>{$h($entry['title'])}</div>
 </a>
 HTML;
         }
@@ -1562,7 +1562,7 @@ body{background:#111;color:#fff}
 .pf-hero p{color:rgba(255,255,255,.7);font-size:1.1rem;max-width:720px;margin:0 auto}
 .grid-wrap{padding:12px 0 72px}
 .pt-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:28px}
-.pt-tile{display:block;text-decoration:none;color:inherit;background:#1b1b1f;border-radius:14px;overflow:hidden;box-shadow:0 14px 30px rgba(0,0,0,.25);transition:transform .2s,box-shadow .2s}
+.pt-tile{display:flex;flex-direction:column;text-decoration:none;color:inherit;background:#1b1b1f;border-radius:14px;overflow:hidden;box-shadow:0 14px 30px rgba(0,0,0,.25);transition:transform .2s,box-shadow .2s}
 .pt-tile:hover{transform:translateY(-3px);box-shadow:0 20px 40px rgba(0,0,0,.4)}
 .pt-thumb{position:relative;height:220px;background:#0e0e11;overflow:hidden}
 .pt-thumb img{width:100%;height:100%;object-fit:cover;display:block}
@@ -1570,7 +1570,7 @@ body{background:#111;color:#fff}
 .pt-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:68px;height:68px;border-radius:999px;background:rgba(196,150,60,.92);display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:#fff;box-shadow:0 12px 28px rgba(0,0,0,.32)}
 .pt-photos{display:flex;gap:4px;height:84px;padding:4px;background:#17171a}
 .pt-photos img{flex:1;min-width:0;height:100%;object-fit:cover}
-.pt-caption{padding:16px 18px 18px;font-weight:700;font-size:1rem;color:#fff;background:#17171a}
+.pt-caption{display:flex;align-items:center;min-height:68px;padding:16px 18px;font-weight:700;font-size:1rem;line-height:1.35;color:#fff;background:#17171a;border-bottom:1px solid rgba(255,255,255,.08)}
 .pt-empty{color:rgba(255,255,255,.72);padding:32px 0;text-align:center}
 @media(max-width:720px){.pt-grid{grid-template-columns:1fr}}
 CSS;
