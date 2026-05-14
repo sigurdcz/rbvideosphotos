@@ -241,6 +241,7 @@ body > .cookie-consent{
 .cookie-consent__option p{margin:0;color:rgba(255,255,255,.62);font-size:12px;line-height:1.45}
 .cookie-consent__option input{width:auto}
 .cookie-consent-link{display:inline-flex;margin-top:12px;border:0;background:transparent;color:inherit;text-decoration:underline;cursor:pointer;font:inherit}
+.site-footer-bottom .cookie-consent-link{margin-top:0;vertical-align:baseline;opacity:inherit}
 @media(min-width:720px){.cookie-consent-host > .cookie-consent,body > .cookie-consent{width:min(620px,calc(100vw - 48px));max-width:min(620px,calc(100vw - 48px))}.cookie-consent__grid{grid-template-columns:1fr auto;align-items:end}.cookie-consent__settings{grid-column:1/-1}.cookie-consent__actions{justify-content:flex-end}}
 </style>
 <div class="cookie-consent-host" data-cookie-consent-host hidden>
@@ -518,13 +519,16 @@ body > .cookie-consent{
     }
     function addFooterLink(){
       if(document.querySelector('.cookie-consent-link[data-cookie-open-settings]'))return;
-      var footer=document.querySelector('.site-footer-rich')||document.querySelector('footer');
+      var footer=document.querySelector('.site-footer-bottom')||document.querySelector('.site-footer-rich')||document.querySelector('footer');
       if(!footer)return;
       var button=document.createElement('button');
       button.type='button';
       button.className='cookie-consent-link';
       button.dataset.cookieOpenSettings='1';
       button.textContent='Nastaveni cookies';
+      if (footer.classList && footer.classList.contains('site-footer-bottom')) {
+        footer.appendChild(document.createTextNode(' · '));
+      }
       footer.appendChild(button);
       bindOpeners(footer);
     }

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Manrope:wght@300;400;500;600&display=swap');
 
 :root {
   --jb-ivory: #faf7f2;
@@ -1840,5 +1840,378 @@ body.theme-jemna-bezova.jb-nav-open {
 
   .theme-jemna-bezova .hp-contact-form {
     gap: 14px;
+  }
+}
+
+/* Reference typography and tighter spacing aligned to the provided index.html. */
+.theme-jemna-bezova {
+  --jb-section-padding: 5.25rem;
+  --jb-section-padding-mobile: 3.5rem;
+}
+
+.theme-jemna-bezova body,
+body.theme-jemna-bezova {
+  font-family: "Manrope", sans-serif;
+  font-weight: 400;
+  line-height: 1.8;
+}
+
+.theme-jemna-bezova .container,
+.theme-jemna-bezova .section > .container,
+.theme-jemna-bezova .hp-hero > .container,
+.theme-jemna-bezova .page-hero > .container,
+.theme-jemna-bezova .pf-hero > .container,
+.theme-jemna-bezova .bp-hero > .container,
+.theme-jemna-bezova .fq-hero > .container,
+.theme-jemna-bezova .kt-hero > .container,
+.theme-jemna-bezova .bl-hero > .container,
+.theme-jemna-bezova .pf-detail-hero > .container,
+.theme-jemna-bezova .bp-detail-hero > .container,
+.theme-jemna-bezova .theme-footer > .container,
+.theme-jemna-bezova .theme-header > .container {
+  width: min(1200px, calc(100% - 48px));
+  max-width: 1200px;
+}
+
+.theme-jemna-bezova .theme-header__inner {
+  min-height: 64px;
+}
+
+.theme-jemna-bezova .theme-header.is-scrolled .theme-header__inner {
+  min-height: 58px;
+}
+
+.theme-jemna-bezova .theme-brand {
+  font-size: clamp(1.2rem, 1.8vw, 1.85rem);
+  font-weight: 400;
+  letter-spacing: .14em;
+}
+
+.theme-jemna-bezova .theme-nav-wrap .nav-links {
+  gap: 8px;
+}
+
+.theme-jemna-bezova .theme-nav-wrap .nav-links a {
+  font-family: "Manrope", sans-serif;
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .18em;
+  padding: 10px 12px;
+}
+
+.theme-jemna-bezova .section {
+  padding: var(--jb-section-padding) 0;
+}
+
+.theme-jemna-bezova .section-label,
+.theme-jemna-bezova .hero-tag,
+.theme-jemna-bezova .hero__eyebrow {
+  margin: 0 0 12px;
+  font-size: .65rem;
+  font-weight: 600;
+  letter-spacing: .35em;
+}
+
+.theme-jemna-bezova h1,
+.theme-jemna-bezova h2,
+.theme-jemna-bezova h3,
+.theme-jemna-bezova .section-title,
+.theme-jemna-bezova .theme-footer__brand {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-weight: 300;
+}
+
+.theme-jemna-bezova .section-title {
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  line-height: 1.15;
+  letter-spacing: -.02em;
+}
+
+.theme-jemna-bezova .section-intro,
+.theme-jemna-bezova .hero-sub,
+.theme-jemna-bezova p {
+  font-size: .95rem;
+}
+
+.theme-jemna-bezova .section-intro {
+  max-width: 700px;
+  margin-top: 14px;
+}
+
+.theme-jemna-bezova .btn,
+.theme-jemna-bezova .btn-primary,
+.theme-jemna-bezova .btn-secondary,
+.theme-jemna-bezova .btn-success,
+.theme-jemna-bezova .btn-h--gold,
+.theme-jemna-bezova .nav-cta,
+.theme-jemna-bezova .kt-form-btn,
+.theme-jemna-bezova .ci-link-btn,
+.theme-jemna-bezova .btn-maps,
+.theme-jemna-bezova .hp-cenik-modal__submit,
+.theme-jemna-bezova .hp-contact-form button,
+.theme-jemna-bezova .hp-section-cta .btn-secondary,
+.theme-jemna-bezova .hp-contact-cta .btn-secondary,
+.theme-jemna-bezova .eg-reviews__cta .btn-secondary {
+  min-height: 44px;
+  padding: 12px 22px;
+  font-family: "Manrope", sans-serif;
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .2em;
+}
+
+.theme-jemna-bezova .hp-hero,
+.theme-jemna-bezova .page-hero,
+.theme-jemna-bezova .pf-hero,
+.theme-jemna-bezova .bp-hero,
+.theme-jemna-bezova .fq-hero,
+.theme-jemna-bezova .kt-hero,
+.theme-jemna-bezova .bl-hero,
+.theme-jemna-bezova .pf-detail-hero,
+.theme-jemna-bezova .bp-detail-hero {
+  min-height: clamp(620px, 88vh, 820px);
+  padding: 112px 0 72px;
+}
+
+.theme-jemna-bezova .hp-hero h1,
+.theme-jemna-bezova .page-hero h1,
+.theme-jemna-bezova .pf-hero h1,
+.theme-jemna-bezova .bp-hero h1,
+.theme-jemna-bezova .fq-hero h1,
+.theme-jemna-bezova .kt-hero h1,
+.theme-jemna-bezova .bl-hero h1,
+.theme-jemna-bezova .pf-detail-hero h1,
+.theme-jemna-bezova .bp-detail-hero h1 {
+  font-size: clamp(2.8rem, 7vw, 6.5rem);
+  line-height: .98;
+}
+
+.theme-jemna-bezova .hero-sub {
+  max-width: 640px;
+  margin-top: 18px;
+}
+
+.theme-jemna-bezova .hero-cta-wrap {
+  margin-top: 26px;
+  gap: 12px;
+}
+
+.theme-jemna-bezova .jb-about-shell,
+.theme-jemna-bezova .hp-services-grid,
+.theme-jemna-bezova .svc-grid,
+.theme-jemna-bezova .pt-grid,
+.theme-jemna-bezova .hp-blog-grid,
+.theme-jemna-bezova .bl-grid,
+.theme-jemna-bezova .hp-cenik-grid,
+.theme-jemna-bezova .hp-faq,
+.theme-jemna-bezova .hp-reviews-grid,
+.theme-jemna-bezova .jb-process__steps,
+.theme-jemna-bezova .hp-contact-grid {
+  gap: 20px;
+}
+
+.theme-jemna-bezova .jb-about-copy,
+.theme-jemna-bezova .hp-blog-body,
+.theme-jemna-bezova .hp-cenik-card,
+.theme-jemna-bezova .hp-review-card,
+.theme-jemna-bezova .eg-review-card,
+.theme-jemna-bezova .hp-faq-item,
+.theme-jemna-bezova .jb-process-step,
+.theme-jemna-bezova .hp-contact-box {
+  padding: 24px;
+}
+
+.theme-jemna-bezova .jb-process__header,
+.theme-jemna-bezova .jb-pricing-header,
+.theme-jemna-bezova .jb-reviews-header {
+  margin-bottom: 2rem;
+}
+
+.theme-jemna-bezova .jb-contact-meta {
+  gap: 16px 24px;
+  margin-top: 24px;
+}
+
+.theme-jemna-bezova .jb-contact-meta__label {
+  font-size: .65rem;
+}
+
+.theme-jemna-bezova .hp-contact-form textarea,
+.theme-jemna-bezova .contact-form textarea {
+  min-height: 150px;
+}
+
+.theme-jemna-bezova .theme-footer {
+  padding: 34px 0 38px;
+}
+
+.theme-jemna-bezova .site-footer-rich {
+  width: min(1200px, calc(100% - 48px));
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(220px, .9fr) minmax(260px, .95fr) minmax(220px, .75fr);
+  gap: 28px;
+  align-items: start;
+}
+
+.theme-jemna-bezova .site-footer-title {
+  margin: 0 0 10px;
+  color: var(--jb-gold);
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+}
+
+.theme-jemna-bezova .site-footer-brand__name {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 2rem;
+  font-weight: 300;
+}
+
+.theme-jemna-bezova .site-footer-brand__note,
+.theme-jemna-bezova .site-footer-bottom {
+  font-size: .9rem;
+}
+
+.theme-jemna-bezova .site-footer-bottom .cookie-consent-link {
+  margin-top: 0;
+  color: inherit;
+  vertical-align: baseline;
+}
+
+.theme-jemna-bezova .site-footer-contact {
+  display: grid;
+  gap: 10px;
+}
+
+.theme-jemna-bezova .site-footer-contact__item {
+  display: grid;
+  grid-template-columns: 78px minmax(0, 1fr);
+  gap: 12px;
+  align-items: baseline;
+  color: rgba(247, 238, 228, .82);
+}
+
+.theme-jemna-bezova .site-footer-contact__item span {
+  color: rgba(212, 176, 111, .92);
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+
+.theme-jemna-bezova .site-footer-contact__item strong,
+.theme-jemna-bezova .site-footer-contact__item a {
+  color: #f7efe6;
+  font-size: .98rem;
+  font-weight: 400;
+  word-break: break-word;
+}
+
+.theme-jemna-bezova .site-footer-socials {
+  gap: 12px;
+}
+
+.theme-jemna-bezova .site-footer-socials__list {
+  gap: 10px;
+}
+
+.theme-jemna-bezova .site-footer-social {
+  width: 40px;
+  height: 40px;
+}
+
+@media (max-width: 1024px) {
+  .theme-jemna-bezova .section {
+    padding: 4.5rem 0;
+  }
+
+  .theme-jemna-bezova .site-footer-rich {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .theme-jemna-bezova .container,
+  .theme-jemna-bezova .section > .container,
+  .theme-jemna-bezova .hp-hero > .container,
+  .theme-jemna-bezova .page-hero > .container,
+  .theme-jemna-bezova .pf-hero > .container,
+  .theme-jemna-bezova .bp-hero > .container,
+  .theme-jemna-bezova .fq-hero > .container,
+  .theme-jemna-bezova .kt-hero > .container,
+  .theme-jemna-bezova .bl-hero > .container,
+  .theme-jemna-bezova .pf-detail-hero > .container,
+  .theme-jemna-bezova .bp-detail-hero > .container,
+  .theme-jemna-bezova .theme-footer > .container,
+  .theme-jemna-bezova .theme-header > .container,
+  .theme-jemna-bezova .site-footer-rich {
+    width: calc(100% - 32px);
+  }
+
+  .theme-jemna-bezova .theme-brand {
+    font-size: 1.05rem;
+    letter-spacing: .12em;
+  }
+
+  .theme-jemna-bezova .section {
+    padding: var(--jb-section-padding-mobile) 0;
+  }
+
+  .theme-jemna-bezova .section-title {
+    font-size: clamp(2.1rem, 11vw, 3.25rem);
+  }
+
+  .theme-jemna-bezova .hp-hero,
+  .theme-jemna-bezova .page-hero,
+  .theme-jemna-bezova .pf-hero,
+  .theme-jemna-bezova .bp-hero,
+  .theme-jemna-bezova .fq-hero,
+  .theme-jemna-bezova .kt-hero,
+  .theme-jemna-bezova .bl-hero,
+  .theme-jemna-bezova .pf-detail-hero,
+  .theme-jemna-bezova .bp-detail-hero {
+    min-height: 540px;
+    padding: 92px 0 56px;
+  }
+
+  .theme-jemna-bezova .theme-nav-wrap .nav-links a {
+    font-size: .8rem;
+    padding: 16px 0;
+  }
+
+  .theme-jemna-bezova .btn,
+  .theme-jemna-bezova .btn-primary,
+  .theme-jemna-bezova .btn-secondary,
+  .theme-jemna-bezova .btn-success,
+  .theme-jemna-bezova .btn-h--gold,
+  .theme-jemna-bezova .nav-cta,
+  .theme-jemna-bezova .kt-form-btn,
+  .theme-jemna-bezova .ci-link-btn,
+  .theme-jemna-bezova .btn-maps,
+  .theme-jemna-bezova .hp-cenik-modal__submit,
+  .theme-jemna-bezova .hp-contact-form button,
+  .theme-jemna-bezova .hp-section-cta .btn-secondary,
+  .theme-jemna-bezova .hp-contact-cta .btn-secondary,
+  .theme-jemna-bezova .eg-reviews__cta .btn-secondary {
+    max-width: 280px;
+  }
+
+  .theme-jemna-bezova .jb-about-copy,
+  .theme-jemna-bezova .hp-blog-body,
+  .theme-jemna-bezova .hp-cenik-card,
+  .theme-jemna-bezova .hp-review-card,
+  .theme-jemna-bezova .eg-review-card,
+  .theme-jemna-bezova .hp-faq-item,
+  .theme-jemna-bezova .jb-process-step,
+  .theme-jemna-bezova .hp-contact-box {
+    padding: 20px;
+  }
+
+  .theme-jemna-bezova .site-footer-contact__item {
+    grid-template-columns: 1fr;
+    gap: 4px;
   }
 }

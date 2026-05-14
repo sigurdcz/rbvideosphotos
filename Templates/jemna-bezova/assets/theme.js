@@ -329,6 +329,43 @@
     infoBox.classList.add('jb-contact-box--hidden');
   }
 
+  function syncFooterContactFromSection() {
+    var section = qs('#kontakt');
+    var footer = qs('.site-footer-contact');
+    if (!section || !footer) return;
+
+    var rows = qsa('.hp-contact-row', section).map(function (row) {
+      var label = qs('.hp-contact-label', row);
+      var link = qs('a', row);
+      var labelText = ((label && label.textContent) || '').trim();
+      var labelKey = labelText.toLowerCase();
+      var href = link ? (link.getAttribute('href') || '') : '';
+      if (!link) return null;
+      if (/sit|site|social|instagram|facebook|youtube|tiktok|linkedin|pinterest|telegram|whatsapp/.test(labelKey)) {
+        return null;
+      }
+      if (!/^(tel:|mailto:)/i.test(href)) {
+        return null;
+      }
+      return {
+        label: labelText,
+        href: href,
+        value: (link.textContent || '').trim()
+      };
+    }).filter(Boolean);
+
+    if (!rows.length) return;
+
+    var title = qs('.site-footer-title', footer);
+    var titleHtml = title ? title.outerHTML : '<div class="site-footer-title">Kontakt</div>';
+    footer.innerHTML = titleHtml + rows.map(function (item) {
+      return '<a class="site-footer-contact__item" href="' + item.href + '">' +
+        '<span>' + item.label + '</span>' +
+        '<strong>' + item.value + '</strong>' +
+      '</a>';
+    }).join('');
+  }
+
   initHeaderScroll();
   initMobileNav();
   enhanceHero();
@@ -339,5 +376,6 @@
   enhanceFaq();
   buildStaticProcess();
   enhanceContact();
+  syncFooterContactFromSection();
   initReveals();
 })();

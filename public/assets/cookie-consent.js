@@ -145,13 +145,16 @@
     }
     function addFooterLink(){
       if(document.querySelector('.cookie-consent-link[data-cookie-open-settings]'))return;
-      var footer=document.querySelector('.site-footer-rich')||document.querySelector('footer');
+      var footer=document.querySelector('.site-footer-bottom')||document.querySelector('.site-footer-rich')||document.querySelector('footer');
       if(!footer)return;
       var button=document.createElement('button');
       button.type='button';
       button.className='cookie-consent-link';
       button.dataset.cookieOpenSettings='1';
       button.textContent='Nastaveni cookies';
+      if (footer.classList && footer.classList.contains('site-footer-bottom')) {
+        footer.appendChild(document.createTextNode(' · '));
+      }
       footer.appendChild(button);
       bindOpeners(footer);
     }
