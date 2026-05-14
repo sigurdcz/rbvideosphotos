@@ -508,7 +508,6 @@ HTML;
                 . '<h3 class="hp-cenik-card-title">' . $h($map['cenik_card_' . $i . '_title'] ?? '') . '</h3>'
                 . '<div class="hp-cenik-card-desc">' . nl2br($h($map['cenik_card_' . $i . '_desc'] ?? '')) . '</div>'
                 . '</div>'
-                . '<div class="hp-cenik-card-price">' . $h($map['cenik_card_' . $i . '_price'] ?? '') . '</div>'
                 . '</button>';
         }
 
@@ -520,7 +519,6 @@ HTML;
             . '.hp-cenik-card-body{flex:1}'
             . '.hp-cenik-card-title{font-size:1.25rem;font-weight:700;color:#fff;margin-bottom:12px}'
             . '.hp-cenik-card-desc{color:rgba(255,255,255,.65);line-height:1.7;font-size:.95rem;white-space:pre-line}'
-            . '.hp-cenik-card-price{font-size:1.3rem;font-weight:800;color:#fff;padding-top:20px;border-top:1px solid rgba(255,255,255,.1)}'
             . '.hp-cenik-modal{position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.72)}'
             . '.hp-cenik-modal.is-open{display:flex}'
             . '.hp-cenik-modal__dialog{position:relative;max-width:560px;width:100%;background:#151518;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:28px;box-shadow:0 30px 80px rgba(0,0,0,.5)}'

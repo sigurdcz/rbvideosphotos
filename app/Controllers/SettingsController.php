@@ -33,6 +33,8 @@ class SettingsController extends Controller
 
         $sites = new SiteRepository();
         $site  = $sites->findFirst();
+        $videoOverlayOpacity = str_replace(',', '.', trim((string)($_POST['video_overlay_opacity'] ?? '')));
+        $videoOverlayOpacity = $videoOverlayOpacity === '' ? 0.62 : max(0, min(1, (float)$videoOverlayOpacity));
 
         $data = [
             'name'                  => trim($_POST['name']                  ?? ''),
@@ -60,6 +62,7 @@ class SettingsController extends Controller
             'apple_touch_icon_url'  => trim($_POST['apple_touch_icon_url']  ?? ''),
             'default_hero_video_url' => trim($_POST['default_hero_video_url'] ?? ''),
             'default_hero_poster_url'=> trim($_POST['default_hero_poster_url'] ?? ''),
+            'video_overlay_opacity'  => $videoOverlayOpacity,
         ];
 
         if ($site) {

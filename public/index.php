@@ -140,7 +140,7 @@ function tryServeDatabasePage(string $uri, bool $authenticated = false, bool $pr
         $html = injectPageHeroImage($html, (int)$page['id']);
         $html = injectHomepageHeroImage($html, (int)$site['id'], $isHome);
         $html = injectPageHeroVideo($html, $site, (int)$page['id'], $themeKey);
-        $html = sanitizeFrontendHtml($html);
+        $html = sanitizeFrontendHtml($html, $site);
 
         if ($authenticated) {
             $html = injectCmsEditorChrome(
@@ -620,12 +620,66 @@ HTML;
     return $html . $runtime . $consent;
 }
 
-function sanitizeFrontendHtml(string $html): string
+function sanitizeFrontendHtml(string $html, ?array $site = null): string
 {
     $html = preg_replace('~https?://localhost(?::\d+)?/storage/media/~i', '/storage/media/', $html) ?? $html;
+    $html = injectGlobalVideoOverlayStyles($html, $site);
     $html = injectEditorialGoldOverrides($html);
 
     return injectCookieConsent($html);
+}
+
+function resolveVideoOverlayOpacity(?array $site = null): float
+{
+    static $cached = null;
+
+    if ($site === null) {
+        if ($cached !== null) {
+            return $cached;
+        }
+        $site = (new SiteRepository())->findFirst();
+    }
+
+    $value = (float)($site['video_overlay_opacity'] ?? 0.62);
+    $value = max(0.0, min(1.0, $value));
+
+    if ($site === null || !isset($site['id'])) {
+        $cached = $value;
+    }
+
+    return $value;
+}
+
+function injectGlobalVideoOverlayStyles(string $html, ?array $site = null): string
+{
+    if (str_contains($html, 'data-cms-video-overlay')) {
+        return $html;
+    }
+
+    $overlay = resolveVideoOverlayOpacity($site);
+    $soft = round($overlay * 0.35, 3);
+    $overlayCss = number_format($overlay, 3, '.', '');
+    $softCss = number_format($soft, 3, '.', '');
+
+    $style = <<<HTML
+<style data-cms-video-overlay>
+:root{--cms-video-overlay-opacity:{$overlayCss};--cms-video-overlay-soft-opacity:{$softCss}}
+.theme-hero-video::after,
+.pf-video-wrap::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:linear-gradient(90deg,rgba(0,0,0,var(--cms-video-overlay-opacity)),rgba(0,0,0,var(--cms-video-overlay-soft-opacity)),rgba(0,0,0,var(--cms-video-overlay-opacity)));
+}
+</style>
+HTML;
+
+    if (str_contains($html, '</head>')) {
+        return str_replace('</head>', "\n" . $style . "\n</head>", $html);
+    }
+
+    return $style . $html;
 }
 
 function injectEditorialGoldOverrides(string $html): string
@@ -1659,7 +1713,7 @@ HTML;
         $html = injectPageHeroVideo($html, $site, findPageIdForHeroPath('nase-prace', (int)$site['id']), 'portfolio');
         $html = injectFooterSocials($html, (int)$site['id']);
         $html = injectCmsEditorChrome($html, $uri, $heroTitle, isset($page['id']) ? (int)$page['id'] : null, Auth::check() && isset($_GET['cms_preview']));
-        echo sanitizeFrontendHtml($html);
+        echo sanitizeFrontendHtml($html, $site);
         return true;
     }
 
@@ -1832,7 +1886,7 @@ HTML;
         }
 
         header('Content-Type: text/html; charset=UTF-8');
-        echo sanitizeFrontendHtml(injectFooterSocials($html, (int)$site['id']));
+        echo sanitizeFrontendHtml(injectFooterSocials($html, (int)$site['id']), $site);
         return true;
     }
 
@@ -1951,7 +2005,7 @@ HTML;
     $html = injectPageHeroVideo($html, $site, findPageIdForHeroPath('faq', (int)$site['id']), 'faq');
     $html = injectFooterSocials($html, (int)$site['id']);
     $html = injectCmsEditorChrome($html, '/faq', $heroTitle, isset($page['id']) ? (int)$page['id'] : null, Auth::check() && isset($_GET['cms_preview']));
-    echo sanitizeFrontendHtml($html);
+    echo sanitizeFrontendHtml($html, $site);
     return true;
 }
 
@@ -2165,7 +2219,7 @@ HTML;
     $html = injectFooterSocials($html, (int)$site['id']);
     $html = injectPageHeroVideo($html, $site, isset($page['id']) ? (int)$page['id'] : findPageIdForHeroPath('kontakt', (int)$site['id']), 'contact');
     $html = injectCmsEditorChrome($html, '/kontakt', $heroTitle, isset($page['id']) ? (int)$page['id'] : null, Auth::check() && isset($_GET['cms_preview']));
-    echo sanitizeFrontendHtml($html);
+    echo sanitizeFrontendHtml($html, $site);
     return true;
 }
 
@@ -2302,7 +2356,7 @@ HTML;
     $html = injectFooterSocials($html, (int)$site['id']);
     $html = injectPageHeroVideo($html, $site, isset($page['id']) ? (int)$page['id'] : findPageIdForHeroPath('blog', (int)$site['id']), 'blog');
     $html = injectCmsEditorChrome($html, '/blog', $heroTitle, isset($page['id']) ? (int)$page['id'] : null, Auth::check() && isset($_GET['cms_preview']));
-    echo sanitizeFrontendHtml($html);
+    echo sanitizeFrontendHtml($html, $site);
     return true;
 }
 
@@ -2479,7 +2533,7 @@ HTML;
     }
 
     header('Content-Type: text/html; charset=UTF-8');
-    echo sanitizeFrontendHtml(injectFooterSocials($html, (int)$site['id']));
+    echo sanitizeFrontendHtml(injectFooterSocials($html, (int)$site['id']), $site);
     return true;
 }
 

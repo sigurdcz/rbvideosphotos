@@ -160,6 +160,19 @@ ob_start();
         </div>
       </div>
     </div>
+    <div class="form-group">
+      <label>Intenzita tmaveho prekryvu videa (0-1)</label>
+      <div class="help-text" style="margin-bottom:8px">Globální nastavení pro vsechna hero videa a video playery s overlayem. <code>0</code> = bez ztmaveni, <code>1</code> = maximalni tmavy prekryv.</div>
+      <div class="form-row" style="align-items:end">
+        <div class="form-group" style="flex:1">
+          <input type="range" id="video-overlay-opacity-range" min="0" max="1" step="0.01" value="<?= $h($site['video_overlay_opacity'] ?? '0.62') ?>">
+        </div>
+        <div class="form-group" style="max-width:140px">
+          <input type="number" name="video_overlay_opacity" id="video-overlay-opacity-input" min="0" max="1" step="0.01" value="<?= $h($site['video_overlay_opacity'] ?? '0.62') ?>" placeholder="0.62">
+        </div>
+      </div>
+      <div class="help-text">Aktualni hodnota: <strong id="video-overlay-opacity-value"><?= $h($site['video_overlay_opacity'] ?? '0.62') ?></strong></div>
+    </div>
   </div>
 
   <div class="card">
@@ -336,6 +349,30 @@ ob_start();
 .brand-media-file{font-size:24px;color:var(--c-muted)}
 .brand-media-name{padding:8px;font-size:11px;color:var(--c-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 </style>
+<script>
+(function(){
+  var range = document.getElementById('video-overlay-opacity-range');
+  var input = document.getElementById('video-overlay-opacity-input');
+  var value = document.getElementById('video-overlay-opacity-value');
+  if(!range || !input || !value) return;
+  function normalize(v){
+    var n = parseFloat(String(v).replace(',', '.'));
+    if (!Number.isFinite(n)) n = 0.62;
+    n = Math.max(0, Math.min(1, n));
+    return n.toFixed(2);
+  }
+  function syncFrom(source, target){
+    var normalized = normalize(source.value);
+    source.value = normalized;
+    target.value = normalized;
+    value.textContent = normalized;
+  }
+  range.addEventListener('input', function(){ syncFrom(range, input); });
+  input.addEventListener('input', function(){ syncFrom(input, range); });
+  input.addEventListener('change', function(){ syncFrom(input, range); });
+  syncFrom(input, range);
+})();
+</script>
 
 <div class="brand-media-modal" id="brand-media-modal" aria-hidden="true">
   <div class="brand-media-dialog" role="dialog" aria-modal="true" aria-label="Vyber media">

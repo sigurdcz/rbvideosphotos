@@ -139,6 +139,7 @@ class SiteRepository
             'apple_touch_icon_url',
             'default_hero_video_url',
             'default_hero_poster_url',
+            'video_overlay_opacity',
         ];
 
         return array_values(array_filter($columns, fn(string $col): bool => $this->supportsColumn($col)));

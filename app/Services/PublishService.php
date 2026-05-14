@@ -154,6 +154,7 @@ class PublishService
         $html        = $this->injectSiteLogo($html, $site);
         $html        = $this->injectPageHeroImage($html, (int)$page['id']);
         $html = $this->injectPageHeroVideo($html, $site, (int)$page['id']);
+        $html = $this->injectGlobalVideoOverlayStyles($html, $site);
         $html = $this->injectEditorialGoldOverrides($html);
 
         // Write HTML file
@@ -501,6 +502,38 @@ HTML;
   background:rgba(5,5,5,.88)!important;
   border-color:var(--eg-gold,#c6943d)!important;
   color:var(--eg-gold,#c6943d)!important;
+}
+</style>
+HTML;
+
+        if (str_contains($html, '</head>')) {
+            return str_replace('</head>', "\n" . $style . "\n</head>", $html);
+        }
+
+        return $style . $html;
+    }
+
+    private function injectGlobalVideoOverlayStyles(string $html, array $site): string
+    {
+        if (str_contains($html, 'data-cms-video-overlay')) {
+            return $html;
+        }
+
+        $overlay = max(0.0, min(1.0, (float)($site['video_overlay_opacity'] ?? 0.62)));
+        $soft = round($overlay * 0.35, 3);
+        $overlayCss = number_format($overlay, 3, '.', '');
+        $softCss = number_format($soft, 3, '.', '');
+
+        $style = <<<HTML
+<style data-cms-video-overlay>
+:root{--cms-video-overlay-opacity:{$overlayCss};--cms-video-overlay-soft-opacity:{$softCss}}
+.theme-hero-video::after,
+.pf-video-wrap::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:linear-gradient(90deg,rgba(0,0,0,var(--cms-video-overlay-opacity)),rgba(0,0,0,var(--cms-video-overlay-soft-opacity)),rgba(0,0,0,var(--cms-video-overlay-opacity)));
 }
 </style>
 HTML;
