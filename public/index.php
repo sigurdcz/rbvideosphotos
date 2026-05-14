@@ -167,7 +167,7 @@ function tryServeDatabasePage(string $uri, bool $authenticated = false, bool $pr
 
 function injectCookieConsent(string $html): string
 {
-    if (str_contains($html, 'data-cookie-consent')) {
+    if (str_contains($html, 'data-cookie-consent-modal')) {
         return $html;
     }
 
@@ -184,7 +184,7 @@ function injectCookieConsent(string $html): string
     }
 
     $consent = <<<'HTML'
-<style data-cookie-consent>
+<style data-cookie-consent-style>
 .cookie-consent-backdrop[hidden],.cookie-consent[hidden],.cookie-consent-host[hidden]{display:none!important}
 .cookie-consent-host{
   position:fixed;
@@ -240,7 +240,7 @@ body > .cookie-consent{
 </style>
 <div class="cookie-consent-host" data-cookie-consent-host hidden>
   <div class="cookie-consent-backdrop" data-cookie-consent-backdrop hidden></div>
-  <div class="cookie-consent" data-cookie-consent role="dialog" aria-live="polite" aria-label="Nastaveni cookies" data-mode="summary" hidden>
+  <div class="cookie-consent" data-cookie-consent-modal role="dialog" aria-live="polite" aria-label="Nastaveni cookies" data-mode="summary" hidden>
   <div class="cookie-consent__grid">
     <div>
       <div class="cookie-consent__label">Soukromi</div>
@@ -272,7 +272,7 @@ body > .cookie-consent{
   </div>
   </div>
 </div>
-<script data-cookie-consent>
+<script data-cookie-consent-script>
 (function(){
   var settings=window.cmsCookieConsentSettings||{};
   var enabled=settings.cookieConsentEnabled!==false;
@@ -362,7 +362,7 @@ body > .cookie-consent{
     window.cmsCookieConsent=manager;
 
     var host=document.querySelector('[data-cookie-consent-host]');
-    var box=document.querySelector('[data-cookie-consent]');
+    var box=document.querySelector('[data-cookie-consent-modal]');
     var backdrop=document.querySelector('[data-cookie-consent-backdrop]');
     debugLog('init:start',{
       enabled:enabled,
