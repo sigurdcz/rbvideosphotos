@@ -27,8 +27,9 @@ use App\Repositories\SiteRepository;
 use App\Repositories\TemplateRepository;
 use App\Services\HomepageContentService;
 use App\Services\PageRenderer;
-use App\Services\ThemeTemplateRegistry;
 use App\Services\SeoRenderer;
+use App\Services\ThemeTemplateRegistry;
+use App\Support\FrontendAssetManager;
 
 Env::load(dirname(__DIR__) . '/.env');
 
@@ -623,10 +624,77 @@ HTML;
 function sanitizeFrontendHtml(string $html, ?array $site = null): string
 {
     $html = preg_replace('~https?://localhost(?::\d+)?/storage/media/~i', '/storage/media/', $html) ?? $html;
+    $html = normalizeLegacyFrontendMarkup($html);
+    $html = externalizeBodyCssVariables($html);
     $html = injectGlobalVideoOverlayStyles($html, $site);
     $html = injectEditorialGoldOverrides($html);
+    $html = injectCookieConsent($html);
+    $html = injectSharedFrontendAssets($html);
+    $html = extractInlineStyleBlocks($html);
+    $html = extractInlineBodyScripts($html);
+    return $html;
+}
 
-    return injectCookieConsent($html);
+function injectSharedFrontendAssets(string $html): string
+{
+    $html = FrontendAssetManager::injectStylesheet($html, '/assets/frontend-runtime.css', 'data-cms-frontend-runtime-css');
+    $html = FrontendAssetManager::injectStylesheet($html, '/assets/cookie-consent.css', 'data-cookie-consent-css');
+    $html = FrontendAssetManager::injectScript($html, '/assets/frontend-runtime.js', 'data-cms-frontend-runtime-js');
+    return FrontendAssetManager::injectScript($html, '/assets/cookie-consent.js', 'data-cookie-consent-js');
+}
+
+function normalizeLegacyFrontendMarkup(string $html): string
+{
+    $html = preg_replace(
+        '~<div>\s*(<a\b(?=[^>]*\bclass=(["\'])[^"\']*\bbtn-secondary\b[^"\']*\2)[^>]*>.*?</a>)\s*</div>~is',
+        '<div class="hp-section-cta">$1</div>',
+        $html
+    ) ?? $html;
+    $html = str_replace(' style="color:inherit;text-decoration:none"', ' class="blog-title-link"', $html);
+    $html = str_replace('<strong style="display:block;color:#fff;margin-bottom:8px">', '<strong class="hp-faq-question">', $html);
+    $html = str_replace('<p style="color:rgba(255,255,255,.72);line-height:1.6;margin:0">', '<p class="hp-faq-answer">', $html);
+    $html = str_replace('<p style="color:rgba(255,255,255,.45)">', '<p class="frontend-note">', $html);
+    $html = str_replace('<p style="color:rgba(255,255,255,.45);text-align:center;padding:32px 0">', '<p class="frontend-note frontend-note--center">', $html);
+    $html = str_replace('<p style="color:rgba(255,255,255,.4)">', '<p class="frontend-note">', $html);
+    $html = str_replace(' style="display:none" tabindex="-1" autocomplete="off"', ' class="hp-honeypot" tabindex="-1" autocomplete="off"', $html);
+    return str_replace(
+        '<div style="height:100%;background:#222;display:flex;align-items:center;justify-content:center;font-size:2rem;color:rgba(255,255,255,.3)">&#9654;</div>',
+        '<div class="pt-thumb__placeholder">&#9654;</div>',
+        $html
+    );
+}
+
+function externalizeBodyCssVariables(string $html): string
+{
+    if (!preg_match('/<body([^>]*)>/i', $html, $m, PREG_OFFSET_CAPTURE)) {
+        return $html;
+    }
+
+    $bodyTag = $m[0][0];
+    $bodyAttrs = $m[1][0];
+    if (!preg_match_all('/\sdata-cms-css-var-([a-z0-9-]+)=(["\'])(.*?)\2/i', $bodyAttrs, $matches, PREG_SET_ORDER)) {
+        return $html;
+    }
+
+    $vars = [];
+    foreach ($matches as $match) {
+        $vars['--' . strtolower($match[1])] = html_entity_decode($match[3], ENT_QUOTES, 'UTF-8');
+    }
+
+    $cleanAttrs = preg_replace('/\sdata-cms-css-var-[a-z0-9-]+=(["\']).*?\1/i', '', $bodyAttrs) ?? $bodyAttrs;
+    $cleanTag = '<body' . $cleanAttrs . '>';
+    $html = substr_replace($html, $cleanTag, $m[0][1], strlen($bodyTag));
+
+    $cssParts = [];
+    foreach ($vars as $name => $value) {
+        $cssParts[] = $name . ':' . $value;
+    }
+
+    if ($cssParts === []) {
+        return $html;
+    }
+
+    return FrontendAssetManager::injectGeneratedCss($html, 'body{' . implode(';', $cssParts) . ';}', 'body-vars', 'data-cms-body-vars');
 }
 
 function resolveVideoOverlayOpacity(?array $site = null): float
@@ -652,17 +720,11 @@ function resolveVideoOverlayOpacity(?array $site = null): float
 
 function injectGlobalVideoOverlayStyles(string $html, ?array $site = null): string
 {
-    if (str_contains($html, 'data-cms-video-overlay')) {
-        return $html;
-    }
-
     $overlay = resolveVideoOverlayOpacity($site);
     $soft = round($overlay * 0.35, 3);
     $overlayCss = number_format($overlay, 3, '.', '');
     $softCss = number_format($soft, 3, '.', '');
-
-    $style = <<<HTML
-<style data-cms-video-overlay>
+    $css = <<<CSS
 :root{--cms-video-overlay-opacity:{$overlayCss};--cms-video-overlay-soft-opacity:{$softCss}}
 .theme-hero-video::after,
 .pf-video-wrap::after{
@@ -672,52 +734,91 @@ function injectGlobalVideoOverlayStyles(string $html, ?array $site = null): stri
   pointer-events:none;
   background:linear-gradient(90deg,rgba(0,0,0,var(--cms-video-overlay-opacity)),rgba(0,0,0,var(--cms-video-overlay-soft-opacity)),rgba(0,0,0,var(--cms-video-overlay-opacity)));
 }
-</style>
-HTML;
+CSS;
 
-    if (str_contains($html, '</head>')) {
-        return str_replace('</head>', "\n" . $style . "\n</head>", $html);
-    }
-
-    return $style . $html;
+    return FrontendAssetManager::injectGeneratedCss($html, $css, 'video-overlay', 'data-cms-video-overlay');
 }
 
 function injectEditorialGoldOverrides(string $html): string
 {
-    if (!str_contains($html, 'theme-editorial-gold') || str_contains($html, 'data-cms-editorial-gold-fixes')) {
+    return $html;
+}
+
+function extractInlineStyleBlocks(string $html): string
+{
+    if (!preg_match_all('~<style\b[^>]*>(.*?)</style>~is', $html, $matches, PREG_SET_ORDER)) {
         return $html;
     }
 
-    $style = <<<'HTML'
-<style data-cms-editorial-gold-fixes>
-.theme-editorial-gold [data-block="reviews_cta"]{display:flex;justify-content:flex-start;margin-top:22px!important}
-.theme-editorial-gold .eg-reviews__cta,
-.theme-editorial-gold .hp-section-cta,
-.theme-editorial-gold .hp-contact-cta{margin-top:22px!important}
-.theme-editorial-gold .hp-section-cta .btn-secondary,
-.theme-editorial-gold [data-block="reviews_cta"] > .btn-secondary,
-.theme-editorial-gold .eg-reviews__cta .btn-secondary,
-.theme-editorial-gold .hp-contact-cta .btn-secondary{
-  background:rgba(5,5,5,.72)!important;
-  border-color:rgba(224,184,102,.68)!important;
-  color:#f7f1e8!important;
-}
-.theme-editorial-gold .hp-section-cta .btn-secondary:hover,
-.theme-editorial-gold [data-block="reviews_cta"] > .btn-secondary:hover,
-.theme-editorial-gold .eg-reviews__cta .btn-secondary:hover,
-.theme-editorial-gold .hp-contact-cta .btn-secondary:hover{
-  background:rgba(5,5,5,.88)!important;
-  border-color:var(--eg-gold,#c6943d)!important;
-  color:var(--eg-gold,#c6943d)!important;
-}
-</style>
-HTML;
-
-    if (str_contains($html, '</head>')) {
-        return str_replace('</head>', "\n" . $style . "\n</head>", $html);
+    $styles = [];
+    foreach ($matches as $match) {
+        $css = trim($match[1]);
+        if ($css === '') {
+            continue;
+        }
+        if (
+            str_contains($css, '.site-logo-img') ||
+            str_contains($css, '.site-footer-rich') ||
+            str_contains($css, '.theme-hero-video') ||
+            str_contains($css, '.theme-editorial-gold [data-block="reviews_cta"]') ||
+            str_contains($css, '.cookie-consent')
+        ) {
+            continue;
+        }
+        $styles[] = $css;
     }
 
-    return $style . $html;
+    $html = preg_replace('~<style\b[^>]*>.*?</style>~is', '', $html) ?? $html;
+    $styles = array_values(array_filter($styles, static fn(string $css): bool => $css !== ''));
+    if ($styles === []) {
+        return $html;
+    }
+
+    return FrontendAssetManager::injectGeneratedCss($html, implode("\n", $styles), 'inline-style-blocks', 'data-cms-inline-styles');
+}
+
+function extractInlineBodyScripts(string $html): string
+{
+    $headClosePos = stripos($html, '</head>');
+    if ($headClosePos === false) {
+        return $html;
+    }
+
+    $headPart = substr($html, 0, $headClosePos + 7);
+    $bodyPart = substr($html, $headClosePos + 7);
+    if ($bodyPart === false || !preg_match_all('~<script\b(?![^>]*\bsrc=)(?![^>]*\btype=(["\'])application/ld\+json\1)[^>]*>(.*?)</script>~is', $bodyPart, $matches, PREG_SET_ORDER)) {
+        return $html;
+    }
+
+    $scripts = [];
+    foreach ($matches as $match) {
+        if (
+            str_contains($match[2], 'window.cmsCookieConsentSettings') ||
+            str_contains($match[2], 'function syncAdminBarOffset') ||
+            str_contains($match[2], 'function enhanceHero()') ||
+            str_contains($match[2], 'IntersectionObserver') ||
+            str_contains($match[2], "document.querySelector('[data-cenik-modal]')")
+        ) {
+            continue;
+        }
+        $scripts[] = trim($match[2]);
+    }
+
+    $bodyPart = preg_replace_callback(
+        '~<script\b(?![^>]*\bsrc=)(?![^>]*\btype=(["\'])application/ld\+json\1)[^>]*>(.*?)</script>~is',
+        static function (array $match): string {
+            $script = $match[2];
+            return str_contains($script, 'window.cmsCookieConsentSettings') ? $match[0] : '';
+        },
+        $bodyPart
+    ) ?? $bodyPart;
+
+    $scripts = array_values(array_filter($scripts, static fn(string $js): bool => $js !== ''));
+    if ($scripts === []) {
+        return $headPart . $bodyPart;
+    }
+
+    return FrontendAssetManager::injectGeneratedJs($headPart . $bodyPart, implode("\n", $scripts), 'inline-body-scripts', 'data-cms-inline-body-scripts');
 }
 
 function injectCmsEditorChrome(string $html, string $uri, string $pageTitle, ?int $pageId, bool $previewMode = false): string
@@ -760,7 +861,7 @@ function injectCmsEditorChrome(string $html, string $uri, string $pageTitle, ?in
     <span class="cms-ab-email">{$userEmail}</span>
     {$editorButton}
     <a class="cms-ab-btn" href="/admin">Administrace</a>
-    <form method="POST" action="/admin/logout" style="margin:0;padding:0;display:inline">
+    <form method="POST" action="/admin/logout" class="cms-ab-form">
       <input type="hidden" name="_csrf" value="{$csrfToken}">
       <button type="submit" class="cms-ab-btn cms-ab-logout">Odhlasit</button>
     </form>
@@ -768,24 +869,8 @@ function injectCmsEditorChrome(string $html, string $uri, string $pageTitle, ?in
 </div>
 HTML;
 
-    $adminBarScript = <<<'HTML'
-<script>
-(function(){
-  function syncAdminBarOffset(){
-    var bar = document.getElementById('cms-adminbar');
-    if (!bar || !document.documentElement) return;
-    document.documentElement.style.setProperty('--cms-adminbar-offset', bar.offsetHeight + 'px');
-  }
-  window.addEventListener('resize', syncAdminBarOffset);
-  window.addEventListener('load', syncAdminBarOffset);
-  syncAdminBarOffset();
-})();
-</script>
-HTML;
-
     $html = str_replace('</head>', "\n" . $editorMeta . "\n</head>", $html);
     $html = preg_replace('/<body\b([^>]*)>/i', '<body$1>' . "\n" . $adminBar, $html, 1) ?? $html;
-    $html = str_replace('</body>', "\n" . $adminBarScript . "\n</body>", $html);
     if (!$previewMode && $pageId !== null) {
         $html = str_replace('</body>', "\n<script src=\"/assets/inline-editor.js\"></script>\n</body>", $html);
     }
@@ -845,27 +930,7 @@ function injectHomepageHeroImage(string $html, int $siteId, bool $isHome): strin
         return $html;
     }
 
-    $styleValue = '--theme-hero-image:url(\'' . str_replace("'", '%27', $heroImage) . '\')';
-
-    if (preg_match('/<body([^>]*)>/i', $html, $m)) {
-        $attrs = $m[1];
-        $styleAttr = ' style="' . htmlspecialchars($styleValue . ';', ENT_QUOTES) . '"';
-        if (preg_match('/\sstyle=(["\'])(.*?)\1/i', $attrs, $styleMatch)) {
-            $existing = html_entity_decode($styleMatch[2], ENT_QUOTES, 'UTF-8');
-            if (str_contains($existing, '--theme-hero-image')) {
-                $existing = preg_replace('/--theme-hero-image\s*:\s*[^;]+;?/i', $styleValue . ';', $existing) ?? $existing;
-            } else {
-                $existing = rtrim($existing, '; ') . ';' . $styleValue . ';';
-            }
-            $attrs = preg_replace('/\sstyle=(["\'])(.*?)\1/i', ' style="' . htmlspecialchars($existing, ENT_QUOTES) . '"', $attrs, 1) ?? $attrs;
-        } else {
-            $attrs .= $styleAttr;
-        }
-
-        return preg_replace('/<body([^>]*)>/i', '<body' . $attrs . '>', $html, 1) ?? $html;
-    }
-
-    return $html;
+    return injectBodyCssVariableToken($html, 'theme-hero-image', "url('" . str_replace("'", '%27', $heroImage) . "')");
 }
 
 function injectPageHeroImage(string $html, int $pageId): string
@@ -875,7 +940,7 @@ function injectPageHeroImage(string $html, int $pageId): string
         return $html;
     }
 
-    return injectBodyCssVariable($html, '--theme-page-hero-image', "url('" . str_replace("'", '%27', $heroImage) . "')");
+    return injectBodyCssVariableToken($html, 'theme-page-hero-image', "url('" . str_replace("'", '%27', $heroImage) . "')");
 }
 
 function resolvePageHeroImageUrl(int $pageId): string
@@ -897,30 +962,22 @@ function resolvePageHeroImageUrl(int $pageId): string
     return '';
 }
 
-function injectBodyCssVariable(string $html, string $name, string $value): string
+function injectBodyCssVariableToken(string $html, string $name, string $value): string
 {
-    $styleValue = $name . ':' . $value;
-
-    if (preg_match('/<body([^>]*)>/i', $html, $m)) {
-        $attrs = $m[1];
-        $styleAttr = ' style="' . htmlspecialchars($styleValue . ';', ENT_QUOTES) . '"';
-        $pattern = '/' . preg_quote($name, '/') . '\s*:\s*[^;]+;?/i';
-        if (preg_match('/\sstyle=(["\'])(.*?)\1/i', $attrs, $styleMatch)) {
-            $existing = html_entity_decode($styleMatch[2], ENT_QUOTES, 'UTF-8');
-            if (preg_match($pattern, $existing)) {
-                $existing = preg_replace($pattern, $styleValue . ';', $existing) ?? $existing;
-            } else {
-                $existing = rtrim($existing, '; ') . ';' . $styleValue . ';';
-            }
-            $attrs = preg_replace('/\sstyle=(["\'])(.*?)\1/i', ' style="' . htmlspecialchars($existing, ENT_QUOTES) . '"', $attrs, 1) ?? $attrs;
-        } else {
-            $attrs .= $styleAttr;
-        }
-
-        return preg_replace('/<body([^>]*)>/i', '<body' . $attrs . '>', $html, 1) ?? $html;
+    if (!preg_match('/<body([^>]*)>/i', $html, $m)) {
+        return $html;
     }
 
-    return $html;
+    $attrs = $m[1];
+    $attrName = 'data-cms-css-var-' . strtolower($name);
+    $attrValue = htmlspecialchars($value, ENT_QUOTES);
+    if (preg_match('/\s' . preg_quote($attrName, '/') . '=(["\']).*?\1/i', $attrs)) {
+        $attrs = preg_replace('/\s' . preg_quote($attrName, '/') . '=(["\']).*?\1/i', ' ' . $attrName . '="' . $attrValue . '"', $attrs, 1) ?? $attrs;
+    } else {
+        $attrs .= ' ' . $attrName . '="' . $attrValue . '"';
+    }
+
+    return preg_replace('/<body([^>]*)>/i', '<body' . $attrs . '>', $html, 1) ?? $html;
 }
 
 function resolveHomepageHeroImageUrl(int $siteId): string

@@ -30,6 +30,12 @@
   gap: 10px;
 }
 
+.cms-ab-form {
+  margin: 0;
+  padding: 0;
+  display: inline;
+}
+
 .cms-ab-logo {
   font-weight: 700;
   font-size: 13px;

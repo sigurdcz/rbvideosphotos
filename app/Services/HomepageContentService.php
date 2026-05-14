@@ -478,7 +478,7 @@ HTML;
         return $css . '<article class="hp-blog-card">'
             . $imageHtml
             . '<div class="hp-blog-body">'
-            . '<h3 class="hp-blog-title"><a href="/' . $h($post['slug']) . '" style="color:inherit;text-decoration:none">'
+            . '<h3 class="hp-blog-title"><a href="/' . $h($post['slug']) . '" class="blog-title-link">'
             . $h($post['title']) . '</a></h3>'
             . '<p class="hp-blog-excerpt">' . $h($excerpt) . '</p>'
             . '<a class="hp-blog-link" href="/' . $h($post['slug']) . '">&#268;&#237;st d&#225;l &rarr;</a>'
@@ -603,9 +603,9 @@ HTML;
         $item = $items[$index];
         $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
 
-        return '<strong style="display:block;color:#fff;margin-bottom:8px">'
+        return '<strong class="hp-faq-question">'
             . $h($item['question']) . '</strong>'
-            . '<p style="color:rgba(255,255,255,.72);line-height:1.6;margin:0">'
+            . '<p class="hp-faq-answer">'
             . nl2br($h($item['answer'])) . '</p>';
     }
 

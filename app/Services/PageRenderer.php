@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Support\FrontendAssetManager;
 use DOMDocument;
 use DOMXPath;
 
@@ -194,13 +195,7 @@ class PageRenderer
      */
     public function injectAssets(string $html, string $css, string $js): string
     {
-        if ($css !== '') {
-            $html = str_replace('</head>', "\n<style>\n{$css}\n</style>\n</head>", $html);
-        }
-        if ($js !== '') {
-            $html = str_replace('</body>', "\n<script>\n{$js}\n</script>\n</body>", $html);
-        }
-        return $html;
+        return FrontendAssetManager::injectInlineAssets($html, $css, $js);
     }
 
     private function buildVideoEmbedUrl(string $videoUrl): string

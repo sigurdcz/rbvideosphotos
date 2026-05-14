@@ -15,6 +15,7 @@ use App\Repositories\SeoRepository;
 use App\Repositories\SiteRepository;
 use App\Repositories\TemplateRepository;
 use App\Services\ThemeTemplateRegistry;
+use App\Support\FrontendAssetManager;
 
 class PublishService
 {
@@ -154,8 +155,13 @@ class PublishService
         $html        = $this->injectSiteLogo($html, $site);
         $html        = $this->injectPageHeroImage($html, (int)$page['id']);
         $html = $this->injectPageHeroVideo($html, $site, (int)$page['id']);
+        $html = $this->normalizeLegacyFrontendMarkup($html);
+        $html = $this->injectSharedFrontendAssets($html);
+        $html = $this->externalizeBodyCssVariables($html);
         $html = $this->injectGlobalVideoOverlayStyles($html, $site);
         $html = $this->injectEditorialGoldOverrides($html);
+        $html = $this->extractInlineStyleBlocks($html);
+        $html = $this->extractInlineBodyScripts($html);
 
         // Write HTML file
         $filePath = $this->resolveFilePath($page['url_path']);
@@ -339,7 +345,7 @@ HTML;
             return $html;
         }
 
-        return $this->injectBodyCssVariable($html, '--theme-page-hero-image', "url('" . str_replace("'", '%27', $url) . "')");
+        return $this->injectBodyCssVariableToken($html, 'theme-page-hero-image', "url('" . str_replace("'", '%27', $url) . "')");
     }
 
     private function injectPageHeroVideo(string $html, array $site, int $pageId): string
@@ -515,17 +521,12 @@ HTML;
 
     private function injectGlobalVideoOverlayStyles(string $html, array $site): string
     {
-        if (str_contains($html, 'data-cms-video-overlay')) {
-            return $html;
-        }
-
         $overlay = max(0.0, min(1.0, (float)($site['video_overlay_opacity'] ?? 0.62)));
         $soft = round($overlay * 0.35, 3);
         $overlayCss = number_format($overlay, 3, '.', '');
         $softCss = number_format($soft, 3, '.', '');
 
-        $style = <<<HTML
-<style data-cms-video-overlay>
+        $css = <<<CSS
 :root{--cms-video-overlay-opacity:{$overlayCss};--cms-video-overlay-soft-opacity:{$softCss}}
 .theme-hero-video::after,
 .pf-video-wrap::after{
@@ -535,14 +536,146 @@ HTML;
   pointer-events:none;
   background:linear-gradient(90deg,rgba(0,0,0,var(--cms-video-overlay-opacity)),rgba(0,0,0,var(--cms-video-overlay-soft-opacity)),rgba(0,0,0,var(--cms-video-overlay-opacity)));
 }
-</style>
-HTML;
+CSS;
 
-        if (str_contains($html, '</head>')) {
-            return str_replace('</head>', "\n" . $style . "\n</head>", $html);
+        return FrontendAssetManager::injectGeneratedCss($html, $css, 'video-overlay', 'data-cms-video-overlay');
+    }
+
+    private function injectSharedFrontendAssets(string $html): string
+    {
+        $html = FrontendAssetManager::injectStylesheet($html, '/assets/frontend-runtime.css', 'data-cms-frontend-runtime-css');
+        $html = FrontendAssetManager::injectStylesheet($html, '/assets/cookie-consent.css', 'data-cookie-consent-css');
+        $html = FrontendAssetManager::injectScript($html, '/assets/frontend-runtime.js', 'data-cms-frontend-runtime-js');
+        return FrontendAssetManager::injectScript($html, '/assets/cookie-consent.js', 'data-cookie-consent-js');
+    }
+
+    private function normalizeLegacyFrontendMarkup(string $html): string
+    {
+        $html = preg_replace(
+            '~<div>\s*(<a\b(?=[^>]*\bclass=(["\'])[^"\']*\bbtn-secondary\b[^"\']*\2)[^>]*>.*?</a>)\s*</div>~is',
+            '<div class="hp-section-cta">$1</div>',
+            $html
+        ) ?? $html;
+        $html = str_replace(' style="color:inherit;text-decoration:none"', ' class="blog-title-link"', $html);
+        $html = str_replace('<strong style="display:block;color:#fff;margin-bottom:8px">', '<strong class="hp-faq-question">', $html);
+        $html = str_replace('<p style="color:rgba(255,255,255,.72);line-height:1.6;margin:0">', '<p class="hp-faq-answer">', $html);
+        $html = str_replace('<p style="color:rgba(255,255,255,.45)">', '<p class="frontend-note">', $html);
+        $html = str_replace('<p style="color:rgba(255,255,255,.45);text-align:center;padding:32px 0">', '<p class="frontend-note frontend-note--center">', $html);
+        return str_replace(
+            '<div style="height:100%;background:#222;display:flex;align-items:center;justify-content:center;font-size:2rem;color:rgba(255,255,255,.3)">&#9654;</div>',
+            '<div class="pt-thumb__placeholder">&#9654;</div>',
+            $html
+        );
+    }
+
+    private function externalizeBodyCssVariables(string $html): string
+    {
+        if (!preg_match('/<body([^>]*)>/i', $html, $m, PREG_OFFSET_CAPTURE)) {
+            return $html;
         }
 
-        return $style . $html;
+        $bodyTag = $m[0][0];
+        $bodyAttrs = $m[1][0];
+        if (!preg_match_all('/\sdata-cms-css-var-([a-z0-9-]+)=(["\'])(.*?)\2/i', $bodyAttrs, $matches, PREG_SET_ORDER)) {
+            return $html;
+        }
+
+        $vars = [];
+        foreach ($matches as $match) {
+            $vars['--' . strtolower($match[1])] = html_entity_decode($match[3], ENT_QUOTES, 'UTF-8');
+        }
+
+        $cleanAttrs = preg_replace('/\sdata-cms-css-var-[a-z0-9-]+=(["\']).*?\1/i', '', $bodyAttrs) ?? $bodyAttrs;
+        $cleanTag = '<body' . $cleanAttrs . '>';
+        $html = substr_replace($html, $cleanTag, $m[0][1], strlen($bodyTag));
+
+        $cssParts = [];
+        foreach ($vars as $name => $value) {
+            $cssParts[] = $name . ':' . $value;
+        }
+
+        if ($cssParts === []) {
+            return $html;
+        }
+
+        return FrontendAssetManager::injectGeneratedCss($html, 'body{' . implode(';', $cssParts) . ';}', 'body-vars', 'data-cms-body-vars');
+    }
+
+    private function extractInlineStyleBlocks(string $html): string
+    {
+        if (!preg_match_all('~<style\b[^>]*>(.*?)</style>~is', $html, $matches, PREG_SET_ORDER)) {
+            return $html;
+        }
+
+        $styles = [];
+        foreach ($matches as $match) {
+            $css = trim($match[1]);
+            if ($css === '') {
+                continue;
+            }
+            if (
+                str_contains($css, '.site-logo-img') ||
+                str_contains($css, '.site-footer-rich') ||
+                str_contains($css, '.theme-hero-video') ||
+                str_contains($css, '.theme-editorial-gold [data-block="reviews_cta"]') ||
+                str_contains($css, '.cookie-consent')
+            ) {
+                continue;
+            }
+            $styles[] = $css;
+        }
+
+        $html = preg_replace('~<style\b[^>]*>.*?</style>~is', '', $html) ?? $html;
+        $styles = array_values(array_filter($styles, static fn(string $css): bool => $css !== ''));
+        if ($styles === []) {
+            return $html;
+        }
+
+        return FrontendAssetManager::injectGeneratedCss($html, implode("\n", $styles), 'inline-style-blocks', 'data-cms-inline-styles');
+    }
+
+    private function extractInlineBodyScripts(string $html): string
+    {
+        $headClosePos = stripos($html, '</head>');
+        if ($headClosePos === false) {
+            return $html;
+        }
+
+        $headPart = substr($html, 0, $headClosePos + 7);
+        $bodyPart = substr($html, $headClosePos + 7);
+        if ($bodyPart === false || !preg_match_all('~<script\b(?![^>]*\bsrc=)(?![^>]*\btype=(["\'])application/ld\+json\1)[^>]*>(.*?)</script>~is', $bodyPart, $matches, PREG_SET_ORDER)) {
+            return $html;
+        }
+
+        $scripts = [];
+        foreach ($matches as $match) {
+            if (
+                str_contains($match[2], 'window.cmsCookieConsentSettings') ||
+                str_contains($match[2], 'function syncAdminBarOffset') ||
+                str_contains($match[2], 'function enhanceHero()') ||
+                str_contains($match[2], 'IntersectionObserver') ||
+                str_contains($match[2], "document.querySelector('[data-cenik-modal]')")
+            ) {
+                continue;
+            }
+            $scripts[] = trim($match[2]);
+        }
+
+        $bodyPart = preg_replace_callback(
+        '~<script\b(?![^>]*\bsrc=)(?![^>]*\btype=(["\'])application/ld\+json\1)[^>]*>(.*?)</script>~is',
+        static function (array $match): string {
+            $script = $match[2];
+            return str_contains($script, 'window.cmsCookieConsentSettings') ? $match[0] : '';
+        },
+        $bodyPart
+    ) ?? $bodyPart;
+
+        $scripts = array_values(array_filter($scripts, static fn(string $js): bool => $js !== ''));
+        if ($scripts === []) {
+            return $headPart . $bodyPart;
+        }
+
+        return FrontendAssetManager::injectGeneratedJs($headPart . $bodyPart, implode("\n", $scripts), 'inline-body-scripts', 'data-cms-inline-body-scripts');
     }
 
     private function buildRichFooterHtml(array $site): string
@@ -615,23 +748,19 @@ HTML;
             . '</div>';
     }
 
-    private function injectBodyCssVariable(string $html, string $name, string $value): string
+    private function injectBodyCssVariableToken(string $html, string $name, string $value): string
     {
-        $styleValue = $name . ':' . $value;
         if (!preg_match('/<body([^>]*)>/i', $html, $m)) {
             return $html;
         }
 
         $attrs = $m[1];
-        $pattern = '/' . preg_quote($name, '/') . '\s*:\s*[^;]+;?/i';
-        if (preg_match('/\sstyle=(["\'])(.*?)\1/i', $attrs, $styleMatch)) {
-            $existing = html_entity_decode($styleMatch[2], ENT_QUOTES, 'UTF-8');
-            $existing = preg_match($pattern, $existing)
-                ? (preg_replace($pattern, $styleValue . ';', $existing) ?? $existing)
-                : rtrim($existing, '; ') . ';' . $styleValue . ';';
-            $attrs = preg_replace('/\sstyle=(["\'])(.*?)\1/i', ' style="' . htmlspecialchars($existing, ENT_QUOTES) . '"', $attrs, 1) ?? $attrs;
+        $attrName = 'data-cms-css-var-' . strtolower($name);
+        $attrValue = htmlspecialchars($value, ENT_QUOTES);
+        if (preg_match('/\s' . preg_quote($attrName, '/') . '=(["\']).*?\1/i', $attrs)) {
+            $attrs = preg_replace('/\s' . preg_quote($attrName, '/') . '=(["\']).*?\1/i', ' ' . $attrName . '="' . $attrValue . '"', $attrs, 1) ?? $attrs;
         } else {
-            $attrs .= ' style="' . htmlspecialchars($styleValue . ';', ENT_QUOTES) . '"';
+            $attrs .= ' ' . $attrName . '="' . $attrValue . '"';
         }
 
         return preg_replace('/<body([^>]*)>/i', '<body' . $attrs . '>', $html, 1) ?? $html;

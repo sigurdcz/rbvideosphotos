@@ -19,9 +19,89 @@
     element.innerHTML = words.join(' ') + ' <span class="jb-title-accent">' + accent + '</span>';
   }
 
+  function initHeaderScroll() {
+    var header = qs('.theme-header');
+    if (!header) return;
+
+    function sync() {
+      header.classList.toggle('is-scrolled', window.scrollY > 18);
+    }
+
+    window.addEventListener('scroll', sync, { passive: true });
+    sync();
+  }
+
+  function initMobileNav() {
+    var nav = qs('.theme-nav-wrap .site-nav');
+    if (!nav) return;
+    var toggle = qs('.nav-toggle-input', nav);
+    var label = qs('.nav-toggle-label', nav);
+    var links = qs('.nav-links', nav);
+    if (!toggle || !label || !links) return;
+
+    function syncState() {
+      var open = toggle.checked === true;
+      label.classList.toggle('is-active', open);
+      label.setAttribute('aria-expanded', open ? 'true' : 'false');
+      document.body.classList.toggle('jb-nav-open', open);
+    }
+
+    toggle.addEventListener('change', syncState);
+    qsa('a', links).forEach(function (link) {
+      link.addEventListener('click', function () {
+        toggle.checked = false;
+        syncState();
+      });
+    });
+
+    window.addEventListener('resize', function () {
+      if (window.innerWidth > 768 && toggle.checked) {
+        toggle.checked = false;
+        syncState();
+      }
+    });
+
+    syncState();
+  }
+
+  function markReveals() {
+    qsa(
+      '.jb-about-shell, .pt-tile, .hp-blog-card, .hp-cenik-card, .hp-review-card, .hp-faq-item, .jb-process-step, .hp-section-cta, .jb-contact-meta'
+    ).forEach(function (element) {
+      element.classList.add('jb-reveal');
+    });
+  }
+
+  function initReveals() {
+    markReveals();
+    var elements = qsa('.jb-reveal');
+    if (!elements.length) return;
+
+    if (!('IntersectionObserver' in window)) {
+      elements.forEach(function (element) {
+        element.classList.add('is-visible');
+      });
+      return;
+    }
+
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add('is-visible');
+        observer.unobserve(entry.target);
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -48px 0px' });
+
+    elements.forEach(function (element, index) {
+      element.style.transitionDelay = Math.min(index * 70, 280) + 'ms';
+      observer.observe(element);
+    });
+  }
+
   function enhanceHero() {
     var hero = qs('.hp-hero');
     if (!hero) return;
+
     hero.classList.add('jb-hero');
 
     var cta = qs('.hero-cta-wrap', hero);
@@ -63,14 +143,14 @@
     shell.className = 'jb-about-shell';
 
     var visual = document.createElement('div');
-    visual.className = 'jb-about-visual';
+    visual.className = 'jb-about-visual jb-reveal';
     visual.innerHTML =
       '<div class="jb-about-visual__frame"></div>' +
       '<div class="jb-about-visual__panel"><span>[ Vase fotografie ]</span></div>' +
       '<div class="jb-about-badge"><strong>10+</strong><span>let zkusenosti</span></div>';
 
     var copy = document.createElement('div');
-    copy.className = 'jb-about-copy';
+    copy.className = 'jb-about-copy jb-reveal';
     copy.appendChild(label);
     copy.appendChild(title);
     copy.appendChild(intro);
@@ -78,6 +158,7 @@
     var highlights = document.createElement('div');
     highlights.className = 'jb-about-highlights';
     qsa('.hp-svc-card, .svc-card', grid).slice(0, 4).forEach(function (card) {
+      card.classList.add('jb-panel-card');
       var item = document.createElement('div');
       item.className = 'jb-about-highlight';
       var cardTitle = qs('.hp-svc-card__title, h3', card);
@@ -102,6 +183,7 @@
     if (title) accentLastWord(title);
 
     qsa('.pt-tile', section).forEach(function (tile, index) {
+      tile.classList.add('jb-panel-card');
       var thumb = qs('.pt-thumb', tile);
       var caption = qs('.pt-caption', tile);
       if (thumb && caption && !qs('.jb-pt-label', thumb)) {
@@ -125,6 +207,7 @@
 
     var icons = ['sun', 'heart', 'layers'];
     qsa('.hp-cenik-card', section).forEach(function (card, index) {
+      card.classList.add('jb-panel-card');
       if (!qs('.jb-price-icon', card)) {
         var icon = document.createElement('div');
         icon.className = 'jb-price-icon jb-price-icon--' + (icons[index] || 'spark');
@@ -155,6 +238,7 @@
     if (title) accentLastWord(title);
 
     qsa('.hp-review-card', section).forEach(function (card, index) {
+      card.classList.add('jb-panel-card');
       if (index > 2) {
         card.classList.add('jb-review-card--hidden');
         return;
@@ -179,18 +263,37 @@
     var title = qs('.section-title', section);
     if (title) accentLastWord(title);
 
-    qsa('.hp-faq-item', section).forEach(function (item, index) {
-      if (index > 3) {
-        item.classList.add('jb-process-step--hidden');
-        return;
-      }
-      if (!qs('.jb-process-step__num', item)) {
-        var num = document.createElement('div');
-        num.className = 'jb-process-step__num';
-        num.textContent = String(index + 1).padStart(2, '0');
-        item.insertBefore(num, item.firstChild);
-      }
+    qsa('.hp-faq-item', section).forEach(function (item) {
+      item.classList.add('jb-panel-card');
     });
+  }
+
+  function buildStaticProcess() {
+    var reviews = qs('#hodnoceni');
+    var contact = qs('#kontakt');
+    if (!contact || qs('.jb-process')) return;
+
+    var section = document.createElement('section');
+    section.className = 'section jb-process';
+    section.innerHTML =
+      '<div class="container">' +
+      '  <div class="jb-process__header jb-reveal">' +
+      '    <p class="section-label">Jak to probiha</p>' +
+      '    <h2 class="section-title">Cesta k vasim <span>dokonalym fotkam</span></h2>' +
+      '  </div>' +
+      '  <div class="jb-process__steps">' +
+      '    <article class="jb-process-step jb-reveal"><div class="jb-process-step__num">01</div><h3>Seznameni</h3><p>Nezavazna konzultace, kde probereme vase predstavy, styl a termin foceni nebo svatby.</p></article>' +
+      '    <article class="jb-process-step jb-reveal"><div class="jb-process-step__num">02</div><h3>Planovani</h3><p>Spolecne nastavime harmonogram, lokace a dulezite momenty, ktere chceme zachytit.</p></article>' +
+      '    <article class="jb-process-step jb-reveal"><div class="jb-process-step__num">03</div><h3>Vas den</h3><p>Diskretne zachytim emoce, detaily i spontanni okamziky tak, aby vse pusobilo prirozene.</p></article>' +
+      '    <article class="jb-process-step jb-reveal"><div class="jb-process-step__num">04</div><h3>Predani</h3><p>Hotove vystupy dostanete v online galerii a ve finalni podobe pripravene pro dalsi sdileni i tisk.</p></article>' +
+      '  </div>' +
+      '</div>';
+
+    if (reviews && reviews.parentNode) {
+      reviews.parentNode.insertBefore(section, contact);
+      return;
+    }
+    contact.parentNode.insertBefore(section, contact);
   }
 
   function enhanceContact() {
@@ -204,7 +307,7 @@
     if (!infoBox || !formBox) return;
 
     var meta = document.createElement('div');
-    meta.className = 'jb-contact-meta';
+    meta.className = 'jb-contact-meta jb-reveal';
 
     qsa('.hp-contact-row', infoBox).forEach(function (row) {
       var label = qs('.hp-contact-label', row);
@@ -222,14 +325,19 @@
     });
 
     formBox.appendChild(meta);
+    formBox.classList.add('jb-panel-card');
     infoBox.classList.add('jb-contact-box--hidden');
   }
 
+  initHeaderScroll();
+  initMobileNav();
   enhanceHero();
   enhanceServices();
   enhancePortfolio();
   enhancePricing();
   enhanceReviews();
   enhanceFaq();
+  buildStaticProcess();
   enhanceContact();
+  initReveals();
 })();
