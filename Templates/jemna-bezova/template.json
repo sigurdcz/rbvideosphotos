@@ -1,0 +1,26 @@
+{
+  "key": "jemna-bezova",
+  "name": "Jemna bezova",
+  "description": "Elegantni svetla sablona s tmavou navigaci, bezovym hero blokem a editorialnim rozvrzenim inspirovanym luxusnim svatebnim webem.",
+  "version": "1.0.0",
+  "author": "SEO CMS",
+  "sort_order": 50,
+  "layout_html": "layout.html",
+  "layout_css": "assets/theme.css",
+  "layout_js": "assets/theme.js",
+  "pages": [
+    "homepage",
+    "sluzby",
+    "portfolio",
+    "portfolio-detail",
+    "blog",
+    "blog-post",
+    "cenik",
+    "faq",
+    "kontakt"
+  ],
+  "assets": {
+    "css": [],
+    "js": []
+  }
+}
