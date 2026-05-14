@@ -119,6 +119,8 @@ class SiteRepository
             'google_analytics_id',
             'google_tag_manager_id',
             'cookie_consent_enabled',
+            'cookie_consent_analytics_enabled',
+            'cookie_consent_marketing_enabled',
             'head_scripts',
             'body_scripts',
             'analytics_head_scripts',

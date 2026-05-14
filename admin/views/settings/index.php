@@ -163,16 +163,36 @@ ob_start();
   </div>
 
   <div class="card">
-    <div class="card-title">Analytics</div>
+    <div class="card-title">Cookies, consent a analytics</div>
     <div class="form-group">
       <label style="display:flex;align-items:center;gap:8px">
         <input type="checkbox" name="cookie_consent_enabled" value="1" <?= (int)($site['cookie_consent_enabled'] ?? 1) === 1 ? 'checked' : '' ?> style="width:auto">
-        Cookie consent enabled
+        Zobrazovat consent listu
       </label>
       <p class="help-text" style="margin-top:6px">
-        Pokud je zapnuto, analyticke a marketingove skripty se spusti az po souhlasu uzivatele.
-        Pokud je vypnuto, consent lista se nezobrazi a analytics se nacita automaticky.
+        Toto je hlavni prepinac cookie listy. Kdyz je zapnuty, navstevnik vidi consent listu a skripty podle kategorii
+        se spusti az po souhlasu. Kdyz je vypnuty, lista se nezobrazi a skripty se nacitaji bez consent kroku.
       </p>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label style="display:flex;align-items:center;gap:8px">
+          <input type="checkbox" name="cookie_consent_analytics_enabled" value="1" <?= (int)($site['cookie_consent_analytics_enabled'] ?? 1) === 1 ? 'checked' : '' ?> style="width:auto">
+          Povolit kategorii Analyticke cookies
+        </label>
+        <p class="help-text" style="margin-top:6px">
+          Pouzij pro Google Analytics, Clarity, Hotjar a dalsi merici nastroje.
+        </p>
+      </div>
+      <div class="form-group">
+        <label style="display:flex;align-items:center;gap:8px">
+          <input type="checkbox" name="cookie_consent_marketing_enabled" value="1" <?= (int)($site['cookie_consent_marketing_enabled'] ?? 1) === 1 ? 'checked' : '' ?> style="width:auto">
+          Povolit kategorii Marketingove cookies
+        </label>
+        <p class="help-text" style="margin-top:6px">
+          Pouzij pro remarketing, reklamni pixely a dalsi marketingove skripty.
+        </p>
+      </div>
     </div>
     <div class="form-row">
       <div class="form-group">

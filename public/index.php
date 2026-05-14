@@ -221,11 +221,11 @@ function injectCookieConsent(string $html): string
         <label>Nezbytne cookies <input type="checkbox" checked disabled></label>
         <p>Vzdy aktivni. Jsou potreba pro zakladni fungovani webu.</p>
       </div>
-      <div class="cookie-consent__option">
+      <div class="cookie-consent__option" data-cookie-option="analytics">
         <label>Analyticke cookies <input type="checkbox" data-cookie-category="analytics"></label>
         <p>Google Analytics a merici nastroje, pouze se souhlasem.</p>
       </div>
-      <div class="cookie-consent__option">
+      <div class="cookie-consent__option" data-cookie-option="marketing">
         <label>Marketingove cookies <input type="checkbox" data-cookie-category="marketing"></label>
         <p>Reklamni a remarketingove nastroje, pouze pokud je pouzivame a povolite je.</p>
       </div>
@@ -240,6 +240,8 @@ function injectCookieConsent(string $html): string
   var manager=window.cmsCookieConsent||null;
   var settings=window.cmsCookieConsentSettings||{};
   var enabled=settings.cookieConsentEnabled!==false;
+  var analyticsCategoryEnabled=settings.analyticsCategoryEnabled!==false;
+  var marketingCategoryEnabled=settings.marketingCategoryEnabled!==false;
   if(!manager){
     manager=(function(){
       var key='cookie_consent_preferences';
@@ -250,11 +252,11 @@ function injectCookieConsent(string $html): string
           if(!raw)return null;
           var parsed=JSON.parse(raw);
           if(!parsed||parsed.version!==version)return null;
-          return {necessary:true,analytics:parsed.analytics===true,marketing:parsed.marketing===true,timestamp:parsed.timestamp||new Date().toISOString(),version:version};
+          return {necessary:true,analytics:analyticsCategoryEnabled&&parsed.analytics===true,marketing:marketingCategoryEnabled&&parsed.marketing===true,timestamp:parsed.timestamp||new Date().toISOString(),version:version};
         }catch(e){return null;}
       }
       function savePreferences(data){
-        var normalized={necessary:true,analytics:data&&data.analytics===true,marketing:data&&data.marketing===true,timestamp:new Date().toISOString(),version:version};
+        var normalized={necessary:true,analytics:analyticsCategoryEnabled&&data&&data.analytics===true,marketing:marketingCategoryEnabled&&data&&data.marketing===true,timestamp:new Date().toISOString(),version:version};
         try{if(window.localStorage)localStorage.setItem(key,JSON.stringify(normalized));}catch(e){}
         document.dispatchEvent(new CustomEvent('cms-cookie-consent:updated',{detail:normalized}));
         return normalized;
@@ -271,9 +273,16 @@ function injectCookieConsent(string $html): string
     var p=pref()||{analytics:false,marketing:false};
     box.querySelectorAll('[data-cookie-category]').forEach(function(input){input.checked=p[input.dataset.cookieCategory]===true;});
   }
+  function syncCategoryVisibility(){
+    var analyticsRow=box.querySelector('[data-cookie-option="analytics"]');
+    var marketingRow=box.querySelector('[data-cookie-option="marketing"]');
+    if(analyticsRow) analyticsRow.style.display=analyticsCategoryEnabled?'':'none';
+    if(marketingRow) marketingRow.style.display=marketingCategoryEnabled?'':'none';
+  }
   function openSettings(){
     if(!box||!enabled)return;
     sync();
+    syncCategoryVisibility();
     box.classList.add('is-visible','is-settings');
   }
   function addFooterLink(){
@@ -289,6 +298,7 @@ function injectCookieConsent(string $html): string
     footer.appendChild(button);
   }
   if(!box||!enabled){hide();return;}
+  syncCategoryVisibility();
   addFooterLink();
   if(!pref())box.classList.add('is-visible');
   var acceptAll=box.querySelector('[data-cookie-accept-all]');
@@ -370,8 +380,24 @@ function injectCmsEditorChrome(string $html, string $uri, string $pageTitle, ?in
 </div>
 HTML;
 
+    $adminBarScript = <<<'HTML'
+<script>
+(function(){
+  function syncAdminBarOffset(){
+    var bar = document.getElementById('cms-adminbar');
+    if (!bar || !document.documentElement) return;
+    document.documentElement.style.setProperty('--cms-adminbar-offset', bar.offsetHeight + 'px');
+  }
+  window.addEventListener('resize', syncAdminBarOffset);
+  window.addEventListener('load', syncAdminBarOffset);
+  syncAdminBarOffset();
+})();
+</script>
+HTML;
+
     $html = str_replace('</head>', "\n" . $editorMeta . "\n</head>", $html);
     $html = preg_replace('/<body\b([^>]*)>/i', '<body$1>' . "\n" . $adminBar, $html, 1) ?? $html;
+    $html = str_replace('</body>', "\n" . $adminBarScript . "\n</body>", $html);
     if (!$previewMode && $pageId !== null) {
         $html = str_replace('</body>', "\n<script src=\"/assets/inline-editor.js\"></script>\n</body>", $html);
     }
@@ -581,7 +607,7 @@ function injectPageHeroVideo(string $html, array $site, ?int $pageId, string $pa
 {
     $siteId = (int)($site['id'] ?? 0);
     $pageKey = getThemeTemplateRegistry()->normalizePageKey($pageKey);
-    if (str_contains($html, 'theme-hero-video')) {
+    if (hasHeroVideoElement($html)) {
         return ensureHeroVideoStyle($html);
     }
 
@@ -600,7 +626,7 @@ function injectPageHeroVideo(string $html, array $site, ?int $pageId, string $pa
 
     $count = 0;
     $html = preg_replace_callback(
-        '/(<section\b(?=[^>]*\bclass=(["\'])(?=[^"\']*(?:hp-hero|hero))[^"\']*\2)[^>]*>)/i',
+        '/(<section\b(?=[^>]*\bclass=(["\'])(?=[^"\']*(?:hp-hero|hero|page-hero|pf-hero|bl-hero|kt-hero|fq-hero|bp-hero|pf-detail-hero|bp-detail-hero))[^"\']*\2)[^>]*>)/i',
         static fn(array $m): string => $m[1] . $videoHtml,
         $html,
         1,
@@ -627,13 +653,13 @@ function ensureHeroVideoStyle(string $html): string
 
     $style = <<<'HTML'
 <style data-cms-hero-video>
-.hp-hero,.hero,.pf-hero,.bl-hero,.kt-hero,.fq-hero,.bp-hero,.pf-detail-hero{position:relative;overflow:hidden}
-.hp-hero::before,.hero::before,.pf-hero::before,.bl-hero::before,.kt-hero::before,.fq-hero::before,.bp-hero::before,.pf-detail-hero::before{z-index:0!important}
+.hp-hero,.hero,.page-hero,.pf-hero,.bl-hero,.kt-hero,.fq-hero,.bp-hero,.pf-detail-hero,.bp-detail-hero{position:relative;overflow:hidden}
+.hp-hero::before,.hero::before,.page-hero::before,.pf-hero::before,.bl-hero::before,.kt-hero::before,.fq-hero::before,.bp-hero::before,.pf-detail-hero::before,.bp-detail-hero::before{z-index:0!important}
 .theme-hero-video{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;pointer-events:none;background:#050505;background-size:cover;background-position:center}
 .theme-hero-video--embed{overflow:hidden;background-size:cover;background-position:center}
 .theme-hero-video--embed iframe{position:absolute;top:50%;left:50%;width:120vw;height:67.5vw;min-width:213.33vh;min-height:120vh;transform:translate(-50%,-50%);border:0;pointer-events:none}
 .theme-hero-video::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.62),rgba(0,0,0,.22),rgba(0,0,0,.58))}
-.hp-hero>.container,.hero>.container,.pf-hero>.container,.bl-hero>.container,.kt-hero>.container,.fq-hero>.container,.bp-hero>.container,.pf-detail-hero>.container,.hero-content{position:relative;z-index:3}
+.hp-hero>.container,.hero>.container,.page-hero>.container,.pf-hero>.container,.bl-hero>.container,.kt-hero>.container,.fq-hero>.container,.bp-hero>.container,.pf-detail-hero>.container,.bp-detail-hero>.container,.hero-content{position:relative;z-index:3}
 </style>
 HTML;
 
@@ -696,6 +722,11 @@ function buildHeroVideoHtml(string $videoUrl, string $posterUrl = ''): string
     }
 
     return '';
+}
+
+function hasHeroVideoElement(string $html): bool
+{
+    return (bool) preg_match('/<[^>]+\bclass=(["\'])[^"\']*\btheme-hero-video\b[^"\']*\1/i', $html);
 }
 
 function buildVideoEmbedUrl(string $videoUrl): string

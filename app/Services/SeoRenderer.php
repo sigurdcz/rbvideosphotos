@@ -82,6 +82,8 @@ class SeoRenderer
     {
         $settings = [
             'cookieConsentEnabled' => (int)($site['cookie_consent_enabled'] ?? 1) === 1,
+            'analyticsCategoryEnabled' => (int)($site['cookie_consent_analytics_enabled'] ?? 1) === 1,
+            'marketingCategoryEnabled' => (int)($site['cookie_consent_marketing_enabled'] ?? 1) === 1,
             'googleAnalyticsId' => trim((string)($site['google_analytics_id'] ?? '')),
             'googleTagManagerId' => trim((string)($site['google_tag_manager_id'] ?? '')),
             'analyticsHeadScripts' => (string)($site['analytics_head_scripts'] ?? ''),
@@ -102,10 +104,18 @@ window.cmsCookieConsentSettings = {$json};
   var storageKey = 'cookie_consent_preferences';
   var settings = window.cmsCookieConsentSettings || {};
   var consentEnabled = settings.cookieConsentEnabled !== false;
+  var analyticsCategoryEnabled = settings.analyticsCategoryEnabled !== false;
+  var marketingCategoryEnabled = settings.marketingCategoryEnabled !== false;
   var version = '1.0';
 
   function defaultPreferences(){
-    return {necessary:true,analytics:false,marketing:false,timestamp:new Date().toISOString(),version:version};
+    return {
+      necessary:true,
+      analytics: analyticsCategoryEnabled ? false : false,
+      marketing: marketingCategoryEnabled ? false : false,
+      timestamp:new Date().toISOString(),
+      version:version
+    };
   }
 
   function getPreferences(){
@@ -119,8 +129,8 @@ window.cmsCookieConsentSettings = {$json};
       if (!parsed || parsed.version !== version) return null;
       return {
         necessary:true,
-        analytics: parsed.analytics === true,
-        marketing: parsed.marketing === true,
+        analytics: analyticsCategoryEnabled && parsed.analytics === true,
+        marketing: marketingCategoryEnabled && parsed.marketing === true,
         timestamp: parsed.timestamp || new Date().toISOString(),
         version: version
       };
@@ -132,8 +142,8 @@ window.cmsCookieConsentSettings = {$json};
   function savePreferences(preferences){
     var normalized = {
       necessary:true,
-      analytics: preferences && preferences.analytics === true,
-      marketing: preferences && preferences.marketing === true,
+      analytics: analyticsCategoryEnabled && preferences && preferences.analytics === true,
+      marketing: marketingCategoryEnabled && preferences && preferences.marketing === true,
       timestamp:new Date().toISOString(),
       version:version
     };
@@ -149,12 +159,14 @@ window.cmsCookieConsentSettings = {$json};
 
   function canLoadAnalytics(){
     if (!consentEnabled) return true;
+    if (!analyticsCategoryEnabled) return false;
     var preferences = getPreferences();
     return !!(preferences && preferences.analytics === true);
   }
 
   function canLoadMarketing(){
     if (!consentEnabled) return true;
+    if (!marketingCategoryEnabled) return false;
     var preferences = getPreferences();
     return !!(preferences && preferences.marketing === true);
   }

@@ -1,13 +1,19 @@
 /* Inline editor — edit-mode styles */
 
 /* ── Admin bar ───────────────────────────────────────────────────────────── */
+:root {
+  --cms-adminbar-offset: 0px;
+}
+
 #cms-adminbar {
   position: relative;
   z-index: 99998;
   min-height: 40px;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
+  gap: 8px 16px;
   padding: 0 16px;
   background: #1e1e2e;
   border-bottom: 1px solid rgba(255,255,255,0.08);
@@ -113,6 +119,17 @@
 
 /* The CMS bar lives in the normal page flow so it never covers template headers. */
 body { padding-top: 0 !important; }
+
+body > #cms-adminbar ~ .theme-header,
+body > #cms-adminbar ~ .site-header,
+body > #cms-adminbar ~ .nav,
+body > #cms-adminbar ~ .navbar,
+body > #cms-adminbar + .theme-shell .theme-header,
+body > #cms-adminbar + .theme-shell .site-header,
+body > #cms-adminbar + .theme-shell .nav,
+body > #cms-adminbar + .theme-shell .navbar {
+  top: var(--cms-adminbar-offset) !important;
+}
 
 [data-inline-key] {
   outline: 2px dashed rgba(99, 102, 241, 0.45);

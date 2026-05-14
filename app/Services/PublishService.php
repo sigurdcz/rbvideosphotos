@@ -342,7 +342,7 @@ HTML;
 
     private function injectPageHeroVideo(string $html, array $site, int $pageId): string
     {
-        if (str_contains($html, 'theme-hero-video')) {
+        if ($this->hasHeroVideoElement($html)) {
             return $this->ensureHeroVideoStyle($html);
         }
 
@@ -365,7 +365,7 @@ HTML;
 
         $count = 0;
         $html = preg_replace_callback(
-            '/(<section\b(?=[^>]*\bclass=(["\'])(?=[^"\']*(?:hp-hero|hero))[^"\']*\2)[^>]*>)/i',
+            '/(<section\b(?=[^>]*\bclass=(["\'])(?=[^"\']*(?:hp-hero|hero|page-hero|pf-hero|bl-hero|kt-hero|fq-hero|bp-hero|pf-detail-hero|bp-detail-hero))[^"\']*\2)[^>]*>)/i',
             static fn(array $m): string => $m[1] . $videoHtml,
             $html,
             1,
@@ -387,12 +387,13 @@ HTML;
 
         $style = <<<'HTML'
 <style data-cms-hero-video>
-.hp-hero,.hero,.pf-hero,.bl-hero,.kt-hero,.fq-hero,.bp-hero,.pf-detail-hero{position:relative;overflow:hidden}
-.hp-hero::before,.hero::before,.pf-hero::before,.bl-hero::before,.kt-hero::before,.fq-hero::before,.bp-hero::before,.pf-detail-hero::before{z-index:0!important}
+.hp-hero,.hero,.page-hero,.pf-hero,.bl-hero,.kt-hero,.fq-hero,.bp-hero,.pf-detail-hero,.bp-detail-hero{position:relative;overflow:hidden}
+.hp-hero::before,.hero::before,.page-hero::before,.pf-hero::before,.bl-hero::before,.kt-hero::before,.fq-hero::before,.bp-hero::before,.pf-detail-hero::before,.bp-detail-hero::before{z-index:0!important}
 .theme-hero-video{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;pointer-events:none;background:#050505;background-size:cover;background-position:center}
 .theme-hero-video--embed{overflow:hidden;background-size:cover;background-position:center}
 .theme-hero-video--embed iframe{position:absolute;top:50%;left:50%;width:120vw;height:67.5vw;min-width:213.33vh;min-height:120vh;transform:translate(-50%,-50%);border:0;pointer-events:none}
-.hp-hero>.container,.hero>.container,.pf-hero>.container,.bl-hero>.container,.kt-hero>.container,.fq-hero>.container,.bp-hero>.container,.pf-detail-hero>.container,.hero-content{position:relative;z-index:3}
+.theme-hero-video::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.62),rgba(0,0,0,.22),rgba(0,0,0,.58))}
+.hp-hero>.container,.hero>.container,.page-hero>.container,.pf-hero>.container,.bl-hero>.container,.kt-hero>.container,.fq-hero>.container,.bp-hero>.container,.pf-detail-hero>.container,.bp-detail-hero>.container,.hero-content{position:relative;z-index:3}
 </style>
 HTML;
 
@@ -574,6 +575,11 @@ HTML;
             return $normalized;
         }
         return '/' . ltrim($normalized, '/');
+    }
+
+    private function hasHeroVideoElement(string $html): bool
+    {
+        return (bool) preg_match('/<[^>]+\bclass=(["\'])[^"\']*\btheme-hero-video\b[^"\']*\1/i', $html);
     }
 
     private function ensureDir(string $dir): void
