@@ -2215,3 +2215,237 @@ body.theme-jemna-bezova {
     gap: 4px;
   }
 }
+
+/* Subpage normalization: full-width sections, contained content, no hero video. */
+.theme-jemna-bezova .grid-wrap,
+.theme-jemna-bezova .pf-main,
+.theme-jemna-bezova .fq-wrap,
+.theme-jemna-bezova .kt-wrap,
+.theme-jemna-bezova .bl-grid-wrap,
+.theme-jemna-bezova .bp-content-wrap {
+  width: 100%;
+  max-width: none;
+}
+
+.theme-jemna-bezova .grid-wrap > .container,
+.theme-jemna-bezova .pf-main > .container,
+.theme-jemna-bezova .fq-wrap > .container,
+.theme-jemna-bezova .kt-wrap > .container,
+.theme-jemna-bezova .bl-grid-wrap > .container,
+.theme-jemna-bezova .bp-content-wrap > .container {
+  width: min(1200px, calc(100% - 48px));
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.theme-jemna-bezova .pf-hero,
+.theme-jemna-bezova .bp-hero,
+.theme-jemna-bezova .fq-hero,
+.theme-jemna-bezova .kt-hero,
+.theme-jemna-bezova .bl-hero,
+.theme-jemna-bezova .pf-detail-hero,
+.theme-jemna-bezova .page-hero {
+  min-height: 280px;
+  padding: 88px 0 40px;
+  background:
+    linear-gradient(180deg, rgba(79, 63, 48, .92), rgba(92, 74, 57, .82)),
+    radial-gradient(circle at 50% 24%, rgba(235, 213, 171, .16), transparent 30%),
+    linear-gradient(135deg, #5b4737, #74604d 46%, #584637 100%);
+}
+
+.theme-jemna-bezova .pf-hero::before,
+.theme-jemna-bezova .bp-hero::before,
+.theme-jemna-bezova .fq-hero::before,
+.theme-jemna-bezova .kt-hero::before,
+.theme-jemna-bezova .bl-hero::before,
+.theme-jemna-bezova .pf-detail-hero::before,
+.theme-jemna-bezova .page-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(29, 22, 17, .28), rgba(29, 22, 17, .18)),
+    var(--theme-page-hero-image, var(--theme-hero-image, linear-gradient(135deg, #6c5846, #9a8773))) center / cover no-repeat;
+  opacity: .42;
+  mix-blend-mode: normal;
+}
+
+.theme-jemna-bezova .pf-hero .theme-hero-video,
+.theme-jemna-bezova .bp-hero .theme-hero-video,
+.theme-jemna-bezova .fq-hero .theme-hero-video,
+.theme-jemna-bezova .kt-hero .theme-hero-video,
+.theme-jemna-bezova .bl-hero .theme-hero-video,
+.theme-jemna-bezova .pf-detail-hero .theme-hero-video,
+.theme-jemna-bezova .page-hero .theme-hero-video {
+  display: none !important;
+}
+
+.theme-jemna-bezova .pf-hero > .container,
+.theme-jemna-bezova .bp-hero > .container,
+.theme-jemna-bezova .fq-hero > .container,
+.theme-jemna-bezova .kt-hero > .container,
+.theme-jemna-bezova .bl-hero > .container,
+.theme-jemna-bezova .pf-detail-hero > .container,
+.theme-jemna-bezova .page-hero > .container {
+  max-width: 900px;
+}
+
+.theme-jemna-bezova .pf-hero h1,
+.theme-jemna-bezova .bp-hero h1,
+.theme-jemna-bezova .fq-hero h1,
+.theme-jemna-bezova .kt-hero h1,
+.theme-jemna-bezova .bl-hero h1,
+.theme-jemna-bezova .pf-detail-hero h1,
+.theme-jemna-bezova .page-hero h1 {
+  font-size: clamp(2.3rem, 4.8vw, 4rem);
+  letter-spacing: -.03em;
+}
+
+.theme-jemna-bezova .pf-hero p,
+.theme-jemna-bezova .bp-hero p,
+.theme-jemna-bezova .fq-hero p,
+.theme-jemna-bezova .kt-hero p,
+.theme-jemna-bezova .bl-hero p,
+.theme-jemna-bezova .pf-detail-hero p,
+.theme-jemna-bezova .page-hero p,
+.theme-jemna-bezova .bp-hero .bp-excerpt {
+  margin-top: 12px;
+  font-size: .98rem;
+  line-height: 1.75;
+}
+
+.theme-jemna-bezova .grid-wrap,
+.theme-jemna-bezova .pf-main,
+.theme-jemna-bezova .bl-grid-wrap,
+.theme-jemna-bezova .bp-content-wrap {
+  padding: 3.75rem 0 4.5rem;
+  background: #fcf9f5;
+}
+
+.theme-jemna-bezova .fq-wrap {
+  padding: 3.75rem 0 4.5rem;
+  background: #fbf9f6;
+}
+
+.theme-jemna-bezova .kt-wrap {
+  padding: 3.5rem 0 4.25rem;
+  background:
+    linear-gradient(180deg, rgba(88, 69, 51, .98), rgba(65, 52, 40, .98)),
+    var(--jb-brown);
+}
+
+.theme-jemna-bezova .pf-main .pf-description,
+.theme-jemna-bezova .bp-content {
+  max-width: 820px;
+}
+
+.theme-jemna-bezova .pf-main .pf-description,
+.theme-jemna-bezova .bp-content p,
+.theme-jemna-bezova .bp-content li,
+.theme-jemna-bezova .bp-content blockquote {
+  color: var(--theme-muted);
+}
+
+.theme-jemna-bezova .bp-content h2,
+.theme-jemna-bezova .bp-content h3 {
+  color: var(--jb-brown-strong);
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-weight: 400;
+}
+
+.theme-jemna-bezova .bp-featured {
+  width: 100%;
+  max-height: 420px;
+  background: #d4c4b2;
+}
+
+.theme-jemna-bezova .bp-featured img {
+  width: 100%;
+  max-height: 420px;
+  object-fit: cover;
+  filter: sepia(.12) saturate(.82) contrast(.97);
+}
+
+.theme-jemna-bezova .faq-list {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.theme-jemna-bezova .faq-item {
+  border: 1px solid rgba(122, 95, 65, .12);
+  background: rgba(255, 255, 255, .72);
+  box-shadow: 0 14px 34px rgba(48, 38, 30, .06);
+}
+
+.theme-jemna-bezova .faq-q {
+  color: var(--jb-brown-strong);
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 1.35rem;
+  font-weight: 400;
+}
+
+.theme-jemna-bezova .faq-a {
+  color: var(--theme-muted);
+}
+
+.theme-jemna-bezova .bl-grid,
+.theme-jemna-bezova .pt-grid {
+  margin-top: 0;
+}
+
+.theme-jemna-bezova .bl-card,
+.theme-jemna-bezova .pt-tile,
+.theme-jemna-bezova .pf-photo,
+.theme-jemna-bezova .bg-item {
+  box-shadow: none;
+}
+
+.theme-jemna-bezova .bl-card:hover,
+.theme-jemna-bezova .pt-tile:hover,
+.theme-jemna-bezova .pf-photo:hover,
+.theme-jemna-bezova .bg-item:hover {
+  transform: translateY(-4px);
+}
+
+.theme-jemna-bezova .pf-photo img,
+.theme-jemna-bezova .bg-item img {
+  border-radius: 0;
+  filter: sepia(.1) saturate(.84) contrast(.98);
+}
+
+.theme-jemna-bezova .ci-block,
+.theme-jemna-bezova .kt-form-block {
+  background: transparent;
+}
+
+@media (max-width: 760px) {
+  .theme-jemna-bezova .grid-wrap > .container,
+  .theme-jemna-bezova .pf-main > .container,
+  .theme-jemna-bezova .fq-wrap > .container,
+  .theme-jemna-bezova .kt-wrap > .container,
+  .theme-jemna-bezova .bl-grid-wrap > .container,
+  .theme-jemna-bezova .bp-content-wrap > .container {
+    width: calc(100% - 32px);
+  }
+
+  .theme-jemna-bezova .pf-hero,
+  .theme-jemna-bezova .bp-hero,
+  .theme-jemna-bezova .fq-hero,
+  .theme-jemna-bezova .kt-hero,
+  .theme-jemna-bezova .bl-hero,
+  .theme-jemna-bezova .pf-detail-hero,
+  .theme-jemna-bezova .page-hero {
+    min-height: 220px;
+    padding: 76px 0 28px;
+  }
+
+  .theme-jemna-bezova .grid-wrap,
+  .theme-jemna-bezova .pf-main,
+  .theme-jemna-bezova .fq-wrap,
+  .theme-jemna-bezova .kt-wrap,
+  .theme-jemna-bezova .bl-grid-wrap,
+  .theme-jemna-bezova .bp-content-wrap {
+    padding: 2.75rem 0 3.25rem;
+  }
+}
