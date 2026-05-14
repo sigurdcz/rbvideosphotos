@@ -96,11 +96,14 @@
     var viewport = qs('.eg-reviews__viewport', body);
     sourceGrid.parentNode.insertBefore(body, sourceGrid);
     viewport.appendChild(sourceGrid);
-    if (!qs('.eg-reviews__cta', section)) {
-      var cta = document.createElement('div');
-      cta.className = 'eg-reviews__cta';
-      cta.innerHTML = '<a class="btn-secondary" href="/hodnoceni">Vsechny recenze</a><a class="btn-secondary" href="/hodnoceni">O vsech hodnocenich</a>';
-      container.appendChild(cta);
+    var existingCta = qs('[data-block="reviews_cta"], .hp-section-cta, .eg-reviews__cta', section);
+    if (existingCta) {
+      existingCta.classList.add('eg-reviews__cta');
+      Array.prototype.slice.call(existingCta.querySelectorAll('a')).forEach(function (link, index) {
+        if (index > 0) {
+          link.remove();
+        }
+      });
     }
     initReviewCarousel(section);
   }

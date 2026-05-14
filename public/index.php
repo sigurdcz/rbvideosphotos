@@ -185,12 +185,22 @@ function injectCookieConsent(string $html): string
 
     $consent = <<<'HTML'
 <style data-cookie-consent>
-.cookie-consent-backdrop[hidden],.cookie-consent[hidden]{display:none!important}
-.cookie-consent-backdrop:not([hidden]){display:block!important}
-.cookie-consent:not([hidden]){display:block!important}
-.cookie-consent-backdrop{position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,.56);backdrop-filter:blur(8px)}
+.cookie-consent-backdrop[hidden],.cookie-consent[hidden],.cookie-consent-host[hidden]{display:none!important}
+.cookie-consent-host{
+  position:fixed;
+  inset:0;
+  z-index:99998;
+  pointer-events:none;
+}
+.cookie-consent-host:not([hidden]){display:block!important}
+.cookie-consent-host > .cookie-consent-backdrop,
+.cookie-consent-host > .cookie-consent{
+  pointer-events:auto;
+}
+.cookie-consent-host > .cookie-consent-backdrop{position:absolute;inset:0;z-index:0;background:rgba(0,0,0,.56);backdrop-filter:blur(8px)}
 .cookie-consent,.cookie-consent *{box-sizing:border-box}
-.cookie-consent{
+.cookie-consent-host > .cookie-consent,
+body > .cookie-consent{
   position:fixed;
   left:50%;
   top:50%;
@@ -226,10 +236,11 @@ function injectCookieConsent(string $html): string
 .cookie-consent__option p{margin:0;color:rgba(255,255,255,.62);font-size:12px;line-height:1.45}
 .cookie-consent__option input{width:auto}
 .cookie-consent-link{display:inline-flex;margin-top:12px;border:0;background:transparent;color:inherit;text-decoration:underline;cursor:pointer;font:inherit}
-@media(min-width:720px){.cookie-consent{width:min(620px,calc(100vw - 48px));max-width:min(620px,calc(100vw - 48px))}.cookie-consent__grid{grid-template-columns:1fr auto;align-items:end}.cookie-consent__settings{grid-column:1/-1}.cookie-consent__actions{justify-content:flex-end}}
+@media(min-width:720px){.cookie-consent-host > .cookie-consent,body > .cookie-consent{width:min(620px,calc(100vw - 48px));max-width:min(620px,calc(100vw - 48px))}.cookie-consent__grid{grid-template-columns:1fr auto;align-items:end}.cookie-consent__settings{grid-column:1/-1}.cookie-consent__actions{justify-content:flex-end}}
 </style>
-<div class="cookie-consent-backdrop" data-cookie-consent-backdrop hidden></div>
-<div class="cookie-consent" data-cookie-consent role="dialog" aria-live="polite" aria-label="Nastaveni cookies" data-mode="summary" hidden>
+<div class="cookie-consent-host" data-cookie-consent-host hidden>
+  <div class="cookie-consent-backdrop" data-cookie-consent-backdrop hidden></div>
+  <div class="cookie-consent" data-cookie-consent role="dialog" aria-live="polite" aria-label="Nastaveni cookies" data-mode="summary" hidden>
   <div class="cookie-consent__grid">
     <div>
       <div class="cookie-consent__label">Soukromi</div>
@@ -258,6 +269,7 @@ function injectCookieConsent(string $html): string
         <button class="cookie-consent__btn cookie-consent__btn--accept" type="button" data-cookie-save>Ulozit nastaveni</button>
       </div>
     </div>
+  </div>
   </div>
 </div>
 <script data-cookie-consent>
@@ -349,6 +361,7 @@ function injectCookieConsent(string $html): string
     var manager=window.cmsCookieConsent||createFallbackManager();
     window.cmsCookieConsent=manager;
 
+    var host=document.querySelector('[data-cookie-consent-host]');
     var box=document.querySelector('[data-cookie-consent]');
     var backdrop=document.querySelector('[data-cookie-consent-backdrop]');
     debugLog('init:start',{
@@ -356,19 +369,27 @@ function injectCookieConsent(string $html): string
       analyticsCategoryEnabled:analyticsCategoryEnabled,
       marketingCategoryEnabled:marketingCategoryEnabled,
       hasManager:!!manager,
+      hasHost:!!host,
       hasBox:!!box,
       hasBackdrop:!!backdrop,
       readyState:document.readyState
     });
-    if(!box||!backdrop||!enabled){
+    if(!host||!box||!backdrop||!enabled){
+      if(host)host.hidden=true;
       if(box)box.hidden=true;
       if(backdrop)backdrop.hidden=true;
       debugLog('init:aborted',{
         reason:!enabled?'disabled':'missing-elements',
+        host:inspectElement(host,'host'),
         box:inspectElement(box,'modal'),
         backdrop:inspectElement(backdrop,'backdrop')
       });
       return;
+    }
+
+    if(host.parentNode!==document.body){
+      document.body.appendChild(host);
+      debugLog('init:host-moved-to-body',inspectElement(host,'host'));
     }
 
     var acceptAll=box.querySelector('[data-cookie-accept-all]');
@@ -400,16 +421,29 @@ function injectCookieConsent(string $html): string
     function show(mode){
       sync();
       syncCategoryVisibility();
+      host.hidden=false;
+      host.removeAttribute('hidden');
       box.dataset.mode=mode||'summary';
       box.hidden=false;
+      box.removeAttribute('hidden');
       backdrop.hidden=false;
+      backdrop.removeAttribute('hidden');
+      host.style.display='block';
+      box.style.display='block';
+      backdrop.style.display='block';
+      box.style.visibility='visible';
+      backdrop.style.visibility='visible';
+      box.style.opacity='1';
+      backdrop.style.opacity='1';
       debugLog('show:before-frame',{
+        host:inspectElement(host,'host'),
         mode:box.dataset.mode,
         modal:inspectElement(box,'modal'),
         backdrop:inspectElement(backdrop,'backdrop')
       });
       window.requestAnimationFrame(function(){
         debugLog('show:after-frame',{
+          host:inspectElement(host,'host'),
           mode:box.dataset.mode,
           modal:inspectElement(box,'modal'),
           backdrop:inspectElement(backdrop,'backdrop')
@@ -418,14 +452,23 @@ function injectCookieConsent(string $html): string
     }
     function hide(){
       debugLog('hide:before',{
+        host:inspectElement(host,'host'),
         mode:box.dataset.mode,
         modal:inspectElement(box,'modal'),
         backdrop:inspectElement(backdrop,'backdrop')
       });
+      host.hidden=true;
       box.hidden=true;
       backdrop.hidden=true;
+      host.setAttribute('hidden','');
+      box.setAttribute('hidden','');
+      backdrop.setAttribute('hidden','');
+      host.style.display='none';
+      box.style.display='none';
+      backdrop.style.display='none';
       box.dataset.mode='summary';
       debugLog('hide:after',{
+        host:inspectElement(host,'host'),
         mode:box.dataset.mode,
         modal:inspectElement(box,'modal'),
         backdrop:inspectElement(backdrop,'backdrop')
@@ -516,6 +559,7 @@ function injectCookieConsent(string $html): string
     }
 
     debugLog('init:bound-elements',{
+      host:inspectElement(host,'host'),
       modal:inspectElement(box,'modal'),
       backdrop:inspectElement(backdrop,'backdrop'),
       acceptAll:inspectElement(acceptAll,'accept-all'),
