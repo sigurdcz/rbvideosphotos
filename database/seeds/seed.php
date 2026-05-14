@@ -576,7 +576,7 @@ $tplPortfolioListing = seedUpsertTemplate($pdo, $siteId, 'Naše práce — přeh
 $tplRulesHtml = <<<'HTML'
 <section class="page-hero">
   <div class="container">
-    <h1 data-block="hero_h1">Ty krása no</h1>
+    <h1 data-block="hero_h1">Podmínky užití</h1>
     <p data-block="hero_sub" class="hero-sub">Pravidla provozu webu, pouzivani obsahu a informace o cookies.</p>
   </div>
 </section>
@@ -604,7 +604,7 @@ $tplRulesCss = <<<'CSS'
 .legal-card ul{margin:10px 0 0 18px;padding:0}
 CSS;
 
-$tplRules = seedUpsertTemplate($pdo, $siteId, 'Ty krása no', $tplRulesHtml, $tplRulesCss, '');
+$tplRules = seedUpsertTemplate($pdo, $siteId, 'Podmínky užití', $tplRulesHtml, $tplRulesCss, '');
 
 echo "Šablony vytvořeny.\n";
 
@@ -617,7 +617,7 @@ $pidFaq       = seedUpsertPage($pdo, $siteId, $tplFaq,             'FAQ',       
 $pidKontakt   = seedUpsertPage($pdo, $siteId, $tplKontakt,         'Kontakt',       'kontakt',    'kontakt');
 $pidBlog      = seedUpsertPage($pdo, $siteId, $tplBlogListing,     'Blog',          'blog',       'blog');
 $pidPortfolio = seedUpsertPage($pdo, $siteId, $tplPortfolioListing,'Naše práce',    'nase-prace', 'nase-prace');
-$pidRules     = seedUpsertPage($pdo, $siteId, $tplRules,           'Ty krása no',   'ty-krasa-no','ty-krasa-no');
+$pidRules     = seedUpsertPage($pdo, $siteId, $tplRules,           'Podmínky užití',   'podminky-uziti','podminky-uziti');
 
 echo "Stránky vytvořeny.\n";
 
@@ -711,7 +711,7 @@ seedBlock($pdo, $pidBlog, 'hero_sub', 'textarea', 'Hero — intro',  'Tipy, insp
 seedBlock($pdo, $pidPortfolio, 'hero_h1',  'text',     'Hero — nadpis', 'Naše práce',                           1);
 seedBlock($pdo, $pidPortfolio, 'hero_sub', 'textarea', 'Hero — intro',  'Ukázka projektů a realizací.',          2);
 
-seedBlock($pdo, $pidRules, 'hero_h1', 'text', 'Hero - nadpis', 'Ty krása no', 1);
+seedBlock($pdo, $pidRules, 'hero_h1', 'text', 'Hero - nadpis', 'Podmínky užití', 1);
 seedBlock($pdo, $pidRules, 'hero_sub', 'textarea', 'Hero - intro', 'Pravidla provozu webu, pouzivani obsahu a informace o cookies.', 2);
 seedBlock($pdo, $pidRules, 'rules_title', 'text', 'Pravidla - nadpis', 'Co plati pri pouzivani tohoto webu', 3);
 seedBlock($pdo, $pidRules, 'rules_intro', 'textarea', 'Pravidla - intro', 'Pouzivanim tohoto webu potvrzujete, ze jste si precetli tato pravidla. Pokud s nimi nesouhlasite, web nepouzivejte.', 4);

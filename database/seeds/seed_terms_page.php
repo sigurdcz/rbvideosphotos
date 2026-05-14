@@ -30,7 +30,7 @@ $userId = (int)$user['id'];
 $templateHtml = <<<'HTML'
 <section class="page-hero">
   <div class="container">
-    <h1 data-block="hero_h1">Ty krása no</h1>
+    <h1 data-block="hero_h1">Podmínky užití</h1>
     <p data-block="hero_sub" class="hero-sub">Pravidla provozu webu, pouzivani obsahu a informace o cookies.</p>
   </div>
 </section>
@@ -58,36 +58,36 @@ $templateCss = <<<'CSS'
 .legal-card ul{margin:10px 0 0 18px;padding:0}
 CSS;
 
-$stmt = $pdo->prepare('SELECT id FROM templates WHERE site_id = ? AND name = ? LIMIT 1');
-$stmt->execute([$siteId, 'Ty krása no']);
+$stmt = $pdo->prepare('SELECT id FROM templates WHERE site_id = ? AND name IN (?, ?) ORDER BY FIELD(name, ?, ?) LIMIT 1');
+$stmt->execute([$siteId, 'Podmínky užití', 'Ty krása no', 'Podmínky užití', 'Ty krása no']);
 $template = $stmt->fetch();
 
 if ($template) {
     $templateId = (int)$template['id'];
-    $pdo->prepare('UPDATE templates SET html_source = ?, css_source = ?, js_source = ? WHERE id = ?')
-        ->execute([$templateHtml, $templateCss, '', $templateId]);
+    $pdo->prepare('UPDATE templates SET name = ?, html_source = ?, css_source = ?, js_source = ? WHERE id = ?')
+        ->execute(['Podmínky užití', $templateHtml, $templateCss, '', $templateId]);
 } else {
     $pdo->prepare('INSERT INTO templates (site_id, name, html_source, css_source, js_source) VALUES (?,?,?,?,?)')
-        ->execute([$siteId, 'Ty krása no', $templateHtml, $templateCss, '']);
+        ->execute([$siteId, 'Podmínky užití', $templateHtml, $templateCss, '']);
     $templateId = (int)$pdo->lastInsertId();
 }
 
-$stmt = $pdo->prepare('SELECT id FROM pages WHERE site_id = ? AND slug = ? LIMIT 1');
-$stmt->execute([$siteId, 'ty-krasa-no']);
+$stmt = $pdo->prepare('SELECT id FROM pages WHERE site_id = ? AND slug IN (?, ?) ORDER BY FIELD(slug, ?, ?) LIMIT 1');
+$stmt->execute([$siteId, 'podminky-uziti', 'ty-krasa-no', 'podminky-uziti', 'ty-krasa-no']);
 $page = $stmt->fetch();
 
 if ($page) {
     $pageId = (int)$page['id'];
-    $pdo->prepare('UPDATE pages SET template_id = ?, title = ?, url_path = ?, status = ?, published_at = NOW() WHERE id = ?')
-        ->execute([$templateId, 'Ty krása no', 'ty-krasa-no', 'published', $pageId]);
+    $pdo->prepare('UPDATE pages SET template_id = ?, title = ?, slug = ?, url_path = ?, status = ?, published_at = NOW() WHERE id = ?')
+        ->execute([$templateId, 'Podmínky užití', 'podminky-uziti', 'podminky-uziti', 'published', $pageId]);
 } else {
     $pdo->prepare('INSERT INTO pages (site_id, template_id, title, slug, url_path, language, status, published_at) VALUES (?,?,?,?,?,?,?,NOW())')
-        ->execute([$siteId, $templateId, 'Ty krása no', 'ty-krasa-no', 'ty-krasa-no', 'cs', 'published']);
+        ->execute([$siteId, $templateId, 'Podmínky užití', 'podminky-uziti', 'podminky-uziti', 'cs', 'published']);
     $pageId = (int)$pdo->lastInsertId();
 }
 
 $blocks = [
-    ['hero_h1', 'text', 'Hero - nadpis', 'Ty krása no', 1],
+    ['hero_h1', 'text', 'Hero - nadpis', 'Podmínky užití', 1],
     ['hero_sub', 'textarea', 'Hero - intro', 'Pravidla provozu webu, pouzivani obsahu a informace o cookies.', 2],
     ['rules_title', 'text', 'Pravidla - nadpis', 'Co plati pri pouzivani tohoto webu', 3],
     ['rules_intro', 'textarea', 'Pravidla - intro', 'Pouzivanim tohoto webu potvrzujete, ze jste si precetli tato pravidla. Pokud s nimi nesouhlasite, web nepouzivejte.', 4],
@@ -117,4 +117,4 @@ if (!$result['success']) {
     throw new RuntimeException('Publishing failed: ' . ($result['message'] ?? 'unknown error'));
 }
 
-echo "Terms page seeded at /ty-krasa-no\n";
+echo "Terms page seeded at /podminky-uziti\n";
