@@ -254,8 +254,7 @@ body > .cookie-consent{
       </div>
       <p class="cookie-consent__text">Pouzivame cookies k zajisteni spravneho fungovani webu a se souhlasem take k mereni navstevnosti pomocí Google Analytics. Diky tomu vime, co navstevniky zajima, a muzeme web zlepsovat.</p>
       <div class="cookie-consent__legal">
-        <span>Pravidla pouzivani webu najdete tady:</span>
-        <a href="/ty-krasa-no">Ty krása no</a>
+        <a href="/ty-krasa-no">Pravidla</a>
       </div>
     </div>
     <div class="cookie-consent__actions">
@@ -1278,7 +1277,7 @@ function buildRichFooterHtml(int $siteId): string
         . '<div class="site-footer-brand">' . $brand . '<div class="site-footer-brand__name">' . $h($siteName) . '</div><div class="site-footer-brand__note">Svatebni fotografie a video. Olomouc, Morava a cela CR.</div></div>'
         . '<div class="site-footer-contact"><div class="site-footer-title">Kontakt</div>' . ($contactItems !== [] ? implode('', $contactItems) : '<div class="site-footer-contact__item"><span>Kontakt</span><strong>Doplnte kontaktni udaje v administraci.</strong></div>') . '</div>'
         . '<div class="site-footer-socials"><div class="site-footer-title">Socialni site</div><div class="site-footer-socials__list">' . ($socialItems !== [] ? implode('', $socialItems) : '<span class="site-footer-brand__note">Doplnte socialni site v kontaktu.</span>') . '</div></div>'
-        . '<div class="site-footer-bottom">&copy; ' . date('Y') . ' ' . $h($siteName) . '</div>'
+        . '<div class="site-footer-bottom">&copy; ' . date('Y') . ' ' . $h($siteName) . ' · <a href="/ty-krasa-no">Ty krása no</a></div>'
         . '</div>';
 }
 
