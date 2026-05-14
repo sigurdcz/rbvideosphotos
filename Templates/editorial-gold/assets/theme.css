@@ -2041,3 +2041,104 @@ body.theme-editorial-gold {
     padding-top: 128px;
   }
 }
+
+/* Reviews: full-width section, contained carousel content. */
+.theme-editorial-gold .eg-reviews {
+  display: block !important;
+  width: 100%;
+  padding: 34px 0 !important;
+  background: #070707 !important;
+}
+
+.theme-editorial-gold .eg-reviews__inner {
+  width: calc(100% - 32px);
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.theme-editorial-gold .eg-reviews__title {
+  margin-bottom: 18px;
+}
+
+.theme-editorial-gold .eg-reviews__body {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) 38px;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.theme-editorial-gold .eg-reviews__viewport {
+  overflow: hidden;
+  min-width: 0;
+}
+
+.theme-editorial-gold .eg-reviews__track {
+  display: flex;
+  gap: 18px;
+  transition: transform .35s ease;
+  will-change: transform;
+}
+
+.theme-editorial-gold .eg-review-card {
+  flex: 0 0 100%;
+  min-height: 150px;
+  padding: 18px;
+  border: 1px solid rgba(198, 148, 61, .35);
+  background: rgba(255,255,255,.02);
+}
+
+.theme-editorial-gold .eg-review-card p {
+  color: #d0c7b8;
+  font-size: 13px;
+  line-height: 1.55;
+  font-style: italic;
+}
+
+.theme-editorial-gold .eg-review-card strong {
+  display: block;
+  margin-top: 14px;
+  color: #fff;
+  font-size: 13px;
+}
+
+.theme-editorial-gold .eg-review-card span {
+  display: block;
+  color: #a99f92;
+  font-size: 11px;
+}
+
+.theme-editorial-gold .eg-review-arrow {
+  border: 1px solid rgba(198,148,61,.45);
+  background: rgba(255,255,255,.025);
+  color: var(--eg-gold-2);
+  font-size: 32px;
+  cursor: pointer;
+}
+
+.theme-editorial-gold .eg-review-arrow:hover {
+  background: var(--eg-gold);
+  color: #050505;
+}
+
+.theme-editorial-gold .eg-reviews__cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.theme-editorial-gold .eg-reviews__cta .btn-secondary {
+  background: rgba(5, 5, 5, .72) !important;
+  border-color: rgba(224, 184, 102, .68) !important;
+  color: #f7f1e8 !important;
+}
+
+@media(min-width: 761px) {
+  .theme-editorial-gold .eg-reviews {
+    padding: 40px 0 !important;
+  }
+
+  .theme-editorial-gold .eg-reviews__inner {
+    width: min(1180px, calc(100% - 48px));
+  }
+}

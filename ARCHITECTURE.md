@@ -95,6 +95,7 @@ Uživatel si může vytvářet vlastní substránky (ceník, FAQ, o nás, …). 
 | Kontakt              | `/kontakt`        | Kontaktní informace                           |
 | Blog — přehled       | `/blog`           | Hero text; seznam článků renderuje PHP        |
 | Naše práce — přehled | `/nase-prace`     | Hero text; grid portfolia renderuje PHP       |
+| Hodnocení            | `/hodnoceni`      | Stránka recenzí seedovaná přes `database/seeds/seed_reviews_page.php` |
 
 Nové substránky mohou používat libovolnou z dostupných šablon.
 

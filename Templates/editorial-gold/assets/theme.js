@@ -71,17 +71,106 @@
   }
 
   function createReviews() {
-    if (qs('.eg-reviews') || qs('.hp-reviews-demo') || !qs('#kontakt')) return;
+    if (qs('.eg-reviews') || !qs('#kontakt')) return;
+    var existing = qs('.hp-reviews-demo');
+    if (existing) {
+      enhanceExistingReviews(existing);
+      return;
+    }
+    var reviewItems = [
+      ['Jan Jungling', 'Svatba M+H', 'Kluci jsou naprosti profesionalove. Jsou peclivi a dokazou zachytit skutecne emoce.'],
+      ['Vaclav Konopka', 'Svatebni foceni', 'Super domluva, mily a profesionalni pristup k foceni. Velka spokojenost.'],
+      ['Jana Dudkova', 'Rodinne foceni', 'Moc doporucuji. Vse profesionalne nafocene, krasne barvy a skvela domluva.'],
+      ['Marketa a Tomas', 'Svatebni video', 'Video vystihlo atmosferu dne do posledniho detailu. Vracime se k nemu porad dokola.'],
+      ['Lucie Novakova', 'Portretni foceni', 'Foceni bylo uvolnene a bez stresu. Vysledek pusobi prirozene a profesionalne.'],
+      ['Petr Maly', 'Firemni akce', 'Rychla domluva, jistota na miste a vystupy pouzitelne rovnou na web i socialni site.']
+    ];
+    var cards = reviewItems.map(function (review) {
+      return '<article class="eg-review-card"><div class="eg-stars">*****</div><p>' + review[2] + '</p><strong>' + review[0] + '</strong><span>' + review[1] + '</span></article>';
+    }).join('');
     var reviews = document.createElement('section');
     reviews.className = 'section eg-reviews';
     reviews.innerHTML =
+      '<div class="container eg-reviews__inner">' +
       '<div class="eg-reviews__title"><p class="section-label">Co o nas rikaji</p><h2 class="section-title">Hodnoceni<br>nasich paru</h2></div>' +
-      '<div class="eg-reviews__grid">' +
-      '<article><div class="eg-stars">*****</div><p>Kluci jsou naprosti profesionalove. Jsou peclivi a dokazou zachytit skutecne emoce.</p><strong>Jan Jungling</strong><span>Svatba M+H</span></article>' +
-      '<article><div class="eg-stars">*****</div><p>Super domluva, mily a profesionalni pristup k foceni. Velka spokojenost.</p><strong>Vaclav Konopka</strong><span>Svatebni foceni</span></article>' +
-      '<article><div class="eg-stars">*****</div><p>Moc doporucuji. Vse profesionalne nafocene, krasne barvy a skvela domluva.</p><strong>Jana Dudkova</strong><span>Rodinne foceni</span></article>' +
+      '<div class="eg-reviews__body">' +
+      '<button class="eg-review-arrow eg-review-arrow--prev" type="button" aria-label="Predchozi recenze">&lsaquo;</button>' +
+      '<div class="eg-reviews__viewport"><div class="eg-reviews__track">' + cards + '</div></div>' +
+      '<button class="eg-review-arrow eg-review-arrow--next" type="button" aria-label="Dalsi recenze">&rsaquo;</button>' +
+      '</div>' +
+      '<div class="eg-reviews__cta"><a class="btn-secondary" href="/hodnoceni">Vsechny recenze</a><a class="btn-secondary" href="/hodnoceni">O vsech hodnocenich</a></div>' +
       '</div>';
     qs('#kontakt').insertAdjacentElement('beforebegin', reviews);
+    initReviewCarousel(reviews);
+  }
+
+  function enhanceExistingReviews(section) {
+    if (!section || qs('.eg-reviews__viewport', section)) return;
+    var container = qs('.container', section);
+    var sourceGrid = qs('.hp-reviews-grid', section);
+    if (!container || !sourceGrid) return;
+    section.classList.add('eg-reviews');
+    sourceGrid.classList.add('eg-reviews__track');
+    Array.prototype.slice.call(sourceGrid.children).forEach(function (card) {
+      card.classList.add('eg-review-card');
+    });
+    var body = document.createElement('div');
+    body.className = 'eg-reviews__body';
+    body.innerHTML =
+      '<button class="eg-review-arrow eg-review-arrow--prev" type="button" aria-label="Predchozi recenze">&lsaquo;</button>' +
+      '<div class="eg-reviews__viewport"></div>' +
+      '<button class="eg-review-arrow eg-review-arrow--next" type="button" aria-label="Dalsi recenze">&rsaquo;</button>';
+    var viewport = qs('.eg-reviews__viewport', body);
+    sourceGrid.parentNode.insertBefore(body, sourceGrid);
+    viewport.appendChild(sourceGrid);
+    if (!qs('.eg-reviews__cta', section)) {
+      var cta = document.createElement('div');
+      cta.className = 'eg-reviews__cta';
+      cta.innerHTML = '<a class="btn-secondary" href="/hodnoceni">Vsechny recenze</a><a class="btn-secondary" href="/hodnoceni">O vsech hodnocenich</a>';
+      container.appendChild(cta);
+    }
+    initReviewCarousel(section);
+  }
+
+  function initReviewCarousel(section) {
+    var track = qs('.eg-reviews__track', section);
+    var cards = Array.prototype.slice.call(section.querySelectorAll('.eg-review-card'));
+    var prev = qs('.eg-review-arrow--prev', section);
+    var next = qs('.eg-review-arrow--next', section);
+    if (!track || !cards.length || !prev || !next) return;
+    var index = 0;
+
+    function visibleCount() {
+      if (window.innerWidth >= 980) return 3;
+      if (window.innerWidth >= 680) return 2;
+      return 1;
+    }
+
+    function update() {
+      var visible = visibleCount();
+      var max = Math.max(0, cards.length - visible);
+      index = Math.max(0, Math.min(index, max));
+      track.style.transform = 'translateX(' + (-index * (100 / visible)) + '%)';
+      cards.forEach(function (card) {
+        card.style.flexBasis = 'calc(' + (100 / visible) + '% - 12px)';
+      });
+    }
+
+    prev.addEventListener('click', function () {
+      var visible = visibleCount();
+      index = index <= 0 ? Math.max(0, cards.length - visible) : index - 1;
+      update();
+    });
+
+    next.addEventListener('click', function () {
+      var visible = visibleCount();
+      var max = Math.max(0, cards.length - visible);
+      index = index >= max ? 0 : index + 1;
+      update();
+    });
+
+    window.addEventListener('resize', update);
+    update();
   }
 
   function enhanceContactBand() {
