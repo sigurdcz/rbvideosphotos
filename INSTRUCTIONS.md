@@ -35,6 +35,8 @@ Tento soubor je obecny pracovni navod pro vsechny AI asistenty i lidske vyvojare
 - Nikdy nevytvarejte novou migraci s nizsim cislem, nez ma aktualni posledni migrace.
 - Neskakejte zbytecne daleko dopredu v cislovani migraci.
 - Migrace musi byt idempotentni, pokud je to technicky mozne.
+- Pred vytvorenim nove migrace vzdy zkontrolujte existujici migrace v `database/migrations/` a konsolidovane schema v `database/schema.sql` nebo `database/migrations/001_schema.sql`, aby nova migrace neduplikovala uz existujici zmenu pod jinym nazvem nebo znovu nepridavala stejny sloupec, index, tabulku nebo enum hodnotu.
+- Pokud je zmena uz obsazena v aktualnim schematu nebo ji uz resi starsi migrace, nevytvarejte dalsi duplicitni migraci. Misto toho navazte pouze novou zmenou, ktera resi skutecne novy rozdil schema stavu.
 - Migracni utilita si stav drzi v tabulce `schema_migrations`; nespolehejte na rucni mazani lock souboru.
 
 ## Seed a demo obsah

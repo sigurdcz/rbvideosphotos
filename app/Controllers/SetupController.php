@@ -178,15 +178,73 @@ class SetupController extends Controller
                 continue;
             }
 
+            if ($this->isMigrationAlreadySatisfied($pdo, $migrationName)) {
+                $this->markMigrationApplied($pdo, $migrationName);
+                continue;
+            }
+
             $sql = file_get_contents($file);
             if ($sql === false) {
                 throw new \RuntimeException('Nepodařilo se načíst migraci: ' . $migrationName);
             }
 
             $pdo->exec($sql);
-            $pdo->prepare('INSERT INTO schema_migrations (migration) VALUES (?)')
-                ->execute([$migrationName]);
+            $this->markMigrationApplied($pdo, $migrationName);
         }
+    }
+
+    private function isMigrationAlreadySatisfied(PDO $pdo, string $migrationName): bool
+    {
+        return match ($migrationName) {
+            '002_add_autofill_disabled_to_content_blocks.sql' => $this->columnExists($pdo, 'content_blocks', 'autofill_disabled'),
+            '004_create_service_items.sql' => $this->tableExists($pdo, 'service_items'),
+            '005_add_active_theme_key_to_sites.sql' => $this->columnExists($pdo, 'sites', 'active_theme_key'),
+            '006_expand_content_blocks_block_type_to_video.sql' => $this->columnEnumContains($pdo, 'content_blocks', 'block_type', 'video'),
+            default => false,
+        };
+    }
+
+    private function markMigrationApplied(PDO $pdo, string $migrationName): void
+    {
+        $pdo->prepare('INSERT INTO schema_migrations (migration) VALUES (?)')
+            ->execute([$migrationName]);
+    }
+
+    private function tableExists(PDO $pdo, string $table): bool
+    {
+        $stmt = $pdo->prepare(
+            'SELECT COUNT(*)
+             FROM information_schema.tables
+             WHERE table_schema = DATABASE() AND table_name = ?'
+        );
+        $stmt->execute([$table]);
+
+        return (int) $stmt->fetchColumn() > 0;
+    }
+
+    private function columnExists(PDO $pdo, string $table, string $column): bool
+    {
+        $stmt = $pdo->prepare(
+            'SELECT COUNT(*)
+             FROM information_schema.columns
+             WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ?'
+        );
+        $stmt->execute([$table, $column]);
+
+        return (int) $stmt->fetchColumn() > 0;
+    }
+
+    private function columnEnumContains(PDO $pdo, string $table, string $column, string $value): bool
+    {
+        $stmt = $pdo->prepare(
+            'SELECT COLUMN_TYPE
+             FROM information_schema.columns
+             WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ?'
+        );
+        $stmt->execute([$table, $column]);
+        $columnType = (string) $stmt->fetchColumn();
+
+        return $columnType !== '' && str_contains($columnType, "'" . $value . "'");
     }
 
     private function purgeDirectoryContents(string $dir): void
