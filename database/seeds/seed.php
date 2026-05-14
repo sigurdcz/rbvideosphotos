@@ -630,7 +630,7 @@ seedBlock($pdo, $pidHome, 'kontakt_info',   'html',     'Kontakt — info',     
 // ─── Obsahové bloky — Služby ──────────────────────────────────────────────────
 
 seedBlock($pdo, $pidSluzby, 'hero_h1',   'text',     'Hero — nadpis',  'Naše služby',                                             1);
-seedBlock($pdo, $pidSluzby, 'hero_sub',  'textarea', 'Hero — intro',   'Co konkrétně nabízíme a v čem jsme nejlepší.',            2);
+seedBlock($pdo, $pidSluzby, 'hero_sub',  'textarea', 'Hero — intro',   'Od svateb přes portréty až po firemní vizuál. Každou zakázku stavíme na emocích, detailu a profesionálním výsledku.', 2);
 seedBlock($pdo, $pidSluzby, 'sluzby_grid','html',    'Služby — karty', '<p style="color:rgba(255,255,255,.45)">Doplňte karty služeb.</p>', 3);
 seedBlock($pdo, $pidSluzby, 'cta_wrap',  'html',     'CTA',            '<a href="/kontakt" class="btn-primary">Kontaktujte n&#225;s</a>', 4);
 
@@ -687,11 +687,19 @@ $serviceStmt = $pdo->prepare('
         site_id, title, description, image_url, icon_url, button_text, button_url, sort_order, is_active
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)
 ');
-$serviceStmt->execute([$siteId, 'Svatební foto & video', 'Zachytíme každý slib, emoci i atmosféru vašeho dne s citem pro detail.', '', '', 'Více informací', '/sluzby', 1]);
-$serviceStmt->execute([$siteId, 'Rodinné & portrétní focení', 'Přirozené momenty, jemné vedení a fotografie, ke kterým se budete rádi vracet.', '', '', 'Více informací', '/sluzby', 2]);
-$serviceStmt->execute([$siteId, 'Reklamní foto & video', 'Profesionální vizuální obsah pro firmy, produkty, kampaně i sociální sítě.', '', '', 'Více informací', '/sluzby', 3]);
-$serviceStmt->execute([$siteId, 'Akce & události', 'Konference, koncerty, plesy i kulturní programy zachycené rychle, čistě a spolehlivě.', '', '', 'Více informací', '/sluzby', 4]);
+$serviceStmt->execute([$siteId, 'Svatební foto & video', 'Zachytíme každý dotek, každý pohled i každou slzu štěstí. Přirozené reportážní fotografie a filmové video, které vám budou váš den připomínat celý život.', '', '', 'Více informací', '/sluzby', 1]);
+$serviceStmt->execute([$siteId, 'Rodinné & portrétní focení', 'Rodinné vzpomínky, těhotenské focení, křtiny i portréty. Přirozené, nenucené a krásné snímky, ke kterým se budete rádi vracet.', '', '', 'Více informací', '/sluzby', 2]);
+$serviceStmt->execute([$siteId, 'Reklamní foto & video', 'Profesionální vizuální obsah pro firmy, produkty, kapely i značky. Obsah, který buduje důvěru, odlišuje a prodává.', '', '', 'Více informací', '/sluzby', 3]);
+$serviceStmt->execute([$siteId, 'Akce & události', 'Konference, kulturní akce, plesy, koncerty i firemní večery. Každá událost si zaslouží profesionální dokumentaci bez kompromisů.', '', '', 'Více informací', '/sluzby', 4]);
 echo "Služby vytvořeny.\n";
+
+$serviceContent = new \App\Services\HomepageContentService();
+$homeServicesHtml = $serviceContent->buildServicesHtml($siteId, 3);
+$allServicesHtml = $serviceContent->buildServicesHtml($siteId, 0);
+
+seedBlock($pdo, $pidHome, 'sluzby_items', 'html', 'Služby — karty', $homeServicesHtml, 12);
+seedBlock($pdo, $pidSluzby, 'sluzby_grid', 'html', 'Služby — karty', $allServicesHtml, 3);
+echo "Výpisy služeb synchronizovány.\n";
 
 $pdo->exec("DELETE FROM faq_items WHERE site_id = {$siteId}");
 $faqStmt = $pdo->prepare('INSERT INTO faq_items (site_id, question, answer, sort_order, is_active) VALUES (?, ?, ?, ?, 1)');

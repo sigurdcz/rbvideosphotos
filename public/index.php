@@ -185,7 +185,9 @@ function injectCookieConsent(string $html): string
 
     $consent = <<<'HTML'
 <style data-cookie-consent>
-.cookie-consent{position:fixed;left:16px;right:16px;bottom:16px;z-index:99999;display:none;max-width:760px;margin:0 auto;padding:16px;border:1px solid rgba(198,148,61,.45);background:rgba(5,5,5,.95);color:#f7f1e8;box-shadow:0 24px 80px rgba(0,0,0,.38);backdrop-filter:blur(12px)}
+.cookie-consent-backdrop{position:fixed;inset:0;z-index:99998;display:none;background:rgba(0,0,0,.56);backdrop-filter:blur(8px)}
+.cookie-consent-backdrop.is-visible{display:block}
+.cookie-consent{position:fixed;left:16px;right:16px;top:50%;z-index:99999;display:none;max-width:760px;margin:0 auto;padding:16px;border:1px solid rgba(198,148,61,.45);background:rgba(5,5,5,.96);color:#f7f1e8;box-shadow:0 24px 80px rgba(0,0,0,.38);backdrop-filter:blur(12px);transform:translateY(-50%)}
 .cookie-consent.is-visible{display:block}
 .cookie-consent__grid{display:grid;gap:14px}
 .cookie-consent__label{color:#e0b866;font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase}
@@ -202,8 +204,9 @@ function injectCookieConsent(string $html): string
 .cookie-consent__option p{margin:0;color:rgba(255,255,255,.62);font-size:12px;line-height:1.45}
 .cookie-consent__option input{width:auto}
 .cookie-consent-link{display:inline-flex;margin-top:12px;border:0;background:transparent;color:inherit;text-decoration:underline;cursor:pointer;font:inherit}
-@media(min-width:720px){.cookie-consent{left:auto;right:24px;bottom:24px;width:620px}.cookie-consent__grid{grid-template-columns:1fr auto;align-items:end}.cookie-consent__settings{grid-column:1/-1}.cookie-consent__actions{justify-content:flex-end}}
+@media(min-width:720px){.cookie-consent{width:min(620px,calc(100vw - 48px))}.cookie-consent__grid{grid-template-columns:1fr auto;align-items:end}.cookie-consent__settings{grid-column:1/-1}.cookie-consent__actions{justify-content:flex-end}}
 </style>
+<div class="cookie-consent-backdrop" data-cookie-consent-backdrop></div>
 <div class="cookie-consent" data-cookie-consent role="dialog" aria-live="polite" aria-label="Nastaveni cookies">
   <div class="cookie-consent__grid">
     <div>
@@ -266,9 +269,11 @@ function injectCookieConsent(string $html): string
     window.cmsCookieConsent=manager;
   }
   var box=document.querySelector('[data-cookie-consent]');
+  var backdrop=document.querySelector('[data-cookie-consent-backdrop]');
   function pref(){return manager&&manager.getPreferences?manager.getPreferences():null;}
   function save(data){if(manager&&manager.savePreferences)manager.savePreferences(data);}
-  function hide(){if(box)box.classList.remove('is-visible','is-settings');}
+  function show(){if(box)box.classList.add('is-visible');if(backdrop)backdrop.classList.add('is-visible');}
+  function hide(){if(box)box.classList.remove('is-visible','is-settings');if(backdrop)backdrop.classList.remove('is-visible');}
   function sync(){
     var p=pref()||{analytics:false,marketing:false};
     box.querySelectorAll('[data-cookie-category]').forEach(function(input){input.checked=p[input.dataset.cookieCategory]===true;});
@@ -283,10 +288,21 @@ function injectCookieConsent(string $html): string
     if(!box||!enabled)return;
     sync();
     syncCategoryVisibility();
-    box.classList.add('is-visible','is-settings');
+    show();
+    box.classList.add('is-settings');
+  }
+  function bindOpeners(scope){
+    (scope||document).querySelectorAll('[data-cookie-open-settings]').forEach(function(el){
+      if(el.dataset.cookieBound==='1') return;
+      el.dataset.cookieBound='1';
+      el.addEventListener('click',function(e){
+        e.preventDefault();
+        openSettings();
+      });
+    });
   }
   function addFooterLink(){
-    if(!enabled||document.querySelector('[data-cookie-open-settings]'))return;
+    if(!enabled||document.querySelector('.cookie-consent-link[data-cookie-open-settings]'))return;
     var footer=document.querySelector('.site-footer-rich')||document.querySelector('footer');
     if(!footer)return;
     var button=document.createElement('button');
@@ -294,13 +310,15 @@ function injectCookieConsent(string $html): string
     button.className='cookie-consent-link';
     button.dataset.cookieOpenSettings='1';
     button.textContent='Nastaveni cookies';
-    button.addEventListener('click',openSettings);
     footer.appendChild(button);
+    bindOpeners(footer);
   }
   if(!box||!enabled){hide();return;}
   syncCategoryVisibility();
   addFooterLink();
-  if(!pref())box.classList.add('is-visible');
+  bindOpeners();
+  if(backdrop)backdrop.addEventListener('click',hide);
+  if(!pref())openSettings();
   var acceptAll=box.querySelector('[data-cookie-accept-all]');
   var rejectAll=box.querySelector('[data-cookie-reject-all]');
   var settingsBtn=box.querySelector('[data-cookie-settings]');
