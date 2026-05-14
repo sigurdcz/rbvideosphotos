@@ -573,6 +573,39 @@ HTML;
 
 $tplPortfolioListing = seedUpsertTemplate($pdo, $siteId, 'Naše práce — přehled', $tplPortfolioHtml, '', '');
 
+$tplRulesHtml = <<<'HTML'
+<section class="page-hero">
+  <div class="container">
+    <h1 data-block="hero_h1">Ty krása no</h1>
+    <p data-block="hero_sub" class="hero-sub">Pravidla provozu webu, pouzivani obsahu a informace o cookies.</p>
+  </div>
+</section>
+<section class="section">
+  <div class="container">
+    <p class="section-label">Pravidla provozu</p>
+    <h2 data-block="rules_title" class="section-title">Co plati pri pouzivani tohoto webu</h2>
+    <p data-block="rules_intro" class="section-intro">Stranka shrnuje zakladni podminky pouzivani, pravidla pro cookies a zpusob kontaktu.</p>
+    <div class="legal-grid">
+      <article data-block="rule_1" class="legal-card"></article>
+      <article data-block="rule_2" class="legal-card"></article>
+      <article data-block="rule_3" class="legal-card"></article>
+      <article data-block="rule_4" class="legal-card"></article>
+    </div>
+    <div data-block="cta_wrap" class="hp-section-cta"></div>
+  </div>
+</section>
+HTML;
+
+$tplRulesCss = <<<'CSS'
+.legal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px}
+.legal-card{padding:24px;border:1px solid rgba(198,148,61,.3);background:rgba(255,255,255,.025)}
+.legal-card h3{margin:0 0 10px;color:#fff;font-size:1.1rem}
+.legal-card p,.legal-card li{color:rgba(255,255,255,.72);line-height:1.65}
+.legal-card ul{margin:10px 0 0 18px;padding:0}
+CSS;
+
+$tplRules = seedUpsertTemplate($pdo, $siteId, 'Ty krása no', $tplRulesHtml, $tplRulesCss, '');
+
 echo "Šablony vytvořeny.\n";
 
 // ─── Stránky ──────────────────────────────────────────────────────────────────
@@ -584,6 +617,7 @@ $pidFaq       = seedUpsertPage($pdo, $siteId, $tplFaq,             'FAQ',       
 $pidKontakt   = seedUpsertPage($pdo, $siteId, $tplKontakt,         'Kontakt',       'kontakt',    'kontakt');
 $pidBlog      = seedUpsertPage($pdo, $siteId, $tplBlogListing,     'Blog',          'blog',       'blog');
 $pidPortfolio = seedUpsertPage($pdo, $siteId, $tplPortfolioListing,'Naše práce',    'nase-prace', 'nase-prace');
+$pidRules     = seedUpsertPage($pdo, $siteId, $tplRules,           'Ty krása no',   'ty-krasa-no','ty-krasa-no');
 
 echo "Stránky vytvořeny.\n";
 
@@ -676,6 +710,16 @@ seedBlock($pdo, $pidBlog, 'hero_sub', 'textarea', 'Hero — intro',  'Tipy, insp
 
 seedBlock($pdo, $pidPortfolio, 'hero_h1',  'text',     'Hero — nadpis', 'Naše práce',                           1);
 seedBlock($pdo, $pidPortfolio, 'hero_sub', 'textarea', 'Hero — intro',  'Ukázka projektů a realizací.',          2);
+
+seedBlock($pdo, $pidRules, 'hero_h1', 'text', 'Hero - nadpis', 'Ty krása no', 1);
+seedBlock($pdo, $pidRules, 'hero_sub', 'textarea', 'Hero - intro', 'Pravidla provozu webu, pouzivani obsahu a informace o cookies.', 2);
+seedBlock($pdo, $pidRules, 'rules_title', 'text', 'Pravidla - nadpis', 'Co plati pri pouzivani tohoto webu', 3);
+seedBlock($pdo, $pidRules, 'rules_intro', 'textarea', 'Pravidla - intro', 'Pouzivanim tohoto webu potvrzujete, ze jste si precetli tato pravidla. Pokud s nimi nesouhlasite, web nepouzivejte.', 4);
+seedBlock($pdo, $pidRules, 'rule_1', 'html', 'Pravidlo 1', '<h3>Pouzivani webu</h3><p>Web pouzivejte pouze zakonnym a bezpecnym zpusobem. Nesmite se pokouset o naruseni provozu, zneuziti formularu ani o zasahy do zabezpeceni.</p>', 5);
+seedBlock($pdo, $pidRules, 'rule_2', 'html', 'Pravidlo 2', '<h3>Cookies a souhlasy</h3><p>Nezbytne cookies pouzivame pro fungovani webu. Analyticke a marketingove cookies se aktivuji az po vasem jasnem souhlasu v cookie liste. Sve volby muzete kdykoli zmenit pres nastaveni cookies.</p>', 6);
+seedBlock($pdo, $pidRules, 'rule_3', 'html', 'Pravidlo 3', '<h3>Obsah a autorska prava</h3><p>Fotografie, videa, texty a znacka webu zustavaji chranenym obsahem provozovatele nebo jeho klientu. Bez souhlasu je nepouzivejte dale, nekopirujte a nevydavejte za vlastni.</p>', 7);
+seedBlock($pdo, $pidRules, 'rule_4', 'html', 'Pravidlo 4', '<h3>Zmeny a kontakt</h3><p>Obsah webu i tato pravidla se mohou prubezne menit. Pokud mate dotaz k provozu webu, soukromi nebo souhlasu s cookies, napiste nam pres kontaktni stranku.</p>', 8);
+seedBlock($pdo, $pidRules, 'cta_wrap', 'html', 'CTA', '<a href="/kontakt" class="btn-secondary">Kontaktovat nas</a>', 9);
 
 echo "Obsahové bloky vytvořeny.\n";
 

@@ -223,8 +223,12 @@ body > .cookie-consent{
 }
 .cookie-consent__grid{display:grid;gap:14px}
 .cookie-consent__label{color:#e0b866;font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase}
+.cookie-consent__hero{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
 .cookie-consent__title{margin:0;color:#fff;font-family:Georgia,"Times New Roman",serif;font-size:22px;line-height:1.1}
+.cookie-consent__smile{flex:0 0 auto;color:#e0b866;font-size:48px;line-height:1}
 .cookie-consent__text{margin:8px 0 0;color:rgba(255,255,255,.72);font-size:14px;line-height:1.55}
+.cookie-consent__legal{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px;color:rgba(255,255,255,.68);font-size:12px;line-height:1.5}
+.cookie-consent__legal a{color:#e0b866;text-decoration:underline}
 .cookie-consent__actions{display:flex;flex-wrap:wrap;gap:8px}
 .cookie-consent__btn{min-height:40px;padding:10px 16px;border:1px solid rgba(224,184,102,.62);background:transparent;color:#f7f1e8;font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
 .cookie-consent__btn--accept{background:#c6943d;border-color:#c6943d;color:#050505}
@@ -244,13 +248,20 @@ body > .cookie-consent{
   <div class="cookie-consent__grid">
     <div>
       <div class="cookie-consent__label">Soukromi</div>
-      <h2 class="cookie-consent__title">Pouzivame cookies</h2>
+      <div class="cookie-consent__hero">
+        <h2 class="cookie-consent__title">Pouzivame cookies</h2>
+        <div class="cookie-consent__smile" aria-hidden="true">&#9786;</div>
+      </div>
       <p class="cookie-consent__text">Pouzivame cookies k zajisteni spravneho fungovani webu a se souhlasem take k mereni navstevnosti pomocí Google Analytics. Diky tomu vime, co navstevniky zajima, a muzeme web zlepsovat.</p>
+      <div class="cookie-consent__legal">
+        <span>Pravidla pouzivani webu najdete tady:</span>
+        <a href="/ty-krasa-no">Ty krása no</a>
+      </div>
     </div>
     <div class="cookie-consent__actions">
       <button class="cookie-consent__btn cookie-consent__btn--accept" type="button" data-cookie-accept-all>Prijmout vse</button>
       <button class="cookie-consent__btn" type="button" data-cookie-reject-all>Odmitnout vse</button>
-      <button class="cookie-consent__btn" type="button" data-cookie-settings>Nastaveni</button>
+      <button class="cookie-consent__btn" type="button" data-cookie-settings aria-expanded="false">Nastaveni</button>
     </div>
     <div class="cookie-consent__settings" data-cookie-settings-panel>
       <div class="cookie-consent__option">
@@ -278,7 +289,7 @@ body > .cookie-consent{
   var enabled=settings.cookieConsentEnabled!==false;
   var analyticsCategoryEnabled=settings.analyticsCategoryEnabled!==false;
   var marketingCategoryEnabled=settings.marketingCategoryEnabled!==false;
-  var debugEnabled=true;
+  var debugEnabled=false;
 
   function debugLog(step,payload){
     if(!debugEnabled||!window.console) return;
@@ -399,6 +410,12 @@ body > .cookie-consent{
 
     function pref(){return manager&&manager.getPreferences?manager.getPreferences():null;}
     function save(data){if(manager&&manager.savePreferences)manager.savePreferences(data);}
+    function syncSettingsButton(){
+      if(!settingsBtn) return;
+      var expanded=box.dataset.mode==='settings';
+      settingsBtn.textContent=expanded?'Skryt nastaveni':'Nastaveni';
+      settingsBtn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+    }
     function sync(){
       var p=pref()||{analytics:false,marketing:false};
       debugLog('sync:preferences',p);
@@ -435,6 +452,7 @@ body > .cookie-consent{
       backdrop.style.visibility='visible';
       box.style.opacity='1';
       backdrop.style.opacity='1';
+      syncSettingsButton();
       debugLog('show:before-frame',{
         host:inspectElement(host,'host'),
         mode:box.dataset.mode,
@@ -467,6 +485,7 @@ body > .cookie-consent{
       box.style.display='none';
       backdrop.style.display='none';
       box.dataset.mode='summary';
+      syncSettingsButton();
       debugLog('hide:after',{
         host:inspectElement(host,'host'),
         mode:box.dataset.mode,
@@ -477,6 +496,14 @@ body > .cookie-consent{
     function openSettings(){
       debugLog('action:open-settings');
       show('settings');
+    }
+    function toggleSettings(){
+      if(box.dataset.mode==='settings'){
+        debugLog('action:close-settings');
+        show('summary');
+        return;
+      }
+      openSettings();
     }
     function bindOpeners(scope){
       (scope||document).querySelectorAll('[data-cookie-open-settings]').forEach(function(el){
@@ -532,7 +559,7 @@ body > .cookie-consent{
       settingsBtn.dataset.cookieBound='1';
       settingsBtn.addEventListener('click',function(){
         debugLog('action:settings-button');
-        openSettings();
+        toggleSettings();
       });
     }
     if(saveBtn&&saveBtn.dataset.cookieBound!=='1'){
@@ -571,7 +598,7 @@ body > .cookie-consent{
 
     if(!pref()){
       debugLog('init:auto-open-no-preferences');
-      openSettings();
+      show('summary');
     } else {
       debugLog('init:existing-preferences',pref());
       hide();
