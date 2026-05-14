@@ -266,6 +266,49 @@ function injectCookieConsent(string $html): string
   var enabled=settings.cookieConsentEnabled!==false;
   var analyticsCategoryEnabled=settings.analyticsCategoryEnabled!==false;
   var marketingCategoryEnabled=settings.marketingCategoryEnabled!==false;
+  var debugEnabled=true;
+
+  function debugLog(step,payload){
+    if(!debugEnabled||!window.console) return;
+    try{
+      console.groupCollapsed('[cookie-consent] ' + step);
+      if(payload!==undefined) console.log(payload);
+      console.groupEnd();
+    }catch(e){}
+  }
+
+  function inspectElement(el,label){
+    if(!el) return {label:label||'unknown',missing:true};
+    var style=window.getComputedStyle?window.getComputedStyle(el):null;
+    var rect=typeof el.getBoundingClientRect==='function'?el.getBoundingClientRect():null;
+    return {
+      label:label||el.className||el.tagName,
+      hidden:!!el.hidden,
+      className:el.className,
+      dataset:Object.assign({}, el.dataset || {}),
+      clientWidth:el.clientWidth,
+      clientHeight:el.clientHeight,
+      offsetWidth:el.offsetWidth,
+      offsetHeight:el.offsetHeight,
+      rect:rect?{
+        top:rect.top,
+        left:rect.left,
+        width:rect.width,
+        height:rect.height,
+        bottom:rect.bottom,
+        right:rect.right
+      }:null,
+      computed:style?{
+        display:style.display,
+        visibility:style.visibility,
+        opacity:style.opacity,
+        zIndex:style.zIndex,
+        position:style.position,
+        transform:style.transform,
+        pointerEvents:style.pointerEvents
+      }:null
+    };
+  }
 
   function createFallbackManager(){
     var key='cookie_consent_preferences';
@@ -308,9 +351,23 @@ function injectCookieConsent(string $html): string
 
     var box=document.querySelector('[data-cookie-consent]');
     var backdrop=document.querySelector('[data-cookie-consent-backdrop]');
+    debugLog('init:start',{
+      enabled:enabled,
+      analyticsCategoryEnabled:analyticsCategoryEnabled,
+      marketingCategoryEnabled:marketingCategoryEnabled,
+      hasManager:!!manager,
+      hasBox:!!box,
+      hasBackdrop:!!backdrop,
+      readyState:document.readyState
+    });
     if(!box||!backdrop||!enabled){
       if(box)box.hidden=true;
       if(backdrop)backdrop.hidden=true;
+      debugLog('init:aborted',{
+        reason:!enabled?'disabled':'missing-elements',
+        box:inspectElement(box,'modal'),
+        backdrop:inspectElement(backdrop,'backdrop')
+      });
       return;
     }
 
@@ -323,6 +380,7 @@ function injectCookieConsent(string $html): string
     function save(data){if(manager&&manager.savePreferences)manager.savePreferences(data);}
     function sync(){
       var p=pref()||{analytics:false,marketing:false};
+      debugLog('sync:preferences',p);
       box.querySelectorAll('[data-cookie-category]').forEach(function(input){
         input.checked=p[input.dataset.cookieCategory]===true;
       });
@@ -332,6 +390,12 @@ function injectCookieConsent(string $html): string
       var marketingRow=box.querySelector('[data-cookie-option="marketing"]');
       if(analyticsRow) analyticsRow.hidden=!analyticsCategoryEnabled;
       if(marketingRow) marketingRow.hidden=!marketingCategoryEnabled;
+      debugLog('sync:category-visibility',{
+        analyticsEnabled:analyticsCategoryEnabled,
+        marketingEnabled:marketingCategoryEnabled,
+        analyticsRow:inspectElement(analyticsRow,'analytics-row'),
+        marketingRow:inspectElement(marketingRow,'marketing-row')
+      });
     }
     function show(mode){
       sync();
@@ -339,13 +403,36 @@ function injectCookieConsent(string $html): string
       box.dataset.mode=mode||'summary';
       box.hidden=false;
       backdrop.hidden=false;
+      debugLog('show:before-frame',{
+        mode:box.dataset.mode,
+        modal:inspectElement(box,'modal'),
+        backdrop:inspectElement(backdrop,'backdrop')
+      });
+      window.requestAnimationFrame(function(){
+        debugLog('show:after-frame',{
+          mode:box.dataset.mode,
+          modal:inspectElement(box,'modal'),
+          backdrop:inspectElement(backdrop,'backdrop')
+        });
+      });
     }
     function hide(){
+      debugLog('hide:before',{
+        mode:box.dataset.mode,
+        modal:inspectElement(box,'modal'),
+        backdrop:inspectElement(backdrop,'backdrop')
+      });
       box.hidden=true;
       backdrop.hidden=true;
       box.dataset.mode='summary';
+      debugLog('hide:after',{
+        mode:box.dataset.mode,
+        modal:inspectElement(box,'modal'),
+        backdrop:inspectElement(backdrop,'backdrop')
+      });
     }
     function openSettings(){
+      debugLog('action:open-settings');
       show('settings');
     }
     function bindOpeners(scope){
@@ -354,6 +441,7 @@ function injectCookieConsent(string $html): string
         el.dataset.cookieBound='1';
         el.addEventListener('click',function(e){
           e.preventDefault();
+          debugLog('action:open-from-link',inspectElement(el,'opener'));
           openSettings();
         });
       });
@@ -376,11 +464,15 @@ function injectCookieConsent(string $html): string
 
     if(backdrop.dataset.cookieBound!=='1'){
       backdrop.dataset.cookieBound='1';
-      backdrop.addEventListener('click',hide);
+      backdrop.addEventListener('click',function(){
+        debugLog('action:backdrop-click');
+        hide();
+      });
     }
     if(acceptAll&&acceptAll.dataset.cookieBound!=='1'){
       acceptAll.dataset.cookieBound='1';
       acceptAll.addEventListener('click',function(){
+        debugLog('action:accept-all');
         save({necessary:true,analytics:true,marketing:true});
         hide();
       });
@@ -388,6 +480,7 @@ function injectCookieConsent(string $html): string
     if(rejectAll&&rejectAll.dataset.cookieBound!=='1'){
       rejectAll.dataset.cookieBound='1';
       rejectAll.addEventListener('click',function(){
+        debugLog('action:reject-all');
         save({necessary:true,analytics:false,marketing:false});
         hide();
       });
@@ -395,6 +488,7 @@ function injectCookieConsent(string $html): string
     if(settingsBtn&&settingsBtn.dataset.cookieBound!=='1'){
       settingsBtn.dataset.cookieBound='1';
       settingsBtn.addEventListener('click',function(){
+        debugLog('action:settings-button');
         openSettings();
       });
     }
@@ -405,6 +499,7 @@ function injectCookieConsent(string $html): string
         box.querySelectorAll('[data-cookie-category]').forEach(function(input){
           data[input.dataset.cookieCategory]=input.checked===true;
         });
+        debugLog('action:save-settings',data);
         save(data);
         hide();
       });
@@ -413,13 +508,28 @@ function injectCookieConsent(string $html): string
     if(document.documentElement.dataset.cookieEscBound!=='1'){
       document.documentElement.dataset.cookieEscBound='1';
       document.addEventListener('keydown',function(e){
-        if(e.key==='Escape'&&!box.hidden)hide();
+        if(e.key==='Escape'&&!box.hidden){
+          debugLog('action:escape');
+          hide();
+        }
       });
     }
 
+    debugLog('init:bound-elements',{
+      modal:inspectElement(box,'modal'),
+      backdrop:inspectElement(backdrop,'backdrop'),
+      acceptAll:inspectElement(acceptAll,'accept-all'),
+      rejectAll:inspectElement(rejectAll,'reject-all'),
+      settingsBtn:inspectElement(settingsBtn,'settings-button'),
+      saveBtn:inspectElement(saveBtn,'save-button'),
+      openerCount:document.querySelectorAll('[data-cookie-open-settings]').length
+    });
+
     if(!pref()){
+      debugLog('init:auto-open-no-preferences');
       openSettings();
     } else {
+      debugLog('init:existing-preferences',pref());
       hide();
     }
   }
