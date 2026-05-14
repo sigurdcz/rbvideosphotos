@@ -1317,24 +1317,124 @@ function socialLabel(string $type): string
 function socialIconSvg(string $type): string
 {
     $icons = [
-        'instagram' => '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4.1"/><circle cx="17.2" cy="6.8" r="1.1"/></svg>',
-        'facebook' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.4 8.2h2.2V4.6c-.4-.1-1.7-.2-3.2-.2-3.2 0-5.3 1.9-5.3 5.5v3.1H4.8v4h3.3v6h4v-6h3.3l.6-4h-3.9V10.3c0-1.2.4-2.1 2.3-2.1z"/></svg>',
-        'youtube' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 8.2s-.2-1.6-.8-2.3c-.8-.8-1.7-.8-2.1-.9C16.2 4.8 12 4.8 12 4.8h0s-4.2 0-7.1.2c-.4.1-1.3.1-2.1.9C2.2 6.6 2 8.2 2 8.2S1.8 10 1.8 11.9v1.7c0 1.9.2 3.7.2 3.7s.2 1.6.8 2.3c.8.8 1.9.8 2.4.9 1.7.2 6.8.2 6.8.2s4.2 0 7.1-.2c.4-.1 1.3-.1 2.1-.9.6-.7.8-2.3.8-2.3s.2-1.9.2-3.7v-1.7c0-1.9-.2-3.7-.2-3.7zM9.9 15.6V8.9l5.9 3.4-5.9 3.3z"/></svg>',
-        'tiktok' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.2 3c.4 2.7 1.9 4.4 4.5 4.6v3.7c-1.5.1-2.9-.3-4.4-1.2v6.8c0 8.6-9.4 11.3-13.2 5.1-2.4-4 .1-9.6 4.7-10.5.9-.2 1.8-.1 2.8 0v3.9c-.3-.1-.7-.1-1-.1-4.4.3-4.2 6.8.6 6.1 1.8-.3 2.7-1.6 2.7-3.7V3h3.3z"/></svg>',
-        'linkedin' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.8 7.5H1.2V22h3.6V7.5zM3 1.5a2.1 2.1 0 1 0 0 4.2 2.1 2.1 0 0 0 0-4.2zM22.8 13.7c0-3.9-2.1-6.5-5.4-6.5-2.1 0-3.3 1.2-3.8 2h-.1V7.5H10V22h3.6v-7.2c0-1.9.4-3.8 2.8-3.8 2.3 0 2.4 2.2 2.4 3.9V22h3.6v-8.3z"/></svg>',
-        'twitter' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.3 10.2 22.7 1h-2l-7.3 8.1L7.6 1H1l8.8 12.2L1 23h2l7.7-8.6 6.2 8.6h6.6l-9.2-12.8zm-2.7 3-1-.1L3.5 2.6h3.1l5.7 8.1 1 .1 7.5 10.7h-3.1l-6.1-8.3z"/></svg>',
-        'pinterest' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.2 1.8C6.6 1.8 3 5.4 3 10.1c0 3.5 2 5.5 3.2 5.5.5 0 .8-1.4.8-1.8 0-.5-1.2-1.5-1.2-3.4 0-3.9 3-6.7 6.8-6.7 3.3 0 5.7 1.9 5.7 5.3 0 2.5-1 7.2-4.3 7.2-1.2 0-2.3-.9-2-2.2.4-1.5 1.2-3.2 1.2-4.8 0-2.8-4-2.3-4 1.1 0 .7.1 1.5.4 2.2-.6 2.4-1.8 6.1-1.8 8.6 0 .8.1 1.5.2 2.3.2.2.1.2.4.1 2.4-3.3 2.3-3.9 3.4-8.3.6 1.1 2.2 1.8 3.4 1.8 5.2 0 7.6-5.1 7.6-9.7 0-4.9-4.3-7.5-8.7-7.5z"/></svg>',
-        'whatsapp' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 3.5A11.8 11.8 0 0 0 1.9 17.7L.5 23.5l5.9-1.5A11.8 11.8 0 0 0 20.5 3.5zm-8.4 17a9.6 9.6 0 0 1-4.9-1.3l-.4-.2-3.5.9.9-3.4-.2-.4a9.6 9.6 0 1 1 8.1 4.4zm5.3-7.1c-.3-.2-1.8-.9-2.1-1s-.5-.2-.7.2-.8 1-1 1.2-.4.2-.7.1a7.9 7.9 0 0 1-3.9-3.4c-.3-.5.3-.5.8-1.7.1-.2 0-.4-.1-.6l-.9-2c-.2-.5-.5-.4-.7-.4h-.6c-.2 0-.6.1-.9.4-.3.3-1.2 1.1-1.2 2.8s1.2 3.2 1.4 3.4c.2.2 2.4 3.7 5.8 5.1 2.2.9 3.1 1 4.2.8.6-.1 1.8-.7 2-1.4.3-.7.3-1.3.2-1.4-.1-.1-.3-.2-.6-.3z"/></svg>',
-        'telegram' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22.2 2.6 1.6 10.5c-1.4.6-1.4 1.3-.3 1.7l5.3 1.7 2 6.1c.3.8.1 1.1.9 1.1.6 0 .9-.3 1.2-.6l2.9-2.8 5.9 4.3c1.1.6 1.8.3 2.1-1l3.8-17.9c.4-1.5-.6-2.2-1.8-1.7zM7.4 13.5 19.8 5.7c.6-.4 1.1-.2.7.2L9.9 15.5l-.4 4.2-2.1-6.2z"/></svg>',
-        'link' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.2 13.8a1.2 1.2 0 0 1 0-1.7l3.9-3.9a3 3 0 1 1 4.3 4.3l-2 2a1.2 1.2 0 1 0 1.7 1.7l2-2a5.4 5.4 0 1 0-7.6-7.6l-3.9 3.9a1.2 1.2 0 0 0 1.6 1.7z"/><path d="M13.8 10.2a1.2 1.2 0 0 1 0 1.7l-3.9 3.9a3 3 0 1 1-4.3-4.3l2-2a1.2 1.2 0 0 0-1.7-1.7l-2 2a5.4 5.4 0 0 0 7.6 7.6l3.9-3.9a1.2 1.2 0 0 0-1.6-1.7z"/></svg>',
+        'instagram' => '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="12" cy="12" r="3.6"/><circle cx="17" cy="7" r=".8"/></svg>',
+        'facebook' => '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M13.5 19v-5h1.9l.4-2.3h-2.3v-1.5c0-.9.3-1.6 1.5-1.6h1V6.6c-.2 0-.9-.1-1.8-.1-2.7 0-4.2 1.4-4.2 4v1.2h-1.7V14H10V19"/></svg>',
+        'youtube' => '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="6.5" width="17" height="11" rx="3.2"/><path d="M10 9.4 15.3 12 10 14.6z"/></svg>',
+        'tiktok' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4c.6 1.7 1.8 2.8 3.6 3.1v2.5c-1.2 0-2.4-.4-3.5-1.1v5.1a4.4 4.4 0 1 1-4.4-4.4c.3 0 .7 0 1 .1v2.5c-.2-.1-.5-.1-.7-.1a1.9 1.9 0 1 0 1.8 1.9V4z"/></svg>',
+        'linkedin' => '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="9" width="3" height="10"/><circle cx="5.5" cy="5.8" r="1.4"/><path d="M10 9v10"/><path d="M10 13.2c0-2.2 1.4-4.2 4-4.2 2.4 0 3.5 1.6 3.5 4.3V19"/><path d="M17.5 19v-5.1"/></svg>',
+        'twitter' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5 19.5 19"/><path d="M19.5 5 4 19"/></svg>',
+        'pinterest' => '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M10.7 18.5c.3-1.2.7-2.6 1-3.9"/><path d="M9.8 10.2c0-2.2 1.7-3.8 4-3.8 2 0 3.5 1.3 3.5 3.2 0 2.4-1 5.4-3.2 5.4-.9 0-1.6-.8-1.4-1.7.3-1 1-2.2 1-3.4 0-2-2.5-1.7-2.5.8 0 .6.1 1.1.3 1.5-.2 1-.6 2.4-1 3.6"/></svg>',
+        'whatsapp' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.7 18.1A8.9 8.9 0 1 0 6 19.6L3.5 20.5l1-2.4"/><path d="M9.2 8.8c-.2-.4-.4-.4-.7-.4h-.6c-.2 0-.5.1-.7.4-.3.3-.9.9-.9 2.1s1 2.4 1.1 2.6c.1.1 1.9 3 4.8 4.1 2.4.9 2.9.7 3.4.6.5-.1 1.6-.7 1.8-1.3.2-.6.2-1.1.2-1.2s-.2-.2-.5-.3l-1.7-.8c-.3-.1-.5-.1-.7.1l-.8 1c-.1.2-.3.2-.6.1-.3-.1-1.2-.4-2.2-1.3-.8-.7-1.4-1.6-1.6-1.9-.2-.3 0-.4.1-.6l.4-.5.3-.4c.1-.2.1-.4 0-.6z"/></svg>',
+        'telegram' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 4 3.8 10.7l5.4 1.8 1.9 5.6 2.6-2.5 4.9 3.6z"/><path d="M9.2 12.5 20.2 5.2"/><path d="M11.1 18.1 12 14.2"/></svg>',
+        'link' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14 8.2 15.8a3.2 3.2 0 1 1-4.5-4.5L5.6 9.5"/><path d="M14 10 15.8 8.2a3.2 3.2 0 1 1 4.5 4.5L18.4 14.5"/><path d="M8.8 15.2 15.2 8.8"/></svg>',
     ];
 
     return $icons[$type] ?? $icons['link'];
 }
 
+function enrichContactWithLegacyBlocks(int $siteId, array $contact): array
+{
+    $hasPrimaryContact = false;
+    foreach (['phone_1', 'phone_2', 'phone_3', 'email'] as $key) {
+        if (trim((string)($contact[$key] ?? '')) !== '') {
+            $hasPrimaryContact = true;
+            break;
+        }
+    }
+
+    if ($hasPrimaryContact) {
+        return $contact;
+    }
+
+    $pages = new PageRepository();
+    $blocks = new BlockRepository();
+    $htmlChunks = [];
+
+    foreach (['kontakt', ''] as $path) {
+        $page = $pages->findByUrlPath($path);
+        if (!$page || (int)($page['site_id'] ?? 0) !== $siteId) {
+            continue;
+        }
+        foreach (['kontakt_info', 'contact_info', 'contact_card'] as $blockKey) {
+            $block = $blocks->findByKey((int)$page['id'], $blockKey);
+            $content = trim((string)($block['content'] ?? ''));
+            if ($content !== '') {
+                $htmlChunks[] = html_entity_decode($content, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            }
+        }
+    }
+
+    if ($htmlChunks === []) {
+        return $contact;
+    }
+
+    $html = implode("\n", $htmlChunks);
+    $plain = preg_replace('/\x{00A0}/u', ' ', strip_tags($html)) ?? '';
+
+    if (trim((string)($contact['email'] ?? '')) === '' && preg_match('/[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}/i', $plain, $m)) {
+        $contact['email'] = $m[0];
+    }
+
+    $phones = [];
+    if (preg_match_all('/(?:\+?\d[\d\s().\-]{7,}\d)/u', $plain, $matches)) {
+        foreach ($matches[0] as $candidate) {
+            $normalized = preg_replace('/[^\d+]/', '', $candidate) ?? '';
+            if (strlen(ltrim($normalized, '+')) < 9) {
+                continue;
+            }
+            if (!in_array($normalized, $phones, true)) {
+                $phones[] = $normalized;
+            }
+        }
+    }
+
+    foreach (['phone_1', 'phone_2', 'phone_3'] as $index => $key) {
+        if (trim((string)($contact[$key] ?? '')) === '' && isset($phones[$index])) {
+            $contact[$key] = $phones[$index];
+        }
+    }
+
+    if (preg_match_all('/href=["\']([^"\']+)["\']/i', $html, $linkMatches)) {
+        $socialSlot = 1;
+        foreach ($linkMatches[1] as $href) {
+            $type = normalizeSocialType('', $href);
+            if ($type === 'link' || !preg_match('~^(?:https?:)?//~i', $href)) {
+                continue;
+            }
+
+            $alreadyPresent = false;
+            for ($i = 1; $i <= 5; $i++) {
+                if (trim((string)($contact['social_' . $i . '_url'] ?? '')) === trim((string)$href)) {
+                    $alreadyPresent = true;
+                    break;
+                }
+            }
+            if ($alreadyPresent) {
+                continue;
+            }
+
+            while ($socialSlot <= 5 && trim((string)($contact['social_' . $socialSlot . '_url'] ?? '')) !== '') {
+                $socialSlot++;
+            }
+            if ($socialSlot > 5) {
+                break;
+            }
+            $contact['social_' . $socialSlot . '_type'] = $type;
+            $contact['social_' . $socialSlot . '_url'] = $href;
+            $socialSlot++;
+        }
+    }
+
+    if (trim((string)($contact['form_email'] ?? '')) === '' && trim((string)($contact['email'] ?? '')) !== '') {
+        $contact['form_email'] = $contact['email'];
+    }
+
+    return $contact;
+}
+
 function buildFooterSocialsHtml(int $siteId): string
 {
-    $contact = (new ContactRepository())->findBySiteSafe($siteId);
+    $contact = enrichContactWithLegacyBlocks($siteId, (new ContactRepository())->findBySiteSafe($siteId));
 
     $items = [];
     for ($i = 1; $i <= 5; $i++) {
@@ -1373,7 +1473,7 @@ function buildFooterSocialsHtml(int $siteId): string
 
 function buildRichFooterHtml(int $siteId): string
 {
-    $contact = (new ContactRepository())->findBySiteSafe($siteId);
+    $contact = enrichContactWithLegacyBlocks($siteId, (new ContactRepository())->findBySiteSafe($siteId));
     $site = (new SiteRepository())->findById($siteId) ?? [];
     $siteName = (string)($site['name'] ?? 'RB Videos & Photos');
     $logoUrl = normalizePublicAssetUrl((string)($site['logo_url'] ?? ''));
@@ -1419,8 +1519,8 @@ function buildRichFooterHtml(int $siteId): string
         . 'html,body{min-height:100%}body{min-height:100vh;display:flex;flex-direction:column}.theme-shell{width:100%;flex:1 0 auto;display:flex;flex-direction:column}.theme-shell,.theme-shell__frame{min-height:100vh}.theme-shell__frame{display:flex;flex-direction:column;flex:1 0 auto}.theme-main,main,#page-content{flex:1 0 auto}footer,.theme-footer,.site-footer{margin-top:auto}'
         . 'footer .site-footer-rich,.theme-footer .site-footer-rich,.site-footer .site-footer-rich{width:100%;max-width:1180px;margin:0 auto;padding:0;display:grid;grid-template-columns:minmax(220px,.85fr) minmax(300px,1fr) minmax(220px,.75fr);gap:34px;align-items:start;text-align:left}'
         . '.site-footer-brand{display:flex;flex-direction:column;gap:12px;align-items:flex-start}.site-footer-brand__logoBox{display:inline-flex;align-items:center;justify-content:center;min-width:74px;min-height:58px;padding:9px 12px;border:1px solid rgba(198,148,61,.7);background:rgba(0,0,0,.45);box-shadow:0 14px 32px rgba(198,148,61,.12)}.site-footer-brand__logo{max-height:42px;max-width:220px;width:auto;height:auto;object-fit:contain}.site-footer-brand__mark{display:inline-grid;place-items:center;width:54px;height:54px;border:1px solid rgba(198,148,61,.55);color:#c6943d;font-family:Georgia,serif;font-weight:800;font-size:20px;letter-spacing:.08em;text-transform:uppercase}.site-footer-brand__name{color:#f3efe7;font-family:Georgia,serif;font-size:22px;line-height:1.1}.site-footer-brand__note{color:rgba(255,255,255,.52);font-size:13px;line-height:1.65}'
-        . '.site-footer-contact{display:grid;gap:9px}.site-footer-title{margin:0 0 12px;color:#c6943d;font-size:11px;font-weight:900;letter-spacing:.18em;text-transform:uppercase}.site-footer-contact__item{display:grid;grid-template-columns:86px minmax(0,1fr);gap:14px;align-items:baseline;color:#f3efe7;text-decoration:none}.site-footer-contact__item span{color:rgba(255,255,255,.44);font-size:11px;text-transform:uppercase;letter-spacing:.12em;white-space:nowrap}.site-footer-contact__item strong{min-width:0;font-size:14px;line-height:1.45;font-weight:800;word-break:break-word}'
-        . '.site-footer-socials{display:flex;flex-direction:column;gap:14px;align-items:flex-start}.site-footer-socials__list{display:flex;flex-wrap:wrap;gap:10px}.site-footer-social{--social:#c6943d;display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;padding:0;border:1px solid rgba(255,255,255,.14);border-radius:999px;background:rgba(255,255,255,.03);color:#f3efe7;text-decoration:none;transition:transform .2s,border-color .2s,color .2s}.site-footer-social:hover{transform:translateY(-1px);border-color:rgba(255,255,255,.3);color:var(--social)}.site-footer-social__icon{display:grid;place-items:center;line-height:1;transition:color .2s,transform .2s}.site-footer-social:hover .site-footer-social__icon{transform:scale(1.06)}.site-footer-social__icon svg{width:17px;height:17px;fill:currentColor;stroke:currentColor;stroke-width:1.6}.site-footer-social--instagram{--social:#e4405f}.site-footer-social--facebook{--social:#1877f2}.site-footer-social--youtube{--social:#ff0033}.site-footer-social--tiktok{--social:#00f2ea}.site-footer-social--linkedin{--social:#0a66c2}.site-footer-social--twitter{--social:#fff}.site-footer-social--pinterest{--social:#bd081c}.site-footer-social--whatsapp{--social:#25d366}.site-footer-social--telegram{--social:#229ed9}.site-footer-bottom{grid-column:1/-1;margin-top:4px;padding-top:20px;border-top:1px solid rgba(255,255,255,.09);color:rgba(255,255,255,.36);font-size:12px;text-align:left}'
+        . '.site-footer-contact{display:grid;gap:9px}.site-footer-title{margin:0 0 12px;color:#c6943d;font-size:11px;font-weight:900;letter-spacing:.18em;text-transform:uppercase}.site-footer-contact__item{display:grid;grid-template-columns:86px minmax(0,1fr);gap:14px;align-items:baseline;color:#f3efe7;text-decoration:none}.site-footer-contact__item span{color:rgba(255,255,255,.44);font-size:11px;text-transform:uppercase;letter-spacing:.12em;white-space:nowrap}.site-footer-contact__item strong,.site-footer-contact__item a{min-width:0;color:#f3efe7;font-size:14px;line-height:1.45;font-weight:800;word-break:break-word}'
+        . '.site-footer-socials{display:flex;flex-direction:column;gap:14px;align-items:flex-start}.site-footer-socials__list{display:flex;flex-wrap:wrap;gap:10px}.site-footer-social{--social:#d4b06f;display:inline-flex;align-items:center;justify-content:center;width:50px;height:40px;padding:0;border:1px solid rgba(212,176,111,.24);border-radius:0;background:transparent;color:#d8d1c6;text-decoration:none;transition:transform .2s,border-color .2s,color .2s,background-color .2s}.site-footer-social:hover{transform:translateY(-1px);border-color:rgba(212,176,111,.62);background:rgba(212,176,111,.06);color:#f2e7d5}.site-footer-social__icon{display:grid;place-items:center;line-height:1;transition:color .2s,transform .2s}.site-footer-social:hover .site-footer-social__icon{transform:scale(1.06)}.site-footer-social__icon svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}.site-footer-bottom{grid-column:1/-1;margin-top:4px;padding-top:20px;border-top:1px solid rgba(255,255,255,.09);color:rgba(255,255,255,.36);font-size:12px;text-align:left}'
         . '@media(max-width:820px){footer .site-footer-rich,.theme-footer .site-footer-rich,.site-footer .site-footer-rich{grid-template-columns:1fr;gap:24px}.site-footer-bottom{text-align:left}}'
         . '</style>'
         . '<div class="site-footer-rich">'
@@ -2104,12 +2204,6 @@ function tryServeKontaktPage(): bool
     $heroTitleAttrs = inlineAttrs($page, $heroTitleKey, $heroTitleType);
     $heroSubAttrs = inlineAttrs($page, $heroSubKey, $heroSubType);
 
-    $socialIcons = [
-        'instagram' => '&#x1F4F7;', 'facebook' => '&#x1F426;', 'youtube'   => '&#x25B6;',
-        'tiktok'    => '&#x1F3B5;', 'linkedin'  => '&#x1F4BC;', 'twitter'   => '&#x1D54F;',
-        'pinterest' => '&#x1F4CC;', 'whatsapp'  => '&#x1F4AC;', 'telegram'  => '&#x2708;',
-    ];
-
     // Contact details block
     $detailsHtml = '<div class="ci-brand">'
         . '<div class="ci-brand__label">Ozvěte se</div>'
@@ -2150,9 +2244,10 @@ function tryServeKontaktPage(): bool
         $type = $contact['social_' . $i . '_type'] ?? '';
         $url  = $contact['social_' . $i . '_url']  ?? '';
         if ($type && $url) {
-            $icon = $socialIcons[$type] ?? '&#128279;';
+            $canonicalType = normalizeSocialType((string)$type, (string)$url);
+            $icon = socialIconSvg($canonicalType);
             $socialsHtml .= '<a href="' . $h($url) . '" target="_blank" rel="noopener" class="ci-social">'
-                . $icon . ' ' . ucfirst($h($type)) . '</a>';
+                . '<span class="ci-social__icon">' . $icon . '</span><span>' . $h(socialLabel($canonicalType)) . '</span></a>';
         }
     }
     if ($socialsHtml) {
@@ -2186,8 +2281,10 @@ body{background:#111;color:#fff}
 .ci-row a{color:#c4963c;text-decoration:none}.ci-row a:hover{text-decoration:underline}
 .ci-label{font-size:.82rem;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.04em}
 .ci-socials{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
-.ci-social{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#1f1f26;border-radius:8px;color:#fff;text-decoration:none;font-size:.9rem}
-.ci-social:hover{background:#c4963c}
+.ci-social{display:inline-flex;align-items:center;gap:10px;padding:8px 14px;border:1px solid rgba(212,176,111,.24);background:transparent;color:#f3efe7;text-decoration:none;font-size:.9rem;transition:border-color .2s,color .2s,background-color .2s,transform .2s}
+.ci-social:hover{transform:translateY(-1px);border-color:rgba(212,176,111,.62);background:rgba(212,176,111,.06);color:#fff6ea}
+.ci-social__icon{display:grid;place-items:center;width:32px;height:32px;border:1px solid rgba(212,176,111,.24)}
+.ci-social__icon svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
 .btn-maps{display:inline-flex;align-items:center;gap:8px;margin-top:20px;padding:12px 22px;background:#c4963c;color:#fff;border-radius:8px;text-decoration:none;font-weight:700}
 .btn-maps:hover{opacity:.9}
 .kt-form-block input,.kt-form-block textarea,.kt-form-block select{width:100%;background:#111;border:1px solid rgba(255,255,255,.12);color:#fff;padding:12px 14px;border-radius:8px;font-size:.95rem;font-family:inherit;margin-bottom:14px}

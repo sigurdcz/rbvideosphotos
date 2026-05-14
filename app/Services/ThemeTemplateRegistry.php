@@ -677,25 +677,52 @@ class ThemeTemplateRegistry
   gap: 10px;
 }
 
+.theme-shell .site-footer-contact__item strong,
+.theme-shell .site-footer-contact__item a {
+  color: var(--theme-text, #fff);
+}
+
 .theme-shell .site-footer-social {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  border-radius: 999px;
-  background: rgba(255,255,255,.04);
-  border: 1px solid var(--theme-border, rgba(255,255,255,.08));
-  color: var(--theme-text, #fff);
+  justify-content: center;
+  width: 50px;
+  height: 40px;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  border: 1px solid rgba(212,176,111,.24);
+  color: rgba(255,255,255,.82);
   text-decoration: none;
-  font-size: .9rem;
-  font-weight: 700;
-  transition: transform .2s, background .2s, color .2s;
+  transition: transform .2s, background-color .2s, border-color .2s, color .2s;
 }
 
 .theme-shell .site-footer-social:hover {
   transform: translateY(-1px);
-  background: var(--theme-accent, #c4963c);
-  color: #111;
+  background: rgba(212,176,111,.06);
+  border-color: rgba(212,176,111,.62);
+  color: #f3efe7;
+}
+
+.theme-shell .site-footer-social__icon {
+  display: grid;
+  place-items: center;
+  line-height: 1;
+  transition: color .2s, transform .2s;
+}
+
+.theme-shell .site-footer-social:hover .site-footer-social__icon {
+  transform: scale(1.06);
+}
+
+.theme-shell .site-footer-social__icon svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 @media (max-width: 760px) {

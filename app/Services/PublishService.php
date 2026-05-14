@@ -678,24 +678,192 @@ CSS;
         return FrontendAssetManager::injectGeneratedJs($headPart . $bodyPart, implode("\n", $scripts), 'inline-body-scripts', 'data-cms-inline-body-scripts');
     }
 
+    private function normalizeSocialType(string $type, string $url = ''): string
+    {
+        $value = strtolower(trim($type));
+        $value = preg_replace('~[^a-z0-9]+~', '', $value) ?? '';
+        $host = strtolower((string)(parse_url(trim($url), PHP_URL_HOST) ?: trim($url)));
+
+        $map = [
+            'ig' => 'instagram',
+            'in' => 'instagram',
+            'insta' => 'instagram',
+            'instagram' => 'instagram',
+            'fb' => 'facebook',
+            'fa' => 'facebook',
+            'facebook' => 'facebook',
+            'yt' => 'youtube',
+            'yo' => 'youtube',
+            'youtube' => 'youtube',
+            'tt' => 'tiktok',
+            'ti' => 'tiktok',
+            'tiktok' => 'tiktok',
+            'li' => 'linkedin',
+            'linkedin' => 'linkedin',
+            'x' => 'twitter',
+            'tw' => 'twitter',
+            'twitter' => 'twitter',
+            'pinterest' => 'pinterest',
+            'wa' => 'whatsapp',
+            'whatsapp' => 'whatsapp',
+            'telegram' => 'telegram',
+        ];
+
+        if (isset($map[$value])) {
+            return $map[$value];
+        }
+
+        foreach ($map as $needle => $canonical) {
+            if ($needle !== '' && str_contains($host, $needle)) {
+                return $canonical;
+            }
+        }
+
+        if (str_contains($host, 'youtu')) {
+            return 'youtube';
+        }
+
+        return $value !== '' ? $value : 'link';
+    }
+
+    private function socialLabel(string $type): string
+    {
+        return [
+            'instagram' => 'Instagram',
+            'facebook' => 'Facebook',
+            'youtube' => 'YouTube',
+            'tiktok' => 'TikTok',
+            'linkedin' => 'LinkedIn',
+            'twitter' => 'X',
+            'pinterest' => 'Pinterest',
+            'whatsapp' => 'WhatsApp',
+            'telegram' => 'Telegram',
+        ][$type] ?? 'Odkaz';
+    }
+
+    private function socialIconSvg(string $type): string
+    {
+        $icons = [
+            'instagram' => '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="12" cy="12" r="3.6"/><circle cx="17" cy="7" r=".8"/></svg>',
+            'facebook' => '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M13.5 19v-5h1.9l.4-2.3h-2.3v-1.5c0-.9.3-1.6 1.5-1.6h1V6.6c-.2 0-.9-.1-1.8-.1-2.7 0-4.2 1.4-4.2 4v1.2h-1.7V14H10V19"/></svg>',
+            'youtube' => '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="6.5" width="17" height="11" rx="3.2"/><path d="M10 9.4 15.3 12 10 14.6z"/></svg>',
+            'tiktok' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4c.6 1.7 1.8 2.8 3.6 3.1v2.5c-1.2 0-2.4-.4-3.5-1.1v5.1a4.4 4.4 0 1 1-4.4-4.4c.3 0 .7 0 1 .1v2.5c-.2-.1-.5-.1-.7-.1a1.9 1.9 0 1 0 1.8 1.9V4z"/></svg>',
+            'linkedin' => '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="9" width="3" height="10"/><circle cx="5.5" cy="5.8" r="1.4"/><path d="M10 9v10"/><path d="M10 13.2c0-2.2 1.4-4.2 4-4.2 2.4 0 3.5 1.6 3.5 4.3V19"/><path d="M17.5 19v-5.1"/></svg>',
+            'twitter' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5 19.5 19"/><path d="M19.5 5 4 19"/></svg>',
+            'pinterest' => '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M10.7 18.5c.3-1.2.7-2.6 1-3.9"/><path d="M9.8 10.2c0-2.2 1.7-3.8 4-3.8 2 0 3.5 1.3 3.5 3.2 0 2.4-1 5.4-3.2 5.4-.9 0-1.6-.8-1.4-1.7.3-1 1-2.2 1-3.4 0-2-2.5-1.7-2.5.8 0 .6.1 1.1.3 1.5-.2 1-.6 2.4-1 3.6"/></svg>',
+            'whatsapp' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.7 18.1A8.9 8.9 0 1 0 6 19.6L3.5 20.5l1-2.4"/><path d="M9.2 8.8c-.2-.4-.4-.4-.7-.4h-.6c-.2 0-.5.1-.7.4-.3.3-.9.9-.9 2.1s1 2.4 1.1 2.6c.1.1 1.9 3 4.8 4.1 2.4.9 2.9.7 3.4.6.5-.1 1.6-.7 1.8-1.3.2-.6.2-1.1.2-1.2s-.2-.2-.5-.3l-1.7-.8c-.3-.1-.5-.1-.7.1l-.8 1c-.1.2-.3.2-.6.1-.3-.1-1.2-.4-2.2-1.3-.8-.7-1.4-1.6-1.6-1.9-.2-.3 0-.4.1-.6l.4-.5.3-.4c.1-.2.1-.4 0-.6z"/></svg>',
+            'telegram' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 4 3.8 10.7l5.4 1.8 1.9 5.6 2.6-2.5 4.9 3.6z"/><path d="M9.2 12.5 20.2 5.2"/><path d="M11.1 18.1 12 14.2"/></svg>',
+            'link' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14 8.2 15.8a3.2 3.2 0 1 1-4.5-4.5L5.6 9.5"/><path d="M14 10 15.8 8.2a3.2 3.2 0 1 1 4.5 4.5L18.4 14.5"/><path d="M8.8 15.2 15.2 8.8"/></svg>',
+        ];
+
+        return $icons[$type] ?? $icons['link'];
+    }
+
+    private function enrichContactWithLegacyBlocks(int $siteId, array $contact): array
+    {
+        $hasPrimaryContact = false;
+        foreach (['phone_1', 'phone_2', 'phone_3', 'email'] as $key) {
+            if (trim((string)($contact[$key] ?? '')) !== '') {
+                $hasPrimaryContact = true;
+                break;
+            }
+        }
+
+        if ($hasPrimaryContact) {
+            return $contact;
+        }
+
+        $htmlChunks = [];
+        foreach (['kontakt', ''] as $path) {
+            $page = $this->pages->findByUrlPath($path);
+            if (!$page || (int)($page['site_id'] ?? 0) !== $siteId) {
+                continue;
+            }
+            foreach (['kontakt_info', 'contact_info', 'contact_card'] as $blockKey) {
+                $block = $this->blocks->findByKey((int)$page['id'], $blockKey);
+                $content = trim((string)($block['content'] ?? ''));
+                if ($content !== '') {
+                    $htmlChunks[] = html_entity_decode($content, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                }
+            }
+        }
+
+        if ($htmlChunks === []) {
+            return $contact;
+        }
+
+        $html = implode("\n", $htmlChunks);
+        $plain = preg_replace('/\x{00A0}/u', ' ', strip_tags($html)) ?? '';
+
+        if (trim((string)($contact['email'] ?? '')) === '' && preg_match('/[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}/i', $plain, $m)) {
+            $contact['email'] = $m[0];
+        }
+
+        $phones = [];
+        if (preg_match_all('/(?:\+?\d[\d\s().\-]{7,}\d)/u', $plain, $matches)) {
+            foreach ($matches[0] as $candidate) {
+                $normalized = preg_replace('/[^\d+]/', '', $candidate) ?? '';
+                if (strlen(ltrim($normalized, '+')) < 9) {
+                    continue;
+                }
+                if (!in_array($normalized, $phones, true)) {
+                    $phones[] = $normalized;
+                }
+            }
+        }
+
+        foreach (['phone_1', 'phone_2', 'phone_3'] as $index => $key) {
+            if (trim((string)($contact[$key] ?? '')) === '' && isset($phones[$index])) {
+                $contact[$key] = $phones[$index];
+            }
+        }
+
+        if (preg_match_all('/href=["\']([^"\']+)["\']/i', $html, $linkMatches)) {
+            $socialSlot = 1;
+            foreach ($linkMatches[1] as $href) {
+                $type = $this->normalizeSocialType('', $href);
+                if ($type === 'link' || !preg_match('~^(?:https?:)?//~i', $href)) {
+                    continue;
+                }
+
+                $alreadyPresent = false;
+                for ($i = 1; $i <= 5; $i++) {
+                    if (trim((string)($contact['social_' . $i . '_url'] ?? '')) === trim((string)$href)) {
+                        $alreadyPresent = true;
+                        break;
+                    }
+                }
+                if ($alreadyPresent) {
+                    continue;
+                }
+
+                while ($socialSlot <= 5 && trim((string)($contact['social_' . $socialSlot . '_url'] ?? '')) !== '') {
+                    $socialSlot++;
+                }
+                if ($socialSlot > 5) {
+                    break;
+                }
+
+                $contact['social_' . $socialSlot . '_type'] = $type;
+                $contact['social_' . $socialSlot . '_url'] = $href;
+                $socialSlot++;
+            }
+        }
+
+        if (trim((string)($contact['form_email'] ?? '')) === '' && trim((string)($contact['email'] ?? '')) !== '') {
+            $contact['form_email'] = $contact['email'];
+        }
+
+        return $contact;
+    }
+
     private function buildRichFooterHtml(array $site): string
     {
         $siteId = (int)($site['id'] ?? 0);
-        $contact = $siteId > 0 ? (new ContactRepository())->findBySiteSafe($siteId) : [];
+        $contact = $siteId > 0 ? $this->enrichContactWithLegacyBlocks($siteId, (new ContactRepository())->findBySiteSafe($siteId)) : [];
         $siteName = (string)($site['name'] ?? 'RB Videos & Photos');
         $logoUrl = $this->normalizePublicAssetUrl((string)($site['logo_url'] ?? ''));
         $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
-        $socialIcons = [
-            'instagram' => 'IG',
-            'facebook' => 'FB',
-            'youtube' => 'YT',
-            'tiktok' => 'TT',
-            'linkedin' => 'IN',
-            'twitter' => 'X',
-            'pinterest' => 'PI',
-            'whatsapp' => 'WA',
-            'telegram' => 'TG',
-        ];
 
         $contactItems = [];
         foreach (['phone_1', 'phone_2', 'phone_3'] as $phoneKey) {
@@ -724,8 +892,9 @@ CSS;
             if ($type === '' || $url === '') {
                 continue;
             }
-            $icon = $socialIcons[$type] ?? 'URL';
-            $socialItems[] = '<a class="site-footer-social site-footer-social--' . $h($type) . '" href="' . $h($url) . '" target="_blank" rel="noopener" aria-label="' . $h(ucfirst($type)) . '" title="' . $h(ucfirst($type)) . '"><span class="site-footer-social__icon">' . $icon . '</span></a>';
+            $canonicalType = $this->normalizeSocialType($type, $url);
+            $label = $h($this->socialLabel($canonicalType));
+            $socialItems[] = '<a class="site-footer-social site-footer-social--' . $h($canonicalType) . '" href="' . $h($url) . '" target="_blank" rel="noopener" aria-label="' . $label . '" title="' . $label . '"><span class="site-footer-social__icon">' . $this->socialIconSvg($canonicalType) . '</span></a>';
         }
 
         $brand = $logoUrl !== ''
@@ -736,8 +905,8 @@ CSS;
             . 'html,body{min-height:100%}body{min-height:100vh;display:flex;flex-direction:column}.theme-shell{width:100%;flex:1 0 auto;display:flex;flex-direction:column}.theme-shell,.theme-shell__frame{min-height:100vh}.theme-shell__frame{display:flex;flex-direction:column;flex:1 0 auto}.theme-main,main,#page-content{flex:1 0 auto}footer,.theme-footer,.site-footer{margin-top:auto}'
             . 'footer .site-footer-rich,.theme-footer .site-footer-rich,.site-footer .site-footer-rich{width:100%;max-width:1180px;margin:0 auto;padding:0;display:grid;grid-template-columns:minmax(220px,.85fr) minmax(260px,1fr) minmax(220px,.75fr);gap:34px;align-items:start;text-align:left}'
             . '.site-footer-brand{display:flex;flex-direction:column;gap:12px;align-items:flex-start}.site-footer-brand__logo{max-height:52px;max-width:260px;width:auto;height:auto;object-fit:contain}.site-footer-brand__mark{display:inline-grid;place-items:center;width:54px;height:54px;border:1px solid rgba(198,148,61,.45);color:#c6943d;font-family:Georgia,serif;font-weight:800;font-size:20px;letter-spacing:.08em;text-transform:uppercase}.site-footer-brand__name{color:#f3efe7;font-family:Georgia,serif;font-size:22px;line-height:1.1}.site-footer-brand__note{color:rgba(255,255,255,.52);font-size:13px;line-height:1.65}'
-            . '.site-footer-contact{display:grid;gap:12px}.site-footer-title{margin:0 0 12px;color:#c6943d;font-size:11px;font-weight:900;letter-spacing:.18em;text-transform:uppercase}.site-footer-contact__item{display:grid;gap:4px;color:#f3efe7;text-decoration:none}.site-footer-contact__item span{color:rgba(255,255,255,.44);font-size:11px;text-transform:uppercase;letter-spacing:.12em}.site-footer-contact__item strong{font-size:14px;line-height:1.5;font-weight:700}'
-            . '.site-footer-socials{display:flex;flex-direction:column;gap:14px;align-items:flex-start}.site-footer-socials__list{display:flex;flex-wrap:wrap;gap:10px}.site-footer-social{--social:#c6943d;display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;padding:0;border:1px solid rgba(255,255,255,.14);border-radius:999px;background:rgba(255,255,255,.03);color:#f3efe7;text-decoration:none;font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;transition:transform .2s,border-color .2s,color .2s}.site-footer-social:hover{transform:translateY(-1px);border-color:rgba(255,255,255,.3);color:var(--social)}.site-footer-social__icon{display:grid;place-items:center;width:26px;height:26px;border:1px solid currentColor;border-radius:50%;font-size:10px;line-height:1;transition:color .2s,transform .2s}.site-footer-social:hover .site-footer-social__icon{transform:scale(1.06)}.site-footer-social--instagram{--social:#e4405f}.site-footer-social--facebook{--social:#1877f2}.site-footer-social--youtube{--social:#ff0033}.site-footer-social--tiktok{--social:#00f2ea}.site-footer-social--linkedin{--social:#0a66c2}.site-footer-social--twitter{--social:#fff}.site-footer-social--pinterest{--social:#bd081c}.site-footer-social--whatsapp{--social:#25d366}.site-footer-social--telegram{--social:#229ed9}.site-footer-bottom{grid-column:1/-1;margin-top:4px;padding-top:20px;border-top:1px solid rgba(255,255,255,.09);color:rgba(255,255,255,.36);font-size:12px;text-align:left}'
+            . '.site-footer-contact{display:grid;gap:12px}.site-footer-title{margin:0 0 12px;color:#c6943d;font-size:11px;font-weight:900;letter-spacing:.18em;text-transform:uppercase}.site-footer-contact__item{display:grid;gap:4px;color:#f3efe7;text-decoration:none}.site-footer-contact__item span{color:rgba(255,255,255,.44);font-size:11px;text-transform:uppercase;letter-spacing:.12em}.site-footer-contact__item strong,.site-footer-contact__item a{color:#f3efe7;font-size:14px;line-height:1.5;font-weight:700}'
+            . '.site-footer-socials{display:flex;flex-direction:column;gap:14px;align-items:flex-start}.site-footer-socials__list{display:flex;flex-wrap:wrap;gap:10px}.site-footer-social{--social:#d4b06f;display:inline-flex;align-items:center;justify-content:center;width:50px;height:40px;padding:0;border:1px solid rgba(212,176,111,.24);border-radius:0;background:transparent;color:#d8d1c6;text-decoration:none;transition:transform .2s,border-color .2s,color .2s,background-color .2s}.site-footer-social:hover{transform:translateY(-1px);border-color:rgba(212,176,111,.62);background:rgba(212,176,111,.06);color:#f2e7d5}.site-footer-social__icon{display:grid;place-items:center;line-height:1;transition:color .2s,transform .2s}.site-footer-social:hover .site-footer-social__icon{transform:scale(1.06)}.site-footer-social__icon svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}.site-footer-bottom{grid-column:1/-1;margin-top:4px;padding-top:20px;border-top:1px solid rgba(255,255,255,.09);color:rgba(255,255,255,.36);font-size:12px;text-align:left}'
             . '@media(max-width:820px){footer .site-footer-rich,.theme-footer .site-footer-rich,.site-footer .site-footer-rich{grid-template-columns:1fr;gap:24px}.site-footer-bottom{text-align:left}}'
             . '</style>'
             . '<div class="site-footer-rich">'
