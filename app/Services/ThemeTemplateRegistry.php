@@ -367,6 +367,14 @@ class ThemeTemplateRegistry
   color: #111 !important;
 }
 
+/* Homepage section CTA buttons must remain readable on dark sections. */
+.theme-shell .hp-section-cta .btn-secondary,
+.theme-shell .hp-contact-cta .btn-secondary,
+.theme-shell .hp-section-cta .btn-secondary:hover,
+.theme-shell .hp-contact-cta .btn-secondary:hover {
+  color: #fff !important;
+}
+
 .theme-shell .hp-cenik-card {
   padding: 30px;
   gap: 20px;
