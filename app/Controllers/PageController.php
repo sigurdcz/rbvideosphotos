@@ -111,9 +111,7 @@ class PageController extends Controller
 
         $sites     = new SiteRepository();
         $isHomepage = trim((string)($page['url_path'] ?? ''), '/') === '';
-        if ($isHomepage) {
-            $this->ensureHomepageHeroVideoBlock($id);
-        }
+        $this->ensurePageHeroVideoBlock($id);
         $templates = (new TemplateRepository())->allForAdmin();
         $template  = $page['template_id'] ? (new TemplateRepository())->findById((int)$page['template_id']) : null;
         $layout    = $this->resolveLayoutType($template['name'] ?? '');
@@ -182,9 +180,7 @@ class PageController extends Controller
         }
 
         $isHomepage = trim((string)($page['url_path'] ?? ''), '/') === '';
-        if ($isHomepage) {
-            $this->ensureHomepageHeroVideoBlock($id);
-        }
+        $this->ensurePageHeroVideoBlock($id);
         if ($layoutType === 'services') {
             $this->ensureServicesHeroImageBlock($id);
         }
@@ -248,7 +244,7 @@ class PageController extends Controller
         }
     }
 
-    private function ensureHomepageHeroVideoBlock(int $pageId): void
+    private function ensurePageHeroVideoBlock(int $pageId): void
     {
         $blockRepo = new BlockRepository();
         if ($blockRepo->findByKey($pageId, 'hero_video')) {
@@ -257,7 +253,7 @@ class PageController extends Controller
 
         $blockRepo->upsert($pageId, 'hero_video', [
             'block_type' => 'link',
-            'label' => 'Hero — video (URL)',
+            'label' => 'Hero - video pozadi (Vimeo/YouTube URL)',
             'content' => '',
             'sort_order' => 2,
             'autofill_disabled' => 0,

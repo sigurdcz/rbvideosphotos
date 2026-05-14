@@ -143,10 +143,10 @@ Tabulka `sites` zároveň drží globální brand assety a fallback média pro h
 
 - `logo_url` pro logo v hlavičce a patičce
 - `favicon_ico_url`, `favicon_png_url`, `apple_touch_icon_url` pro ikony webu
-- `default_hero_video_url` jako fallback video pro stránky bez vlastního hero videa
+- `default_hero_video_url` jako fallback video pro stránky bez vlastního hero videa; hodnota je URL z Vimeo nebo YouTube
 - `default_hero_poster_url` jako poster/placeholder obrázek, který se zobrazí před načtením videa
 
-Stránka může mít vlastní blok `hero_video`. Pokud je prázdný, frontend pro podporované stránky použije globální `default_hero_video_url`.
+Každá stránka může mít vlastní blok `hero_video`. Do tohoto bloku se ukládá pouze URL z Vimeo nebo YouTube, ne uploadovaný video soubor. Pokud je blok prázdný, frontend použije globální `default_hero_video_url` ze Settings. Renderer při výstupu převede Vimeo/YouTube odkaz na embed iframe pozadí, aby s tím počítaly všechny šablony stejně.
 
 ---
 

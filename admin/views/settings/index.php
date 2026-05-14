@@ -135,24 +135,14 @@ ob_start();
   <div class="card">
     <div class="card-title">Vychozi hero video</div>
     <p class="help-text" style="margin-bottom:16px">
-      Toto video se pouzije jako fallback pro SluĹľby, NaĹˇe prĂˇce, Blog a Cenik, pokud konkretni stranka nema vlastni hero video.
+      Toto video se pouzije jako fallback pro vsechny stranky, pokud konkretni stranka nema vlastni hero video.
       Poster obrazek se zobrazi okamzite pri nacitani videa, aby uzivatel nevidel cernou plochu.
     </p>
     <div class="form-row">
       <div class="form-group">
-        <label>Defaultni hero video</label>
-        <div class="help-text" style="margin-bottom:8px">Doporuceni: MP4/WebM 1920x1080 px, komprimovane pro web, idealne do 8-15 MB podle delky.</div>
-        <div class="brand-asset-picker">
-          <input type="hidden" name="default_hero_video_url" id="default-hero-video-url" value="<?= $h($site['default_hero_video_url'] ?? '') ?>">
-          <div class="brand-asset-preview" data-brand-preview for="default-hero-video-url">
-            <?php if (!empty($site['default_hero_video_url'])): ?><span><?= $h($site['default_hero_video_url']) ?></span><?php else: ?><span>Neni vybrano</span><?php endif; ?>
-          </div>
-          <div class="brand-asset-actions">
-            <button type="button" class="btn btn-secondary" data-open-brand-media data-target="default-hero-video-url">Vybrat z medii</button>
-            <button type="button" class="btn btn-secondary" data-clear-brand-media data-target="default-hero-video-url">Odebrat</button>
-          </div>
-          <div class="help-text brand-asset-path" data-brand-path for="default-hero-video-url"><?= $h($site['default_hero_video_url'] ?? '') ?></div>
-        </div>
+        <label>Defaultni hero video URL</label>
+        <div class="help-text" style="margin-bottom:8px">Vlozte odkaz z Vimeo nebo YouTube, napr. <code>https://vimeo.com/123456789</code> nebo <code>https://www.youtube.com/watch?v=...</code>.</div>
+        <input type="url" name="default_hero_video_url" id="default-hero-video-url" value="<?= $h($site['default_hero_video_url'] ?? '') ?>" placeholder="https://vimeo.com/... nebo https://www.youtube.com/watch?v=...">
       </div>
       <div class="form-group">
         <label>Placeholder / poster obrazek</label>

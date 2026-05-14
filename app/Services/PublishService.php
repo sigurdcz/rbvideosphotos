@@ -153,9 +153,7 @@ class PublishService
         $html        = $this->injectRichFooter($html, $site);
         $html        = $this->injectSiteLogo($html, $site);
         $html        = $this->injectPageHeroImage($html, (int)$page['id']);
-        if ($isHome) {
-            $html = $this->injectHomepageHeroVideo($html, (int)$page['id']);
-        }
+        $html = $this->injectPageHeroVideo($html, $site, (int)$page['id']);
 
         // Write HTML file
         $filePath = $this->resolveFilePath($page['url_path']);
@@ -342,36 +340,28 @@ HTML;
         return $this->injectBodyCssVariable($html, '--theme-page-hero-image', "url('" . str_replace("'", '%27', $url) . "')");
     }
 
-    private function injectHomepageHeroVideo(string $html, int $pageId): string
+    private function injectPageHeroVideo(string $html, array $site, int $pageId): string
     {
         if (str_contains($html, 'theme-hero-video')) {
-            return $html;
+            return $this->ensureHeroVideoStyle($html);
         }
 
         $block = $this->blocks->findByKey($pageId, 'hero_video');
         $url = $block ? $this->normalizePublicAssetUrl((string)($block['content'] ?? '')) : '';
         if ($url === '') {
+            $url = $this->normalizePublicAssetUrl((string)($site['default_hero_video_url'] ?? ''));
+        }
+        if ($url === '') {
             return $html;
         }
 
-        $videoHtml = $this->buildHomepageHeroVideoHtml($url);
+        $posterUrl = $this->normalizePublicAssetUrl((string)($site['default_hero_poster_url'] ?? ''));
+        $videoHtml = $this->buildHeroVideoHtml($url, $posterUrl);
         if ($videoHtml === '') {
             return $html;
         }
 
-        $style = <<<'HTML'
-<style data-cms-hero-video>
-.hp-hero,.hero{position:relative;overflow:hidden}
-.hp-hero::before,.hero::before{z-index:0!important}
-.theme-hero-video{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;pointer-events:none;background:#050505}
-.theme-hero-video--embed{overflow:hidden}
-.theme-hero-video--embed iframe{position:absolute;top:50%;left:50%;width:120vw;height:67.5vw;min-width:213.33vh;min-height:120vh;transform:translate(-50%,-50%);border:0;pointer-events:none}
-.hp-hero>.container,.hero>.container,.hero-content{position:relative;z-index:3}
-</style>
-HTML;
-        if (!str_contains($html, 'data-cms-hero-video')) {
-            $html = str_replace('</head>', "\n" . $style . "\n</head>", $html);
-        }
+        $html = $this->ensureHeroVideoStyle($html);
 
         $count = 0;
         $html = preg_replace_callback(
@@ -389,14 +379,39 @@ HTML;
         return preg_replace_callback('/(<main\b[^>]*>)/i', static fn(array $m): string => $m[1] . $videoHtml, $html, 1) ?? $html;
     }
 
-    private function buildHomepageHeroVideoHtml(string $videoUrl): string
+    private function ensureHeroVideoStyle(string $html): string
     {
-        $embedUrl = $this->buildVideoEmbedUrl($videoUrl);
-        if ($embedUrl !== '') {
-            return '<div class="theme-hero-video theme-hero-video--embed" aria-hidden="true"><iframe src="' . htmlspecialchars($embedUrl, ENT_QUOTES) . '" title="Homepage hero video" allow="autoplay; fullscreen; picture-in-picture" loading="eager"></iframe></div>';
+        if (str_contains($html, 'data-cms-hero-video')) {
+            return $html;
         }
 
-        return '<video class="theme-hero-video" src="' . htmlspecialchars($videoUrl, ENT_QUOTES) . '" autoplay muted loop playsinline preload="auto" aria-hidden="true"></video>';
+        $style = <<<'HTML'
+<style data-cms-hero-video>
+.hp-hero,.hero,.pf-hero,.bl-hero,.kt-hero,.fq-hero,.bp-hero,.pf-detail-hero{position:relative;overflow:hidden}
+.hp-hero::before,.hero::before,.pf-hero::before,.bl-hero::before,.kt-hero::before,.fq-hero::before,.bp-hero::before,.pf-detail-hero::before{z-index:0!important}
+.theme-hero-video{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;pointer-events:none;background:#050505;background-size:cover;background-position:center}
+.theme-hero-video--embed{overflow:hidden;background-size:cover;background-position:center}
+.theme-hero-video--embed iframe{position:absolute;top:50%;left:50%;width:120vw;height:67.5vw;min-width:213.33vh;min-height:120vh;transform:translate(-50%,-50%);border:0;pointer-events:none}
+.hp-hero>.container,.hero>.container,.pf-hero>.container,.bl-hero>.container,.kt-hero>.container,.fq-hero>.container,.bp-hero>.container,.pf-detail-hero>.container,.hero-content{position:relative;z-index:3}
+</style>
+HTML;
+
+        if (str_contains($html, '</head>')) {
+            return str_replace('</head>', "\n" . $style . "\n</head>", $html);
+        }
+
+        return $style . $html;
+    }
+
+    private function buildHeroVideoHtml(string $videoUrl, string $posterUrl = ''): string
+    {
+        $embedUrl = $this->buildVideoEmbedUrl($videoUrl);
+        $posterStyle = $posterUrl !== '' ? ' style="background-image:url(\'' . htmlspecialchars($posterUrl, ENT_QUOTES) . '\')"' : '';
+        if ($embedUrl !== '') {
+            return '<div class="theme-hero-video theme-hero-video--embed" aria-hidden="true"' . $posterStyle . '><iframe src="' . htmlspecialchars($embedUrl, ENT_QUOTES) . '" title="Hero video" allow="autoplay; fullscreen; picture-in-picture" loading="eager"></iframe></div>';
+        }
+
+        return '';
     }
 
     private function buildVideoEmbedUrl(string $videoUrl): string

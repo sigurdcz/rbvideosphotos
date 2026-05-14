@@ -165,6 +165,14 @@ ob_start();
         <button type="submit" class="btn btn-primary">Vytvorit stranku</button>
         <a href="/admin/pages" class="btn btn-secondary">Zrusit</a>
       </div>
+      <?php else: ?>
+      <div class="card">
+        <div class="card-title">Hero video pozadi</div>
+        <p class="form-hint" style="margin-bottom:12px">
+          Vlozte URL z Vimeo nebo YouTube. Pokud pole nechate prazdne, stranka pouzije vychozi hero video ze sekce Nastaveni.
+        </p>
+        <?php $renderBlockField('hero_video', 'Vimeo / YouTube URL', 'link', 'Podporovane jsou odkazy typu https://vimeo.com/123456789, https://youtu.be/... nebo https://www.youtube.com/watch?v=...'); ?>
+      </div>
       <?php endif; ?>
     </div>
 

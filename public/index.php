@@ -429,9 +429,8 @@ function injectPageHeroVideo(string $html, array $site, ?int $pageId, string $pa
 {
     $siteId = (int)($site['id'] ?? 0);
     $pageKey = getThemeTemplateRegistry()->normalizePageKey($pageKey);
-    $supported = ['', 'homepage', 'sluzby', 'services', 'nase-prace', 'portfolio', 'blog', 'cenik', 'pricing'];
-    if (!in_array($pageKey, $supported, true) || str_contains($html, 'theme-hero-video')) {
-        return $html;
+    if (str_contains($html, 'theme-hero-video')) {
+        return ensureHeroVideoStyle($html);
     }
 
     $videoUrl = resolvePageHeroVideoUrl($siteId, $pageId, $site);
@@ -445,21 +444,7 @@ function injectPageHeroVideo(string $html, array $site, ?int $pageId, string $pa
         return $html;
     }
 
-    $style = <<<'HTML'
-<style data-cms-hero-video>
-.hp-hero,.hero,.pf-hero,.bl-hero,.kt-hero,.bp-hero,.pf-detail-hero{position:relative;overflow:hidden}
-.hp-hero::before,.hero::before,.pf-hero::before,.bl-hero::before,.kt-hero::before,.bp-hero::before,.pf-detail-hero::before{z-index:0!important}
-.theme-hero-video{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;pointer-events:none;background:#050505;background-size:cover;background-position:center}
-.theme-hero-video--embed{overflow:hidden;background-size:cover;background-position:center}
-.theme-hero-video--embed iframe{position:absolute;top:50%;left:50%;width:120vw;height:67.5vw;min-width:213.33vh;min-height:120vh;transform:translate(-50%,-50%);border:0;pointer-events:none}
-.theme-hero-video::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.62),rgba(0,0,0,.22),rgba(0,0,0,.58))}
-.hp-hero>.container,.hero>.container,.pf-hero>.container,.bl-hero>.container,.kt-hero>.container,.bp-hero>.container,.pf-detail-hero>.container,.hero-content{position:relative;z-index:3}
-</style>
-HTML;
-
-    if (!str_contains($html, 'data-cms-hero-video')) {
-        $html = str_replace('</head>', "\n" . $style . "\n</head>", $html);
-    }
+    $html = ensureHeroVideoStyle($html);
 
     $count = 0;
     $html = preg_replace_callback(
@@ -480,6 +465,31 @@ HTML;
         $html,
         1
     ) ?? $html;
+}
+
+function ensureHeroVideoStyle(string $html): string
+{
+    if (str_contains($html, 'data-cms-hero-video')) {
+        return $html;
+    }
+
+    $style = <<<'HTML'
+<style data-cms-hero-video>
+.hp-hero,.hero,.pf-hero,.bl-hero,.kt-hero,.fq-hero,.bp-hero,.pf-detail-hero{position:relative;overflow:hidden}
+.hp-hero::before,.hero::before,.pf-hero::before,.bl-hero::before,.kt-hero::before,.fq-hero::before,.bp-hero::before,.pf-detail-hero::before{z-index:0!important}
+.theme-hero-video{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;pointer-events:none;background:#050505;background-size:cover;background-position:center}
+.theme-hero-video--embed{overflow:hidden;background-size:cover;background-position:center}
+.theme-hero-video--embed iframe{position:absolute;top:50%;left:50%;width:120vw;height:67.5vw;min-width:213.33vh;min-height:120vh;transform:translate(-50%,-50%);border:0;pointer-events:none}
+.theme-hero-video::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.62),rgba(0,0,0,.22),rgba(0,0,0,.58))}
+.hp-hero>.container,.hero>.container,.pf-hero>.container,.bl-hero>.container,.kt-hero>.container,.fq-hero>.container,.bp-hero>.container,.pf-detail-hero>.container,.hero-content{position:relative;z-index:3}
+</style>
+HTML;
+
+    if (str_contains($html, '</head>')) {
+        return str_replace('</head>', "\n" . $style . "\n</head>", $html);
+    }
+
+    return $style . $html;
 }
 
 function resolvePageHeroVideoUrl(int $siteId, ?int $pageId, array $site): string
@@ -533,9 +543,7 @@ function buildHeroVideoHtml(string $videoUrl, string $posterUrl = ''): string
         return '<div class="theme-hero-video theme-hero-video--embed" aria-hidden="true"' . $posterStyle . '><iframe src="' . $safeEmbed . '" title="Hero video" allow="autoplay; fullscreen; picture-in-picture" loading="eager"></iframe></div>';
     }
 
-    $safeUrl = htmlspecialchars($videoUrl, ENT_QUOTES);
-    $posterAttr = $posterUrl !== '' ? ' poster="' . htmlspecialchars($posterUrl, ENT_QUOTES) . '"' : '';
-    return '<video class="theme-hero-video" src="' . $safeUrl . '"' . $posterAttr . ' autoplay muted loop playsinline preload="auto" aria-hidden="true"></video>';
+    return '';
 }
 
 function buildVideoEmbedUrl(string $videoUrl): string
@@ -1600,6 +1608,7 @@ HTML;
 
     header('Content-Type: text/html; charset=UTF-8');
     $html = injectFooterSocials($html, (int)$site['id']);
+    $html = injectPageHeroVideo($html, $site, isset($page['id']) ? (int)$page['id'] : findPageIdForHeroPath('kontakt', (int)$site['id']), 'contact');
     $html = injectCmsEditorChrome($html, '/kontakt', $heroTitle, isset($page['id']) ? (int)$page['id'] : null, Auth::check() && isset($_GET['cms_preview']));
     echo sanitizeFrontendHtml($html);
     return true;
@@ -1736,6 +1745,7 @@ HTML;
 
     header('Content-Type: text/html; charset=UTF-8');
     $html = injectFooterSocials($html, (int)$site['id']);
+    $html = injectPageHeroVideo($html, $site, isset($page['id']) ? (int)$page['id'] : findPageIdForHeroPath('blog', (int)$site['id']), 'blog');
     $html = injectCmsEditorChrome($html, '/blog', $heroTitle, isset($page['id']) ? (int)$page['id'] : null, Auth::check() && isset($_GET['cms_preview']));
     echo sanitizeFrontendHtml($html);
     return true;

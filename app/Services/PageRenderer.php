@@ -53,6 +53,25 @@ class PageRenderer
 
                 $isVideoBlock = (($block['block_type'] ?? '') === 'video') || $key === 'hero_video';
                 if ($isVideoBlock && $node->nodeName === 'video') {
+                    $embedUrl = $this->buildVideoEmbedUrl((string)$content);
+                    if ($embedUrl !== '') {
+                        $wrapper = $dom->createElement('div');
+                        $wrapper->setAttribute('class', trim(($node->getAttribute('class') ?: '') . ' theme-hero-video theme-hero-video--embed'));
+                        $wrapper->setAttribute('aria-hidden', 'true');
+
+                        $iframe = $dom->createElement('iframe');
+                        $iframe->setAttribute('src', $embedUrl);
+                        $iframe->setAttribute('title', 'Hero video');
+                        $iframe->setAttribute('allow', 'autoplay; fullscreen; picture-in-picture');
+                        $iframe->setAttribute('loading', 'eager');
+                        $wrapper->appendChild($iframe);
+
+                        if ($node->parentNode) {
+                            $node->parentNode->replaceChild($wrapper, $node);
+                        }
+                        continue;
+                    }
+
                     foreach (['autoplay' => 'autoplay', 'muted' => 'muted', 'loop' => 'loop', 'playsinline' => 'playsinline'] as $attr => $value) {
                         if (!$node->hasAttribute($attr)) {
                             $node->setAttribute($attr, $value);
@@ -61,7 +80,7 @@ class PageRenderer
                     if (!$node->hasAttribute('preload')) {
                         $node->setAttribute('preload', 'metadata');
                     }
-                    if ($content !== '') {
+                    if ($content !== '' && !preg_match('~^https?://~i', (string)$content)) {
                         $node->setAttribute('src', $content);
                     }
                     continue;
@@ -182,5 +201,30 @@ class PageRenderer
             $html = str_replace('</body>', "\n<script>\n{$js}\n</script>\n</body>", $html);
         }
         return $html;
+    }
+
+    private function buildVideoEmbedUrl(string $videoUrl): string
+    {
+        $url = trim($videoUrl);
+        if ($url === '') {
+            return '';
+        }
+
+        if (preg_match('~vimeo\.com/(?:video/)?([0-9]+)~i', $url, $m)) {
+            return 'https://player.vimeo.com/video/' . $m[1] . '?background=1&autoplay=1&loop=1&muted=1&playsinline=1';
+        }
+
+        $youtubeId = '';
+        if (preg_match('~youtu\.be/([A-Za-z0-9_-]{6,})~i', $url, $m)) {
+            $youtubeId = $m[1];
+        } elseif (preg_match('~youtube\.com/(?:embed|shorts)/([A-Za-z0-9_-]{6,})~i', $url, $m)) {
+            $youtubeId = $m[1];
+        } elseif (preg_match('~[?&]v=([A-Za-z0-9_-]{6,})~i', $url, $m)) {
+            $youtubeId = $m[1];
+        }
+
+        return $youtubeId !== ''
+            ? 'https://www.youtube.com/embed/' . $youtubeId . '?autoplay=1&mute=1&controls=0&loop=1&playlist=' . $youtubeId . '&playsinline=1&modestbranding=1&rel=0'
+            : '';
     }
 }
