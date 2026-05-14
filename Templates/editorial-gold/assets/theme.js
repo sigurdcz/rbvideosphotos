@@ -88,18 +88,36 @@
     var section = qs('#kontakt');
     if (!section || qs('.eg-contact-band', section)) return;
     var infoBox = qs('.hp-contact-box', section);
-    var lines = infoBox ? infoBox.innerHTML : '';
+    var rows = infoBox ? Array.prototype.slice.call(infoBox.querySelectorAll('.hp-contact-row')) : [];
+    var lines = rows.filter(function (row) {
+      var label = (qs('.hp-contact-label', row) || {}).textContent || '';
+      return label.toLowerCase().indexOf('sit') === -1 && label.toLowerCase().indexOf('sí') === -1;
+    }).map(function (row) {
+      return row.outerHTML;
+    }).join('');
+    lines = rows.filter(function (row) {
+      var label = (qs('.hp-contact-label', row) || {}).textContent || '';
+      var href = (qs('a', row) || {}).href || '';
+      var key = (label + ' ' + href).toLowerCase();
+      return !/(sit|site|social|instagram|facebook|youtube|tiktok|linkedin|pinterest|whatsapp|telegram)/.test(key);
+    }).map(function (row) {
+      return row.outerHTML;
+    }).join('');
     var contactLink = qs('a[href="/kontakt"]', section);
+    var socials = Array.prototype.slice.call(document.querySelectorAll('.site-footer-social')).slice(0, 3).map(function (link) {
+      return link.outerHTML;
+    }).join('');
     var band = document.createElement('div');
     band.className = 'eg-contact-band';
     band.innerHTML =
       '<div class="eg-contact-band__photo" aria-hidden="true"></div>' +
-      '<div class="eg-contact-band__copy"><p class="section-label">Kontakt</p><h2>Pojdme vytvorit<br><span>neco krasneho</span></h2><p>Nevahajte se nam ozvat. Pripravime nabidku na miru.</p>' +
-      '<div class="eg-contact-band__info">' + lines + '</div></div>';
+      '<div class="eg-contact-band__copy"><p class="section-label">Kontakt</p><h2>Pojdme vytvorit<br><span>neco krasneho</span></h2><p>Nevahajte se nam ozvat. Pripravime nabidku na miru.</p></div>' +
+      '<div class="eg-contact-band__info">' + lines + '</div>' +
+      '<div class="eg-contact-band__actions"><a class="btn-primary" href="' + (contactLink ? contactLink.href : '/kontakt') + '">Kontakt</a>' + socials + '</div>';
     var container = qs('.container', section);
     if (container) {
       Array.prototype.slice.call(container.children).forEach(function (child) {
-        if (!child.classList || !child.classList.contains('section-label')) child.style.display = 'none';
+        child.style.display = 'none';
       });
       container.appendChild(band);
     }

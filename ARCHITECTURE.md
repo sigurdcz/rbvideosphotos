@@ -148,6 +148,12 @@ Tabulka `sites` zároveň drží globální brand assety a fallback média pro h
 
 Každá stránka může mít vlastní blok `hero_video`. Do tohoto bloku se ukládá pouze URL z Vimeo nebo YouTube, ne uploadovaný video soubor. Pokud je blok prázdný, frontend použije globální `default_hero_video_url` ze Settings. Renderer při výstupu převede Vimeo/YouTube odkaz na embed iframe pozadí, aby s tím počítaly všechny šablony stejně.
 
+### Cookie consent a analytika
+
+Verejny frontend injektuje cookie consent pres `public/index.php` pri sanitizaci vystupniho HTML. Volba se uklada do browser cookie `cms_cookie_consent` s hodnotou `accepted` nebo `rejected`.
+
+`SeoRenderer` nesmi nacitat Google Analytics ani Google Tag Manager pred souhlasem uzivatele. GA/GTM skripty se proto vkladaji jako gated loader, ktery se spusti pouze pokud cookie obsahuje `cms_cookie_consent=accepted`, nebo po udalosti `cms-cookie-consent:accepted`.
+
 ---
 
 ## Request flow

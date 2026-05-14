@@ -50,6 +50,8 @@ Tento soubor je obecny pracovni navod pro vsechny AI asistenty i lidske vyvojare
 - Blog a portfolio detaily pouzivaji prime slugy bez prefixu.
 - Absolutni URL pouzivejte hlavne pro canonical, sitemap a Open Graph vystupy.
 - Pri uprave verejneho renderingu overte homepage, bezne CMS stranky, blog listing/detail a portfolio listing/detail.
+- Frontend upravy navrhujte mobile-first: zakladni styly musi fungovat na mobilu a desktopove rozsirovani pride az pres `min-width` breakpointy.
+- Nepridavejte ani neodstranujte sekce jen kvuli kompaktnejsimu vzhledu. Kompaktni layout resit primarne typografii, spacingem, gridem a responzivnim chovanim.
 
 ## Bezpecnostni checklist
 

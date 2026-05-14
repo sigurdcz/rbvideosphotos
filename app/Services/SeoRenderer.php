@@ -62,11 +62,11 @@ class SeoRenderer
         // Analytics
         if (!empty($site['google_analytics_id'])) {
             $gaid = $this->e($site['google_analytics_id']);
-            $lines[] = "<!-- Google Analytics -->\n<script async src=\"https://www.googletagmanager.com/gtag/js?id={$gaid}\"></script>\n<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','{$gaid}');</script>";
+            $lines[] = "<!-- Google Analytics gated by cookie consent -->\n<script>(function(){function ok(){return document.cookie.indexOf('cms_cookie_consent=accepted')!==-1;}window.cmsLoadGoogleAnalytics=window.cmsLoadGoogleAnalytics||function(){if(window.cmsGaLoaded||!ok())return;window.cmsGaLoaded=true;window.dataLayer=window.dataLayer||[];window.gtag=function(){dataLayer.push(arguments);};var s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id={$gaid}';document.head.appendChild(s);gtag('js',new Date());gtag('config','{$gaid}');};document.addEventListener('cms-cookie-consent:accepted',window.cmsLoadGoogleAnalytics);window.cmsLoadGoogleAnalytics();})();</script>";
         }
         if (!empty($site['google_tag_manager_id'])) {
             $gtm = $this->e($site['google_tag_manager_id']);
-            $lines[] = "<!-- Google Tag Manager -->\n<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','{$gtm}');</script>";
+            $lines[] = "<!-- Google Tag Manager gated by cookie consent -->\n<script>(function(){function ok(){return document.cookie.indexOf('cms_cookie_consent=accepted')!==-1;}window.cmsLoadGoogleTagManager=window.cmsLoadGoogleTagManager||function(){if(window.cmsGtmLoaded||!ok())return;window.cmsGtmLoaded=true;(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','{$gtm}');};document.addEventListener('cms-cookie-consent:accepted',window.cmsLoadGoogleTagManager);window.cmsLoadGoogleTagManager();})();</script>";
         }
         if (!empty($site['head_scripts'])) {
             $lines[] = $site['head_scripts'];

@@ -165,9 +165,67 @@ function tryServeDatabasePage(string $uri, bool $authenticated = false, bool $pr
     }
 }
 
+function injectCookieConsent(string $html): string
+{
+    if (str_contains($html, 'data-cookie-consent')) {
+        return $html;
+    }
+
+    $consent = <<<'HTML'
+<style data-cookie-consent>
+.cookie-consent{position:fixed;left:16px;right:16px;bottom:16px;z-index:99999;display:none;max-width:760px;margin:0 auto;padding:16px;border:1px solid rgba(198,148,61,.45);background:rgba(5,5,5,.94);color:#f7f1e8;box-shadow:0 24px 80px rgba(0,0,0,.38);backdrop-filter:blur(12px)}
+.cookie-consent.is-visible{display:block}
+.cookie-consent__grid{display:grid;gap:12px}
+.cookie-consent__label{color:#e0b866;font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase}
+.cookie-consent__title{margin:0;color:#fff;font-family:Georgia,"Times New Roman",serif;font-size:22px;line-height:1.1}
+.cookie-consent__text{margin:0;color:rgba(255,255,255,.72);font-size:14px;line-height:1.55}
+.cookie-consent__actions{display:flex;flex-wrap:wrap;gap:8px}
+.cookie-consent__btn{min-height:40px;padding:10px 16px;border:1px solid rgba(224,184,102,.62);background:transparent;color:#f7f1e8;font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+.cookie-consent__btn--accept{background:#c6943d;border-color:#c6943d;color:#050505}
+.cookie-consent__btn:hover{transform:translateY(-1px)}
+@media(min-width:720px){.cookie-consent{left:auto;right:24px;bottom:24px;width:560px}.cookie-consent__grid{grid-template-columns:1fr auto;align-items:end}.cookie-consent__actions{justify-content:flex-end}}
+</style>
+<div class="cookie-consent" data-cookie-consent role="dialog" aria-live="polite" aria-label="Nastaveni cookies">
+  <div class="cookie-consent__grid">
+    <div>
+      <div class="cookie-consent__label">Soukromi</div>
+      <h2 class="cookie-consent__title">Pomuzete nam zlepsovat web?</h2>
+      <p class="cookie-consent__text">Pouzivame jen zakladni analyticke cookies, abychom videli, ktere stranky a ukazky prace lidem opravdu pomahaji. Souhlas muzete odmitnout a web bude fungovat dal.</p>
+    </div>
+    <div class="cookie-consent__actions">
+      <button class="cookie-consent__btn" type="button" data-cookie-reject>Odmitnout</button>
+      <button class="cookie-consent__btn cookie-consent__btn--accept" type="button" data-cookie-accept>Povolit</button>
+    </div>
+  </div>
+</div>
+<script data-cookie-consent>
+(function(){
+  var name='cms_cookie_consent';
+  function getChoice(){return document.cookie.split('; ').find(function(row){return row.indexOf(name+'=')===0;});}
+  function save(value){document.cookie=name+'='+value+'; Max-Age=31536000; Path=/; SameSite=Lax';}
+  var box=document.querySelector('[data-cookie-consent]');
+  if(!box||getChoice()) return;
+  box.classList.add('is-visible');
+  var accept=box.querySelector('[data-cookie-accept]');
+  var reject=box.querySelector('[data-cookie-reject]');
+  if(accept) accept.addEventListener('click',function(){save('accepted');box.classList.remove('is-visible');document.dispatchEvent(new CustomEvent('cms-cookie-consent:accepted'));});
+  if(reject) reject.addEventListener('click',function(){save('rejected');box.classList.remove('is-visible');});
+})();
+</script>
+HTML;
+
+    if (str_contains($html, '</body>')) {
+        return str_replace('</body>', $consent . "\n</body>", $html);
+    }
+
+    return $html . $consent;
+}
+
 function sanitizeFrontendHtml(string $html): string
 {
-    return preg_replace('~https?://localhost(?::\d+)?/storage/media/~i', '/storage/media/', $html) ?? $html;
+    $html = preg_replace('~https?://localhost(?::\d+)?/storage/media/~i', '/storage/media/', $html) ?? $html;
+
+    return injectCookieConsent($html);
 }
 
 function injectCmsEditorChrome(string $html, string $uri, string $pageTitle, ?int $pageId, bool $previewMode = false): string

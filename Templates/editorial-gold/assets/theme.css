@@ -1844,3 +1844,200 @@ body.theme-editorial-gold {
   border-color: var(--eg-gold) !important;
   color: #050505 !important;
 }
+
+/* Compact mobile-first rhythm for Editorial Gold homepage sections. */
+.theme-editorial-gold .section {
+  padding: 34px 0 !important;
+}
+
+.theme-editorial-gold .section > .container,
+.theme-editorial-gold .hp-hero > .container,
+.theme-editorial-gold .eg-contact-band {
+  width: calc(100% - 32px);
+  max-width: 1180px;
+}
+
+.theme-editorial-gold .section-label {
+  margin-bottom: 8px;
+}
+
+.theme-editorial-gold .section-title {
+  font-size: clamp(28px, 8vw, 37px);
+}
+
+.theme-editorial-gold .section-intro {
+  margin: 8px 0 18px;
+}
+
+.theme-editorial-gold .hp-services-grid,
+.theme-editorial-gold .svc-grid,
+.theme-editorial-gold .hp-blog-grid,
+.theme-editorial-gold .hp-cenik-grid,
+.theme-editorial-gold .hp-faq {
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.theme-editorial-gold .hp-svc-card__body {
+  min-height: 150px;
+  padding: 18px 16px;
+}
+
+.theme-editorial-gold .hp-cenik-card,
+.theme-editorial-gold .hp-faq-item,
+.theme-editorial-gold .hp-blog-body {
+  padding: 18px;
+}
+
+.theme-editorial-gold #nase-prace .pt-grid {
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.theme-editorial-gold #nase-prace .pt-tile {
+  display: grid;
+  grid-template-rows: auto;
+}
+
+.theme-editorial-gold #nase-prace .pt-thumb {
+  height: clamp(150px, 48vw, 220px);
+}
+
+.theme-editorial-gold #nase-prace .pt-photos,
+.theme-editorial-gold #nase-prace .pt-caption {
+  display: none;
+}
+
+.theme-editorial-gold #kontakt {
+  padding: 0 !important;
+}
+
+.theme-editorial-gold #kontakt > .container > .section-label {
+  display: none !important;
+}
+
+.theme-editorial-gold .eg-contact-band {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  min-height: 0;
+  padding: 0;
+  border-top: 1px solid var(--eg-line);
+}
+
+.theme-editorial-gold .eg-contact-band__photo {
+  min-height: 150px;
+}
+
+.theme-editorial-gold .eg-contact-band__copy,
+.theme-editorial-gold .eg-contact-band__info,
+.theme-editorial-gold .eg-contact-band__actions {
+  padding: 18px 0;
+}
+
+.theme-editorial-gold .eg-contact-band__copy {
+  gap: 8px;
+}
+
+.theme-editorial-gold .eg-contact-band__copy h2 {
+  font-size: clamp(27px, 8vw, 34px);
+}
+
+.theme-editorial-gold .eg-contact-band__copy > p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.theme-editorial-gold .eg-contact-band__info {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 7px;
+  border-right: 0;
+}
+
+.theme-editorial-gold .eg-contact-band__info .hp-contact-row {
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 10px;
+}
+
+.theme-editorial-gold .eg-contact-band__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.theme-editorial-gold .eg-contact-band__actions .btn-primary {
+  min-height: 36px;
+  padding: 10px 16px;
+}
+
+.theme-editorial-gold .eg-contact-band__actions .site-footer-social {
+  width: 36px;
+  height: 36px;
+  border-radius: 0;
+}
+
+@media(min-width: 761px) {
+  .theme-editorial-gold .section {
+    padding: 40px 0 !important;
+  }
+
+  .theme-editorial-gold .hp-hero {
+    min-height: 560px;
+    height: 72vh;
+  }
+
+  .theme-editorial-gold .hp-hero > .container {
+    padding: 112px 0 56px;
+  }
+
+  .theme-editorial-gold #nase-prace .pt-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .theme-editorial-gold #nase-prace .pt-thumb {
+    height: 132px;
+  }
+
+  .theme-editorial-gold .eg-contact-band {
+    width: min(1180px, calc(100% - 48px));
+    grid-template-columns: 1.08fr 1.05fr .92fr .72fr;
+    align-items: stretch;
+  }
+
+  .theme-editorial-gold .eg-contact-band__photo {
+    min-height: 150px;
+  }
+
+  .theme-editorial-gold .eg-contact-band__copy,
+  .theme-editorial-gold .eg-contact-band__info,
+  .theme-editorial-gold .eg-contact-band__actions {
+    padding: 20px 24px;
+    border-right: 1px solid var(--eg-line-soft);
+  }
+
+  .theme-editorial-gold .eg-contact-band__actions {
+    border-right: 0;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+  }
+
+  .theme-editorial-gold .eg-contact-band__actions .site-footer-social {
+    width: 100%;
+    height: 36px;
+  }
+}
+
+@media(min-width: 1180px) {
+  .theme-editorial-gold .section {
+    padding: 46px 0 !important;
+  }
+
+  .theme-editorial-gold .hp-hero > .container {
+    padding-top: 128px;
+  }
+}
