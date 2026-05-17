@@ -504,16 +504,13 @@ HTML;
         $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
         for ($i = 1; $i <= 3; $i++) {
             $featured = $i === 2 ? ' hp-cenik-card--featured' : '';
-            $price = trim((string)($map['cenik_card_' . $i . '_price'] ?? ''));
-            $priceHtml = $price !== ''
-                ? '<div class="hp-cenik-card-price">' . $h($price) . '</div>'
-                : '';
+            $fullDesc = trim((string)($map['cenik_card_' . $i . '_desc'] ?? ''));
+            $summary = trim(explode("\n", $fullDesc)[0]);
             $cards .= '<div class="hp-cenik-card' . $featured . '">'
                 . '<div class="hp-cenik-card-body">'
                 . '<h3 class="hp-cenik-card-title">' . $h($map['cenik_card_' . $i . '_title'] ?? '') . '</h3>'
-                . '<div class="hp-cenik-card-desc">' . nl2br($h($map['cenik_card_' . $i . '_desc'] ?? '')) . '</div>'
+                . ($summary !== '' ? '<div class="hp-cenik-card-desc">' . $h($summary) . '</div>' : '')
                 . '</div>'
-                . $priceHtml
                 . '</div>';
         }
 
