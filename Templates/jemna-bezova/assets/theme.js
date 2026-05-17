@@ -359,7 +359,8 @@
       var labelText = ((label && label.textContent) || '').toLowerCase();
       if (!link) return;
 
-      if (/sit|site|social|instagram|facebook|youtube|tiktok|linkedin|pinterest|telegram|whatsapp/.test(labelText)) {
+      var labelNorm = labelText.normalize('NFD').replace(/[̀-ͯ]/g, '');
+      if (/sit|site|social|instagram|facebook|youtube|tiktok|linkedin|pinterest|telegram|whatsapp/.test(labelNorm)) {
         socialLinks.push({ href: link.getAttribute('href'), name: link.textContent.trim() });
         return;
       }
@@ -407,7 +408,8 @@
       var labelKey = labelText.toLowerCase();
       var href = link ? (link.getAttribute('href') || '') : '';
       if (!link) return null;
-      if (/sit|site|social|instagram|facebook|youtube|tiktok|linkedin|pinterest|telegram|whatsapp/.test(labelKey)) {
+      var labelKeyNorm = labelKey.normalize('NFD').replace(/[̀-ͯ]/g, '');
+      if (/sit|site|social|instagram|facebook|youtube|tiktok|linkedin|pinterest|telegram|whatsapp/.test(labelKeyNorm)) {
         return null;
       }
       if (!/^(tel:|mailto:)/i.test(href)) {
