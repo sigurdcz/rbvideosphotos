@@ -412,8 +412,10 @@ class HomepageContentService
                 $extraHtml .= '<img src="' . $h($this->publicMediaUrl((string)$pfile)) . '" alt="' . $h($photo['alt_text'] ?? '') . '" loading="lazy">';
             }
 
+            $entrySlug = $h($entry['slug'] ?? '');
+            $entryHref = $entrySlug !== '' ? '/' . $entrySlug : '/nase-prace';
             $tiles .= <<<HTML
-<a class="pt-tile" href="/nase-prace">
+<a class="pt-tile" href="{$entryHref}">
   <div class="pt-caption">{$h($entry['title'])}</div>
   <div class="pt-thumb">{$thumbHtml}{$playIcon}</div>
   <div class="pt-photos">{$extraHtml}</div>
@@ -502,84 +504,24 @@ HTML;
         $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
         for ($i = 1; $i <= 3; $i++) {
             $featured = $i === 2 ? ' hp-cenik-card--featured' : '';
-            $plan = trim((string)($map['cenik_card_' . $i . '_title'] ?? '')) ?: ('Balíček ' . $i);
-            $cards .= '<button type="button" class="hp-cenik-card' . $featured . '" data-cenik-open data-plan="' . $h($plan) . '">'
+            $cards .= '<div class="hp-cenik-card' . $featured . '">'
                 . '<div class="hp-cenik-card-body">'
                 . '<h3 class="hp-cenik-card-title">' . $h($map['cenik_card_' . $i . '_title'] ?? '') . '</h3>'
                 . '<div class="hp-cenik-card-desc">' . nl2br($h($map['cenik_card_' . $i . '_desc'] ?? '')) . '</div>'
                 . '</div>'
-                . '</button>';
+                . '</div>';
         }
 
         $css = '<style>'
             . '.hp-cenik-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px}'
-            . '.hp-cenik-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:32px;display:flex;flex-direction:column;gap:24px;text-align:left;width:100%;cursor:pointer;color:inherit;transition:transform .2s,border-color .2s}'
-            . '.hp-cenik-card:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.24)}'
+            . '.hp-cenik-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:28px;display:flex;flex-direction:column;gap:20px;text-align:left;width:100%;color:inherit}'
             . '.hp-cenik-card--featured{border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.09)}'
             . '.hp-cenik-card-body{flex:1}'
             . '.hp-cenik-card-title{font-size:1.25rem;font-weight:700;color:#fff;margin-bottom:12px}'
             . '.hp-cenik-card-desc{color:rgba(255,255,255,.65);line-height:1.7;font-size:.95rem;white-space:pre-line}'
-            . '.hp-cenik-modal{position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.72)}'
-            . '.hp-cenik-modal.is-open{display:flex}'
-            . '.hp-cenik-modal__dialog{position:relative;max-width:560px;width:100%;background:#151518;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:28px;box-shadow:0 30px 80px rgba(0,0,0,.5)}'
-            . '.hp-cenik-modal__title{font-size:1.5rem;font-weight:900;color:#fff;margin-bottom:8px}'
-            . '.hp-cenik-modal__plan{color:#c4963c;font-weight:800;margin-bottom:20px}'
-            . '.hp-cenik-modal__close{position:absolute;top:12px;right:12px;background:transparent;border:none;color:#fff;font-size:2rem;line-height:1;cursor:pointer}'
-            . '.hp-cenik-modal form{display:grid;gap:12px}'
-            . '.hp-cenik-modal label{font-size:.82rem;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.04em}'
-            . '.hp-cenik-modal input,.hp-cenik-modal textarea{width:100%;background:#0f0f12;border:1px solid rgba(255,255,255,.12);color:#fff;padding:12px 14px;border-radius:8px;font-size:.95rem;font-family:inherit}'
-            . '.hp-cenik-modal textarea{min-height:120px;resize:vertical}'
-            . '.hp-cenik-modal input::placeholder,.hp-cenik-modal textarea::placeholder{color:rgba(255,255,255,.35)}'
-            . '.hp-cenik-modal__submit{padding:14px 18px;background:#c4963c;color:#fff;border:none;border-radius:8px;font-weight:800;cursor:pointer}'
-            . '.hp-cenik-modal__submit:hover{background:#d4a64c}'
             . '</style>';
 
-        $csrf = htmlspecialchars(\App\Core\Auth::csrfToken(), ENT_QUOTES);
-        $modal = <<<HTML
-<div class="hp-cenik-modal" data-cenik-modal aria-hidden="true">
-  <div class="hp-cenik-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="cenik-modal-title">
-    <button type="button" class="hp-cenik-modal__close" data-cenik-close aria-label="Zavřít">&times;</button>
-    <h3 id="cenik-modal-title" class="hp-cenik-modal__title">Nezávazně poptat</h3>
-    <div class="hp-cenik-modal__plan" data-cenik-plan></div>
-    <form method="POST" action="/kontakt/odeslat">
-      <input type="hidden" name="_csrf" value="{$csrf}">
-      <input type="hidden" name="website" value="" autocomplete="off">
-      <label>Jméno *</label>
-      <input type="text" name="name" required placeholder="Vaše jméno">
-      <label>E-mail nebo telefon *</label>
-      <input type="text" name="contact_value" required placeholder="email nebo telefon">
-      <label>Zpráva *</label>
-      <textarea name="message" required placeholder="Napište nám co nejvíce detailů"></textarea>
-      <button type="submit" class="hp-cenik-modal__submit">Odeslat poptávku</button>
-    </form>
-  </div>
-</div>
-<script>
-(function(){
-  var modal = document.querySelector('[data-cenik-modal]');
-  if(!modal) return;
-  var planEl = modal.querySelector('[data-cenik-plan]');
-  var message = modal.querySelector('textarea[name="message"]');
-  var buttons = document.querySelectorAll('[data-cenik-open]');
-  function openModal(plan){
-    if(planEl) planEl.textContent = plan ? plan : 'Nezávazně poptat';
-    if(message) message.value = plan ? ('Mám zájem o službu: ' + plan + '\\n\\nProsím o nezávaznou nabídku.') : '';
-    modal.classList.add('is-open');
-    modal.setAttribute('aria-hidden', 'false');
-  }
-  function closeModal(){
-    modal.classList.remove('is-open');
-    modal.setAttribute('aria-hidden', 'true');
-  }
-  buttons.forEach(function(btn){ btn.addEventListener('click', function(){ openModal(btn.dataset.plan || ''); }); });
-  modal.querySelectorAll('[data-cenik-close]').forEach(function(el){ el.addEventListener('click', closeModal); });
-  modal.addEventListener('click', function(e){ if(e.target === modal) closeModal(); });
-  document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeModal(); });
-})();
-</script>
-HTML;
-
-        return $css . '<div class="hp-cenik-grid">' . $cards . '</div>' . $modal;
+        return $css . '<div class="hp-cenik-grid">' . $cards . '</div>';
     }
 
     private function buildSectionCtaHtml(string $url, string $label): string

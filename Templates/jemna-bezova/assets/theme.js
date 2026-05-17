@@ -174,6 +174,10 @@
     shell.appendChild(visual);
     shell.appendChild(copy);
     container.insertBefore(shell, grid);
+
+    if (qs('.hp-hero')) {
+      grid.style.display = 'none';
+    }
   }
 
   function enhancePortfolio() {
@@ -205,7 +209,7 @@
     var title = qs('.section-title', section);
     if (title) accentLastWord(title);
 
-    var icons = ['sun', 'heart', 'layers'];
+    var icons = ['basic', 'standard', 'premium'];
     qsa('.hp-cenik-card', section).forEach(function (card, index) {
       card.classList.add('jb-panel-card');
       if (!qs('.jb-price-icon', card)) {
@@ -265,6 +269,22 @@
 
     qsa('.hp-faq-item', section).forEach(function (item) {
       item.classList.add('jb-panel-card');
+
+      var question = qs('.hp-faq-question, strong', item);
+      if (question) {
+        var text = (question.textContent || '').trim();
+        if (text.length > 30) {
+          question.textContent = text.slice(0, 30).trimEnd() + '…';
+        }
+      }
+
+      var answer = qs('.hp-faq-answer, p', item);
+      if (answer) answer.style.display = 'none';
+
+      item.style.cursor = 'pointer';
+      item.addEventListener('click', function () {
+        window.location.href = '/faq';
+      });
     });
   }
 
@@ -296,6 +316,17 @@
     contact.parentNode.insertBefore(section, contact);
   }
 
+  function detectSocialNetwork(name, href) {
+    var text = ((name || '') + ' ' + (href || '')).toLowerCase();
+    if (/instagram/.test(text)) return 'instagram';
+    if (/facebook|fb\.com/.test(text)) return 'facebook';
+    if (/youtube/.test(text)) return 'youtube';
+    if (/tiktok/.test(text)) return 'tiktok';
+    if (/linkedin/.test(text)) return 'linkedin';
+    if (/pinterest/.test(text)) return 'pinterest';
+    return 'link';
+  }
+
   function enhanceContact() {
     var section = qs('#kontakt');
     if (!section || qs('.jb-contact-meta', section)) return;
@@ -309,13 +340,19 @@
     var meta = document.createElement('div');
     meta.className = 'jb-contact-meta jb-reveal';
 
+    var socialLinks = [];
+
     qsa('.hp-contact-row', infoBox).forEach(function (row) {
       var label = qs('.hp-contact-label', row);
       var link = qs('a', row);
       var labelText = ((label && label.textContent) || '').toLowerCase();
-      if (!link || /sit|site|social|instagram|facebook|youtube|tiktok|linkedin|pinterest|telegram|whatsapp/.test(labelText)) {
+      if (!link) return;
+
+      if (/sit|site|social|instagram|facebook|youtube|tiktok|linkedin|pinterest|telegram|whatsapp/.test(labelText)) {
+        socialLinks.push({ href: link.getAttribute('href'), name: link.textContent.trim() });
         return;
       }
+
       var item = document.createElement('div');
       item.className = 'jb-contact-meta__item';
       item.innerHTML =
@@ -323,6 +360,24 @@
         '<a href="' + link.getAttribute('href') + '">' + link.textContent.trim() + '</a>';
       meta.appendChild(item);
     });
+
+    if (socialLinks.length) {
+      var socialsWrap = document.createElement('div');
+      socialsWrap.className = 'jb-contact-socials';
+      socialLinks.forEach(function (s) {
+        var network = detectSocialNetwork(s.name, s.href);
+        var btn = document.createElement('a');
+        btn.className = 'jb-contact-social-btn';
+        btn.href = s.href;
+        btn.target = '_blank';
+        btn.rel = 'noopener';
+        btn.innerHTML =
+          '<span class="jb-contact-social-btn__icon jb-contact-social-btn__icon--' + network + '"></span>' +
+          '<span class="jb-contact-social-btn__label">' + s.name + '</span>';
+        socialsWrap.appendChild(btn);
+      });
+      meta.appendChild(socialsWrap);
+    }
 
     formBox.appendChild(meta);
     formBox.classList.add('jb-panel-card');

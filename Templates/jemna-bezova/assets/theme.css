@@ -179,7 +179,7 @@ body.theme-jemna-bezova {
 }
 
 .theme-jemna-bezova .section {
-  padding: 96px 0;
+  padding: 64px 0;
 }
 
 .theme-jemna-bezova .section:nth-of-type(odd) {
@@ -820,18 +820,16 @@ body.theme-jemna-bezova {
 
 .theme-jemna-bezova .hp-cenik-card {
   position: relative;
-  min-height: 520px;
-  padding: 42px 36px 34px;
+  padding: 28px 24px 22px;
   border: 1px solid rgba(212, 176, 111, .24);
   border-radius: 0;
   background: rgba(255, 255, 255, .04);
   box-shadow: none;
   text-align: left;
+  cursor: default;
 }
 
-.theme-jemna-bezova .hp-cenik-card:hover,
 .theme-jemna-bezova .hp-cenik-card--featured {
-  transform: translateY(-2px);
   border-color: rgba(212, 176, 111, .54);
   background: rgba(255, 255, 255, .06);
 }
@@ -853,78 +851,47 @@ body.theme-jemna-bezova {
 }
 
 .theme-jemna-bezova .jb-price-icon {
-  width: 34px;
-  height: 34px;
-  margin-bottom: 30px;
-  position: relative;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 20px;
+  border-radius: 10px;
+  background: rgba(212, 176, 111, .10);
+  border: 1.5px solid rgba(212, 176, 111, .28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: var(--jb-gold);
+  font-size: 1.4rem;
+  line-height: 1;
 }
 
 .theme-jemna-bezova .jb-price-icon::before,
 .theme-jemna-bezova .jb-price-icon::after {
-  content: "";
-  position: absolute;
+  content: none;
 }
 
-.theme-jemna-bezova .jb-price-icon--sun::before {
-  inset: 8px;
-  border: 2px solid currentColor;
-  border-radius: 50%;
+.theme-jemna-bezova .jb-price-icon--basic::before {
+  content: "✦";
+  display: block;
+  font-size: 1.2rem;
 }
 
-.theme-jemna-bezova .jb-price-icon--sun::after {
-  inset: 0;
-  border-top: 2px solid currentColor;
-  border-bottom: 2px solid currentColor;
-  transform: scaleX(.55);
+.theme-jemna-bezova .jb-price-icon--standard::before {
+  content: "★";
+  display: block;
+  font-size: 1.4rem;
 }
 
-.theme-jemna-bezova .jb-price-icon--heart::before {
-  left: 7px;
-  top: 9px;
-  width: 18px;
-  height: 18px;
-  border: 2px solid currentColor;
-  border-top-left-radius: 10px;
-  border-top-right-radius: 10px;
-  border-bottom: 0;
-  transform: rotate(-45deg);
-}
-
-.theme-jemna-bezova .jb-price-icon--heart::after {
-  left: 15px;
-  top: 9px;
-  width: 18px;
-  height: 18px;
-  border: 2px solid currentColor;
-  border-top-left-radius: 10px;
-  border-top-right-radius: 10px;
-  border-bottom: 0;
-  transform: rotate(45deg);
-}
-
-.theme-jemna-bezova .jb-price-icon--layers::before {
-  left: 4px;
-  right: 4px;
-  top: 8px;
-  height: 8px;
-  border: 2px solid currentColor;
-  transform: rotate(0deg) skewX(-24deg);
-}
-
-.theme-jemna-bezova .jb-price-icon--layers::after {
-  left: 8px;
-  right: 8px;
-  top: 18px;
-  height: 8px;
-  border: 2px solid currentColor;
-  transform: skewX(-24deg);
+.theme-jemna-bezova .jb-price-icon--premium::before {
+  content: "◆";
+  display: block;
+  font-size: 1.2rem;
 }
 
 .theme-jemna-bezova .hp-cenik-card-title,
 .theme-jemna-bezova .hp-cenik-card__title {
   color: #fff8f0;
-  font-size: 2.5rem;
+  font-size: 1.4rem;
 }
 
 .theme-jemna-bezova .hp-cenik-card-desc,
@@ -1206,6 +1173,53 @@ body.theme-jemna-bezova {
 .theme-jemna-bezova .jb-contact-meta a {
   color: inherit;
 }
+
+.theme-jemna-bezova .jb-contact-socials {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+  width: 100%;
+}
+
+.theme-jemna-bezova .jb-contact-social-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: 8px;
+  background: rgba(212, 176, 111, .10);
+  border: 1px solid rgba(212, 176, 111, .24);
+  color: var(--jb-gold-soft);
+  text-decoration: none;
+  font-size: .88rem;
+  font-weight: 600;
+  transition: background .18s, border-color .18s;
+}
+
+.theme-jemna-bezova .jb-contact-social-btn:hover {
+  background: rgba(212, 176, 111, .20);
+  border-color: rgba(212, 176, 111, .46);
+}
+
+.theme-jemna-bezova .jb-contact-social-btn__icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .9rem;
+  font-style: normal;
+}
+
+.theme-jemna-bezova .jb-contact-social-btn__icon--instagram::before { content: "◈"; }
+.theme-jemna-bezova .jb-contact-social-btn__icon--facebook::before { content: "f"; font-weight: 900; font-size: .78rem; }
+.theme-jemna-bezova .jb-contact-social-btn__icon--youtube::before { content: "▶"; font-size: .7rem; }
+.theme-jemna-bezova .jb-contact-social-btn__icon--tiktok::before { content: "♪"; }
+.theme-jemna-bezova .jb-contact-social-btn__icon--linkedin::before { content: "in"; font-weight: 900; font-size: .66rem; }
+.theme-jemna-bezova .jb-contact-social-btn__icon--pinterest::before { content: "P"; font-weight: 900; font-size: .78rem; }
+.theme-jemna-bezova .jb-contact-social-btn__icon--link::before { content: "↗"; }
 
 .theme-jemna-bezova .theme-footer {
   padding: 42px 0 48px;
