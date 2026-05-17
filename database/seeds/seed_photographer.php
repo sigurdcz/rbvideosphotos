@@ -873,6 +873,45 @@ block($pdo, $pidCenik, 'pricing_other_sub',       'textarea', 'Ceník Ostatní I
 block($pdo, $pidCenik, 'cta_heading',             'text',     'CTA Nadpis',        'Rezervujte termín ještě dnes', 7);
 block($pdo, $pidCenik, 'cta_sub',                 'textarea', 'CTA Sub',           'Oblíbené soboty se obsazují rok dopředu — čím dříve, tím větší výběr. Zavolejte nebo napište, odpovíme do 24 hodin.', 8);
 
+// Balíčky — renderuje buildPricingHtml() na homepage a cenik stránce
+block($pdo, $pidCenik, 'cenik_card_1_title', 'text',     'Karta 1 — nadpis', 'Základní', 11);
+block($pdo, $pidCenik, 'cenik_card_1_desc',  'textarea', 'Karta 1 — popis',
+'Průkazové, portrétní nebo firemní focení.
+
+• Průkazové a osobní fotografie
+• Portrétní session (do 2 hodin, jedno místo)
+• Produktové foto (do 20 produktů)
+• Reportáž z akce (do 2 hodin)
+• 30–60 upravených fotografií
+• Soukromá online galerie na 60 dní
+• Předání do 10 pracovních dní', 12);
+block($pdo, $pidCenik, 'cenik_card_1_price', 'text',     'Karta 1 — cena',  'od 3 500 Kč', 13);
+
+block($pdo, $pidCenik, 'cenik_card_2_title', 'text',     'Karta 2 — nadpis', 'Standardní', 14);
+block($pdo, $pidCenik, 'cenik_card_2_desc',  'textarea', 'Karta 2 — popis',
+'Fotograf a kameraman na celý svatební den.
+
+• Přípravy, obřad, hostina, první tanec
+• Focení 8–10 hodin
+• 400–500 upravených fotografií
+• Highlight video 8–12 minut
+• Soukromá online galerie na 1 rok
+• Předání do 6 týdnů', 15);
+block($pdo, $pidCenik, 'cenik_card_2_price', 'text',     'Karta 2 — cena',  'od 26 900 Kč', 16);
+
+block($pdo, $pidCenik, 'cenik_card_3_title', 'text',     'Karta 3 — nadpis', 'Prémiový', 17);
+block($pdo, $pidCenik, 'cenik_card_3_desc',  'textarea', 'Karta 3 — popis',
+'Vše ze Standardního + výjimečné doplňky.
+
+• Focení celého dne až do večera (12 hod)
+• 600+ upravených fotografií
+• Příběhové video 20–25 min + krátký highlight
+• Zásnubní session v hodnotě 6 000 Kč
+• Luxusní fotoalbum 30×30 cm (40 stran)
+• Soukromá online galerie na 1 rok
+• Předání do 4 týdnů', 18);
+block($pdo, $pidCenik, 'cenik_card_3_price', 'text',     'Karta 3 — cena',  'od 39 900 Kč', 19);
+
 // ─── Content blocks: FAQ ─────────────────────────────────────────────────────
 
 block($pdo, $pidFaq, 'hero_heading', 'text',     'Hero Nadpis', 'Časté otázky', 1);

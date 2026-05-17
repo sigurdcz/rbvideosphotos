@@ -918,18 +918,26 @@ body.theme-jemna-bezova {
 
 .theme-jemna-bezova .hp-faq {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 280px));
   gap: 24px;
   margin-top: 54px;
+  justify-content: center;
 }
 
 .theme-jemna-bezova .hp-faq-item {
-  padding: 22px 18px 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
+  padding: 22px 20px 20px;
+  border: 1px solid rgba(122, 95, 65, .18);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .58);
+  box-shadow: 0 2px 14px rgba(48, 38, 30, .06);
   text-align: center;
+  cursor: pointer;
+  transition: border-color .18s, box-shadow .18s;
+}
+
+.theme-jemna-bezova .hp-faq-item:hover {
+  border-color: rgba(212, 176, 111, .46);
+  box-shadow: 0 4px 22px rgba(48, 38, 30, .10);
 }
 
 .theme-jemna-bezova .jb-process-step--hidden {
@@ -950,21 +958,20 @@ body.theme-jemna-bezova {
 }
 
 .theme-jemna-bezova .hp-faq-item::before {
-  content: "";
-  position: absolute;
-  left: calc(50% + 29px);
-  top: 50px;
-  width: calc(100% - 58px);
-  height: 1px;
-  background: rgba(212, 176, 111, .18);
-}
-
-.theme-jemna-bezova .hp-faq-item:last-child::before {
   display: none;
 }
 
-.theme-jemna-bezova .hp-faq-item {
-  position: relative;
+.theme-jemna-bezova .hp-faq-hr {
+  border: none;
+  border-top: 1px solid rgba(122, 95, 65, .18);
+  margin: 14px 0 12px;
+}
+
+.theme-jemna-bezova .hp-faq-excerpt {
+  font-size: .88rem;
+  color: var(--theme-muted);
+  margin: 0;
+  line-height: 1.5;
 }
 
 .theme-jemna-bezova .hp-faq-question,

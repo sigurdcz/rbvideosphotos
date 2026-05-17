@@ -279,7 +279,18 @@
       }
 
       var answer = qs('.hp-faq-answer, p', item);
-      if (answer) answer.style.display = 'none';
+      if (answer) {
+        var answerText = (answer.textContent || '').trim();
+        answer.textContent = answerText.length > 20
+          ? answerText.slice(0, 20).trimEnd() + '…'
+          : answerText;
+        answer.className = 'hp-faq-excerpt';
+        if (question) {
+          var hr = document.createElement('hr');
+          hr.className = 'hp-faq-hr';
+          question.insertAdjacentElement('afterend', hr);
+        }
+      }
 
       item.style.cursor = 'pointer';
       item.addEventListener('click', function () {
