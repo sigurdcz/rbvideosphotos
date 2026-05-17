@@ -361,10 +361,7 @@ body.theme-jemna-bezova {
   justify-content: center;
   padding: 140px 0 96px;
   text-align: center;
-  background:
-    linear-gradient(180deg, rgba(88, 69, 51, .90), rgba(113, 92, 70, .82)),
-    radial-gradient(circle at 50% 24%, rgba(235, 213, 171, .20), transparent 28%),
-    linear-gradient(135deg, #5d4937, #7a6650 45%, #5b493a 100%);
+  background: #0e0c0a;
 }
 
 .theme-jemna-bezova .hp-hero::before,
@@ -387,12 +384,17 @@ body.theme-jemna-bezova {
 }
 
 .theme-jemna-bezova .theme-hero-video {
-  opacity: .38;
-  filter: saturate(.58) contrast(1.04) brightness(.78);
+  opacity: .86;
+  filter: brightness(.88) saturate(.90);
 }
 
 .theme-jemna-bezova .theme-hero-video::after {
-  background: linear-gradient(90deg, rgba(0,0,0,.34), rgba(0,0,0,.20), rgba(0,0,0,.34));
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, var(--cms-video-overlay-opacity, .52)),
+    rgba(0, 0, 0, var(--cms-video-overlay-soft-opacity, .18)),
+    rgba(0, 0, 0, var(--cms-video-overlay-opacity, .52))
+  );
 }
 
 .theme-jemna-bezova .hp-hero > .container,

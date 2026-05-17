@@ -13,7 +13,7 @@ Zadání: (1) Vyplnit 3 ceníkové balíčky reálnými daty dle trhu 2026. (2) 
 - [x] 2b. Přidat HR pod nadpis FAQ itemu
 - [x] 2c. Zobrazit krátký excerpt (20 znaků) z odpovědi pod dotazem
 - [x] 2d. Vycentrovat FAQ grid / itemy
-- [ ] Commitnout
+- [x] Commitnout
 
 ## Poznámky
 
