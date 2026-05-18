@@ -1,20 +1,27 @@
-# UKOL: Odebrat GTM, ponechat pouze GA4
+# UKOL: Homepage UI opravy — jemna bezova
 
 Datum: 2026-05-18
-Zadání: Celý tracking přesunout výhradně pod Google Analytics 4 (gtag.js). GTM kompletně odebrat z kódu, nastavení i výstupu.
+Zadání: Opravit 5 vizuálních chyb na homepage šablony jemna-bezova (blog karty, FAQ, recenze, process linka).
 
 ## Kroky
 
-- [x] SeoRenderer.php — odebrat renderGtmHead(), renderGtmNoscript(), volání v renderHead() a renderBodyScripts(); odebrat googleTagManagerId z renderConsentRuntime()
-- [x] SeoRenderer.php — renderBodyScripts() vrátit zpět k body_scripts only
-- [x] tracking.js — odebrat dataLayer.push() blok (GTM gone, zbytečné)
-- [x] settings/index.php — odebrat pole Google Tag Manager ID z UI
+- [x] Blog karty — opravit bílý text (přidat color: var(--jb-brown) pro title, var(--theme-muted) pro excerpt)
+- [x] Blog karty — připevnit "Číst dál" na spodek karty (flex layout na .hp-blog-body, margin-top: auto na .hp-blog-link)
+- [x] FAQ — HR oddělovač na stejné výšce pro všechny karty (min-height na .hp-faq-question, flex na .hp-faq-item)
+- [x] Recenze — zarovnat hvězdičky, text, autora na stejnou pozici (flex layout na .hp-review-card, flex:1 na p)
+- [x] Process linka — opravit pozici (top: 29px místo 28px) a zvýšit viditelnost (opacity: .45 místo .28)
 - [x] Commitnout výsledek
 
 ## Poznámky
 
-- tracking.js volá gtag() přímo — GA4 eventy fungují bez GTM
-- cookie-consent-runtime.js loadGoogleTagManager() byl odstraněn v předchozí session
-- DB sloupec google_tag_manager_id zůstane (neškodí), jen se nezobrazuje v UI
+- Konflikt: HomepageContentService.php generuje inline CSS s color:#fff pro dark theme, ale jemna-bezova přepisuje background na světlý — text byl neviditelný
+- Fixes jsou v theme.css, inline CSS v HomepageContentService.php zůstává (platí pro ostatní tmavé šablony)
 
 ## Výsledek
+
+Opraveno 5 vizuálních chyb v Templates/jemna-bezova/assets/theme.css:
+
+- Blog karty mají čitelný tmavý text a tlačítko přichycené ke spodku
+- FAQ HR oddělovač je na konzistentní výšce díky min-height na nadpisu
+- Recenze jsou zarovnány přes flex layout
+- Process linka je správně vycentrována a viditelnější
