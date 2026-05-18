@@ -74,6 +74,7 @@ Tento soubor je obecny pracovni navod pro vsechny AI asistenty i lidske vyvojare
 - Druha cast nebo telo commitu vysvetluje duvod nebo dopad.
 - Pokud je potreba vice kontextu, pridejte kratke body do tela commitu: co se upravilo, proc to bylo potreba, jaky je dopad.
 - Piste strucne, vecne a v pritomnem case.
+- **Nepridavejte `Co-Authored-By:` radku ani zadne jine AI atributy do commit zprav.** Commity neobsahuji zmínku o AI asistentovi ani nastroji.
 
 Priklady:
 
