@@ -97,17 +97,12 @@ class SiteRepository
             return $this->columnSupport[$column];
         }
 
-        $stmt = $this->db->prepare(
-            'SELECT 1
-             FROM information_schema.columns
-             WHERE table_schema = DATABASE()
-               AND table_name = ?
-               AND column_name = ?
-             LIMIT 1'
-        );
-        $stmt->execute(['sites', $column]);
-        $this->columnSupport[$column] = (bool)$stmt->fetch();
-        return $this->columnSupport[$column];
+        $stmt = $this->db->query('SHOW COLUMNS FROM `sites`');
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $this->columnSupport[$row['Field']] = true;
+        }
+
+        return $this->columnSupport[$column] ?? false;
     }
 
     private function writableColumns(): array
@@ -140,6 +135,12 @@ class SiteRepository
             'default_hero_video_url',
             'default_hero_poster_url',
             'video_overlay_opacity',
+            'tracking_enabled',
+            'tracking_require_consent',
+            'tracking_debug',
+            'clarity_id',
+            'meta_pixel_id',
+            'tracking_events_json',
         ];
 
         return array_values(array_filter($columns, fn(string $col): bool => $this->supportsColumn($col)));

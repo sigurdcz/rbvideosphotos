@@ -74,11 +74,21 @@
         window.dataLayer.push(dlEvent);
         log('dataLayer:', name, dlEvent);
       }
-      // Meta Pixel lead conversion
+      // Meta Pixel + GA4 standard conversion events
       if (name === 'lead_form_submit' || name === 'lead_thank_you_page') {
         if (typeof window.fbq === 'function') {
           window.fbq('track', 'Lead');
           log('fbq Lead');
+        }
+        if (typeof window.gtag === 'function') {
+          window.gtag('event', 'generate_lead');
+          log('gtag generate_lead');
+        }
+      }
+      if (name === 'social_click') {
+        if (typeof window.fbq === 'function') {
+          window.fbq('track', 'Contact');
+          log('fbq Contact');
         }
       }
     } catch (e) {
@@ -161,11 +171,14 @@
     });
   }
 
-  // ── Event: thank-you page ─────────────────────────────────────────────────
+  // ── Event: thank-you page / ?sent=1 ──────────────────────────────────────
   function setupThankYouPage() {
-    var path = window.location.pathname;
+    var path   = window.location.pathname;
+    var search = window.location.search;
     if (path === '/dekujeme' || path.indexOf('/dekujeme') === 0) {
       trackEvent('lead_thank_you_page', { event_category: 'lead', event_label: 'thank_you_page' });
+    } else if (search.indexOf('sent=1') !== -1) {
+      trackEvent('lead_form_submit', { event_category: 'lead', event_label: 'sent_param' });
     }
   }
 

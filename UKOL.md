@@ -1,29 +1,32 @@
-# UKOL: Výzkum llms.txt + implementace pro web
+# UKOL: Konverzní tracking + oprava ukládání nastavení
 
 Datum: 2026-05-18
-Zadání: Zjistit, zda existuje standard llms.txt pro AI/LLM (jako robots.txt pro crawlery) a případně ho implementovat.
+Zadání: (1) Přesunout konverzní scripty na kliknutí místo /dekujeme stránky. (2) Opravit kritický bug — admin/settings nic neukládá.
 
 ## Kroky
 
-- [x] Nastudovat llms.txt — co to je, kdo ho definoval, jak vypadá
-- [x] Zjistit, zda existují alternativy (ai.txt, llm-instructions.txt, atp.)
-- [x] Rozhodnout, co implementovat pro rbvideosphotos.kvalitne.cz
-- [x] Implementovat llms.txt do projektu
-- [x] Commitnout výsledek
+- [x] Prozkoumat existující tracking kód (GA4, GTM, Meta Pixel, Clarity)
+- [x] Prozkoumat kontaktní formulář — jak se odesílá, kde je success banner
+- [x] Opravit tracking.js — 3 problémy:
+  1. social_click nepálí fbq/generate_lead → přidáno fbq('track','Contact')
+  2. setupThankYouPage nekontroluje ?sent=1 → přidána detekce search.indexOf('sent=1')
+  3. chybí GA4 generate_lead → přidáno gtag('event','generate_lead')
+- [x] Opravit SiteRepository — admin/settings nic neukládá:
+  - supportsColumn() přepsáno na SHOW COLUMNS FROM sites (funguje na webzdarma)
+  - writableColumns() doplněno o 6 tracking sloupců z migrace 015
+- [ ] Commitnout výsledek
 
 ## Poznámky
 
-- llms.txt navržen Jeremy Howardem (Answer.AI) v 2024, spec: <https://llmstxt.org/>
-- Alternativy: ai.txt (jiný standard, méně rozšířený), llms-full.txt (rozšířená verze)
-- Rozhodnutí: implementovat llms.txt (llmstxt.org spec) — jednoduchý Markdown se seznamem stránek
-- Generuje se při každém globálním publish (publishSite) vedle robots.txt a sitemap.xml
-- Servíruje se přes existující static file handler (index.php → storage/published/llms.txt)
-- ai.txt je jiná věc (meta značky pro AI crawlery) — neimplementováno, není nutné
+Konverze bez /dekujeme — trackovat při:
+1. Kliknutí na odeslat formulář (kontaktní formulář /kontakt)
+2. Kliknutí na sociální sítě (Instagram, FB, YouTube atd.)
+
+Bug v settings: webzdarma blokuje information_schema → supportsColumn() vrací vždy false
+→ writableColumns() vrátí prázdné pole → update() se ihned vrátí bez zápisu
 
 ## Výsledek
 
-- Nový soubor: `app/Services/LlmsTxtGenerator.php` — generuje /llms.txt dle llmstxt.org spec
-  (H1 název webu, blockquote popis, seznam stránek s URL a meta popisem, odkaz na sitemap)
-- `PublishService::regenerateSitemapAndRobots` — přidáno generování llms.txt
-- `public/index.php` a `.htaccess` — beze změny, .txt soubory se servírují automaticky
-- Soubor vznikne automaticky při nejbližším globálním publish webu
+- `SiteRepository::supportsColumn()` — přepsáno z `information_schema` na `SHOW COLUMNS FROM sites`; webzdarma blokoval information_schema, takže žádné nastavení se nikdy neuložilo
+- `SiteRepository::writableColumns()` — doplněno 6 chybějících tracking sloupců (tracking_enabled, tracking_require_consent, tracking_debug, clarity_id, meta_pixel_id, tracking_events_json)
+- `tracking.js` — 3 opravy: (1) `setupThankYouPage` nově detekuje `?sent=1`, (2) `generate_lead` GA4 key event při odeslání formuláře, (3) Meta Pixel `Contact` event při kliknutí na sociální sítě
