@@ -361,7 +361,19 @@ body.theme-jemna-bezova {
   justify-content: center;
   padding: 140px 0 96px;
   text-align: center;
-  background: #0e0c0a;
+  background: #1a1610;
+}
+
+.theme-jemna-bezova .hp-hero::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 90px;
+  background: linear-gradient(to bottom, transparent, var(--jb-ivory));
+  z-index: 2;
+  pointer-events: none;
 }
 
 .theme-jemna-bezova .hp-hero::before,
@@ -386,6 +398,7 @@ body.theme-jemna-bezova {
 .theme-jemna-bezova .theme-hero-video {
   opacity: .86;
   filter: brightness(.88) saturate(.90);
+  background: #1a1610;
 }
 
 .theme-jemna-bezova .theme-hero-video::after {
@@ -1308,18 +1321,6 @@ body.theme-jemna-bezova {
     letter-spacing: .08em;
   }
 
-  .theme-jemna-bezova .theme-nav-wrap .nav-links {
-    display: none !important;
-    position: absolute;
-    top: 68px;
-    left: 0;
-    right: 0;
-    flex-direction: column;
-    gap: 0;
-    background: rgba(48, 38, 30, .98);
-    padding: 10px 0;
-  }
-
   .theme-jemna-bezova .theme-nav-wrap .nav-toggle-label {
     display: flex !important;
     flex-direction: column;
@@ -1339,15 +1340,6 @@ body.theme-jemna-bezova {
     height: 2px;
     margin: 0 auto;
     background: #fff3e3;
-  }
-
-  .theme-jemna-bezova .theme-nav-wrap .nav-toggle-input:checked ~ .nav-links {
-    display: flex !important;
-  }
-
-  .theme-jemna-bezova .theme-nav-wrap .nav-links a {
-    width: 100%;
-    padding: 16px 24px;
   }
 
   .theme-jemna-bezova .hp-hero,
@@ -1786,10 +1778,13 @@ body.theme-jemna-bezova.jb-nav-open {
   .theme-jemna-bezova .theme-nav-wrap .nav-cta {
     color: #f9f2e9 !important;
     font-family: "Cormorant Garamond", Georgia, serif;
-    font-size: 2rem;
+    font-size: clamp(1.7rem, 6vw, 2.2rem);
     font-weight: 400;
     letter-spacing: .08em;
     text-transform: none;
+    width: auto;
+    text-align: center;
+    padding: 10px 0;
   }
 
   .theme-jemna-bezova .theme-nav-wrap .nav-links a::after {
@@ -2200,11 +2195,6 @@ body.theme-jemna-bezova {
     padding: 92px 0 56px;
   }
 
-  .theme-jemna-bezova .theme-nav-wrap .nav-links a {
-    font-size: .8rem;
-    padding: 16px 0;
-  }
-
   .theme-jemna-bezova .btn,
   .theme-jemna-bezova .btn-primary,
   .theme-jemna-bezova .btn-secondary,
@@ -2234,8 +2224,9 @@ body.theme-jemna-bezova {
   }
 
   .theme-jemna-bezova .site-footer-contact__item {
-    grid-template-columns: 1fr;
-    gap: 4px;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 8px;
+    align-items: baseline;
   }
 }
 
@@ -2415,6 +2406,92 @@ body.theme-jemna-bezova {
 .theme-jemna-bezova .bl-grid,
 .theme-jemna-bezova .pt-grid {
   margin-top: 0;
+}
+
+/* ── Kontaktní stránka (/kontakt) — theme overrides ── */
+.theme-jemna-bezova .ci-title {
+  color: #f2e9dc;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 1.45rem;
+  font-weight: 400;
+  letter-spacing: .04em;
+  margin-bottom: 22px;
+}
+
+.theme-jemna-bezova .ci-brand__label {
+  color: var(--jb-gold);
+  font-family: "Manrope", sans-serif;
+  font-size: .72rem;
+  letter-spacing: .18em;
+}
+
+.theme-jemna-bezova .ci-brand__name {
+  color: #f2e9dc;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  font-weight: 400;
+}
+
+.theme-jemna-bezova .ci-brand__sub {
+  color: rgba(242, 233, 220, .78);
+  font-size: 1rem;
+}
+
+.theme-jemna-bezova .ci-label {
+  color: var(--jb-gold);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.theme-jemna-bezova .ci-row {
+  color: rgba(242, 233, 220, .86);
+}
+
+.theme-jemna-bezova .ci-row a {
+  color: var(--jb-gold-soft);
+}
+
+.theme-jemna-bezova .kt-form-block label {
+  color: rgba(242, 233, 220, .72);
+  font-family: "Manrope", sans-serif;
+  font-size: .76rem;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.theme-jemna-bezova .kt-form-block input,
+.theme-jemna-bezova .kt-form-block textarea,
+.theme-jemna-bezova .kt-form-block select {
+  background: rgba(255, 255, 255, .07);
+  border: 1px solid rgba(212, 176, 111, .22);
+  border-radius: 0;
+  color: #f2e9dc;
+  padding: 14px 18px;
+  font-family: inherit;
+  font-size: .95rem;
+  transition: border-color .2s;
+}
+
+.theme-jemna-bezova .kt-form-block input:focus,
+.theme-jemna-bezova .kt-form-block textarea:focus,
+.theme-jemna-bezova .kt-form-block select:focus {
+  outline: none;
+  border-color: rgba(212, 176, 111, .58);
+  background: rgba(255, 255, 255, .10);
+}
+
+.theme-jemna-bezova .kt-form-block input::placeholder,
+.theme-jemna-bezova .kt-form-block textarea::placeholder {
+  color: rgba(242, 233, 220, .36);
+}
+
+.theme-jemna-bezova .kt-form-block select option {
+  background: #3a2e24;
+  color: #f2e9dc;
 }
 
 .theme-jemna-bezova .bl-card,

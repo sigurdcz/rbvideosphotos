@@ -39,6 +39,14 @@
     var links = qs('.nav-links', nav);
     if (!toggle || !label || !links) return;
 
+    if (!qs('a[href="/"]', links) && !qs('a[href="/#uvod"]', links)) {
+      var home = document.createElement('a');
+      home.href = '/';
+      home.textContent = 'Úvod';
+      home.className = 'nav-home-link';
+      links.insertBefore(home, links.firstChild);
+    }
+
     function syncState() {
       var open = toggle.checked === true;
       label.classList.toggle('is-active', open);
