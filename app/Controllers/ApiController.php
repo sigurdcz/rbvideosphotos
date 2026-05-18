@@ -2,13 +2,18 @@
 
 namespace App\Controllers;
 
+use App\Core\SlugTrait;
 use App\Repositories\BlogRepository;
 use App\Repositories\MediaRepository;
 use App\Repositories\PortfolioRepository;
 use App\Repositories\SiteRepository;
+use App\Services\BlogSyncService;
+use App\Services\MediaIngestionService;
+use App\Services\PortfolioPublishService;
 
 class ApiController
 {
+    use SlugTrait;
 
     public function dispatch(string $uri): void
     {
@@ -27,32 +32,63 @@ class ApiController
             exit;
         }
 
-        $path = rtrim(substr($uri, strlen('/api/v1')), '/');
+        $method = $_SERVER['REQUEST_METHOD'];
+        $path   = rtrim(substr($uri, strlen('/api/v1')), '/');
 
+        // ── Articles ──────────────────────────────────────────────────────────
         if ($path === '/articles') {
-            $this->listArticles();
+            if ($method === 'GET')       $this->listArticles();
+            elseif ($method === 'POST')  $this->createArticle();
+            else                         $this->methodNotAllowed();
         } elseif (preg_match('#^/articles/([^/]+)$#', $path, $m)) {
-            $this->getArticle($m[1]);
+            if ($method === 'GET')        $this->getArticle($m[1]);
+            elseif ($method === 'PUT')    $this->updateArticle($m[1]);
+            elseif ($method === 'DELETE') $this->deleteArticle($m[1]);
+            else                          $this->methodNotAllowed();
+
+        // ── Portfolio ─────────────────────────────────────────────────────────
         } elseif ($path === '/portfolio') {
-            $this->listPortfolio();
+            if ($method === 'GET')       $this->listPortfolio();
+            elseif ($method === 'POST')  $this->createPortfolioEntry();
+            else                         $this->methodNotAllowed();
         } elseif (preg_match('#^/portfolio/([^/]+)$#', $path, $m)) {
-            $this->getPortfolioEntry($m[1]);
+            if ($method === 'GET')        $this->getPortfolioEntry($m[1]);
+            elseif ($method === 'PUT')    $this->updatePortfolioEntry($m[1]);
+            elseif ($method === 'DELETE') $this->deletePortfolioEntry($m[1]);
+            else                          $this->methodNotAllowed();
+
+        // ── Media ─────────────────────────────────────────────────────────────
+        } elseif ($path === '/media') {
+            if ($method === 'POST') $this->uploadMedia();
+            else                    $this->methodNotAllowed();
+        } elseif (preg_match('#^/media/(\d+)$#', $path, $m)) {
+            if ($method === 'DELETE') $this->deleteMedia((int)$m[1]);
+            else                      $this->methodNotAllowed();
+
+        // ── Key (convenience) ─────────────────────────────────────────────────
         } elseif ($path === '/key') {
-            // Show the current key (admin convenience)
             echo json_encode(['api_key' => $this->getApiKey()]);
         } else {
             http_response_code(404);
             echo json_encode(['error' => 'Endpoint not found.', 'available' => [
-                'GET /api/v1/articles',
-                'GET /api/v1/articles/{slug}',
-                'GET /api/v1/portfolio',
-                'GET /api/v1/portfolio/{slug}',
+                'GET    /api/v1/articles',
+                'POST   /api/v1/articles',
+                'GET    /api/v1/articles/{slug}',
+                'PUT    /api/v1/articles/{slug}',
+                'DELETE /api/v1/articles/{slug}',
+                'GET    /api/v1/portfolio',
+                'POST   /api/v1/portfolio',
+                'GET    /api/v1/portfolio/{slug}',
+                'PUT    /api/v1/portfolio/{slug}',
+                'DELETE /api/v1/portfolio/{slug}',
+                'POST   /api/v1/media',
+                'DELETE /api/v1/media/{id}',
             ]]);
         }
         exit;
     }
 
-    // ── Articles ──────────────────────────────────────────────────────────────
+    // ── Articles — read ───────────────────────────────────────────────────────
 
     private function listArticles(): void
     {
@@ -76,32 +112,149 @@ class ApiController
         echo json_encode($this->formatPost($post, $site), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
     }
 
-    private function formatPost(array $p, array $site): array
+    // ── Articles — write ──────────────────────────────────────────────────────
+
+    private function createArticle(): void
     {
-        $domain = rtrim($site['domain'] ?? '', '/');
-        $imgUrl = null;
-        if ($p['featured_image_id']) {
-            $m = (new MediaRepository())->findById((int)$p['featured_image_id']);
-            if ($m) $imgUrl = $domain . '/' . ltrim($m['storage_path'], '/');
+        $data = $this->readJsonBody();
+        if ($data === null) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Invalid JSON body.']);
+            return;
         }
 
-        return [
-            'id'                => (int)$p['id'],
-            'title'             => $p['title'],
-            'slug'              => $p['slug'],
-            'excerpt'           => $p['excerpt'] ?? '',
-            'content'           => $p['content'] ?? '',
-            'featured_image_url'=> $imgUrl,
-            'meta_title'        => $p['meta_title'],
-            'meta_description'  => $p['meta_description'],
-            'status'            => $p['status'],
-            'published_at'      => $p['published_at'],
-            'created_at'        => $p['created_at'],
-            'updated_at'        => $p['updated_at'],
-        ];
+        $site = (new SiteRepository())->findFirst();
+        if (!$site) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Site not configured.']);
+            return;
+        }
+
+        $title = trim((string)($data['title'] ?? ''));
+        if ($title === '') {
+            http_response_code(400);
+            echo json_encode(['error' => 'Field "title" is required.']);
+            return;
+        }
+
+        $slug   = $this->makeSlug((string)($data['slug'] ?? ''), $title);
+        $status = ($data['status'] ?? 'draft') === 'published' ? 'published' : 'draft';
+
+        $repo = new BlogRepository();
+        try {
+            $id = $repo->create([
+                'site_id'           => $site['id'],
+                'title'             => $title,
+                'slug'              => $slug,
+                'excerpt'           => trim((string)($data['excerpt'] ?? '')),
+                'content'           => (string)($data['content'] ?? ''),
+                'featured_image_id' => $this->intOrNull($data['featured_image_id'] ?? null),
+                'status'            => $status,
+                'published_at'      => $status === 'published' ? date('Y-m-d H:i:s') : null,
+                'meta_title'        => trim((string)($data['meta_title'] ?? '')) ?: null,
+                'meta_description'  => trim((string)($data['meta_description'] ?? '')) ?: null,
+            ]);
+        } catch (\PDOException $e) {
+            if ($this->isDuplicateEntry($e)) {
+                http_response_code(409);
+                echo json_encode(['error' => 'Slug already exists.']);
+                return;
+            }
+            throw $e;
+        }
+
+        if (isset($data['gallery_ids']) && is_array($data['gallery_ids'])) {
+            $repo->setGallery($id, $data['gallery_ids']);
+        }
+
+        (new BlogSyncService())->syncHomepageBlocks($repo, $site['id']);
+
+        http_response_code(201);
+        echo json_encode($this->formatPost($repo->findById($id), $site), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
     }
 
-    // ── Portfolio ─────────────────────────────────────────────────────────────
+    private function updateArticle(string $slug): void
+    {
+        $data = $this->readJsonBody();
+        if ($data === null) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Invalid JSON body.']);
+            return;
+        }
+
+        $repo = new BlogRepository();
+        $post = $repo->findBySlugAdmin($slug);
+        if (!$post) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Article not found.']);
+            return;
+        }
+
+        $title  = isset($data['title']) ? trim((string)$data['title']) : (string)$post['title'];
+        $newSlug = isset($data['slug'])
+            ? $this->makeSlug((string)$data['slug'], $title)
+            : (string)$post['slug'];
+        $status = isset($data['status'])
+            ? (($data['status'] === 'published') ? 'published' : 'draft')
+            : (string)$post['status'];
+        $publishedAt = $status === 'published'
+            ? ($post['published_at'] ?? date('Y-m-d H:i:s'))
+            : null;
+
+        try {
+            $repo->update($post['id'], [
+                'title'             => $title,
+                'slug'              => $newSlug,
+                'excerpt'           => isset($data['excerpt'])           ? trim((string)$data['excerpt'])           : (string)($post['excerpt'] ?? ''),
+                'content'           => isset($data['content'])           ? (string)$data['content']                : (string)($post['content'] ?? ''),
+                'featured_image_id' => isset($data['featured_image_id']) ? $this->intOrNull($data['featured_image_id']) : ($post['featured_image_id'] ?? null),
+                'status'            => $status,
+                'published_at'      => $publishedAt,
+                'meta_title'        => isset($data['meta_title'])        ? (trim((string)$data['meta_title']) ?: null)        : $post['meta_title'],
+                'meta_description'  => isset($data['meta_description'])  ? (trim((string)$data['meta_description']) ?: null)  : $post['meta_description'],
+            ]);
+        } catch (\PDOException $e) {
+            if ($this->isDuplicateEntry($e)) {
+                http_response_code(409);
+                echo json_encode(['error' => 'Slug already exists.']);
+                return;
+            }
+            throw $e;
+        }
+
+        if (isset($data['gallery_ids']) && is_array($data['gallery_ids'])) {
+            $repo->setGallery((int)$post['id'], $data['gallery_ids']);
+        }
+
+        $site = (new SiteRepository())->findFirst() ?? [];
+        if ($site) {
+            (new BlogSyncService())->syncHomepageBlocks($repo, $site['id']);
+        }
+
+        echo json_encode($this->formatPost($repo->findById($post['id']), $site), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    }
+
+    private function deleteArticle(string $slug): void
+    {
+        $repo = new BlogRepository();
+        $post = $repo->findBySlugAdmin($slug);
+        if (!$post) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Article not found.']);
+            return;
+        }
+
+        $repo->delete((int)$post['id']);
+
+        $site = (new SiteRepository())->findFirst();
+        if ($site) {
+            (new BlogSyncService())->syncHomepageBlocks($repo, $site['id']);
+        }
+
+        echo json_encode(['success' => true, 'deleted_slug' => $slug]);
+    }
+
+    // ── Portfolio — read ──────────────────────────────────────────────────────
 
     private function listPortfolio(): void
     {
@@ -125,6 +278,269 @@ class ApiController
         }
         $site = (new SiteRepository())->findFirst() ?? [];
         echo json_encode($this->formatEntry($entry, $repo, $site), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    }
+
+    // ── Portfolio — write ─────────────────────────────────────────────────────
+
+    private function createPortfolioEntry(): void
+    {
+        $data = $this->readJsonBody();
+        if ($data === null) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Invalid JSON body.']);
+            return;
+        }
+
+        $site = (new SiteRepository())->findFirst();
+        if (!$site) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Site not configured.']);
+            return;
+        }
+
+        $title = trim((string)($data['title'] ?? ''));
+        if ($title === '') {
+            http_response_code(400);
+            echo json_encode(['error' => 'Field "title" is required.']);
+            return;
+        }
+
+        $slug   = $this->makeSlug((string)($data['slug'] ?? ''), $title);
+        $status = ($data['status'] ?? 'draft') === 'published' ? 'published' : 'draft';
+
+        $repo = new PortfolioRepository();
+        try {
+            $id = $repo->create([
+                'site_id'          => $site['id'],
+                'title'            => $title,
+                'slug'             => $slug,
+                'description'      => (string)($data['description'] ?? ''),
+                'video_url'        => trim((string)($data['video_url'] ?? '')) ?: null,
+                'status'           => $status,
+                'published_at'     => $status === 'published' ? date('Y-m-d H:i:s') : null,
+                'sort_order'       => (int)($data['sort_order'] ?? 0),
+                'meta_title'       => trim((string)($data['meta_title'] ?? '')) ?: null,
+                'meta_description' => trim((string)($data['meta_description'] ?? '')) ?: null,
+            ]);
+        } catch (\PDOException $e) {
+            if ($this->isDuplicateEntry($e)) {
+                http_response_code(409);
+                echo json_encode(['error' => 'Slug already exists.']);
+                return;
+            }
+            throw $e;
+        }
+
+        if (isset($data['media_ids']) && is_array($data['media_ids'])) {
+            $repo->setMedia($id, $data['media_ids']);
+        }
+
+        $svc = new PortfolioPublishService();
+        if ($status === 'published') {
+            $svc->publishEntry($repo->findById($id), $repo, $site);
+        }
+        $svc->syncHomepageTiles($repo, $site['id']);
+
+        http_response_code(201);
+        echo json_encode($this->formatEntry($repo->findById($id), $repo, $site), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    }
+
+    private function updatePortfolioEntry(string $slug): void
+    {
+        $data = $this->readJsonBody();
+        if ($data === null) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Invalid JSON body.']);
+            return;
+        }
+
+        $repo  = new PortfolioRepository();
+        $entry = $repo->findBySlugAdmin($slug);
+        if (!$entry) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Portfolio entry not found.']);
+            return;
+        }
+
+        $title   = isset($data['title']) ? trim((string)$data['title']) : (string)$entry['title'];
+        $newSlug = isset($data['slug'])
+            ? $this->makeSlug((string)$data['slug'], $title)
+            : (string)$entry['slug'];
+        $status = isset($data['status'])
+            ? (($data['status'] === 'published') ? 'published' : 'draft')
+            : (string)$entry['status'];
+        $publishedAt = $status === 'published'
+            ? ($entry['published_at'] ?? date('Y-m-d H:i:s'))
+            : null;
+
+        try {
+            $repo->update($entry['id'], [
+                'title'            => $title,
+                'slug'             => $newSlug,
+                'description'      => isset($data['description']) ? (string)$data['description'] : (string)($entry['description'] ?? ''),
+                'video_url'        => isset($data['video_url'])    ? (trim((string)$data['video_url']) ?: null) : $entry['video_url'],
+                'status'           => $status,
+                'published_at'     => $publishedAt,
+                'sort_order'       => isset($data['sort_order']) ? (int)$data['sort_order'] : (int)$entry['sort_order'],
+                'meta_title'       => isset($data['meta_title'])       ? (trim((string)$data['meta_title']) ?: null)       : $entry['meta_title'],
+                'meta_description' => isset($data['meta_description']) ? (trim((string)$data['meta_description']) ?: null) : $entry['meta_description'],
+            ]);
+        } catch (\PDOException $e) {
+            if ($this->isDuplicateEntry($e)) {
+                http_response_code(409);
+                echo json_encode(['error' => 'Slug already exists.']);
+                return;
+            }
+            throw $e;
+        }
+
+        if (isset($data['media_ids']) && is_array($data['media_ids'])) {
+            $repo->setMedia((int)$entry['id'], $data['media_ids']);
+        }
+
+        $site = (new SiteRepository())->findFirst();
+        $svc  = new PortfolioPublishService();
+        if ($status === 'published' && $site) {
+            $svc->publishEntry($repo->findById($entry['id']), $repo, $site);
+        }
+        if ($site) {
+            $svc->syncHomepageTiles($repo, $site['id']);
+        }
+
+        $site = $site ?? [];
+        echo json_encode($this->formatEntry($repo->findById($entry['id']), $repo, $site), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    }
+
+    private function deletePortfolioEntry(string $slug): void
+    {
+        $repo  = new PortfolioRepository();
+        $entry = $repo->findBySlugAdmin($slug);
+        if (!$entry) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Portfolio entry not found.']);
+            return;
+        }
+
+        $repo->delete((int)$entry['id']);
+
+        $svc = new PortfolioPublishService();
+        $svc->removePublishedFiles($entry['slug']);
+
+        $site = (new SiteRepository())->findFirst();
+        if ($site) {
+            $svc->syncHomepageTiles($repo, $site['id']);
+        }
+
+        echo json_encode(['success' => true, 'deleted_slug' => $slug]);
+    }
+
+    // ── Media ─────────────────────────────────────────────────────────────────
+
+    private function uploadMedia(): void
+    {
+        $site = (new SiteRepository())->findFirst();
+        if (!$site) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Site not configured.']);
+            return;
+        }
+
+        $altText = trim($_POST['alt_text'] ?? '');
+        if ($altText === '') {
+            http_response_code(400);
+            echo json_encode(['error' => 'Field "alt_text" is required.']);
+            return;
+        }
+        $title = trim($_POST['title'] ?? '') ?: $altText;
+
+        $files = $this->normalizeFiles($_FILES['files'] ?? $_FILES['file'] ?? null);
+        if (empty($files)) {
+            $phpLimit = ini_get('post_max_size');
+            http_response_code(400);
+            echo json_encode(['error' => 'No files received. Possible post_max_size limit (' . $phpLimit . ').']);
+            return;
+        }
+
+        $results = [];
+        $ingest  = new MediaIngestionService();
+
+        foreach ($files as $file) {
+            if ($file['error'] === UPLOAD_ERR_INI_SIZE || $file['error'] === UPLOAD_ERR_FORM_SIZE) {
+                $results[] = ['error' => 'File too large (PHP limit): ' . $file['name']];
+                continue;
+            }
+            if ($file['error'] !== UPLOAD_ERR_OK) {
+                $results[] = ['error' => 'Upload failed (code ' . $file['error'] . '): ' . $file['name']];
+                continue;
+            }
+
+            try {
+                $result    = $ingest->ingestUploadedFile($site['id'], $file['tmp_name'], $file['name'], $altText, $title);
+                $media     = (new MediaRepository())->findById($result['media_id']);
+                $results[] = [
+                    'success'       => true,
+                    'media_id'      => $result['media_id'],
+                    'storage_path'  => $result['storage_path'],
+                    'variant_count' => $result['variant_count'],
+                    'name'          => $file['name'],
+                    'url'           => '/' . ltrim($result['storage_path'], '/'),
+                    'width'         => $media['width'] ?? null,
+                    'height'        => $media['height'] ?? null,
+                    'mime_type'     => $media['mime_type'] ?? null,
+                ];
+            } catch (\RuntimeException $e) {
+                $results[] = ['error' => $e->getMessage(), 'name' => $file['name']];
+            }
+        }
+
+        echo json_encode(['results' => $results], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    }
+
+    private function deleteMedia(int $id): void
+    {
+        $repo = new MediaRepository();
+        $m    = $repo->findById($id);
+        if (!$m) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Media not found.']);
+            return;
+        }
+
+        $base = dirname(__DIR__, 2) . '/';
+        @unlink($base . $m['storage_path']);
+        foreach ($repo->variantsByMediaId($id) as $v) {
+            @unlink($base . $v['path']);
+        }
+        $repo->delete($id);
+
+        echo json_encode(['success' => true, 'deleted_id' => $id]);
+    }
+
+    // ── Formatters ────────────────────────────────────────────────────────────
+
+    private function formatPost(array $p, array $site): array
+    {
+        $domain = rtrim($site['domain'] ?? '', '/');
+        $imgUrl = null;
+        if ($p['featured_image_id']) {
+            $m = (new MediaRepository())->findById((int)$p['featured_image_id']);
+            if ($m) $imgUrl = $domain . '/' . ltrim($m['storage_path'], '/');
+        }
+
+        return [
+            'id'                 => (int)$p['id'],
+            'title'              => $p['title'],
+            'slug'               => $p['slug'],
+            'excerpt'            => $p['excerpt'] ?? '',
+            'content'            => $p['content'] ?? '',
+            'featured_image_url' => $imgUrl,
+            'meta_title'         => $p['meta_title'],
+            'meta_description'   => $p['meta_description'],
+            'status'             => $p['status'],
+            'published_at'       => $p['published_at'],
+            'created_at'         => $p['created_at'],
+            'updated_at'         => $p['updated_at'],
+        ];
     }
 
     private function formatEntry(array $e, PortfolioRepository $repo, array $site): array
@@ -164,18 +580,15 @@ class ApiController
     {
         $key = $this->getApiKey();
 
-        // Check X-Api-Key header
         $headerKey = $_SERVER['HTTP_X_API_KEY'] ?? '';
         if ($headerKey && hash_equals($key, $headerKey)) return true;
 
-        // Check Authorization: Bearer {key}
         $auth = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
         if (str_starts_with($auth, 'Bearer ')) {
             $bearer = substr($auth, 7);
             if (hash_equals($key, $bearer)) return true;
         }
 
-        // Check ?api_key= query param (convenience, not for production)
         $qkey = $_GET['api_key'] ?? '';
         if ($qkey && hash_equals($key, $qkey)) return true;
 
@@ -185,5 +598,49 @@ class ApiController
     private function getApiKey(): string
     {
         return (string) getenv('API_KEY');
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private function readJsonBody(): ?array
+    {
+        $raw = (string) file_get_contents('php://input');
+        if ($raw === '') return [];
+        $data = json_decode($raw, true);
+        return is_array($data) ? $data : null;
+    }
+
+    private function intOrNull(mixed $v): ?int
+    {
+        if ($v === null || $v === '' || $v === false) return null;
+        $i = (int)$v;
+        return $i > 0 ? $i : null;
+    }
+
+    private function isDuplicateEntry(\PDOException $e): bool
+    {
+        return str_contains($e->getMessage(), '1062') || str_contains($e->getMessage(), 'Duplicate entry');
+    }
+
+    private function methodNotAllowed(): void
+    {
+        http_response_code(405);
+        echo json_encode(['error' => 'Method not allowed.']);
+    }
+
+    private function normalizeFiles(?array $raw): array
+    {
+        if (!$raw) return [];
+        if (is_string($raw['name'])) return [$raw];
+        $out = [];
+        foreach ($raw['name'] as $i => $_) {
+            $out[] = [
+                'name'     => $raw['name'][$i],
+                'tmp_name' => $raw['tmp_name'][$i],
+                'error'    => $raw['error'][$i],
+                'size'     => $raw['size'][$i],
+            ];
+        }
+        return $out;
     }
 }

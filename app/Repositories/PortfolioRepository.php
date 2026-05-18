@@ -42,6 +42,13 @@ class PortfolioRepository
         return $stmt->fetch() ?: null;
     }
 
+    public function findBySlugAdmin(string $slug): ?array
+    {
+        $stmt = $this->db->prepare('SELECT * FROM portfolio_entries WHERE slug = ? LIMIT 1');
+        $stmt->execute([$slug]);
+        return $stmt->fetch() ?: null;
+    }
+
     public function create(array $d): int
     {
         $stmt = $this->db->prepare(

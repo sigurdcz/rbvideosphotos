@@ -395,11 +395,20 @@ ob_start();
   <div class="form-group" style="margin-top:4px">
     <label>Dostupne endpointy</label>
     <ul style="margin:4px 0 0 18px;font-size:13px;color:var(--c-muted);line-height:1.8">
-      <li><code>GET /api/v1/articles</code> - seznam clanku</li>
-      <li><code>GET /api/v1/articles/{slug}</code> - detail clanku</li>
-      <li><code>GET /api/v1/portfolio</code> - seznam portfolia</li>
-      <li><code>GET /api/v1/portfolio/{slug}</code> - detail polozky</li>
+      <li><code>GET    /api/v1/articles</code> — seznam vsech clanku</li>
+      <li><code>POST   /api/v1/articles</code> — vytvorit novy clanek (JSON: title*, slug, excerpt, content, status, featured_image_id, gallery_ids[], meta_title, meta_description)</li>
+      <li><code>GET    /api/v1/articles/{slug}</code> — detail clanku</li>
+      <li><code>PUT    /api/v1/articles/{slug}</code> — aktualizovat clanek (JSON: stejna tela jako POST, vsechna pole volitelna)</li>
+      <li><code>DELETE /api/v1/articles/{slug}</code> — smazat clanek</li>
+      <li style="margin-top:6px"><code>GET    /api/v1/portfolio</code> — seznam portfolia</li>
+      <li><code>POST   /api/v1/portfolio</code> — vytvorit polozku (JSON: title*, slug, description, video_url, status, sort_order, media_ids[], meta_title, meta_description)</li>
+      <li><code>GET    /api/v1/portfolio/{slug}</code> — detail polozky</li>
+      <li><code>PUT    /api/v1/portfolio/{slug}</code> — aktualizovat polozku (JSON: stejna tela jako POST, vsechna pole volitelna)</li>
+      <li><code>DELETE /api/v1/portfolio/{slug}</code> — smazat polozku</li>
+      <li style="margin-top:6px"><code>POST   /api/v1/media</code> — nahrat medium (multipart/form-data: file/files[], alt_text*, title)</li>
+      <li><code>DELETE /api/v1/media/{id}</code> — smazat medium</li>
     </ul>
+    <p class="help-text" style="margin-top:8px">* povinna pole &nbsp;|&nbsp; status: <code>draft</code> (vychozi) nebo <code>published</code></p>
   </div>
   <?php else: ?>
   <p class="help-text">API klic bude automaticky vygenerovan pri prvnim volani API endpointu.</p>
