@@ -2519,6 +2519,42 @@ body.theme-jemna-bezova {
   background: transparent;
 }
 
+/* ── Kontaktní stránka — světlé barvy na tmavém pozadí ──────────────────── */
+/* .theme-jemna-bezova a { color: inherit } má specificitu (0,1,1) a přebíjí
+   .ci-social { color: #f3efe7 } se specificitou (0,1,0) z $kontaktCss.
+   Explicitní pravidla s (0,2,0) toto napraví. */
+.theme-jemna-bezova .ci-title {
+  color: #f2e9dc;
+}
+
+.theme-jemna-bezova .ci-row {
+  color: rgba(242, 233, 220, .86);
+}
+
+.theme-jemna-bezova .ci-row a {
+  color: var(--jb-gold-soft);
+}
+
+.theme-jemna-bezova .ci-social {
+  color: var(--jb-gold-soft);
+  border-color: rgba(212, 176, 111, .28);
+  background: transparent;
+}
+
+.theme-jemna-bezova .ci-social:hover {
+  color: var(--jb-ivory);
+  background: rgba(212, 176, 111, .12);
+  border-color: rgba(212, 176, 111, .52);
+}
+
+.theme-jemna-bezova .ci-social__icon {
+  border-color: rgba(212, 176, 111, .28);
+}
+
+.theme-jemna-bezova .ci-label {
+  color: var(--jb-gold);
+}
+
 @media (max-width: 760px) {
   .theme-jemna-bezova .grid-wrap > .container,
   .theme-jemna-bezova .pf-main > .container,
