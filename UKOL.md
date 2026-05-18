@@ -1,32 +1,29 @@
-# UKOL: Konverzní tracking + oprava ukládání nastavení
+# UKOL: Update README a ARCHITECTURE.md
 
 Datum: 2026-05-18
-Zadání: (1) Přesunout konverzní scripty na kliknutí místo /dekujeme stránky. (2) Opravit kritický bug — admin/settings nic neukládá.
+Zadání: Aktualizovat README.md a ARCHITECTURE.md o vše co přibylo — téma systém, minifikátor, llms.txt, tracking, settings bug fix.
 
 ## Kroky
 
-- [x] Prozkoumat existující tracking kód (GA4, GTM, Meta Pixel, Clarity)
-- [x] Prozkoumat kontaktní formulář — jak se odesílá, kde je success banner
-- [x] Opravit tracking.js — 3 problémy:
-  1. social_click nepálí fbq/generate_lead → přidáno fbq('track','Contact')
-  2. setupThankYouPage nekontroluje ?sent=1 → přidána detekce search.indexOf('sent=1')
-  3. chybí GA4 generate_lead → přidáno gtag('event','generate_lead')
-- [x] Opravit SiteRepository — admin/settings nic neukládá:
-  - supportsColumn() přepsáno na SHOW COLUMNS FROM sites (funguje na webzdarma)
-  - writableColumns() doplněno o 6 tracking sloupců z migrace 015
-- [ ] Commitnout výsledek
+- [x] Aktualizovat README.md
+- [x] Aktualizovat ARCHITECTURE.md
+- [x] Commitnout výsledek
 
 ## Poznámky
 
-Konverze bez /dekujeme — trackovat při:
-1. Kliknutí na odeslat formulář (kontaktní formulář /kontakt)
-2. Kliknutí na sociální sítě (Instagram, FB, YouTube atd.)
+Co přibylo od posledního update:
 
-Bug v settings: webzdarma blokuje information_schema → supportsColumn() vrací vždy false
-→ writableColumns() vrátí prázdné pole → update() se ihned vrátí bez zápisu
+- Templates/ adresář — 5 šablon (jemna-bezova, soft-memories, modern-atelier, minimal-dark, editorial-gold)
+- ThemeTemplateRegistry — správa šablon témat
+- app/Support/AssetMinifier.php — regex minifikátor CSS/JS
+- app/Support/FrontendAssetManager.php — zapisuje minifikované CSS/JS do public/assets/generated/
+- app/Services/LlmsTxtGenerator.php — generuje /llms.txt dle llmstxt.org spec
+- PublishService — při publishování čistí generated/ a generuje llms.txt
+- tracking.js — konverze bez /dekujeme: ?sent=1 detekce, generate_lead GA4, fbq Contact pro social
+- SiteRepository — SHOW COLUMNS místo information_schema, +6 tracking sloupců
+- DB: tabulky reviews, faq_items, service_items, contact_info, blog_media (chybí v docs)
 
 ## Výsledek
 
-- `SiteRepository::supportsColumn()` — přepsáno z `information_schema` na `SHOW COLUMNS FROM sites`; webzdarma blokoval information_schema, takže žádné nastavení se nikdy neuložilo
-- `SiteRepository::writableColumns()` — doplněno 6 chybějících tracking sloupců (tracking_enabled, tracking_require_consent, tracking_debug, clarity_id, meta_pixel_id, tracking_events_json)
-- `tracking.js` — 3 opravy: (1) `setupThankYouPage` nově detekuje `?sent=1`, (2) `generate_lead` GA4 key event při odeslání formuláře, (3) Meta Pixel `Contact` event při kliknutí na sociální sítě
+README.md: přidána sekce Témata, CSS/JS minifikace, /llms.txt, konverzní tracking, public/assets/generated/ v adresářové struktuře, app/Support/ namespace.
+ARCHITECTURE.md: přidány tabulky (faq_items, service_items, contact_info, reviews, blog_media), sekce Témata, CSS/JS minifikace, konverzní tracking; klíčové sloupce sites; všechny tabulky přepsány do compact formátu, code blocky dostaly language identifikátor.

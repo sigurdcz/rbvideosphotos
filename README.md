@@ -10,10 +10,27 @@ Jednoduche SEO CMS pro male staticke weby v cistem PHP 8. Aplikace ma admin rozh
 - Verejny web: `public/index.php`
 - Media: `storage/media/*`
 - Publikovane exporty: `storage/published/*`
+- Minifikovane assety: `public/assets/generated/*`
 
 ## Brand a hero media
 
 V admin sekci `Nastaveni` lze vybrat logo, favicony, vychozi hero video a poster obrazek primo z medii. Vlastni hero video stranky ma prednost; pokud neni vyplnene, podporovane stranky pouziji vychozi video a poster z nastaveni webu.
+
+## Temata (Templates)
+
+Projekt obsahuje predpripravena vizualni temata v adresari `Templates/`. Kazde tema ma vlastni `layout.html`, `theme.css`, volitelne `theme.js` a popisny `template.json`. Aktivni tema se nastavuje v `Nastaveni → Tema`.
+
+Dostupna temata:
+
+| Tema | Klic |
+|---|---|
+| Jemna bezova | `jemna-bezova` |
+| Soft Memories | `soft-memories` |
+| Modern Atelier | `modern-atelier` |
+| Minimal Dark | `minimal-dark` |
+| Editorial Gold | `editorial-gold` |
+
+Tema lze aplikovat jednim klikem — `ThemeTemplateRegistry` nacte layout, CSS a JS z adresare tematu a prepise sablony webu v databazi.
 
 ## Dokumentace pro vyvoj
 
@@ -114,9 +131,17 @@ php database/seeds/seed_photographer.php --fresh
 
 1. Do adminu se nahraji sablony a obsah.
 2. Verejne stranky se bezne renderuji primo z databaze.
-3. Cast vystupu se pri publishi generuje do `storage/published`.
+3. Pri publishovani webu se vycisti `public/assets/generated/` a regeneruji minifikovane CSS/JS soubory.
 4. Portfolio listing a detail se generuji jako staticke HTML do `storage/published/nase-prace`.
-5. `sitemap.xml`, `robots.txt` a dalsi exporty se take ukladaji do `storage/published`.
+5. `sitemap.xml`, `robots.txt` a `llms.txt` se generuji do `storage/published`.
+
+### CSS a JS minifikace
+
+`FrontendAssetManager` zapisuje layout CSS/JS do `public/assets/generated/` jako hahovane soubory (`prefix-HASH.css`). Pred zapisem prochazi pres `AssetMinifier` (regex minifikace bez zavislosti). Pri kazdem globalni publishovani se adresar vycisti a soubory se regeneruji — zadne stale assety nezustavaji.
+
+### /llms.txt
+
+Na kazdem publishovani se do `storage/published/llms.txt` zapise soubor dle specifikace [llmstxt.org](https://llmstxt.org/). Obsahuje nazev webu, popis a seznam vsech stranek s URL a meta popisky — pro AI indexery analogicky jako `sitemap.xml` pro crawlery.
 
 ## Dulezite URL pravidlo
 
@@ -134,15 +159,20 @@ seo-editor/
 |  |- Core/            jadro (Router, Auth, Controller, SlugTrait, ...)
 |  |- Controllers/     controllery
 |  |- Repositories/    DB pristup
-|  `- Services/        business logika
+|  |- Services/        business logika
+|  `- Support/         pomocne tridy (AssetMinifier, FrontendAssetManager)
 |- admin/              admin panel
 |- config/             konfigurace
 |- database/           migrace, schema, seedy
-|- public/             verejny front controller a assety
+|- public/
+|  |- index.php        front controller
+|  |- assets/          assety editoru a tracking
+|  `- assets/generated/  minifikovane CSS/JS (generovane, neni v gitu)
 |- storage/
 |  |- media/           nahrane soubory
 |  |- logs/            logy
-|  `- published/       generovane exporty a portfolio HTML
+|  `- published/       sitemap.xml, robots.txt, llms.txt, portfolio HTML
+|- Templates/          predpripravena vizualni temata
 |- vendor/             autoload
 |- router.php          router pro lokalni PHP server
 |- index.php           vstup pro hosting
@@ -193,6 +223,17 @@ Write operace (POST/PUT/DELETE) maji stejne vedlejsi efekty jako admin UI — sy
 
 `API_KEY` se nastavuje v `.env`. Detailni dokumentaci endpointu vcetne vsech polí najdes v admin panelu pod `Nastaveni → API`.
 
+## Konverzni tracking
+
+Web trackuje konverze bez nutnosti stranky `/dekujeme`. `public/assets/tracking.js` detekuje:
+
+- **Odeslani formulare** — `submit` event na kontaktnim formulari → `lead_form_submit`, GA4 `generate_lead`, Meta Pixel `Lead`
+- **Parametr `?sent=1`** — kdyz backend po odeslani presmeruje s query stringem → `lead_form_submit`, GA4 `generate_lead`, Meta Pixel `Lead`
+- **Kliknuti na socialni site** — Instagram, Facebook, YouTube atd. → `social_click`, Meta Pixel `Contact`
+- **Kliknuti na telefon / email** — `phone_click`, `email_click`
+
+Vsechny udalosti prochazi consent gate — nespousti se pred souhlasem s analytics cookies (pokud je consent povinny).
+
 ## Nasazeni
 
 - Produkce bezi z branche `master`
@@ -200,6 +241,7 @@ Write operace (POST/PUT/DELETE) maji stejne vedlejsi efekty jako admin UI — sy
 - Deploy probiha pres GitHub Actions a FTP
 - `.env` se nedeployuje
 - `storage/media` se nedeployuje jako soucast buildu
+- `public/assets/generated/` se nedeployuje — generuje se pri publishovani
 
 ## Media a obrazky
 
