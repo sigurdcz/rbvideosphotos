@@ -77,15 +77,33 @@ final class FrontendAssetManager
     {
         self::ensureGeneratedDir();
 
-        $hash = substr(sha1($content), 0, 16);
+        $content  = AssetMinifier::minify($content, $extension);
+        $hash     = substr(sha1($content), 0, 16);
         $filename = $prefix . '-' . $hash . '.' . $extension;
-        $path = rtrim(self::GENERATED_PUBLIC_DIR, '\\/') . DIRECTORY_SEPARATOR . $filename;
+        $path     = rtrim(self::GENERATED_PUBLIC_DIR, '\\/') . DIRECTORY_SEPARATOR . $filename;
 
         if (!is_file($path)) {
             file_put_contents($path, $content);
         }
 
         return self::GENERATED_RELATIVE_DIR . '/' . $filename;
+    }
+
+    /**
+     * Delete all files from public/assets/generated/.
+     * Called before a full site publish so stale un-minified assets are purged.
+     */
+    public static function clearGeneratedAssets(): void
+    {
+        if (!is_dir(self::GENERATED_PUBLIC_DIR)) {
+            return;
+        }
+
+        foreach (glob(rtrim(self::GENERATED_PUBLIC_DIR, '\\/') . DIRECTORY_SEPARATOR . '*') ?: [] as $file) {
+            if (is_file($file)) {
+                @unlink($file);
+            }
+        }
     }
 
     private static function ensureGeneratedDir(): void

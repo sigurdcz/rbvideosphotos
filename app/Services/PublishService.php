@@ -193,6 +193,8 @@ class PublishService
 
     public function publishSite(int $siteId, int $userId): array
     {
+        FrontendAssetManager::clearGeneratedAssets();
+
         $site  = $this->sites->findById($siteId);
         $pages = $this->pages->findPublishedBySite($siteId);
         $errors = [];
