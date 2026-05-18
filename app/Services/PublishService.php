@@ -14,6 +14,7 @@ use App\Repositories\RedirectRepository;
 use App\Repositories\SeoRepository;
 use App\Repositories\SiteRepository;
 use App\Repositories\TemplateRepository;
+use App\Services\LlmsTxtGenerator;
 use App\Services\ThemeTemplateRegistry;
 use App\Support\FrontendAssetManager;
 
@@ -223,6 +224,9 @@ class PublishService
 
         $robotsTxt = $this->robots->generate($site['domain']);
         file_put_contents($this->publishedDir . '/robots.txt', $robotsTxt);
+
+        $llmsTxt = (new LlmsTxtGenerator())->generate($site, $pages);
+        file_put_contents($this->publishedDir . '/llms.txt', $llmsTxt);
     }
 
     public function generateHtaccess(int $siteId): void

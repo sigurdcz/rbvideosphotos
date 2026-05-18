@@ -1,35 +1,29 @@
-# UKOL: SEO audit webu + dev tracking ID do .env.example
+# UKOL: Výzkum llms.txt + implementace pro web
 
 Datum: 2026-05-18
-Zadání: Technický SEO a performance audit rbvideosphotos.kvalitne.cz + doplnit dev tracking ID do .env.example.
+Zadání: Zjistit, zda existuje standard llms.txt pro AI/LLM (jako robots.txt pro crawlery) a případně ho implementovat.
 
 ## Kroky
 
-- [x] Fetch homepage a analýza HTML, obrázků, videí
-- [x] Fetch dalších stránek (portfolio, kontakt, ceník)
-- [x] Výstup: audit obrázků — seznam s návrhy optimalizace
-- [x] Výstup: audit videí a embedů
-- [x] Výstup: doporučení struktury homepage
-- [x] Aktualizovat .env.example — opravit GTM_ID (mělo G-BD4BS9R4JZ, správně GTM-542MMSL)
-- [x] Opravit injectSiteLogo — servírovat WebP přes picture element
-- [x] Commitnout změny
+- [x] Nastudovat llms.txt — co to je, kdo ho definoval, jak vypadá
+- [x] Zjistit, zda existují alternativy (ai.txt, llm-instructions.txt, atp.)
+- [x] Rozhodnout, co implementovat pro rbvideosphotos.kvalitne.cz
+- [x] Implementovat llms.txt do projektu
+- [x] Commitnout výsledek
 
 ## Poznámky
 
-Web běží na vlastním PHP CMS nasazeném na webzdarma.cz.
-URL: https://rbvideosphotos.kvalitne.cz/
-
-Dev tracking IDs z .env:
-- GA4_ID=G-BD4BS9R4JZ
-- GTM_ID=GTM-542MMSL
-- CLARITY_ID=wss3v71dbz
+- llms.txt navržen Jeremy Howardem (Answer.AI) v 2024, spec: <https://llmstxt.org/>
+- Alternativy: ai.txt (jiný standard, méně rozšířený), llms-full.txt (rozšířená verze)
+- Rozhodnutí: implementovat llms.txt (llmstxt.org spec) — jednoduchý Markdown se seznamem stránek
+- Generuje se při každém globálním publish (publishSite) vedle robots.txt a sitemap.xml
+- Servíruje se přes existující static file handler (index.php → storage/published/llms.txt)
+- ai.txt je jiná věc (meta značky pro AI crawlery) — neimplementováno, není nutné
 
 ## Výsledek
 
-- `.env.example` doplněn: GA4_ID, GTM_ID (opraven z chybné G-BD4BS9R4JZ na správnou GTM-542MMSL), CLARITY_ID
-- `public/index.php` — `injectSiteLogo` přepsán:
-  - Vyhledá WebP variantu loga z `media_variants` (přes `MediaRepository::findByStoragePath` + `variantsByMediaId`)
-  - Pokud WebP existuje, wrapper je `<picture><source type="image/webp">` + `<img fetchpriority="high" decoding="async">`
-  - Přidán `.site-logo-picture{display:contents}` do injektovaného CSS
-- Audit: viz výstup v konverzaci (PRIORITA 1/2/3 s konkrétními nálezy a doporučeními)
-- Commit: a8f3fe2
+- Nový soubor: `app/Services/LlmsTxtGenerator.php` — generuje /llms.txt dle llmstxt.org spec
+  (H1 název webu, blockquote popis, seznam stránek s URL a meta popisem, odkaz na sitemap)
+- `PublishService::regenerateSitemapAndRobots` — přidáno generování llms.txt
+- `public/index.php` a `.htaccess` — beze změny, .txt soubory se servírují automaticky
+- Soubor vznikne automaticky při nejbližším globálním publish webu
