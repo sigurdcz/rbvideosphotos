@@ -1207,15 +1207,40 @@ function buildVideoEmbedUrl(string $videoUrl): string
 
 function injectSiteLogo(string $html, array $site): string
 {
-    $logoUrl = normalizePublicAssetUrl((string)($site['logo_url'] ?? ''));
+    $rawLogoUrl = (string)($site['logo_url'] ?? '');
+    $logoUrl    = normalizePublicAssetUrl($rawLogoUrl);
     if ($logoUrl === '') {
         return $html;
     }
 
     $siteName = (string)($site['name'] ?? 'Web');
-    $safeUrl = htmlspecialchars($logoUrl, ENT_QUOTES);
+    $safeUrl  = htmlspecialchars($logoUrl, ENT_QUOTES);
     $safeName = htmlspecialchars($siteName, ENT_QUOTES);
-    $brandHtml = '<img class="site-logo-img" src="' . $safeUrl . '" alt="' . $safeName . '"><span class="site-logo-text">' . $safeName . '</span>';
+
+    $webpUrl  = '';
+    $siteId   = (int)($site['id'] ?? 0);
+    if ($siteId > 0 && !preg_match('~^https?://~i', $rawLogoUrl)) {
+        $storagePath = ltrim(str_replace('\\', '/', $rawLogoUrl), '/');
+        $mrepo = new MediaRepository();
+        $mediaRow = $mrepo->findByStoragePath($siteId, $storagePath);
+        if ($mediaRow) {
+            foreach ($mrepo->variantsByMediaId((int)$mediaRow['id']) as $v) {
+                if ($v['format'] === 'webp' && !empty($v['path'])) {
+                    $webpUrl = normalizePublicAssetUrl($v['path']);
+                    break;
+                }
+            }
+        }
+    }
+
+    $imgTag = '<img class="site-logo-img" src="' . $safeUrl . '" alt="' . $safeName . '" fetchpriority="high" decoding="async">';
+    if ($webpUrl !== '') {
+        $safeWebp  = htmlspecialchars($webpUrl, ENT_QUOTES);
+        $brandHtml = '<picture class="site-logo-picture"><source srcset="' . $safeWebp . '" type="image/webp">' . $imgTag . '</picture>'
+                   . '<span class="site-logo-text">' . $safeName . '</span>';
+    } else {
+        $brandHtml = $imgTag . '<span class="site-logo-text">' . $safeName . '</span>';
+    }
 
     $html = preg_replace_callback(
         '~(<a\b(?=[^>]*\bclass=(["\'])(?=[^"\']*(?:theme-brand|brand|pf-nav-logo|pl-nav-logo))[^"\']*\2)[^>]*>).*?(</a>)~is',
@@ -1225,6 +1250,7 @@ function injectSiteLogo(string $html, array $site): string
 
     $style = <<<'HTML'
 <style data-cms-site-logo>
+.site-logo-picture{display:contents}
 .site-logo-img{display:block;max-height:44px;max-width:120px;width:auto;height:auto;object-fit:contain}
 .site-logo-text{display:inline-block;margin-left:10px;color:inherit;font:inherit;letter-spacing:inherit;text-transform:inherit;line-height:1}
 </style>
