@@ -803,11 +803,11 @@ body.theme-jemna-bezova {
 .theme-jemna-bezova .hp-blog-title,
 .theme-jemna-bezova .bl-title {
   font-size: 2rem;
-  color: var(--jb-brown);
+  color: var(--jb-brown) !important;
 }
 
 .theme-jemna-bezova .hp-blog-excerpt {
-  color: var(--theme-muted);
+  color: var(--theme-muted) !important;
 }
 
 .theme-jemna-bezova .blog-title-link {
@@ -1005,7 +1005,7 @@ body.theme-jemna-bezova {
 .theme-jemna-bezova .hp-faq-item strong,
 .theme-jemna-bezova .faq-q {
   display: block;
-  min-height: 4.5rem;
+  min-height: 6rem;
   color: var(--jb-brown);
   font-family: "Cormorant Garamond", Georgia, serif;
   font-size: 2rem;
@@ -1668,7 +1668,7 @@ body.theme-jemna-bezova.jb-nav-open {
 .theme-jemna-bezova .jb-process__steps::before {
   content: "";
   position: absolute;
-  top: 29px;
+  top: 55px;
   left: 10%;
   right: 10%;
   height: 1px;

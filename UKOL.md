@@ -1,27 +1,20 @@
-# UKOL: Homepage UI opravy — jemna bezova
+# UKOL: Homepage UI — blog bílý text, FAQ HR, process linka
 
 Datum: 2026-05-18
-Zadání: Opravit 5 vizuálních chyb na homepage šablony jemna-bezova (blog karty, FAQ, recenze, process linka).
+Zadání: Opravit 3 přetrvávající vizuální chyby na homepage jemna-bezova: bílý text v blog kartách, nekonzistentní HR v FAQ, špatná pozice čáry v sekci Jak to probíhá.
 
 ## Kroky
 
-- [x] Blog karty — opravit bílý text (přidat color: var(--jb-brown) pro title, var(--theme-muted) pro excerpt)
-- [x] Blog karty — připevnit "Číst dál" na spodek karty (flex layout na .hp-blog-body, margin-top: auto na .hp-blog-link)
-- [x] FAQ — HR oddělovač na stejné výšce pro všechny karty (min-height na .hp-faq-question, flex na .hp-faq-item)
-- [x] Recenze — zarovnat hvězdičky, text, autora na stejnou pozici (flex layout na .hp-review-card, flex:1 na p)
-- [x] Process linka — opravit pozici (top: 29px místo 28px) a zvýšit viditelnost (opacity: .45 místo .28)
-- [x] Commitnout výsledek
+- [x] Blog karty — opravit inline CSS v HomepageContentService.php (flex na .hp-blog-body, odebrat color:#fff)
+- [x] Blog karty — theme.css: přidat !important na color overrides aby prorazily inline CSS
+- [x] FAQ — navýšit min-height na .hp-faq-question pro konzistentní pozici HR
+- [x] Process linka — změnit top: 29px → top: 55px (uživatel potvrdil)
+- [ ] Commitnout výsledek
 
 ## Poznámky
 
-- Konflikt: HomepageContentService.php generuje inline CSS s color:#fff pro dark theme, ale jemna-bezova přepisuje background na světlý — text byl neviditelný
-- Fixes jsou v theme.css, inline CSS v HomepageContentService.php zůstává (platí pro ostatní tmavé šablony)
+- HR v FAQ se vkládá přes JS (theme.js řádek 297-299) za .hp-faq-question
+- inline `<style>` v PHP je generován s specificitem 0,1,0 vs theme.css 0,2,0 — ale !important zaručí override
+- top: 55px confirmed by user testing
 
 ## Výsledek
-
-Opraveno 5 vizuálních chyb v Templates/jemna-bezova/assets/theme.css:
-
-- Blog karty mají čitelný tmavý text a tlačítko přichycené ke spodku
-- FAQ HR oddělovač je na konzistentní výšce díky min-height na nadpisu
-- Recenze jsou zarovnány přes flex layout
-- Process linka je správně vycentrována a viditelnější

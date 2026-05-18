@@ -471,10 +471,10 @@ HTML;
             . '.hp-blog-card{background:#1b1b1f;border-radius:14px;overflow:hidden;box-shadow:0 14px 30px rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.06)}'
             . '.hp-blog-thumb{height:200px;background:#0e0e11;overflow:hidden}'
             . '.hp-blog-thumb img{width:100%;height:100%;object-fit:cover;display:block}'
-            . '.hp-blog-body{padding:20px}'
+            . '.hp-blog-body{padding:20px;display:flex;flex-direction:column;height:100%}'
             . '.hp-blog-title{margin:0 0 10px;font-size:1rem;color:#fff;line-height:1.35}'
-            . '.hp-blog-excerpt{color:rgba(255,255,255,.65);font-size:.875rem;line-height:1.55;margin:0 0 16px}'
-            . '.hp-blog-link{color:#c4963c;font-weight:700;font-size:.875rem;text-decoration:none}'
+            . '.hp-blog-excerpt{color:rgba(255,255,255,.65);font-size:.875rem;line-height:1.55;margin:0 0 16px;flex:1}'
+            . '.hp-blog-link{color:#c4963c;font-weight:700;font-size:.875rem;text-decoration:none;margin-top:auto}'
             . '</style>';
 
         return $css . '<article class="hp-blog-card">'
