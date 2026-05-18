@@ -62,8 +62,16 @@ DB_PASS=
 | Promenna | Popis |
 |---|---|
 | `APP_URL` | Verejná URL aplikace. Pokud zacina `https://`, session cookie dostane `Secure` flag automaticky. |
+| `APP_DEBUG` | `true` v lokalu, `false` na produkci. |
 | `MIGRATE_TOKEN` | Token pro `migrate-util.php`. Nesmí byt hardcoded — generuj nahodne. |
 | `API_KEY` | Klic pro `/api/v1/*` endpointy. |
+| `GA4_ID` | Google Analytics 4 — ID měření (G-XXXXXXXXXX). |
+| `GTM_ID` | Google Tag Manager — ID kontejneru (GTM-XXXXXXX). |
+| `CLARITY_ID` | Microsoft Clarity — ID projektu. |
+| `META_PIXEL_ID` | Meta Pixel — ID pixelu (volitelne). |
+| `FTP_HOST` / `FTP_USER` / `FTP_PASS` | Pristupove udaje pro deploy pres FTP. |
+
+Tracking kody (GA4, GTM, Clarity, Meta Pixel) se injektuji az po souhlasu s cookies pres `cookie-consent-runtime.js` — nikdy se nenacitaji blokovane.
 
 ## Prvotni spusteni
 
@@ -165,13 +173,25 @@ Endpointy `SetupController` a `SettingsController` vyzaduji roli `admin`.
 REST API je dostupne na `/api/v1/*` s autentizaci pres `X-Api-Key` nebo `Authorization: Bearer` header.
 
 ```text
-GET /api/v1/articles
-GET /api/v1/articles/{slug}
-GET /api/v1/portfolio
-GET /api/v1/portfolio/{slug}
+GET    /api/v1/articles
+POST   /api/v1/articles
+GET    /api/v1/articles/{slug}
+PUT    /api/v1/articles/{slug}
+DELETE /api/v1/articles/{slug}
+
+GET    /api/v1/portfolio
+POST   /api/v1/portfolio
+GET    /api/v1/portfolio/{slug}
+PUT    /api/v1/portfolio/{slug}
+DELETE /api/v1/portfolio/{slug}
+
+POST   /api/v1/media            multipart/form-data; pole: file, alt_text, title
+DELETE /api/v1/media/{id}
 ```
 
-`API_KEY` se nastavuje v `.env`.
+Write operace (POST/PUT/DELETE) maji stejne vedlejsi efekty jako admin UI — synchronizace homepage bloku, publikovani statickeho HTML, generovani obrazkovych variant. PUT je parcialni: chybejici pole zustanou na aktualni hodnote z DB. Duplicitni slug vraci `409 Conflict`.
+
+`API_KEY` se nastavuje v `.env`. Detailni dokumentaci endpointu vcetne vsech polí najdes v admin panelu pod `Nastaveni → API`.
 
 ## Nasazeni
 
@@ -180,6 +200,13 @@ GET /api/v1/portfolio/{slug}
 - Deploy probiha pres GitHub Actions a FTP
 - `.env` se nedeployuje
 - `storage/media` se nedeployuje jako soucast buildu
+
+## Media a obrazky
+
+- Nahrane obrazky se zpracovavaji pres `MediaIngestionService`: detekce MIME, validace velikosti, presun souboru, zapis do DB
+- Automaticky se generuji varianty: `webp` (plna velikost), `thumb` (max 300 px), `medium` (max 900 px)
+- Logo webu se servuje pres `<picture><source type="image/webp">` — WebP varianta se vyhledava automaticky z `media_variants`
+- Vsechna media na frontendu pouzivaji root-relative cesty (`/storage/media/...`), nikdy natvrdo ulozenou domenu
 
 ## Poznamky k portfoliu
 

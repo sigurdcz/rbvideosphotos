@@ -12,7 +12,7 @@ Zadání: Technický SEO a performance audit rbvideosphotos.kvalitne.cz + doplni
 - [x] Výstup: doporučení struktury homepage
 - [x] Aktualizovat .env.example — opravit GTM_ID (mělo G-BD4BS9R4JZ, správně GTM-542MMSL)
 - [x] Opravit injectSiteLogo — servírovat WebP přes picture element
-- [ ] Commitnout změny
+- [x] Commitnout změny
 
 ## Poznámky
 
@@ -32,3 +32,4 @@ Dev tracking IDs z .env:
   - Pokud WebP existuje, wrapper je `<picture><source type="image/webp">` + `<img fetchpriority="high" decoding="async">`
   - Přidán `.site-logo-picture{display:contents}` do injektovaného CSS
 - Audit: viz výstup v konverzaci (PRIORITA 1/2/3 s konkrétními nálezy a doporučeními)
+- Commit: a8f3fe2
