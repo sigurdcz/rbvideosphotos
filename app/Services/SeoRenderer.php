@@ -11,6 +11,8 @@ class SeoRenderer
         if (!empty($seo['robots_follow'])) $robots[] = 'follow'; else $robots[] = 'nofollow';
 
         $lines = [];
+        $gtmHead = $this->renderGtmHead($site);
+        if ($gtmHead !== '') $lines[] = $gtmHead;
 
         if (!empty($seo['meta_title'])) {
             $lines[] = '<title>' . $this->e($seo['meta_title']) . '</title>';
@@ -70,8 +72,10 @@ class SeoRenderer
 
     public function renderBodyScripts(array $site): string
     {
-        if (empty($site['body_scripts'])) return '';
-        return $site['body_scripts'];
+        $noscript = $this->renderGtmNoscript($site);
+        $custom   = trim((string)($site['body_scripts'] ?? ''));
+        $parts    = array_filter([$noscript, $custom]);
+        return implode("\n", $parts);
     }
 
     public function renderTrackingRuntime(array $site): string
@@ -119,6 +123,34 @@ class SeoRenderer
         return <<<HTML
 <meta name="cms-tracking-config" content="{$encoded}">
 <script src="/assets/tracking.js" defer></script>
+HTML;
+    }
+
+    private function renderGtmHead(array $site): string
+    {
+        $id = trim((string)($site['google_tag_manager_id'] ?? ''));
+        if ($id === '') return '';
+        $eid = $this->e($id);
+        return <<<HTML
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','{$eid}');</script>
+<!-- End Google Tag Manager -->
+HTML;
+    }
+
+    private function renderGtmNoscript(array $site): string
+    {
+        $id = trim((string)($site['google_tag_manager_id'] ?? ''));
+        if ($id === '') return '';
+        $eid = $this->e($id);
+        return <<<HTML
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id={$eid}" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
 HTML;
     }
 

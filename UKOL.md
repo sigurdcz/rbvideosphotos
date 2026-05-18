@@ -1,21 +1,21 @@
-# UKOL: Fix analytics/tracking issues — inline JS, duplicate runtime, encoding
+# UKOL: Inject GTM snippet do head tak, aby ho Google naslo
 
 Datum: 2026-05-18
-Zadání: Opravit tři problémy s cookie consent a tracking skriptem: velký inline JS blok ve zdrojáku, duplicitní injektování runtime skriptu a garbled znaky v tracking.js.
+Zadání: Google checker hlásí "značka nenalezena" — GTM se načítá až po souhlasu, ale Google ho musí vidět přímo v HTML. Přesunout GTM snippet do head (unconditionally), GA4/Pixel nechat za consentem.
 
 ## Kroky
 
-- [ ] Opravit check duplikátního runtime v injectCookieConsent() — cmsCookieConsentSettings → cookie-consent-runtime.js
-- [ ] Odstranit inline `script[data-cookie-consent-script]` blok z index.php (330+ řádků)
-- [ ] Opravit box-drawing Unicode znaky v tracking.js na plain ASCII
+- [ ] Přečíst SeoRenderer.php a cookie-consent-runtime.js — pochopit stávající implementaci
+- [ ] Přidat renderGtmHead() a renderGtmNoscript() do SeoRenderer
+- [ ] Injektovat GTM head snippet do `</head>` v SeoRenderer::render() nebo v index.php
+- [ ] Injektovat GTM noscript snippet hned za `<body>`
+- [ ] Odebrat GTM z dynamického načítání v cookie-consent-runtime.js
 - [ ] Commitnout výsledek
 
 ## Poznámky
 
-- Inline JS blok v $consent heredoc (řádky 287-618 index.php) duplikuje /assets/cookie-consent.js
-- injectSharedFrontendAssets() už načítá cookie-consent.js přes data-cookie-consent-js marker
-- Inline blok má jiný marker (data-cookie-consent-script) — deduplikace nefunguje → JS běží dvakrát
-- str_contains($html, 'cmsCookieConsentSettings') nikdy nesedí — správná kontrola je 'cookie-consent-runtime.js'
-- tracking.js má Unicode ── znaky v komentářích, webzdarma je servuje bez charset=UTF-8 → garbled výstup
+- GTM je kontejner pro správu consent — má být vždy přítomen v head
+- GA4, Clarity, Meta Pixel zůstávají za consentem v cookie-consent-runtime.js
+- GTM noscript musí jít hned za `<body>`, ne ke konci body
 
 ## Výsledek

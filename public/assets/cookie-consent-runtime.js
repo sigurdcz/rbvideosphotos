@@ -116,20 +116,6 @@
     gtag('config', id);
   }
 
-  function loadGoogleTagManager(){
-    var id = (settings.googleTagManagerId || '').trim();
-    if (!id || window.__tagManagerLoaded || !canLoadMarketing()) return;
-    window.__tagManagerLoaded = true;
-    (function(w,d,s,l,i){
-      w[l]=w[l]||[];
-      w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});
-      var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';
-      j.async=true;
-      j.src='https://www.googletagmanager.com/gtm.js?id='+encodeURIComponent(i)+dl;
-      f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer',id);
-  }
-
   function loadClarity(){
     var id = (settings.clarityId || '').trim();
     if (!id || window.__clarityLoaded || !canLoadAnalytics()) return;
@@ -167,7 +153,6 @@
 
   function loadMarketingScripts(){
     if (!canLoadMarketing()) return;
-    loadGoogleTagManager();
     loadMetaPixel();
     appendHtml(settings.marketingHeadScripts || '', 'head', '__marketingHeadScriptsLoaded');
     appendHtml(settings.marketingBodyScripts || '', 'body', '__marketingBodyScriptsLoaded');
@@ -179,7 +164,7 @@
     if (!preferences.analytics && id) window['ga-disable-' + id] = true;
     if (
       (!preferences.analytics && (window.__analyticsLoaded || window.__analyticsHeadScriptsLoaded || window.__analyticsBodyScriptsLoaded)) ||
-      (!preferences.marketing && (window.__tagManagerLoaded || window.__marketingHeadScriptsLoaded || window.__marketingBodyScriptsLoaded))
+      (!preferences.marketing && (window.__metaPixelLoaded || window.__marketingHeadScriptsLoaded || window.__marketingBodyScriptsLoaded))
     ) {
       window.location.reload();
     }
