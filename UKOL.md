@@ -1,29 +1,21 @@
-# UKOL: Update README a ARCHITECTURE.md
+# UKOL: Fix analytics/tracking issues — inline JS, duplicate runtime, encoding
 
 Datum: 2026-05-18
-Zadání: Aktualizovat README.md a ARCHITECTURE.md o vše co přibylo — téma systém, minifikátor, llms.txt, tracking, settings bug fix.
+Zadání: Opravit tři problémy s cookie consent a tracking skriptem: velký inline JS blok ve zdrojáku, duplicitní injektování runtime skriptu a garbled znaky v tracking.js.
 
 ## Kroky
 
-- [x] Aktualizovat README.md
-- [x] Aktualizovat ARCHITECTURE.md
-- [x] Commitnout výsledek
+- [ ] Opravit check duplikátního runtime v injectCookieConsent() — cmsCookieConsentSettings → cookie-consent-runtime.js
+- [ ] Odstranit inline `script[data-cookie-consent-script]` blok z index.php (330+ řádků)
+- [ ] Opravit box-drawing Unicode znaky v tracking.js na plain ASCII
+- [ ] Commitnout výsledek
 
 ## Poznámky
 
-Co přibylo od posledního update:
-
-- Templates/ adresář — 5 šablon (jemna-bezova, soft-memories, modern-atelier, minimal-dark, editorial-gold)
-- ThemeTemplateRegistry — správa šablon témat
-- app/Support/AssetMinifier.php — regex minifikátor CSS/JS
-- app/Support/FrontendAssetManager.php — zapisuje minifikované CSS/JS do public/assets/generated/
-- app/Services/LlmsTxtGenerator.php — generuje /llms.txt dle llmstxt.org spec
-- PublishService — při publishování čistí generated/ a generuje llms.txt
-- tracking.js — konverze bez /dekujeme: ?sent=1 detekce, generate_lead GA4, fbq Contact pro social
-- SiteRepository — SHOW COLUMNS místo information_schema, +6 tracking sloupců
-- DB: tabulky reviews, faq_items, service_items, contact_info, blog_media (chybí v docs)
+- Inline JS blok v $consent heredoc (řádky 287-618 index.php) duplikuje /assets/cookie-consent.js
+- injectSharedFrontendAssets() už načítá cookie-consent.js přes data-cookie-consent-js marker
+- Inline blok má jiný marker (data-cookie-consent-script) — deduplikace nefunguje → JS běží dvakrát
+- str_contains($html, 'cmsCookieConsentSettings') nikdy nesedí — správná kontrola je 'cookie-consent-runtime.js'
+- tracking.js má Unicode ── znaky v komentářích, webzdarma je servuje bez charset=UTF-8 → garbled výstup
 
 ## Výsledek
-
-README.md: přidána sekce Témata, CSS/JS minifikace, /llms.txt, konverzní tracking, public/assets/generated/ v adresářové struktuře, app/Support/ namespace.
-ARCHITECTURE.md: přidány tabulky (faq_items, service_items, contact_info, reviews, blog_media), sekce Témata, CSS/JS minifikace, konverzní tracking; klíčové sloupce sites; všechny tabulky přepsány do compact formátu, code blocky dostaly language identifikátor.

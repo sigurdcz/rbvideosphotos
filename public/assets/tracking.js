@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  // ── Polyfill Element.closest for IE11 ──────────────────────────────────────
+  // Polyfill Element.closest for IE11
   if (typeof Element !== 'undefined' && !Element.prototype.closest) {
     Element.prototype.closest = function (sel) {
       var el = this;
@@ -13,7 +13,7 @@
     };
   }
 
-  // ── Read tracking config from meta tag ────────────────────────────────────
+  // Read tracking config from meta tag
   var configMeta = document.querySelector('meta[name="cms-tracking-config"]');
   var config = {};
   if (configMeta && configMeta.content) {
@@ -25,7 +25,7 @@
   var debug           = config.trackingDebug === true;
   var events          = config.trackingEvents || {};
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
+  // Helpers
   function log() {
     if (!debug || !window.console) return;
     var args = ['[AppTracking]'].concat(Array.prototype.slice.call(arguments));
@@ -92,11 +92,11 @@
         }
       }
     } catch (e) {
-      // fail silently — never crash
+      // fail silently - never crash
     }
   }
 
-  // ── Event: phone click ─────────────────────────────────────────────────────
+  // Event: phone click
   function setupPhoneClick() {
     document.addEventListener('click', function (e) {
       var target = e.target;
@@ -106,7 +106,7 @@
     });
   }
 
-  // ── Event: email click ─────────────────────────────────────────────────────
+  // Event: email click
   function setupEmailClick() {
     document.addEventListener('click', function (e) {
       var target = e.target;
@@ -117,7 +117,7 @@
     });
   }
 
-  // ── Event: CTA click via data attributes ──────────────────────────────────
+  // Event: CTA click via data attributes
   function setupCtaClick() {
     document.addEventListener('click', function (e) {
       var target = e.target;
@@ -129,7 +129,7 @@
     });
   }
 
-  // ── Event: social click ────────────────────────────────────────────────────
+  // Event: social click
   var socialDomains = [
     { domain: 'instagram.com',  name: 'instagram' },
     { domain: 'facebook.com',   name: 'facebook'  },
@@ -156,7 +156,7 @@
     });
   }
 
-  // ── Event: form submit ────────────────────────────────────────────────────
+  // Event: form submit
   function setupFormSubmit() {
     document.addEventListener('submit', function (e) {
       var form = e.target;
@@ -171,7 +171,7 @@
     });
   }
 
-  // ── Event: thank-you page / ?sent=1 ──────────────────────────────────────
+  // Event: thank-you page / ?sent=1
   function setupThankYouPage() {
     var path   = window.location.pathname;
     var search = window.location.search;
@@ -182,7 +182,7 @@
     }
   }
 
-  // ── Event: gallery open ───────────────────────────────────────────────────
+  // Event: gallery open
   function setupGalleryOpen() {
     var tracked = false;
     document.addEventListener('click', function (e) {
@@ -197,7 +197,7 @@
     });
   }
 
-  // ── Event: video play ─────────────────────────────────────────────────────
+  // Event: video play
   function setupVideoPlay() {
     var tracked = false;
 
@@ -233,7 +233,7 @@
     });
   }
 
-  // ── Event: pricing click ──────────────────────────────────────────────────
+  // Event: pricing click
   function setupPricingClick() {
     document.addEventListener('click', function (e) {
       var target = e.target;
@@ -247,7 +247,7 @@
     });
   }
 
-  // ── Event: scroll 90% ─────────────────────────────────────────────────────
+  // Event: scroll 90%
   function setupScroll90() {
     var tracked = false;
     window.addEventListener('scroll', function () {
@@ -261,7 +261,7 @@
     }, { passive: true });
   }
 
-  // ── Init ──────────────────────────────────────────────────────────────────
+  // Init
   function init() {
     if (!enabled) {
       log('AppTracking: globally disabled, skipping init');
@@ -283,7 +283,7 @@
     if (events.lead_thank_you_page !== false) setupThankYouPage();
   }
 
-  // ── Public API ────────────────────────────────────────────────────────────
+  // Public API
   window.AppTracking = {
     init:        init,
     canTrack:    canTrack,
