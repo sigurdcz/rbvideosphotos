@@ -22,12 +22,12 @@ class BlogSyncService
             if (isset($posts[$i])) {
                 $post    = $posts[$i];
                 $excerpt = mb_strimwidth(strip_tags((string)($post['excerpt'] ?? '')), 0, 120, '…');
-                $content = '<h3 style="margin:0 0 10px;font-size:1rem;color:#fff;line-height:1.35">'
-                    . '<a href="/' . $h($post['slug']) . '" style="color:inherit;text-decoration:none">'
+                $content = '<div class="hp-blog-body">'
+                    . '<h3 class="hp-blog-title"><a href="/' . $h($post['slug']) . '" class="blog-title-link">'
                     . $h($post['title']) . '</a></h3>'
-                    . '<p style="color:rgba(255,255,255,.65);font-size:.875rem;line-height:1.55;margin:0 0 16px">'
-                    . $h($excerpt) . '</p>'
-                    . '<a href="/' . $h($post['slug']) . '" style="color:#c4963c;font-weight:700;font-size:.875rem">&#268;&#237;st d&#225;l &rarr;</a>';
+                    . '<p class="hp-blog-excerpt">' . $h($excerpt) . '</p>'
+                    . '<a href="/' . $h($post['slug']) . '" class="hp-blog-link">&#268;&#237;st d&#225;l &rarr;</a>'
+                    . '</div>';
             } else {
                 $content = '';
             }
