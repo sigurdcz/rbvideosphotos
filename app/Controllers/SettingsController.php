@@ -63,6 +63,12 @@ class SettingsController extends Controller
             'default_hero_video_url' => trim($_POST['default_hero_video_url'] ?? ''),
             'default_hero_poster_url'=> trim($_POST['default_hero_poster_url'] ?? ''),
             'video_overlay_opacity'  => $videoOverlayOpacity,
+            'tracking_enabled'       => isset($_POST['tracking_enabled']) ? 1 : 0,
+            'tracking_require_consent'=> isset($_POST['tracking_require_consent']) ? 1 : 0,
+            'tracking_debug'         => isset($_POST['tracking_debug']) ? 1 : 0,
+            'clarity_id'             => trim($_POST['clarity_id'] ?? ''),
+            'meta_pixel_id'          => trim($_POST['meta_pixel_id'] ?? ''),
+            'tracking_events_json'   => $this->buildTrackingEventsJson(),
         ];
 
         if ($site) {
@@ -73,5 +79,19 @@ class SettingsController extends Controller
 
         $this->flash('success', 'Nastavení webu uloženo.');
         $this->redirect('/admin/settings');
+    }
+
+    private function buildTrackingEventsJson(): string
+    {
+        $eventKeys = [
+            'lead_form_submit', 'lead_thank_you_page', 'phone_click',
+            'email_click', 'cta_click', 'social_click', 'gallery_open',
+            'video_play', 'pricing_click', 'scroll_90',
+        ];
+        $result = [];
+        foreach ($eventKeys as $key) {
+            $result[$key] = isset($_POST['tracking_event_' . $key]);
+        }
+        return (string) json_encode($result);
     }
 }

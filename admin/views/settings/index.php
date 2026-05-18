@@ -267,6 +267,83 @@ ob_start();
     </div>
   </div>
 
+  <?php
+    $trackingEventsDefault = [
+      'lead_form_submit' => true, 'lead_thank_you_page' => true,
+      'phone_click' => true, 'email_click' => true, 'cta_click' => true,
+      'social_click' => true, 'gallery_open' => true, 'video_play' => true,
+      'pricing_click' => true, 'scroll_90' => true,
+    ];
+    $trackingEventsRaw = trim((string)($site['tracking_events_json'] ?? ''));
+    $trackingEvents = $trackingEventsDefault;
+    if ($trackingEventsRaw !== '') {
+      $dec = json_decode($trackingEventsRaw, true);
+      if (is_array($dec)) $trackingEvents = array_merge($trackingEventsDefault, $dec);
+    }
+    $trackingEventLabels = [
+      'lead_form_submit'   => 'Odeslani kontaktniho formulare',
+      'lead_thank_you_page'=> 'Navsteva stranky /dekujeme (hlavni konverze)',
+      'phone_click'        => 'Klik na telefonni cislo',
+      'email_click'        => 'Klik na e-mailovou adresu',
+      'cta_click'          => 'Klik na CTA tlacitko (data-track-event)',
+      'social_click'       => 'Klik na socialni site (Instagram, FB, YouTube...)',
+      'gallery_open'       => 'Otevreni polozky galerie / portfolia',
+      'video_play'         => 'Prehrani videa (prvni spusteni)',
+      'pricing_click'      => 'Klik na cenovou kartu',
+      'scroll_90'          => 'Scrollovani 90 % stranky',
+    ];
+  ?>
+  <div class="card">
+    <div class="card-title">Tracking / Konverze</div>
+    <p class="help-text" style="margin-bottom:16px">
+      Centralni nastaveni merenı konverzı a analytickych eventu. Tracking se spustı pouze
+      kdyz je zapnuty a (pokud je vyzadovan souhlas) uzivatel odsouhlasil Analytics cookies.
+    </p>
+
+    <div class="form-group" style="display:flex;gap:32px;flex-wrap:wrap;margin-bottom:16px">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600">
+        <input type="checkbox" name="tracking_enabled" value="1" <?= !empty($site['tracking_enabled']) || !isset($site['tracking_enabled']) ? 'checked' : '' ?>>
+        Tracking povolen
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600">
+        <input type="checkbox" name="tracking_require_consent" value="1" <?= !isset($site['tracking_require_consent']) || !empty($site['tracking_require_consent']) ? 'checked' : '' ?>>
+        Vyzadovat souhlas uzivatele (GDPR)
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <input type="checkbox" name="tracking_debug" value="1" <?= !empty($site['tracking_debug']) ? 'checked' : '' ?>>
+        Debug mod (loguje do konzole)
+      </label>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Microsoft Clarity ID</label>
+        <input type="text" name="clarity_id" value="<?= $h($site['clarity_id'] ?? '') ?>" placeholder="xxxxxxxxxx" style="font-family:monospace">
+        <p class="help-text">Najdes na clarity.microsoft.com → Nastaveni projektu. Spusti se s Analytics consent.</p>
+      </div>
+      <div class="form-group">
+        <label>Meta Pixel ID</label>
+        <input type="text" name="meta_pixel_id" value="<?= $h($site['meta_pixel_id'] ?? '') ?>" placeholder="000000000000000" style="font-family:monospace">
+        <p class="help-text">Najdes v Meta Events Manager → Datove zdroje. Spusti se s Marketing consent.</p>
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-top:8px">
+      <label style="font-weight:600;display:block;margin-bottom:10px">Merene eventy</label>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:8px">
+        <?php foreach ($trackingEventLabels as $key => $label): ?>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 10px;border:1px solid var(--c-border);border-radius:8px;background:var(--c-bg)">
+          <input type="checkbox" name="tracking_event_<?= $h($key) ?>" value="1" <?= !empty($trackingEvents[$key]) ? 'checked' : '' ?>>
+          <span>
+            <span style="display:block;font-size:13px;font-weight:500"><?= $h($label) ?></span>
+            <span style="display:block;font-size:11px;color:var(--c-muted);font-family:monospace"><?= $h($key) ?></span>
+          </span>
+        </label>
+        <?php endforeach; ?>
+      </div>
+    </div>
+  </div>
+
   <div class="card">
     <div class="card-title">Layout webu (spolecna hlavicka a paticka)</div>
     <p class="help-text" style="margin-bottom:16px">

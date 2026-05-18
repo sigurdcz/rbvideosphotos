@@ -60,6 +60,7 @@ class SeoRenderer
         }
 
         $lines[] = $this->renderConsentRuntime($site);
+        $lines[] = $this->renderTrackingRuntime($site);
         if (!empty($site['head_scripts'])) {
             $lines[] = $site['head_scripts'];
         }
@@ -71,6 +72,54 @@ class SeoRenderer
     {
         if (empty($site['body_scripts'])) return '';
         return $site['body_scripts'];
+    }
+
+    public function renderTrackingRuntime(array $site): string
+    {
+        $trackingEnabled = (int)($site['tracking_enabled'] ?? 1) === 1;
+        if (!$trackingEnabled) {
+            return '';
+        }
+
+        $defaultEvents = [
+            'lead_form_submit'   => true,
+            'lead_thank_you_page'=> true,
+            'phone_click'        => true,
+            'email_click'        => true,
+            'cta_click'          => true,
+            'social_click'       => true,
+            'gallery_open'       => true,
+            'video_play'         => true,
+            'pricing_click'      => true,
+            'scroll_90'          => true,
+        ];
+
+        $eventsRaw = (string)($site['tracking_events_json'] ?? '');
+        $events = $defaultEvents;
+        if ($eventsRaw !== '') {
+            $decoded = json_decode($eventsRaw, true);
+            if (is_array($decoded)) {
+                $events = array_merge($defaultEvents, $decoded);
+            }
+        }
+
+        $config = [
+            'trackingEnabled'       => true,
+            'trackingRequireConsent'=> (int)($site['tracking_require_consent'] ?? 1) === 1,
+            'trackingDebug'         => (int)($site['tracking_debug'] ?? 0) === 1,
+            'trackingEvents'        => $events,
+        ];
+
+        $json = json_encode($config, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
+        if ($json === false) {
+            $json = '{}';
+        }
+
+        $encoded = htmlspecialchars($json, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        return <<<HTML
+<meta name="cms-tracking-config" content="{$encoded}">
+<script src="/assets/tracking.js" defer></script>
+HTML;
     }
 
     private function e(string $v): string
@@ -90,6 +139,8 @@ class SeoRenderer
             'analyticsBodyScripts' => (string)($site['analytics_body_scripts'] ?? ''),
             'marketingHeadScripts' => (string)($site['marketing_head_scripts'] ?? ''),
             'marketingBodyScripts' => (string)($site['marketing_body_scripts'] ?? ''),
+            'clarityId' => trim((string)($site['clarity_id'] ?? '')),
+            'metaPixelId' => trim((string)($site['meta_pixel_id'] ?? '')),
         ];
 
         $json = json_encode($settings, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
