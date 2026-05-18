@@ -11,8 +11,6 @@ class SeoRenderer
         if (!empty($seo['robots_follow'])) $robots[] = 'follow'; else $robots[] = 'nofollow';
 
         $lines = [];
-        $gtmHead = $this->renderGtmHead($site);
-        if ($gtmHead !== '') $lines[] = $gtmHead;
 
         if (!empty($seo['meta_title'])) {
             $lines[] = '<title>' . $this->e($seo['meta_title']) . '</title>';
@@ -72,10 +70,8 @@ class SeoRenderer
 
     public function renderBodyScripts(array $site): string
     {
-        $noscript = $this->renderGtmNoscript($site);
-        $custom   = trim((string)($site['body_scripts'] ?? ''));
-        $parts    = array_filter([$noscript, $custom]);
-        return implode("\n", $parts);
+        if (empty($site['body_scripts'])) return '';
+        return $site['body_scripts'];
     }
 
     public function renderTrackingRuntime(array $site): string
@@ -126,34 +122,6 @@ class SeoRenderer
 HTML;
     }
 
-    private function renderGtmHead(array $site): string
-    {
-        $id = trim((string)($site['google_tag_manager_id'] ?? ''));
-        if ($id === '') return '';
-        $eid = $this->e($id);
-        return <<<HTML
-<!-- Google Tag Manager -->
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','{$eid}');</script>
-<!-- End Google Tag Manager -->
-HTML;
-    }
-
-    private function renderGtmNoscript(array $site): string
-    {
-        $id = trim((string)($site['google_tag_manager_id'] ?? ''));
-        if ($id === '') return '';
-        $eid = $this->e($id);
-        return <<<HTML
-<!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id={$eid}" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<!-- End Google Tag Manager (noscript) -->
-HTML;
-    }
-
     private function e(string $v): string
     {
         return htmlspecialchars($v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
@@ -162,17 +130,16 @@ HTML;
     public function renderConsentRuntime(array $site): string
     {
         $settings = [
-            'cookieConsentEnabled' => (int)($site['cookie_consent_enabled'] ?? 1) === 1,
+            'cookieConsentEnabled'     => (int)($site['cookie_consent_enabled'] ?? 1) === 1,
             'analyticsCategoryEnabled' => (int)($site['cookie_consent_analytics_enabled'] ?? 1) === 1,
             'marketingCategoryEnabled' => (int)($site['cookie_consent_marketing_enabled'] ?? 1) === 1,
-            'googleAnalyticsId' => trim((string)($site['google_analytics_id'] ?? '')),
-            'googleTagManagerId' => trim((string)($site['google_tag_manager_id'] ?? '')),
-            'analyticsHeadScripts' => (string)($site['analytics_head_scripts'] ?? ''),
-            'analyticsBodyScripts' => (string)($site['analytics_body_scripts'] ?? ''),
-            'marketingHeadScripts' => (string)($site['marketing_head_scripts'] ?? ''),
-            'marketingBodyScripts' => (string)($site['marketing_body_scripts'] ?? ''),
-            'clarityId' => trim((string)($site['clarity_id'] ?? '')),
-            'metaPixelId' => trim((string)($site['meta_pixel_id'] ?? '')),
+            'googleAnalyticsId'        => trim((string)($site['google_analytics_id'] ?? '')),
+            'analyticsHeadScripts'     => (string)($site['analytics_head_scripts'] ?? ''),
+            'analyticsBodyScripts'     => (string)($site['analytics_body_scripts'] ?? ''),
+            'marketingHeadScripts'     => (string)($site['marketing_head_scripts'] ?? ''),
+            'marketingBodyScripts'     => (string)($site['marketing_body_scripts'] ?? ''),
+            'clarityId'                => trim((string)($site['clarity_id'] ?? '')),
+            'metaPixelId'              => trim((string)($site['meta_pixel_id'] ?? '')),
         ];
 
         $json = json_encode($settings, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);

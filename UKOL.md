@@ -1,21 +1,20 @@
-# UKOL: Inject GTM snippet do head tak, aby ho Google naslo
+# UKOL: Odebrat GTM, ponechat pouze GA4
 
 Datum: 2026-05-18
-Zadání: Google checker hlásí "značka nenalezena" — GTM se načítá až po souhlasu, ale Google ho musí vidět přímo v HTML. Přesunout GTM snippet do head (unconditionally), GA4/Pixel nechat za consentem.
+Zadání: Celý tracking přesunout výhradně pod Google Analytics 4 (gtag.js). GTM kompletně odebrat z kódu, nastavení i výstupu.
 
 ## Kroky
 
-- [ ] Přečíst SeoRenderer.php a cookie-consent-runtime.js — pochopit stávající implementaci
-- [ ] Přidat renderGtmHead() a renderGtmNoscript() do SeoRenderer
-- [ ] Injektovat GTM head snippet do `</head>` v SeoRenderer::render() nebo v index.php
-- [ ] Injektovat GTM noscript snippet hned za `<body>`
-- [ ] Odebrat GTM z dynamického načítání v cookie-consent-runtime.js
-- [ ] Commitnout výsledek
+- [x] SeoRenderer.php — odebrat renderGtmHead(), renderGtmNoscript(), volání v renderHead() a renderBodyScripts(); odebrat googleTagManagerId z renderConsentRuntime()
+- [x] SeoRenderer.php — renderBodyScripts() vrátit zpět k body_scripts only
+- [x] tracking.js — odebrat dataLayer.push() blok (GTM gone, zbytečné)
+- [x] settings/index.php — odebrat pole Google Tag Manager ID z UI
+- [x] Commitnout výsledek
 
 ## Poznámky
 
-- GTM je kontejner pro správu consent — má být vždy přítomen v head
-- GA4, Clarity, Meta Pixel zůstávají za consentem v cookie-consent-runtime.js
-- GTM noscript musí jít hned za `<body>`, ne ke konci body
+- tracking.js volá gtag() přímo — GA4 eventy fungují bez GTM
+- cookie-consent-runtime.js loadGoogleTagManager() byl odstraněn v předchozí session
+- DB sloupec google_tag_manager_id zůstane (neškodí), jen se nezobrazuje v UI
 
 ## Výsledek

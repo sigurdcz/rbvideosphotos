@@ -59,22 +59,12 @@
     if (!canTrack(name)) return;
     try {
       var extra = params || {};
-      // gtag (GA4 direct)
+      // GA4 direct
       if (typeof window.gtag === 'function') {
         window.gtag('event', name, extra);
         log('gtag:', name, extra);
       }
-      // dataLayer (GTM)
-      if (Array.isArray(window.dataLayer)) {
-        var dlEvent = { event: name };
-        var k;
-        for (k in extra) {
-          if (Object.prototype.hasOwnProperty.call(extra, k)) dlEvent[k] = extra[k];
-        }
-        window.dataLayer.push(dlEvent);
-        log('dataLayer:', name, dlEvent);
-      }
-      // Meta Pixel + GA4 standard conversion events
+      // GA4 standard conversion events + Meta Pixel
       if (name === 'lead_form_submit' || name === 'lead_thank_you_page') {
         if (typeof window.fbq === 'function') {
           window.fbq('track', 'Lead');

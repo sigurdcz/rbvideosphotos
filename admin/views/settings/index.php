@@ -211,10 +211,7 @@ ob_start();
       <div class="form-group">
         <label>Google Analytics ID</label>
         <input type="text" name="google_analytics_id" value="<?= $h($site['google_analytics_id'] ?? '') ?>" placeholder="G-XXXXXXXXXX">
-      </div>
-      <div class="form-group">
-        <label>Google Tag Manager ID</label>
-        <input type="text" name="google_tag_manager_id" value="<?= $h($site['google_tag_manager_id'] ?? '') ?>" placeholder="GTM-XXXXXXX">
+        <p class="help-text">Measurement ID z GA4 → Správce → Datové toky. Spusti se s Analytics consent.</p>
       </div>
     </div>
   </div>
