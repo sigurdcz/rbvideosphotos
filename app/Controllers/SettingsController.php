@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\Env;
 use App\Repositories\MediaRepository;
 use App\Repositories\SiteRepository;
 
@@ -15,7 +16,7 @@ class SettingsController extends Controller
         $site  = $sites->findFirst();
         $media = $site ? (new MediaRepository())->allBySiteWithVariants((int)$site['id']) : [];
 
-        $apiKey = (string) getenv('API_KEY') ?: null;
+        $apiKey = Env::get('API_KEY') ?: null;
 
         $this->view('settings.index', [
             'site'    => $site,

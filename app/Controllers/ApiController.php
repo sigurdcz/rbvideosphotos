@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Core\Env;
 use App\Core\SlugTrait;
 use App\Repositories\BlogRepository;
 use App\Repositories\MediaRepository;
@@ -597,7 +598,7 @@ class ApiController
 
     private function getApiKey(): string
     {
-        return (string) getenv('API_KEY');
+        return (string) Env::get('API_KEY', '');
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
