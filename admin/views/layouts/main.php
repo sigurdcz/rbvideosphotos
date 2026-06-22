@@ -28,6 +28,7 @@
       <li><a href="/admin/redirects" class="<?= strpos($requestUri, '/admin/redirects') === 0 ? 'active' : '' ?>">Redirecty</a></li>
       <li><a href="/admin/publish" class="<?= strpos($requestUri, '/admin/publish') === 0 ? 'active' : '' ?>">Publikovani</a></li>
       <li><a href="/admin/settings" class="<?= strpos($requestUri, '/admin/settings') === 0 ? 'active' : '' ?>">Nastaveni</a></li>
+      <li><a href="/admin/gtm" class="<?= strpos($requestUri, '/admin/gtm') === 0 ? 'active' : '' ?>">Google Tag Manager</a></li>
       <li><a href="/admin/setup" class="<?= strpos($requestUri, '/admin/setup') === 0 ? 'active' : '' ?>">Pocatecni data</a></li>
     </ul>
     <div style="padding:12px 16px 0;display:flex;flex-direction:column;gap:8px">

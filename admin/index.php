@@ -97,6 +97,25 @@ try {
     $router->get('/admin/settings',        'SettingsController', 'index');
     $router->post('/admin/settings/update','SettingsController', 'update');
 
+    // Google Tag Manager
+    $router->get('/admin/gtm', 'GtmController', 'index');
+    $router->get('/admin/gtm/connect', 'GtmOAuthController', 'connect');
+    $router->get('/admin/gtm/oauth/callback', 'GtmOAuthController', 'callback');
+    $router->post('/admin/gtm/disconnect', 'GtmOAuthController', 'disconnect');
+    $router->post('/admin/gtm/connection/select', 'GtmOAuthController', 'selectConnection');
+    $router->get('/admin/gtm/events', 'GtmController', 'events');
+    $router->get('/admin/gtm/events/edit', 'GtmController', 'eventEdit');
+    $router->post('/admin/gtm/events/update', 'GtmController', 'eventUpdate');
+    $router->get('/admin/gtm/entities', 'GtmController', 'entities');
+    $router->post('/admin/gtm/inventory/refresh', 'GtmController', 'inventoryRefresh');
+    $router->post('/admin/gtm/plan', 'GtmController', 'plan');
+    $router->post('/admin/gtm/apply', 'GtmController', 'apply');
+    $router->post('/admin/gtm/entities/adopt', 'GtmController', 'adoptEntity');
+    $router->post('/admin/gtm/entities/delete', 'GtmController', 'deleteEntity');
+    $router->get('/admin/gtm/versions', 'GtmController', 'versions');
+    $router->post('/admin/gtm/versions/create', 'GtmController', 'versionsCreate');
+    $router->post('/admin/gtm/versions/publish', 'GtmController', 'versionsPublish');
+
     // Blog articles
     $router->get('/admin/blog',          'BlogController', 'index');
     $router->get('/admin/blog/create',   'BlogController', 'create');

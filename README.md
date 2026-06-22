@@ -85,9 +85,40 @@ DB_PASS=
 | `GA4_ID` | Google Analytics 4 — ID měření (G-XXXXXXXXXX). |
 | `CLARITY_ID` | Microsoft Clarity — ID projektu. |
 | `META_PIXEL_ID` | Meta Pixel — ID pixelu (volitelne). |
+| `GTM_CLIENT_ID` | OAuth client ID pro Google Tag Manager admin sekci. |
+| `GTM_CLIENT_SECRET` | OAuth client secret pro GTM admin sekci. |
+| `GTM_REDIRECT_URI` | Volitelne prepsani OAuth callback URL. |
+| `GTM_ENCRYPTION_KEY` | 32-byte klic pro sifrovani refresh tokenu GTM spojeni. |
+| `GTM_AUTH_URI` / `GTM_TOKEN_URI` / `GTM_API_BASE_URI` | Volitelne prepsani Google OAuth a GTM endpointu. |
+| `GTM_REQUEST_TIMEOUT` / `GTM_CONNECT_TIMEOUT` / `GTM_RETRY_DELAY_MS` | Ladeni timeoutu a retry chovani GTM API klienta. |
 | `FTP_HOST` / `FTP_USER` / `FTP_PASS` | Pristupove udaje pro deploy pres FTP. |
 
 Tracking kody (GA4, Clarity, Meta Pixel) se injektuji az po souhlasu s cookies pres `cookie-consent-runtime.js` — nikdy se nenacitaji blokovane.
+
+## Google Tag Manager v administraci
+
+Administrace obsahuje samostatnou sekci `Google Tag Manager` dostupnou na `/admin/gtm`. Tato sekce slouzi k tomu, aby bylo mozno spravovat GTM pres API bez rucni prace v rozhrani Google Tag Manageru.
+
+Co umoznuje:
+
+- pripojeni Google uctu pres OAuth
+- vyber GTM uctu, kontejneru a workspace
+- nacitani inventare tagu, triggeru, promennych a verzi
+- spravu predpripravenych eventovych definic
+- vytvoreni planu z lokalniho katalogu a jeho aplikaci do GTM workspace
+- vytvoreni a publikaci GTM verzi
+
+Databazova struktura pro tuto sekci je v nove append-only migraci `database/migrations/016_create_gtm_admin_tables.sql`.
+
+Tato faze nezasahuje do runtime trackingu na webu. `public/assets/tracking.js`, `SeoRenderer` ani soucasne GA4 eventy se v tomto kroku nemení.
+
+Poznamky k provozu:
+
+- OAuth callback je `https://tvoje-domena/admin/gtm/oauth/callback` nebo hodnota z `GTM_REDIRECT_URI`
+- refresh token se uklada sifrovane pomoci `GTM_ENCRYPTION_KEY`
+- GTM API musi byt povolene v Google Cloud projektu
+- pro OAuth scope se pouziva `tagmanager.readonly`, `tagmanager.edit.containers`, `tagmanager.edit.containerversions` a `tagmanager.publish`
+- pokud Google vrati chybu nebo chybi opravneni, administrace to zobrazi explicitne a zapise do auditniho logu
 
 ## Prvotni spusteni
 

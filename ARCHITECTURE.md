@@ -23,6 +23,45 @@ SEO Editor je **univerzální CMS pro tvorbu webových stránek** s důrazem na 
 - Vanilla JS (bez frameworku)
 - Composer autoload pro namespace `App\`
 
+## GTM administrace
+
+Administrace obsahuje samostatnou sekci `/admin/gtm` pro spravu Google Tag Manageru pres API. Cilem je pripravit a spravovat GTM entity z CMS bez rucni prace primo v rozhrani GTM.
+
+### Co tato vrstva dela
+
+- OAuth pripojeni Google uctu a ulozeni sifrovaneho refresh tokenu
+- vyber GTM account, container a workspace
+- nacitani inventare tagu, triggeru, promennych a verzi
+- katalog predpripravenych eventu pro SEO editor
+- plan/apply workflow pro vytvareni a update GTM entit
+- vytvareni verzi a jejich samostatna publikace
+
+### Dulezite sluzby
+
+- `GtmApiClient` - wrapper nad GTM REST API v2
+- `GtmConnectionService` - sprava OAuth spojeni, sifrovani tokenu a vyberu workspace
+- `GtmInventoryService` - nacitani inventare z GTM
+- `GtmEventCatalog` - katalog podporovanych eventu
+- `GtmManifestCompiler` - preklad lokalni definice na GTM tag/trigger payload
+- `GtmPlanService` / `GtmApplyService` - diff, plan a zapis do workspace
+- `GtmVersionService` - vytvareni a publikace verzi
+
+### GTM data tabulky
+
+- `gtm_connections`
+- `gtm_event_definitions`
+- `gtm_managed_entities`
+- `gtm_sync_runs`
+- `gtm_sync_operations`
+- `gtm_container_versions`
+
+### Bezpecnostni pravidla
+
+- refresh tokeny se ukladaji sifrovane
+- chyby GTM API jsou explicitni a zapisuje se auditni stopa
+- externi entity se nemeni bez potvrzeni
+- publikace verze je oddelena od vytvoreni workspace verze
+
 ---
 
 ## Adresáře

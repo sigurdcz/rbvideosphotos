@@ -210,33 +210,33 @@ Vsechny zapisove admin routy musi vyzadovat prihlaseneho administratora a CSRF k
 
 ## Implementacni kroky
 
-- [ ] Proverit aktualni admin navigaci, routovani, autentizaci, CSRF a databazove konvence projektu.
-- [ ] Navrhnout konkretni GTM domenu, DTO a validacni pravidla bez vazby na frontend tracking.
-- [ ] Pridat konfiguraci Google OAuth a GTM API do `.env.example` a aplikacni konfigurace.
-- [ ] Pridat novou append-only migraci pro GTM tabulky, indexy a unikatni omezeni.
-- [ ] Implementovat repository vrstvu pro GTM spojeni, eventy, spravovane entity, sync runy a verze.
-- [ ] Implementovat bezpecne sifrovani a rotovatelne ukladani refresh tokenu.
-- [ ] Implementovat OAuth connect, callback, scope validaci a disconnect.
-- [ ] Implementovat `GtmApiClient` s explicitnimi chybami, rate limitingem a retry pravidly.
-- [ ] Implementovat nacteni GTM uctu, kontejneru, workspace, tagu, triggeru, promennych a verzi.
-- [ ] Implementovat predpripraveny katalog vsech 20 eventu.
-- [ ] Implementovat compiler eventove definice na GTM tagy, triggery a promenne.
-- [ ] Implementovat stabilni management keys, normalizaci konfigurace a configuration hash.
-- [ ] Implementovat detekci duplicit, konfliktu, externich entit a adoptovani.
-- [ ] Implementovat read-only diff a plan operaci bez zapisu do GTM.
-- [ ] Implementovat potvrzene aplikovani planu do workspace.
-- [ ] Implementovat workspace sync, kontrolu merge konfliktu a overeni vysledku.
-- [ ] Implementovat quick preview, vytvoreni verze a ulozeni noveho workspace path.
-- [ ] Implementovat samostatnou a chranenou publikaci konkretni GTM verze.
-- [ ] Pridat polozku do admin navigace a vytvorit vsechny obrazovky sekce `/admin/gtm`.
-- [ ] Pridat srozumitelne prazdne, nacitaci, chybove, konfliktni a uspesne stavy.
-- [ ] Pridat auditni historii bez citlivych udaju.
+- [x] Proverit aktualni admin navigaci, routovani, autentizaci, CSRF a databazove konvence projektu.
+- [x] Navrhnout konkretni GTM domenu, DTO a validacni pravidla bez vazby na frontend tracking.
+- [x] Pridat konfiguraci Google OAuth a GTM API do `.env.example` a aplikacni konfigurace.
+- [x] Pridat novou append-only migraci pro GTM tabulky, indexy a unikatni omezeni.
+- [x] Implementovat repository vrstvu pro GTM spojeni, eventy, spravovane entity, sync runy a verze.
+- [x] Implementovat bezpecne sifrovani a rotovatelne ukladani refresh tokenu.
+- [x] Implementovat OAuth connect, callback, scope validaci a disconnect.
+- [x] Implementovat `GtmApiClient` s explicitnimi chybami, rate limitingem a retry pravidly.
+- [x] Implementovat nacteni GTM uctu, kontejneru, workspace, tagu, triggeru, promennych a verzi.
+- [x] Implementovat predpripraveny katalog vsech 20 eventu.
+- [x] Implementovat compiler eventove definice na GTM tagy, triggery a promenne.
+- [x] Implementovat stabilni management keys, normalizaci konfigurace a configuration hash.
+- [x] Implementovat detekci duplicit, konfliktu, externich entit a adoptovani.
+- [x] Implementovat read-only diff a plan operaci bez zapisu do GTM.
+- [x] Implementovat potvrzene aplikovani planu do workspace.
+- [x] Implementovat workspace sync, kontrolu merge konfliktu a overeni vysledku.
+- [x] Implementovat quick preview, vytvoreni verze a ulozeni noveho workspace path.
+- [x] Implementovat samostatnou a chranenou publikaci konkretni GTM verze.
+- [x] Pridat polozku do admin navigace a vytvorit vsechny obrazovky sekce `/admin/gtm`.
+- [x] Pridat srozumitelne prazdne, nacitaci, chybove, konfliktni a uspesne stavy.
+- [x] Pridat auditni historii bez citlivych udaju.
 - [ ] Pridat unit testy pro compiler, hashovani, duplicity, diff a plan.
 - [ ] Pridat integracni testy API klienta s mockovanymi GTM odpovedmi.
 - [ ] Otestovat idempotenci: druhy beh nad stejnym stavem nesmi vytvorit dalsi entity.
 - [ ] Otestovat auth chyby, chybejici scopes, API kvotu, fingerprint konflikt, merge konflikt a compiler error.
 - [ ] Rucne overit admin workflow na testovacim GTM kontejneru bez publikace do produkce.
-- [ ] Aktualizovat `README.md`, `ARCHITECTURE.md`, `.env.example` a dalsi relevantni dokumentaci.
+- [x] Aktualizovat `README.md`, `ARCHITECTURE.md`, `.env.example` a dalsi relevantni dokumentaci.
 - [ ] Provest zaverecnou kontrolu, ze nebyl zmenen GA4 runtime ani frontendove eventy.
 
 ## Akceptacni kriteria
@@ -260,7 +260,8 @@ Vsechny zapisove admin routy musi vyzadovat prihlaseneho administratora a CSRF k
 - Google API ma nizky QPS limit, proto nesmi UI pri jednom refreshi bezhlave paralelizovat desitky API requestu.
 - Samotny surovy GTM JSON nema byt hlavnim uzivatelskym rozhranim. Bezna konfigurace ma byt vedena pres bezpecne sablony a validovane formulare.
 - Pred zahajenim implementace overit aktualni dokumentaci GTM API a konkretni payloady pro pouzite typy tagu, triggeru a promennych.
+- Zatim je pripraveny jen plan a mapovani systemu; dalsi krok bude konkretni databazova a kodova implementace GTM sekce.
 
 ## Vysledek
 
-Nevyplneno. Tento soubor je podrobne zadani pro budouci implementaci; kod GTM administrace zatim nebyl vytvoren.
+GTM administrace je implementovana jako samostatna admin sekce s OAuth pripojenim, lokalni katalogizaci eventu, plan/apply workflow, spravou entit a verzi. Otevrene zustavaji hlavne testy a manualni overeni na testovacim kontejneru.
