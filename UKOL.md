@@ -1,20 +1,25 @@
-# UKOL: Homepage UI — blog bílý text, FAQ HR, process linka
+# UKOL: GA4 event console logy
 
-Datum: 2026-05-18
-Zadání: Opravit 3 přetrvávající vizuální chyby na homepage jemna-bezova: bílý text v blog kartách, nekonzistentní HR v FAQ, špatná pozice čáry v sekci Jak to probíhá.
+Datum: 2026-06-22
+Zadání: Doplnit do frontend trackingu viditelný console log, který u GA4 eventů jasně ukáže, jestli byl event skutečně odeslán nebo proč se neodeslal.
 
 ## Kroky
 
-- [x] Blog karty — opravit inline CSS v HomepageContentService.php (flex na .hp-blog-body, odebrat color:#fff)
-- [x] Blog karty — theme.css: přidat !important na color overrides aby prorazily inline CSS
-- [x] FAQ — navýšit min-height na .hp-faq-question pro konzistentní pozici HR
-- [x] Process linka — změnit top: 29px → top: 55px (uživatel potvrdil)
-- [ ] Commitnout výsledek
+- [x] Najít skutečné místo, odkud se posílají GA4 eventy
+- [x] Upravit tracking runtime tak, aby logoval odeslání i blokaci eventů
+- [x] Zkontrolovat dopad do dokumentace a ověřit diff
 
 ## Poznámky
 
-- HR v FAQ se vkládá přes JS (theme.js řádek 297-299) za .hp-faq-question
-- inline `<style>` v PHP je generován s specificitem 0,1,0 vs theme.css 0,2,0 — ale !important zaručí override
-- top: 55px confirmed by user testing
+- Trackovací runtime je centrálně injektovaný přes `App\Services\SeoRenderer::renderTrackingRuntime()` a běží z `public/assets/tracking.js`.
+- Požadované eventy jako `phone_click`, `email_click`, `cta_click`, `lead_form_submit` a `scroll_90` už existují; chybí viditelný konzolový audit mimo debug-only log.
+- V repu byl před začátkem rozpracovaný `UKOL.md` z minulého úkolu; přepsán na aktuální zadání podle workflow skillu.
+- `public/assets/tracking.js` nově loguje i blokované eventy a chybějící `gtag`, takže při testu není ticho, když se event neposlal.
+- `README.md` a `ARCHITECTURE.md` doplněny o popis konzolového auditu pro GA4 tracking.
+- Pokus o syntax check přes `node --check public/assets/tracking.js` nešel ověřit, protože `node` v tomto prostředí není nainstalovaný.
 
 ## Výsledek
+
+- `public/assets/tracking.js` teď pro GA4 eventy vypisuje do konzole stav `Event odeslan`, `Event neodeslan` nebo `Event selhal` včetně názvu eventu, parametrů a důvodu blokace.
+- Audit pokrývá i případy bez consentu, s vypnutým eventem nebo bez dostupného `window.gtag`, takže je při testování vidět, proč se nic neposlalo.
+- Dokumentace v `README.md` a `ARCHITECTURE.md` odpovídá novému chování runtime.

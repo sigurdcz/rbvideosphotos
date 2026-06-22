@@ -590,6 +590,7 @@ Web trackuje konverze bez nutnosti stranky `/dekujeme`. `public/assets/tracking.
 - **Kliknuti na telefon / email** — `phone_click`, `email_click`
 
 Vsechny udalosti prochazi consent gate — nespousti se pred souhlasem s analytics cookies (pokud je consent povinny).
+Pri pokusu o odeslani GA4 eventu runtime zapisuje do konzole `[GA4 Tracking]` stav `Event odeslan`, `Event neodeslan` nebo `Event selhal`, vcetne nazvu eventu a duvodu blokace.
 
 ## Nasazeni
 

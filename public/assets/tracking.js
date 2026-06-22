@@ -32,48 +32,72 @@
     console.log.apply(console, args);
   }
 
-  function canTrack(eventName) {
+  function audit(level, message, payload) {
+    if (!window.console) return;
+    var method = typeof console[level] === 'function' ? console[level] : console.log;
+    if (typeof payload === 'undefined') {
+      method.call(console, '[GA4 Tracking] ' + message);
+      return;
+    }
+    method.call(console, '[GA4 Tracking] ' + message, payload);
+  }
+
+  function getTrackBlockReason(eventName) {
     if (!enabled) {
       log('disabled globally');
-      return false;
+      return 'tracking_disabled';
     }
     if (eventName && events[eventName] === false) {
       log('event disabled:', eventName);
-      return false;
+      return 'event_disabled';
     }
     if (requireConsent) {
       var cc = window.cmsCookieConsent;
       if (!cc) {
         log('consent runtime not ready');
-        return false;
+        return 'consent_runtime_not_ready';
       }
       if (!cc.canLoadAnalytics()) {
         log('consent not given for analytics');
-        return false;
+        return 'analytics_consent_missing';
       }
     }
-    return true;
+    return null;
+  }
+
+  function canTrack(eventName) {
+    return getTrackBlockReason(eventName) === null;
   }
 
   function trackEvent(name, params) {
-    if (!canTrack(name)) return;
+    var blockReason = getTrackBlockReason(name);
+    var extra = params || {};
+
+    if (blockReason !== null) {
+      audit('warn', 'Event neodeslan', { eventName: name, reason: blockReason, params: extra });
+      return false;
+    }
+
     try {
-      var extra = params || {};
-      // GA4 direct
-      if (typeof window.gtag === 'function') {
-        window.gtag('event', name, extra);
-        log('gtag:', name, extra);
+      if (typeof window.gtag !== 'function') {
+        audit('warn', 'Event neodeslan', { eventName: name, reason: 'gtag_unavailable', params: extra });
+        return false;
       }
+
+      // GA4 direct
+      window.gtag('event', name, extra);
+      audit('info', 'Event odeslan', { eventName: name, params: extra });
+      log('gtag:', name, extra);
+
       // GA4 standard conversion events + Meta Pixel
       if (name === 'lead_form_submit' || name === 'lead_thank_you_page') {
         if (typeof window.fbq === 'function') {
           window.fbq('track', 'Lead');
           log('fbq Lead');
         }
-        if (typeof window.gtag === 'function') {
-          window.gtag('event', 'generate_lead');
-          log('gtag generate_lead');
-        }
+        window.gtag('event', 'generate_lead');
+        audit('info', 'Event odeslan', { eventName: 'generate_lead', sourceEvent: name });
+        log('gtag generate_lead');
       }
       if (name === 'social_click') {
         if (typeof window.fbq === 'function') {
@@ -81,8 +105,15 @@
           log('fbq Contact');
         }
       }
+      return true;
     } catch (e) {
-      // fail silently - never crash
+      audit('error', 'Event selhal', {
+        eventName: name,
+        reason: 'exception',
+        message: e && e.message ? e.message : String(e),
+        params: extra
+      });
+      return false;
     }
   }
 

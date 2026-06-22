@@ -222,6 +222,7 @@ Soubory v `public/assets/generated/` nejsou verzovány v gitu.
 | `email_click` | klik na `mailto:` odkaz | `email_click` | — |
 
 Všechny události procházejí consent gate (`canTrack()`). `generate_lead` je standardní GA4 key event — GA4 ho počítá jako konverzi automaticky. Zapnutí/vypnutí jednotlivých událostí se řídí `sites.tracking_events_json`.
+Při pokusu o odeslání GA4 eventu zapisuje runtime do konzole zprávy `[GA4 Tracking] Event odeslan`, `Event neodeslan` nebo `Event selhal`, aby bylo při testování vidět, zda event prošel a případně proč byl zablokován.
 
 ---
 
