@@ -105,12 +105,22 @@ class GtmInventoryService
 
     private function ensureAccessToken(int $siteId, array $connection): string
     {
+        $token = trim((string)($connection['access_token'] ?? ''));
         $expiresAt = trim((string)($connection['token_expires_at'] ?? ''));
-        if ($expiresAt !== '' && strtotime($expiresAt) !== false && strtotime($expiresAt) <= time() + 60) {
+        $refreshToken = trim((string)($connection['refresh_token'] ?? ''));
+
+        if ($token === '') {
+            if ($refreshToken === '') {
+                throw new RuntimeException('Missing GTM access token and refresh token.');
+            }
+
             $connection = $this->connections->refreshAccessToken($siteId);
+            $token = trim((string)($connection['access_token'] ?? ''));
+        } elseif ($expiresAt !== '' && strtotime($expiresAt) !== false && strtotime($expiresAt) <= time() + 60) {
+            $connection = $this->connections->refreshAccessToken($siteId);
+            $token = trim((string)($connection['access_token'] ?? ''));
         }
 
-        $token = trim((string)($connection['access_token'] ?? ''));
         if ($token === '') {
             throw new RuntimeException('Missing GTM access token.');
         }
