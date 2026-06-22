@@ -588,6 +588,8 @@ Web trackuje konverze bez nutnosti stranky `/dekujeme`. `public/assets/tracking.
 - **Parametr `?sent=1`** — kdyz backend po odeslani presmeruje s query stringem → `lead_form_submit`, GA4 `generate_lead`, Meta Pixel `Lead`
 - **Kliknuti na socialni site** — Instagram, Facebook, YouTube atd. → `social_click`, Meta Pixel `Contact`
 - **Kliknuti na telefon / email** — `phone_click`, `email_click`
+- **Kliknuti na CTA prvky** — prvky s `data-track-event`, typicky `cta_click`
+- **Engagement eventy** — `gallery_open`, `video_play`, `pricing_click`, `scroll_90`
 
 Vsechny udalosti prochazi consent gate — nespousti se pred souhlasem s analytics cookies (pokud je consent povinny).
 Pri pokusu o odeslani GA4 eventu runtime zapisuje do konzole `[GA4 Tracking]` stav `Event odeslan`, `Event neodeslan` nebo `Event selhal`, vcetne nazvu eventu a duvodu blokace.
