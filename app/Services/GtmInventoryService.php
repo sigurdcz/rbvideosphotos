@@ -105,6 +105,11 @@ class GtmInventoryService
 
     private function ensureAccessToken(int $siteId, array $connection): string
     {
+        $tokenError = trim((string)($connection['token_error'] ?? ''));
+        if ($tokenError !== '') {
+            throw new RuntimeException('GTM token decryption failed: ' . $tokenError);
+        }
+
         $token = trim((string)($connection['access_token'] ?? ''));
         $expiresAt = trim((string)($connection['token_expires_at'] ?? ''));
         $refreshToken = trim((string)($connection['refresh_token'] ?? ''));
