@@ -56,6 +56,13 @@ class GtmOAuthController extends Controller
         try {
             $tokenResponse = (new GtmApiClient())->exchangeCodeForToken($code);
             $this->connections->storeTokenResponse($this->siteId(), $tokenResponse);
+            try {
+                $this->inventory->load($this->siteId());
+            } catch (RuntimeException $inventoryError) {
+                unset($_SESSION['gtm_oauth_state'], $_SESSION['gtm_oauth_started_at']);
+                $this->flash('warning', 'Google účet byl pripojen, ale inventar se nepodarilo nacist: ' . $inventoryError->getMessage());
+                $this->redirect('/admin/gtm');
+            }
             unset($_SESSION['gtm_oauth_state'], $_SESSION['gtm_oauth_started_at']);
             $this->flash('success', 'Google účet byl pripojen.');
             $this->redirect('/admin/gtm');
@@ -86,7 +93,7 @@ class GtmOAuthController extends Controller
         ];
 
         try {
-            $inventory = $this->inventory->load($siteId);
+            $inventory = $this->inventory->loadCached($siteId);
             $selection = $this->resolveSelection($inventory, $selected);
             $this->connections->updateSelection($siteId, $selection);
             $this->flash('success', 'GTM vyber byl ulozen.');

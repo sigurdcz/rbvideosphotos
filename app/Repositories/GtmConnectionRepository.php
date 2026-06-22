@@ -27,8 +27,8 @@ class GtmConnectionRepository extends GtmRepository
 
         $stmt = $this->db->prepare(
             'INSERT INTO gtm_connections
-             (site_id, status, google_account_email, google_account_name, access_token_encrypted, refresh_token_encrypted, token_scopes, token_expires_at, account_id, account_name, container_id, container_name, workspace_id, workspace_name, workspace_path, workspace_fingerprint, last_inventory_at, last_synced_at, last_verified_at, last_error)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+             (site_id, status, google_account_email, google_account_name, access_token_encrypted, refresh_token_encrypted, token_scopes, token_expires_at, account_id, account_name, container_id, container_name, workspace_id, workspace_name, workspace_path, workspace_fingerprint, last_inventory_at, last_synced_at, last_verified_at, last_error, inventory_snapshot_json, inventory_snapshot_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
         $stmt->execute([
             $siteId,
@@ -51,6 +51,8 @@ class GtmConnectionRepository extends GtmRepository
             $data['last_synced_at'] ?? null,
             $data['last_verified_at'] ?? null,
             $data['last_error'] ?? null,
+            $data['inventory_snapshot_json'] ?? null,
+            $data['inventory_snapshot_at'] ?? null,
         ]);
 
         return (int) $this->db->lastInsertId();
@@ -78,6 +80,8 @@ class GtmConnectionRepository extends GtmRepository
             'last_synced_at',
             'last_verified_at',
             'last_error',
+            'inventory_snapshot_json',
+            'inventory_snapshot_at',
         ];
 
         $sets = [];
@@ -100,7 +104,7 @@ class GtmConnectionRepository extends GtmRepository
     public function setDisconnected(int $siteId, ?string $message = null): void
     {
         $stmt = $this->db->prepare(
-            'UPDATE gtm_connections SET status = ?, access_token_encrypted = NULL, refresh_token_encrypted = NULL, token_scopes = NULL, token_expires_at = NULL, last_error = ?, account_id = NULL, account_name = NULL, container_id = NULL, container_name = NULL, workspace_id = NULL, workspace_name = NULL, workspace_path = NULL, workspace_fingerprint = NULL WHERE site_id = ?'
+            'UPDATE gtm_connections SET status = ?, access_token_encrypted = NULL, refresh_token_encrypted = NULL, token_scopes = NULL, token_expires_at = NULL, last_error = ?, account_id = NULL, account_name = NULL, container_id = NULL, container_name = NULL, workspace_id = NULL, workspace_name = NULL, workspace_path = NULL, workspace_fingerprint = NULL, inventory_snapshot_json = NULL, inventory_snapshot_at = NULL WHERE site_id = ?'
         );
         $stmt->execute(['disconnected', $message, $siteId]);
     }

@@ -125,6 +125,8 @@ Typicky zde najdeš:
 
 Inventář GTM se načítá z vybraného account/container/workspace. Tím se zobrazuje aktuální stav a umožňuje porovnání s lokálním katalogem.
 
+Po kliknutí na `Nacist inventar` se stav uloží jako lokální snapshot. `Sestavit plan` a `Aplikovat plan` už nad GTM nevolají live list endpointy, ale pracují s tímto uloženým snapshotem. Tím se drží API kvóta a současně je jasně oddělený refresh od plánování.
+
 Tahle vrstva slouží k tomu, aby šlo:
 
 - načíst aktuální stav GTM
@@ -182,4 +184,3 @@ Tato implementace zatím neřeší:
 - automatické publishování po každé úpravě
 
 To je až další krok refaktoru.
-

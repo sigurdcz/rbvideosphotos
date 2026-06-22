@@ -58,8 +58,7 @@ class GtmInventoryService
         $workspaceStatus = $workspacePath !== '' ? $this->client->getWorkspaceStatus($accessToken, $workspacePath) : [];
 
         $this->connections->updateInventoryStamp($siteId);
-
-        return [
+        $inventory = [
             'connection' => $connection,
             'accounts' => $accounts,
             'containers' => $containers,
@@ -70,6 +69,31 @@ class GtmInventoryService
             'versions' => $versions,
             'workspace_status' => $workspaceStatus,
         ];
+
+        $this->connections->save($siteId, [
+            'inventory_snapshot_json' => $this->encodeSnapshot($inventory),
+            'inventory_snapshot_at' => date('Y-m-d H:i:s'),
+            'status' => 'connected',
+        ]);
+
+        return $inventory;
+    }
+
+    public function loadCached(int $siteId): array
+    {
+        $connection = $this->connections->requireForSite($siteId);
+        $snapshot = trim((string)($connection['inventory_snapshot_json'] ?? ''));
+        if ($snapshot === '') {
+            throw new RuntimeException('Cached GTM inventory not found. Click "Nacist inventar" first.');
+        }
+
+        $decoded = json_decode($snapshot, true);
+        if (!is_array($decoded)) {
+            throw new RuntimeException('Cached GTM inventory is invalid. Refresh inventory again.');
+        }
+
+        $decoded['connection'] = $connection;
+        return $decoded;
     }
 
     public function connectionEntities(int $siteId): array
@@ -131,5 +155,18 @@ class GtmInventoryService
         }
 
         return $token;
+    }
+
+    private function encodeSnapshot(array $inventory): string
+    {
+        $snapshot = $inventory;
+        unset($snapshot['connection']);
+
+        $json = json_encode($snapshot, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        if ($json === false) {
+            throw new RuntimeException('Unable to encode GTM inventory snapshot.');
+        }
+
+        return $json;
     }
 }

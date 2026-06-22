@@ -241,7 +241,7 @@ class GtmController extends Controller
         }
 
         try {
-            $inventory = $this->inventory->load((int) $site['id']);
+            $inventory = $this->inventory->loadCached((int) $site['id']);
             $definitions = (new GtmEventDefinitionRepository())->allBySite((int) $site['id']);
             $user = Auth::user() ?? [];
             $plan = $this->planner->build($site, $inventory['connection'], $inventory, $definitions);
@@ -282,7 +282,7 @@ class GtmController extends Controller
 
         try {
             $connection = $this->connections->requireForSite((int) $site['id']);
-            $inventory = $this->inventory->load((int) $site['id']);
+            $inventory = $this->inventory->loadCached((int) $site['id']);
             $definitions = (new GtmEventDefinitionRepository())->allBySite((int) $site['id']);
             $user = Auth::user() ?? [];
             $plan = $this->planner->build($site, $connection, $inventory, $definitions);
@@ -476,7 +476,7 @@ class GtmController extends Controller
     private function safeInventory(int $siteId): array
     {
         try {
-            return $this->inventory->load($siteId);
+            return $this->inventory->loadCached($siteId);
         } catch (\Throwable $e) {
             return ['error' => $e->getMessage()];
         }
