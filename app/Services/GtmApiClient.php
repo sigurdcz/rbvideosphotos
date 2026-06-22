@@ -102,7 +102,7 @@ class GtmApiClient
 
     public function listVersions(string $accessToken, string $containerPath): array
     {
-        return $this->request('GET', $containerPath . '/versions', accessToken: $accessToken)['containerVersion'] ?? [];
+        return $this->request('GET', $containerPath . '/version_headers', accessToken: $accessToken)['containerVersionHeader'] ?? [];
     }
 
     public function getWorkspace(string $accessToken, string $workspacePath): array
