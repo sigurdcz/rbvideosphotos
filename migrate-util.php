@@ -11,12 +11,12 @@ use App\Core\Logger;
 
 Env::load(BASE_PATH . '/.env');
 
-$token = (string) getenv('MIGRATE_TOKEN');
+$token = (string) Env::get('MIGRATE_TOKEN', '');
 if ($token === '') {
     renderPage('Chyba konfigurace', '500', '<h1>MIGRATE_TOKEN neni nastaven.</h1><p>Pridej <code>MIGRATE_TOKEN=...</code> do <code>.env</code>.</p>', 500);
 }
 $providedToken = (string) ($_GET['token'] ?? '');
-date_default_timezone_set(getenv('APP_TZ') ?: 'Europe/Prague');
+date_default_timezone_set(Env::get('APP_TZ', 'Europe/Prague') ?: 'Europe/Prague');
 
 header('Content-Type: text/html; charset=UTF-8');
 header('X-Robots-Tag: noindex, nofollow, noarchive', true);
@@ -52,11 +52,11 @@ if (!hash_equals($token, $providedToken)) {
 }
 
 try {
-    $host = getenv('DB_HOST') ?: '127.0.0.1';
-    $port = getenv('DB_PORT') ?: '3306';
-    $db   = getenv('DB_NAME') ?: 'seo_editor_cms';
-    $user = getenv('DB_USER') ?: 'seo_editor_app';
-    $pass = getenv('DB_PASS') ?: '';
+    $host = Env::get('DB_HOST', '127.0.0.1');
+    $port = Env::get('DB_PORT', '3306');
+    $db   = Env::get('DB_NAME', 'seo_editor_cms');
+    $user = Env::get('DB_USER', 'seo_editor_app');
+    $pass = Env::get('DB_PASS', '');
 
     $pdo = new PDO(
         sprintf('mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4', $host, $port, $db),

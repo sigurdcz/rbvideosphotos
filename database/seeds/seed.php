@@ -145,7 +145,7 @@ echo "Uživatel: admin@example.com / admin123\n";
 
 // ─── Web ──────────────────────────────────────────────────────────────────────
 
-$appUrl = rtrim((string)(getenv('APP_URL') ?: 'http://localhost:8000'), '/');
+$appUrl = rtrim((string)(\App\Core\Env::get('APP_URL', 'http://localhost:8000') ?: 'http://localhost:8000'), '/');
 $siteId = seedUpsertSite($pdo, 'RB Videos & Photos', $appUrl);
 
 // ─── Sdílený layout ───────────────────────────────────────────────────────────

@@ -10,11 +10,11 @@ use App\Core\Env;
 
 Env::load(BASE_PATH . '/.env');
 
-$host = getenv('DB_HOST') ?: '127.0.0.1';
-$port = getenv('DB_PORT') ?: '3306';
-$db   = getenv('DB_NAME') ?: 'seo_editor_cms';
-$user = getenv('DB_USER') ?: 'seo_editor_app';
-$pass = getenv('DB_PASS') ?: '';
+$host = Env::get('DB_HOST', '127.0.0.1');
+$port = Env::get('DB_PORT', '3306');
+$db   = Env::get('DB_NAME', 'seo_editor_cms');
+$user = Env::get('DB_USER', 'seo_editor_app');
+$pass = Env::get('DB_PASS', '');
 
 $pdo = new PDO(
     sprintf('mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4', $host, $port, $db),
