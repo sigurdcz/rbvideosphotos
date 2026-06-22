@@ -70,7 +70,12 @@ class GtmInventoryService
             'workspace_status' => $workspaceStatus,
         ];
 
-        $this->connections->save($siteId, [
+        $connectionId = (int) ($connection['id'] ?? 0);
+        if ($connectionId <= 0) {
+            throw new RuntimeException('GTM connection record is missing an id.');
+        }
+
+        $this->connections->update($connectionId, [
             'inventory_snapshot_json' => $this->encodeSnapshot($inventory),
             'inventory_snapshot_at' => date('Y-m-d H:i:s'),
             'status' => 'connected',

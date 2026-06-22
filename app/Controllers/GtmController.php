@@ -50,7 +50,9 @@ class GtmController extends Controller
             return;
         }
 
-        $this->ensureDefinitions($site['id']);
+        if (!$this->ensureDefinitions($site['id'])) {
+            return;
+        }
         $connection = $this->connections->loadForSite((int) $site['id']);
         $inventory = $this->safeInventory((int) $site['id']);
         $definitions = (new GtmEventDefinitionRepository())->allBySite((int) $site['id']);
@@ -81,7 +83,9 @@ class GtmController extends Controller
             return;
         }
 
-        $this->ensureDefinitions($site['id']);
+        if (!$this->ensureDefinitions($site['id'])) {
+            return;
+        }
         $definitions = (new GtmEventDefinitionRepository())->allBySite((int) $site['id']);
 
         $this->view('gtm.events', [
@@ -101,7 +105,9 @@ class GtmController extends Controller
             return;
         }
 
-        $this->ensureDefinitions($site['id']);
+        if (!$this->ensureDefinitions($site['id'])) {
+            return;
+        }
         $id = (int) ($_GET['id'] ?? 0);
         $repo = new GtmEventDefinitionRepository();
         $definition = $id > 0 ? $repo->findById($id) : null;
@@ -126,6 +132,10 @@ class GtmController extends Controller
 
         $site = $this->siteOrFlash();
         if (!$site) {
+            return;
+        }
+
+        if (!$this->ensureDefinitions($site['id'])) {
             return;
         }
 
@@ -181,7 +191,9 @@ class GtmController extends Controller
             return;
         }
 
-        $this->ensureDefinitions($site['id']);
+        if (!$this->ensureDefinitions($site['id'])) {
+            return;
+        }
         $connection = $this->connections->loadForSite((int) $site['id']);
         $inventory = $this->safeInventory((int) $site['id']);
         $entities = (new GtmManagedEntityRepository())->allBySite((int) $site['id']);
@@ -240,6 +252,10 @@ class GtmController extends Controller
             return;
         }
 
+        if (!$this->ensureDefinitions($site['id'])) {
+            return;
+        }
+
         try {
             $inventory = $this->inventory->loadCached((int) $site['id']);
             $definitions = (new GtmEventDefinitionRepository())->allBySite((int) $site['id']);
@@ -277,6 +293,10 @@ class GtmController extends Controller
         $this->csrfCheck();
         $site = $this->siteOrFlash();
         if (!$site) {
+            return;
+        }
+
+        if (!$this->ensureDefinitions($site['id'])) {
             return;
         }
 
@@ -389,7 +409,9 @@ class GtmController extends Controller
             return;
         }
 
-        $this->ensureDefinitions($site['id']);
+        if (!$this->ensureDefinitions($site['id'])) {
+            return;
+        }
         $connection = $this->connections->loadForSite((int) $site['id']);
         $versions = (new GtmContainerVersionRepository())->allBySite((int) $site['id'], 16);
 
@@ -457,9 +479,20 @@ class GtmController extends Controller
         $this->redirect('/admin/gtm/versions');
     }
 
-    private function ensureDefinitions(int $siteId): void
+    private function ensureDefinitions(int $siteId): bool
     {
-        (new GtmEventDefinitionRepository())->ensureCatalog($siteId, $this->catalog->all());
+        try {
+            (new GtmEventDefinitionRepository())->ensureCatalog($siteId, $this->catalog->all());
+            return true;
+        } catch (\Throwable $e) {
+            $this->flash('error', 'GTM databaze neni pripravena. Spust migrace 016_create_gtm_admin_tables.sql a 017_add_gtm_inventory_snapshot.sql.');
+            $this->audit->error('gtm.catalog.ensure', 'GTM catalog setup failed', [
+                'site_id' => $siteId,
+                'error' => $e->getMessage(),
+            ]);
+            $this->redirect('/admin');
+            return false;
+        }
     }
 
     private function siteOrFlash(): ?array
