@@ -129,6 +129,22 @@ class GtmConnectionService
         ]);
     }
 
+    public function storeInventorySnapshot(int $siteId, string $snapshotJson): void
+    {
+        $connection = $this->connections->findBySite($siteId);
+        if (!$connection) {
+            return;
+        }
+
+        $now = date('Y-m-d H:i:s');
+        $this->connections->update((int) $connection['id'], [
+            'inventory_snapshot_json' => $snapshotJson,
+            'inventory_snapshot_at' => $now,
+            'last_inventory_at' => $now,
+            'status' => 'connected',
+        ]);
+    }
+
     public function updateSyncStamp(int $siteId): void
     {
         $connection = $this->connections->findBySite($siteId);

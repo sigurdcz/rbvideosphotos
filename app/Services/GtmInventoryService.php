@@ -57,7 +57,6 @@ class GtmInventoryService
         $versions = $containerPath !== '' ? $this->client->listVersions($accessToken, $containerPath) : [];
         $workspaceStatus = $workspacePath !== '' ? $this->client->getWorkspaceStatus($accessToken, $workspacePath) : [];
 
-        $this->connections->updateInventoryStamp($siteId);
         $inventory = [
             'connection' => $connection,
             'accounts' => $accounts,
@@ -70,16 +69,7 @@ class GtmInventoryService
             'workspace_status' => $workspaceStatus,
         ];
 
-        $connectionId = (int) ($connection['id'] ?? 0);
-        if ($connectionId <= 0) {
-            throw new RuntimeException('GTM connection record is missing an id.');
-        }
-
-        $this->connections->update($connectionId, [
-            'inventory_snapshot_json' => $this->encodeSnapshot($inventory),
-            'inventory_snapshot_at' => date('Y-m-d H:i:s'),
-            'status' => 'connected',
-        ]);
+        $this->connections->storeInventorySnapshot($siteId, $this->encodeSnapshot($inventory));
 
         return $inventory;
     }
