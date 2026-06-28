@@ -39,7 +39,7 @@ class GtmManifestCompiler
                     [
                         'type' => 'equals',
                         'parameter' => [
-                            ['type' => 'template', 'key' => 'arg0', 'value' => '{{Event}}'],
+                            ['type' => 'template', 'key' => 'arg0', 'value' => '{{_event}}'],
                             ['type' => 'template', 'key' => 'arg1', 'value' => $eventKey],
                         ],
                     ],
