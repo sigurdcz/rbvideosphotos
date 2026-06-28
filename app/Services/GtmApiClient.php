@@ -15,6 +15,10 @@ class GtmApiClient
     private string $apiBaseUri;
     private int $connectTimeout;
     private int $requestTimeout;
+    private int $minRequestIntervalMs;
+
+    /** Cas posledniho GTM API requestu (microtime) sdileny napric instancemi v ramci procesu. */
+    private static float $lastRequestAt = 0.0;
 
     public function __construct()
     {
@@ -26,6 +30,7 @@ class GtmApiClient
         $this->apiBaseUri = rtrim((string) Config::get('gtm', 'api_base_uri', 'https://tagmanager.googleapis.com/tagmanager/v2'), '/');
         $this->connectTimeout = max(1, (int) Config::get('gtm', 'connect_timeout', 10));
         $this->requestTimeout = max(1, (int) Config::get('gtm', 'request_timeout', 20));
+        $this->minRequestIntervalMs = max(0, (int) Config::get('gtm', 'min_request_interval_ms', 300));
     }
 
     public function isConfigured(): bool
@@ -137,12 +142,12 @@ class GtmApiClient
 
     public function createTag(string $accessToken, string $workspacePath, array $tag): array
     {
-        return $this->request('POST', $workspacePath . '/tags', accessToken: $accessToken, body: $tag, retryable: false);
+        return $this->request('POST', $workspacePath . '/tags', accessToken: $accessToken, body: $tag, retryable: true);
     }
 
     public function updateTag(string $accessToken, string $tagPath, array $tag, ?string $fingerprint): array
     {
-        return $this->request('PUT', $tagPath, accessToken: $accessToken, body: $tag, query: $fingerprint ? ['fingerprint' => $fingerprint] : [], retryable: false);
+        return $this->request('PUT', $tagPath, accessToken: $accessToken, body: $tag, query: $fingerprint ? ['fingerprint' => $fingerprint] : [], retryable: true);
     }
 
     public function deleteTag(string $accessToken, string $tagPath, ?string $fingerprint = null): array
@@ -152,12 +157,12 @@ class GtmApiClient
 
     public function createTrigger(string $accessToken, string $workspacePath, array $trigger): array
     {
-        return $this->request('POST', $workspacePath . '/triggers', accessToken: $accessToken, body: $trigger, retryable: false);
+        return $this->request('POST', $workspacePath . '/triggers', accessToken: $accessToken, body: $trigger, retryable: true);
     }
 
     public function updateTrigger(string $accessToken, string $triggerPath, array $trigger, ?string $fingerprint): array
     {
-        return $this->request('PUT', $triggerPath, accessToken: $accessToken, body: $trigger, query: $fingerprint ? ['fingerprint' => $fingerprint] : [], retryable: false);
+        return $this->request('PUT', $triggerPath, accessToken: $accessToken, body: $trigger, query: $fingerprint ? ['fingerprint' => $fingerprint] : [], retryable: true);
     }
 
     public function deleteTrigger(string $accessToken, string $triggerPath, ?string $fingerprint = null): array
@@ -210,6 +215,8 @@ class GtmApiClient
         if (!function_exists('curl_init')) {
             throw new RuntimeException('cURL extension is required for GTM API requests.');
         }
+
+        $this->throttle();
 
         $attempt = 0;
         $maxAttempts = $retryable ? 3 : 1;
@@ -296,6 +303,29 @@ class GtmApiClient
         }
 
         throw $lastException ?? new RuntimeException('GTM API request failed.');
+    }
+
+    /**
+     * Centralni rate limiter: drzi minimalni rozestup mezi GTM API requesty,
+     * aby davka operaci (napr. apply) nevycerpala nizkou kvotu naraz.
+     */
+    private function throttle(): void
+    {
+        if ($this->minRequestIntervalMs <= 0) {
+            return;
+        }
+
+        $now = microtime(true);
+        if (self::$lastRequestAt > 0.0) {
+            $elapsedMs = ($now - self::$lastRequestAt) * 1000.0;
+            $waitMs = $this->minRequestIntervalMs - $elapsedMs;
+            if ($waitMs > 0) {
+                usleep((int) ($waitMs * 1000));
+                $now = microtime(true);
+            }
+        }
+
+        self::$lastRequestAt = $now;
     }
 
     private function buildUrl(string $path, array $query = []): string

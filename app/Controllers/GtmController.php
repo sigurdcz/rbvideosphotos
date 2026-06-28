@@ -12,6 +12,7 @@ use App\Repositories\GtmSyncOperationRepository;
 use App\Repositories\GtmSyncRunRepository;
 use App\Repositories\SiteRepository;
 use App\Services\GtmApiClient;
+use App\Services\GtmApiException;
 use App\Services\GtmApplyService;
 use App\Services\GtmAuditService;
 use App\Services\GtmConnectionService;
@@ -301,9 +302,9 @@ class GtmController extends Controller
         }
 
         try {
-            // Pred zapisem nacti aktualni stav workspace, ne zastaraly cache,
+            // Pred zapisem nacti aktualni stav workspace (jen entity, kvuli kvote),
             // jinak by se uz existujici GTM entity vytvarely znovu (duplicate name).
-            $inventory = $this->inventory->load((int) $site['id']);
+            $inventory = $this->inventory->loadWorkspaceEntities((int) $site['id']);
             $connection = $inventory['connection'];
             $definitions = (new GtmEventDefinitionRepository())->allBySite((int) $site['id']);
             $user = Auth::user() ?? [];
@@ -316,6 +317,19 @@ class GtmController extends Controller
             $result = $this->applier->apply((int) $site['id'], $site, $connection, $plan, (int) ($user['id'] ?? 0));
             $this->flash('success', 'Plan byl aplikovan. Run ID: ' . $result['run_id']);
             $this->redirect('/admin/gtm/entities?run_id=' . $result['run_id']);
+        } catch (GtmApiException $e) {
+            $this->connections->updateFailure((int) $site['id'], $e->getMessage());
+            $this->audit->error('gtm.apply', 'Apply failed', [
+                'site_id' => $site['id'],
+                'status' => $e->getStatusCode(),
+                'error' => $e->getMessage(),
+            ]);
+            if ($e->getStatusCode() === 429) {
+                $this->flash('error', 'GTM API kvota byla vycerpana. Hotove operace zustaly ulozene — pockej cca minutu a klikni Aplikovat plan znovu, dokonci se zbyvajici operace.');
+            } else {
+                $this->flash('error', $e->getMessage());
+            }
+            $this->redirect('/admin/gtm/entities');
         } catch (RuntimeException $e) {
             $this->connections->updateFailure((int) $site['id'], $e->getMessage());
             $this->audit->error('gtm.apply', 'Apply failed', [

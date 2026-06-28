@@ -31,4 +31,5 @@ return [
     'request_timeout' => (int)(Env::get('GTM_REQUEST_TIMEOUT') ?: 20),
     'connect_timeout' => (int)(Env::get('GTM_CONNECT_TIMEOUT') ?: 10),
     'retry_delay_ms' => (int)(Env::get('GTM_RETRY_DELAY_MS') ?: 500),
+    'min_request_interval_ms' => (int)(Env::get('GTM_MIN_REQUEST_INTERVAL_MS') ?: 300),
 ];

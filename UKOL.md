@@ -1,29 +1,40 @@
-# UKOL: GA4 tag – measurementIdOverride must not be empty
+# UKOL: GTM apply – odolnost vůči API kvótě
 
 Datum: 2026-06-28
-Zadání: GA4 event tag (gaawe) musí mít parametr measurementIdOverride s neprázdným GA4 ID.
-Hotovo když: Apply vytvoří GA4 event tagy bez chyby; chybějící GA4 ID dá jasnou blokující hlášku; PHP lint čistý.
+Zadání: Apply nesmí padat na Quota exceeded; pacing + retry + lehčí inventář + resume přes idempotenci.
+Hotovo když: Apply na 429 nespadne celý, opakované kliknutí postupně dokončí 40 operací bez duplicit; PHP lint čistý.
 
 ## Kroky
 
-- [x] V GtmManifestCompiler přejmenovat parametr measurementId -> measurementIdOverride
-- [x] Přidat guard: prázdné GA4 ID u enabled eventu -> RuntimeException s jasnou CZ hláškou
-- [x] PHP lint
+- [x] config/gtm.php + .env.example: přidat min_request_interval_ms (GTM_MIN_REQUEST_INTERVAL_MS)
+- [x] GtmApiClient: proaktivní pacing (static lastRequestAt) v rawRequest
+- [x] GtmApiClient: create/update tag & trigger retryable (429/5xx), delete/version/publish ponechat
+- [x] GtmInventoryService: loadWorkspaceEntities() = connection + tags + triggers + variables (lehký load)
+- [x] GtmController::apply: použít lehký load; na GtmApiException 429 srozumitelná resume hláška
+- [x] PHP lint všech změněných
 - [x] Commit
 
 ## Poznámky
 
-- Chyba: vendorTemplate.parameter.measurementIdOverride: The value must not be empty.
-- gaawe = GA4 Event tag; aktuální GTM schéma chce measurementIdOverride (G-XXXX), ne legacy measurementId.
-- measurementId bere z sites.google_analytics_id. Pokud prázdné, i po přejmenování klíče bude hodnota
-  prázdná -> guard to zachytí dřív s lidskou hláškou (no silent fallback dle zadání UKOL GTM).
-- Změna parametru změní config_hash -> re-plan ukáže update/create správně.
+- GTM API default kvóta je nízká (~15 dotazů/min, příp. 0,25 QPS). 40 zápisů + inventář nejde do jednoho
+  requestu (i PHP timeout na sdíleném hostingu). Řešení = pacing + resume přes idempotenci, ne one-shot.
+- Idempotence už funguje: persistEntityResult ukládá hotové entity (last_status fix), fresh inventář při
+  dalším apply je vidí jako noop/update -> žádné duplicity, pokračuje se ve zbytku.
+- Pacing: static property na GtmApiClient (drží stav v rámci jednoho PHP requestu napříč instancemi klienta).
+- Retry: jen create/update (rejected 429 = nezapsáno, bezpečné opakovat). NE create_version/publish (dle zadání).
+- Alternativa pro one-shot: uživatel může požádat o navýšení kvóty v Google Cloud (Tag Manager API > Quotas).
 - Bez zásahu do GA4 runtime / frontend eventů.
 
 ## Výsledek
 
-GA4 event tag v GtmManifestCompiler nyní posílá parametr measurementIdOverride (místo legacy
-measurementId), jak vyžaduje aktuální gaawe schéma GTM. Přidán guard: pokud chybí GA4
-Measurement ID (sites.google_analytics_id), compile vyhodí jasnou CZ hlášku a apply/plan se
-zastaví dřív, než narazí na kryptickou GTM chybu. Změna parametru mění config_hash, takže
-re-plan ukáže korektní stav.
+Apply je nyní odolný vůči nízké GTM API kvótě:
+- GtmApiClient má centrální rate limiter (throttle(), static lastRequestAt) s konfigurovatelným
+  rozestupem GTM_MIN_REQUEST_INTERVAL_MS (default 300 ms) — žádné burst requesty.
+- create/update tag & trigger jsou retryovatelné (429/5xx, backoff); delete/version/publish ne (dle zadání).
+- Apply staví plán z lehkého loadWorkspaceEntities() (tagy+triggery+proměnné) místo plného load() — méně
+  read callů, víc kvóty na zápisy.
+- Při 429 controller ukáže jasnou hlášku, že hotové operace zůstaly uložené a stačí za chvíli kliknout
+  Aplikovat plán znovu. Díky idempotenci (uložené entity = noop/update) se pokračuje bez duplicit.
+- GA4 runtime / frontend eventy beze změny.
+
+Pozn.: Pro one-shot apply lze v Google Cloud (Tag Manager API > Quotas) požádat o navýšení kvóty.

@@ -74,6 +74,28 @@ class GtmInventoryService
         return $inventory;
     }
 
+    /**
+     * Lehky load pouze entit workspace (tagy, triggery, promenne) pro plan/apply.
+     * Setri GTM API kvotu — nenacita ucty, kontejnery, workspace ani verze.
+     */
+    public function loadWorkspaceEntities(int $siteId): array
+    {
+        $connection = $this->connections->requireForSite($siteId);
+        $accessToken = $this->connections->validAccessToken($siteId, $connection);
+        $workspacePath = trim((string)($connection['workspace_path'] ?? ''));
+
+        if ($workspacePath === '') {
+            throw new RuntimeException('Vyber GTM workspace pred sestavenim planu.');
+        }
+
+        return [
+            'connection' => $connection,
+            'tags' => $this->client->listTags($accessToken, $workspacePath),
+            'triggers' => $this->client->listTriggers($accessToken, $workspacePath),
+            'variables' => $this->client->listVariables($accessToken, $workspacePath),
+        ];
+    }
+
     public function loadCached(int $siteId): array
     {
         $connection = $this->connections->requireForSite($siteId);
