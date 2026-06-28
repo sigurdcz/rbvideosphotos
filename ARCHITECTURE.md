@@ -223,7 +223,9 @@ Verejny frontend injektuje cookie consent pres `public/index.php` pri sanitizaci
 
 Rozhodnuti uzivatele se uklada do `localStorage` pod klicem `cookie_consent_preferences` ve strukturach `necessary`, `analytics`, `marketing`, `timestamp` a `version`. Kategorie `necessary` je vzdy aktivni. Kategorie `analytics` a `marketing` jsou pri zapnute consent liste vypnute, dokud je uzivatel nepovoli.
 
-`SeoRenderer` nesmi nacitat Google Analytics, Google Tag Manager ani kategorizovane analyticke/marketingove skripty pred souhlasem uzivatele. GA se spousti pouze po povoleni `analytics`. GTM a skripty v polich `marketing_head_scripts` / `marketing_body_scripts` se spousti po povoleni `marketing`. Puvodni `head_scripts` a `body_scripts` jsou urcene jen pro technicky nezbytne skripty.
+`SeoRenderer` nesmi nacitat Google Analytics, Google Tag Manager ani kategorizovane analyticke/marketingove skripty pred souhlasem uzivatele. GA se spousti pouze po povoleni `analytics`. GTM kontejner (`sites.google_tag_manager_id`, snippet `gtm.js`) a skripty v polich `marketing_head_scripts` / `marketing_body_scripts` se spousti po povoleni `marketing`. Puvodni `head_scripts` a `body_scripts` jsou urcene jen pro technicky nezbytne skripty.
+
+GTM container snippet injektuje `cookie-consent-runtime.js` funkci `loadGoogleTagManager()` az po marketing souhlasu (analogicky jako Meta Pixel). ID kontejneru se zadava v `Nastaveni → Google Tag Manager ID`. Pole je oddelene od admin sekce `/admin/gtm`, ktera jen spravuje konfiguraci uvnitr kontejneru.
 
 Pokud je `cookie_consent_enabled = 0`, consent modal se nezobrazi a analyticke/marketingove loadery se chovaji jako povolene podle globalniho nastaveni webu.
 

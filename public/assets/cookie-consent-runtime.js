@@ -127,6 +127,18 @@
     })(window,document,'clarity','script',id);
   }
 
+  function loadGoogleTagManager(){
+    var id = (settings.googleTagManagerId || '').trim();
+    if (!id || window.__gtmLoaded || !canLoadMarketing()) return;
+    window.__gtmLoaded = true;
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({'gtm.start': new Date().getTime(), event: 'gtm.js'});
+    var script = document.createElement('script');
+    script.async = true;
+    script.src = 'https://www.googletagmanager.com/gtm.js?id=' + encodeURIComponent(id);
+    document.head.appendChild(script);
+  }
+
   function loadMetaPixel(){
     var id = (settings.metaPixelId || '').trim();
     if (!id || window.__metaPixelLoaded || !canLoadMarketing()) return;
@@ -153,6 +165,7 @@
 
   function loadMarketingScripts(){
     if (!canLoadMarketing()) return;
+    loadGoogleTagManager();
     loadMetaPixel();
     appendHtml(settings.marketingHeadScripts || '', 'head', '__marketingHeadScriptsLoaded');
     appendHtml(settings.marketingBodyScripts || '', 'body', '__marketingBodyScriptsLoaded');
@@ -164,7 +177,7 @@
     if (!preferences.analytics && id) window['ga-disable-' + id] = true;
     if (
       (!preferences.analytics && (window.__analyticsLoaded || window.__analyticsHeadScriptsLoaded || window.__analyticsBodyScriptsLoaded)) ||
-      (!preferences.marketing && (window.__metaPixelLoaded || window.__marketingHeadScriptsLoaded || window.__marketingBodyScriptsLoaded))
+      (!preferences.marketing && (window.__metaPixelLoaded || window.__gtmLoaded || window.__marketingHeadScriptsLoaded || window.__marketingBodyScriptsLoaded))
     ) {
       window.location.reload();
     }

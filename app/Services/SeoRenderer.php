@@ -134,6 +134,7 @@ HTML;
             'analyticsCategoryEnabled' => (int)($site['cookie_consent_analytics_enabled'] ?? 1) === 1,
             'marketingCategoryEnabled' => (int)($site['cookie_consent_marketing_enabled'] ?? 1) === 1,
             'googleAnalyticsId'        => trim((string)($site['google_analytics_id'] ?? '')),
+            'googleTagManagerId'       => trim((string)($site['google_tag_manager_id'] ?? '')),
             'analyticsHeadScripts'     => (string)($site['analytics_head_scripts'] ?? ''),
             'analyticsBodyScripts'     => (string)($site['analytics_body_scripts'] ?? ''),
             'marketingHeadScripts'     => (string)($site['marketing_head_scripts'] ?? ''),

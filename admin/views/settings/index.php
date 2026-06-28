@@ -213,6 +213,11 @@ ob_start();
         <input type="text" name="google_analytics_id" value="<?= $h($site['google_analytics_id'] ?? '') ?>" placeholder="G-XXXXXXXXXX">
         <p class="help-text">Measurement ID z GA4 → Správce → Datové toky. Spusti se s Analytics consent.</p>
       </div>
+      <div class="form-group">
+        <label>Google Tag Manager ID</label>
+        <input type="text" name="google_tag_manager_id" value="<?= $h($site['google_tag_manager_id'] ?? '') ?>" placeholder="GTM-XXXXXXX">
+        <p class="help-text">ID kontejneru ze Správce značek (vlevo nahoře). Snippet se na web nacte az s Marketing consent.</p>
+      </div>
     </div>
   </div>
 
