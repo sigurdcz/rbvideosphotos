@@ -301,8 +301,10 @@ class GtmController extends Controller
         }
 
         try {
-            $connection = $this->connections->requireForSite((int) $site['id']);
-            $inventory = $this->inventory->loadCached((int) $site['id']);
+            // Pred zapisem nacti aktualni stav workspace, ne zastaraly cache,
+            // jinak by se uz existujici GTM entity vytvarely znovu (duplicate name).
+            $inventory = $this->inventory->load((int) $site['id']);
+            $connection = $inventory['connection'];
             $definitions = (new GtmEventDefinitionRepository())->allBySite((int) $site['id']);
             $user = Auth::user() ?? [];
             $plan = $this->planner->build($site, $connection, $inventory, $definitions);
