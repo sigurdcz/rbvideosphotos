@@ -27,7 +27,7 @@ class GtmApplyService
             throw new \RuntimeException('Vyber workspace pred aplikaci plánu.');
         }
 
-        $accessToken = $this->requireAccessToken($siteId, $connection);
+        $accessToken = $this->connections->validAccessToken($siteId, $connection);
         $workspacePath = (string) $connection['workspace_path'];
         $this->audit->info('gtm.apply.start', 'Applying GTM plan', [
             'site_id' => $siteId,
@@ -159,22 +159,6 @@ class GtmApplyService
             'trigger_filter_json' => $operation['request_json'] ?? [],
             'notes_json' => [],
         ];
-    }
-
-    private function requireAccessToken(int $siteId, array $connection): string
-    {
-        $token = trim((string)($connection['access_token'] ?? ''));
-        if ($token !== '') {
-            return $token;
-        }
-
-        $refreshed = $this->connections->refreshAccessToken($siteId);
-        $token = trim((string)($refreshed['access_token'] ?? ''));
-        if ($token === '') {
-            throw new \RuntimeException('Missing GTM access token.');
-        }
-
-        return $token;
     }
 
     private function persistEntityResult(int $siteId, array $operation, array $result, string $entityType): void

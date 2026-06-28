@@ -92,6 +92,45 @@ class GtmConnectionService
         return $this->storeTokenResponse($siteId, $tokenResponse);
     }
 
+    /**
+     * Vrati platny access token pro dany web. Token obnovi, pokud chybi nebo
+     * je expirovany (vcetne 60s rezervy). Volitelne lze predat jiz nactene
+     * spojeni, aby se setrila DB.
+     */
+    public function validAccessToken(int $siteId, ?array $connection = null): string
+    {
+        $connection ??= $this->requireForSite($siteId);
+
+        $tokenError = trim((string)($connection['token_error'] ?? ''));
+        if ($tokenError !== '') {
+            throw new RuntimeException('GTM token decryption failed: ' . $tokenError);
+        }
+
+        $token = trim((string)($connection['access_token'] ?? ''));
+        $expiresAt = trim((string)($connection['token_expires_at'] ?? ''));
+        $refreshToken = trim((string)($connection['refresh_token'] ?? ''));
+
+        $expiresTs = $expiresAt !== '' ? strtotime($expiresAt) : false;
+        $expired = $expiresTs !== false && $expiresTs <= time() + 60;
+
+        if ($token === '' || $expired) {
+            if ($refreshToken === '') {
+                throw new RuntimeException($token === ''
+                    ? 'Missing GTM access token and refresh token.'
+                    : 'GTM access token expired and no refresh token is available. Reconnect the Google account.');
+            }
+
+            $connection = $this->refreshAccessToken($siteId);
+            $token = trim((string)($connection['access_token'] ?? ''));
+        }
+
+        if ($token === '') {
+            throw new RuntimeException('Missing GTM access token.');
+        }
+
+        return $token;
+    }
+
     public function updateSelection(int $siteId, array $selection): array
     {
         $existing = $this->connections->findBySite($siteId);

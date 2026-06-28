@@ -24,7 +24,7 @@ class GtmInventoryService
     public function load(int $siteId): array
     {
         $connection = $this->connections->requireForSite($siteId);
-        $accessToken = $this->ensureAccessToken($siteId, $connection);
+        $accessToken = $this->connections->validAccessToken($siteId, $connection);
         $accountId = trim((string)($connection['account_id'] ?? ''));
         $containerId = trim((string)($connection['container_id'] ?? ''));
         $workspaceId = trim((string)($connection['workspace_id'] ?? ''));
@@ -120,36 +120,6 @@ class GtmInventoryService
     {
         $runs = $this->runs->allBySite($siteId, 1);
         return $runs[0] ?? null;
-    }
-
-    private function ensureAccessToken(int $siteId, array $connection): string
-    {
-        $tokenError = trim((string)($connection['token_error'] ?? ''));
-        if ($tokenError !== '') {
-            throw new RuntimeException('GTM token decryption failed: ' . $tokenError);
-        }
-
-        $token = trim((string)($connection['access_token'] ?? ''));
-        $expiresAt = trim((string)($connection['token_expires_at'] ?? ''));
-        $refreshToken = trim((string)($connection['refresh_token'] ?? ''));
-
-        if ($token === '') {
-            if ($refreshToken === '') {
-                throw new RuntimeException('Missing GTM access token and refresh token.');
-            }
-
-            $connection = $this->connections->refreshAccessToken($siteId);
-            $token = trim((string)($connection['access_token'] ?? ''));
-        } elseif ($expiresAt !== '' && strtotime($expiresAt) !== false && strtotime($expiresAt) <= time() + 60) {
-            $connection = $this->connections->refreshAccessToken($siteId);
-            $token = trim((string)($connection['access_token'] ?? ''));
-        }
-
-        if ($token === '') {
-            throw new RuntimeException('Missing GTM access token.');
-        }
-
-        return $token;
     }
 
     private function encodeSnapshot(array $inventory): string

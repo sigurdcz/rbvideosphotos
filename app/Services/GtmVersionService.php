@@ -23,7 +23,7 @@ class GtmVersionService
         }
 
         $workspacePath = (string) $connection['workspace_path'];
-        $accessToken = $this->requireAccessToken($siteId, $connection);
+        $accessToken = $this->connections->validAccessToken($siteId, $connection);
         $runId = $this->runs->create([
             'site_id' => $siteId,
             'connection_id' => $connection['id'] ?? null,
@@ -71,7 +71,7 @@ class GtmVersionService
 
     public function publishVersion(int $siteId, array $connection, int $userId, string $versionPath): array
     {
-        $accessToken = $this->requireAccessToken($siteId, $connection);
+        $accessToken = $this->connections->validAccessToken($siteId, $connection);
         $runId = $this->runs->create([
             'site_id' => $siteId,
             'connection_id' => $connection['id'] ?? null,
@@ -112,19 +112,4 @@ class GtmVersionService
         return ['run_id' => $runId, 'response' => $response];
     }
 
-    private function requireAccessToken(int $siteId, array $connection): string
-    {
-        $token = trim((string)($connection['access_token'] ?? ''));
-        if ($token !== '') {
-            return $token;
-        }
-
-        $refreshed = $this->connections->refreshAccessToken($siteId);
-        $token = trim((string)($refreshed['access_token'] ?? ''));
-        if ($token === '') {
-            throw new \RuntimeException('Missing GTM access token.');
-        }
-
-        return $token;
-    }
 }
