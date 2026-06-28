@@ -23,6 +23,10 @@ class GtmManifestCompiler
                 continue;
             }
 
+            if ($measurementId === '') {
+                throw new \RuntimeException('Chybí GA4 Measurement ID. Vyplň "Google Analytics ID" (G-XXXXXXXXXX) v Nastavení — GA4 event tagy ho potřebují.');
+            }
+
             $catalogRow = $this->catalog->find($eventKey) ?? [];
             $tagName = (string)($definition['tag_name'] ?? ($catalogRow['tag_name'] ?? $this->catalog->makeTagName($eventKey, $eventKey)));
             $triggerName = (string)($definition['trigger_name'] ?? ($catalogRow['trigger_name'] ?? $this->catalog->makeTriggerName($eventKey, $eventKey)));
@@ -52,7 +56,7 @@ class GtmManifestCompiler
                 'name' => $tagName,
                 'type' => 'gaawe',
                 'parameter' => [
-                    ['type' => 'template', 'key' => 'measurementId', 'value' => $measurementId],
+                    ['type' => 'template', 'key' => 'measurementIdOverride', 'value' => $measurementId],
                     ['type' => 'template', 'key' => 'eventName', 'value' => $eventKey],
                 ],
                 'firingTriggerId' => [],
