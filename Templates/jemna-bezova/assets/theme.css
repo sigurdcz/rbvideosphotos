@@ -1121,6 +1121,29 @@ body.theme-jemna-bezova {
   margin-top: 3px;
 }
 
+/* Stranka Hodnoceni: karty maji vlastni (tmave-tema) CSS ze seederu —
+   na svetlem pozadi jemne bezove byla jmena/typy bile na bilem. Prepiseme. */
+.theme-jemna-bezova .reviews-page-card {
+  border: 1px solid rgba(122, 95, 65, .14);
+  background: rgba(255, 255, 255, .54);
+}
+
+.theme-jemna-bezova .reviews-page-stars {
+  color: var(--jb-gold);
+}
+
+.theme-jemna-bezova .reviews-page-card p {
+  color: #6b5642;
+}
+
+.theme-jemna-bezova .reviews-page-card strong {
+  color: #1a1610;
+}
+
+.theme-jemna-bezova .reviews-page-card span {
+  color: #5f5143;
+}
+
 .theme-jemna-bezova #kontakt {
   padding-bottom: 0;
   background:

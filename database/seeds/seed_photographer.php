@@ -906,6 +906,7 @@ $pricingPackages = <<<'HTML'
       <li>párové focení novomanželů</li>
       <li>hostina, detaily a atmosféra dne</li>
       <li>minimálně 300–500 upravených fotografií</li>
+      <li>svatební video / sestřih dne</li>
       <li>online galerie</li>
       <li>konzultace před svatbou</li>
       <li>archivace hotových výstupů na 2 roky</li>
@@ -920,24 +921,10 @@ $pricingPackages = <<<'HTML'
       <li>celý den od příprav až po večerní zábavu</li>
       <li>větší počet upravených fotografií</li>
       <li>detailní zachycení atmosféry, hostů a momentů</li>
-      <li>online galerie</li>
-      <li>konzultace před svatbou</li>
-      <li>prioritní zpracování</li>
-      <li>možnost krátkého video / reels výstupu dle domluvy</li>
-      <li>archivace hotových výstupů na 5 let</li>
-    </ul>
-  </div>
-  <div class="ckp-card">
-    <h3 class="ckp-title">Foto + video svatba</h3>
-    <div class="ckp-price">od 44 900 Kč</div>
-    <p class="ckp-desc">Pro páry, které chtějí kromě fotografií také svatební video, krátký sestřih nebo výstupy na sociální sítě.</p>
-    <ul class="ckp-feats">
-      <li>focení a natáčení svatebního dne</li>
-      <li>upravené fotografie</li>
-      <li>hlavní svatební video</li>
-      <li>krátký sestřih / reels podle domluvy</li>
+      <li>svatební video + krátký sestřih / reels v ceně</li>
       <li>online galerie a video ke stažení</li>
       <li>konzultace před svatbou</li>
+      <li>prioritní zpracování</li>
       <li>archivace hotových výstupů na 5 let</li>
     </ul>
   </div>
