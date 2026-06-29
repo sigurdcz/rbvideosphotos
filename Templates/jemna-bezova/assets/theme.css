@@ -2441,12 +2441,19 @@ body.theme-jemna-bezova {
   z-index: 2;
   height: 480px;
   min-height: 0;
+  margin-top: 14px;
   padding: 60px 0 40px;
-  background: linear-gradient(180deg, rgba(20, 16, 12, .38), rgba(20, 16, 12, .52));
+  background: transparent;
 }
 
 .theme-jemna-bezova .pf-detail-hero::before {
   display: none;
+}
+
+/* Bez scrimu cte bily text primo na videu — proto silny text-shadow. */
+.theme-jemna-bezova .pf-detail-hero h1,
+.theme-jemna-bezova .pf-detail-hero p {
+  text-shadow: 0 2px 20px rgba(0, 0, 0, .6), 0 1px 4px rgba(0, 0, 0, .55);
 }
 
 .theme-jemna-bezova .pf-main {
