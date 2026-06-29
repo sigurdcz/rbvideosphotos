@@ -2431,21 +2431,30 @@ body.theme-jemna-bezova {
   filter: sepia(.12) saturate(.82) contrast(.97);
 }
 
-/* Portfolio detail hero ("Nase prace" detail): text PRES obrazek.
-   ::before uz vykresluje hero obrazek z promenne --theme-page-hero-image,
-   ale na .42 opacity pres hnede pozadi, takze fotka je sotva videt.
-   Zvysime na plnou viditelnost + tmavy scrim pro citelnost textu,
-   cimz hnede pozadi zmizi pod obrazkem. */
+/* Portfolio detail ("Nase prace" detail): text z pf-detail-hero PRES
+   video v pf-main. Tato stranka nema vlastni hero obrazek, takze misto
+   ::before (hnede fallback) prekryjeme sekce: hero dostane polopruhledny
+   scrim a pf-main se vytahne nahoru pod hero, takze prvni video prosvita
+   pod textem. Stejny princip jako blog bp-hero / bp-featured. */
 .theme-jemna-bezova .pf-detail-hero {
-  min-height: 480px;
+  box-sizing: border-box;
+  z-index: 2;
+  height: 480px;
+  min-height: 0;
+  padding: 60px 0 40px;
+  background: linear-gradient(180deg, rgba(20, 16, 12, .38), rgba(20, 16, 12, .52));
 }
 
 .theme-jemna-bezova .pf-detail-hero::before {
-  opacity: 1;
-  background:
-    linear-gradient(180deg, rgba(20, 16, 12, .42), rgba(20, 16, 12, .55)),
-    var(--theme-page-hero-image, var(--theme-hero-image, linear-gradient(135deg, #6c5846, #9a8773))) center / cover no-repeat;
-  mix-blend-mode: normal;
+  display: none;
+}
+
+.theme-jemna-bezova .pf-main {
+  position: relative;
+  z-index: 1;
+  margin-top: -480px;
+  padding-top: 0;
+  background: transparent;
 }
 
 .theme-jemna-bezova .faq-list {
@@ -2657,6 +2666,16 @@ body.theme-jemna-bezova {
 
   .theme-jemna-bezova .bp-featured {
     margin-top: -400px;
+  }
+
+  /* Portfolio detail overlay: na mobilu sladit hero a posun pf-main (360px). */
+  .theme-jemna-bezova .pf-detail-hero {
+    height: 360px;
+    min-height: 0;
+  }
+
+  .theme-jemna-bezova .pf-main {
+    margin-top: -360px;
   }
 
   .theme-jemna-bezova .grid-wrap,
