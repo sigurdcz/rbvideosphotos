@@ -2365,10 +2365,6 @@ body.theme-jemna-bezova {
   background: #fcf9f5;
 }
 
-.theme-jemna-bezova .pf-main {
-  margin-top: -180px;
-}
-
 .theme-jemna-bezova .fq-wrap {
   padding: 3.75rem 0 4.5rem;
   background: #fbf9f6;
@@ -2400,17 +2396,34 @@ body.theme-jemna-bezova {
   font-weight: 400;
 }
 
+/* Blog hero overlay: text PRES obrazek.
+   Misto opaque hneveho pozadi pouzijeme polopruhledny tmavy scrim,
+   aby fotka (bp-featured) prosvitala pod textem. Vysky hero a obrazku
+   musi sedet, aby se prekryly presne. */
+.theme-jemna-bezova .bp-hero {
+  z-index: 2;
+  min-height: 460px;
+  background: linear-gradient(180deg, rgba(20, 16, 12, .42), rgba(20, 16, 12, .55));
+}
+
+.theme-jemna-bezova .bp-hero::before {
+  display: none;
+}
+
 .theme-jemna-bezova .bp-featured {
   position: relative;
   z-index: 1;
   width: 100%;
-  max-height: 420px;
-  margin-top: -260px;
+  height: 460px;
+  max-height: 460px;
+  margin-top: -460px;
+  background: none;
 }
 
 .theme-jemna-bezova .bp-featured img {
   width: 100%;
-  max-height: 420px;
+  height: 460px;
+  max-height: 460px;
   object-fit: cover;
   filter: sepia(.12) saturate(.82) contrast(.97);
 }
@@ -2608,6 +2621,21 @@ body.theme-jemna-bezova {
   .theme-jemna-bezova .page-hero {
     min-height: 220px;
     padding: 76px 0 28px;
+  }
+
+  /* Blog hero overlay: na mobilu sladit vysku hero a obrazku (320px). */
+  .theme-jemna-bezova .bp-hero {
+    min-height: 320px;
+  }
+
+  .theme-jemna-bezova .bp-featured,
+  .theme-jemna-bezova .bp-featured img {
+    height: 320px;
+    max-height: 320px;
+  }
+
+  .theme-jemna-bezova .bp-featured {
+    margin-top: -320px;
   }
 
   .theme-jemna-bezova .grid-wrap,
