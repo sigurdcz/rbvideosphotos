@@ -2431,6 +2431,23 @@ body.theme-jemna-bezova {
   filter: sepia(.12) saturate(.82) contrast(.97);
 }
 
+/* Portfolio detail hero ("Nase prace" detail): text PRES obrazek.
+   ::before uz vykresluje hero obrazek z promenne --theme-page-hero-image,
+   ale na .42 opacity pres hnede pozadi, takze fotka je sotva videt.
+   Zvysime na plnou viditelnost + tmavy scrim pro citelnost textu,
+   cimz hnede pozadi zmizi pod obrazkem. */
+.theme-jemna-bezova .pf-detail-hero {
+  min-height: 480px;
+}
+
+.theme-jemna-bezova .pf-detail-hero::before {
+  opacity: 1;
+  background:
+    linear-gradient(180deg, rgba(20, 16, 12, .42), rgba(20, 16, 12, .55)),
+    var(--theme-page-hero-image, var(--theme-hero-image, linear-gradient(135deg, #6c5846, #9a8773))) center / cover no-repeat;
+  mix-blend-mode: normal;
+}
+
 .theme-jemna-bezova .faq-list {
   max-width: 900px;
   margin: 0 auto;
