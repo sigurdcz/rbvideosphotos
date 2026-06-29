@@ -2307,6 +2307,10 @@ body.theme-jemna-bezova {
   mix-blend-mode: normal;
 }
 
+.theme-jemna-bezova .bp-hero::before {
+  display: none;
+}
+
 .theme-jemna-bezova .pf-hero .theme-hero-video,
 .theme-jemna-bezova .bp-hero .theme-hero-video,
 .theme-jemna-bezova .fq-hero .theme-hero-video,
