@@ -522,6 +522,7 @@ body{padding-top:0}
 .faq-item:first-child{border-top:1px solid #e0dcd5}
 .faq-q{font-size:1rem;font-weight:700;color:#111;margin-bottom:8px}
 .faq-a{font-size:.9rem;color:#555;line-height:1.75}
+.faq-foot{max-width:780px;margin:26px auto 8px;color:#555;line-height:1.75;font-size:.95rem}
 @media(max-width:1024px){.svc-grid{grid-template-columns:1fr 1fr}.feat-grid{grid-template-columns:1fr 1fr}.blog-grid{grid-template-columns:1fr 1fr}.svc-card{border-bottom:1px solid #e5e5e5}.feat{border-bottom:1px solid rgba(255,255,255,.07)}}
 @media(max-width:900px){.cta-2col{grid-template-columns:1fr;gap:32px}.stats-row{grid-template-columns:repeat(2,1fr)}.rev-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:640px){.rev-grid{grid-template-columns:1fr}.hero h1{font-size:2.2rem}.pt-grid{grid-template-columns:1fr}.blog-grid{grid-template-columns:1fr}}
@@ -579,6 +580,8 @@ $htmlFaq = <<<'HTML'
 </header>
 <section class="section">
   <div class="container">
+    <div class="faq-list" data-block="faq_body"></div>
+    <p class="faq-foot" data-block="faq_footer"></p>
     <p><a href="/cenik" class="btn">Zobrazit cen&#237;k</a></p>
   </div>
 </section>
@@ -853,9 +856,9 @@ block($pdo, $pidHome, 'blog_cta',   'html',     'Blog — tlačítko', '<a href=
 
 block($pdo, $pidHome, 'faq_title', 'text',     'FAQ — nadpis', 'Nejčastější otázky', 90);
 block($pdo, $pidHome, 'faq_intro', 'textarea', 'FAQ — intro',  'Vše, co potřebujete vědět před rezervací.', 91);
-block($pdo, $pidHome, 'faq_1',     'html',     'FAQ 1',        '', 92);
-block($pdo, $pidHome, 'faq_2',     'html',     'FAQ 2',        '', 93);
-block($pdo, $pidHome, 'faq_3',     'html',     'FAQ 3',        '', 94);
+block($pdo, $pidHome, 'faq_1',     'html',     'FAQ 1',        '<div class="faq-q">Kdy je nejlepší rezervovat termín svatby?</div><div class="faq-a">Ideálně co nejdříve po potvrzení data a místa svatby. U víkendových termínů ve svatební sezóně doporučuji rezervaci několik měsíců dopředu.</div>', 92);
+block($pdo, $pidHome, 'faq_2',     'html',     'FAQ 2',        '<div class="faq-q">Kolik fotografií dostaneme?</div><div class="faq-a">Záleží na délce focení a zvoleném balíčku. U menších svateb obvykle předávám nižší stovky fotografií, u celodenních svateb několik stovek upravených snímků.</div>', 93);
+block($pdo, $pidHome, 'faq_3',     'html',     'FAQ 3',        '<div class="faq-q">Za jak dlouho dostaneme hotové fotografie?</div><div class="faq-a">Obvyklá doba dodání je podle rozsahu zakázky. Menší focení bývá hotové rychleji, u větších svateb a kombinace foto + video je potřeba počítat s delší postprodukcí.</div>', 94);
 block($pdo, $pidHome, 'faq_cta',   'html',     'FAQ — tlačítko', '<a href="/faq" class="btn-od">V&#353;echny ot&#225;zky</a>', 95);
 
 block($pdo, $pidHome, 'cta_title',    'text',     'CTA — nadpis',     'Pojďme vytvořit něco krásného', 60);
@@ -965,8 +968,25 @@ block($pdo, $pidCenik, 'cenik_card_3_price', 'text',     'Karta 3 — cena',  'o
 
 // ─── Content blocks: FAQ ─────────────────────────────────────────────────────
 
-block($pdo, $pidFaq, 'hero_heading', 'text',     'Hero Nadpis', 'Časté otázky', 1);
-block($pdo, $pidFaq, 'hero_sub',     'textarea', 'Hero Sub',    'Vše, co potřebujete vědět před rezervací. Ceny, termíny, příprava i to, co se bojíte zeptat.', 2);
+$faqBody = <<<'HTML'
+<div class="faq-item"><div class="faq-q">Kdy je nejlepší rezervovat termín svatby?</div><div class="faq-a">Ideálně co nejdříve po potvrzení data a místa svatby. U víkendových termínů ve svatební sezóně doporučuji rezervaci několik měsíců dopředu.</div></div>
+<div class="faq-item"><div class="faq-q">Je možné nafotit jen obřad?</div><div class="faq-a">Ano. Pro menší svatby nebo pouze obřad je vhodný základní balíček. Zahrnuje obřad, gratulace, skupinové fotografie a krátké focení novomanželů.</div></div>
+<div class="faq-item"><div class="faq-q">Kolik fotografií dostaneme?</div><div class="faq-a">Záleží na délce focení a zvoleném balíčku. U menších svateb obvykle předávám nižší stovky fotografií, u celodenních svateb několik stovek upravených snímků.</div></div>
+<div class="faq-item"><div class="faq-q">Za jak dlouho dostaneme hotové fotografie?</div><div class="faq-a">Obvyklá doba dodání je podle rozsahu zakázky. Menší focení bývá hotové rychleji, u větších svateb a kombinace foto + video je potřeba počítat s delší postprodukcí.</div></div>
+<div class="faq-item"><div class="faq-q">Jak nám budou fotografie předány?</div><div class="faq-a">Hotové fotografie předávám online formou galerie nebo odkazu ke stažení. Díky tomu si je můžete jednoduše stáhnout a sdílet s rodinou nebo hosty.</div></div>
+<div class="faq-item"><div class="faq-q">Jak dlouho archivujete hotové výstupy?</div><div class="faq-a">Podle zvoleného balíčku archivuji finálně předané výstupy po dobu 2 nebo 5 let. Archivace se vztahuje na hotové předané fotografie a videa, ne na všechny surové záznamy.</div></div>
+<div class="faq-item"><div class="faq-q">Dostaneme i neupravené fotografie nebo RAW soubory?</div><div class="faq-a">Standardně předávám pouze vybrané a upravené fotografie. Neupravené fotografie ani RAW soubory nejsou běžnou součástí předání.</div></div>
+<div class="faq-item"><div class="faq-q">Fotíte i video?</div><div class="faq-a">Ano. Kromě fotografování je možné domluvit také video výstup, krátký sestřih nebo reels/shorts verze pro sociální sítě.</div></div>
+<div class="faq-item"><div class="faq-q">Je doprava v ceně?</div><div class="faq-a">Doprava záleží na místě konání svatby nebo akce. U každé poptávky ji řeším individuálně podle lokality.</div></div>
+<div class="faq-item"><div class="faq-q">Jak probíhá rezervace termínu?</div><div class="faq-a">Po odeslání poptávky si společně upřesníme datum, místo, rozsah focení nebo natáčení a požadované výstupy. Poté připravím konkrétní nabídku.</div></div>
+<div class="faq-item"><div class="faq-q">Musíme umět pózovat?</div><div class="faq-a">Ne. Většinu dne fotím přirozeně a reportážně. Při párovém focení vás navedu tak, aby fotky působily přirozeně a nebyly strojené.</div></div>
+<div class="faq-item"><div class="faq-q">Je možné upravit balíček na míru?</div><div class="faq-a">Ano. Každá svatba nebo akce je jiná, proto je možné rozsah focení, videa, počet hodin i typ výstupů upravit individuálně.</div></div>
+HTML;
+
+block($pdo, $pidFaq, 'hero_heading', 'text',     'Hero Nadpis', 'Často kladené otázky', 1);
+block($pdo, $pidFaq, 'hero_sub',     'textarea', 'Hero Sub',    'Vše, co potřebujete vědět před rezervací — termíny, fotografie, video, předání i archivace.', 2);
+block($pdo, $pidFaq, 'faq_body',     'html',     'FAQ — otázky', $faqBody, 3);
+block($pdo, $pidFaq, 'faq_footer',   'textarea', 'FAQ — patička', 'Nenašli jste odpověď na svou otázku? Napište mi a připravím vám konkrétní nabídku podle termínu, místa, rozsahu focení nebo natáčení a požadovaných výstupů.', 4);
 
 // ─── Content blocks: Blog ────────────────────────────────────────────────────
 
