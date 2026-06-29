@@ -2280,6 +2280,8 @@ body.theme-jemna-bezova {
 .theme-jemna-bezova .bl-hero,
 .theme-jemna-bezova .pf-detail-hero,
 .theme-jemna-bezova .page-hero {
+  position: relative;
+  z-index: 10;
   min-height: 280px;
   padding: 88px 0 40px;
   background:
@@ -2353,8 +2355,14 @@ body.theme-jemna-bezova {
 .theme-jemna-bezova .pf-main,
 .theme-jemna-bezova .bl-grid-wrap,
 .theme-jemna-bezova .bp-content-wrap {
+  position: relative;
+  z-index: 1;
   padding: 3.75rem 0 4.5rem;
   background: #fcf9f5;
+}
+
+.theme-jemna-bezova .pf-main {
+  margin-top: -180px;
 }
 
 .theme-jemna-bezova .fq-wrap {
@@ -2394,7 +2402,6 @@ body.theme-jemna-bezova {
   width: 100%;
   max-height: 420px;
   margin-top: -260px;
-  background: #d4c4b2;
 }
 
 .theme-jemna-bezova .bp-featured img {
