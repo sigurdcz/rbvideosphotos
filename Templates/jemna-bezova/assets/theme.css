@@ -1935,6 +1935,7 @@ body.theme-jemna-bezova {
   font-weight: 600;
   letter-spacing: .18em;
   padding: 10px 12px;
+  white-space: nowrap;
 }
 
 .theme-jemna-bezova .section {
