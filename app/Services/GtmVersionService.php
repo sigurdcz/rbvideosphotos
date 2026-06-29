@@ -96,12 +96,23 @@ class GtmVersionService
 
         $response = $this->client->publishVersion($accessToken, $versionPath);
         $version = $response['containerVersion'] ?? [];
+        $containerVersionId = (string)($version['containerVersionId'] ?? $version['versionId'] ?? $versionPath);
+
+        $existing = $this->versions->findByContainerVersionId($siteId, $containerVersionId);
+        if ($existing) {
+            $this->runs->update($runId, [
+                'status' => 'succeeded',
+                'summary' => 'GTM verze uz publikovana (idempotence)',
+                'finished_at' => date('Y-m-d H:i:s'),
+            ]);
+            return ['run_id' => $runId, 'response' => $response, 'existing' => true];
+        }
 
         $this->versions->create([
             'site_id' => $siteId,
             'connection_id' => $connection['id'] ?? null,
             'sync_run_id' => $runId,
-            'container_version_id' => (string)($version['containerVersionId'] ?? $version['versionId'] ?? $versionPath),
+            'container_version_id' => $containerVersionId,
             'version_name' => (string)($version['name'] ?? $versionPath),
             'version_path' => $version['path'] ?? $versionPath,
             'fingerprint' => $version['fingerprint'] ?? null,
