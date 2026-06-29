@@ -138,7 +138,7 @@ body > #cms-adminbar + .theme-shell .navbar {
 }
 
 [data-inline-key] {
-  outline: 2px dashed rgba(99, 102, 241, 0.45);
+  outline: 2px dashed transparent;
   outline-offset: 2px;
   cursor: pointer;
   transition: outline-color 0.15s;

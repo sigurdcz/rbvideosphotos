@@ -2401,8 +2401,11 @@ body.theme-jemna-bezova {
    aby fotka (bp-featured) prosvitala pod textem. Vysky hero a obrazku
    musi sedet, aby se prekryly presne. */
 .theme-jemna-bezova .bp-hero {
+  box-sizing: border-box;
   z-index: 2;
-  min-height: 460px;
+  height: 600px;
+  min-height: 0;
+  padding: 60px 0 40px;
   background: linear-gradient(180deg, rgba(20, 16, 12, .42), rgba(20, 16, 12, .55));
 }
 
@@ -2414,16 +2417,16 @@ body.theme-jemna-bezova {
   position: relative;
   z-index: 1;
   width: 100%;
-  height: 460px;
-  max-height: 460px;
-  margin-top: -460px;
+  height: 600px;
+  max-height: 600px;
+  margin-top: -600px;
   background: none;
 }
 
 .theme-jemna-bezova .bp-featured img {
   width: 100%;
-  height: 460px;
-  max-height: 460px;
+  height: 600px;
+  max-height: 600px;
   object-fit: cover;
   filter: sepia(.12) saturate(.82) contrast(.97);
 }
@@ -2623,19 +2626,20 @@ body.theme-jemna-bezova {
     padding: 76px 0 28px;
   }
 
-  /* Blog hero overlay: na mobilu sladit vysku hero a obrazku (320px). */
+  /* Blog hero overlay: na mobilu sladit vysku hero a obrazku (400px). */
   .theme-jemna-bezova .bp-hero {
-    min-height: 320px;
+    height: 400px;
+    min-height: 0;
   }
 
   .theme-jemna-bezova .bp-featured,
   .theme-jemna-bezova .bp-featured img {
-    height: 320px;
-    max-height: 320px;
+    height: 400px;
+    max-height: 400px;
   }
 
   .theme-jemna-bezova .bp-featured {
-    margin-top: -320px;
+    margin-top: -400px;
   }
 
   .theme-jemna-bezova .grid-wrap,
