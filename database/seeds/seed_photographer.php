@@ -552,6 +552,7 @@ $htmlCenik = <<<'HTML'
   <div class="container">
     <h2 data-block="pricing_weddings_heading"></h2>
     <p data-block="pricing_weddings_sub"></p>
+    <div data-block="pricing_packages"></div>
     <h2 data-block="pricing_other_heading"></h2>
     <p data-block="pricing_other_sub"></p>
   </div>
@@ -864,10 +865,90 @@ block($pdo, $pidHome, 'contact_card', 'html',     'Kontakt — karta',  '<h3>Ozv
 
 // ─── Content blocks: Ceník ───────────────────────────────────────────────────
 
+// Detailni svatebni balicky (self-contained styl, robustni napric tematy).
+$pricingPackages = <<<'HTML'
+<style>
+.ckp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px;margin:8px 0 40px}
+.ckp-card{position:relative;display:flex;flex-direction:column;background:#fff;border:1px solid #e7e0d6;border-radius:14px;padding:30px 26px;box-shadow:0 10px 30px rgba(48,38,30,.06)}
+.ckp-card--featured{border-color:#c4963c;box-shadow:0 16px 40px rgba(196,150,60,.18)}
+.ckp-badge{position:absolute;top:-12px;left:26px;background:#c4963c;color:#fff;font-size:.66rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;padding:5px 12px;border-radius:999px}
+.ckp-title{font-size:1.3rem;font-weight:800;color:#1a1208;margin:0 0 6px}
+.ckp-price{font-size:1.5rem;font-weight:800;color:#c4963c;margin:0 0 14px}
+.ckp-desc{font-size:.92rem;color:#5f5143;line-height:1.65;margin:0 0 18px}
+.ckp-feats{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px}
+.ckp-feats li{position:relative;padding-left:22px;font-size:.9rem;color:#3a2f24;line-height:1.5}
+.ckp-feats li::before{content:"\2713";position:absolute;left:0;top:0;color:#c4963c;font-weight:800}
+@media(max-width:640px){.ckp-grid{grid-template-columns:1fr}}
+</style>
+<div class="ckp-grid">
+  <div class="ckp-card">
+    <h3 class="ckp-title">Základní svatba</h3>
+    <div class="ckp-price">od 14 900 Kč</div>
+    <p class="ckp-desc">Pro menší svatby, obřad, gratulace, skupinové fotografie a krátké focení novomanželů.</p>
+    <ul class="ckp-feats">
+      <li>focení cca 3 hodiny</li>
+      <li>obřad, gratulace, skupinové fotografie</li>
+      <li>krátké párové focení novomanželů</li>
+      <li>minimálně 100 upravených fotografií</li>
+      <li>online galerie</li>
+      <li>předání fotek ke stažení</li>
+      <li>archivace hotových výstupů na 2 roky</li>
+    </ul>
+  </div>
+  <div class="ckp-card ckp-card--featured">
+    <span class="ckp-badge">Nejoblíbenější</span>
+    <h3 class="ckp-title">Standardní svatba</h3>
+    <div class="ckp-price">od 24 900 Kč</div>
+    <p class="ckp-desc">Nejoblíbenější volba pro většinu párů. Pokryje hlavní část svatebního dne od příprav po první tanec nebo večerní program.</p>
+    <ul class="ckp-feats">
+      <li>focení cca 8 hodin</li>
+      <li>přípravy, obřad, gratulace, skupinky</li>
+      <li>párové focení novomanželů</li>
+      <li>hostina, detaily a atmosféra dne</li>
+      <li>minimálně 300–500 upravených fotografií</li>
+      <li>online galerie</li>
+      <li>konzultace před svatbou</li>
+      <li>archivace hotových výstupů na 2 roky</li>
+    </ul>
+  </div>
+  <div class="ckp-card">
+    <h3 class="ckp-title">Prémiová svatba</h3>
+    <div class="ckp-price">od 34 900 Kč</div>
+    <p class="ckp-desc">Kompletní zachycení celého svatebního dne bez spěchu a kompromisů.</p>
+    <ul class="ckp-feats">
+      <li>focení cca 10–12 hodin</li>
+      <li>celý den od příprav až po večerní zábavu</li>
+      <li>větší počet upravených fotografií</li>
+      <li>detailní zachycení atmosféry, hostů a momentů</li>
+      <li>online galerie</li>
+      <li>konzultace před svatbou</li>
+      <li>prioritní zpracování</li>
+      <li>možnost krátkého video / reels výstupu dle domluvy</li>
+      <li>archivace hotových výstupů na 5 let</li>
+    </ul>
+  </div>
+  <div class="ckp-card">
+    <h3 class="ckp-title">Foto + video svatba</h3>
+    <div class="ckp-price">od 44 900 Kč</div>
+    <p class="ckp-desc">Pro páry, které chtějí kromě fotografií také svatební video, krátký sestřih nebo výstupy na sociální sítě.</p>
+    <ul class="ckp-feats">
+      <li>focení a natáčení svatebního dne</li>
+      <li>upravené fotografie</li>
+      <li>hlavní svatební video</li>
+      <li>krátký sestřih / reels podle domluvy</li>
+      <li>online galerie a video ke stažení</li>
+      <li>konzultace před svatbou</li>
+      <li>archivace hotových výstupů na 5 let</li>
+    </ul>
+  </div>
+</div>
+HTML;
+
 block($pdo, $pidCenik, 'hero_heading',            'text',     'Hero Nadpis',       'Ceník fotografických a video služeb — Olomouc', 1);
 block($pdo, $pidCenik, 'hero_intro',              'textarea', 'Hero Intro',        'Transparentní ceny bez překvapení. Každá zakázka je individuální — vždy se domluvíme na balíčku přesně pro vás. Přes 150 spokojených klientů, 8 let praxe.', 2);
-block($pdo, $pidCenik, 'pricing_weddings_heading','text',     'Ceník Svatby',      'Svatební fotograf Olomouc — ceník', 3);
-block($pdo, $pidCenik, 'pricing_weddings_sub',    'textarea', 'Ceník Svatby Info', 'Základní balíček od 13 000 Kč (do 4 hodin) · Kompletní svatební den od 22 000 Kč (6–8 hod) · Rozšířený balíček od 27 000 Kč. Individuální nabídka na míru — zavolejte nám.', 4);
+block($pdo, $pidCenik, 'pricing_weddings_heading','text',     'Ceník Svatby',      'Svatební balíčky', 3);
+block($pdo, $pidCenik, 'pricing_weddings_sub',    'textarea', 'Ceník Svatby Info', 'Vyberte si balíček podle rozsahu svatebního dne. Každá zakázka je individuální — finální nabídku připravíme vždy na míru. Ceny jsou orientační, „od".', 4);
+block($pdo, $pidCenik, 'pricing_packages',        'html',     'Svatební balíčky',  $pricingPackages, 5);
 block($pdo, $pidCenik, 'pricing_other_heading',   'text',     'Ceník Ostatní',     'Rodinné, portrétní a firemní focení', 5);
 block($pdo, $pidCenik, 'pricing_other_sub',       'textarea', 'Ceník Ostatní Info','Rodinné focení od 4 500 Kč · Portrétní focení od 3 000 Kč · Firemní focení od 6 000 Kč · Zásnuby & Maternity od 3 500 Kč · Videografie od 8 000 Kč.', 6);
 block($pdo, $pidCenik, 'cta_heading',             'text',     'CTA Nadpis',        'Rezervujte termín ještě dnes', 7);
@@ -876,41 +957,24 @@ block($pdo, $pidCenik, 'cta_sub',                 'textarea', 'CTA Sub',        
 // Balíčky — renderuje buildPricingHtml() na homepage a cenik stránce
 block($pdo, $pidCenik, 'cenik_card_1_title', 'text',     'Karta 1 — nadpis', 'Základní', 11);
 block($pdo, $pidCenik, 'cenik_card_1_desc',  'textarea', 'Karta 1 — popis',
-'Průkazové, portrétní nebo firemní focení.
+'Menší svatba, obřad, skupinky a krátké focení novomanželů.
 
-• Průkazové a osobní fotografie
-• Portrétní session (do 2 hodin, jedno místo)
-• Produktové foto (do 20 produktů)
-• Reportáž z akce (do 2 hodin)
-• 30–60 upravených fotografií
-• Soukromá online galerie na 60 dní
-• Předání do 10 pracovních dní', 12);
-block($pdo, $pidCenik, 'cenik_card_1_price', 'text',     'Karta 1 — cena',  'od 3 500 Kč', 13);
+Archivace: 2 roky', 12);
+block($pdo, $pidCenik, 'cenik_card_1_price', 'text',     'Karta 1 — cena',  'od 14 900 Kč', 13);
 
 block($pdo, $pidCenik, 'cenik_card_2_title', 'text',     'Karta 2 — nadpis', 'Standardní', 14);
 block($pdo, $pidCenik, 'cenik_card_2_desc',  'textarea', 'Karta 2 — popis',
-'Fotograf a kameraman na celý svatební den.
+'Nejoblíbenější balíček pro hlavní část svatebního dne.
 
-• Přípravy, obřad, hostina, první tanec
-• Focení 8–10 hodin
-• 400–500 upravených fotografií
-• Highlight video 8–12 minut
-• Soukromá online galerie na 1 rok
-• Předání do 6 týdnů', 15);
-block($pdo, $pidCenik, 'cenik_card_2_price', 'text',     'Karta 2 — cena',  'od 26 900 Kč', 16);
+Archivace: 2 roky', 15);
+block($pdo, $pidCenik, 'cenik_card_2_price', 'text',     'Karta 2 — cena',  'od 24 900 Kč', 16);
 
 block($pdo, $pidCenik, 'cenik_card_3_title', 'text',     'Karta 3 — nadpis', 'Prémiový', 17);
 block($pdo, $pidCenik, 'cenik_card_3_desc',  'textarea', 'Karta 3 — popis',
-'Vše ze Standardního + výjimečné doplňky.
+'Celodenní zachycení svatby s rozšířenou péčí a delší archivací.
 
-• Focení celého dne až do večera (12 hod)
-• 600+ upravených fotografií
-• Příběhové video 20–25 min + krátký highlight
-• Zásnubní session v hodnotě 6 000 Kč
-• Luxusní fotoalbum 30×30 cm (40 stran)
-• Soukromá online galerie na 1 rok
-• Předání do 4 týdnů', 18);
-block($pdo, $pidCenik, 'cenik_card_3_price', 'text',     'Karta 3 — cena',  'od 39 900 Kč', 19);
+Archivace: 5 let', 18);
+block($pdo, $pidCenik, 'cenik_card_3_price', 'text',     'Karta 3 — cena',  'od 34 900 Kč', 19);
 
 // ─── Content blocks: FAQ ─────────────────────────────────────────────────────
 

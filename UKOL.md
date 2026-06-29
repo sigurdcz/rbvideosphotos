@@ -1,38 +1,30 @@
-# UKOL: Opravy šablony + tracking logs toggle
+# UKOL: Svatební ceník do photographer seederu
 
 Datum: 2026-06-29
-Zadání: Přidat checkbox pro tracking logy v admin Nastavení + opravit 3 problémy v šabloně jemná béžová.
-Hotovo když: Checkbox v Nastavení funguje, hero bez gradientu, texty na Hodnocení viditelné, sociální sítě v HP formuláři pryč.
+Zadání: Přidat 4 svatební balíčky + 3 krátké homepage karty do seed_photographer.php.
+Hotovo když: Seeder obsahuje nové pricing bloky, PHP lint čistý, commit.
 
 ## Kroky
 
-- [x] Přidat checkbox pro tracking logs do admin/views/settings/index.php
-- [x] Přidat setting do config (enable_gtm_tracking_logs do SeoRenderer)
-- [x] Přidat logiku do cookie-consent-runtime.js pro podmíněné logy
-- [x] Oprava šablony: odstranit gradient z hero sekce (.hp-hero::after)
-- [x] Oprava šablony: fixovat viditelnost textů na Hodnocení (review card name/desc barvy)
-- [x] Oprava šablony: smazat div.jb-contact-socials z HP formuláře
+- [x] Přidat pricing_packages div do Ceník template ($htmlCenik)
+- [x] Definovat $pricingPackages HTML (4 balíčky, self-contained style)
+- [x] block() pro pricing_packages na Ceník stránce
+- [x] Update pricing_weddings_heading/sub (svatební balíčky intro)
+- [x] Přidat cenik_card_1/2/3 (title/desc/price) pro homepage karty (přepsány existující)
 - [x] PHP lint
 - [x] Commit
 
 ## Poznámky
 
-- Tracking logs: když toggle = on, JS console zobrazuje [GA4 Tracking] zprávy
-- Hero gradient: je na řádce ~374 (linear-gradient to bottom), blokuje viditelnost scrollu
-- Hodnocení: .jb-review-person strong/span jsou bílé (#fff) na bílém pozadí — potřebuje barvu
-- Sociální sítě: na HP jsou v kontaktu pod formulárem, v Hodnocení nejsou (jen tam smazat)
+- Homepage karty: HomepageContentService::buildPricingHtml čte cenik_card_N_title/desc z 'cenik' stránky (3 karty, i=1..3) — ukazuje title + první řádek desc (bez ceny, limitace služby).
+- Detailní balíčky: self-contained HTML blok (style scoped ckp-) — robustní napříč tématy, s cenou + features.
+- Standardní = featured. 4. balíček (Foto+video) jen v detailu (homepage karty jsou 3).
 
 ## Výsledek
 
-✅ Checkbox pro tracking logy: admin Nastavení → nová checkbox "Zobrazovat GTM tracking logy"
-
-- Při ON: window.cmsCookieConsent.logTrackingEvent() vypíše [GA4 Tracking] do DevTools Console
-- Flág: enableGtmTrackingLogs v runtime settings (cms-cookie-consent-settings meta)
-
-✅ Opravy šablony jemná béžová:
-
-- Hero sekce: odstraněn gradient (hp-hero::after) — tlačítko SCROLL teď vidět
-- Hodnocení: jména/popis nyní tmavé (#1a1610/#5f5143) — viditelné na všech pozadích
-- HP formulář: sociální sítě skrytá (jb-contact-socials display:none)
-
-Commit: e52cb8a
+Photographer seeder nyní obsahuje nový svatební ceník:
+- Ceník stránka: blok `pricing_packages` se 4 detailními balíčky (Základní 14 900, Standardní 24 900 featured,
+  Prémiová 34 900, Foto+video 44 900) — cena, popis, „Obsahuje" seznam. Self-contained styl (.ckp-).
+- Homepage teaser: cenik_card_1/2/3 přepsány na 3 krátké karty (Základní/Standardní/Prémiový) s archivací.
+- pricing_weddings_heading/sub aktualizovány na svatební balíčky intro.
+PHP lint OK.
