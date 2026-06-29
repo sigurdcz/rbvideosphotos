@@ -40,11 +40,23 @@ class GtmVersionService
         ]);
 
         $version = $response['containerVersion'] ?? [];
+        $containerVersionId = (string)($version['containerVersionId'] ?? $version['versionId'] ?? $name);
+
+        $existing = $this->versions->findByContainerVersionId($siteId, $containerVersionId);
+        if ($existing) {
+            $this->runs->update($runId, [
+                'status' => 'succeeded',
+                'summary' => 'GTM verze uz existuje (idempotence)',
+                'finished_at' => date('Y-m-d H:i:s'),
+            ]);
+            return ['run_id' => $runId, 'response' => $response, 'existing' => true];
+        }
+
         $this->versions->create([
             'site_id' => $siteId,
             'connection_id' => $connection['id'] ?? null,
             'sync_run_id' => $runId,
-            'container_version_id' => (string)($version['containerVersionId'] ?? $version['versionId'] ?? $name),
+            'container_version_id' => $containerVersionId,
             'version_name' => $name,
             'version_path' => $version['path'] ?? null,
             'fingerprint' => $version['fingerprint'] ?? null,

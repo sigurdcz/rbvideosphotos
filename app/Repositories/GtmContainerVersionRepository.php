@@ -27,6 +27,14 @@ class GtmContainerVersionRepository extends GtmRepository
         return (int) $this->db->lastInsertId();
     }
 
+    public function findByContainerVersionId(int $siteId, string $containerVersionId): ?array
+    {
+        $stmt = $this->db->prepare('SELECT * FROM gtm_container_versions WHERE site_id = ? AND container_version_id = ? LIMIT 1');
+        $stmt->execute([$siteId, $containerVersionId]);
+        $row = $stmt->fetch();
+        return $row ?: null;
+    }
+
     public function allBySite(int $siteId, int $limit = 20): array
     {
         $stmt = $this->db->prepare('SELECT * FROM gtm_container_versions WHERE site_id = ? ORDER BY created_at DESC LIMIT ' . (int) $limit);
