@@ -14,6 +14,7 @@
   var consentEnabled = settings.cookieConsentEnabled !== false;
   var analyticsCategoryEnabled = settings.analyticsCategoryEnabled !== false;
   var marketingCategoryEnabled = settings.marketingCategoryEnabled !== false;
+  var enableGtmTrackingLogs = settings.enableGtmTrackingLogs === true;
   var version = '1.0';
 
   function defaultPreferences(){
@@ -183,6 +184,12 @@
     }
   }
 
+  function logTrackingEvent(eventName, details){
+    if (enableGtmTrackingLogs && window.console && window.console.log) {
+      console.log('[GA4 Tracking] Event odeslan: ' + eventName, details || '');
+    }
+  }
+
   window.cmsCookieConsent = {
     enabled: consentEnabled,
     getPreferences: getPreferences,
@@ -191,7 +198,8 @@
     canLoadAnalytics: canLoadAnalytics,
     canLoadMarketing: canLoadMarketing,
     loadAnalyticsScripts: loadAnalyticsScripts,
-    loadMarketingScripts: loadMarketingScripts
+    loadMarketingScripts: loadMarketingScripts,
+    logTrackingEvent: logTrackingEvent
   };
   window.cmsCookieConsentPreferences = getPreferences();
 

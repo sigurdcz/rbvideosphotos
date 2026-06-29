@@ -218,6 +218,15 @@ ob_start();
         <input type="text" name="google_tag_manager_id" value="<?= $h($site['google_tag_manager_id'] ?? '') ?>" placeholder="GTM-XXXXXXX">
         <p class="help-text">ID kontejneru ze Správce značek (vlevo nahoře). Snippet se na web nacte az s Marketing consent.</p>
       </div>
+      <div class="form-group">
+        <label style="display:flex;align-items:center;gap:8px">
+          <input type="checkbox" name="enable_gtm_tracking_logs" value="1" <?= (int)($site['enable_gtm_tracking_logs'] ?? 0) === 1 ? 'checked' : '' ?> style="width:auto">
+          Zobrazovat GTM tracking logy v DevTools konzoli
+        </label>
+        <p class="help-text" style="margin-top:6px">
+          Zapne vypis [GA4 Tracking] zpráv do DevTools konzole pro debugování. Užitečné při testování GTM konfiguraci.
+        </p>
+      </div>
     </div>
   </div>
 

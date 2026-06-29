@@ -141,6 +141,7 @@ HTML;
             'marketingBodyScripts'     => (string)($site['marketing_body_scripts'] ?? ''),
             'clarityId'                => trim((string)($site['clarity_id'] ?? '')),
             'metaPixelId'              => trim((string)($site['meta_pixel_id'] ?? '')),
+            'enableGtmTrackingLogs'    => (int)($site['enable_gtm_tracking_logs'] ?? 0) === 1,
         ];
 
         $json = json_encode($settings, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);

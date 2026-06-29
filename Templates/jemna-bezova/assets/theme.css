@@ -364,17 +364,6 @@ body.theme-jemna-bezova {
   background: #1a1610;
 }
 
-.theme-jemna-bezova .hp-hero::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 90px;
-  background: linear-gradient(to bottom, transparent, var(--jb-ivory));
-  z-index: 2;
-  pointer-events: none;
-}
 
 .theme-jemna-bezova .hp-hero::before,
 .theme-jemna-bezova .page-hero::before,
@@ -1119,13 +1108,13 @@ body.theme-jemna-bezova {
 }
 
 .theme-jemna-bezova .jb-review-person strong {
-  color: var(--jb-brown);
+  color: #1a1610;
   font-size: 1.02rem;
   font-weight: 700;
 }
 
 .theme-jemna-bezova .jb-review-person span {
-  color: rgba(69, 54, 42, .58);
+  color: #5f5143;
   font-size: .92rem;
   margin-top: 3px;
 }
@@ -1230,11 +1219,7 @@ body.theme-jemna-bezova {
 }
 
 .theme-jemna-bezova .jb-contact-socials {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 22px;
-  width: 100%;
+  display: none;
 }
 
 .theme-jemna-bezova .jb-contact-social-btn {
