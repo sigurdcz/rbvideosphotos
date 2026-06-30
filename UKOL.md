@@ -1,30 +1,30 @@
-# UKOL: Svatební ceník do photographer seederu
+# UKOL: Favicon na všech stránkách + SEO audit
 
-Datum: 2026-06-29
-Zadání: Přidat 4 svatební balíčky + 3 krátké homepage karty do seed_photographer.php.
-Hotovo když: Seeder obsahuje nové pricing bloky, PHP lint čistý, commit.
+Datum: 2026-06-30
+Zadání: Doplnit chybějící favicon na všechny stránky/podstránky + zkontrolovat rozdíly v SEO hlavičkách.
+Hotovo když: Favicon je na všech stránkách (centrálně), PHP lint OK, SEO rozdíly zreportovány.
 
 ## Kroky
 
-- [x] Přidat pricing_packages div do Ceník template ($htmlCenik)
-- [x] Definovat $pricingPackages HTML (4 balíčky, self-contained style)
-- [x] block() pro pricing_packages na Ceník stránce
-- [x] Update pricing_weddings_heading/sub (svatební balíčky intro)
-- [x] Přidat cenik_card_1/2/3 (title/desc/price) pro homepage karty (přepsány existující)
+- [x] Najít příčinu (speciální handlery vkládají do <head> jen <title>, ne renderHead)
+- [x] Centrální injectFaviconLinks() v sanitizeFrontendHtml (idempotentní)
 - [x] PHP lint
 - [x] Commit
+- [x] SEO audit — report rozdílů hlaviček
 
 ## Poznámky
 
-- Homepage karty: HomepageContentService::buildPricingHtml čte cenik_card_N_title/desc z 'cenik' stránky (3 karty, i=1..3) — ukazuje title + první řádek desc (bez ceny, limitace služby).
-- Detailní balíčky: self-contained HTML blok (style scoped ckp-) — robustní napříč tématy, s cenou + features.
-- Standardní = featured. 4. balíček (Foto+video) jen v detailu (homepage karty jsou 3).
+- Příčina: /faq, /kontakt, /nase-prace (listing i detail), hodnocení — vlastní <head> přes
+  str_replace('</head>', titulek) bez renderHead → chybí favicon + SEO meta.
+- sanitizeFrontendHtml($html, $site) se volá pro KAŽDOU stránku → ideální centrální bod.
+- Idempotentní: pokud <head> už má rel="icon" (běžné stránky přes renderHead), nepřidá nic.
 
 ## Výsledek
 
-Photographer seeder nyní obsahuje nový svatební ceník:
-- Ceník stránka: blok `pricing_packages` se 4 detailními balíčky (Základní 14 900, Standardní 24 900 featured,
-  Prémiová 34 900, Foto+video 44 900) — cena, popis, „Obsahuje" seznam. Self-contained styl (.ckp-).
-- Homepage teaser: cenik_card_1/2/3 přepsány na 3 krátké karty (Základní/Standardní/Prémiový) s archivací.
-- pricing_weddings_heading/sub aktualizovány na svatební balíčky intro.
-PHP lint OK.
+Favicon doplněn centrálně přes injectFaviconLinks() v sanitizeFrontendHtml — pokrývá všechny
+dynamické stránky. Běžné stránky (renderHead) přeskočeny (idempotence).
+
+SEO audit hlaviček (před fixem) — viz zpráva uživateli: běžné stránky mají plný renderHead
+(description, canonical, OG, twitter, robots, JSON-LD), speciální handlery jen title (±desc).
+Favicon nyní jednotný; ostatní SEO meta zůstávají nekonzistentní — návrh na centralizaci čeká
+na rozhodnutí uživatele.

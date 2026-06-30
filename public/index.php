@@ -303,9 +303,47 @@ function sanitizeFrontendHtml(string $html, ?array $site = null): string
     $html = injectEditorialGoldOverrides($html);
     $html = injectCookieConsent($html);
     $html = injectSharedFrontendAssets($html);
+    $html = injectFaviconLinks($html, $site);
     $html = extractInlineStyleBlocks($html);
     $html = extractInlineBodyScripts($html);
     return $html;
+}
+
+/**
+ * Centralni doplneni favicon odkazu do <head> pro vsechny stranky.
+ * Specialni handlery (FAQ, Kontakt, portfolio, hodnoceni, blog) vkladaji do
+ * <head> jen <title>, takze jim favicon chybel — tady ho doplnime jednotne.
+ * Idempotentni: pokud uz <head> nejaky favicon obsahuje (bezne stranky pres
+ * SeoRenderer::renderHead), neprida se nic.
+ */
+function injectFaviconLinks(string $html, ?array $site): string
+{
+    if (!is_array($site) || stripos($html, '</head>') === false) {
+        return $html;
+    }
+    if (preg_match('~<link[^>]+rel=(["\'])(?:shortcut\s+)?icon\1~i', $html)) {
+        return $html;
+    }
+
+    $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
+    $links = '';
+    if (!empty($site['favicon_ico_url'])) {
+        $links .= '<link rel="icon" type="image/x-icon" href="' . $h($site['favicon_ico_url']) . '">';
+    }
+    if (!empty($site['favicon_png_url'])) {
+        $png = (string) $site['favicon_png_url'];
+        $type = str_ends_with(strtolower(parse_url($png, PHP_URL_PATH) ?: $png), '.svg') ? 'image/svg+xml' : 'image/png';
+        $links .= '<link rel="icon" type="' . $type . '" href="' . $h($png) . '">';
+    }
+    if (!empty($site['apple_touch_icon_url'])) {
+        $links .= '<link rel="apple-touch-icon" href="' . $h($site['apple_touch_icon_url']) . '">';
+    }
+
+    if ($links === '') {
+        return $html;
+    }
+
+    return str_replace('</head>', "\n" . $links . "\n</head>", $html);
 }
 
 function injectSharedFrontendAssets(string $html): string
