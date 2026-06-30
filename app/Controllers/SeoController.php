@@ -28,7 +28,7 @@ class SeoController extends Controller
         $sites   = new SiteRepository();
         $media   = new MediaRepository();
         $site    = $sites->findById($page['site_id']);
-        $mediaList = $site ? $media->allBySite($site['id']) : [];
+        $mediaList = $site ? $media->allBySiteWithVariants($site['id']) : [];
 
         // Read published HTML for audit
         $publishedPath = dirname(__DIR__, 2) . '/storage/published';

@@ -123,7 +123,17 @@ class MediaController extends Controller
                 }
             }
 
-            $r = ['success' => true, 'media_id' => $mediaId, 'name' => basename($file['name'])];
+            $storedMedia = $repo->findByIdWithThumb($mediaId);
+            $r = [
+                'success' => true,
+                'media_id' => $mediaId,
+                'name' => basename($file['name']),
+                'mime_type' => $mime,
+                'storage_path' => $storedMedia['storage_path'] ?? ($storagePath . '/' . $newName),
+                'thumb_path' => $storedMedia['thumb_path'] ?? null,
+                'alt_text' => $altText,
+                'title' => $title,
+            ];
             if ($variantWarning) $r['warning'] = $variantWarning;
             $results[] = $r;
         }

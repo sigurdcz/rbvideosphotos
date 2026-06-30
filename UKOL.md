@@ -1,32 +1,28 @@
-# UKOL: Reálná demo data (fotky + videa) + SEO
+# UKOL: SEO obrazky bez rucniho ID
 
 Datum: 2026-06-30
-Zadání: Nahrát reálné placeholder fotky/videa do media a sekcí (portfolio, blog, hero), doplnit SEO všech stránek.
-Hotovo když: Fotky jsou v media library + přiřazené do sekcí, videa v portfoliu, SEO doplněné, lint OK.
+Zadani: Predelat OG a Twitter image pole v SEO nastaveni stranky tak, aby odpovidala beznemu nahravani a vyberu fotek v projektu misto rucniho zadavani ID media.
 
 ## Kroky
 
-- [ ] Přesun demo_data/ → database/seeds/demo_assets/
-- [ ] DemoContentSeeder: ingestDemoAsset() (lokální soubor → media)
-- [ ] Nahrát všechny fotky do media library (uživatel je má k dispozici)
-- [ ] Portfolio: reálné fotky (dle tématu) + svatební videa z videa.txt
-- [ ] Blog: featured fotky
-- [ ] Hero pozadí stránek (kde chybí)
-- [ ] SEO: meta_title/description pro všechny stránky
-- [ ] PHP lint + commit
+- [x] Najit aktualni SEO formular a existujici media workflow v adminu.
+- [x] Upravit SEO formular na bezny picker/nahrani fotky pro OG a Twitter image.
+- [x] Otestovat PHP syntax a zkontrolovat dotcene workflow.
+- [x] Rozhodnout, jestli zmena vyzaduje upravu dokumentace, a pripadne ji dopsat.
 
-## Poznámky
+## Poznamky
 
-- ingestUploadedFile(..., requireUploadedFile:false) kopíruje lokální soubor → media.
-- 17 fotek (svatba, rodinné, portrét, těhotenské, dětské, koncert, auto) + 19 videí (videa.txt).
-- Mapování fotek na portfolio dle tématu (svatba→wedding, rodinné→family, atd.).
+- Soucasny stav v `admin/views/seo/edit.php` pouziva `og_image_id` a `twitter_image_id` jako ciselna pole s rucnimi odkazy na media.
+- Existujici vzory v projektu: media upload pres `admin/views/media/index.php` a asset picker modal v `admin/views/settings/index.php`.
+- Cil: zachovat ukladani `*_image_id` do SEO tabulky, ale odstranit potrebu rucne hledat a zadavat ID.
+- `SeoController` ted natahuje media pres `allBySiteWithVariants()`, aby mel SEO formular k dispozici thumb nahledy.
+- `MediaController::upload()` vraci i `storage_path` a `thumb_path`, takze novy obrazek lze po uploadu rovnou vybrat bez reloadu.
+- Dokumentaci jsem nemenil; jde o lokalni admin UX zmenu bez dopadu na architekturu, API nebo runtime chovani webu.
 
-## Výsledek
+## Vysledek
 
-Hotovo (commit a0dfcfc):
-- demo_data/ → database/seeds/demo_assets/ (16 fotek + videa.txt), commitnuto.
-- seedMediaLibrary(): nahraje všech 16 fotek do media knihovny (dedup) → uživatel je má v adminu.
-- Portfolio (5) + Blog (5): reálné fotky mapované dle tématu; portfolio svatební videa (vimeo).
-- Hero foto (hero_bg) na homepage + sluzby/cenik/faq/nase-prace/blog/kontakt.
-- SEO (seo_settings): meta_title/description/canonical/OG/twitter pro 7 stránek.
-- Vyžaduje: deploy (demo_assets na server) + spuštění "Demo content".
+Hotovo:
+- OG a Twitter image pole v SEO nastaveni uz nepouzivaji rucni zadavani media ID.
+- Formular zobrazuje nahled, aktualni vybrane medium, tlacitka pro vyber z knihovny, upload z pocitace a odebrani.
+- Upload pouziva stavajici `/admin/media/upload` endpoint a po uspesnem nahrani obrazek hned vybere do daneho SEO pole.
+- Overeno pres `php -l` na `admin/views/seo/edit.php`, `app/Controllers/SeoController.php` a `app/Controllers/MediaController.php`.
