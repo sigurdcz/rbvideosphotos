@@ -401,8 +401,8 @@ body.theme-jemna-bezova {
 }
 
 .theme-jemna-bezova .theme-hero-video {
-  opacity: .86;
-  filter: brightness(.88) saturate(.90);
+  opacity: 1;
+  filter: brightness(.76) saturate(.90);
   background: #1a1610;
 }
 
@@ -463,6 +463,17 @@ body.theme-jemna-bezova {
   color: rgba(255, 246, 235, .84);
   font-size: clamp(1.05rem, 1.55vw, 1.28rem);
   line-height: 1.8;
+}
+
+.theme-jemna-bezova .hp-hero .section-label,
+.theme-jemna-bezova .hp-hero h1,
+.theme-jemna-bezova .hp-hero .hero-sub,
+.theme-jemna-bezova .hp-hero .hero-cta-wrap,
+.theme-jemna-bezova .hp-hero .btn,
+.theme-jemna-bezova .hp-hero .btn-primary,
+.theme-jemna-bezova .hp-hero .btn-secondary {
+  opacity: 1 !important;
+  filter: none !important;
 }
 
 .theme-jemna-bezova .hero-cta-wrap {
