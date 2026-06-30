@@ -2,6 +2,13 @@
 
 use App\Core\Env;
 
+// Pojistka pro pripad primeho web pristupu (/config/app.php) bez autoloaderu —
+// vrat 404 + prazdnou konfiguraci misto fatal erroru. Pristup blokuje i .htaccess.
+if (!class_exists(Env::class, true)) {
+    http_response_code(404);
+    return [];
+}
+
 $debugEnv = Env::get('APP_DEBUG');
 
 // Auto-detect base URL from the current request when APP_URL is not set.

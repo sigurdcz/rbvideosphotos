@@ -1,0 +1,10 @@
+# Konfiguracni soubory nikdy nesmi byt pristupne ani spustitelne z webu.
+# Bez teto ochrany Apache spusti napr. /config/app.php primo (bez autoloaderu),
+# coz konci fatal errorem "Class App\Core\Env not found".
+<IfModule mod_authz_core.c>
+  Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+  Order allow,deny
+  Deny from all
+</IfModule>

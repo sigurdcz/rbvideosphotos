@@ -1,30 +1,24 @@
-# UKOL: Favicon na všech stránkách + SEO audit
+# UKOL: Fatal error config + FAQ vizuál/obsah
 
 Datum: 2026-06-30
-Zadání: Doplnit chybějící favicon na všechny stránky/podstránky + zkontrolovat rozdíly v SEO hlavičkách.
-Hotovo když: Favicon je na všech stránkách (centrálně), PHP lint OK, SEO rozdíly zreportovány.
+Zadání: Opravit fatal "App\Core\Env not found" v config/app.php + opravit prázdný/amatérský /faq.
+Hotovo když: Config nejde spustit přímo z webu (žádný fatal), /faq má obsah a světlý vzhled. Lint OK.
 
 ## Kroky
 
-- [x] Najít příčinu (speciální handlery vkládají do <head> jen <title>, ne renderHead)
-- [x] Centrální injectFaviconLinks() v sanitizeFrontendHtml (idempotentní)
+- [x] Diagnóza fatal: config/ pod web rootem → přímý přístup spustí app.php bez autoloaderu
+- [x] config/.htaccess — deny web access
+- [x] Pojistka v config/app.php — class_exists guard → 404 místo fatal
+- [x] Diagnóza /faq: čte z faq_items tabulky (ne page bloky), tmavé CSS bije se s light theme
+- [x] Světlé accordion CSS v tryServeFaqPage
+- [x] Seed faq_items (12 Q&A) v seed_photographer.php
 - [x] PHP lint
 - [x] Commit
-- [x] SEO audit — report rozdílů hlaviček
-
-## Poznámky
-
-- Příčina: /faq, /kontakt, /nase-prace (listing i detail), hodnocení — vlastní <head> přes
-  str_replace('</head>', titulek) bez renderHead → chybí favicon + SEO meta.
-- sanitizeFrontendHtml($html, $site) se volá pro KAŽDOU stránku → ideální centrální bod.
-- Idempotentní: pokud <head> už má rel="icon" (běžné stránky přes renderHead), nepřidá nic.
 
 ## Výsledek
 
-Favicon doplněn centrálně přes injectFaviconLinks() v sanitizeFrontendHtml — pokrývá všechny
-dynamické stránky. Běžné stránky (renderHead) přeskočeny (idempotence).
-
-SEO audit hlaviček (před fixem) — viz zpráva uživateli: běžné stránky mají plný renderHead
-(description, canonical, OG, twitter, robots, JSON-LD), speciální handlery jen title (±desc).
-Favicon nyní jednotný; ostatní SEO meta zůstávají nekonzistentní — návrh na centralizaci čeká
-na rozhodnutí uživatele.
+1) Fatal error: config/.htaccess blokuje přímý web přístup + guard v app.php vrací 404
+   místo fatalu (class_exists(Env) check). Interní require (Config::get) běží dál normálně.
+2) /faq: handler čte z tabulky faq_items (FaqRepository), kterou seeder neplnil → prázdné.
+   Doplněn seed 12 Q&A do faq_items. CSS přepsáno z tmavého (#111) na světlý accordion
+   ladící s jemná béžová (světlé karty, zlatý +/− indikátor, čitelný text).

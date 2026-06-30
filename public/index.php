@@ -1827,22 +1827,21 @@ function tryServeFaqPage(): bool
             . '</div>';
     }
     if ($faqHtml === '') {
-        $faqHtml = '<p style="color:rgba(255,255,255,.45)">Zatím žádné otázky.</p>';
+        $faqHtml = '<p class="faq-empty">Zatím žádné otázky. Napište nám a rádi odpovíme.</p>';
     }
 
     $faqCss = <<<'CSS'
-body{background:#111;color:#fff}
-.fq-hero{background:#1a1a1a;padding:64px 0 40px;text-align:center}
-.fq-hero h1{font-size:clamp(2rem,4vw,3.2rem);color:#fff;margin-bottom:12px}
-.fq-hero p{color:rgba(255,255,255,.7);font-size:1.05rem;max-width:680px;margin:0 auto}
 .fq-wrap{padding:56px 0 80px}
-.faq-list{display:flex;flex-direction:column;gap:16px;max-width:820px;margin:0 auto}
-.faq-item{padding:24px 28px;background:#18181c;border-radius:12px;border-left:3px solid #c4963c;cursor:pointer}
-.faq-q{font-size:1.05rem;color:#fff;margin:0 0 0;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:16px;line-height:1.4}
-.faq-q::after{content:"＋";flex-shrink:0;font-size:1.2rem;color:#c4963c;transition:transform .2s}
-.faq-item.open .faq-q::after{transform:rotate(45deg)}
-.faq-a{color:rgba(255,255,255,.75);line-height:1.65;margin-top:14px;display:none}
-.faq-item.open .faq-a{display:block}
+.fq-wrap .faq-list{display:flex;flex-direction:column;gap:14px;max-width:840px;margin:0 auto}
+.fq-wrap .faq-item{padding:2px 28px;background:rgba(255,255,255,.6);border:1px solid rgba(122,95,65,.16);border-radius:12px;cursor:pointer;transition:border-color .2s,box-shadow .2s,background .2s}
+.fq-wrap .faq-item:hover{border-color:rgba(212,176,111,.5)}
+.fq-wrap .faq-item.open{border-color:rgba(212,176,111,.62);background:rgba(255,255,255,.85);box-shadow:0 10px 30px rgba(48,38,30,.08)}
+.fq-wrap .faq-q{font-family:"Manrope",system-ui,sans-serif!important;font-size:1.06rem!important;min-height:0!important;letter-spacing:0!important;text-transform:none!important;color:#1a1610!important;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:18px;line-height:1.45;margin:0;padding:22px 0}
+.fq-wrap .faq-q::after{content:"＋";flex-shrink:0;font-size:1.4rem;font-weight:400;color:#c4963c;transition:transform .25s}
+.fq-wrap .faq-item.open .faq-q::after{transform:rotate(45deg)}
+.fq-wrap .faq-a{color:#5f5143!important;font-size:.97rem!important;line-height:1.72;margin:0!important;padding:0 0 22px;max-width:none;display:none}
+.fq-wrap .faq-item.open .faq-a{display:block}
+.fq-wrap .faq-empty{text-align:center;color:#7a6a58;max-width:680px;margin:0 auto}
 CSS;
 
     $renderer   = new PageRenderer();
