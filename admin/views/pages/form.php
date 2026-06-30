@@ -45,7 +45,12 @@ foreach (($blocks ?? []) as $block) {
     $blockMap[$block['block_key']] = $block;
 }
 
-$renderBlockField = function (string $key, string $label, string $type = 'text', string $hint = '') use ($blockMap, $h): void {
+$renderedBlockKeys = [];
+$renderBlockField = function (string $key, string $label, string $type = 'text', string $hint = '') use ($blockMap, $h, &$renderedBlockKeys): void {
+    if (isset($renderedBlockKeys[$key])) {
+        return;
+    }
+    $renderedBlockKeys[$key] = true;
     $block = $blockMap[$key] ?? ['content' => '', 'block_type' => $type];
     $value = $block['content'] ?? '';
     $inputType = $key === 'hero_video'
@@ -447,6 +452,7 @@ ob_start();
         <div class="blocks-list">
           <?php foreach ($blocks as $block): ?>
           <?php if ($isHomepage && isset($hiddenHomepageBlockKeys[$block['block_key'] ?? ''])) continue; ?>
+          <?php if (isset($renderedBlockKeys[$block['block_key'] ?? ''])) continue; ?>
           <?php $autofillBlock = $isHomepage ? ($homepageAutofillBlocks[$block['block_key']] ?? null) : null; ?>
           <?php $autofillEnabled = $autofillBlock ? empty($block['autofill_disabled']) : false; ?>
           <div class="block-item<?= $autofillBlock ? ' autofill-panel' : '' ?><?= $autofillEnabled ? ' is-autofill-enabled' : '' ?>" data-autofill-panel="<?= $autofillBlock ? '1' : '0' ?>">
