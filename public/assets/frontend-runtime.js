@@ -20,6 +20,7 @@
     var sections = document.querySelectorAll('section[id]');
     var allLinks = Array.prototype.slice.call(document.querySelectorAll('.nav-links a[href]'));
     if (!allLinks.length) return;
+    var isHome = normalizePath(window.location.pathname || '/') === '/';
 
     function normalizePath(path) {
       if (!path) return '/';
@@ -51,7 +52,7 @@
       }
     });
 
-    if (currentPath !== '/' && directLink) {
+    if (!isHome) {
       activate(directLink);
       return;
     }

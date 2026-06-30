@@ -190,11 +190,21 @@
       var cardTitle = qs('.hp-svc-card__title, h3', card);
       var cardDesc = qs('.hp-svc-card__desc, p', card);
       item.innerHTML =
-        '<span class="jb-about-highlight__icon"></span>' +
+        '<span class="jb-about-highlight__icon" aria-hidden="true"><span></span></span>' +
         '<div><strong>' + ((cardTitle && cardTitle.textContent) ? cardTitle.textContent.trim() : 'Sluzba') + '</strong>' +
         '<p>' + ((cardDesc && cardDesc.textContent) ? cardDesc.textContent.trim() : '') + '</p></div>';
       highlights.appendChild(item);
     });
+
+    if (highlights.children.length < 4) {
+      var extra = document.createElement('div');
+      extra.className = 'jb-about-highlight jb-about-highlight--accent';
+      extra.innerHTML =
+        '<span class="jb-about-highlight__icon" aria-hidden="true"><span></span></span>' +
+        '<div><strong>Akce & události</strong>' +
+        '<p>Konference, kulturní akce, plesy i firemní večery. Zachytím důležité momenty, které se stanou součástí vaší značky.</p></div>';
+      highlights.appendChild(extra);
+    }
 
     copy.appendChild(highlights);
     shell.appendChild(visual);

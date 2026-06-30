@@ -389,6 +389,8 @@ $tplHomepageJs = <<<'JS'
   var sections=document.querySelectorAll('section[id]');
   var navLinks=document.querySelectorAll('.nav-links a[href^="#"]');
   if(!sections.length||!navLinks.length) return;
+  var isHome = window.location.pathname.replace(/\/+$/, '') === '' || window.location.pathname === '/';
+  if(!isHome) return;
   var io=new IntersectionObserver(function(entries){
     entries.forEach(function(e){
       if(e.isIntersecting){
