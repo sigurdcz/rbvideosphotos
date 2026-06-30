@@ -23,4 +23,10 @@ Hotovo když: Fotky jsou v media library + přiřazené do sekcí, videa v portf
 
 ## Výsledek
 
-[Vyplnit po dokončení]
+Hotovo (commit a0dfcfc):
+- demo_data/ → database/seeds/demo_assets/ (16 fotek + videa.txt), commitnuto.
+- seedMediaLibrary(): nahraje všech 16 fotek do media knihovny (dedup) → uživatel je má v adminu.
+- Portfolio (5) + Blog (5): reálné fotky mapované dle tématu; portfolio svatební videa (vimeo).
+- Hero foto (hero_bg) na homepage + sluzby/cenik/faq/nase-prace/blog/kontakt.
+- SEO (seo_settings): meta_title/description/canonical/OG/twitter pro 7 stránek.
+- Vyžaduje: deploy (demo_assets na server) + spuštění "Demo content".
