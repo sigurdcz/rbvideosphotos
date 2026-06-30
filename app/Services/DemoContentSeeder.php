@@ -77,10 +77,49 @@ class DemoContentSeeder
         }
         $pageId = (int)$page['id'];
 
+        // Vicerradkovy popis: 1. radek = souhrn (homepage teaser bere jen prvni
+        // radek), zbytek = seznam (.cenik-card-desc ma white-space:pre-line,
+        // takze se na /cenik vykresli jako odrazky vc. archivace).
         $cards = [
-            1 => ['Základní', 'Menší svatba, obřad, skupinky a krátké focení novomanželů.', 'od 14 900 Kč'],
-            2 => ['Standardní', 'Nejoblíbenější balíček pro hlavní část svatebního dne.', 'od 24 900 Kč'],
-            3 => ['Prémiový', 'Celodenní zachycení svatby s rozšířenou péčí a delší archivací.', 'od 34 900 Kč'],
+            1 => [
+                'Základní',
+                "Menší svatba, obřad, skupinky a krátké focení novomanželů.\n\n"
+                . "• focení cca 3 hodiny\n"
+                . "• obřad, gratulace, skupinové fotografie\n"
+                . "• krátké párové focení novomanželů\n"
+                . "• minimálně 100 upravených fotografií\n"
+                . "• online galerie\n"
+                . "• předání fotek ke stažení\n"
+                . "• archivace hotových výstupů na 2 roky",
+                'od 14 900 Kč',
+            ],
+            2 => [
+                'Standardní',
+                "Nejoblíbenější balíček pro hlavní část svatebního dne.\n\n"
+                . "• focení cca 8 hodin\n"
+                . "• přípravy, obřad, gratulace, skupinky\n"
+                . "• párové focení novomanželů\n"
+                . "• hostina, detaily a atmosféra dne\n"
+                . "• minimálně 300–500 upravených fotografií\n"
+                . "• online galerie\n"
+                . "• konzultace před svatbou\n"
+                . "• archivace hotových výstupů na 2 roky",
+                'od 24 900 Kč',
+            ],
+            3 => [
+                'Prémiový',
+                "Celodenní zachycení svatby s rozšířenou péčí a delší archivací.\n\n"
+                . "• focení cca 10–12 hodin\n"
+                . "• celý den od příprav až po večerní zábavu\n"
+                . "• větší počet upravených fotografií\n"
+                . "• detailní zachycení atmosféry, hostů a momentů\n"
+                . "• online galerie\n"
+                . "• konzultace před svatbou\n"
+                . "• prioritní zpracování\n"
+                . "• možnost krátkého video / reels výstupu dle domluvy\n"
+                . "• archivace hotových výstupů na 5 let",
+                'od 34 900 Kč',
+            ],
         ];
 
         $order = 10;
@@ -107,6 +146,28 @@ class DemoContentSeeder
                 'autofill_disabled' => 1,
             ]);
         }
+
+        // Poznamka pod cenik (do CTA bloku) + zachovani tlacitka poptavky.
+        $note = '<style>'
+            . '.cenik-note{max-width:760px;margin:4px auto 30px;text-align:center}'
+            . '.cenik-note p{color:#5f5143;line-height:1.7;margin:0 0 8px}'
+            . '.cenik-note__fine{font-size:.82rem;color:#8a7a68}'
+            . '</style>'
+            . '<div class="cenik-note">'
+            . '<p>Hotové výstupy archivuji podle zvoleného balíčku po dobu 2 nebo 5 let. '
+            . 'Díky tomu je možné fotografie nebo video v případě ztráty znovu obnovit.</p>'
+            . '<p class="cenik-note__fine">Archivace se vztahuje na finálně předané výstupy, '
+            . 'nikoliv na všechny surové záznamy.</p>'
+            . '</div>'
+            . '<a href="/kontakt" class="btn-primary">Nezávazná poptávka</a>';
+
+        $this->blocks->upsert($pageId, 'cta_wrap', [
+            'block_type' => 'html',
+            'label' => 'Ceník — poznámka a CTA',
+            'content' => $note,
+            'sort_order' => 90,
+            'autofill_disabled' => 1,
+        ]);
     }
 
     /**
