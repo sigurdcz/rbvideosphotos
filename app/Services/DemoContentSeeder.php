@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Core\Database;
 use App\Repositories\BlockRepository;
 use App\Repositories\BlogRepository;
+use App\Repositories\FaqRepository;
 use App\Repositories\PageRepository;
 use App\Repositories\PortfolioRepository;
 use App\Repositories\ReviewRepository;
@@ -45,6 +46,8 @@ class DemoContentSeeder
         $portfolioCount = $this->seedPortfolioEntries($siteId);
         $this->resetHomepageAutofillBlocks();
         $reviewCount = $this->seedReviewRows($siteId);
+        $this->seedCenikCards($siteId);
+        $faqCount = $this->seedFaqItems($siteId);
 
         $published = false;
         if ($publish && $userId) {
@@ -56,8 +59,85 @@ class DemoContentSeeder
             'blog_posts' => $blogCount,
             'portfolio_entries' => $portfolioCount,
             'reviews' => $reviewCount,
+            'faq_items' => $faqCount,
             'published' => $published,
         ];
+    }
+
+    /**
+     * Svatebni cenik (3 baliky) — prepise cenik_card_N na strance Cenik.
+     * Zdroj pro homepage teaser i /cenik. Bez toho zustanou genericke hodnoty
+     * z migrace 014.
+     */
+    private function seedCenikCards(int $siteId): void
+    {
+        $page = $this->pages->findByUrlPath('cenik');
+        if (!$page) {
+            return;
+        }
+        $pageId = (int)$page['id'];
+
+        $cards = [
+            1 => ['Základní', 'Menší svatba, obřad, skupinky a krátké focení novomanželů.', 'od 14 900 Kč'],
+            2 => ['Standardní', 'Nejoblíbenější balíček pro hlavní část svatebního dne.', 'od 24 900 Kč'],
+            3 => ['Prémiový', 'Celodenní zachycení svatby s rozšířenou péčí a delší archivací.', 'od 34 900 Kč'],
+        ];
+
+        $order = 10;
+        foreach ($cards as $i => [$title, $desc, $price]) {
+            $this->blocks->upsert($pageId, 'cenik_card_' . $i . '_title', [
+                'block_type' => 'text',
+                'label' => 'Karta ' . $i . ' — nadpis',
+                'content' => $title,
+                'sort_order' => $order++,
+                'autofill_disabled' => 1,
+            ]);
+            $this->blocks->upsert($pageId, 'cenik_card_' . $i . '_desc', [
+                'block_type' => 'textarea',
+                'label' => 'Karta ' . $i . ' — popis',
+                'content' => $desc,
+                'sort_order' => $order++,
+                'autofill_disabled' => 1,
+            ]);
+            $this->blocks->upsert($pageId, 'cenik_card_' . $i . '_price', [
+                'block_type' => 'text',
+                'label' => 'Karta ' . $i . ' — cena',
+                'content' => $price,
+                'sort_order' => $order++,
+                'autofill_disabled' => 1,
+            ]);
+        }
+    }
+
+    /**
+     * Svatebni FAQ (12 otazek) do tabulky faq_items — zdroj pro /faq stranku.
+     */
+    private function seedFaqItems(int $siteId): int
+    {
+        $faqs = [
+            ['Kdy je nejlepší rezervovat termín svatby?', 'Ideálně co nejdříve po potvrzení data a místa svatby. U víkendových termínů ve svatební sezóně doporučuji rezervaci několik měsíců dopředu.'],
+            ['Je možné nafotit jen obřad?', 'Ano. Pro menší svatby nebo pouze obřad je vhodný základní balíček. Zahrnuje obřad, gratulace, skupinové fotografie a krátké focení novomanželů.'],
+            ['Kolik fotografií dostaneme?', 'Záleží na délce focení a zvoleném balíčku. U menších svateb obvykle předávám nižší stovky fotografií, u celodenních svateb několik stovek upravených snímků.'],
+            ['Za jak dlouho dostaneme hotové fotografie?', 'Obvyklá doba dodání je podle rozsahu zakázky. Menší focení bývá hotové rychleji, u větších svateb a kombinace foto + video je potřeba počítat s delší postprodukcí.'],
+            ['Jak nám budou fotografie předány?', 'Hotové fotografie předávám online formou galerie nebo odkazu ke stažení. Díky tomu si je můžete jednoduše stáhnout a sdílet s rodinou nebo hosty.'],
+            ['Jak dlouho archivujete hotové výstupy?', 'Podle zvoleného balíčku archivuji finálně předané výstupy po dobu 2 nebo 5 let. Archivace se vztahuje na hotové předané fotografie a videa, ne na všechny surové záznamy.'],
+            ['Dostaneme i neupravené fotografie nebo RAW soubory?', 'Standardně předávám pouze vybrané a upravené fotografie. Neupravené fotografie ani RAW soubory nejsou běžnou součástí předání.'],
+            ['Fotíte i video?', 'Ano. Kromě fotografování je možné domluvit také video výstup, krátký sestřih nebo reels/shorts verze pro sociální sítě.'],
+            ['Je doprava v ceně?', 'Doprava záleží na místě konání svatby nebo akce. U každé poptávky ji řeším individuálně podle lokality.'],
+            ['Jak probíhá rezervace termínu?', 'Po odeslání poptávky si společně upřesníme datum, místo, rozsah focení nebo natáčení a požadované výstupy. Poté připravím konkrétní nabídku.'],
+            ['Musíme umět pózovat?', 'Ne. Většinu dne fotím přirozeně a reportážně. Při párovém focení vás navedu tak, aby fotky působily přirozeně a nebyly strojené.'],
+            ['Je možné upravit balíček na míru?', 'Ano. Každá svatba nebo akce je jiná, proto je možné rozsah focení, videa, počet hodin i typ výstupů upravit individuálně.'],
+        ];
+
+        $rows = [];
+        $order = 0;
+        foreach ($faqs as [$q, $a]) {
+            $rows[] = ['question' => $q, 'answer' => $a, 'sort_order' => ++$order, 'is_active' => 1];
+        }
+
+        (new FaqRepository())->replaceAllBySite($siteId, $rows);
+
+        return count($rows);
     }
 
     private function seedBlogPosts(int $siteId): int
