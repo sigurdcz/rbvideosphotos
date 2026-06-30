@@ -2187,6 +2187,67 @@ body.theme-editorial-gold {
   transform: scale(1.06);
 }
 
+/* Hero video must cover the whole header even when the editable video block
+   is rendered inside the hero container by the template parser. */
+.theme-editorial-gold .hp-hero {
+  isolation: isolate;
+}
+
+.theme-editorial-gold .hp-hero > .container {
+  position: static !important;
+}
+
+.theme-editorial-gold .hp-hero .theme-hero-video,
+.theme-editorial-gold .hp-hero .hero-video.theme-hero-video {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 1 !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  opacity: 1 !important;
+  filter: saturate(.88) contrast(1.04) brightness(.82) !important;
+}
+
+.theme-editorial-gold .hp-hero .theme-hero-video iframe {
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  width: max(100vw, 177.78vh) !important;
+  height: max(56.25vw, 100vh) !important;
+  min-width: 100% !important;
+  min-height: 100% !important;
+  transform: translate(-50%, -50%) !important;
+}
+
+.theme-editorial-gold .hp-hero::after {
+  z-index: 2 !important;
+  background:
+    linear-gradient(90deg, rgba(0,0,0,.58), rgba(0,0,0,.16) 48%, rgba(0,0,0,.42)),
+    linear-gradient(180deg, rgba(0,0,0,.42), rgba(0,0,0,.02) 42%, rgba(0,0,0,.50)) !important;
+}
+
+.theme-editorial-gold .hp-hero .theme-hero-video::after {
+  opacity: .34 !important;
+}
+
+.theme-editorial-gold .hp-hero > .container > :not(.theme-hero-video),
+.theme-editorial-gold .hp-hero .hero-content,
+.theme-editorial-gold .hp-hero .hero-cta-wrap {
+  position: relative !important;
+  z-index: 6 !important;
+}
+
+.theme-editorial-gold .hp-hero .section-label,
+.theme-editorial-gold .hp-hero h1,
+.theme-editorial-gold .hp-hero .hero-sub,
+.theme-editorial-gold .hp-hero .btn-primary,
+.theme-editorial-gold .hp-hero .btn-secondary {
+  opacity: 1 !important;
+  filter: none !important;
+}
+
 @media(min-width: 761px) {
   .theme-editorial-gold .grid-wrap > .container,
   .theme-editorial-gold .pf-main > .container,

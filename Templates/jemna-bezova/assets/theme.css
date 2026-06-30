@@ -2827,3 +2827,20 @@ body.theme-jemna-bezova {
     padding: 2.75rem 0 3.25rem;
   }
 }
+
+@media (max-width: 760px) {
+  .theme-jemna-bezova #sluzby.jb-about-section,
+  .theme-jemna-bezova .jb-about-section {
+    padding-top: 2rem !important;
+  }
+
+  .theme-jemna-bezova .jb-about-section .container,
+  .theme-jemna-bezova .jb-about-shell {
+    gap: 1rem !important;
+  }
+
+  .theme-jemna-bezova .jb-about-visual {
+    display: none !important;
+    min-height: 0 !important;
+  }
+}
