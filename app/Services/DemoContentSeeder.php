@@ -80,10 +80,13 @@ class DemoContentSeeder
         // Vicerradkovy popis: 1. radek = souhrn (homepage teaser bere jen prvni
         // radek), zbytek = seznam (.cenik-card-desc ma white-space:pre-line,
         // takze se na /cenik vykresli jako odrazky vc. archivace).
+        // Popis = prehledovy odstavec (zobrazi se i na homepage, bez ceny) +
+        // prazdny radek + "Obsahuje" seznam (jen na /cenik diky pre-line).
         $cards = [
             1 => [
                 'Základní',
-                "Menší svatba, obřad, skupinky a krátké focení novomanželů.\n\n"
+                "Pro menší svatby a samotný obřad – obřad, gratulace, skupinové fotografie a krátké focení novomanželů. Přibližně 3 hodiny focení a nejméně 100 upravených fotografií.\n\n"
+                . "Obsahuje:\n"
                 . "• focení cca 3 hodiny\n"
                 . "• obřad, gratulace, skupinové fotografie\n"
                 . "• krátké párové focení novomanželů\n"
@@ -95,12 +98,14 @@ class DemoContentSeeder
             ],
             2 => [
                 'Standardní',
-                "Nejoblíbenější balíček pro hlavní část svatebního dne.\n\n"
+                "Nejoblíbenější volba pro hlavní část svatebního dne, od příprav po první tanec nebo večerní program. Přibližně 8 hodin focení, 300–500 upravených fotografií a svatební video v ceně.\n\n"
+                . "Obsahuje:\n"
                 . "• focení cca 8 hodin\n"
                 . "• přípravy, obřad, gratulace, skupinky\n"
                 . "• párové focení novomanželů\n"
                 . "• hostina, detaily a atmosféra dne\n"
                 . "• minimálně 300–500 upravených fotografií\n"
+                . "• svatební video / sestřih dne\n"
                 . "• online galerie\n"
                 . "• konzultace před svatbou\n"
                 . "• archivace hotových výstupů na 2 roky",
@@ -108,15 +113,16 @@ class DemoContentSeeder
             ],
             3 => [
                 'Prémiový',
-                "Celodenní zachycení svatby s rozšířenou péčí a delší archivací.\n\n"
+                "Kompletní zachycení celého svatebního dne bez spěchu a kompromisů. Přibližně 10–12 hodin focení, prioritní zpracování a svatební video / reels v ceně. Delší archivace výstupů.\n\n"
+                . "Obsahuje:\n"
                 . "• focení cca 10–12 hodin\n"
                 . "• celý den od příprav až po večerní zábavu\n"
                 . "• větší počet upravených fotografií\n"
                 . "• detailní zachycení atmosféry, hostů a momentů\n"
+                . "• svatební video + krátký sestřih / reels v ceně\n"
                 . "• online galerie\n"
                 . "• konzultace před svatbou\n"
                 . "• prioritní zpracování\n"
-                . "• možnost krátkého video / reels výstupu dle domluvy\n"
                 . "• archivace hotových výstupů na 5 let",
                 'od 34 900 Kč',
             ],
