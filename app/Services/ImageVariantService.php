@@ -68,6 +68,63 @@ class ImageVariantService
         return (bool)$result;
     }
 
+    /**
+     * Vytvori variantu s presnymi rozmery (cover crop, vystred). Vhodne pro
+     * OG/Twitter nahledy (napr. 1200x630), kde je potreba pevny pomer stran.
+     */
+    public function createCropped(string $sourcePath, string $destPath, int $targetW, int $targetH, int $quality = 82): bool
+    {
+        if (!extension_loaded('gd')) return false;
+        $info = @getimagesize($sourcePath);
+        if (!$info) return false;
+
+        [$origW, $origH] = [$info[0], $info[1]];
+        if ($origW <= 0 || $origH <= 0 || $targetW <= 0 || $targetH <= 0) return false;
+
+        $src = $this->loadImage($sourcePath, $info[2]);
+        if (!$src) return false;
+
+        // Cover: vyber ze zdroje co nejvetsi vyrez s pomerem cile, pak resample.
+        $targetRatio = $targetW / $targetH;
+        $origRatio = $origW / $origH;
+        if ($origRatio > $targetRatio) {
+            $cropH = $origH;
+            $cropW = (int) round($origH * $targetRatio);
+        } else {
+            $cropW = $origW;
+            $cropH = (int) round($origW / $targetRatio);
+        }
+        $srcX = (int) floor(($origW - $cropW) / 2);
+        $srcY = (int) floor(($origH - $cropH) / 2);
+
+        $dst = imagecreatetruecolor($targetW, $targetH);
+        if ($info[2] === IMAGETYPE_PNG) {
+            imagealphablending($dst, false);
+            imagesavealpha($dst, true);
+        }
+        imagecopyresampled($dst, $src, 0, 0, $srcX, $srcY, $targetW, $targetH, $cropW, $cropH);
+
+        $ext = strtolower(pathinfo($destPath, PATHINFO_EXTENSION));
+        $result = match ($ext) {
+            'webp'        => $this->supportsWebP() ? imagewebp($dst, $destPath, $quality) : false,
+            'jpg', 'jpeg' => imagejpeg($dst, $destPath, $quality),
+            'png'         => imagepng($dst, $destPath, 7),
+            default       => false,
+        };
+
+        if (!$result && $ext === 'webp') {
+            $jpegPath = preg_replace('/\.webp$/i', '.jpg', $destPath);
+            if ($jpegPath !== null && imagejpeg($dst, $jpegPath, $quality)) {
+                @rename($jpegPath, $destPath);
+                $result = true;
+            }
+        }
+
+        imagedestroy($src);
+        imagedestroy($dst);
+        return (bool) $result;
+    }
+
     public function supportsWebP(): bool
     {
         if (extension_loaded('imagick')) {

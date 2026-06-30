@@ -340,7 +340,18 @@ HTML;
         if (!$mediaId) return null;
         $m = $this->media->findById($mediaId);
         if (!$m) return null;
-        return rtrim($site['domain'], '/') . '/' . ltrim($m['storage_path'], '/');
+
+        // Preferuj OG variantu (1200x630), jinak original.
+        $path = (string) ($m['storage_path'] ?? '');
+        foreach ($this->media->variantsByMediaId($mediaId) as $variant) {
+            if (($variant['format'] ?? '') === 'og' && !empty($variant['path'])) {
+                $path = (string) $variant['path'];
+                break;
+            }
+        }
+        if ($path === '') return null;
+
+        return rtrim($site['domain'], '/') . '/' . ltrim($path, '/');
     }
 
     private function injectPageHeroImage(string $html, int $pageId): string

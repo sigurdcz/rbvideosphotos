@@ -81,21 +81,8 @@ function tryServeDatabasePage(string $uri, bool $authenticated = false, bool $pr
         $pagePath = trim((string)($page['url_path'] ?? ''), '/');
         $pageUrl = rtrim((string)$site['domain'], '/') . ($pagePath === '' ? '/' : '/' . $pagePath);
 
-        $ogImageUrl = null;
-        if (!empty($seo['og_image_id'])) {
-            $media = $mediaRepo->findById((int)$seo['og_image_id']);
-            if ($media) {
-                $ogImageUrl = rtrim((string)$site['domain'], '/') . '/' . ltrim((string)$media['storage_path'], '/');
-            }
-        }
-
-        $twImageUrl = null;
-        if (!empty($seo['twitter_image_id'])) {
-            $media = $mediaRepo->findById((int)$seo['twitter_image_id']);
-            if ($media) {
-                $twImageUrl = rtrim((string)$site['domain'], '/') . '/' . ltrim((string)$media['storage_path'], '/');
-            }
-        }
+        $ogImageUrl = resolveSocialImageUrl($mediaRepo, $seo['og_image_id'] ?? null, $site);
+        $twImageUrl = resolveSocialImageUrl($mediaRepo, $seo['twitter_image_id'] ?? null, $site);
 
         $html = $renderer->render(
             $template['html_source'],
@@ -865,6 +852,34 @@ function buildHeroImageHtml(string $imageUrl): string
     }
     $safe = htmlspecialchars($imageUrl, ENT_QUOTES);
     return '<div class="theme-hero-video theme-hero-video--image" aria-hidden="true" style="background-image:url(\'' . $safe . '\')"></div>';
+}
+
+/**
+ * URL pro OG/Twitter nahled — preferuje variantu 'og' (1200x630), jinak original.
+ */
+function resolveSocialImageUrl(MediaRepository $mediaRepo, $imageId, array $site): ?string
+{
+    if (empty($imageId)) {
+        return null;
+    }
+    $media = $mediaRepo->findById((int) $imageId);
+    if (!$media) {
+        return null;
+    }
+
+    $path = (string) ($media['storage_path'] ?? '');
+    foreach ($mediaRepo->variantsByMediaId((int) $imageId) as $variant) {
+        if (($variant['format'] ?? '') === 'og' && !empty($variant['path'])) {
+            $path = (string) $variant['path'];
+            break;
+        }
+    }
+
+    if ($path === '') {
+        return null;
+    }
+
+    return rtrim((string) ($site['domain'] ?? ''), '/') . '/' . ltrim($path, '/');
 }
 
 function buildHeroVideoHtml(string $videoUrl, string $posterUrl = ''): string

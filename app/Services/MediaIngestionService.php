@@ -231,6 +231,22 @@ class MediaIngestionService
             }
         }
 
+        // OG/Twitter nahled — pevny pomer 1200x630 (cover crop).
+        if (!$isGif) {
+            $ogName = uniqid('img_', true) . '_og.webp';
+            $ogDest = $fullDir . '/' . $ogName;
+            if ($this->variants->createCropped($dest, $ogDest, 1200, 630)) {
+                $this->media->addVariant($mediaId, [
+                    'format' => 'og',
+                    'width' => 1200,
+                    'height' => 630,
+                    'path' => $storagePath . '/' . $ogName,
+                    'filesize' => @filesize($ogDest) ?: null,
+                ]);
+                $created++;
+            }
+        }
+
         return $created;
     }
 
