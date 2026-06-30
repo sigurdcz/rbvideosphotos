@@ -9,6 +9,7 @@ use App\Repositories\FaqRepository;
 use App\Repositories\PageRepository;
 use App\Repositories\PortfolioRepository;
 use App\Repositories\ReviewRepository;
+use App\Repositories\ServiceRepository;
 use App\Repositories\SiteRepository;
 use App\Repositories\TemplateRepository;
 use PDO;
@@ -53,6 +54,7 @@ class DemoContentSeeder
         $this->seedCenikCards($siteId);
         $faqCount = $this->seedFaqItems($siteId);
         $this->seedHeroBackgrounds($siteId);
+        $this->seedServiceItems($siteId);
         $this->seedServiceVisuals($siteId);
         $this->seedPageSeo($siteId, $site);
 
@@ -190,6 +192,36 @@ class DemoContentSeeder
                 'autofill_disabled' => 1,
             ]);
         }
+    }
+
+    /**
+     * Seed sluzeb (service_items) pro /sluzby i homepage grid. Builder cte tato
+     * data primarne ze service_items (ServiceRepository), takze obsah patri sem.
+     */
+    private function seedServiceItems(int $siteId): void
+    {
+        $services = [
+            ['Svatební foto & video', 'Zachytíme každý dotek, každý pohled i každou slzu štěstí. Přirozené reportážní fotografie a filmové video, které vám budou váš den připomínat celý život.', 'svatba-nevesta-zenich-polibek-kamenna-zed.webp'],
+            ['Rodinné & portrétní focení', 'Rodinné vzpomínky, těhotenské focení, křtiny i portréty. Přirozené, nenucené a krásné snímky, ke kterým se budete rádi vracet.', 'rodinne-foceni-rodina-dite-louka.webp'],
+            ['Reklamní foto & video', 'Profesionální vizuální obsah pro firmy, produkty, kapely i značky. Obsah, který buduje důvěru, odlišuje a prodává.', 'sportovni-auto-nissan-silnice-les-pohyb.webp'],
+            ['Akce & události', 'Konference, kulturní akce, plesy, koncerty i firemní večery. Každá událost si zaslouží profesionální dokumentaci bez kompromisů.', 'koncert-zpevak-mikrofon-cernobila-fotografie.webp'],
+        ];
+
+        $items = [];
+        foreach ($services as $i => [$title, $desc, $imageFile]) {
+            $imageUrl = !empty($this->demoMedia[$imageFile]) ? $this->mediaPathById((int) $this->demoMedia[$imageFile]) : '';
+            $items[] = [
+                'title' => $title,
+                'description' => $desc,
+                'image_url' => $imageUrl,
+                'button_text' => 'Více informací',
+                'button_url' => '/kontakt',
+                'sort_order' => $i + 1,
+                'is_active' => 1,
+            ];
+        }
+
+        (new ServiceRepository())->upsertMany($siteId, $items);
     }
 
     private function seedServiceVisuals(int $siteId): void

@@ -325,15 +325,9 @@ class HomepageContentService
             return '';
         }
 
-        $isServicesPage = $limit === 0;
         $cards = '';
-        $details = '';
         foreach ($items as $idx => $item) {
-            $detailId = $isServicesPage ? 'sluzba-' . ($idx + 1) : '';
-            $cards .= $this->buildServiceCardHtml($item, $idx + 1, $detailId);
-            if ($detailId !== '') {
-                $details .= $this->buildServiceDetailHtml($item, $detailId, $idx + 1);
-            }
+            $cards .= $this->buildServiceCardHtml($item, $idx + 1, '');
         }
 
         $css = '<style>'
@@ -362,7 +356,7 @@ class HomepageContentService
             . '@media(max-width:820px){.hp-service-detail{grid-template-columns:1fr}.hp-service-detail__media{min-height:200px}}'
             . '</style>';
 
-        return $css . $cards . ($details !== '' ? '<div class="hp-service-details">' . $details . '</div>' : '');
+        return $css . $cards;
     }
 
     private function buildServiceCardHtml(?array $service, int $index = 0, string $detailId = ''): string
