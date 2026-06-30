@@ -18,14 +18,66 @@
 
   function initActiveNav() {
     var sections = document.querySelectorAll('section[id]');
-    var navLinks = document.querySelectorAll('.nav-links a[href^="#"]');
-    if (!sections.length || !navLinks.length) return;
+    var allLinks = Array.prototype.slice.call(document.querySelectorAll('.nav-links a[href]'));
+    if (!allLinks.length) return;
+
+    function normalizePath(path) {
+      if (!path) return '/';
+      path = path.replace(/\/+$/, '');
+      return path === '' ? '/' : path;
+    }
+
+    function activate(link) {
+      allLinks.forEach(function(item){ item.classList.remove('nav-active'); });
+      if (link) link.classList.add('nav-active');
+    }
+
+    var currentPath = normalizePath(window.location.pathname || '/');
+    var currentHash = window.location.hash || '';
+    var directLink = null;
+
+    allLinks.forEach(function(link) {
+      var href = link.getAttribute('href') || '';
+      if (!href || href.charAt(0) === '#') return;
+      try {
+        var url = new URL(href, window.location.origin);
+        var linkPath = normalizePath(url.pathname);
+        if (linkPath === currentPath) {
+          directLink = link;
+        } else if (currentPath === '/' && (href === '/' || href === '/#uvod' || href === '#uvod')) {
+          directLink = link;
+        }
+      } catch (error) {
+      }
+    });
+
+    if (currentPath !== '/' && directLink) {
+      activate(directLink);
+      return;
+    }
+
+    var navLinks = Array.prototype.slice.call(document.querySelectorAll('.nav-links a[href^="#"], .nav-links a[href^="/#"]'));
+    if (!sections.length || !navLinks.length) {
+      if (directLink) activate(directLink);
+      return;
+    }
+
+    function linkForSection(id) {
+      return document.querySelector('.nav-links a[href="#' + id + '"], .nav-links a[href="/#' + id + '"]');
+    }
+
+    if (currentHash) {
+      var hashLink = linkForSection(currentHash.replace(/^#/, ''));
+      if (hashLink) activate(hashLink);
+    } else if (directLink) {
+      activate(directLink);
+    }
+
     var io = new IntersectionObserver(function(entries){
       entries.forEach(function(entry){
         if (!entry.isIntersecting) return;
-        navLinks.forEach(function(link){ link.classList.remove('nav-active'); });
-        var active = document.querySelector('.nav-links a[href="#' + entry.target.id + '"]');
-        if (active) active.classList.add('nav-active');
+        var active = linkForSection(entry.target.id);
+        if (active) activate(active);
       });
     }, { rootMargin: '-40% 0px -40% 0px' });
     sections.forEach(function(section){ io.observe(section); });

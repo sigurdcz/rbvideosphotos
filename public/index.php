@@ -756,20 +756,25 @@ function injectPageHeroVideo(string $html, array $site, ?int $pageId, string $pa
 
     $posterUrl = normalizePublicAssetUrl((string)($site['default_hero_poster_url'] ?? ''));
 
-    // Priorita: 1) page hero_video, 2) page hero_bg foto, 3) site default video.
+    $isHomepage = $pageKey === 'homepage';
+    // Priorita: 1) page hero_video, 2) homepage site default video, 3) page hero_bg foto, 4) site default video.
     $videoHtml = '';
     $pageVideo = ($pageId !== null && $pageId > 0) ? resolvePageBlockUrl($pageId, 'hero_video') : '';
     if ($pageVideo !== '') {
         $videoHtml = buildHeroVideoHtml($pageVideo, $posterUrl);
     } else {
+        $defaultVideo = normalizePublicAssetUrl((string)($site['default_hero_video_url'] ?? ''));
+        if ($isHomepage && $defaultVideo !== '') {
+            $videoHtml = buildHeroVideoHtml($defaultVideo, $posterUrl);
+        }
+
         $pagePhoto = ($pageId !== null && $pageId > 0) ? resolvePageHeroImageUrl($pageId) : '';
-        if ($pagePhoto !== '') {
+        if ($videoHtml === '' && $pagePhoto !== '') {
             $videoHtml = buildHeroImageHtml($pagePhoto);
-        } else {
-            $defaultVideo = normalizePublicAssetUrl((string)($site['default_hero_video_url'] ?? ''));
-            if ($defaultVideo !== '') {
-                $videoHtml = buildHeroVideoHtml($defaultVideo, $posterUrl);
-            }
+        }
+
+        if ($videoHtml === '' && $defaultVideo !== '') {
+            $videoHtml = buildHeroVideoHtml($defaultVideo, $posterUrl);
         }
     }
 

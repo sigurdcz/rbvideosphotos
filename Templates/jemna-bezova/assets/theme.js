@@ -150,11 +150,29 @@
     var shell = document.createElement('div');
     shell.className = 'jb-about-shell';
 
+    function pickVisualImage() {
+      var serviceImage = qs('.hp-svc-card__media img, .svc-card img', grid);
+      if (serviceImage && serviceImage.getAttribute('src')) {
+        return serviceImage.getAttribute('src');
+      }
+      var portfolioImage = qs('#nase-prace .pt-thumb img');
+      if (portfolioImage && portfolioImage.getAttribute('src')) {
+        return portfolioImage.getAttribute('src');
+      }
+      var blogImage = qs('.hp-blog-thumb img');
+      return blogImage ? blogImage.getAttribute('src') : '';
+    }
+
+    var visualImage = pickVisualImage();
+    var visualInner = visualImage
+      ? '<img class="jb-about-visual__media" src="' + visualImage + '" alt="Nase sluzby" loading="lazy">'
+      : '<span>[ Vase fotografie ]</span>';
+
     var visual = document.createElement('div');
     visual.className = 'jb-about-visual jb-reveal';
     visual.innerHTML =
       '<div class="jb-about-visual__frame"></div>' +
-      '<div class="jb-about-visual__panel"><span>[ Vase fotografie ]</span></div>' +
+      '<div class="jb-about-visual__panel' + (visualImage ? ' has-image' : '') + '">' + visualInner + '</div>' +
       '<div class="jb-about-badge"><strong>10+</strong><span>let zkusenosti</span></div>';
 
     var copy = document.createElement('div');

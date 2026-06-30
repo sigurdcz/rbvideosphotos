@@ -1,28 +1,35 @@
-# UKOL: SEO obrazky bez rucniho ID
+# UKOL: Jemna bezova homepage a subpages opravy
 
 Datum: 2026-06-30
-Zadani: Predelat OG a Twitter image pole v SEO nastaveni stranky tak, aby odpovidala beznemu nahravani a vyberu fotek v projektu misto rucniho zadavani ID media.
+Zadani: Opravit homepage a podstranky v aktivnim fotografickem motivu tak, aby hero a obsah pouzivaly spravne obrazky/video, fungovaly kliky ve sluzbach, byly bile hero texty a navbar zvyraznoval aktualni sekci/stranku.
 
 ## Kroky
 
-- [x] Najit aktualni SEO formular a existujici media workflow v adminu.
-- [x] Upravit SEO formular na bezny picker/nahrani fotky pro OG a Twitter image.
-- [x] Otestovat PHP syntax a zkontrolovat dotcene workflow.
-- [x] Rozhodnout, jestli zmena vyzaduje upravu dokumentace, a pripadne ji dopsat.
+- [x] Najit aktivni soubory a bugy souvisejici s homepage, subpages a navbar chovanim.
+- [x] Upravit tema a runtime tak, aby homepage a podstranky mely spravne hero media, kontrast textu a funkcni interakce.
+- [ ] Overit klikani, hero media a navbar aktivni stav na lokalnim webu.
+- [x] Otestovat syntax dotcenych PHP souboru a zapsat vysledek.
+- [x] Rozhodnout o dokumentaci a doplnit jen pokud je to vecna zmena chovani systemu.
 
 ## Poznamky
 
-- Soucasny stav v `admin/views/seo/edit.php` pouziva `og_image_id` a `twitter_image_id` jako ciselna pole s rucnimi odkazy na media.
-- Existujici vzory v projektu: media upload pres `admin/views/media/index.php` a asset picker modal v `admin/views/settings/index.php`.
-- Cil: zachovat ukladani `*_image_id` do SEO tabulky, ale odstranit potrebu rucne hledat a zadavat ID.
-- `SeoController` ted natahuje media pres `allBySiteWithVariants()`, aby mel SEO formular k dispozici thumb nahledy.
-- `MediaController::upload()` vraci i `storage_path` a `thumb_path`, takze novy obrazek lze po uploadu rovnou vybrat bez reloadu.
-- Dokumentaci jsem nemenil; jde o lokalni admin UX zmenu bez dopadu na architekturu, API nebo runtime chovani webu.
+- Bugy smeruji hlavne do `Templates/jemna-bezova/assets/theme.js`, `Templates/jemna-bezova/assets/theme.css` a casti renderingu v `public/index.php`.
+- `theme.js` ted umi rozbit sekci sluzeb tim, ze skryje puvodni grid a vlozi placeholder `[ Vase fotografie ]`.
+- Subpage hero CSS obsahuje fallback gradient a zaroven explicitne skryva `.theme-hero-video`, coz muze byt primy duvod chybejiciho videa/obrazku v hero oblastech.
+- Navbar aktivni stav je potreba resit podle aktualni URL, ne jen podle hover stylu.
+- `HomepageContentService.php` ted generuje na `/sluzby` detail sekce pod gridem a stejne-page tlacitka prepina z `/sluzby` na kotvy `#sluzba-*`, aby se stranka jen nerefreshovala.
+- Homepage portfolio thumby jsem prepnul z `thumb_path` na `medium_path`, aby grid na uvodu netahal zbytecne male nahledy.
+- Hero prioritu jsem zmenil v `public/index.php` i `app/Services/PublishService.php`: homepage preferuje site default video pred pevnou fotkou, pokud je video nastavene.
+- Lokalni PHP server na `127.0.0.1:8000` bezi, ale dynamicky root vraci 404 z aplikace; plne browser overeni nad zivou DB strankou je tim blokovane a nesmi se vydavat za hotove.
+- PHP syntax overena: `public/index.php`, `app/Services/PublishService.php`, `app/Services/HomepageContentService.php`.
+- Dokumentaci jsem nemenil; jde o konkretni theme/runtime opravy, ne o novou architekturu nebo API kontrakt.
 
 ## Vysledek
 
-Hotovo:
-- OG a Twitter image pole v SEO nastaveni uz nepouzivaji rucni zadavani media ID.
-- Formular zobrazuje nahled, aktualni vybrane medium, tlacitka pro vyber z knihovny, upload z pocitace a odebrani.
-- Upload pouziva stavajici `/admin/media/upload` endpoint a po uspesnem nahrani obrazek hned vybere do daneho SEO pole.
-- Overeno pres `php -l` na `admin/views/seo/edit.php`, `app/Controllers/SeoController.php` a `app/Controllers/MediaController.php`.
+Hotovo s overovacim blokrem:
+- Homepage hero ma preferovat video pred pevnou fotkou, pokud je nastavene defaultni hero video webu.
+- Sekce `Nase sluzby` v jemne bezove uz neukazuje placeholder panel, ale realny obrazek z obsahu.
+- `/sluzby` uz nemaji tlacitka vedouci na refresh te same stranky; stejne-page akce skacou na vygenerovane detaily sluzeb pod gridem.
+- Homepage `Nase prace` pouziva kvalitnejsi `medium` nahledy.
+- `/faq`, `/blog`, `/nase-prace`, `/kontakt` a dalsi subpage hero vrstvy znovu zobrazuji hero media a maji svetlejsi text v hlavicce.
+- Navbar runtime umi pri nacteni zvyraznit aktualni podstranku podle URL a na homepage dal reaguje i na sekce.

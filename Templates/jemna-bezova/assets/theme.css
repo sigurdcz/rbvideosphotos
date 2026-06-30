@@ -523,6 +523,18 @@ body.theme-jemna-bezova {
   box-shadow: var(--jb-shadow);
 }
 
+.theme-jemna-bezova .jb-about-visual__media {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: sepia(.08) saturate(.9) contrast(.98);
+}
+
+.theme-jemna-bezova .jb-about-visual__panel.has-image span {
+  display: none;
+}
+
 .theme-jemna-bezova .jb-about-visual__panel span {
   color: rgba(249, 239, 227, .56);
   font-family: "Cormorant Garamond", Georgia, serif;
@@ -2354,7 +2366,7 @@ body.theme-jemna-bezova {
   background:
     linear-gradient(180deg, rgba(29, 22, 17, .28), rgba(29, 22, 17, .18)),
     var(--theme-page-hero-image, var(--theme-hero-image, linear-gradient(135deg, #6c5846, #9a8773))) center / cover no-repeat;
-  opacity: .42;
+  opacity: .58;
   mix-blend-mode: normal;
 }
 
@@ -2363,13 +2375,13 @@ body.theme-jemna-bezova {
 }
 
 .theme-jemna-bezova .pf-hero .theme-hero-video,
-.theme-jemna-bezova .bp-hero .theme-hero-video,
 .theme-jemna-bezova .fq-hero .theme-hero-video,
 .theme-jemna-bezova .kt-hero .theme-hero-video,
 .theme-jemna-bezova .bl-hero .theme-hero-video,
-.theme-jemna-bezova .pf-detail-hero .theme-hero-video,
 .theme-jemna-bezova .page-hero .theme-hero-video {
-  display: none !important;
+  display: block !important;
+  opacity: .96;
+  filter: brightness(.58) saturate(.86);
 }
 
 .theme-jemna-bezova .pf-hero > .container,
@@ -2404,6 +2416,27 @@ body.theme-jemna-bezova {
   margin-top: 12px;
   font-size: .98rem;
   line-height: 1.75;
+  color: rgba(255, 244, 232, .88);
+}
+
+.theme-jemna-bezova .pf-hero .section-label,
+.theme-jemna-bezova .bp-hero .section-label,
+.theme-jemna-bezova .fq-hero .section-label,
+.theme-jemna-bezova .kt-hero .section-label,
+.theme-jemna-bezova .bl-hero .section-label,
+.theme-jemna-bezova .pf-detail-hero .section-label,
+.theme-jemna-bezova .page-hero .section-label {
+  color: var(--jb-gold-soft);
+}
+
+.theme-jemna-bezova .pf-hero h1,
+.theme-jemna-bezova .bp-hero h1,
+.theme-jemna-bezova .fq-hero h1,
+.theme-jemna-bezova .kt-hero h1,
+.theme-jemna-bezova .bl-hero h1,
+.theme-jemna-bezova .pf-detail-hero h1,
+.theme-jemna-bezova .page-hero h1 {
+  color: #fff8f1;
 }
 
 .theme-jemna-bezova .grid-wrap,
@@ -2418,7 +2451,9 @@ body.theme-jemna-bezova {
 
 .theme-jemna-bezova .fq-wrap {
   padding: 3.75rem 0 4.5rem;
-  background: #fbf9f6;
+  background:
+    radial-gradient(circle at 14% 10%, rgba(212, 176, 111, .10), transparent 20%),
+    linear-gradient(180deg, #fdfaf6, #f6efe6);
 }
 
 .theme-jemna-bezova .kt-wrap {
@@ -2503,23 +2538,37 @@ body.theme-jemna-bezova {
 .theme-jemna-bezova .faq-list {
   max-width: 900px;
   margin: 0 auto;
+  display: grid;
+  gap: 18px;
 }
 
 .theme-jemna-bezova .faq-item {
   border: 1px solid rgba(122, 95, 65, .12);
-  background: rgba(255, 255, 255, .72);
-  box-shadow: 0 14px 34px rgba(48, 38, 30, .06);
+  background: rgba(255, 255, 255, .86);
+  box-shadow: 0 18px 42px rgba(48, 38, 30, .08);
+  border-radius: 18px;
+  overflow: hidden;
+  transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+}
+
+.theme-jemna-bezova .faq-item:hover,
+.theme-jemna-bezova .faq-item.open {
+  transform: translateY(-2px);
+  box-shadow: 0 24px 56px rgba(48, 38, 30, .12);
+  border-color: rgba(212, 176, 111, .34);
 }
 
 .theme-jemna-bezova .faq-q {
   color: var(--jb-brown-strong);
   font-family: "Cormorant Garamond", Georgia, serif;
-  font-size: 1.35rem;
+  font-size: 1.6rem;
   font-weight: 400;
 }
 
 .theme-jemna-bezova .faq-a {
   color: var(--theme-muted);
+  font-size: 1rem;
+  line-height: 1.78;
 }
 
 .theme-jemna-bezova .bl-grid,

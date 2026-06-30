@@ -373,7 +373,9 @@ HTML;
 
         $posterUrl = $this->normalizePublicAssetUrl((string)($site['default_hero_poster_url'] ?? ''));
 
-        // Priorita: 1) page hero_video, 2) page hero_bg foto, 3) site default video.
+        $page = $this->pages->findById($pageId);
+        $isHomepage = trim((string)($page['url_path'] ?? '')) === '';
+        // Priorita: 1) page hero_video, 2) homepage site default video, 3) page hero_bg foto, 4) site default video.
         $videoBlock = $this->blocks->findByKey($pageId, 'hero_video');
         $pageVideo = $videoBlock ? $this->normalizePublicAssetUrl((string)($videoBlock['content'] ?? '')) : '';
 
@@ -381,15 +383,19 @@ HTML;
         if ($pageVideo !== '') {
             $videoHtml = $this->buildHeroVideoHtml($pageVideo, $posterUrl);
         } else {
+            $defaultVideo = $this->normalizePublicAssetUrl((string)($site['default_hero_video_url'] ?? ''));
+            if ($isHomepage && $defaultVideo !== '') {
+                $videoHtml = $this->buildHeroVideoHtml($defaultVideo, $posterUrl);
+            }
+
             $photoBlock = $this->blocks->findByKey($pageId, 'hero_bg');
             $pagePhoto = $photoBlock ? $this->normalizePublicAssetUrl((string)($photoBlock['content'] ?? '')) : '';
-            if ($pagePhoto !== '') {
+            if ($videoHtml === '' && $pagePhoto !== '') {
                 $videoHtml = $this->buildHeroImageHtml($pagePhoto);
-            } else {
-                $defaultVideo = $this->normalizePublicAssetUrl((string)($site['default_hero_video_url'] ?? ''));
-                if ($defaultVideo !== '') {
-                    $videoHtml = $this->buildHeroVideoHtml($defaultVideo, $posterUrl);
-                }
+            }
+
+            if ($videoHtml === '' && $defaultVideo !== '') {
+                $videoHtml = $this->buildHeroVideoHtml($defaultVideo, $posterUrl);
             }
         }
 

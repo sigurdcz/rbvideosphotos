@@ -325,9 +325,15 @@ class HomepageContentService
             return '';
         }
 
+        $isServicesPage = $limit === 0;
         $cards = '';
+        $details = '';
         foreach ($items as $idx => $item) {
-            $cards .= $this->buildServiceCardHtml($item, $idx + 1);
+            $detailId = $isServicesPage ? 'sluzba-' . ($idx + 1) : '';
+            $cards .= $this->buildServiceCardHtml($item, $idx + 1, $detailId);
+            if ($detailId !== '') {
+                $details .= $this->buildServiceDetailHtml($item, $detailId, $idx + 1);
+            }
         }
 
         $css = '<style>'
@@ -342,12 +348,23 @@ class HomepageContentService
             . '.hp-svc-card__desc{color:rgba(255,255,255,.68);line-height:1.65;font-size:.95rem;white-space:pre-line}'
             . '.hp-svc-card__btn{display:inline-flex;align-self:flex-start;margin-top:auto;padding:11px 16px;border-radius:6px;background:#c4963c;color:#fff;text-decoration:none;font-weight:700;font-size:.86rem}'
             . '.hp-svc-card__btn:hover{background:#d4a64c}'
+            . '.hp-service-details{grid-column:1/-1;display:grid;gap:20px;margin-top:6px}'
+            . '.hp-service-detail{display:grid;grid-template-columns:minmax(220px,320px) minmax(0,1fr);gap:24px;padding:24px;border-radius:18px;background:rgba(255,255,255,.78);border:1px solid rgba(122,95,65,.14);box-shadow:0 18px 40px rgba(48,38,30,.08);scroll-margin-top:120px}'
+            . '.hp-service-detail__media{min-height:220px;border-radius:14px;overflow:hidden;background:linear-gradient(135deg,#d5c3ad,#a6917a)}'
+            . '.hp-service-detail__media img{width:100%;height:100%;object-fit:cover;display:block}'
+            . '.hp-service-detail__body{display:grid;gap:14px;align-content:start}'
+            . '.hp-service-detail__eyebrow{font-size:.74rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#c4963c}'
+            . '.hp-service-detail__title{margin:0;color:#231912;font-size:1.75rem;line-height:1.1}'
+            . '.hp-service-detail__desc{margin:0;color:#5f5143;line-height:1.8;white-space:pre-line}'
+            . '.hp-service-detail__cta{display:inline-flex;width:max-content;padding:12px 18px;border-radius:999px;background:#231912;color:#fff;text-decoration:none;font-weight:700}'
+            . '.hp-service-detail__cta:hover{background:#3a2b1f}'
+            . '@media(max-width:820px){.hp-service-detail{grid-template-columns:1fr}.hp-service-detail__media{min-height:200px}}'
             . '</style>';
 
-        return $css . $cards;
+        return $css . $cards . ($details !== '' ? '<div class="hp-service-details">' . $details . '</div>' : '');
     }
 
-    private function buildServiceCardHtml(?array $service, int $index = 0): string
+    private function buildServiceCardHtml(?array $service, int $index = 0, string $detailId = ''): string
     {
         if (!$service) {
             return '';
@@ -360,6 +377,9 @@ class HomepageContentService
         $iconUrl = $this->publicMediaUrl((string)($service['icon_url'] ?? ''));
         $buttonText = trim((string)($service['button_text'] ?? '')) ?: 'Poptat službu';
         $buttonUrl = trim((string)($service['button_url'] ?? '')) ?: '/kontakt';
+        if ($detailId !== '' && $this->isSameServicesUrl($buttonUrl)) {
+            $buttonUrl = '#' . $detailId;
+        }
         $num = $index > 0 ? str_pad((string)$index, 2, '0', STR_PAD_LEFT) : '';
         $icon = $iconUrl !== ''
             ? '<div class="hp-svc-card__icon"><img src="' . $h($iconUrl) . '" alt="" loading="lazy"></div>'
@@ -380,6 +400,38 @@ class HomepageContentService
             . '</div></article>';
     }
 
+    private function buildServiceDetailHtml(array $service, string $detailId, int $index): string
+    {
+        $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
+        $title = trim((string)($service['title'] ?? ''));
+        $description = trim((string)($service['description'] ?? ''));
+        $imageUrl = $this->publicMediaUrl((string)($service['image_url'] ?? ''));
+        $contactLabel = $title !== '' ? 'Poptat: ' . $title : 'Nezavazne poptat';
+        $eyebrow = $index > 0 ? str_pad((string)$index, 2, '0', STR_PAD_LEFT) . ' / Detail sluzby' : 'Detail sluzby';
+
+        $media = $imageUrl !== ''
+            ? '<div class="hp-service-detail__media"><img src="' . $h($imageUrl) . '" alt="' . $h($title) . '" loading="lazy"></div>'
+            : '<div class="hp-service-detail__media"></div>';
+
+        return '<article class="hp-service-detail" id="' . $h($detailId) . '">'
+            . $media
+            . '<div class="hp-service-detail__body">'
+            . '<div class="hp-service-detail__eyebrow">' . $h($eyebrow) . '</div>'
+            . '<h3 class="hp-service-detail__title">' . $h($title) . '</h3>'
+            . '<p class="hp-service-detail__desc">' . nl2br($h($description)) . '</p>'
+            . '<a class="hp-service-detail__cta" href="/kontakt">' . $h($contactLabel) . '</a>'
+            . '</div></article>';
+    }
+
+    private function isSameServicesUrl(string $url): bool
+    {
+        $normalized = trim($url);
+        return $normalized === ''
+            || $normalized === '#'
+            || $normalized === '/sluzby'
+            || $normalized === '/sluzby/';
+    }
+
     private function buildPortfolioHtml(int $siteId): string
     {
         $entries = $this->portfolio->allPublished($siteId);
@@ -396,7 +448,7 @@ class HomepageContentService
             $hasVideo = !empty($entry['video_url']);
 
             if ($thumb === '' && !empty($photos)) {
-                $thumbFile = $photos[0]['thumb_path'] ?? $photos[0]['medium_path'] ?? $photos[0]['storage_path'] ?? '';
+                $thumbFile = $photos[0]['medium_path'] ?? $photos[0]['thumb_path'] ?? $photos[0]['storage_path'] ?? '';
                 $thumb = $this->publicMediaUrl((string)$thumbFile);
             }
 
@@ -408,7 +460,7 @@ class HomepageContentService
             $extraHtml = '';
             $stripPhotos = $hasVideo ? array_slice($photos, 0, 3) : array_slice($photos, 1, 3);
             foreach ($stripPhotos as $photo) {
-                $pfile = $photo['thumb_path'] ?? $photo['storage_path'] ?? '';
+                $pfile = $photo['medium_path'] ?? $photo['thumb_path'] ?? $photo['storage_path'] ?? '';
                 $extraHtml .= '<img src="' . $h($this->publicMediaUrl((string)$pfile)) . '" alt="' . $h($photo['alt_text'] ?? '') . '" loading="lazy">';
             }
 
