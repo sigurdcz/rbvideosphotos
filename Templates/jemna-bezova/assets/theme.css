@@ -2855,3 +2855,78 @@ body.theme-jemna-bezova {
     min-height: 0 !important;
   }
 }
+
+/* Final homepage hero layering: the editable video block is rendered inside
+   .container, but visually it must cover the whole hero, not the content frame. */
+.theme-jemna-bezova .hp-hero {
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.theme-jemna-bezova .hp-hero > .container {
+  position: static !important;
+  max-width: none !important;
+}
+
+.theme-jemna-bezova .hp-hero .theme-hero-video,
+.theme-jemna-bezova .hp-hero .hero-video.theme-hero-video {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 1 !important;
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  opacity: 1 !important;
+  filter: brightness(.70) saturate(.90) !important;
+}
+
+.theme-jemna-bezova .hp-hero .theme-hero-video iframe {
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  width: max(100vw, 177.78vh) !important;
+  height: max(56.25vw, 100vh) !important;
+  min-width: 100% !important;
+  min-height: 100% !important;
+  transform: translate(-50%, -50%) !important;
+}
+
+.theme-jemna-bezova .hp-hero::before {
+  z-index: 2 !important;
+  pointer-events: none;
+}
+
+.theme-jemna-bezova .hp-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(26,22,16,.64), rgba(26,22,16,.18) 50%, rgba(26,22,16,.55)),
+    linear-gradient(180deg, rgba(26,22,16,.42), rgba(26,22,16,.04) 42%, rgba(26,22,16,.55));
+}
+
+.theme-jemna-bezova .hp-hero .section-label,
+.theme-jemna-bezova .hp-hero h1,
+.theme-jemna-bezova .hp-hero .hero-sub,
+.theme-jemna-bezova .hp-hero .hero-cta-wrap,
+.theme-jemna-bezova .hp-hero .jb-scroll-cue {
+  position: relative !important;
+  z-index: 5 !important;
+  opacity: 1 !important;
+  filter: none !important;
+  visibility: visible !important;
+}
+
+.theme-jemna-bezova .hp-hero .btn,
+.theme-jemna-bezova .hp-hero .btn-primary,
+.theme-jemna-bezova .hp-hero .btn-secondary {
+  position: relative !important;
+  z-index: 6 !important;
+  opacity: 1 !important;
+  filter: none !important;
+  visibility: visible !important;
+}

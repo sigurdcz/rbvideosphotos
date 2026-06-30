@@ -1,23 +1,23 @@
-# UKOL: Opravit opacity hero textu
+# UKOL: Opravit viditelnost homepage hero
 
 Datum: 2026-07-01
-Zadani: Odstranit opacity z hero video wrapperu v `jemna-bezova`, aby text a tlacitka v hero zustaly na opacity 1.
+Zadani: Opravit `jemna-bezova` homepage hero tak, aby video/obraz vyplnil celou sirku a vysku hero a texty s tlacitky byly vzdy viditelne nad videem.
 
 ## Kroky
 
-- [x] Najit CSS pravidlo, ktere nastavuje opacity na hero video wrapper.
-- [x] Presunout ztmaveni na video/overlay bez opacity na rodicovskem wrapperu.
+- [x] Najit CSS pravidla, kvuli kterym je video v ramecku a prekryva obsah.
+- [x] Upravit positioning videa a z-index hero obsahu v aktualni sablone.
 - [x] Overit diff bez sahani na lokalni DB.
 - [x] Zhodnotit dokumentaci a zapsat vysledek.
 
 ## Poznamky
 
-- Problemove pravidlo je `.theme-jemna-bezova .theme-hero-video { opacity: .86; }`.
-- Text a tlacitka v hero musi zustat plne nepruhledne; pruhlednost se nesmi aplikovat na rodicovsky wrapper v hero kompozici.
-- `Templates/jemna-bezova/assets/theme.css` ted ma na `.theme-hero-video` opacity 1 a ztmaveni resi pres `filter`; texty a tlacitka v `.hp-hero` maji explicitne opacity 1.
-- Overeno pres `rg` kontrolu opacity pravidel a `git diff --check`. DB se nepouzivala.
+- `.theme-hero-video` je v DOM uvnitr `.hp-hero > .container`; container ma `position: relative` a `max-width`, proto video vyplnuje jen ramecek.
+- Texty/tlacitka jsou sourozenci absolutne pozicovaneho videa a musi dostat vlastni `position: relative` + vyssi `z-index`.
+- `Templates/jemna-bezova/assets/theme.css` ma finalni override na konci souboru: container neni positioning context, video/iframe cover jde pres celou `.hp-hero` a text/CTA maji z-index nad overlayem.
+- Overeno pres `git diff --check`. DB se nepouzivala.
 - Dokumentaci neni potreba menit: jde o vizualni CSS bugfix v existujici sablone.
 
 ## Vysledek
 
-Hero video wrapper v `jemna-bezova` uz nema snizenou opacity. Ztmaveni zustava na videu pres filter/overlay a hero texty i tlacitka jsou explicitne na opacity 1.
+Homepage hero v `jemna-bezova` uz nenechava video/obraz v ramecku containeru; media cover jde pres celou `.hp-hero` a texty s tlacitky jsou explicitne ve vrstve nad videem i overlayem.
