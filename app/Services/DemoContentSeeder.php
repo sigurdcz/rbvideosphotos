@@ -56,6 +56,7 @@ class DemoContentSeeder
         $this->seedHeroBackgrounds($siteId);
         $this->seedServiceItems($siteId);
         $this->seedServiceVisuals($siteId);
+        $servicePageCount = $this->seedServicePages($siteId, $site);
         $this->seedPageSeo($siteId, $site);
 
         $published = false;
@@ -70,6 +71,7 @@ class DemoContentSeeder
             'reviews' => $reviewCount,
             'faq_items' => $faqCount,
             'media' => $mediaCount,
+            'service_pages' => $servicePageCount,
             'published' => $published,
         ];
     }
@@ -200,28 +202,260 @@ class DemoContentSeeder
      */
     private function seedServiceItems(int $siteId): void
     {
-        $services = [
-            ['Svatební foto & video', 'Zachytíme každý dotek, každý pohled i každou slzu štěstí. Přirozené reportážní fotografie a filmové video, které vám budou váš den připomínat celý život.', 'svatba-nevesta-zenich-polibek-kamenna-zed.webp'],
-            ['Rodinné & portrétní focení', 'Rodinné vzpomínky, těhotenské focení, křtiny i portréty. Přirozené, nenucené a krásné snímky, ke kterým se budete rádi vracet.', 'rodinne-foceni-rodina-dite-louka.webp'],
-            ['Reklamní foto & video', 'Profesionální vizuální obsah pro firmy, produkty, kapely i značky. Obsah, který buduje důvěru, odlišuje a prodává.', 'sportovni-auto-nissan-silnice-les-pohyb.webp'],
-            ['Akce & události', 'Konference, kulturní akce, plesy, koncerty i firemní večery. Každá událost si zaslouží profesionální dokumentaci bez kompromisů.', 'koncert-zpevak-mikrofon-cernobila-fotografie.webp'],
-        ];
-
         $items = [];
-        foreach ($services as $i => [$title, $desc, $imageFile]) {
-            $imageUrl = !empty($this->demoMedia[$imageFile]) ? $this->mediaPathById((int) $this->demoMedia[$imageFile]) : '';
+        foreach ($this->servicePages() as $i => $svc) {
+            $imageUrl = !empty($this->demoMedia[$svc['image']]) ? $this->mediaPathById((int) $this->demoMedia[$svc['image']]) : '';
             $items[] = [
-                'title' => $title,
-                'description' => $desc,
+                'title' => $svc['title'],
+                'description' => $svc['lead'],
                 'image_url' => $imageUrl,
                 'button_text' => 'Více informací',
-                'button_url' => '/kontakt',
+                // "Více informací" teď vede na detailní stránku služby (viz seedServicePages).
+                'button_url' => '/' . $svc['slug'],
                 'sort_order' => $i + 1,
                 'is_active' => 1,
             ];
         }
 
         (new ServiceRepository())->upsertMany($siteId, $items);
+    }
+
+    /**
+     * Kanonický seznam 4 služeb. Sdílený mezi service_items (homepage grid + /sluzby)
+     * a detailními stránkami služeb (seedServicePages), aby titulky, popisy, obrázky
+     * a slugy zůstaly konzistentní na jednom místě.
+     */
+    private function servicePages(): array
+    {
+        return [
+            [
+                'slug' => 'svatebni-foto-video',
+                'title' => 'Svatební foto & video',
+                'image' => 'svatba-nevesta-zenich-polibek-kamenna-zed.webp',
+                'lead' => 'Zachytíme každý dotek, každý pohled i každou slzu štěstí. Přirozené reportážní fotografie a filmové video, které vám budou váš den připomínat celý život.',
+                'sections' => [
+                    ['Váš den, vyprávěný přirozeně', 'Svatbu fotím i natáčím reportážně — bez zbytečného pózování a režírování. Většinu dne jsem nenápadně poblíž a zachytávám skutečné momenty: přípravy, obřad, gratulace, smích hostů i tiché detaily, kterých si v tom shonu možná ani nevšimnete.'],
+                    ['Foto i video pohromadě', 'Fotografie zastaví konkrétní okamžik, video k němu přidá pohyb, hlasy a atmosféru. Dohromady vznikne vzpomínka, ke které se budete vracet celý život. Vše ladím tak, aby výstupy působily jednotně a opravdově.'],
+                    ['Co je součástí', '<ul><li>celodenní nebo půldenní focení dle balíčku</li><li>filmový sestřih / svatební video</li><li>online galerie a předání ke stažení</li><li>archivace hotových výstupů</li></ul>'],
+                ],
+                'seo_title' => 'Svatební foto & video Olomouc | RB Photos & Videos',
+                'seo_desc' => 'Svatební fotografie a filmové video v Olomouci a po celé ČR. Přirozené reportážní záběry vašeho dne. Nezávazná poptávka — 792 483 583.',
+                'seo_kw' => 'svatební foto video Olomouc, svatební fotograf, svatební kameraman, svatební video',
+            ],
+            [
+                'slug' => 'rodinne-a-portretni-foceni',
+                'title' => 'Rodinné & portrétní focení',
+                'image' => 'rodinne-foceni-rodina-dite-louka.webp',
+                'lead' => 'Rodinné vzpomínky, těhotenské focení, křtiny i portréty. Přirozené, nenucené a krásné snímky, ke kterým se budete rádi vracet.',
+                'sections' => [
+                    ['Focení bez stresu', 'Rodinné a portrétní focení vedu tak, aby bylo příjemné i pro ty, kdo se neradi fotí. Děti nemusí sedět jako v katalogu a vy nemusíte umět pózovat — navedu vás jednoduše a nechám prostor přirozenosti.'],
+                    ['Vzpomínky, ke kterým se vracíte', 'Těhotenské focení, křtiny, rodinné portréty i osobní fotky na míru tomu, k čemu je potřebujete. Společně vybereme místo i styl tak, aby snímky působily uvolněně a opravdově.'],
+                    ['Kde fotíme', '<ul><li>v přírodě, parku nebo na místě, které máte rádi</li><li>ateliérové i venkovní portréty</li><li>kratší session vhodná i pro malé děti</li></ul>'],
+                ],
+                'seo_title' => 'Rodinné & portrétní focení Olomouc | RB Photos & Videos',
+                'seo_desc' => 'Rodinné, těhotenské a portrétní focení v Olomouci. Přirozené a nenucené snímky bez stresu, ke kterým se budete rádi vracet.',
+                'seo_kw' => 'rodinné focení Olomouc, portrétní focení, těhotenské focení, focení dětí',
+            ],
+            [
+                'slug' => 'reklamni-foto-video',
+                'title' => 'Reklamní foto & video',
+                'image' => 'sportovni-auto-nissan-silnice-les-pohyb.webp',
+                'lead' => 'Profesionální vizuální obsah pro firmy, produkty, kapely i značky. Obsah, který buduje důvěru, odlišuje a prodává.',
+                'sections' => [
+                    ['Obsah, který buduje důvěru', 'Pomáhám firmám, kapelám i značkám ukázat jejich práci tak, aby působila profesionálně a důvěryhodně. Žádné prázdné snímky z fotobanky — reálné prostředí, lidé a produkty v dobrém světle.'],
+                    ['Podle toho, kde se obsah použije', 'Web, sociální sítě, reklama nebo Google profil — každé využití potřebuje trochu jiný přístup. Když to promyslíme dopředu, vznikne materiál, se kterým se dá dlouhodobě pracovat.'],
+                    ['Pro koho', '<ul><li>firmy, e-shopy a lokální značky</li><li>produktové a reklamní foto i video</li><li>kapely, klipy a firemní prezentace</li></ul>'],
+                ],
+                'seo_title' => 'Reklamní foto & video pro firmy | RB Photos & Videos',
+                'seo_desc' => 'Profesionální reklamní foto a video pro firmy, produkty i značky. Vizuální obsah, který buduje důvěru a prodává. Olomouc a celá ČR.',
+                'seo_kw' => 'reklamní foto video, firemní focení, produktové foto, video pro firmy Olomouc',
+            ],
+            [
+                'slug' => 'akce-a-udalosti',
+                'title' => 'Akce & události',
+                'image' => 'koncert-zpevak-mikrofon-cernobila-fotografie.webp',
+                'lead' => 'Konference, kulturní akce, plesy, koncerty i firemní večery. Každá událost si zaslouží profesionální dokumentaci bez kompromisů.',
+                'sections' => [
+                    ['Dokumentace bez kompromisů', 'Konference, kulturní akce, plesy, koncerty i firemní večery zachytím tak, aby byla vidět atmosféra i důležité momenty. Pohybuji se nenápadně a soustředím se na to podstatné.'],
+                    ['Rychlé a použitelné výstupy', 'Z akce dostanete fotografie i případný videosestřih ve formě, kterou rovnou využijete na web i sociální sítě. Termín, rozsah i způsob předání domluvíme podle konkrétní události.'],
+                    ['Co nafotím', '<ul><li>konference, semináře a firemní akce</li><li>plesy, koncerty a kulturní události</li><li>reportážní foto i krátké video</li></ul>'],
+                ],
+                'seo_title' => 'Foto & video akcí a událostí | RB Photos & Videos',
+                'seo_desc' => 'Profesionální dokumentace akcí — konference, plesy, koncerty i firemní večery. Foto i video bez kompromisů. Olomouc a celá ČR.',
+                'seo_kw' => 'focení akcí Olomouc, fotograf konference, foto plesy koncerty, dokumentace události',
+            ],
+        ];
+    }
+
+    /**
+     * Vytvoří (nebo aktualizuje) 4 detailní stránky služeb — jednu pro každou službu
+     * z servicePages(). Každá stránka = pages řádek (published) se sdílenou šablonou
+     * "Služba detail" + content_blocks + SEO. Publish (na konci run()) je pak vyrenderuje
+     * do storage/published/<slug>/index.html. Idempotentní podle url_path.
+     */
+    private function seedServicePages(int $siteId, array $site): int
+    {
+        $templateId = $this->ensureServiceTemplate($siteId);
+
+        $seoStmt = $this->db->prepare(
+            'REPLACE INTO seo_settings
+               (page_id, meta_title, meta_description, meta_keywords, canonical_url, robots_index, robots_follow,
+                og_title, og_description, og_image_id, twitter_title, twitter_description, twitter_image_id, schema_type, schema_json)
+             VALUES (?, ?, ?, ?, ?, 1, 1, ?, ?, ?, ?, ?, ?, ?, ?)'
+        );
+
+        $count = 0;
+        foreach ($this->servicePages() as $i => $svc) {
+            $slug = $svc['slug'];
+            $urlPath = '/' . $slug;
+            $pageTitle = $svc['title'] . ' | RB Photos & Videos';
+
+            $existing = $this->pages->findByUrlPath($slug);
+            if ($existing) {
+                $pageId = (int) $existing['id'];
+                $this->pages->update($pageId, [
+                    'title' => $pageTitle,
+                    'slug' => $slug,
+                    'url_path' => $urlPath,
+                    'template_id' => $templateId,
+                    'status' => 'published',
+                ]);
+            } else {
+                $pageId = $this->pages->create([
+                    'site_id' => $siteId,
+                    'template_id' => $templateId,
+                    'title' => $pageTitle,
+                    'slug' => $slug,
+                    'url_path' => $urlPath,
+                    'language' => 'cs',
+                    'status' => 'published',
+                ]);
+            }
+
+            $imageId = !empty($this->demoMedia[$svc['image']]) ? (int) $this->demoMedia[$svc['image']] : 0;
+            $imageUrl = $imageId ? $this->mediaPathById($imageId) : '';
+
+            $this->blocks->upsert($pageId, 'hero_tag', [
+                'block_type' => 'text', 'label' => 'Hero — štítek',
+                'content' => 'Služba ' . sprintf('%02d', $i + 1),
+                'sort_order' => 1, 'autofill_disabled' => 1,
+            ]);
+            $this->blocks->upsert($pageId, 'hero_heading', [
+                'block_type' => 'text', 'label' => 'Hero — nadpis',
+                'content' => $svc['title'], 'sort_order' => 2, 'autofill_disabled' => 1,
+            ]);
+            $this->blocks->upsert($pageId, 'hero_sub', [
+                'block_type' => 'textarea', 'label' => 'Hero — podnadpis',
+                'content' => $svc['lead'], 'sort_order' => 3, 'autofill_disabled' => 1,
+            ]);
+            $this->blocks->upsert($pageId, 'body', [
+                'block_type' => 'html', 'label' => 'Obsah služby',
+                'content' => $this->buildServiceBody($imageUrl, $svc['title'], $svc['sections']),
+                'sort_order' => 4, 'autofill_disabled' => 1,
+            ]);
+            $this->blocks->upsert($pageId, 'cta_heading', [
+                'block_type' => 'text', 'label' => 'CTA — nadpis',
+                'content' => 'Pojďme naplánovat vaše focení', 'sort_order' => 5, 'autofill_disabled' => 1,
+            ]);
+            $this->blocks->upsert($pageId, 'cta_sub', [
+                'block_type' => 'textarea', 'label' => 'CTA — podnadpis',
+                'content' => 'Nezávazně se ozvěte — domluvíme termín, rozsah i výstupy přesně podle vašich představ.',
+                'sort_order' => 6, 'autofill_disabled' => 1,
+            ]);
+
+            $schemaJson = $this->buildSchemaJson('Service', $svc['seo_title'], $svc['seo_desc'], $urlPath, $imageUrl, $site);
+            $seoStmt->execute([
+                $pageId, $svc['seo_title'], $svc['seo_desc'], $svc['seo_kw'], $urlPath,
+                $svc['seo_title'], $svc['seo_desc'], $imageId ?: null,
+                $svc['seo_title'], $svc['seo_desc'], $imageId ?: null,
+                'Service', $schemaJson,
+            ]);
+
+            $count++;
+        }
+
+        return $count;
+    }
+
+    /** Sestaví HTML obsah detailní stránky služby (úvodní foto + sekce h2/odstavce). */
+    private function buildServiceBody(string $imageUrl, string $title, array $sections): string
+    {
+        $html = '';
+        if ($imageUrl !== '') {
+            $html .= '<img class="svc-detail__img" src="' . $this->h($imageUrl) . '" alt="' . $this->h($title) . '" loading="lazy">';
+        }
+        foreach ($sections as [$heading, $bodyHtml]) {
+            $html .= '<h2>' . $this->h($heading) . '</h2>';
+            $trimmed = trim((string) $bodyHtml);
+            $html .= str_starts_with($trimmed, '<') ? $trimmed : '<p>' . $this->h($trimmed) . '</p>';
+        }
+        return $html;
+    }
+
+    /**
+     * Zajistí sdílenou šablonu "Služba detail" (hero + obsah + CTA). Obsahuje jen obsah
+     * stránky — nav, patičku a obal doplní site layout při publish. CSS je samonosné,
+     * aby stránka vypadala dobře i bez aktivního tématu.
+     */
+    private function ensureServiceTemplate(int $siteId): int
+    {
+        $html = <<<'HTML'
+<header class="hero svc-hero">
+  <div class="container">
+    <span class="hero-tag" data-block="hero_tag"></span>
+    <h1 data-block="hero_heading"></h1>
+    <p data-block="hero_sub"></p>
+    <a href="/kontakt" class="btn">Nezávazná poptávka</a>
+  </div>
+</header>
+<section class="section">
+  <div class="container svc-detail" data-block="body"></div>
+</section>
+<section class="section-dark">
+  <div class="container">
+    <h2 data-block="cta_heading"></h2>
+    <p data-block="cta_sub"></p>
+    <a href="tel:792483583" class="btn">&#128222; 792&#160;483&#160;583</a>
+  </div>
+</section>
+HTML;
+
+        $css = <<<'CSS'
+.hero{background:#1a1a1a;color:#fff;padding:64px 0 72px}
+.hero .hero-tag{display:inline-block;font-size:11px;color:#c4963c;text-transform:uppercase;letter-spacing:.18em;margin-bottom:14px}
+.hero h1{color:#fff;font-size:clamp(2rem,4vw,2.6rem);font-weight:900;margin-bottom:.6rem}
+.hero p{color:rgba(255,255,255,.65);max-width:640px;margin-bottom:0}
+.section{padding:64px 0}
+.section-dark{background:#1a1a1a;padding:64px 0}
+.section-dark h2{color:#fff;font-size:1.6rem;margin-bottom:.5rem}
+.section-dark p{color:rgba(255,255,255,.6);max-width:640px;margin-bottom:1rem}
+.svc-detail__img{width:100%;height:auto;margin-bottom:28px;border-radius:6px}
+.svc-detail h2{font-size:1.4rem;margin:30px 0 10px;color:#222}
+.svc-detail p{color:#555;line-height:1.8;margin-bottom:1rem}
+.svc-detail ul{margin:0 0 1rem 1.2rem;color:#555;line-height:1.8}
+.btn{display:inline-block;background:#c4963c;color:#fff !important;padding:12px 26px;font-size:13px;font-weight:700;letter-spacing:.04em;margin-top:18px}
+.btn:hover{background:#b5853a}
+CSS;
+
+        foreach ($this->templates->allBySite($siteId) as $t) {
+            if (($t['name'] ?? '') === 'Služba detail') {
+                $this->templates->update((int) $t['id'], [
+                    'name' => 'Služba detail',
+                    'html_source' => $html,
+                    'css_source' => $css,
+                    'js_source' => '',
+                ]);
+                return (int) $t['id'];
+            }
+        }
+
+        return $this->templates->create([
+            'site_id' => $siteId,
+            'name' => 'Služba detail',
+            'html_source' => $html,
+            'css_source' => $css,
+            'js_source' => '',
+        ]);
     }
 
     private function seedServiceVisuals(int $siteId): void

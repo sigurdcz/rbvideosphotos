@@ -34,9 +34,11 @@ $d = $diag ?? [];
 <div class="card">
   <div class="card-title">Doplnit demo obsah</div>
   <p style="color:var(--c-muted);margin-bottom:16px;font-size:13.5px">
-    Doplní 5 článků, 5 položek Naše práce a 10 recenzí. Obrázky stáhne z placehold.co
-    a uloží je přes stejný mediální proces jako běžný upload v administraci včetně ALTů, titulků a variant.
-    Existující záznamy se najdou podle slugů a aktualizují se, nebudou se duplikovat.
+    Doplní 5 článků, 5 položek Naše práce, 4 služby + 4 stránky služeb, 12 FAQ, 10 recenzí, svatební ceník
+    a kompletní SEO všech hlavních stránek (vč. OG/Twitter obrázků a Schema.org). Reálné demo fotografie
+    nahraje do mediální knihovny přes stejný proces jako běžný upload v administraci — včetně ALTů, titulků
+    a variant (thumb, medium i OG 1200×630). Existující záznamy se najdou podle slugů a aktualizují se,
+    nebudou se duplikovat.
   </p>
   <form method="POST" action="/admin/setup/demo-content" data-confirm="Doplnit demo články, práce, recenze a média?">
     <input type="hidden" name="_csrf" value="<?= $h($_csrfToken) ?>">
