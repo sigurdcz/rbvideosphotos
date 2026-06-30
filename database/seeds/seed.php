@@ -803,10 +803,10 @@ $serviceStmt = $pdo->prepare('
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)
 ');
 $weareImageUrl = (string)($seedMedia['weare2.png']['url'] ?? '');
-$serviceStmt->execute([$siteId, 'Svatební foto & video', 'Zachytíme každý dotek, každý pohled i každou slzu štěstí. Přirozené reportážní fotografie a filmové video, které vám budou váš den připomínat celý život.', $weareImageUrl, '', 'Více informací', '/sluzby', 1]);
-$serviceStmt->execute([$siteId, 'Rodinné & portrétní focení', 'Rodinné vzpomínky, těhotenské focení, křtiny i portréty. Přirozené, nenucené a krásné snímky, ke kterým se budete rádi vracet.', '', '', 'Více informací', '/sluzby', 2]);
-$serviceStmt->execute([$siteId, 'Reklamní foto & video', 'Profesionální vizuální obsah pro firmy, produkty, kapely i značky. Obsah, který buduje důvěru, odlišuje a prodává.', '', '', 'Více informací', '/sluzby', 3]);
-$serviceStmt->execute([$siteId, 'Akce & události', 'Konference, kulturní akce, plesy, koncerty i firemní večery. Každá událost si zaslouží profesionální dokumentaci bez kompromisů.', '', '', 'Více informací', '/sluzby', 4]);
+$serviceStmt->execute([$siteId, 'Svatební foto & video', 'Zachytíme každý dotek, každý pohled i každou slzu štěstí. Přirozené reportážní fotografie a filmové video, které vám budou váš den připomínat celý život.', $weareImageUrl, '', 'Více informací', '/kontakt', 1]);
+$serviceStmt->execute([$siteId, 'Rodinné & portrétní focení', 'Rodinné vzpomínky, těhotenské focení, křtiny i portréty. Přirozené, nenucené a krásné snímky, ke kterým se budete rádi vracet.', '', '', 'Více informací', '/kontakt', 2]);
+$serviceStmt->execute([$siteId, 'Reklamní foto & video', 'Profesionální vizuální obsah pro firmy, produkty, kapely i značky. Obsah, který buduje důvěru, odlišuje a prodává.', '', '', 'Více informací', '/kontakt', 3]);
+$serviceStmt->execute([$siteId, 'Akce & události', 'Konference, kulturní akce, plesy, koncerty i firemní večery. Každá událost si zaslouží profesionální dokumentaci bez kompromisů.', '', '', 'Více informací', '/kontakt', 4]);
 echo "Služby vytvořeny.\n";
 
 $serviceContent = new \App\Services\HomepageContentService();
