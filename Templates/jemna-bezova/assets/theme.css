@@ -945,6 +945,33 @@ body.theme-jemna-bezova {
   font-weight: 500;
 }
 
+/* Stranka /cenik: karty (.cenik-card) jsou na svetle sekci, ale jejich
+   sablonove CSS ma bily text (pro tmave tema) -> popis a cena byly
+   neviditelne. Prebijeme na svetle pozadi karty + citelny tmavy text. */
+.theme-jemna-bezova .cenik-card {
+  background: rgba(255, 255, 255, .55);
+  border: 1px solid rgba(122, 95, 65, .16);
+  border-radius: 0;
+}
+
+.theme-jemna-bezova .cenik-card--featured {
+  border-color: rgba(212, 176, 111, .5);
+  background: rgba(255, 255, 255, .74);
+}
+
+.theme-jemna-bezova .cenik-card-title {
+  color: var(--jb-brown);
+}
+
+.theme-jemna-bezova .cenik-card-desc {
+  color: #5f5143;
+}
+
+.theme-jemna-bezova .cenik-card-price {
+  color: var(--jb-gold);
+  border-top-color: rgba(122, 95, 65, .16);
+}
+
 .theme-jemna-bezova #faq {
   background: #fbf9f6;
 }
