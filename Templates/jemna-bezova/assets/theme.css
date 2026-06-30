@@ -330,6 +330,20 @@ body.theme-jemna-bezova {
   color: var(--jb-brown-strong) !important;
 }
 
+/* CTA tlacitka v sekci sluzeb (napr. "Vsechny sluzby") maji na svetlem
+   pozadi plnou vypln, aby byla jasne viditelna. */
+.theme-jemna-bezova .jb-about-section .hp-section-cta .btn-secondary {
+  background: var(--jb-brown-strong) !important;
+  border-color: var(--jb-brown-strong) !important;
+  color: #f7efe6 !important;
+}
+
+.theme-jemna-bezova .jb-about-section .hp-section-cta .btn-secondary:hover {
+  background: var(--jb-brown) !important;
+  border-color: var(--jb-brown) !important;
+  color: var(--jb-gold-soft) !important;
+}
+
 .theme-jemna-bezova .btn-secondary:hover,
 .theme-jemna-bezova .hp-section-cta .btn-secondary:hover,
 .theme-jemna-bezova .hp-contact-cta .btn-secondary:hover,
@@ -546,12 +560,13 @@ body.theme-jemna-bezova {
   position: absolute;
   left: -24px;
   bottom: -24px;
-  width: 168px;
-  min-height: 128px;
+  width: 172px;
+  min-height: 132px;
   display: grid;
   align-content: center;
   justify-items: center;
-  gap: 8px;
+  gap: 10px;
+  padding: 26px 24px;
   background: var(--jb-brown-strong);
   color: #f7f0e6;
   box-shadow: 0 18px 40px rgba(48, 38, 30, .16);
@@ -1522,8 +1537,31 @@ body.theme-jemna-bezova {
 
   .theme-jemna-bezova .jb-contact-meta {
     flex-direction: column;
-    align-items: center;
-    gap: 14px;
+    align-items: stretch;
+    gap: 12px;
+    max-width: 320px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* Kontakt — telefon/e-mail zarovnat: pevny sloupec pro stitek, hodnoty v zakrytu. */
+  .theme-jemna-bezova .jb-contact-meta__item {
+    display: grid;
+    grid-template-columns: 78px minmax(0, 1fr);
+    gap: 12px;
+    align-items: baseline;
+  }
+
+  /* About sekce na mobilu: cista vertikalni skladba, aby titulek "Nase sluzby"
+     neprekryval fotku a byl citelny. */
+  .theme-jemna-bezova .jb-about-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+  }
+
+  .theme-jemna-bezova .jb-about-visual {
+    overflow: hidden;
   }
 }
 
@@ -2208,7 +2246,7 @@ body.theme-jemna-bezova {
 
 .theme-jemna-bezova .site-footer-contact__item {
   display: grid;
-  grid-template-columns: 78px minmax(0, 1fr);
+  grid-template-columns: 96px minmax(0, 1fr);
   gap: 12px;
   align-items: baseline;
   color: rgba(247, 238, 228, .82);
@@ -2220,6 +2258,7 @@ body.theme-jemna-bezova {
   font-weight: 600;
   letter-spacing: .18em;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .theme-jemna-bezova .site-footer-contact__item strong,
