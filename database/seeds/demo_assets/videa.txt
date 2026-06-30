@@ -1,0 +1,24 @@
+seznam videjí 
+ 
+
+|  # | Název videa                                                              | Datum        | Popisek            | Odkaz                                                  |
+| -: | ------------------------------------------------------------------------ | ------------ | ------------------ | ------------------------------------------------------ |
+|  1 | Pavlína a Marek Krylovi                                                  | 26. 9. 2025  | Svatební video     | [Otevřít](https://www.youtube.com/watch?v=5ZlVVcIu10U) |
+|  2 | Simona a Michal Novákovi                                                 | 6. 9. 2025   | Svatební video     | [Otevřít](https://vimeo.com/1133996815)                |
+|  3 | Martina a Jaroslav Žáčkovi                                               | 2. 8. 2025   | Svatební video     | [Otevřít](https://vimeo.com/1122538281)                |
+|  4 | Lucie a Miroslav Provazovi                                               | 7. 6. 2025   | Svatební video     | [Otevřít](https://www.youtube.com/watch?v=hYj2w3P5rK8) |
+|  5 | Michaela a Jan Jünglingovi                                               | 27. 7. 2024  | Svatební video     | [Otevřít](https://www.youtube.com/watch?v=1z-qckQn5UU) |
+|  6 | Marie a Miroslav                                                         | 1. 6. 2024   | Svatební video     | [Otevřít](https://www.youtube.com/watch?v=O5i9TzCms5c) |
+|  7 | Zimní svatební editorial                                                 | —            | Svatební editorial | [Otevřít](https://www.youtube.com/watch?v=FzchuDWJ5Vg) |
+|  8 | Ester a Tomáš Krůpovi                                                    | 14. 10. 2023 | Svatební video     | [Otevřít](https://www.youtube.com/watch?v=su0hKnBnCKw) |
+|  9 | Markéta a Petr Pláškovi                                                  | 17. 6. 2023  | Svatební video     | [Otevřít](https://www.youtube.com/watch?v=DBWKJ46eM4c) |
+| 10 | Nikola a Jirka Kaňkovští                                                 | 20. 5. 2023  | Svatební video     | [Otevřít](https://www.youtube.com/watch?v=C1wL3QFZhn0) |
+| 11 | RB Videos Photos Villa Grande Olomouc behind the scenes video z natáčení | —            | Behind the scenes  | [Otevřít](https://www.youtube.com/shorts/g2xbGhaUkpg)  |
+| 12 | Tomáš a Helena Hufovi                                                    | 17. 9. 2022  | Svatební video     | [Otevřít](https://www.youtube.com/watch?v=GBKJ_VB_Nmw) |
+| 13 | Stanislav a Martina Šinclovi                                             | 23. 4. 2022  | Svatební video     | [Otevřít](https://www.youtube.com/watch?v=sc06FkCv_Mw) |
+| 14 | Maturitní večírek Gymnázia Čajkovského Olomouc                           | 19. 3. 2022  | Maturitní večírek  | [Otevřít](https://www.youtube.com/watch?v=zviMaOQnxUY) |
+| 15 | Mitsubishi EVO VII                                                       | —            | Automobilové video | [Otevřít](https://www.youtube.com/watch?v=cclveM5EE3o) |
+| 16 | Another day, another story                                               | —            | Filmový projekt    | [Otevřít](https://www.youtube.com/watch?v=YKRu1l0Rb6U) |
+| 17 | Dayz - Another day, another story (Dayz Standalone real life movie) 4K   | —            | DayZ fan film      | [Otevřít](https://www.youtube.com/watch?v=YKRu1l0Rb6U) |
+| 18 | Dayz Another day another story - Trailer                                 | 27. 12. 2020 | DayZ trailer       | [Otevřít](https://www.youtube.com/watch?v=NTJPAikJjro) |
+| 19 | Renault Clio Sport 3                                                     | —            | Automobilové video | [Otevřít](https://www.youtube.com/watch?v=zUHc15ZbHZY) |

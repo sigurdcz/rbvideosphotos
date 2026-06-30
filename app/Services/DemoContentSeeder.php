@@ -23,6 +23,9 @@ class DemoContentSeeder
     private BlockRepository $blocks;
     private TemplateRepository $templates;
 
+    /** filename (demo_assets) => media_id — naplneno v seedMediaLibrary(). */
+    private array $demoMedia = [];
+
     public function __construct()
     {
         $this->db = Database::getInstance();
@@ -42,12 +45,15 @@ class DemoContentSeeder
         }
 
         $siteId = (int)$site['id'];
+        $mediaCount = $this->seedMediaLibrary($siteId);
         $blogCount = $this->seedBlogPosts($siteId);
         $portfolioCount = $this->seedPortfolioEntries($siteId);
         $this->resetHomepageAutofillBlocks();
         $reviewCount = $this->seedReviewRows($siteId);
         $this->seedCenikCards($siteId);
         $faqCount = $this->seedFaqItems($siteId);
+        $this->seedHeroBackgrounds($siteId);
+        $this->seedPageSeo($siteId);
 
         $published = false;
         if ($publish && $userId) {
@@ -60,8 +66,153 @@ class DemoContentSeeder
             'portfolio_entries' => $portfolioCount,
             'reviews' => $reviewCount,
             'faq_items' => $faqCount,
+            'media' => $mediaCount,
             'published' => $published,
         ];
+    }
+
+    /**
+     * Nahraje vsechny demo fotky (database/seeds/demo_assets) do media knihovny,
+     * aby je uzivatel mel v adminu k dispozici. Naplni $this->demoMedia mapou
+     * filename => media_id. Idempotentni (dedup podle original_filename).
+     */
+    private function seedMediaLibrary(int $siteId): int
+    {
+        $dir = dirname(__DIR__, 2) . '/database/seeds/demo_assets';
+        if (!is_dir($dir)) {
+            return 0;
+        }
+
+        $count = 0;
+        foreach (glob($dir . '/*.webp') ?: [] as $path) {
+            $filename = basename($path);
+            $alt = $this->altFromFilename($filename);
+            $id = $this->ingestDemoAsset($siteId, $filename, $alt);
+            if ($id > 0) {
+                $this->demoMedia[$filename] = $id;
+                $count++;
+            }
+        }
+
+        return $count;
+    }
+
+    private function ingestDemoAsset(int $siteId, string $filename, string $alt): int
+    {
+        // Dedup: pokud uz medium s timto puvodnim nazvem existuje, znovu pouzij.
+        $stmt = $this->db->prepare('SELECT id FROM media WHERE site_id = ? AND original_filename = ? LIMIT 1');
+        $stmt->execute([$siteId, $filename]);
+        $row = $stmt->fetch();
+        if ($row) {
+            return (int)$row['id'];
+        }
+
+        $path = dirname(__DIR__, 2) . '/database/seeds/demo_assets/' . $filename;
+        if (!is_file($path)) {
+            return 0;
+        }
+
+        try {
+            $result = $this->media->ingestUploadedFile($siteId, $path, $filename, $alt, $alt, false);
+            return (int)($result['media_id'] ?? 0);
+        } catch (\Throwable $e) {
+            return 0;
+        }
+    }
+
+    private function altFromFilename(string $filename): string
+    {
+        $base = (string) pathinfo($filename, PATHINFO_FILENAME);
+        return ucfirst(trim(str_replace('-', ' ', $base)));
+    }
+
+    /** Vrati media_id pro dany seznam nazvu souboru (jen existujici). */
+    private function pickMedia(array $filenames): array
+    {
+        $ids = [];
+        foreach ($filenames as $f) {
+            if (!empty($this->demoMedia[$f])) {
+                $ids[] = (int) $this->demoMedia[$f];
+            }
+        }
+        return $ids;
+    }
+
+    private function mediaPathById(int $id): string
+    {
+        $stmt = $this->db->prepare('SELECT storage_path FROM media WHERE id = ? LIMIT 1');
+        $stmt->execute([$id]);
+        $path = (string) ($stmt->fetchColumn() ?: '');
+        return $path !== '' ? '/' . ltrim($path, '/') : '';
+    }
+
+    /**
+     * Nastavi hero foto (hero_bg) na strankach, kde chybi hero pozadi. Foto se
+     * zobrazi jako hero pozadi vsude, kde neni hero video (viz priorita
+     * video -> foto -> default).
+     */
+    private function seedHeroBackgrounds(int $siteId): void
+    {
+        $map = [
+            '' => 'svatba-nevesta-zenich-polibek-kamenna-zed.webp',
+            'sluzby' => 'svatba-nevesta-zavoj-cernobily-portret.webp',
+            'cenik' => 'svatba-nevesta-kytice-zapad-slunce-u-vody.webp',
+            'faq' => 'svatba-nevesta-zenich-objeti-kytice-les.webp',
+            'nase-prace' => 'svatba-nevesta-zenich-zavoj-tanec-priroda.webp',
+            'blog' => 'par-v-prirode-romanticky-portret-zapad-slunce.webp',
+            'kontakt' => 'zamilovany-par-objeti-zapad-slunce-podzim.webp',
+        ];
+
+        foreach ($map as $urlPath => $filename) {
+            if (empty($this->demoMedia[$filename])) {
+                continue;
+            }
+            $page = $this->pages->findByUrlPath($urlPath);
+            if (!$page) {
+                continue;
+            }
+            $bgUrl = $this->mediaPathById((int) $this->demoMedia[$filename]);
+            if ($bgUrl === '') {
+                continue;
+            }
+            $this->blocks->upsert((int) $page['id'], 'hero_bg', [
+                'block_type' => 'image',
+                'label' => 'Hero foto',
+                'content' => $bgUrl,
+                'sort_order' => 5,
+                'autofill_disabled' => 1,
+            ]);
+        }
+    }
+
+    /**
+     * Doplni SEO (seo_settings) pro hlavni stranky webu, pokud chybi nebo je prazdne.
+     */
+    private function seedPageSeo(int $siteId): void
+    {
+        $brand = 'RB Videos & Photos';
+        $seo = [
+            '' => ['Svatební fotograf a kameraman Olomouc | ' . $brand, 'Svatební fotografie a video v Olomouci a po celé ČR. Přirozené záběry, filmové video a profesionální přístup pro váš den.', '/'],
+            'sluzby' => ['Služby — foto a video na míru | ' . $brand, 'Svatební, rodinné, portrétní i reklamní foto a video. Profesionální výsledky a přátelský přístup. Olomouc a celá ČR.', '/sluzby'],
+            'cenik' => ['Ceník svatebního focení a videa — Olomouc | ' . $brand, 'Transparentní ceník svatebních balíčků od 14 900 Kč. Foto i video, online galerie a archivace výstupů. Nabídka na míru.', '/cenik'],
+            'faq' => ['Často kladené otázky — svatební focení | ' . $brand, 'Odpovědi na nejčastější dotazy o rezervaci termínu, dodání fotografií, videu, archivaci i průběhu svatebního focení.', '/faq'],
+            'nase-prace' => ['Naše práce — svatební foto a video | ' . $brand, 'Galerie svatebních fotografií a videí z Olomouce a celé ČR. Reálné realizace, párové i rodinné focení.', '/nase-prace'],
+            'blog' => ['Blog — tipy a inspirace pro focení | ' . $brand, 'Rady od profesionálního fotografa: příprava na focení, svatební video, výběr místa a tipy pro klienty.', '/blog'],
+            'kontakt' => ['Kontakt — svatební fotograf Olomouc | ' . $brand, 'Ozvěte se nám — Olomouc a celá ČR. Volejte nebo napište na sociální sítě, odpovídáme rychle.', '/kontakt'],
+        ];
+
+        $stmt = $this->db->prepare(
+            'REPLACE INTO seo_settings (page_id, meta_title, meta_description, canonical_url, robots_index, robots_follow, og_title, og_description, twitter_title, twitter_description)
+             VALUES (?, ?, ?, ?, 1, 1, ?, ?, ?, ?)'
+        );
+
+        foreach ($seo as $urlPath => [$title, $desc, $canonical]) {
+            $page = $this->pages->findByUrlPath($urlPath);
+            if (!$page) {
+                continue;
+            }
+            $stmt->execute([(int) $page['id'], $title, $desc, $canonical, $title, $desc, $title, $desc]);
+        }
     }
 
     /**
@@ -247,8 +398,19 @@ class DemoContentSeeder
             ],
         ];
 
+        $blogImages = [
+            'jak-vybrat-misto-na-foceni' => ['svatba-nevesta-kytice-zapad-slunce-u-vody.webp', 'par-v-prirode-romanticky-portret-zapad-slunce.webp', 'svatba-nevesta-zenich-objeti-kytice-les.webp'],
+            'proc-mit-svatebni-video' => ['svatba-nevesta-zenich-zavoj-tanec-priroda.webp', 'svatba-nevesta-zenich-polibek-kamenna-zed.webp', 'svatba-nevesta-zavoj-cernobily-portret.webp'],
+            'svatebni-fotograf-olomouc' => ['svatba-nevesta-zenich-polibek-kamenna-zed.webp', 'snubni-prsteny-listy-zapad-slunce-detail.webp', 'svatba-nevesta-kytice-zapad-slunce-u-vody.webp'],
+            'rodinne-foceni-olomouc' => ['rodinne-foceni-rodina-dite-louka.webp', 'rodinne-tehotenske-foceni-rodina-pole.webp', 'detske-foceni-chlapec-odrazedlo-zapad-slunce.webp'],
+            'reklamni-foto-video-pro-firmy' => ['sportovni-auto-nissan-silnice-les-pohyb.webp', 'koncert-zpevak-mikrofon-cernobila-fotografie.webp'],
+        ];
+
         foreach ($posts as $index => $post) {
-            $mediaIds = $this->seedImageSet($siteId, 'blog-' . $post['slug'], $post['topic'], $post['color'][0], $post['color'][1], 7);
+            $mediaIds = $this->pickMedia($blogImages[$post['slug']] ?? []);
+            if ($mediaIds === []) {
+                $mediaIds = $this->seedImageSet($siteId, 'blog-' . $post['slug'], $post['topic'], $post['color'][0], $post['color'][1], 7);
+            }
             $featured = $mediaIds[0] ?? null;
             $id = $this->upsertBlogPost($siteId, $post, $featured, $index);
             $this->blog->setGallery($id, $mediaIds);
@@ -297,8 +459,19 @@ class DemoContentSeeder
             ],
         ];
 
+        $portfolioImages = [
+            'svatebni-foto-video-olomouc' => ['svatba-nevesta-zenich-polibek-kamenna-zed.webp', 'svatba-nevesta-zenich-objeti-kytice-les.webp', 'svatba-nevesta-kytice-zapad-slunce-u-vody.webp', 'svatba-nevesta-zavoj-cernobily-portret.webp', 'svatba-nevesta-zenich-zavoj-tanec-priroda.webp', 'snubni-prsteny-listy-zapad-slunce-detail.webp'],
+            'svatebni-fotograf-brno' => ['svatba-nevesta-zenich-objeti-kytice-les.webp', 'svatba-nevesta-zenich-zavoj-tanec-priroda.webp', 'svatba-nevesta-zavoj-cernobily-portret.webp', 'svatba-nevesta-kytice-zapad-slunce-u-vody.webp', 'snubni-prsteny-listy-zapad-slunce-detail.webp', 'svatba-nevesta-zenich-polibek-kamenna-zed.webp'],
+            'rodinne-portretni-foceni' => ['rodinne-foceni-rodina-dite-louka.webp', 'rodinne-tehotenske-foceni-rodina-pole.webp', 'tehotenske-foceni-par-lavicka-park.webp', 'portret-zeny-letni-saty-listi-priroda.webp', 'detske-foceni-chlapec-odrazedlo-zapad-slunce.webp'],
+            'reklamni-foto-video-olomouc' => ['sportovni-auto-nissan-silnice-les-pohyb.webp', 'koncert-zpevak-mikrofon-cernobila-fotografie.webp'],
+            'portretni-foceni-olomouc' => ['portret-divka-kytice-kvetinova-celenka-slunce.webp', 'portret-zeny-letni-saty-listi-priroda.webp', 'par-v-prirode-romanticky-portret-zapad-slunce.webp', 'zamilovany-par-objeti-zapad-slunce-podzim.webp'],
+        ];
+
         foreach ($entries as $index => $entry) {
-            $mediaIds = $this->seedImageSet($siteId, 'portfolio-' . $entry['slug'], $entry['topic'], $entry['color'][0], $entry['color'][1], 8);
+            $mediaIds = $this->pickMedia($portfolioImages[$entry['slug']] ?? []);
+            if ($mediaIds === []) {
+                $mediaIds = $this->seedImageSet($siteId, 'portfolio-' . $entry['slug'], $entry['topic'], $entry['color'][0], $entry['color'][1], 8);
+            }
             $id = $this->upsertPortfolioEntry($siteId, $entry, $index);
             $this->portfolio->setMedia($id, $mediaIds);
         }
