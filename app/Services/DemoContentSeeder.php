@@ -53,7 +53,7 @@ class DemoContentSeeder
         $this->seedCenikCards($siteId);
         $faqCount = $this->seedFaqItems($siteId);
         $this->seedHeroBackgrounds($siteId);
-        $this->seedPageSeo($siteId);
+        $this->seedPageSeo($siteId, $site);
 
         $published = false;
         if ($publish && $userId) {
@@ -186,33 +186,73 @@ class DemoContentSeeder
     }
 
     /**
-     * Doplni SEO (seo_settings) pro hlavni stranky webu, pokud chybi nebo je prazdne.
+     * Doplni kompletni SEO (seo_settings) pro hlavni stranky webu:
+     * meta (title/description/keywords/canonical), Open Graph, Twitter Card
+     * (vc. og/twitter image ID z media) a Schema.org (type + JSON-LD).
      */
-    private function seedPageSeo(int $siteId): void
+    private function seedPageSeo(int $siteId, array $site): void
     {
         $brand = 'RB Videos & Photos';
+        // [title, desc, canonical, keywords, hero foto (pro OG/Twitter image), schema_type]
         $seo = [
-            '' => ['Svatební fotograf a kameraman Olomouc | ' . $brand, 'Svatební fotografie a video v Olomouci a po celé ČR. Přirozené záběry, filmové video a profesionální přístup pro váš den.', '/'],
-            'sluzby' => ['Služby — foto a video na míru | ' . $brand, 'Svatební, rodinné, portrétní i reklamní foto a video. Profesionální výsledky a přátelský přístup. Olomouc a celá ČR.', '/sluzby'],
-            'cenik' => ['Ceník svatebního focení a videa — Olomouc | ' . $brand, 'Transparentní ceník svatebních balíčků od 14 900 Kč. Foto i video, online galerie a archivace výstupů. Nabídka na míru.', '/cenik'],
-            'faq' => ['Často kladené otázky — svatební focení | ' . $brand, 'Odpovědi na nejčastější dotazy o rezervaci termínu, dodání fotografií, videu, archivaci i průběhu svatebního focení.', '/faq'],
-            'nase-prace' => ['Naše práce — svatební foto a video | ' . $brand, 'Galerie svatebních fotografií a videí z Olomouce a celé ČR. Reálné realizace, párové i rodinné focení.', '/nase-prace'],
-            'blog' => ['Blog — tipy a inspirace pro focení | ' . $brand, 'Rady od profesionálního fotografa: příprava na focení, svatební video, výběr místa a tipy pro klienty.', '/blog'],
-            'kontakt' => ['Kontakt — svatební fotograf Olomouc | ' . $brand, 'Ozvěte se nám — Olomouc a celá ČR. Volejte nebo napište na sociální sítě, odpovídáme rychle.', '/kontakt'],
+            '' => ['Svatební fotograf a kameraman Olomouc | ' . $brand, 'Svatební fotografie a video v Olomouci a po celé ČR. Přirozené záběry, filmové video a profesionální přístup pro váš den.', '/', 'svatební fotograf Olomouc, svatební video Olomouc, svatební kameraman, fotograf Olomouc, foto a video svatba', 'svatba-nevesta-zenich-polibek-kamenna-zed.webp', 'LocalBusiness'],
+            'sluzby' => ['Služby — foto a video na míru | ' . $brand, 'Svatební, rodinné, portrétní i reklamní foto a video. Profesionální výsledky a přátelský přístup. Olomouc a celá ČR.', '/sluzby', 'svatební focení, rodinné focení, portrétní focení, reklamní video, fotograf Olomouc', 'svatba-nevesta-zavoj-cernobily-portret.webp', 'WebPage'],
+            'cenik' => ['Ceník svatebního focení a videa — Olomouc | ' . $brand, 'Transparentní ceník svatebních balíčků od 14 900 Kč. Foto i video, online galerie a archivace výstupů. Nabídka na míru.', '/cenik', 'ceník svatebního focení, cena svatební fotograf, svatební balíčky, fotograf Olomouc cena', 'svatba-nevesta-kytice-zapad-slunce-u-vody.webp', 'WebPage'],
+            'faq' => ['Často kladené otázky — svatební focení | ' . $brand, 'Odpovědi na nejčastější dotazy o rezervaci termínu, dodání fotografií, videu, archivaci i průběhu svatebního focení.', '/faq', 'svatební focení otázky, rezervace fotografa, dodání fotografií, svatební video, archivace', 'svatba-nevesta-zenich-objeti-kytice-les.webp', 'WebPage'],
+            'nase-prace' => ['Naše práce — svatební foto a video | ' . $brand, 'Galerie svatebních fotografií a videí z Olomouce a celé ČR. Reálné realizace, párové i rodinné focení.', '/nase-prace', 'svatební fotografie, portfolio fotograf Olomouc, svatební video ukázky, naše práce', 'svatba-nevesta-zenich-zavoj-tanec-priroda.webp', 'WebPage'],
+            'blog' => ['Blog — tipy a inspirace pro focení | ' . $brand, 'Rady od profesionálního fotografa: příprava na focení, svatební video, výběr místa a tipy pro klienty.', '/blog', 'tipy svatební focení, příprava na focení, svatební video, fotograf blog, inspirace', 'par-v-prirode-romanticky-portret-zapad-slunce.webp', 'WebPage'],
+            'kontakt' => ['Kontakt — svatební fotograf Olomouc | ' . $brand, 'Ozvěte se nám — Olomouc a celá ČR. Volejte nebo napište na sociální sítě, odpovídáme rychle.', '/kontakt', 'kontakt svatební fotograf Olomouc, rezervace termínu, fotograf telefon', 'zamilovany-par-objeti-zapad-slunce-podzim.webp', 'LocalBusiness'],
         ];
 
         $stmt = $this->db->prepare(
-            'REPLACE INTO seo_settings (page_id, meta_title, meta_description, canonical_url, robots_index, robots_follow, og_title, og_description, twitter_title, twitter_description)
-             VALUES (?, ?, ?, ?, 1, 1, ?, ?, ?, ?)'
+            'REPLACE INTO seo_settings
+               (page_id, meta_title, meta_description, meta_keywords, canonical_url, robots_index, robots_follow,
+                og_title, og_description, og_image_id, twitter_title, twitter_description, twitter_image_id, schema_type, schema_json)
+             VALUES (?, ?, ?, ?, ?, 1, 1, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
 
-        foreach ($seo as $urlPath => [$title, $desc, $canonical]) {
+        foreach ($seo as $urlPath => [$title, $desc, $canonical, $keywords, $imageFile, $schemaType]) {
             $page = $this->pages->findByUrlPath($urlPath);
             if (!$page) {
                 continue;
             }
-            $stmt->execute([(int) $page['id'], $title, $desc, $canonical, $title, $desc, $title, $desc]);
+            $imageId = !empty($this->demoMedia[$imageFile]) ? (int) $this->demoMedia[$imageFile] : null;
+            $imageUrl = $imageId ? $this->mediaPathById($imageId) : '';
+            $schemaJson = $this->buildSchemaJson($schemaType, $title, $desc, $canonical, $imageUrl, $site);
+
+            $stmt->execute([
+                (int) $page['id'], $title, $desc, $keywords, $canonical,
+                $title, $desc, $imageId,
+                $title, $desc, $imageId,
+                $schemaType, $schemaJson,
+            ]);
         }
+    }
+
+    private function buildSchemaJson(string $type, string $title, string $desc, string $url, string $imageUrl, array $site): string
+    {
+        $base = rtrim((string) ($site['domain'] ?? ''), '/');
+        $data = [
+            '@context' => 'https://schema.org',
+            '@type' => $type,
+            'name' => $title,
+            'description' => $desc,
+            'url' => ($base !== '' ? $base : '') . $url,
+        ];
+        if ($imageUrl !== '') {
+            $data['image'] = ($base !== '' ? $base : '') . $imageUrl;
+        }
+        if ($type === 'LocalBusiness') {
+            $data['telephone'] = '+420 792 483 583';
+            $data['areaServed'] = 'Olomouc a celá ČR';
+            $data['address'] = [
+                '@type' => 'PostalAddress',
+                'addressLocality' => 'Olomouc',
+                'addressCountry' => 'CZ',
+            ];
+        }
+
+        return (string) json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
     }
 
     /**
