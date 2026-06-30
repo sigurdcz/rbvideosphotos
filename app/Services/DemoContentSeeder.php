@@ -53,6 +53,7 @@ class DemoContentSeeder
         $this->seedCenikCards($siteId);
         $faqCount = $this->seedFaqItems($siteId);
         $this->seedHeroBackgrounds($siteId);
+        $this->seedServiceVisuals($siteId);
         $this->seedPageSeo($siteId, $site);
 
         $published = false;
@@ -84,7 +85,13 @@ class DemoContentSeeder
         }
 
         $count = 0;
-        foreach (glob($dir . '/*.webp') ?: [] as $path) {
+        $paths = [];
+        foreach (['webp', 'png', 'jpg', 'jpeg'] as $ext) {
+            $paths = array_merge($paths, glob($dir . '/*.' . $ext) ?: []);
+        }
+        sort($paths, SORT_NATURAL | SORT_FLAG_CASE);
+
+        foreach ($paths as $path) {
             $filename = basename($path);
             $alt = $this->altFromFilename($filename);
             $id = $this->ingestDemoAsset($siteId, $filename, $alt);
@@ -154,13 +161,13 @@ class DemoContentSeeder
     private function seedHeroBackgrounds(int $siteId): void
     {
         $map = [
-            '' => 'svatba-nevesta-zenich-polibek-kamenna-zed.webp',
-            'sluzby' => 'svatba-nevesta-zavoj-cernobily-portret.webp',
-            'cenik' => 'svatba-nevesta-kytice-zapad-slunce-u-vody.webp',
-            'faq' => 'svatba-nevesta-zenich-objeti-kytice-les.webp',
-            'nase-prace' => 'svatba-nevesta-zenich-zavoj-tanec-priroda.webp',
-            'blog' => 'par-v-prirode-romanticky-portret-zapad-slunce.webp',
-            'kontakt' => 'zamilovany-par-objeti-zapad-slunce-podzim.webp',
+            'sluzby' => 'sluzby.png',
+            'cenik' => 'cenik.png',
+            'faq' => 'faq.png',
+            'nase-prace' => 'nase-prace.png',
+            'blog' => 'blog.png',
+            'kontakt' => 'kontakt.png',
+            'podminky-uziti' => 'podminky-uziti.png',
         ];
 
         foreach ($map as $urlPath => $filename) {
@@ -183,6 +190,27 @@ class DemoContentSeeder
                 'autofill_disabled' => 1,
             ]);
         }
+    }
+
+    private function seedServiceVisuals(int $siteId): void
+    {
+        if (empty($this->demoMedia['weare2.png'])) {
+            return;
+        }
+
+        $imageUrl = $this->mediaPathById((int) $this->demoMedia['weare2.png']);
+        if ($imageUrl === '') {
+            return;
+        }
+
+        $stmt = $this->db->prepare(
+            'UPDATE service_items
+             SET image_url = ?
+             WHERE site_id = ?
+             ORDER BY sort_order ASC, id ASC
+             LIMIT 1'
+        );
+        $stmt->execute([$imageUrl, $siteId]);
     }
 
     /**
@@ -211,7 +239,18 @@ class DemoContentSeeder
              VALUES (?, ?, ?, ?, ?, 1, 1, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
 
+        $seoImageOverrides = [
+            'sluzby' => 'sluzby.png',
+            'cenik' => 'cenik.png',
+            'faq' => 'faq.png',
+            'nase-prace' => 'nase-prace.png',
+            'blog' => 'blog.png',
+            'kontakt' => 'kontakt.png',
+            'podminky-uziti' => 'podminky-uziti.png',
+        ];
+
         foreach ($seo as $urlPath => [$title, $desc, $canonical, $keywords, $imageFile, $schemaType]) {
+            $imageFile = $seoImageOverrides[$urlPath] ?? $imageFile;
             $page = $this->pages->findByUrlPath($urlPath);
             if (!$page) {
                 continue;
@@ -688,6 +727,12 @@ class DemoContentSeeder
         }
 
         $keys = [
+            'sluzby_items',
+            'sluzby_grid',
+            'service_1',
+            'service_2',
+            'service_3',
+            'service_4',
             'portfolio-tiles',
             'blog_1',
             'blog_2',

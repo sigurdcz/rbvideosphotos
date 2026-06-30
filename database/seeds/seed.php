@@ -22,8 +22,10 @@ if (php_sapi_name() === 'cli') {
     require BASE_PATH . '/vendor/autoload.php';
     \App\Core\Env::load(BASE_PATH . '/.env');
 }
+defined('BASE_PATH') || define('BASE_PATH', dirname(__DIR__, 2));
 
 use App\Core\Database;
+use App\Services\MediaIngestionService;
 use App\Services\PublishService;
 
 $pdo = Database::getInstance();
@@ -123,6 +125,43 @@ if (!function_exists('seedBlock')) {
                 'INSERT INTO content_blocks (page_id, block_key, block_type, label, content, sort_order) VALUES (?,?,?,?,?,?)'
             )->execute([$pageId, $key, $type, $label, $content, $order]);
         }
+    }
+}
+
+if (!function_exists('seedAltFromFilename')) {
+    function seedAltFromFilename(string $filename): string
+    {
+        $base = (string) pathinfo($filename, PATHINFO_FILENAME);
+        return ucfirst(trim(str_replace('-', ' ', $base)));
+    }
+}
+
+if (!function_exists('seedMediaAsset')) {
+    function seedMediaAsset(PDO $pdo, int $siteId, string $filename): array
+    {
+        $stmt = $pdo->prepare('SELECT id, storage_path FROM media WHERE site_id = ? AND original_filename = ? LIMIT 1');
+        $stmt->execute([$siteId, $filename]);
+        $row = $stmt->fetch();
+        if ($row) {
+            return [
+                'id' => (int) $row['id'],
+                'url' => '/' . ltrim((string) $row['storage_path'], '/'),
+            ];
+        }
+
+        $path = BASE_PATH . '/database/seeds/demo_assets/' . $filename;
+        if (!is_file($path)) {
+            return ['id' => 0, 'url' => ''];
+        }
+
+        $alt = seedAltFromFilename($filename);
+        $result = (new MediaIngestionService())->ingestUploadedFile($siteId, $path, $filename, $alt, $alt, false);
+        $storagePath = (string) ($result['storage_path'] ?? '');
+
+        return [
+            'id' => (int) ($result['media_id'] ?? 0),
+            'url' => $storagePath !== '' ? '/' . ltrim($storagePath, '/') : '',
+        ];
     }
 }
 
@@ -623,6 +662,21 @@ $pidRules     = seedUpsertPage($pdo, $siteId, $tplRules,           'Podmínky u�
 
 echo "Stránky vytvořeny.\n";
 
+$seedMedia = [];
+foreach ([
+    'sluzby.png',
+    'cenik.png',
+    'faq.png',
+    'kontakt.png',
+    'nase-prace.png',
+    'blog.png',
+    'podminky-uziti.png',
+    'weare2.png',
+] as $seedAsset) {
+    $seedMedia[$seedAsset] = seedMediaAsset($pdo, $siteId, $seedAsset);
+}
+echo "Demo obrazky nahrany.\n";
+
 // ─── Obsahové bloky — Homepage ────────────────────────────────────────────────
 
 seedBlock($pdo, $pidHome, 'hero_label',     'text',     'Hero — štítek',       'Fotograf a kameraman - Olomouc, Praha',                            1);
@@ -723,6 +777,21 @@ seedBlock($pdo, $pidRules, 'rule_3', 'html', 'Pravidlo 3', '<h3>Obsah a autorska
 seedBlock($pdo, $pidRules, 'rule_4', 'html', 'Pravidlo 4', '<h3>Zmeny a kontakt</h3><p>Obsah webu i tato pravidla se mohou prubezne menit. Pokud mate dotaz k provozu webu, soukromi nebo souhlasu s cookies, napiste nam pres kontaktni stranku.</p>', 8);
 seedBlock($pdo, $pidRules, 'cta_wrap', 'html', 'CTA', '<a href="/kontakt" class="btn-secondary">Kontaktovat nas</a>', 9);
 
+foreach ([
+    $pidSluzby => 'sluzby.png',
+    $pidCenik => 'cenik.png',
+    $pidFaq => 'faq.png',
+    $pidKontakt => 'kontakt.png',
+    $pidBlog => 'blog.png',
+    $pidPortfolio => 'nase-prace.png',
+    $pidRules => 'podminky-uziti.png',
+] as $heroPageId => $heroFile) {
+    $heroUrl = (string)($seedMedia[$heroFile]['url'] ?? '');
+    if ($heroUrl !== '') {
+        seedBlock($pdo, (int)$heroPageId, 'hero_bg', 'image', 'Hero foto', $heroUrl, 5);
+    }
+}
+
 echo "Obsahové bloky vytvořeny.\n";
 
 // ─── FAQ položky ──────────────────────────────────────────────────────────────
@@ -733,7 +802,8 @@ $serviceStmt = $pdo->prepare('
         site_id, title, description, image_url, icon_url, button_text, button_url, sort_order, is_active
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)
 ');
-$serviceStmt->execute([$siteId, 'Svatební foto & video', 'Zachytíme každý dotek, každý pohled i každou slzu štěstí. Přirozené reportážní fotografie a filmové video, které vám budou váš den připomínat celý život.', '', '', 'Více informací', '/sluzby', 1]);
+$weareImageUrl = (string)($seedMedia['weare2.png']['url'] ?? '');
+$serviceStmt->execute([$siteId, 'Svatební foto & video', 'Zachytíme každý dotek, každý pohled i každou slzu štěstí. Přirozené reportážní fotografie a filmové video, které vám budou váš den připomínat celý život.', $weareImageUrl, '', 'Více informací', '/sluzby', 1]);
 $serviceStmt->execute([$siteId, 'Rodinné & portrétní focení', 'Rodinné vzpomínky, těhotenské focení, křtiny i portréty. Přirozené, nenucené a krásné snímky, ke kterým se budete rádi vracet.', '', '', 'Více informací', '/sluzby', 2]);
 $serviceStmt->execute([$siteId, 'Reklamní foto & video', 'Profesionální vizuální obsah pro firmy, produkty, kapely i značky. Obsah, který buduje důvěru, odlišuje a prodává.', '', '', 'Více informací', '/sluzby', 3]);
 $serviceStmt->execute([$siteId, 'Akce & události', 'Konference, kulturní akce, plesy, koncerty i firemní večery. Každá událost si zaslouží profesionální dokumentaci bez kompromisů.', '', '', 'Více informací', '/sluzby', 4]);
