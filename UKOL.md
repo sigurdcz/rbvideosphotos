@@ -1,27 +1,25 @@
-# UKOL: Opravit header obrazky a weare2
+# UKOL: Zkompaktnit mobilni vypisy
 
 Datum: 2026-06-30
-Zadani: Opravit prirazeni header obrazku pro sekce, uklidit nahrane obrazky do spravne slozky a zajistit, aby HP sekce `Co nabizime` pouzivala `weare2.png`.
+Zadani: Na mobilu zmensit roztahane vypisy a nastavit `Nase prace` a `Blog` jako kompaktni 2x2 galerii misto velkych jednosloupcovych panelu.
 
 ## Kroky
 
-- [x] Zjistit aktualni stav obrazku, media zaznamu, header bloku a service image.
-- [x] Uklidit obrazky ze slozky `dalsi data` / `data dalsi` do prislusne projektove slozky.
-- [x] Opravit prirazeni header obrazku pro stranky a specialni routy.
-- [x] Opravit vyber fotky v HP sekci `Co nabizime` na `weare2.png`.
-- [x] Overit staticky cesty a PHP syntaxi bez dalsich DB zapisu.
+- [x] Najit CSS a markup pro mobilni vypisy `Nase prace`, `Blog`, `FAQ` a `Cenik`.
+- [x] Upravit mobilni gridy pro `Nase prace` a `Blog` na kompaktni dvousloupcove nahledy.
+- [x] Zmensit mobilni spacing, padding, marginy a typografii u `FAQ` a `Cenik`.
+- [x] Overit syntaxi a zkontrolovat diff bez sahani na lokalni DB.
 - [x] Zhodnotit dokumentaci a zapsat vysledek.
 
 ## Poznamky
 
-- Screenshot ukazuje, ze `/sluzby` stale bere puvodni header obrazek.
-- Screenshot ukazuje, ze HP `jb-about-visual__media` stale bere puvodni medium variantu misto `weare2.png`.
-- Lokalni DB uz mela `weare2.png` u prvni sluzby, ale seed logika porad nahravala jen `.webp` demo assety a mapovala headery na stare soubory.
-- Obrazky byly presunuty z `data dalsi` do `database/seeds/demo_assets`.
-- `DemoContentSeeder` ted bere i PNG/JPG assety, mapuje headery na nove PNG soubory a SEO obrazky hlavnim strankam prepise na stejne nove soubory.
-- Po upozorneni uz neprobiha zadne dalsi sahani na lokalni DB; overeni je jen pres `php -l` a kontrolu souboru.
-- `database/seeds/seed.php` ted nahrava stejne demo assety pres `MediaIngestionService`, zaklada `hero_bg` bloky pro hlavni stranky a dava `weare2.png` do prvni sluzby.
+- Uživatel chce na mobilu mensi rozhrani, ne odstraneni sekci. DB se nema pouzivat.
+- `public/index.php` ma mobilni fallback pro portfolio/blog ve dvou sloupcich s mensimi nahledy a skrytymi sekundarnimi texty.
+- `Templates/editorial-gold/assets/theme.css` ma finalni mobilni override, ktery prebije starsi `1fr` pravidla a zmensuje FAQ/Cenik.
+- `database/seeds/seed.php` ma stejne kompaktni mobilni styly pro nove zalozeny demo obsah `/cenik` a `/faq`.
+- Overeno pres `php -l public/index.php` a `php -l database/seeds/seed.php`.
+- Dokumentaci neni potreba menit: jde o vizualni responzivni upravu existujicich sablon, ne o zmenu routingu, workflow nebo API.
 
 ## Vysledek
 
-Hotovo v seed/demo souborech. Dokumentace se nemenila, protoze jde o obsah seedu a ne zmenu verejneho workflow.
+Mobilni vypisy `Nase prace` a `Blog` jsou nastavene jako kompaktni dvousloupcove galerie. `FAQ` a `Cenik` maji na mobilu mensi paddingy, mezery a pismo v runtime CSS i demo seed sablonach.

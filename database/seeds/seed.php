@@ -521,6 +521,7 @@ $tplCenikCss = <<<'CSS'
 .cenik-card-desc{color:rgba(255,255,255,.65);line-height:1.7;font-size:.95rem;white-space:pre-line}
 .cenik-card-price{font-size:1.3rem;font-weight:800;color:#fff;padding-top:20px;border-top:1px solid rgba(255,255,255,.1)}
 .section-cta{text-align:center;margin-top:16px}
+@media(max-width:720px){.cenik-grid{grid-template-columns:1fr;gap:10px;margin-bottom:22px}.cenik-card{padding:15px 16px;gap:10px}.cenik-card-title{font-size:1.08rem;margin-bottom:6px}.cenik-card-desc{font-size:.78rem;line-height:1.45}.cenik-card-price{font-size:1.05rem;padding-top:10px}.section-cta{margin-top:10px}}
 CSS;
 
 $tplCenik = seedUpsertTemplate($pdo, $siteId, 'Ceník', $tplCenikHtml, $tplCenikCss, '');
@@ -552,6 +553,7 @@ $tplFaqCss = <<<'CSS'
 .faq-list{display:flex;flex-direction:column;gap:16px;max-width:820px;margin:0 auto}
 .faq-item{padding:24px 28px;background:#18181c;border-radius:12px;border-left:3px solid #c4963c}
 .faq-item:empty{display:none}
+@media(max-width:720px){.faq-list{gap:8px}.faq-item{padding:12px 14px;border-radius:8px;border-left-width:2px}.faq-q{font-size:.94rem;line-height:1.25;margin-bottom:6px}.faq-a{font-size:.78rem;line-height:1.48}}
 CSS;
 
 $tplFaq = seedUpsertTemplate($pdo, $siteId, 'FAQ', $tplFaqHtml, $tplFaqCss, '');
