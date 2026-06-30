@@ -404,35 +404,80 @@ class DemoContentSeeder
             [
                 'slug' => 'jak-vybrat-misto-na-foceni',
                 'title' => 'Jak vybrat místo na focení',
-                'excerpt' => 'Praktický průvodce výběrem lokality, světla a atmosféry pro svatební, portrétní i rodinné focení.',
+                'excerpt' => 'Místo na focení nemusí být slavné ani dokonalé. Důležité je, aby vám sedělo, bylo příjemné a pomohlo vytvořit fotky, které nebudou působit strojeně.',
+                'intro' => 'Místo na focení nemusí být slavné ani dokonalé. Důležité je, aby vám sedělo, bylo příjemné a pomohlo vytvořit fotky, které nebudou působit strojeně.',
+                'paragraphs' => [
+                    'Když se domlouvám na focení, výběr místa řeším vždycky hned na začátku. Ne proto, že bych potřeboval za každou cenu nějakou „instagramovou“ lokalitu, ale proto, že místo hodně ovlivní náladu celého focení.',
+                    'Někdy stačí obyčejná louka, klidná ulička, park, zahrada nebo místo, kde to máte rádi. Nemusí to být nic velkého. Důležitější je světlo, klid a to, abyste se tam necítili divně.',
+                    'U svatby se snažím vybírat místa hlavně prakticky. Nechci vás tahat na hodinu pryč od hostů jen kvůli fotkám. Většinou se dá najít hezké místo někde poblíž, jen je potřeba se na něj podívat správně.',
+                    'U rodinného nebo portrétního focení zase řeším, aby se tam dobře fungovalo vám. Pokud máte děti, je lepší místo, kde se můžou trochu hýbat. Pokud chcete klidnější portréty, hledám prostředí, které nebude rušit.',
+                    'Za mě je nejlepší místo takové, kde se cítíte přirozeně. Fotky pak nejsou jen hezké, ale mají v sobě i něco vašeho.',
+                ],
+                'conclusion' => 'Jestli nevíte, kde fotit, klidně to nechte na mě. Navrhnu pár míst podle toho, co spolu budeme fotit a jakou atmosféru chcete.',
                 'topic' => 'Svatebni misto na foceni',
                 'color' => ['151515', 'E6B45D'],
             ],
             [
                 'slug' => 'proc-mit-svatebni-video',
                 'title' => 'Proč mít svatební video',
-                'excerpt' => 'Fotografie zastaví okamžik. Video k němu přidá hlas, hudbu, atmosféru a pohyb celého dne.',
+                'excerpt' => 'Fotky jsou krásná vzpomínka. Video ale zachytí i hlas, pohyb, smích a atmosféru, která se do jedné fotky prostě nevejde.',
+                'intro' => 'Fotky jsou krásná vzpomínka. Video ale zachytí i hlas, pohyb, smích a atmosféru, která se do jedné fotky prostě nevejde.',
+                'paragraphs' => [
+                    'Svatební video podle mě není jen něco navíc. Je to jiný způsob, jak si ten den uchovat.',
+                    'Fotka zastaví jeden okamžik. Video vám ho po čase připomene trochu jinak. Uslyšíte sliby, smích hostů, hudbu, gratulace, nervozitu před obřadem i malé věci, kterých si v den svatby možná ani nevšimnete.',
+                    'Nesnažím se ze svatby dělat hraný film. Mám raději, když video působí opravdově. Když je v něm vidět, jaký ten den skutečně byl, kdo tam byl s vámi a co se dělo kolem.',
+                    'Hodně lidí si řekne, že fotky stačí. A ano, fotky jsou základ. Ale video má sílu hlavně v čase. Po pár letech si nepustíte jen obraz, ale i zvuk a atmosféru. A to je něco, co časem získává mnohem větší hodnotu.',
+                    'Nejde o to mít video za každou cenu. Jde o to, jestli chcete mít ze svatby vzpomínku, která bude živější než samotné fotky.',
+                ],
+                'conclusion' => 'Pokud nad videem váháte, za mě dává smysl hlavně tehdy, když chcete zachytit nejen to, jak svatba vypadala, ale i jak zněla a jaká byla.',
                 'topic' => 'Svatebni video',
                 'color' => ['211811', 'F1D19A'],
             ],
             [
                 'slug' => 'svatebni-fotograf-olomouc',
                 'title' => 'Svatební fotograf Olomouc: jak probíhá focení',
-                'excerpt' => 'Co čekat před svatbou, během dne a po předání galerie, aby vše působilo klidně a přirozeně.',
+                'excerpt' => 'Svatební focení nemusí narušit celý den. Když se dobře naplánuje, proběhne v klidu a vy si ho nemusíte zbytečně hlídat.',
+                'intro' => 'Svatební focení nemusí narušit celý den. Když se dobře naplánuje, proběhne v klidu a vy si ho nemusíte zbytečně hlídat.',
+                'paragraphs' => [
+                    'Svatba není focení v ateliéru. Je to živý den, kde se pořád něco děje. Proto se snažím být připravený, ale zároveň do všeho zbytečně nezasahovat.',
+                    'Před svatbou si projdu harmonogram. Zajímá mě obřad, místo hostiny, důležití lidé, skupinové fotky a čas, kdy bude prostor na portréty. Díky tomu pak v den svatby nemusíte všechno vysvětlovat znovu.',
+                    'Během dne fotím hlavně přirozené momenty. Přípravy, obřad, gratulace, hosty, detaily, smích, nervozitu i malé situace kolem. To jsou věci, které podle mě ke svatbě patří stejně jako portréty.',
+                    'Když přijde čas na společné focení novomanželů, povedu vás. Nemusíte vědět, jak stát nebo co dělat s rukama. Řeknu vám to jednoduše a bez zbytečného pózování.',
+                    'V Olomouci a okolí se dá najít hodně hezkých míst, ale vždycky řeším hlavně to, aby to zapadlo do vašeho dne. Fotky jsou důležité, ale nechci, abyste kvůli nim přišli o půlku svatby.',
+                ],
+                'conclusion' => 'Pokud chcete svatební focení v Olomouci v klidu a bez strojeného pózování, můžeme si projít váš den a vymyslet, jak to udělat přirozeně.',
                 'topic' => 'Svatebni fotograf Olomouc',
                 'color' => ['111827', 'D9A441'],
             ],
             [
                 'slug' => 'rodinne-foceni-olomouc',
                 'title' => 'Rodinné focení v Olomouci bez stresu',
-                'excerpt' => 'Jak se připravit, co si vzít na sebe a proč nejlepší fotky často vznikají mezi pózami.',
+                'excerpt' => 'Rodinné focení nemusí být o nucených úsměvech. Může to být klidná procházka, pár společných momentů a fotky, na kterých se opravdu poznáte.',
+                'intro' => 'Rodinné focení nemusí být o nucených úsměvech. Může to být klidná procházka, pár společných momentů a fotky, na kterých se opravdu poznáte.',
+                'paragraphs' => [
+                    'U rodinného focení často slyším: „Děti asi nevydrží,“ nebo „My se neumíme fotit.“ To je úplně normální. A upřímně, ani nechci, aby děti stály půl hodiny na místě a usmívaly se na povel.',
+                    'Nejhezčí rodinné fotky většinou vzniknou ve chvíli, kdy se trochu zapomene, že se fotí. Když se děti smějí, běží, drží se vás, něco ukazují nebo se prostě chovají tak, jak je znáte.',
+                    'Focení vedu tak, aby bylo jednoduché. Řeknu vám, kam si stoupnout, co udělat a jak se natočit. Zároveň ale nechávám prostor tomu, co se děje samo.',
+                    'V Olomouci a okolí je dost míst, kde se dá fotit příjemně a bez velkého stresu. Parky, příroda, klidnější zákoutí nebo místa, kam chodíte rádi. Nemusíme hledat nic složitého. Hlavní je, aby vám tam bylo dobře.',
+                    'Cílem není vytvořit dokonale naaranžovanou rodinu. Cílem je zachytit vás tak, jak spolu opravdu jste.',
+                ],
+                'conclusion' => 'Jestli máte z rodinného focení trochu obavy, vůbec nevadí. Provedu vás tím tak, aby to bylo co nejpřirozenější.',
                 'topic' => 'Rodinne foceni Olomouc',
                 'color' => ['2B2118', 'FFE2A8'],
             ],
             [
                 'slug' => 'reklamni-foto-video-pro-firmy',
                 'title' => 'Reklamní foto a video pro firmy',
-                'excerpt' => 'Kdy se vyplatí profesionální vizuální obsah a jak z něj vytěžit maximum pro web i sociální sítě.',
+                'excerpt' => 'Dobré fotky a video nejsou jen výplň webu. Často rozhodují o tom, jestli firma působí důvěryhodně, nebo obyčejně.',
+                'intro' => 'Dobré fotky a video nejsou jen výplň webu. Často rozhodují o tom, jestli firma působí důvěryhodně, nebo obyčejně.',
+                'paragraphs' => [
+                    'Když přijdu na firemní web a vidím tam náhodné ilustrační fotky, většinou mi tam něco chybí. Nevidím lidi, prostředí, práci ani skutečnou atmosféru firmy.',
+                    'A přesně proto má smysl mít vlastní fotky a videa.',
+                    'Nejde jen o to, aby výstup hezky vypadal. Dobrý vizuální obsah má lidem rychle ukázat, kdo jste, co děláte a proč vám mají věřit. U firmy to může být provozovna, tým, výrobek, služba, práce v terénu, zákulisí nebo konkrétní proces.',
+                    'Před focením nebo natáčením se vždycky ptám, kde se budou výstupy používat. Web potřebuje něco jiného než sociální sítě. Reklama zase něco jiného než profil na Googlu. Když se tohle promyslí dopředu, vzniknou materiály, které mají mnohem větší využití.',
+                    'Nemám rád obsah, který působí jako prázdná reklama. Lepší je ukázat firmu čistě, hezky, ale pořád lidsky. Aby zákazník neměl pocit, že se dívá na něco umělého.',
+                ],
+                'conclusion' => 'Pokud chcete, aby vaše firma působila lépe a důvěryhodněji, vlastní foto a video je jedna z nejpraktičtějších věcí, kterou můžete udělat.',
                 'topic' => 'Reklamni foto video',
                 'color' => ['0D1117', '9FDBFF'],
             ],
@@ -464,7 +509,17 @@ class DemoContentSeeder
         $entries = [
             [
                 'slug' => 'svatebni-foto-video-olomouc',
-                'title' => 'Svatební foto & video Olomouc',
+                'title' => 'Svatební foto a video Olomouc',
+                'excerpt' => 'Svatbu fotím a natáčím tak, aby vzpomínky působily opravdově. Ne jako póza, ale jako váš den se vším, co k němu patřilo.',
+                'intro' => 'Svatbu fotím a natáčím tak, aby vzpomínky působily opravdově. Ne jako póza, ale jako váš den se vším, co k němu patřilo.',
+                'paragraphs' => [
+                    'Každá svatba má vlastní tempo. Někde je hodně emocí, jinde víc smíchu, někde klidná rodinná atmosféra a jinde velká párty. Mojí prací je to vnímat a zachytit tak, aby výsledek odpovídal právě vám.',
+                    'Při focení a natáčení se snažím být spíš nenápadný. Nechci vás pořád zastavovat a říkat, co máte dělat. Když je potřeba, pomůžu a navedu vás. Ale když se děje něco přirozeného, nechám tomu prostor.',
+                    'Fotky vám zachytí konkrétní momenty. Video k tomu přidá pohyb, hlasy, hudbu a atmosféru. Dohromady to dává vzpomínku, ke které se dá vracet úplně jinak.',
+                    'V Olomouci a okolí znám dost míst, kde se dá udělat hezké portrétní focení, aniž byste museli na dlouho odjíždět od hostů. Vždycky hledám řešení, které bude hezké, ale zároveň praktické.',
+                    'Nejde mi o to udělat svatbu efektnější, než byla. Jde mi o to zachytit ji tak, abyste se v těch fotkách a videu poznali.',
+                ],
+                'conclusion' => 'Pokud chcete ze svatby fotky i video v osobním a přirozeném stylu, rád s vámi projdu plán dne a navrhnu, jak vše zachytit co nejlépe.',
                 'topic' => 'Svatebni foto video Olomouc',
                 'color' => ['17110B', 'E7B75E'],
                 'video_url' => 'https://vimeo.com/1122538281',
@@ -472,20 +527,50 @@ class DemoContentSeeder
             [
                 'slug' => 'svatebni-fotograf-brno',
                 'title' => 'Svatební fotograf Brno',
+                'excerpt' => 'Svatební focení v Brně dělám tak, aby bylo přirozené, klidné a zapadlo do vašeho dne bez zbytečného stresu.',
+                'intro' => 'Svatební focení v Brně dělám tak, aby bylo přirozené, klidné a zapadlo do vašeho dne bez zbytečného stresu.',
+                'paragraphs' => [
+                    'Při svatebním focení se nesnažím z lidí dělat někoho jiného. Chci, aby fotky působily jako vy. Jen v dobrém světle, ve správný moment a s trochou vedení tam, kde je potřeba.',
+                    'Brno má spoustu krásných míst, ale vždycky se dívám hlavně na to, co je reálně praktické. Někdy je lepší krátké focení kousek od místa svatby než složitý přejezd na známou lokalitu. V den svatby je čas cenný.',
+                    'Předem si s vámi projdu, co je důležité. Kde bude obřad, kolik chcete skupinových fotek, kdy bude prostor na portréty a jestli máte nějaké konkrétní přání.',
+                    'Během dne fotím reportážně, takže zachytím i momenty, které se nedají naplánovat. Pohledy, reakce rodičů, smích u stolu, objetí, detaily a atmosféru.',
+                    'U portrétů vás navedu jednoduše. Nemusíte mít žádnou zkušenost s focením. Stačí mi věřit a nechat se vést.',
+                ],
+                'conclusion' => 'Pokud hledáte svatebního fotografa v Brně a chcete fotky bez přehnaného pózování, můžeme se domluvit a projít vaši představu.',
                 'topic' => 'Svatebni fotograf Brno',
                 'color' => ['111111', 'FFFFFF'],
                 'video_url' => 'https://vimeo.com/1133996815',
             ],
             [
                 'slug' => 'rodinne-portretni-foceni',
-                'title' => 'Rodinné & portrétní focení',
+                'title' => 'Rodinné a portrétní focení',
+                'excerpt' => 'Fotím lidi tak, aby se na fotkách poznali. Přirozeně, jednoduše a bez pocitu, že musí před foťákem něco hrát.',
+                'intro' => 'Fotím lidi tak, aby se na fotkách poznali. Přirozeně, jednoduše a bez pocitu, že musí před foťákem něco hrát.',
+                'paragraphs' => [
+                    'Ne každý se rád fotí. To chápu. Právě proto se snažím focení vést tak, aby bylo co nejpříjemnější a aby člověk neměl pocit, že musí umět pózovat.',
+                    'U portrétů řeším hlavně to, k čemu fotky potřebujete. Jinak se fotí pracovní portrét, jinak fotka na sociální sítě a jinak osobní portrét jen pro radost. Podle toho vybírám místo, styl i atmosféru.',
+                    'U rodinného focení nechávám víc prostoru přirozenosti. Děti nemusí sedět jako v katalogu. Rodiče nemusí dokonale pózovat. Stačí být spolu, trochu se uvolnit a nechat focení plynout.',
+                    'Samozřejmě vás během focení povedu. Řeknu vám, co dělat, kam se podívat, jak se postavit nebo jak se k sobě přiblížit. Jen to nechci dělat tvrdě a strojeně.',
+                    'Dobrá fotka podle mě nemusí být dokonalá. Musí být uvěřitelná.',
+                ],
+                'conclusion' => 'Pokud chcete rodinné nebo portrétní fotky, které budou působit přirozeně a ne jako nucená póza, rád vám s tím pomůžu.',
                 'topic' => 'Rodinne portretni foceni',
                 'color' => ['2A2018', 'F5D6A1'],
                 'video_url' => null,
             ],
             [
                 'slug' => 'reklamni-foto-video-olomouc',
-                'title' => 'Reklamní foto & video Olomouc',
+                'title' => 'Reklamní foto a video Olomouc',
+                'excerpt' => 'Pomáhám firmám ukázat jejich práci tak, aby působila dobře, srozumitelně a důvěryhodně. Bez zbytečně umělé reklamy.',
+                'intro' => 'Pomáhám firmám ukázat jejich práci tak, aby působila dobře, srozumitelně a důvěryhodně. Bez zbytečně umělé reklamy.',
+                'paragraphs' => [
+                    'Firemní fotky a videa by neměly být jen hezká dekorace na webu. Měly by lidem ukázat, kdo jste, co děláte a proč vám můžou věřit.',
+                    'Když fotím nebo natáčím pro firmu, nejdřív mě zajímá, kde se bude obsah používat. Web, reklama, sociální sítě, Google profil, prezentace nebo nábor. Každé použití potřebuje trochu jiný přístup.',
+                    'Můžeme zachytit provozovnu, tým, produkty, službu, práci v praxi nebo atmosféru firmy. Důležité je, aby výsledek nepůsobil jako náhodný obrázek z fotobanky. Lidé chtějí vidět realitu, jen dobře zpracovanou.',
+                    'Snažím se, aby výstupy byly čisté, použitelné a dlouhodobě využitelné. Ne jen jedna fotka na jeden příspěvek, ale materiál, se kterým se dá dál pracovat.',
+                    'V Olomouci a okolí můžeme připravit obsah pro menší firmy, služby, řemeslníky, restaurace, lokální značky i e-shopy.',
+                ],
+                'conclusion' => 'Pokud chcete, aby vaše firma působila na webu a sociálních sítích lépe, můžeme společně vymyslet obsah, který bude dávat smysl pro vaše zákazníky.',
                 'topic' => 'Reklamni foto video Olomouc',
                 'color' => ['0C1118', '78D7FF'],
                 'video_url' => null,
@@ -493,6 +578,16 @@ class DemoContentSeeder
             [
                 'slug' => 'portretni-foceni-olomouc',
                 'title' => 'Portrétní focení Olomouc',
+                'excerpt' => 'Portrétní focení nemusí být nepříjemné. Pomůžu vám s pózou, výrazem i místem, aby fotky působily přirozeně a dobře vás vystihly.',
+                'intro' => 'Portrétní focení nemusí být nepříjemné. Pomůžu vám s pózou, výrazem i místem, aby fotky působily přirozeně a dobře vás vystihly.',
+                'paragraphs' => [
+                    'Portrét je často první věc, kterou o vás někdo uvidí. Na webu, v profilu, na sociálních sítích nebo v pracovním kontaktu. Proto by měl působit dobře, ale zároveň ne falešně.',
+                    'Před focením se vždycky ptám, k čemu fotky potřebujete. Chcete působit profesionálně, přátelsky, kreativně, elegantně nebo civilně? Podle toho zvolíme místo, oblečení i celkový styl.',
+                    'Během focení vás povedu. Nemusíte řešit, jak se tvářit nebo kam dát ruce. To je moje práce. Budu vás navádět tak, aby fotky vypadaly dobře, ale nepůsobily křečovitě.',
+                    'V Olomouci můžeme fotit ve městě, v přírodě, u jednoduchého pozadí nebo na místě, které má souvislost s tím, co děláte.',
+                    'Mám raději portréty, které jsou čisté a přirozené, než fotky, které se snaží být za každou cenu efektní.',
+                ],
+                'conclusion' => 'Pokud chcete portrétní focení v Olomouci a nechcete u toho působit strojeně, domluvíme styl, místo a všechno projdeme v klidu.',
                 'topic' => 'Portretni foceni Olomouc',
                 'color' => ['1B1410', 'FFD2BA'],
                 'video_url' => null,
@@ -625,7 +720,7 @@ class DemoContentSeeder
     private function upsertBlogPost(int $siteId, array $post, ?int $featuredImageId, int $index): int
     {
         $existing = $this->fetchId('blog_posts', $siteId, $post['slug']);
-        $content = $this->blogContent($post['title'], $post['topic']);
+        $content = $this->longformContent($post);
         $publishedAt = date('Y-m-d H:i:s', strtotime('-' . (6 - $index) . ' days'));
         $data = [
             $post['title'],
@@ -652,8 +747,7 @@ class DemoContentSeeder
     private function upsertPortfolioEntry(int $siteId, array $entry, int $index): int
     {
         $existing = $this->fetchId('portfolio_entries', $siteId, $entry['slug']);
-        $description = '<p>' . $this->h($entry['title']) . ' je ukázková realizace pro naplnění webu reálnější strukturou obsahu.</p>'
-            . '<p>Galerie obsahuje hlavní fotografii a sérii doplňkových záběrů, aby bylo vidět dlaždice, detail práce i automatické výpisy na homepage.</p>';
+        $description = $this->longformContent($entry);
         $publishedAt = date('Y-m-d H:i:s', strtotime('-' . (10 - $index) . ' days'));
         $data = [
             $entry['title'],
@@ -663,7 +757,7 @@ class DemoContentSeeder
             $publishedAt,
             $index + 1,
             $entry['title'] . ' | Portfolio',
-            'Ukázková práce fotografa: ' . $entry['title'],
+            $entry['excerpt'] ?? ('Ukázková práce fotografa: ' . $entry['title']),
         ];
 
         if ($existing) {
@@ -727,14 +821,32 @@ HTML;
         return $id ? (int)$id : null;
     }
 
-    private function blogContent(string $title, string $topic): string
+    private function longformContent(array $item): string
     {
-        return '<p>Tenhle demo článek ukazuje, jak může vypadat obsah pro fotografa, když je web naplněný reálnými tématy místo prázdných placeholderů.</p>'
-            . '<h2>1. Začněte atmosférou</h2><p>U focení nejde jen o místo, ale o světlo, náladu a příběh. Dobře zvolená lokalita pomůže vytvořit fotky, které působí přirozeně.</p>'
-            . '<h2>2. Myslete na čas dne</h2><p>Nejhezčí světlo bývá ráno nebo večer. U svateb se proto vyplatí naplánovat krátké focení při západu slunce.</p>'
-            . '<h2>3. Připravte si jednoduchý plán</h2><p>Stačí několik jasných bodů: kde začneme, co nesmí chybět a kolik času máme. Zbytek vzniká přirozeně během dne.</p>'
-            . '<h2>4. Nechte prostor emocím</h2><p>Nejsilnější záběry často nejsou dokonale naaranžované. Vznikají mezi momenty, kdy lidé zapomenou, že se fotí.</p>'
-            . '<p><strong>Téma ukázky:</strong> ' . $this->h($topic ?: $title) . '.</p>';
+        $html = '';
+        $intro = trim((string)($item['intro'] ?? ''));
+        if ($intro !== '') {
+            $html .= '<h2>Krátký úvod</h2><p>' . $this->h($intro) . '</p>';
+        }
+
+        $paragraphs = $item['paragraphs'] ?? [];
+        if (is_array($paragraphs) && $paragraphs !== []) {
+            $html .= '<h2>Text</h2>';
+            foreach ($paragraphs as $paragraph) {
+                $paragraph = trim((string)$paragraph);
+                if ($paragraph === '') {
+                    continue;
+                }
+                $html .= '<p>' . $this->h($paragraph) . '</p>';
+            }
+        }
+
+        $conclusion = trim((string)($item['conclusion'] ?? ''));
+        if ($conclusion !== '') {
+            $html .= '<h2>Závěr</h2><p>' . $this->h($conclusion) . '</p>';
+        }
+
+        return $html;
     }
 
     private function reviewsCss(): string
