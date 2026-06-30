@@ -167,11 +167,13 @@ ob_start();
       </div>
       <?php else: ?>
       <div class="card">
-        <div class="card-title">Hero video pozadi</div>
+        <div class="card-title">Hero pozadi (video nebo foto)</div>
         <p class="form-hint" style="margin-bottom:12px">
-          Vlozte URL z Vimeo nebo YouTube. Pokud pole nechate prazdne, stranka pouzije vychozi hero video ze sekce Nastaveni.
+          Prednost ma video. Pokud hero video nechate prazdne a vyplnite hero foto, pouzije se foto.
+          Kdyz necelate prazdne obe, stranka pouzije vychozi hero video ze sekce Nastaveni.
         </p>
-        <?php $renderBlockField('hero_video', 'Vimeo / YouTube URL', 'link', 'Podporovane jsou odkazy typu https://vimeo.com/123456789, https://youtu.be/... nebo https://www.youtube.com/watch?v=...'); ?>
+        <?php $renderBlockField('hero_video', 'Hero video — Vimeo / YouTube URL', 'link', 'Napr. https://vimeo.com/123456789, https://youtu.be/... nebo https://www.youtube.com/watch?v=...'); ?>
+        <?php $renderBlockField('hero_bg', 'Hero foto — URL nebo /storage/media/...', 'image', 'Pouzije se jako pozadi hero sekce, kdyz neni vyplnene hero video.'); ?>
       </div>
       <?php endif; ?>
     </div>

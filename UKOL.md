@@ -1,24 +1,24 @@
-# UKOL: Fatal error config + FAQ vizuál/obsah
+# UKOL: Hero foto NEBO video (s fallbackem)
 
 Datum: 2026-06-30
-Zadání: Opravit fatal "App\Core\Env not found" v config/app.php + opravit prázdný/amatérský /faq.
-Hotovo když: Config nejde spustit přímo z webu (žádný fatal), /faq má obsah a světlý vzhled. Lint OK.
+Zadání: Umožnit zadat hero foto i hero video; když je video prázdné, použít foto (pokud zadané).
+Hotovo když: Admin má foto pole vedle videa; rendering priorita page video → page foto → default video. Lint OK.
 
 ## Kroky
 
-- [x] Diagnóza fatal: config/ pod web rootem → přímý přístup spustí app.php bez autoloaderu
-- [x] config/.htaccess — deny web access
-- [x] Pojistka v config/app.php — class_exists guard → 404 místo fatal
-- [x] Diagnóza /faq: čte z faq_items tabulky (ne page bloky), tmavé CSS bije se s light theme
-- [x] Světlé accordion CSS v tryServeFaqPage
-- [x] Seed faq_items (12 Q&A) v seed_photographer.php
-- [x] PHP lint
-- [x] Commit
+- [ ] Admin: přidat hero_bg (foto) pole vedle hero_video v page formu
+- [ ] index.php: injectPageHeroVideo 3-úrovňová priorita + buildHeroImageHtml
+- [ ] PublishService.php: stejná logika (statický publish)
+- [ ] PHP lint
+- [ ] Commit
+
+## Poznámky
+
+- hero_video block + hero_bg block už existují. hero_bg se ukazuje jen na pricing stránce — přidám ho i k hero kartě.
+- Foto se vykreslí jako `.theme-hero-video` div s background-image (reuse hero stylů: cover + overlay).
+- Priorita: page hero_video → page hero_bg foto → site default_hero_video. Foto má přednost před default videem.
+- Dvě paralelní implementace (index.php dynamic, PublishService static) — fix v obou.
 
 ## Výsledek
 
-1) Fatal error: config/.htaccess blokuje přímý web přístup + guard v app.php vrací 404
-   místo fatalu (class_exists(Env) check). Interní require (Config::get) běží dál normálně.
-2) /faq: handler čte z tabulky faq_items (FaqRepository), kterou seeder neplnil → prázdné.
-   Doplněn seed 12 Q&A do faq_items. CSS přepsáno z tmavého (#111) na světlý accordion
-   ladící s jemná béžová (světlé karty, zlatý +/− indikátor, čitelný text).
+[Vyplnit po dokončení]

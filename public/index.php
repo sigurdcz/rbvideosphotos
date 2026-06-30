@@ -767,13 +767,25 @@ function injectPageHeroVideo(string $html, array $site, ?int $pageId, string $pa
         return ensureHeroVideoStyle($html);
     }
 
-    $videoUrl = resolvePageHeroVideoUrl($siteId, $pageId, $site);
-    if ($videoUrl === '') {
-        return $html;
+    $posterUrl = normalizePublicAssetUrl((string)($site['default_hero_poster_url'] ?? ''));
+
+    // Priorita: 1) page hero_video, 2) page hero_bg foto, 3) site default video.
+    $videoHtml = '';
+    $pageVideo = ($pageId !== null && $pageId > 0) ? resolvePageBlockUrl($pageId, 'hero_video') : '';
+    if ($pageVideo !== '') {
+        $videoHtml = buildHeroVideoHtml($pageVideo, $posterUrl);
+    } else {
+        $pagePhoto = ($pageId !== null && $pageId > 0) ? resolvePageHeroImageUrl($pageId) : '';
+        if ($pagePhoto !== '') {
+            $videoHtml = buildHeroImageHtml($pagePhoto);
+        } else {
+            $defaultVideo = normalizePublicAssetUrl((string)($site['default_hero_video_url'] ?? ''));
+            if ($defaultVideo !== '') {
+                $videoHtml = buildHeroVideoHtml($defaultVideo, $posterUrl);
+            }
+        }
     }
 
-    $posterUrl = normalizePublicAssetUrl((string)($site['default_hero_poster_url'] ?? ''));
-    $videoHtml = buildHeroVideoHtml($videoUrl, $posterUrl);
     if ($videoHtml === '') {
         return $html;
     }
@@ -826,46 +838,33 @@ HTML;
     return $style . $html;
 }
 
-function resolvePageHeroVideoUrl(int $siteId, ?int $pageId, array $site): string
+function resolvePageBlockUrl(int $pageId, string $blockKey): string
 {
     try {
-        if ($pageId !== null && $pageId > 0) {
-            foreach ((new BlockRepository())->allByPage($pageId) as $block) {
-                if (($block['block_key'] ?? '') !== 'hero_video') {
-                    continue;
-                }
-
-                $url = normalizePublicAssetUrl((string)($block['content'] ?? ''));
-                if ($url !== '') {
-                    Logger::infoTo('theme-debug', 'theme.hero.video', 'Page hero video resolved', [
-                        'site_id' => $siteId,
-                        'page_id' => $pageId,
-                        'source' => 'page_block',
-                        'video_url' => $url,
-                    ]);
-                    return $url;
-                }
+        foreach ((new BlockRepository())->allByPage($pageId) as $block) {
+            if (($block['block_key'] ?? '') !== $blockKey) {
+                continue;
             }
-        }
-
-        $defaultUrl = normalizePublicAssetUrl((string)($site['default_hero_video_url'] ?? ''));
-        if ($defaultUrl !== '') {
-            Logger::infoTo('theme-debug', 'theme.hero.video', 'Default hero video resolved', [
-                    'site_id' => $siteId,
-                    'page_id' => $pageId,
-                    'source' => 'site_default',
-                    'video_url' => $defaultUrl,
-            ]);
-            return $defaultUrl;
+            return normalizePublicAssetUrl((string)($block['content'] ?? ''));
         }
     } catch (\Throwable $e) {
-        Logger::infoTo('theme-debug', 'theme.hero.video.error', 'Failed to resolve homepage hero video', [
-            'site_id' => $siteId,
+        Logger::infoTo('theme-debug', 'theme.hero.block.error', 'Failed to resolve page hero block', [
+            'page_id' => $pageId,
+            'block_key' => $blockKey,
             'error' => $e->getMessage(),
         ]);
     }
 
     return '';
+}
+
+function buildHeroImageHtml(string $imageUrl): string
+{
+    if ($imageUrl === '') {
+        return '';
+    }
+    $safe = htmlspecialchars($imageUrl, ENT_QUOTES);
+    return '<div class="theme-hero-video theme-hero-video--image" aria-hidden="true" style="background-image:url(\'' . $safe . '\')"></div>';
 }
 
 function buildHeroVideoHtml(string $videoUrl, string $posterUrl = ''): string

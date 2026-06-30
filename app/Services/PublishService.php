@@ -360,17 +360,28 @@ HTML;
             return $this->ensureHeroVideoStyle($html);
         }
 
-        $block = $this->blocks->findByKey($pageId, 'hero_video');
-        $url = $block ? $this->normalizePublicAssetUrl((string)($block['content'] ?? '')) : '';
-        if ($url === '') {
-            $url = $this->normalizePublicAssetUrl((string)($site['default_hero_video_url'] ?? ''));
-        }
-        if ($url === '') {
-            return $html;
+        $posterUrl = $this->normalizePublicAssetUrl((string)($site['default_hero_poster_url'] ?? ''));
+
+        // Priorita: 1) page hero_video, 2) page hero_bg foto, 3) site default video.
+        $videoBlock = $this->blocks->findByKey($pageId, 'hero_video');
+        $pageVideo = $videoBlock ? $this->normalizePublicAssetUrl((string)($videoBlock['content'] ?? '')) : '';
+
+        $videoHtml = '';
+        if ($pageVideo !== '') {
+            $videoHtml = $this->buildHeroVideoHtml($pageVideo, $posterUrl);
+        } else {
+            $photoBlock = $this->blocks->findByKey($pageId, 'hero_bg');
+            $pagePhoto = $photoBlock ? $this->normalizePublicAssetUrl((string)($photoBlock['content'] ?? '')) : '';
+            if ($pagePhoto !== '') {
+                $videoHtml = $this->buildHeroImageHtml($pagePhoto);
+            } else {
+                $defaultVideo = $this->normalizePublicAssetUrl((string)($site['default_hero_video_url'] ?? ''));
+                if ($defaultVideo !== '') {
+                    $videoHtml = $this->buildHeroVideoHtml($defaultVideo, $posterUrl);
+                }
+            }
         }
 
-        $posterUrl = $this->normalizePublicAssetUrl((string)($site['default_hero_poster_url'] ?? ''));
-        $videoHtml = $this->buildHeroVideoHtml($url, $posterUrl);
         if ($videoHtml === '') {
             return $html;
         }
@@ -427,6 +438,15 @@ HTML;
         }
 
         return '';
+    }
+
+    private function buildHeroImageHtml(string $imageUrl): string
+    {
+        if ($imageUrl === '') {
+            return '';
+        }
+
+        return '<div class="theme-hero-video theme-hero-video--image" aria-hidden="true" style="background-image:url(\'' . htmlspecialchars($imageUrl, ENT_QUOTES) . '\')"></div>';
     }
 
     private function buildVideoEmbedUrl(string $videoUrl): string
