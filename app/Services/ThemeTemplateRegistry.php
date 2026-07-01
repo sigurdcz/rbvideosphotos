@@ -146,7 +146,14 @@ class ThemeTemplateRegistry
 
     public function getCssForPage(array $theme, string $pageKey): string
     {
-        return $this->collectAssets($theme, $pageKey, 'css');
+        $pageKey = $this->normalizePageKey($pageKey);
+        $css = $this->collectAssets($theme, $pageKey, 'css');
+
+        if (($theme['key'] ?? '') === 'jemna-bezova' && $pageKey === 'homepage') {
+            $css = trim($css . "\n\n" . $this->getJemnaBezovaHomepageCssOverrides());
+        }
+
+        return $css;
     }
 
     public function getJsForPage(array $theme, string $pageKey): string
@@ -931,6 +938,61 @@ CSS;
         }
 
         return trim(implode("\n\n", $contents));
+    }
+
+    private function getJemnaBezovaHomepageCssOverrides(): string
+    {
+        return <<<'CSS'
+/* Runtime-safe homepage hero overrides. This is appended after saved layout CSS. */
+.theme-jemna-bezova .hp-hero {
+  text-align: center !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.theme-jemna-bezova .hp-hero > .container {
+  position: static !important;
+  display: flex !important;
+  width: min(calc(100% - 48px), 760px) !important;
+  max-width: 760px !important;
+  min-height: auto !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+}
+
+.theme-jemna-bezova .hp-hero .section-label,
+.theme-jemna-bezova .hp-hero h1,
+.theme-jemna-bezova .hp-hero .hero-sub,
+.theme-jemna-bezova .hp-hero .hero-cta-wrap {
+  width: 100% !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  text-align: center !important;
+  justify-content: center !important;
+}
+
+.theme-jemna-bezova .hp-hero .hero-cta-wrap {
+  align-items: center !important;
+}
+
+@media (max-width: 760px) {
+  .theme-jemna-bezova .hp-hero > .container {
+    width: min(calc(100% - 32px), 360px) !important;
+    max-width: 360px !important;
+  }
+
+  .theme-jemna-bezova .hp-hero h1,
+  .theme-jemna-bezova .hp-hero .hero-sub {
+    max-width: 100% !important;
+  }
+}
+CSS;
     }
 
     private function readThemeFile(array $theme, string $relativePath): string

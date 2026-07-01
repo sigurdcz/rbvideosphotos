@@ -2940,9 +2940,11 @@ body.theme-jemna-bezova {
 
   .theme-jemna-bezova .hp-hero > .container {
     display: flex !important;
-    width: calc(100% - 32px) !important;
+    width: min(calc(100% - 32px), 360px) !important;
+    max-width: 360px !important;
     min-height: auto !important;
-    margin: 0 auto !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
     flex-direction: column !important;
