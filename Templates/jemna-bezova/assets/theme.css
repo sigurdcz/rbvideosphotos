@@ -2376,8 +2376,8 @@ body.theme-jemna-bezova {
   }
 
   .theme-jemna-bezova .site-footer-contact__item {
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: 8px;
+    grid-template-columns: 92px minmax(0, 1fr);
+    gap: 10px;
     align-items: baseline;
   }
 }
