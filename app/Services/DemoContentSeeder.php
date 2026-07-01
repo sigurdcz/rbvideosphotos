@@ -55,6 +55,7 @@ class DemoContentSeeder
         $faqCount = $this->seedFaqItems($siteId);
         $this->seedHeroBackgrounds($siteId);
         $this->seedServiceItems($siteId);
+        $this->resetServiceBlocks($siteId);
         $this->seedServiceVisuals($siteId);
         $servicePageCount = $this->seedServicePages($siteId, $site);
         $this->seedPageSeo($siteId, $site);
@@ -218,6 +219,28 @@ class DemoContentSeeder
         }
 
         (new ServiceRepository())->upsertMany($siteId, $items);
+    }
+
+    /**
+     * Vymaze ulozene service bloky (homepage grid i /sluzby stranka), aby se pri
+     * publikaci znovu vygenerovaly z aktualnich service_items — jinak zustanou
+     * stara tlacitka (napr. odkaz na /kontakt misto na detailni stranku sluzby).
+     */
+    private function resetServiceBlocks(int $siteId): void
+    {
+        $keys = ['sluzby_items', 'sluzby_grid', 'service_1', 'service_2', 'service_3', 'service_4'];
+        $placeholders = implode(',', array_fill(0, count($keys), '?'));
+
+        foreach (['', 'sluzby'] as $urlPath) {
+            $page = $this->pages->findByUrlPath($urlPath);
+            if (!$page) {
+                continue;
+            }
+            $stmt = $this->db->prepare(
+                "UPDATE content_blocks SET content = '', autofill_disabled = 0 WHERE page_id = ? AND block_key IN ({$placeholders})"
+            );
+            $stmt->execute([(int) $page['id'], ...$keys]);
+        }
     }
 
     /**
