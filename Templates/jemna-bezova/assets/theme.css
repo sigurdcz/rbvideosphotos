@@ -2912,9 +2912,16 @@ body.theme-jemna-bezova {
 .theme-jemna-bezova .hp-hero .section-label,
 .theme-jemna-bezova .hp-hero h1,
 .theme-jemna-bezova .hp-hero .hero-sub,
-.theme-jemna-bezova .hp-hero .hero-cta-wrap,
+.theme-jemna-bezova .hp-hero .hero-cta-wrap {
+  /* Bez position:relative — rozbijelo flex-centrovani hero obsahu na mobilu.
+     z-index funguje i tak, protoze .container je flex (deti = flex polozky). */
+  z-index: 5 !important;
+  opacity: 1 !important;
+  filter: none !important;
+  visibility: visible !important;
+}
+
 .theme-jemna-bezova .hp-hero .jb-scroll-cue {
-  position: relative !important;
   z-index: 5 !important;
   opacity: 1 !important;
   filter: none !important;
@@ -2924,7 +2931,6 @@ body.theme-jemna-bezova {
 .theme-jemna-bezova .hp-hero .btn,
 .theme-jemna-bezova .hp-hero .btn-primary,
 .theme-jemna-bezova .hp-hero .btn-secondary {
-  position: relative !important;
   z-index: 6 !important;
   opacity: 1 !important;
   filter: none !important;
