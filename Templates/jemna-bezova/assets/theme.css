@@ -1406,12 +1406,22 @@ body.theme-jemna-bezova {
   }
 
   .theme-jemna-bezova .jb-about-shell {
-    gap: 44px;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
     grid-template-columns: 1fr;
   }
 
   .theme-jemna-bezova .jb-about-visual {
-    min-height: 520px;
+    min-height: 460px;
+    overflow: hidden;
+  }
+
+  /* Na tabletu copy pod fotkou na svetlem pozadi (ne pres fotku) — citelne. */
+  .theme-jemna-bezova .jb-about-copy {
+    position: relative;
+    z-index: 2;
+    background: transparent;
   }
 
   .theme-jemna-bezova .hp-services-grid,
