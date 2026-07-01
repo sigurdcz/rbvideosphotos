@@ -19,6 +19,7 @@ class Runtime
 
         ini_set('display_errors', $debug ? '1' : '0');
         error_reporting(E_ALL);
+        SecurityHeaders::send();
 
         set_error_handler([self::class, 'handleError']);
         set_exception_handler([self::class, 'handleException']);
@@ -130,7 +131,7 @@ class Runtime
     {
         $context = [
             'method' => $_SERVER['REQUEST_METHOD'] ?? 'CLI',
-            'uri' => $_SERVER['REQUEST_URI'] ?? '',
+            'uri' => self::sanitizeUri((string) ($_SERVER['REQUEST_URI'] ?? '')),
             'ip' => $_SERVER['REMOTE_ADDR'] ?? '',
             'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? '',
             'referer' => $_SERVER['HTTP_REFERER'] ?? '',
@@ -313,5 +314,10 @@ class Runtime
 </body>
 </html>
 HTML;
+    }
+
+    private static function sanitizeUri(string $uri): string
+    {
+        return (string) preg_replace('/([?&](?:api_key|token|access_token)=)[^&]+/i', '$1***', $uri);
     }
 }

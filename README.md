@@ -242,7 +242,6 @@ API_KEY=<vygeneruj: php -r "echo bin2hex(random_bytes(32));">
 | --- | --- |
 | Header (doporuceno) | `X-Api-Key: {klic}` |
 | Bearer token | `Authorization: Bearer {klic}` |
-| Query param (mene bezpecne) | `?api_key={klic}` |
 
 Chybejici nebo nespravny klic: `401 Unauthorized`.
 

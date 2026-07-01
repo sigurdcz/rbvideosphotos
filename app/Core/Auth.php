@@ -4,31 +4,41 @@ namespace App\Core;
 
 class Auth
 {
+    private const IDLE_TIMEOUT_SECONDS = 2 * 60 * 60;
+    private const ABSOLUTE_TIMEOUT_SECONDS = 12 * 60 * 60;
+    private const ROTATE_INTERVAL_SECONDS = 30 * 60;
+
     public static function start(): void
     {
         if (session_status() === PHP_SESSION_NONE) {
             $name = Config::get('app', 'session_name', 'seo_cms_session');
             session_name($name);
             $appUrl = (string) Env::get('APP_URL', '');
-            $secure = str_starts_with(strtolower($appUrl), 'https://');
+            $secure = self::shouldUseSecureCookies($appUrl);
+            ini_set('session.use_strict_mode', '1');
             session_set_cookie_params([
                 'lifetime' => 0,
-                'path'     => '/',
-                'secure'   => $secure,
+                'path' => '/',
+                'secure' => $secure,
                 'httponly' => true,
                 'samesite' => 'Lax',
             ]);
             session_start();
         }
+
+        self::enforceSessionTimeouts();
     }
 
     public static function login(array $user): void
     {
         self::start();
         session_regenerate_id(true);
-        $_SESSION['user_id']   = $user['id'];
+        $_SESSION['user_id'] = $user['id'];
         $_SESSION['user_email'] = $user['email'];
-        $_SESSION['user_role']  = $user['role'];
+        $_SESSION['user_role'] = $user['role'];
+        $_SESSION['session_started_at'] = time();
+        $_SESSION['last_activity_at'] = time();
+        $_SESSION['last_regenerated_at'] = time();
     }
 
     public static function logout(): void
@@ -50,9 +60,9 @@ class Auth
             return null;
         }
         return [
-            'id'    => $_SESSION['user_id'],
+            'id' => $_SESSION['user_id'],
             'email' => $_SESSION['user_email'],
-            'role'  => $_SESSION['user_role'],
+            'role' => $_SESSION['user_role'],
         ];
     }
 
@@ -77,5 +87,48 @@ class Auth
     {
         self::start();
         return isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
+    }
+
+    private static function enforceSessionTimeouts(): void
+    {
+        $now = time();
+        $startedAt = (int) ($_SESSION['session_started_at'] ?? 0);
+        $lastActivityAt = (int) ($_SESSION['last_activity_at'] ?? 0);
+        $lastRegeneratedAt = (int) ($_SESSION['last_regenerated_at'] ?? 0);
+
+        if (!empty($_SESSION['user_id'])) {
+            $idleExpired = $lastActivityAt > 0 && ($now - $lastActivityAt) > self::IDLE_TIMEOUT_SECONDS;
+            $absoluteExpired = $startedAt > 0 && ($now - $startedAt) > self::ABSOLUTE_TIMEOUT_SECONDS;
+
+            if ($idleExpired || $absoluteExpired) {
+                $_SESSION = [];
+                session_destroy();
+                return;
+            }
+
+            if ($lastRegeneratedAt <= 0 || ($now - $lastRegeneratedAt) > self::ROTATE_INTERVAL_SECONDS) {
+                session_regenerate_id(true);
+                $_SESSION['last_regenerated_at'] = $now;
+            }
+        }
+
+        if ($startedAt <= 0) {
+            $_SESSION['session_started_at'] = $now;
+        }
+        $_SESSION['last_activity_at'] = $now;
+        $_SESSION['last_regenerated_at'] = $lastRegeneratedAt > 0 ? $lastRegeneratedAt : $now;
+    }
+
+    private static function shouldUseSecureCookies(string $appUrl): bool
+    {
+        if (str_starts_with(strtolower($appUrl), 'https://')) {
+            return true;
+        }
+
+        if (!empty($_SERVER['HTTPS']) && strtolower((string) $_SERVER['HTTPS']) !== 'off') {
+            return true;
+        }
+
+        return strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https';
     }
 }

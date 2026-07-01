@@ -2,6 +2,8 @@
 /storage/media/
 /storage/cache/
 /storage/logs/
+/storage/database.sqlite
+/storage/*.sqlite
 *.log
 .env
 .env.*

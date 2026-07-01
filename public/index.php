@@ -29,6 +29,7 @@ use App\Services\HomepageContentService;
 use App\Services\PageRenderer;
 use App\Services\SeoRenderer;
 use App\Services\ThemeTemplateRegistry;
+use App\Security\RequestThrottle;
 use App\Support\FrontendAssetManager;
 
 Env::load(dirname(__DIR__) . '/.env');
@@ -2074,6 +2075,11 @@ CSS;
     if ($formSent) {
         $formHtml = '<div class="kt-success">&#10003; Zpráva odeslána. Ozveme se co nejdříve.</div>';
     }
+    if (!$formSent && isset($_GET['sent']) && $_GET['sent'] === 'rate-limit') {
+        $formHtml = '<div class="kt-success" style="color:#fca5a5">&#9888; Formular je docasne omezeny kvuli prilis mnoha pokusum. Zkuste to prosim znovu za par minut.</div>';
+    } elseif (!$formSent && isset($_GET['sent']) && $_GET['sent'] === 'error') {
+        $formHtml = '<div class="kt-success" style="color:#fca5a5">&#9888; Zpravu se nepodarilo odeslat. Zkontrolujte prosim nastaveni kontaktniho e-mailu a zkuste to znovu.</div>';
+    }
     $formHtml .= '<form method="POST" action="/kontakt/odeslat">'
         . '<input type="hidden" name="_csrf" value="' . $h(\App\Core\Auth::csrfToken()) . '">'
         . '<div><label>Jméno *</label><input type="text" name="name" required placeholder="Vaše jméno"></div>'
@@ -2545,6 +2551,11 @@ try {
             header('Location: /kontakt');
             exit;
         }
+        $contactThrottleKey = 'contact:' . RequestThrottle::currentIp();
+        if (RequestThrottle::isLocked('contact_form', $contactThrottleKey, 10 * 60, 10 * 60)) {
+            header('Location: /kontakt?sent=rate-limit');
+            exit;
+        }
         $site = (new SiteRepository())->findFirst();
         $formEmail = null;
         if ($site) {
@@ -2556,16 +2567,36 @@ try {
                 }
             } catch (\Throwable $e) {}
         }
-        $name    = trim($_POST['name']          ?? '');
-        $contact = trim($_POST['contact_value'] ?? '');
+        $cleanHeaderValue = static fn (string $value): string => trim(str_ireplace(["\r", "\n", "%0a", "%0d"], '', $value));
+        $name    = $cleanHeaderValue((string) ($_POST['name'] ?? ''));
+        $contact = trim((string) ($_POST['contact_value'] ?? ''));
         $shootingType = trim($_POST['shooting_type'] ?? '');
         $message = trim($_POST['message']       ?? '');
-        if ($name && $contact && $message && $formEmail) {
+        $contactMailSent = false;
+        if ($name && $contact && $message && $formEmail && filter_var($formEmail, FILTER_VALIDATE_EMAIL)) {
             $subject = 'Nová zpráva z webu — ' . $name;
             $body    = "Jméno: {$name}\nKontakt: {$contact}\nTyp focení: {$shootingType}\n\nZpráva:\n{$message}";
-            @mail($formEmail, $subject, $body, "From: noreply@{$_SERVER['HTTP_HOST']}\r\nContent-Type: text/plain; charset=UTF-8");
+            RequestThrottle::hit('contact_form', $contactThrottleKey, 3, 10 * 60, 10 * 60);
+            $appHost = parse_url((string) Config::get('app', 'url', ''), PHP_URL_HOST);
+            $mailHost = is_string($appHost) && $appHost !== '' ? $appHost : 'localhost';
+            $headers = "From: noreply@{$mailHost}\r\nContent-Type: text/plain; charset=UTF-8";
+            $contactMailSent = @mail($formEmail, $subject, $body, $headers);
+            if (!$contactMailSent) {
+                Logger::warning('contact_form', 'Contact form mail() returned false', [
+                    'ip' => RequestThrottle::currentIp(),
+                    'recipient' => $formEmail,
+                ]);
+            }
+        } else {
+            Logger::warning('contact_form', 'Contact form submission rejected before mail send', [
+                'ip' => RequestThrottle::currentIp(),
+                'has_name' => $name !== '',
+                'has_contact' => $contact !== '',
+                'has_message' => $message !== '',
+                'has_valid_recipient' => $formEmail !== null && filter_var((string) $formEmail, FILTER_VALIDATE_EMAIL) !== false,
+            ]);
         }
-        header('Location: /kontakt?sent=1');
+        header('Location: /kontakt?sent=' . ($contactMailSent ? '1' : 'error'));
         exit;
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Core\Config;
 use App\Core\Env;
 use App\Core\SlugTrait;
 use App\Repositories\BlogRepository;
@@ -19,8 +20,9 @@ class ApiController
     public function dispatch(string $uri): void
     {
         header('Content-Type: application/json; charset=UTF-8');
-        header('Access-Control-Allow-Origin: *');
         header('Access-Control-Allow-Headers: X-Api-Key, Authorization, Content-Type');
+        header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+        $this->applyCorsHeaders();
 
         if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
             http_response_code(204);
@@ -590,9 +592,6 @@ class ApiController
             if (hash_equals($key, $bearer)) return true;
         }
 
-        $qkey = $_GET['api_key'] ?? '';
-        if ($qkey && hash_equals($key, $qkey)) return true;
-
         return false;
     }
 
@@ -643,5 +642,43 @@ class ApiController
             ];
         }
         return $out;
+    }
+
+    private function applyCorsHeaders(): void
+    {
+        $origin = trim((string) ($_SERVER['HTTP_ORIGIN'] ?? ''));
+        if ($origin === '') {
+            return;
+        }
+
+        $allowedOrigins = [];
+        $appOrigin = $this->originFromUrl((string) Config::get('app', 'url', ''));
+        if ($appOrigin !== null) {
+            $allowedOrigins[] = $appOrigin;
+        }
+
+        if (in_array($origin, $allowedOrigins, true)) {
+            header('Access-Control-Allow-Origin: ' . $origin);
+            header('Vary: Origin');
+        }
+    }
+
+    private function originFromUrl(string $url): ?string
+    {
+        if ($url === '') {
+            return null;
+        }
+
+        $parts = parse_url($url);
+        if (!is_array($parts) || empty($parts['scheme']) || empty($parts['host'])) {
+            return null;
+        }
+
+        $origin = $parts['scheme'] . '://' . $parts['host'];
+        if (!empty($parts['port'])) {
+            $origin .= ':' . $parts['port'];
+        }
+
+        return $origin;
     }
 }
