@@ -109,6 +109,8 @@
   function enhanceHero() {
     var hero = qs('.hp-hero');
     if (!hero) return;
+    var container = qs('.container', hero);
+    if (!container) return;
 
     hero.classList.add('jb-hero');
 
@@ -126,11 +128,15 @@
       accentLastWord(heading);
     }
 
-    if (!qs('.jb-scroll-cue', hero)) {
-      var cue = document.createElement('div');
+    var cue = qs('.jb-scroll-cue', hero);
+    if (!cue) {
+      cue = document.createElement('div');
       cue.className = 'jb-scroll-cue';
       cue.innerHTML = '<span>Scroll</span>';
-      hero.appendChild(cue);
+    }
+
+    if (cue.parentNode !== container) {
+      container.appendChild(cue);
     }
   }
 

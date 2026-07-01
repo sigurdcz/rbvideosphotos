@@ -983,8 +983,27 @@ CSS;
 
 @media (max-width: 760px) {
   .theme-jemna-bezova .hp-hero > .container {
-    width: min(calc(100% - 32px), 360px) !important;
-    max-width: 360px !important;
+    width: min(calc(100% - 40px), 352px) !important;
+    max-width: 352px !important;
+  }
+
+  .theme-jemna-bezova .hp-hero .section-label {
+    display: inline-flex !important;
+    width: auto !important;
+    max-width: 100% !important;
+    min-height: 36px !important;
+    padding: 6px 14px !important;
+    margin: 0 auto 18px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
+    line-height: 1.45 !important;
+    text-align: center !important;
+    letter-spacing: .22em !important;
+    box-sizing: border-box !important;
   }
 
   .theme-jemna-bezova .hp-hero h1,
