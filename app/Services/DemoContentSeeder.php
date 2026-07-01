@@ -1157,15 +1157,15 @@ HTML;
 
     private function longformContent(array $item): string
     {
+        // Bez nadpisu sekci (Krátký úvod / Text / Závěr) — jen odstavce s mezerou.
         $html = '';
         $intro = trim((string)($item['intro'] ?? ''));
         if ($intro !== '') {
-            $html .= '<h2>Krátký úvod</h2><p>' . $this->h($intro) . '</p>';
+            $html .= '<p>' . $this->h($intro) . '</p>';
         }
 
         $paragraphs = $item['paragraphs'] ?? [];
-        if (is_array($paragraphs) && $paragraphs !== []) {
-            $html .= '<h2>Text</h2>';
+        if (is_array($paragraphs)) {
             foreach ($paragraphs as $paragraph) {
                 $paragraph = trim((string)$paragraph);
                 if ($paragraph === '') {
@@ -1177,7 +1177,7 @@ HTML;
 
         $conclusion = trim((string)($item['conclusion'] ?? ''));
         if ($conclusion !== '') {
-            $html .= '<h2>Závěr</h2><p>' . $this->h($conclusion) . '</p>';
+            $html .= '<p>' . $this->h($conclusion) . '</p>';
         }
 
         return $html;

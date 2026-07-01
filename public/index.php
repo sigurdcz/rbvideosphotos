@@ -1509,9 +1509,27 @@ function tryServePortfolioPage(string $uri, bool $detailOnly = false): bool
             $playIcon = !empty($entry['video_url']) ? '<span class="pt-play">&#9654;</span>' : '';
             $titleAttrs = inlineAttrs($page, 'portfolio:' . (int)$entry['id'] . ':title', 'text');
 
+            // Kratky uryvek z textace prace (pod nadpisem v prehledu).
+            $excerptSrc = trim((string)($entry['meta_description'] ?? ''));
+            if ($excerptSrc === '' || str_starts_with($excerptSrc, 'Ukázková práce fotografa')) {
+                $excerptSrc = trim(preg_replace('/\s+/', ' ', strip_tags((string)($entry['description'] ?? ''))));
+            }
+            $excerptHtml = '';
+            if ($excerptSrc !== '') {
+                if (mb_strlen($excerptSrc) > 150) {
+                    $cut = mb_substr($excerptSrc, 0, 150);
+                    $sp  = mb_strrpos($cut, ' ');
+                    $excerptSrc = rtrim($sp !== false ? mb_substr($cut, 0, $sp) : $cut, " ,.;:") . '…';
+                }
+                $excerptHtml = '<p class="pt-excerpt">' . $h($excerptSrc) . '</p>';
+            }
+
             $tiles .= <<<HTML
 <a class="pt-tile" href="/{$h($entry['slug'])}">
-  <div class="pt-caption"{$titleAttrs}>{$h($entry['title'])}</div>
+  <div class="pt-caption">
+    <h3 class="pt-title"{$titleAttrs}>{$h($entry['title'])}</h3>
+    {$excerptHtml}
+  </div>
   <div class="pt-thumb">{$thumbHtml}{$playIcon}</div>
   <div class="pt-photos">{$extraHtml}</div>
 </a>
@@ -1537,9 +1555,11 @@ body{background:#111;color:#fff}
 .pt-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:68px;height:68px;border-radius:999px;background:rgba(196,150,60,.92);display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:#fff;box-shadow:0 12px 28px rgba(0,0,0,.32)}
 .pt-photos{display:flex;gap:4px;height:84px;padding:4px;background:#17171a}
 .pt-photos img{flex:1;min-width:0;height:100%;object-fit:cover}
-.pt-caption{display:flex;align-items:center;min-height:68px;padding:16px 18px;font-weight:700;font-size:1rem;line-height:1.35;color:#fff;background:#17171a;border-bottom:1px solid rgba(255,255,255,.08)}
+.pt-caption{padding:18px 18px 16px;background:#17171a;border-bottom:1px solid rgba(255,255,255,.08)}
+.pt-title{margin:0 0 8px;font-weight:700;font-size:1.14rem;line-height:1.3;color:#fff;letter-spacing:.01em}
+.pt-excerpt{margin:0;font-size:.9rem;line-height:1.55;color:rgba(255,255,255,.62);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .pt-empty{color:rgba(255,255,255,.72);padding:32px 0;text-align:center}
-@media(max-width:720px){.pf-hero{padding:42px 0 28px}.pf-hero h1{font-size:2.25rem}.pf-hero p{font-size:.92rem}.grid-wrap{padding:18px 0 42px}.pt-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.pt-tile{border-radius:10px}.pt-thumb{height:clamp(118px,38vw,160px)}.pt-play{width:40px;height:40px;font-size:1rem}.pt-photos{display:none}.pt-caption{min-height:0;padding:10px 11px;font-size:.78rem;line-height:1.25}}
+@media(max-width:720px){.pf-hero{padding:42px 0 28px}.pf-hero h1{font-size:2.25rem}.pf-hero p{font-size:.92rem}.grid-wrap{padding:18px 0 42px}.pt-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.pt-tile{border-radius:10px}.pt-thumb{height:clamp(118px,38vw,160px)}.pt-play{width:40px;height:40px;font-size:1rem}.pt-photos{display:none}.pt-caption{padding:12px 12px}.pt-title{font-size:.94rem;margin-bottom:5px}.pt-excerpt{font-size:.8rem;line-height:1.45;-webkit-line-clamp:2}}
 CSS;
 
         $renderer   = new PageRenderer();
