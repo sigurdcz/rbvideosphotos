@@ -1496,17 +1496,9 @@ function tryServePortfolioPage(string $uri, bool $detailOnly = false): bool
                 $thumb = publicMediaUrl((string)$thumbFile);
             }
 
-            $extraHtml   = '';
-            $stripPhotos = $hasVideo ? array_slice($photos, 0, 3) : array_slice($photos, 1, 3);
-            foreach ($stripPhotos as $photo) {
-                $pfile = $photo['thumb_path'] ?? $photo['storage_path'] ?? '';
-                $extraHtml .= '<img src="' . $h(publicMediaUrl((string)$pfile)) . '" alt="' . $h($photo['alt_text'] ?? $entry['title']) . '" loading="lazy">';
-            }
-
             $thumbHtml = $thumb !== ''
-                ? '<img src="' . $h($thumb) . '" alt="' . $h($entry['title']) . '" loading="lazy">'
-                : '<div class="pt-thumb-empty">&#9654;</div>';
-            $playIcon = !empty($entry['video_url']) ? '<span class="pt-play">&#9654;</span>' : '';
+                ? '<div class="bl-thumb"><img src="' . $h($thumb) . '" alt="' . $h($entry['title']) . '" loading="lazy">' . (!empty($entry['video_url']) ? '<span class="bl-play">&#9654;</span>' : '') . '</div>'
+                : '<div class="bl-thumb bl-thumb--empty"></div>';
             $titleAttrs = inlineAttrs($page, 'portfolio:' . (int)$entry['id'] . ':title', 'text');
 
             // Kratky uryvek z textace prace (pod nadpisem v prehledu).
@@ -1521,17 +1513,19 @@ function tryServePortfolioPage(string $uri, bool $detailOnly = false): bool
                     $sp  = mb_strrpos($cut, ' ');
                     $excerptSrc = rtrim($sp !== false ? mb_substr($cut, 0, $sp) : $cut, " ,.;:") . '…';
                 }
-                $excerptHtml = '<p class="pt-excerpt">' . $h($excerptSrc) . '</p>';
+                $excerptHtml = '<p class="bl-excerpt">' . $h($excerptSrc) . '</p>';
             }
+            $typeLabel = !empty($entry['video_url']) ? 'Video & galerie' : 'Fotogalerie';
 
             $tiles .= <<<HTML
-<a class="pt-tile" href="/{$h($entry['slug'])}">
-  <div class="pt-caption">
-    <h3 class="pt-title"{$titleAttrs}>{$h($entry['title'])}</h3>
+<a class="bl-card pt-card" href="/{$h($entry['slug'])}">
+  {$thumbHtml}
+  <div class="bl-body pt-card-body">
+    <div class="bl-date">{$h($typeLabel)}</div>
+    <h2 class="bl-title pt-title"{$titleAttrs}>{$h($entry['title'])}</h2>
     {$excerptHtml}
+    <span class="bl-more">Zobrazit praci &rarr;</span>
   </div>
-  <div class="pt-thumb">{$thumbHtml}{$playIcon}</div>
-  <div class="pt-photos">{$extraHtml}</div>
 </a>
 HTML;
         }
@@ -1545,21 +1539,23 @@ body{background:#111;color:#fff}
 .pf-hero{background:#1a1a1a;color:#fff;padding:72px 0 46px;text-align:center}
 .pf-hero h1{font-size:clamp(2.4rem,5vw,4rem);color:#fff;margin-bottom:10px}
 .pf-hero p{color:rgba(255,255,255,.7);font-size:1.1rem;max-width:720px;margin:0 auto}
-.grid-wrap{padding:12px 0 72px}
-.pt-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:28px}
-.pt-tile{display:flex;flex-direction:column;text-decoration:none;color:inherit;background:#1b1b1f;border-radius:14px;overflow:hidden;box-shadow:0 14px 30px rgba(0,0,0,.25);transition:transform .2s,box-shadow .2s}
-.pt-tile:hover{transform:translateY(-3px);box-shadow:0 20px 40px rgba(0,0,0,.4)}
-.pt-thumb{position:relative;height:220px;background:#0e0e11;overflow:hidden}
-.pt-thumb img{width:100%;height:100%;object-fit:cover;display:block}
-.pt-thumb-empty{height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;color:rgba(255,255,255,.25)}
-.pt-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:68px;height:68px;border-radius:999px;background:rgba(196,150,60,.92);display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:#fff;box-shadow:0 12px 28px rgba(0,0,0,.32)}
-.pt-photos{display:flex;gap:4px;height:84px;padding:4px;background:#17171a}
-.pt-photos img{flex:1;min-width:0;height:100%;object-fit:cover}
-.pt-caption{padding:18px 18px 16px;background:#17171a;border-bottom:1px solid rgba(255,255,255,.08)}
-.pt-title{margin:0 0 8px;font-weight:700;font-size:1.14rem;line-height:1.3;color:#fff;letter-spacing:.01em}
-.pt-excerpt{margin:0;font-size:.9rem;line-height:1.55;color:rgba(255,255,255,.62);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.grid-wrap{padding:48px 0 80px}
+.pt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:28px}
+.bl-card.pt-card{display:flex;flex-direction:column;background:#1b1b1f;border-radius:14px;overflow:hidden;text-decoration:none;color:inherit;box-shadow:0 14px 30px rgba(0,0,0,.25);transition:transform .2s,box-shadow .2s}
+.bl-card.pt-card:hover{transform:translateY(-3px);box-shadow:0 20px 40px rgba(0,0,0,.4)}
+.bl-thumb{position:relative;height:210px;overflow:hidden;background:#0e0e11}
+.bl-thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s}
+.bl-card.pt-card:hover .bl-thumb img{transform:scale(1.04)}
+.bl-thumb--empty{height:210px;background:#16161a;display:flex;align-items:center;justify-content:center}
+.bl-thumb--empty::before{content:"\25B6";font-size:3rem;color:rgba(255,255,255,.25)}
+.bl-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:68px;height:68px;border-radius:999px;background:rgba(196,150,60,.92);display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:#fff;box-shadow:0 12px 28px rgba(0,0,0,.32)}
+.bl-body.pt-card-body{padding:22px 22px 26px;display:flex;flex-direction:column;flex:1}
+.bl-date{font-size:.8rem;color:rgba(255,255,255,.4);margin-bottom:8px}
+.pt-title,.bl-title{font-size:1.15rem;font-weight:800;color:#fff;margin:0 0 10px;line-height:1.35}
+.bl-excerpt{font-size:.9rem;color:rgba(255,255,255,.6);line-height:1.55;flex:1;margin-bottom:16px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.bl-more{display:inline-block;color:#c4963c;font-weight:700;font-size:.9rem;margin-top:auto}
 .pt-empty{color:rgba(255,255,255,.72);padding:32px 0;text-align:center}
-@media(max-width:720px){.pf-hero{padding:42px 0 28px}.pf-hero h1{font-size:2.25rem}.pf-hero p{font-size:.92rem}.grid-wrap{padding:18px 0 42px}.pt-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.pt-tile{border-radius:10px}.pt-thumb{height:clamp(118px,38vw,160px)}.pt-play{width:40px;height:40px;font-size:1rem}.pt-photos{display:none}.pt-caption{padding:12px 12px}.pt-title{font-size:.94rem;margin-bottom:5px}.pt-excerpt{font-size:.8rem;line-height:1.45;-webkit-line-clamp:2}}
+@media(max-width:720px){.pf-hero{padding:42px 0 28px}.pf-hero h1{font-size:2.25rem}.pf-hero p{font-size:.92rem}.grid-wrap{padding:18px 0 42px}.pt-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.bl-card.pt-card{border-radius:10px}.bl-thumb,.bl-thumb--empty{height:clamp(116px,37vw,156px)}.bl-body.pt-card-body{padding:10px 11px 12px}.bl-date,.bl-excerpt,.bl-more{display:none}.pt-title,.bl-title{font-size:.84rem;line-height:1.22;margin:0}.bl-play{width:40px;height:40px;font-size:1rem}}
 CSS;
 
         $renderer   = new PageRenderer();
