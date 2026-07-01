@@ -17,10 +17,8 @@
   }
 
   function initActiveNav() {
-    var sections = document.querySelectorAll('section[id]');
     var allLinks = Array.prototype.slice.call(document.querySelectorAll('.nav-links a[href]'));
     if (!allLinks.length) return;
-    var isHome = normalizePath(window.location.pathname || '/') === '/';
 
     function normalizePath(path) {
       if (!path) return '/';
@@ -28,27 +26,95 @@
       return path === '' ? '/' : path;
     }
 
+    var currentPath = normalizePath(window.location.pathname || '/');
+    var currentHash = window.location.hash || '';
+    var isHome = currentPath === '/';
+
     function activate(link) {
       allLinks.forEach(function(item){ item.classList.remove('nav-active'); });
       if (link) link.classList.add('nav-active');
     }
 
-    var currentPath = normalizePath(window.location.pathname || '/');
-    var currentHash = window.location.hash || '';
+    function parseNavUrl(href) {
+      if (!href) return null;
+      try {
+        return new URL(href, window.location.origin);
+      } catch (error) {
+        return null;
+      }
+    }
+
+    function isSectionNavLink(link) {
+      var href = link.getAttribute('href') || '';
+      if (!href || href.charAt(0) === '#') return true;
+      var url = parseNavUrl(href);
+      return !!(url && url.hash);
+    }
+
+    function linkForSection(id) {
+      return document.querySelector('.nav-links a[href="#' + id + '"], .nav-links a[href="/#' + id + '"]');
+    }
+
+    function sectionsFromNav() {
+      return allLinks
+        .map(function(link) {
+          var url = parseNavUrl(link.getAttribute('href') || '');
+          var id = url && url.hash ? url.hash.replace(/^#/, '') : '';
+          if (!id) return null;
+          var target = document.getElementById(id);
+          return target ? { id: id, element: target, link: link } : null;
+        })
+        .filter(Boolean);
+    }
+
+    function visibleSectionLink(sectionEntries) {
+      if (!sectionEntries.length) return null;
+      var viewportCenter = window.innerHeight * 0.42;
+      var best = null;
+
+      sectionEntries.forEach(function(entry) {
+        var rect = entry.element.getBoundingClientRect();
+        if (rect.bottom <= 0 || rect.top >= window.innerHeight) {
+          return;
+        }
+
+        var distance = Math.abs(rect.top - viewportCenter);
+        if (!best || distance < best.distance) {
+          best = {
+            distance: distance,
+            link: entry.link
+          };
+        }
+      });
+
+      return best ? best.link : null;
+    }
+
     var directLink = null;
 
     allLinks.forEach(function(link) {
       var href = link.getAttribute('href') || '';
       if (!href || href.charAt(0) === '#') return;
-      try {
-        var url = new URL(href, window.location.origin);
-        var linkPath = normalizePath(url.pathname);
-        if (linkPath === currentPath) {
-          directLink = link;
-        } else if (currentPath === '/' && (href === '/' || href === '/#uvod' || href === '#uvod')) {
-          directLink = link;
-        }
-      } catch (error) {
+      var url = parseNavUrl(href);
+      if (!url) {
+        return;
+      }
+
+      var linkPath = normalizePath(url.pathname);
+      var linkHash = url.hash || '';
+      var hashOnlyHomeLink = isHome && (href === '/' || href === '/#uvod' || href === '#uvod');
+
+      if (hashOnlyHomeLink) {
+        directLink = link;
+        return;
+      }
+
+      if (isSectionNavLink(link) && !(linkHash && linkHash === currentHash && linkPath === currentPath)) {
+        return;
+      }
+
+      if (linkPath === currentPath) {
+        directLink = link;
       }
     });
 
@@ -57,31 +123,26 @@
       return;
     }
 
-    var navLinks = Array.prototype.slice.call(document.querySelectorAll('.nav-links a[href^="#"], .nav-links a[href^="/#"]'));
-    if (!sections.length || !navLinks.length) {
+    var sectionEntries = sectionsFromNav();
+    if (!sectionEntries.length) {
       if (directLink) activate(directLink);
       return;
-    }
-
-    function linkForSection(id) {
-      return document.querySelector('.nav-links a[href="#' + id + '"], .nav-links a[href="/#' + id + '"]');
     }
 
     if (currentHash) {
       var hashLink = linkForSection(currentHash.replace(/^#/, ''));
       if (hashLink) activate(hashLink);
-    } else if (directLink) {
-      activate(directLink);
+    } else {
+      activate(visibleSectionLink(sectionEntries) || directLink);
     }
 
     var io = new IntersectionObserver(function(entries){
-      entries.forEach(function(entry){
-        if (!entry.isIntersecting) return;
-        var active = linkForSection(entry.target.id);
-        if (active) activate(active);
-      });
+      var intersecting = entries.some(function(entry){ return entry.isIntersecting; });
+      if (!intersecting) return;
+      var active = visibleSectionLink(sectionEntries);
+      if (active) activate(active);
     }, { rootMargin: '-40% 0px -40% 0px' });
-    sections.forEach(function(section){ io.observe(section); });
+    sectionEntries.forEach(function(entry){ io.observe(entry.element); });
   }
 
   function initPricingModal() {
