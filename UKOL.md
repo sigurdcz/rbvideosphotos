@@ -6,11 +6,11 @@ Zadani: Pridat do administrace nastaveni kvality komprese mediovych fotek a zvys
 ## Kroky
 
 - [x] Zapsat aktualni zadani do UKOL.md
-- [ ] Najit vsechny upload cesty a misto, kde se kvalita nastavuje natvrdo
-- [ ] Pridat do administrace nastaveni kvality komprese medii
-- [ ] Napojit upload a generovani variant na nastavitelne kvality
-- [ ] Zvysit vychozi kvalitu komprese
-- [ ] Overit syntax a chovani zmen
+- [x] Najit vsechny upload cesty a misto, kde se kvalita nastavuje natvrdo
+- [x] Pridat do administrace nastaveni kvality komprese medii
+- [x] Napojit upload a generovani variant na nastavitelne kvality
+- [x] Zvysit vychozi kvalitu komprese
+- [x] Overit syntax a chovani zmen
 
 ## Poznamky
 
@@ -20,4 +20,4 @@ Zadani: Pridat do administrace nastaveni kvality komprese mediovych fotek a zvys
 
 ## Vysledek
 
-Plni se.
+Hotovo. Kvalita komprese medii je nastavitelna v administraci a vychozi kvalita byla zvednuta na 90.
