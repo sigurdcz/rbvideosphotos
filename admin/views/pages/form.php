@@ -44,6 +44,7 @@ $hiddenHomepageBlockKeys = array_fill_keys([
     'cenik_cta',
     'faq_cta',
     'kontakt_cta',
+    'jb-about-visual__media',
 ], true);
 $visibleBlocks = $blocks ?? [];
 if ($isHomepage && !empty($visibleBlocks)) {
@@ -307,6 +308,29 @@ ob_start();
 
     <?php if ($isEdit && $isHomepage): ?>
     <div class="tab-pane" id="tab-homepage-services">
+      <?php $aboutVisualBlock = $blockMap['jb-about-visual__media'] ?? ['content' => '']; ?>
+      <?php $aboutVisualUrl = $publicMediaUrl((string)($aboutVisualBlock['content'] ?? '')); ?>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-title">Vizuál sekce „Naše služby“</div>
+        <div class="form-hint" style="margin-bottom:12px">
+          Tohle je samostatný obrazový panel pro homepage about vizuál. Vybraný obrázek se použije na homepage a můžeš ho kdykoli vyměnit z médií.
+        </div>
+        <div class="brand-asset-picker" data-homepage-about-visual-picker>
+          <input type="hidden" name="homepage_about_visual_url" id="homepage-about-visual-url" value="<?= $h($aboutVisualUrl) ?>">
+          <div class="brand-asset-preview" data-homepage-about-visual-preview>
+            <?php if ($aboutVisualUrl !== ''): ?>
+              <img src="<?= $h($aboutVisualUrl) ?>" alt="Homepage vizuál služby">
+            <?php else: ?>
+              <span>Neni vybrano</span>
+            <?php endif; ?>
+          </div>
+          <div class="brand-asset-actions">
+            <button type="button" class="btn btn-secondary" data-homepage-about-visual-open>Vybrat z medii</button>
+            <button type="button" class="btn btn-secondary" data-homepage-about-visual-clear>Odebrat</button>
+          </div>
+          <div class="help-text brand-asset-path" data-homepage-about-visual-path><?= $h($aboutVisualUrl) ?></div>
+        </div>
+      </div>
       <?php $renderServiceItemsEditor('Služby na homepage', 'Tyto polozky se zobrazuji na homepage i na strance Služby. Obrazek se bere z media knihovny a pouzije se zmensena varianta.'); ?>
     </div>
     <?php endif; ?>
@@ -790,6 +814,50 @@ ob_start();
     });
   })();
   </script>
+  <?php if ($isEdit && $isHomepage): ?>
+  <script>
+  (function(){
+    const input = document.getElementById('homepage-about-visual-url');
+    const preview = document.querySelector('[data-homepage-about-visual-preview]');
+    const path = document.querySelector('[data-homepage-about-visual-path]');
+    const openBtn = document.querySelector('[data-homepage-about-visual-open]');
+    const clearBtn = document.querySelector('[data-homepage-about-visual-clear]');
+    if (!input || !preview || !path || !openBtn || !clearBtn) return;
+
+    const render = (url) => {
+      const value = (url || '').trim();
+      preview.innerHTML = '';
+      if (value) {
+        const img = document.createElement('img');
+        img.src = value;
+        img.alt = 'Homepage vizuál služby';
+        preview.appendChild(img);
+      } else {
+        const span = document.createElement('span');
+        span.textContent = 'Neni vybrano';
+        preview.appendChild(span);
+      }
+      path.textContent = value;
+    };
+
+    openBtn.addEventListener('click', () => {
+      document.dispatchEvent(new CustomEvent('admin:media-picker:open', {
+        detail: {
+          select: (url) => {
+            input.value = url || '';
+            render(url || '');
+          }
+        }
+      }));
+    });
+
+    clearBtn.addEventListener('click', () => {
+      input.value = '';
+      render('');
+    });
+  })();
+  </script>
+  <?php endif; ?>
   <?php if ($layoutType === 'services'): ?>
   <template id="service-item-template">
     <div class="card" data-service-item style="padding:18px">

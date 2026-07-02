@@ -157,6 +157,10 @@
     shell.className = 'jb-about-shell';
 
     function pickVisualImage() {
+      var sourceImage = qs('.jb-about-visual__source');
+      if (sourceImage && sourceImage.getAttribute('src')) {
+        return sourceImage.getAttribute('src');
+      }
       var serviceImage = qs('.hp-svc-card__media img, .svc-card img', grid);
       if (serviceImage && serviceImage.getAttribute('src')) {
         return serviceImage.getAttribute('src');

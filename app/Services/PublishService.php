@@ -148,6 +148,7 @@ class PublishService
                 'page_key' => $pageKey,
             ]);
         }
+        $html = $this->injectHomepageAboutVisualSource($html, (int)$page['id']);
         $html = $this->renderer->injectAssets($html, $css, $js);
 
         $seoHead     = $this->seoRenderer->renderHead($seo, $site, $pageUrl, $ogImageUrl, $twImageUrl);
@@ -365,6 +366,34 @@ HTML;
         }
 
         return $this->injectBodyCssVariableToken($html, 'theme-page-hero-image', "url('" . str_replace("'", '%27', $url) . "')");
+    }
+
+    private function injectHomepageAboutVisualSource(string $html, int $pageId): string
+    {
+        $page = $this->pages->findById($pageId);
+        if (!$page || trim((string)($page['url_path'] ?? ''), '/') !== '') {
+            return $html;
+        }
+
+        if (str_contains($html, 'jb-about-visual__source')) {
+            return $html;
+        }
+
+        $block = $this->blocks->findByKey($pageId, 'jb-about-visual__media');
+        $url = $block ? $this->normalizePublicAssetUrl((string)($block['content'] ?? '')) : '';
+        if ($url === '') {
+            return $html;
+        }
+
+        $source = '<img class="jb-about-visual__source" data-media="jb-about-visual__media" src="' . htmlspecialchars($url, ENT_QUOTES) . '" alt="Naše služby" loading="lazy" hidden>';
+
+        $count = 0;
+        $html = preg_replace('/(<main\b[^>]*>)/i', '$1' . $source, $html, 1, $count);
+        if ($count > 0 && is_string($html)) {
+            return $html;
+        }
+
+        return preg_replace('/(<body\b[^>]*>)/i', '$1' . $source, $html, 1) ?? $html;
     }
 
     private function injectPageHeroVideo(string $html, array $site, int $pageId): string

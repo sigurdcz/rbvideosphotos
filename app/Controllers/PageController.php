@@ -94,6 +94,10 @@ class PageController extends Controller
             $this->initBlocksFromTemplate($pageId, $templateId);
         }
 
+        if ($urlPath === '') {
+            $this->ensureHomepageAboutVisualMediaBlock($pageId);
+        }
+
         $this->flash('success', 'Stránka vytvořena.');
         $this->redirect('/admin/pages/edit?id=' . $pageId);
     }
@@ -112,6 +116,9 @@ class PageController extends Controller
         $sites     = new SiteRepository();
         $isHomepage = trim((string)($page['url_path'] ?? ''), '/') === '';
         $this->ensurePageHeroVideoBlock($id);
+        if ($isHomepage) {
+            $this->ensureHomepageAboutVisualMediaBlock($id);
+        }
         $templates = (new TemplateRepository())->allForAdmin();
         $template  = $page['template_id'] ? (new TemplateRepository())->findById((int)$page['template_id']) : null;
         $layout    = $this->resolveLayoutType($template['name'] ?? '');
@@ -181,6 +188,9 @@ class PageController extends Controller
 
         $isHomepage = trim((string)($page['url_path'] ?? ''), '/') === '';
         $this->ensurePageHeroVideoBlock($id);
+        if ($isHomepage) {
+            $this->ensureHomepageAboutVisualMediaBlock($id);
+        }
         if ($layoutType === 'services') {
             $this->ensureServicesHeroImageBlock($id);
         }
@@ -201,6 +211,10 @@ class PageController extends Controller
             $this->saveSubmittedServiceItems((int)$page['site_id']);
             $this->refreshHomepageServicesBlock((int)$page['site_id']);
             $this->refreshServicesPageBlock((int)$page['site_id']);
+        }
+
+        if ($isHomepage) {
+            $this->syncHomepageAboutVisualBlock($id);
         }
 
         if (isset($_POST['publish_after_save'])) {
@@ -273,6 +287,34 @@ class PageController extends Controller
             'label' => 'Hero — obrazek / medium',
             'content' => '',
             'sort_order' => 3,
+            'autofill_disabled' => 0,
+        ]);
+    }
+
+    private function ensureHomepageAboutVisualMediaBlock(int $pageId): void
+    {
+        $blockRepo = new BlockRepository();
+        if ($blockRepo->findByKey($pageId, 'jb-about-visual__media')) {
+            return;
+        }
+
+        $blockRepo->upsert($pageId, 'jb-about-visual__media', [
+            'block_type' => 'image',
+            'label' => 'Homepage - vizual sekce Naše služby',
+            'content' => '',
+            'sort_order' => 13,
+            'autofill_disabled' => 0,
+        ]);
+    }
+
+    private function syncHomepageAboutVisualBlock(int $pageId): void
+    {
+        $blockRepo = new BlockRepository();
+        $blockRepo->upsert($pageId, 'jb-about-visual__media', [
+            'block_type' => 'image',
+            'label' => 'Homepage - vizual sekce Naše služby',
+            'content' => trim((string)($_POST['homepage_about_visual_url'] ?? '')),
+            'sort_order' => 13,
             'autofill_disabled' => 0,
         ]);
     }

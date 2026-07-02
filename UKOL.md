@@ -1,23 +1,22 @@
-# UKOL: Kvalita komprese medii
+# UKOL: Homepage about visual media
 
 Datum: 2026-07-02
-Zadani: Pridat do administrace nastaveni kvality komprese mediovych fotek a zvysit vychozi kvalitu oproti soucasnemu stavu.
+Zadani: Pridat na homepage moznost menit obrazek `jb-about-visual__media` pres media knihovnu z administrace.
 
 ## Kroky
 
 - [x] Zapsat aktualni zadani do UKOL.md
-- [x] Najit vsechny upload cesty a misto, kde se kvalita nastavuje natvrdo
-- [x] Pridat do administrace nastaveni kvality komprese medii
-- [x] Napojit upload a generovani variant na nastavitelne kvality
-- [x] Zvysit vychozi kvalitu komprese
+- [x] Najit zdroj `jb-about-visual__media` a jak se dnes renderuje
+- [x] Pridat editovatelne media pole do administrace homepage
+- [x] Napojit homepage render na media vyber
 - [x] Overit syntax a chovani zmen
+- [x] Presunout ovladani do samostatneho panelu s mediovým pickerem a nahledem
 
 ## Poznamky
 
-- Kvalita se dnes ridi natvrdo v `ImageVariantService` a upload pipeline generuje varianty pri uploadu.
-- Nastaveni ma byt per web, stejne jako ostatni site konfigurace v tabulce `sites`.
-- Pridan `sites.media_image_quality` s defaultem 90, napojene settings UI a synchronizace kvality pro `MediaController` i `MediaIngestionService`.
+- Cilem je vyhodit hardcoded/seedovany obrazek pro about sekci a nechat ho menit pres media picker.
+- Pokud obrazek patri do sdileneho homepage layoutu, ma se ulozit na stejny zdroj dat jako ostatni homepage bloky.
 
 ## Vysledek
 
-Hotovo. Kvalita komprese medii je nastavitelna v administraci a vychozi kvalita byla zvednuta na 90.
+Hotovo. About vizual na homepage lze menit pres samostatny media panel v administraci.
