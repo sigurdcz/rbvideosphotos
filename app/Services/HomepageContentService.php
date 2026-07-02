@@ -212,7 +212,7 @@ class HomepageContentService
 
         $items = array_slice($this->services->allActive($siteId), 0, 4);
         for ($i = 1; $i <= 4; $i++) {
-            $this->applyBlockFallback($blocks, 'service_' . $i, fn() => $this->buildServiceCardHtml($items[$i - 1] ?? null, $i));
+            $this->applyBlockFallback($blocks, 'service_' . $i, fn() => $this->buildServiceCardHtml($items[$i - 1] ?? null, $i, '', $siteId));
         }
     }
 
@@ -337,7 +337,7 @@ class HomepageContentService
 
         $cards = '';
         foreach ($items as $idx => $item) {
-            $cards .= $this->buildServiceCardHtml($item, $idx + 1, '');
+            $cards .= $this->buildServiceCardHtml($item, $idx + 1, '', $siteId);
         }
 
         $css = '<style>'
@@ -369,7 +369,7 @@ class HomepageContentService
         return $css . $cards;
     }
 
-    private function buildServiceCardHtml(?array $service, int $index = 0, string $detailId = ''): string
+    private function buildServiceCardHtml(?array $service, int $index = 0, string $detailId = '', int $siteId = 0): string
     {
         if (!$service) {
             return '';
@@ -378,7 +378,7 @@ class HomepageContentService
         $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
         $title = (string)($service['title'] ?? '');
         $description = (string)($service['description'] ?? '');
-        $imageUrl = $this->publicMediaUrl((string)($service['image_url'] ?? ''));
+        $imageUrl = $this->resolveServiceImageUrl($siteId, (string)($service['image_url'] ?? ''));
         $iconUrl = $this->publicMediaUrl((string)($service['icon_url'] ?? ''));
         $buttonText = trim((string)($service['button_text'] ?? '')) ?: 'Poptat službu';
         $buttonUrl = trim((string)($service['button_url'] ?? '')) ?: '/kontakt';
@@ -405,12 +405,12 @@ class HomepageContentService
             . '</div></article>';
     }
 
-    private function buildServiceDetailHtml(array $service, string $detailId, int $index): string
+    private function buildServiceDetailHtml(array $service, string $detailId, int $index, int $siteId = 0): string
     {
         $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
         $title = trim((string)($service['title'] ?? ''));
         $description = trim((string)($service['description'] ?? ''));
-        $imageUrl = $this->publicMediaUrl((string)($service['image_url'] ?? ''));
+        $imageUrl = $this->resolveServiceImageUrl($siteId, (string)($service['image_url'] ?? ''));
         $contactLabel = $title !== '' ? 'Poptat: ' . $title : 'Nezavazne poptat';
         $eyebrow = $index > 0 ? str_pad((string)$index, 2, '0', STR_PAD_LEFT) . ' / Detail sluzby' : 'Detail sluzby';
 
@@ -736,5 +736,57 @@ HTML;
         }
 
         return '/' . ltrim($normalized, '/');
+    }
+
+    private function resolveServiceImageUrl(int $siteId, string $storagePath): string
+    {
+        $normalized = str_replace('\\', '/', trim($storagePath));
+        if ($normalized === '') {
+            return '';
+        }
+
+        $publicUrl = $this->publicMediaUrl($normalized);
+        if (
+            !str_starts_with($normalized, '/media/') &&
+            !str_starts_with($normalized, '/storage/media/') &&
+            !str_starts_with($normalized, 'storage/media/') &&
+            !preg_match('~https?://[^/]+/storage/media/~i', $normalized)
+        ) {
+            return $publicUrl;
+        }
+
+        if (preg_match('~https?://[^/]+(/storage/media/.*)$~i', $normalized, $match)) {
+            $normalized = ltrim($match[1], '/');
+        } elseif (str_starts_with($normalized, '/media/')) {
+            $normalized = 'storage/media/' . ltrim(substr($normalized, strlen('/media/')), '/');
+        } elseif (str_starts_with($normalized, '/storage/media/')) {
+            $normalized = ltrim($normalized, '/');
+        }
+
+        if (!str_starts_with($normalized, 'storage/media/')) {
+            return $publicUrl;
+        }
+
+        $media = $this->media->findByStoragePath($siteId, $normalized);
+        if (!$media) {
+            return $publicUrl;
+        }
+
+        $variantPaths = [];
+        foreach ($this->media->variantsByMediaId((int)$media['id']) as $variant) {
+            $format = (string)($variant['format'] ?? '');
+            $path = (string)($variant['path'] ?? '');
+            if ($format !== '' && $path !== '') {
+                $variantPaths[$format] = $path;
+            }
+        }
+
+        foreach (['medium', 'webp', 'thumb'] as $format) {
+            if (!empty($variantPaths[$format])) {
+                return $this->publicMediaUrl($variantPaths[$format]);
+            }
+        }
+
+        return $publicUrl;
     }
 }

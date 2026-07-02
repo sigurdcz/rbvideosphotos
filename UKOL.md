@@ -1,21 +1,22 @@
-# UKOL: Zmensit obrazky a nahledy
+# UKOL: Weare media pro homepage
 
 Datum: 2026-07-02
-Zadani: Zmensit velke PNG obrazky v demo assets i storage a zestrucnit generovani thumbnailu, aby blog, nase prace a podobne nahledy mely nizsi velikost souboru.
+Zadani: Presunout fotku weare na spravu pres media, pouzit zmenseny soubor z media storage a pridat moznost menit tento obrazek na homepage pres media picker.
 
 ## Kroky
 
 - [x] Zapsat aktualni zadani do UKOL.md
-- [x] Najit a prepsat velke PNG soubory v demo assets a storage
-- [x] Zmensit kvalitu a rozmery generovanych nahledu pro nove uploady
-- [x] Overit velikosti a render po uprave
+- [x] Najit, kde se homepage weare obrazek nacita a jak se dnes vybere
+- [x] Napojit homepage na media vyber misto hardcoded souboru
+- [x] Zajistit, aby se weare soubor po uploadu automaticky zmensoval a pouzival jeho zmensena verze
+- [ ] Overit upload, render homepage a velikost vystupu
 
 ## Poznamky
 
-- `weare2.png` a dalsi demo PNG byly zmensene pres resize a paletizaci bez zmeny cest.
-- WebP a JPG varianty v media storage byly znovu prekreslene na nizsi kvalitu, aby se snizila velikost souboru.
-- U variant pro novy upload jsou thumb/medium mensi a s nizsi kvalitou vystupu.
+- Cilem je stejne chovani jako u ostatnich medii: upload do media knihovny, zpracovani variant, a pak vyber z adminu.
+- Pokud je weare dnes jen demo asset, treba jej prevest na normalni mediovy zaznam a nenechat staticky PNG v layoutu.
+- Homepage ted edituje sdilenou sadu `service_items` primo z homepage adminu a render bere preferovane media varianty (`medium`, `webp`, `thumb`) misto puvodniho originalu.
 
 ## Vysledek
 
-Velke PNG i WebP media byla zmensena na disku a novy upload pipeline ma nizsi thumb/medium kvalitu i rozmery. Klicove soubory jako `weare2.png` a velke nahledy na blogu / nasi praci jsou citelne mensi.
+Hotovo v kodu, zbyva jen pripadne manualni browser overeni.

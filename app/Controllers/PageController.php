@@ -122,7 +122,7 @@ class PageController extends Controller
         $homepageAutofillBlocks = $isHomepage
             ? (new HomepageContentService())->getAutofillDefinitions()
             : [];
-        $serviceItems = $layout === 'services' ? (new ServiceRepository())->allBySite((int)$page['site_id']) : [];
+        $serviceItems = ($layout === 'services' || $isHomepage) ? (new ServiceRepository())->allBySite((int)$page['site_id']) : [];
         $media = (new MediaRepository())->allBySiteWithVariants((int)$page['site_id']);
 
         $this->view('pages.form', [
@@ -197,8 +197,9 @@ class PageController extends Controller
             $this->syncHomepageContactBlocks((int)$page['site_id']);
         }
 
-        if ($layoutType === 'services') {
+        if ($layoutType === 'services' || $isHomepage) {
             $this->saveSubmittedServiceItems((int)$page['site_id']);
+            $this->refreshHomepageServicesBlock((int)$page['site_id']);
             $this->refreshServicesPageBlock((int)$page['site_id']);
         }
 
@@ -428,6 +429,22 @@ class PageController extends Controller
             'label' => 'Služby — karty',
             'content' => $content,
             'sort_order' => 3,
+        ]);
+    }
+
+    private function refreshHomepageServicesBlock(int $siteId): void
+    {
+        $page = (new PageRepository())->findByUrlPath('');
+        if (!$page) {
+            return;
+        }
+
+        $content = (new HomepageContentService())->buildServicesHtml($siteId, 3);
+        (new BlockRepository())->upsert((int)$page['id'], 'sluzby_items', [
+            'block_type' => 'html',
+            'label' => 'Služby — karty',
+            'content' => $content,
+            'sort_order' => 12,
         ]);
     }
 

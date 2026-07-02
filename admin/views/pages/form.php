@@ -105,8 +105,82 @@ $renderBlockField = function (string $key, string $label, string $type = 'text',
       <?php else: ?>
         <textarea name="block_content[]" class="<?= $inputType === 'html' ? 'code' : '' ?>"><?= $h($value) ?></textarea>
       <?php endif; ?>
-      <?php if ($hint !== ''): ?>
+    <?php if ($hint !== ''): ?>
         <div class="form-hint"><?= $h($hint) ?></div>
+      <?php endif; ?>
+    </div>
+    <?php
+};
+
+$renderServiceItemsEditor = function (string $cardTitle, string $cardHint) use ($serviceItems, $h): void {
+    ?>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px">
+        <div>
+          <div class="card-title"><?= $h($cardTitle) ?></div>
+          <div class="form-hint"><?= $h($cardHint) ?></div>
+        </div>
+        <button type="button" class="btn btn-secondary" data-add-service-item>+ Pridat sluzbu</button>
+      </div>
+
+      <div id="service-items-list" style="display:flex;flex-direction:column;gap:16px">
+        <?php foreach ($serviceItems as $index => $item): ?>
+        <div class="card" data-service-item style="padding:18px">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Nazev</label>
+              <input type="text" data-service-name="title" value="<?= $h($item['title'] ?? '') ?>">
+            </div>
+            <div class="form-group">
+              <label>Razeni</label>
+              <input type="number" data-service-name="sort_order" value="<?= (int)($item['sort_order'] ?? ($index + 1)) ?>">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Popis</label>
+            <textarea data-service-name="description"><?= $h($item['description'] ?? '') ?></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Obrazek / medium</label>
+              <div class="media-input-row">
+                <input type="text" data-service-name="image_url" value="<?= $h($item['image_url'] ?? '') ?>" placeholder="/media/...">
+                <button type="button" class="btn btn-sm btn-secondary" data-service-media-open data-target-name="image_url">Vybrat</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Ikona / medium</label>
+              <div style="display:flex;gap:8px">
+                <input type="text" data-service-name="icon_url" value="<?= $h($item['icon_url'] ?? '') ?>" placeholder="/media/..." style="flex:1">
+                <button type="button" class="btn btn-sm btn-secondary" data-service-media-open data-target-name="icon_url">Vybrat</button>
+              </div>
+              <div class="form-hint">Doporuceni: jednoducha SVG/PNG ikona, idealne 96x96 px.</div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Tlacitko</label>
+              <input type="text" data-service-name="button_text" value="<?= $h($item['button_text'] ?? '') ?>" placeholder="Zjistit vice">
+            </div>
+            <div class="form-group">
+              <label>Odkaz tlacitka</label>
+              <input type="text" data-service-name="button_url" value="<?= $h($item['button_url'] ?? '') ?>" placeholder="/kontakt">
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+            <label style="display:flex;align-items:center;gap:8px">
+              <input type="hidden" data-service-hidden-active value="0">
+              <input type="checkbox" data-service-name="is_active" value="1" <?= !empty($item['is_active']) ? 'checked' : '' ?>>
+              Aktivni
+            </label>
+            <button type="button" class="btn btn-sm btn-secondary" data-remove-service-item>Odebrat</button>
+          </div>
+        </div>
+        <?php endforeach; ?>
+      </div>
+
+      <?php if (empty($serviceItems)): ?>
+      <p class="form-hint" id="service-empty-state">Zatim tu nejsou zadne sluzby. Pridate je tlacitkem nahore.</p>
       <?php endif; ?>
     </div>
     <?php
@@ -142,6 +216,9 @@ ob_start();
         <button type="button" class="tab-btn" data-tab="services-grid">Sluzby</button>
       <?php else: ?>
         <button type="button" class="tab-btn" data-tab="blocks">Bloky obsahu <?= !empty($visibleBlocks) ? '(' . count($visibleBlocks) . ')' : '' ?></button>
+        <?php if ($isHomepage): ?>
+          <button type="button" class="tab-btn" data-tab="homepage-services">Služby homepage</button>
+        <?php endif; ?>
       <?php endif; ?>
     <?php endif; ?>
   </div>
@@ -225,6 +302,12 @@ ob_start();
         <p style="color:var(--c-muted);margin-bottom:14px">Tato stranka zatim nema zadne bloky. Synchronizujte je z layoutu.</p>
         <button type="submit" form="sync-form" class="btn btn-primary">Nacist bloky z layoutu</button>
       </div>
+    </div>
+    <?php endif; ?>
+
+    <?php if ($isEdit && $isHomepage): ?>
+    <div class="tab-pane" id="tab-homepage-services">
+      <?php $renderServiceItemsEditor('Služby na homepage', 'Tyto polozky se zobrazuji na homepage i na strance Služby. Obrazek se bere z media knihovny a pouzije se zmensena varianta.'); ?>
     </div>
     <?php endif; ?>
 
