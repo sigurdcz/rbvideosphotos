@@ -1686,8 +1686,7 @@ body.theme-jemna-bezova {
 }
 
 .theme-jemna-bezova .theme-nav-wrap .nav-links a:hover::after,
-.theme-jemna-bezova .theme-nav-wrap .nav-links a.nav-active::after,
-.theme-jemna-bezova .theme-nav-wrap .nav-links .nav-cta::after {
+.theme-jemna-bezova .theme-nav-wrap .nav-links a.nav-active::after {
   width: 100%;
 }
 
