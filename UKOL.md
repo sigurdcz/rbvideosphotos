@@ -1,25 +1,23 @@
-# UKOL: Dorovnat vzhled stranky Cenik
+# UKOL: Nastaveni e-mailu pro formulare
 
 Datum: 2026-07-02
-Zadani: Opravit vzhled samostatne stranky /cenik, kde jsou texty a balicky rozbite po demo seederu a rezrvacni CTA panel je nevycentrovany a nevzhledny.
+Zadani: Pridat do administrace Nastaveni pole pro e-mail prijemce kontaktni komunikace a nastavit vychozi hodnotu na sigurd.gnezdilov@gmail.com.
 
 ## Kroky
 
 - [x] Zapsat aktualni zadani do UKOL.md
-- [x] Zjistit, ktera sablona a ktere bloky realne rozbijeji /cenik
-- [x] Sjednotit demo cenik s fotografickym frontend vzorem
-- [x] Overit lokalni render /cenik a mobilni rozlozeni
-- [-] Commitnout a pushnout souvisejici zmeny
+- [x] Najit aktualni zdroj prijemce e-mailu a formular Nastaveni
+- [x] Pridat nove nastaveni do administrace a ulozeni
+- [x] Napojit odesilani formulare na nove nastaveni a doplnit vychozi hodnotu
+- [x] Overit syntaxi a funkcni tok
 
 ## Poznamky
 
-- Problem neni jen hero; demo seeder ma jinou strukturu ceníku nez `seed_photographer.php`.
-- Demo sablona stale renderuje `pricing_body`, zatimco fotograficky ceník pouziva `pricing_packages` a vlastni `ckp-*` karty.
-- CTA cast v demo sablone nema centrovaci wrapper ani sladene CTA styly, proto vypada vlevo a rozpada se.
-- Pridano `data-cms-page-key="cenik"` do renderu i publishe, aby slo zacit opravovat stavajici legacy markup bez vedlejsich zasahu do ostatnich stranek.
-- Frontend runtime ted obsahuje page-specific rescue styly pro `/cenik`: hero, legacy karty i tmavy CTA panel.
-- DemoContentSeeder ted zapisuje `pricing_packages` i `pricing_body` se stejnym obsahem kvuli kompatibilite se starym i novym template markupem.
+- Cilem je, aby administrace umela menit prijemce e-mailu bez upravy kodu.
+- Vychozi hodnota ma byt `sigurd.gnezdilov@gmail.com`, pokud neni nic nastavene.
+- Zdroj pravdy zustava v `contact_info.form_email`; pole v Nastaveni je jen druhe UI nad stejnymi daty.
+- Runtime i publish fallbackuji na `ContactRepository::DEFAULT_FORM_EMAIL`, aby formular fungoval i na starsich datech bez ulozene hodnoty.
 
 ## Vysledek
 
-Stranka `/cenik` ma opravene page-specific styly pro cteni textu a centrovany CTA panel i pro starsi obsah v DB. Demo ceník byl sjednocen s fotografickym frontend vzorem, takze dalsi nacteni demo obsahu uz znovu nevytvori rozbity levy CTA blok ani bledy cenik.
+Do administrace Nastaveni pribylo pole pro e-mail prijemce formularovych zprav. Uklada se do `contact_info.form_email`, a pokud neni nic nastavene, frontend i publish automaticky pouziji `sigurd.gnezdilov@gmail.com`. Demo seed tuto hodnotu nastavuje take jako vychozi.

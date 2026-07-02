@@ -2,6 +2,7 @@
 $pageTitle = 'Nastaveni webu';
 $h = fn($v) => htmlspecialchars((string)($v ?? ''));
 $media = $media ?? [];
+$contact = $contact ?? [];
 $publicMediaUrl = static function (?string $path): string {
     $normalized = str_replace('\\', '/', trim((string)$path));
     if ($normalized === '') return '';
@@ -67,6 +68,18 @@ ob_start();
         <option value="en" <?= ($site['default_language'] ?? '') === 'en' ? 'selected' : '' ?>>English</option>
         <option value="sk" <?= ($site['default_language'] ?? '') === 'sk' ? 'selected' : '' ?>>Slovencina</option>
       </select>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Kontaktni komunikace</div>
+    <div class="form-group">
+      <label>E-mail pro prijem zprav z formularu</label>
+      <input type="email" name="form_email" value="<?= $h($contact['form_email'] ?? '') ?>" placeholder="sigurd.gnezdilov@gmail.com">
+      <p class="help-text" style="margin-top:6px">
+        Na tuto adresu budou chodit zpravy odeslane pres kontaktni formulare. Pokud pole nechate prazdne,
+        system pouzije vychozi adresu <code>sigurd.gnezdilov@gmail.com</code>.
+      </p>
     </div>
   </div>
 

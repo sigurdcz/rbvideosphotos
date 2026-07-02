@@ -8,6 +8,7 @@ use PDO;
 class ContactRepository
 {
     private PDO $db;
+    public const DEFAULT_FORM_EMAIL = 'sigurd.gnezdilov@gmail.com';
 
     private const FIELDS = [
         'phone_1', 'phone_2', 'phone_3', 'email',

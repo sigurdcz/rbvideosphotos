@@ -20,6 +20,7 @@ use App\Support\FrontendAssetManager;
 
 class PublishService
 {
+    private const DEFAULT_FORM_EMAIL = ContactRepository::DEFAULT_FORM_EMAIL;
     private PageRenderer $renderer;
     private HomepageContentService $homepageContent;
     private SeoRenderer $seoRenderer;
@@ -904,8 +905,10 @@ CSS;
             }
         }
 
-        if (trim((string)($contact['form_email'] ?? '')) === '' && trim((string)($contact['email'] ?? '')) !== '') {
-            $contact['form_email'] = $contact['email'];
+        if (trim((string)($contact['form_email'] ?? '')) === '') {
+            $contact['form_email'] = trim((string)($contact['email'] ?? '')) !== ''
+                ? trim((string)($contact['email'] ?? ''))
+                : self::DEFAULT_FORM_EMAIL;
         }
 
         return $contact;

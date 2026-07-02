@@ -620,6 +620,11 @@ function firstBlockValue(array $blocks, array $keys, string $fallback): array
     return [$keys[0] ?? '', $fallback, 'text'];
 }
 
+function defaultContactFormEmail(): string
+{
+    return ContactRepository::DEFAULT_FORM_EMAIL;
+}
+
 function inlineAttrs(?array $page, string $key, string $type = 'text'): string
 {
     if (!Auth::check() || isset($_GET['cms_preview']) || !$page || $key === '') {
@@ -1210,8 +1215,10 @@ function enrichContactWithLegacyBlocks(int $siteId, array $contact): array
         }
     }
 
-    if (trim((string)($contact['form_email'] ?? '')) === '' && trim((string)($contact['email'] ?? '')) !== '') {
-        $contact['form_email'] = $contact['email'];
+    if (trim((string)($contact['form_email'] ?? '')) === '') {
+        $contact['form_email'] = trim((string)($contact['email'] ?? '')) !== ''
+            ? trim((string)($contact['email'] ?? ''))
+            : defaultContactFormEmail();
     }
 
     return $contact;
@@ -2782,6 +2789,9 @@ try {
                     $formEmail = trim((string)($ci['email'] ?? ''));
                 }
             } catch (\Throwable $e) {}
+        }
+        if ($formEmail === null || $formEmail === '') {
+            $formEmail = defaultContactFormEmail();
         }
         $cleanHeaderValue = static fn (string $value): string => trim(str_ireplace(["\r", "\n", "%0a", "%0d"], '', $value));
         $name    = $cleanHeaderValue((string) ($_POST['name'] ?? ''));

@@ -923,13 +923,14 @@ CSS;
         $phone1 = '+420 792 483 583';
         $phone2 = '+420 604 225 032';
         $email = 'rb_vp@volny.cz';
+        $formEmail = ContactRepository::DEFAULT_FORM_EMAIL;
 
         (new ContactRepository())->upsert($siteId, [
             'phone_1' => $phone1,
             'phone_2' => $phone2,
             'phone_3' => '',
             'email' => $email,
-            'form_email' => $email,
+            'form_email' => $formEmail,
             'social_1_type' => 'instagram',
             'social_1_url' => 'https://www.instagram.com/rb_videos_photos/',
             'social_2_type' => 'facebook',

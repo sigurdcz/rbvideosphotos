@@ -13,6 +13,7 @@ use App\Repositories\ServiceRepository;
 
 class HomepageContentService
 {
+    private const DEFAULT_FORM_EMAIL = ContactRepository::DEFAULT_FORM_EMAIL;
     private const AUTOFILL_BLOCKS = [
         'sluzby_items' => ['label' => 'Služby', 'hint' => 'Automaticky doplnit z dat služby.'],
         'sluzby_grid' => ['label' => 'Služby grid', 'hint' => 'Automaticky doplnit z dat služby.'],
@@ -661,6 +662,9 @@ HTML;
         $recipient = trim((string)($contact['form_email'] ?? ''));
         if ($recipient === '') {
             $recipient = trim((string)($contact['email'] ?? ''));
+        }
+        if ($recipient === '') {
+            $recipient = self::DEFAULT_FORM_EMAIL;
         }
 
         $csrf = htmlspecialchars(\App\Core\Auth::csrfToken(), ENT_QUOTES);
