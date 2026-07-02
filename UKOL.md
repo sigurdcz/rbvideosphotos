@@ -1,23 +1,22 @@
-# UKOL: Dolaďení kontaktniho panelu podle reference
+# UKOL: Mobilni oprava kontaktni stranky
 
 Datum: 2026-07-02
-Zadani: Kontaktni panel musi byt blize referenci: kompaktni leve karty, zadne inline socialni site v panelu, male nadpisy, stabilni dva sloupce a formular jako karta vedle kontaktu.
+Zadani: Opravit mobilni kontakt: odstranit pravou mezeru, vycentrovat tlacitko, zmensit a odsadit consent text a skryt sekci `kt-process` na mobilu.
 
 ## Kroky
 
-- [x] Zkontrolovat aktualni kontaktni sablonu a CSS.
-- [x] Odstranit prvky, ktere rozbiji panelove rozlozeni, a doplnit finalni CSS prepis.
-- [x] Overit syntaxi, diff a lokalni render.
+- [x] Zkontrolovat stav pracovniku a rozsah mobilni opravy.
+- [x] Upravit mobilni CSS kontaktni stranky.
+- [x] Overit syntaxi, diff a lokalni dopady.
 - [x] Commitnout a pushnout opravu.
 
 ## Poznamky
 
 - Pracovni strom byl pred zacatkem cisty.
-- Hlavni problem: sablonove/starsi CSS stale zvetsuje `.ci-title` a desktop media query meni `.kt-grid`; inline socialni site prodluzuji levy sloupec oproti referenci.
-- Inline socialni odkazy jsou odstraneny z kontaktniho panelu; socialni site zustavaji ve footeru pres `injectFooterSocials`.
-- Na konec kontaktniho CSS pribyl finalni prepis pro rozmery, fonty, grid a formular.
-- Lokalni `/kontakt` vratil HTTP 200 a generovany CSS obsahoval finalni kontaktni prepis.
+- Oprava se tyka jen mobilniho breakpointu kontaktni stranky v `public/index.php`.
+- Mobilni override skryva `.kt-process`, omezuje sirky kontejneru, zmensuje consent text a centruje submit tlacitko.
+- Lokalni `/kontakt` vratil HTTP 200 a generovany CSS obsahoval nove mobilni pravidlo.
 
 ## Vysledek
 
-Kontaktni panel ma finalni prepis pro kompaktni rozlozeni podle reference: leve karty bez inline socialnich odkazu, male nadpisy, formular jako samostatna karta a pevny dvousloupcovy grid. Overeno `php -l public/index.php`, `git diff --check` a lokalni HTTP 200 pro `/kontakt`.
+Mobilni kontakt ma omezeny horizontalni overflow, submit tlacitko je centrovane, consent text je mensi/lehci s vetsim odstupem a sekce `.kt-process` je na mobilu skryta. Overeno `php -l public/index.php`, `git diff --check` a lokalnim HTTP 200 pro `/kontakt`.
