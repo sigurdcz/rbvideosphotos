@@ -12,9 +12,9 @@ Zadani: Posunout sekci s textem Rodinne, portretni a firemni foceni niz pod bali
 
 ## Poznamky
 
-- Oprava musi byt v runtime i v demo seederu, aby se po reseedu vracelo stejné rozlozeni.
+- Oprava musi byt v runtime i v demo seederu, aby se po reseedu vracelo stejne rozlozeni.
 - Jde jen o vertikalni mezery, ne o zmenu obsahu.
 
 ## Vysledek
 
-Sekce `Rodinne, portretni a firemni foceni` ma nyni vetsi spodní rezervu po balickach, takze uz neskace pod vizualni prekryv predchoziho gridu. Uprava je v runtime CSS i v demo seederu, aby se po reseedu nevracela stara mezera.
+Sekce `Rodinne, portretni a firemni foceni` ma nyni vetsi spodni rezervu po balickach, takze uz neskace pod vizualni prekryv predchoziho gridu. Uprava je v runtime CSS i v demo seederu, aby se po reseedu nevracela stara mezera.
