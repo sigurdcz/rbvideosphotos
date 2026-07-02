@@ -1,22 +1,23 @@
-# UKOL: Dolaďení kontaktni stranky podle reference
+# UKOL: Vymena kontaktniho e-mailu
 
 Datum: 2026-07-02
-Zadani: Kontaktni stranka ma byt jeste blizsi dodanemu referencnimu screenshotu: kompaktnejsi tmavy hero, uzsi obsah, kontaktni karty, formular, proces a FAQ v jednom vizualnim rytmu.
+Zadani: V celem repozitari odstranit puvodni Gmail kontakt a nahradit ho kontaktnim e-mailem `rb_vp@volny.cz`.
 
 ## Kroky
 
-- [x] Zkontrolovat aktualni kontaktni runtime sablonu.
-- [x] Doladit proporce, mezery, velikosti a CTA podle reference.
-- [x] Overit PHP syntaxi a diff.
-- [-] Commitnout a pushnout doladeni.
+- [x] Najit vsechny vyskyty stareho e-mailu.
+- [x] Nahradit stare hodnoty za `rb_vp@volny.cz`.
+- [x] Overit, ze stary e-mail nikde nezustal.
+- [x] Overit syntaxi / relevantni dopady a zapsat vysledek.
+- [x] Commitnout a pushnout zmenu.
 
 ## Poznamky
 
-- Pred zacatkem doladeni byl strom po commitu cisty.
-- Kontaktni stranka je specialni runtime handler v `public/index.php`.
-- Cil doladeni: mene roztazeny layout, mensi hero vyska, karty a formular bliz referenci, tmave napojene sekce bez svetlych mezer.
-- CSS kontaktu bylo zkompaktneno: nizsi hero, uzsi kontejnery, mensi karty/formular, proces a FAQ zarovnane na stejny rytmus.
+- Pracovni strom byl pred zacatkem cisty.
+- Predchozi `UKOL.md` obsahoval zastaraly rozpracovany checkbox, ale zmeny byly uz commitnute a pushnute.
+- Stara adresa byla nalezena pouze v demo seed datech kontaktu a v pracovnim `UKOL.md`.
+- Relevantni dokumentace nevyzaduje zmenu; jde o seed kontaktni hodnoty.
 
 ## Vysledek
 
-Kontaktni stranka byla zkompaktnena bliz referenci: nizsi hero, uzsi obsah, mensi karty, formular, proces a FAQ. Overeno `php -l public/index.php` a `git diff --check`.
+Kontaktni seed pouziva `rb_vp@volny.cz` pro verejny e-mail i cil formularu. Overeno, ze puvodni Gmail adresa mimo `.git` nezustala, a `php -l database/seeds/seed.php` prosel.
