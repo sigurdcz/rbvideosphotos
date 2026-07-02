@@ -2,6 +2,17 @@
 $isEdit    = $entry !== null;
 $pageTitle = $isEdit ? 'Upravit práci' : 'Nová práce';
 $h = fn($v) => htmlspecialchars((string)($v ?? ''));
+$publicMediaUrl = static function (?string $path): string {
+    $normalized = str_replace('\\', '/', trim((string)$path));
+    if ($normalized === '') return '';
+    if (preg_match('~https?://[^/]+(/storage/media/.*)$~i', $normalized, $m)) {
+        return '/media/' . ltrim(substr($m[1], strlen('/storage/media/')), '/');
+    }
+    if (str_starts_with($normalized, '/media/')) return $normalized;
+    if (str_starts_with($normalized, '/storage/media/')) return '/media/' . ltrim(substr($normalized, strlen('/storage/media/')), '/');
+    if (str_starts_with($normalized, 'storage/media/')) return '/media/' . ltrim(substr($normalized, strlen('storage/media/')), '/');
+    return '/' . ltrim($normalized, '/');
+};
 $selectedSet = array_flip(array_map('intval', $selected ?? []));
 ob_start();
 ?>
@@ -111,7 +122,7 @@ ob_start();
              data-media-id="<?= (int)$m['id'] ?>"
              data-order="<?= isset($selectedSet[(int)$m['id']]) ? array_search((int)$m['id'], array_keys($selectedSet)) : '' ?>"
              style="cursor:pointer">
-          <img src="/<?= $h($m['storage_path']) ?>" alt="<?= $h($m['alt_text']) ?>" loading="lazy" style="height:90px;object-fit:cover;display:block;width:100%">
+          <img src="<?= $h($publicMediaUrl((string)($m['storage_path'] ?? ''))) ?>" alt="<?= $h($m['alt_text']) ?>" loading="lazy" style="height:90px;object-fit:cover;display:block;width:100%">
           <div class="media-card-info" style="display:flex;justify-content:space-between;padding:5px 8px">
             <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><?= $h($m['original_filename']) ?></span>
             <span class="pm-check" style="flex-shrink:0;font-size:14px;color:#16a34a">✓</span>

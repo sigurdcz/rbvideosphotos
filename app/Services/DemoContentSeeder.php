@@ -845,6 +845,16 @@ CSS;
             'phone_3' => '',
             'email' => $email,
             'form_email' => $email,
+            'social_1_type' => 'instagram',
+            'social_1_url' => 'https://www.instagram.com/rb_videos_photos/',
+            'social_2_type' => 'facebook',
+            'social_2_url' => 'https://www.facebook.com/rbvideosandphotos',
+            'social_3_type' => 'youtube',
+            'social_3_url' => 'https://www.youtube.com/channel/UC5miHVzPxIs2MjEsoPAzGCw',
+            'social_4_type' => '',
+            'social_4_url' => '',
+            'social_5_type' => '',
+            'social_5_url' => '',
         ]);
 
         $keys = ['kontakt_info', 'contact_info', 'contact_card'];

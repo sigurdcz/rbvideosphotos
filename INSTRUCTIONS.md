@@ -21,7 +21,7 @@ Tento soubor je obecny pracovni navod pro vsechny AI asistenty i lidske vyvojare
 
 - Nepridavejte ORM, Laravel, Symfony ani npm build, pokud to uzivatel vyslovne neschvali.
 - Necommitujte `.env`, credentials, produkcni media ani jine tajne soubory.
-- Nepouzivejte hardcoded domenu ze `sites.domain` pro URL medii. Media na webu maji byt root-relative, napr. `/storage/media/2026/05/foto.webp`.
+- Nepouzivejte hardcoded domenu ze `sites.domain` pro URL medii. Verejne URL medii maji byt root-relative pres streamovaci route, napr. `/media/2026/05/foto.webp`; DB `storage_path` zustava interni cesta `storage/media/...`.
 - Nepridavejte `/blog/` ani `/nase-prace/` prefix do slugu blogovych prispevku a portfolia.
 - Nespoustejte `git push --force` na `master` bez explicitniho souhlasu uzivatele.
 - Neodstranujte existujici bezpecnostni ochrany jako `realpath()` kontroly, CSRF, `requireAuth()` nebo `requireAdmin()`.

@@ -2,6 +2,17 @@
 $isEdit    = $post !== null;
 $pageTitle = $isEdit ? 'Upravit clanek' : 'Novy clanek';
 $h = fn($v) => htmlspecialchars((string)($v ?? ''));
+$publicMediaUrl = static function (?string $path): string {
+    $normalized = str_replace('\\', '/', trim((string)$path));
+    if ($normalized === '') return '';
+    if (preg_match('~https?://[^/]+(/storage/media/.*)$~i', $normalized, $m)) {
+        return '/media/' . ltrim(substr($m[1], strlen('/storage/media/')), '/');
+    }
+    if (str_starts_with($normalized, '/media/')) return $normalized;
+    if (str_starts_with($normalized, '/storage/media/')) return '/media/' . ltrim(substr($normalized, strlen('/storage/media/')), '/');
+    if (str_starts_with($normalized, 'storage/media/')) return '/media/' . ltrim(substr($normalized, strlen('storage/media/')), '/');
+    return '/' . ltrim($normalized, '/');
+};
 $selectedFeaturedId = (int)($post['featured_image_id'] ?? 0);
 $selectedGallery    = array_map('intval', $gallery ?? []);
 ob_start();
@@ -93,10 +104,10 @@ ob_start();
           <?php $mediaId = (int)$m['id']; ?>
           <div class="media-card fi-item <?= $selectedFeaturedId === $mediaId ? 'fi-selected' : '' ?>"
                data-media-id="<?= $mediaId ?>"
-               data-media-src="<?= $h('/' . ltrim((string)$m['storage_path'], '/')) ?>"
+               data-media-src="<?= $h($publicMediaUrl((string)($m['storage_path'] ?? ''))) ?>"
                data-media-name="<?= $h($m['original_filename']) ?>"
                style="cursor:pointer">
-            <img src="/<?= $h($m['storage_path']) ?>" alt="<?= $h($m['alt_text']) ?>" loading="lazy" style="height:90px;object-fit:cover;display:block;width:100%">
+            <img src="<?= $h($publicMediaUrl((string)($m['storage_path'] ?? ''))) ?>" alt="<?= $h($m['alt_text']) ?>" loading="lazy" style="height:90px;object-fit:cover;display:block;width:100%">
             <div class="media-card-info" style="display:flex;justify-content:space-between;padding:5px 8px">
               <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><?= $h($m['original_filename']) ?></span>
               <span class="fi-check" style="flex-shrink:0;font-size:14px;color:#16a34a">&#10003;</span>
@@ -129,7 +140,7 @@ ob_start();
           <div class="media-card gl-item <?= in_array($mediaId, $selectedGallery, true) ? 'gl-selected' : '' ?>"
                data-media-id="<?= $mediaId ?>"
                style="cursor:pointer">
-            <img src="/<?= $h($m['storage_path']) ?>" alt="<?= $h($m['alt_text']) ?>" loading="lazy" style="height:90px;object-fit:cover;display:block;width:100%">
+            <img src="<?= $h($publicMediaUrl((string)($m['storage_path'] ?? ''))) ?>" alt="<?= $h($m['alt_text']) ?>" loading="lazy" style="height:90px;object-fit:cover;display:block;width:100%">
             <div class="media-card-info" style="display:flex;justify-content:space-between;padding:5px 8px">
               <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><?= $h($m['original_filename']) ?></span>
               <span class="gl-check" style="flex-shrink:0;font-size:14px;color:#16a34a">&#10003;</span>

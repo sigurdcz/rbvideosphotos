@@ -3,11 +3,22 @@ $pageTitle = 'SEO - ' . htmlspecialchars($page['title'] ?? '');
 $h = fn($v) => htmlspecialchars((string)($v ?? ''));
 $mediaList = $mediaList ?? [];
 
-$mediaUrl = fn(array $m): string => '/media/' . ltrim(preg_replace('~^storage/media/~', '', str_replace('\\', '/', (string)($m['storage_path'] ?? ''))) ?? '', '/');
-$mediaThumb = function(array $m) use ($mediaUrl): string {
+$publicMediaUrl = static function (?string $path): string {
+    $normalized = str_replace('\\', '/', trim((string)$path));
+    if ($normalized === '') return '';
+    if (preg_match('~https?://[^/]+(/storage/media/.*)$~i', $normalized, $m)) {
+        return '/media/' . ltrim(substr($m[1], strlen('/storage/media/')), '/');
+    }
+    if (str_starts_with($normalized, '/media/')) return $normalized;
+    if (str_starts_with($normalized, '/storage/media/')) return '/media/' . ltrim(substr($normalized, strlen('/storage/media/')), '/');
+    if (str_starts_with($normalized, 'storage/media/')) return '/media/' . ltrim(substr($normalized, strlen('storage/media/')), '/');
+    return '/' . ltrim($normalized, '/');
+};
+$mediaUrl = fn(array $m): string => $publicMediaUrl((string)($m['storage_path'] ?? ''));
+$mediaThumb = function(array $m) use ($mediaUrl, $publicMediaUrl): string {
     foreach (($m['variants'] ?? []) as $v) {
         if (($v['format'] ?? '') === 'thumb' && !empty($v['path'])) {
-            return '/' . ltrim((string)$v['path'], '/');
+            return $publicMediaUrl((string)$v['path']);
         }
     }
     return $mediaUrl($m);
@@ -491,8 +502,8 @@ ob_start();
 
         const media = {
           id: Number(result.media_id || 0),
-          url: result.storage_path ? '/' + String(result.storage_path).replace(/^\/+/, '') : '',
-          thumb: result.thumb_path ? '/' + String(result.thumb_path).replace(/^\/+/, '') : '',
+          url: result.url || '',
+          thumb: result.thumb_url || result.url || '',
           name: result.name || file.name,
           mime: result.mime_type || ''
         };

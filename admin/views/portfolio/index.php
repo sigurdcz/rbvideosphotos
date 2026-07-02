@@ -1,6 +1,17 @@
 <?php
 $pageTitle = 'Nase prace';
 $h = fn($v) => htmlspecialchars((string)($v ?? ''));
+$publicMediaUrl = static function (?string $path): string {
+    $normalized = str_replace('\\', '/', trim((string)$path));
+    if ($normalized === '') return '';
+    if (preg_match('~https?://[^/]+(/storage/media/.*)$~i', $normalized, $m)) {
+        return '/media/' . ltrim(substr($m[1], strlen('/storage/media/')), '/');
+    }
+    if (str_starts_with($normalized, '/media/')) return $normalized;
+    if (str_starts_with($normalized, '/storage/media/')) return '/media/' . ltrim(substr($normalized, strlen('/storage/media/')), '/');
+    if (str_starts_with($normalized, 'storage/media/')) return '/media/' . ltrim(substr($normalized, strlen('storage/media/')), '/');
+    return '/' . ltrim($normalized, '/');
+};
 ob_start();
 ?>
 <div class="page-header">
@@ -25,7 +36,7 @@ ob_start();
         $thumb = \App\Repositories\PortfolioRepository::youtubeThumbnail($e['video_url']);
     }
     if (!$thumb && $e['_first_media']) {
-        $thumb = '/' . $e['_first_media']['storage_path'];
+        $thumb = $publicMediaUrl((string)($e['_first_media']['storage_path'] ?? ''));
     }
   ?>
   <div class="media-card media-card--manage">

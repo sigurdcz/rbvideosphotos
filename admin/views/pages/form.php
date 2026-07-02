@@ -13,11 +13,22 @@ $fixedSocials = [
     5 => ['key' => 'linkedin', 'label' => 'LinkedIn'],
 ];
 $media = $media ?? [];
-$mediaUrl = fn(array $m): string => '/media/' . ltrim(preg_replace('~^storage/media/~', '', str_replace('\\', '/', (string)($m['storage_path'] ?? ''))) ?? '', '/');
-$mediaThumb = function(array $m) use ($mediaUrl): string {
+$publicMediaUrl = static function (?string $path): string {
+    $normalized = str_replace('\\', '/', trim((string)$path));
+    if ($normalized === '') return '';
+    if (preg_match('~https?://[^/]+(/storage/media/.*)$~i', $normalized, $m)) {
+        return '/media/' . ltrim(substr($m[1], strlen('/storage/media/')), '/');
+    }
+    if (str_starts_with($normalized, '/media/')) return $normalized;
+    if (str_starts_with($normalized, '/storage/media/')) return '/media/' . ltrim(substr($normalized, strlen('/storage/media/')), '/');
+    if (str_starts_with($normalized, 'storage/media/')) return '/media/' . ltrim(substr($normalized, strlen('storage/media/')), '/');
+    return '/' . ltrim($normalized, '/');
+};
+$mediaUrl = fn(array $m): string => $publicMediaUrl((string)($m['storage_path'] ?? ''));
+$mediaThumb = function(array $m) use ($mediaUrl, $publicMediaUrl): string {
     foreach (($m['variants'] ?? []) as $variant) {
         if (($variant['format'] ?? '') === 'thumb' && !empty($variant['path'])) {
-            return '/' . ltrim((string)$variant['path'], '/');
+            return $publicMediaUrl((string)$variant['path']);
         }
     }
     return $mediaUrl($m);
@@ -56,6 +67,7 @@ $renderBlockField = function (string $key, string $label, string $type = 'text',
     $inputType = $key === 'hero_video'
       ? 'video'
       : ($type === 'html' ? 'html' : ($block['block_type'] ?? $type));
+    $fieldId = 'block-content-' . preg_replace('~[^a-z0-9_-]+~i', '-', $key);
     ?>
     <div class="form-group">
       <label><?= $h($label) ?></label>
@@ -63,9 +75,33 @@ $renderBlockField = function (string $key, string $label, string $type = 'text',
       <?php if (in_array($inputType, ['text', 'link'], true)): ?>
         <input type="text" name="block_content[]" value="<?= $h($value) ?>">
       <?php elseif ($inputType === 'image'): ?>
-        <input type="text" name="block_content[]" value="<?= $h($value) ?>" placeholder="/media/...">
+        <div class="media-input-row">
+          <input id="<?= $h($fieldId) ?>" type="text" name="block_content[]" value="<?= $h($value) ?>" placeholder="/media/...">
+          <button type="button" class="btn btn-sm btn-secondary" data-page-media-open data-target-id="<?= $h($fieldId) ?>">Vybrat z medii</button>
+        </div>
       <?php elseif ($inputType === 'video'): ?>
         <input type="url" name="block_content[]" value="<?= $h($value) ?>" placeholder="https://... nebo /media/...">
+      <?php elseif (in_array($inputType, ['html', 'richtext'], true)): ?>
+        <div class="article-editor-wrap" data-richtext-editor>
+          <div class="article-editor-toolbar">
+            <button type="button" class="ae-btn" data-cmd="formatBlock" data-val="<h2>" title="Nadpis 2">H2</button>
+            <button type="button" class="ae-btn" data-cmd="formatBlock" data-val="<h3>" title="Nadpis 3">H3</button>
+            <span class="ae-sep"></span>
+            <button type="button" class="ae-btn" data-cmd="bold" title="Tucne"><strong>B</strong></button>
+            <button type="button" class="ae-btn" data-cmd="italic" title="Kurziva"><em>I</em></button>
+            <button type="button" class="ae-btn" data-cmd="underline" title="Podtrzeni"><u>U</u></button>
+            <span class="ae-sep"></span>
+            <button type="button" class="ae-btn" data-cmd="insertUnorderedList" title="Odrzky">&#8226; ul</button>
+            <button type="button" class="ae-btn" data-cmd="insertOrderedList" title="Cislovany seznam">1. ol</button>
+            <button type="button" class="ae-btn" data-cmd="formatBlock" data-val="<p>" title="Odstavec">&para;</button>
+            <span class="ae-sep"></span>
+            <button type="button" class="ae-btn" data-cmd="insertMediaImage" title="Vlozit obrazek z medii">Obrazek</button>
+            <button type="button" class="ae-btn ae-source-btn" data-cmd="source" title="HTML zdrojovy kod">&lt;/&gt; HTML</button>
+          </div>
+          <div class="richtext-content" data-richtext-content contenteditable="true"><?= (string)$value ?></div>
+          <textarea class="code richtext-html-source" data-richtext-html-source style="display:none" spellcheck="false"></textarea>
+        </div>
+        <textarea name="block_content[]" data-richtext-hidden hidden><?= $h($value) ?></textarea>
       <?php else: ?>
         <textarea name="block_content[]" class="<?= $inputType === 'html' ? 'code' : '' ?>"><?= $h($value) ?></textarea>
       <?php endif; ?>
@@ -393,8 +429,11 @@ ob_start();
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label>Obrazek / URL</label>
-                <input type="text" data-service-name="image_url" value="<?= $h($item['image_url'] ?? '') ?>" placeholder="/media/...">
+                <label>Obrazek / medium</label>
+                <div class="media-input-row">
+                  <input type="text" data-service-name="image_url" value="<?= $h($item['image_url'] ?? '') ?>" placeholder="/media/...">
+                  <button type="button" class="btn btn-sm btn-secondary" data-service-media-open data-target-name="image_url">Vybrat</button>
+                </div>
               </div>
               <div class="form-group">
                 <label>Ikona / medium</label>
@@ -455,6 +494,7 @@ ob_start();
           <?php if (isset($renderedBlockKeys[$block['block_key'] ?? ''])) continue; ?>
           <?php $autofillBlock = $isHomepage ? ($homepageAutofillBlocks[$block['block_key']] ?? null) : null; ?>
           <?php $autofillEnabled = $autofillBlock ? empty($block['autofill_disabled']) : false; ?>
+          <?php $blockFieldId = 'block-content-' . preg_replace('~[^a-z0-9_-]+~i', '-', (string)($block['block_key'] ?? 'block')); ?>
           <div class="block-item<?= $autofillBlock ? ' autofill-panel' : '' ?><?= $autofillEnabled ? ' is-autofill-enabled' : '' ?>" data-autofill-panel="<?= $autofillBlock ? '1' : '0' ?>">
             <div class="block-label">
               <?= $h($block['label'] ?? $block['block_key']) ?>
@@ -465,11 +505,35 @@ ob_start();
               <?php if (in_array($block['block_type'], ['text','link'], true)): ?>
                 <input type="text" name="block_content[]" value="<?= $h($block['content'] ?? '') ?>"<?= $autofillEnabled ? ' disabled' : '' ?>>
               <?php elseif ($block['block_type'] === 'image'): ?>
-                <input type="text" name="block_content[]" value="<?= $h($block['content'] ?? '') ?>" placeholder="/media/..."<?= $autofillEnabled ? ' disabled' : '' ?>>
+                <div class="media-input-row">
+                  <input id="<?= $h($blockFieldId) ?>" type="text" name="block_content[]" value="<?= $h($block['content'] ?? '') ?>" placeholder="/media/..."<?= $autofillEnabled ? ' disabled' : '' ?>>
+                  <button type="button" class="btn btn-sm btn-secondary" data-page-media-open data-target-id="<?= $h($blockFieldId) ?>"<?= $autofillEnabled ? ' disabled' : '' ?>>Vybrat z medii</button>
+                </div>
                 <div class="form-hint">URL nebo cesta k obrazku</div>
               <?php elseif (($block['block_type'] === 'video') || $block['block_key'] === 'hero_video'): ?>
                 <input type="url" name="block_content[]" value="<?= $h($block['content'] ?? '') ?>" placeholder="https://... nebo /media/..."<?= $autofillEnabled ? ' disabled' : '' ?>>
                 <div class="form-hint">URL videa pro pozadí v hero sekci homepage.</div>
+              <?php elseif (in_array($block['block_type'], ['html','richtext'], true)): ?>
+                <div class="article-editor-wrap" data-richtext-editor>
+                  <div class="article-editor-toolbar">
+                    <button type="button" class="ae-btn" data-cmd="formatBlock" data-val="<h2>" title="Nadpis 2">H2</button>
+                    <button type="button" class="ae-btn" data-cmd="formatBlock" data-val="<h3>" title="Nadpis 3">H3</button>
+                    <span class="ae-sep"></span>
+                    <button type="button" class="ae-btn" data-cmd="bold" title="Tucne"><strong>B</strong></button>
+                    <button type="button" class="ae-btn" data-cmd="italic" title="Kurziva"><em>I</em></button>
+                    <button type="button" class="ae-btn" data-cmd="underline" title="Podtrzeni"><u>U</u></button>
+                    <span class="ae-sep"></span>
+                    <button type="button" class="ae-btn" data-cmd="insertUnorderedList" title="Odrzky">&#8226; ul</button>
+                    <button type="button" class="ae-btn" data-cmd="insertOrderedList" title="Cislovany seznam">1. ol</button>
+                    <button type="button" class="ae-btn" data-cmd="formatBlock" data-val="<p>" title="Odstavec">&para;</button>
+                    <span class="ae-sep"></span>
+                    <button type="button" class="ae-btn" data-cmd="insertMediaImage" title="Vlozit obrazek z medii">Obrazek</button>
+                    <button type="button" class="ae-btn ae-source-btn" data-cmd="source" title="HTML zdrojovy kod">&lt;/&gt; HTML</button>
+                  </div>
+                  <div class="richtext-content" data-richtext-content contenteditable="<?= $autofillEnabled ? 'false' : 'true' ?>"><?= (string)($block['content'] ?? '') ?></div>
+                  <textarea class="code richtext-html-source" data-richtext-html-source style="display:none" spellcheck="false"></textarea>
+                </div>
+                <textarea name="block_content[]" data-richtext-hidden hidden<?= $autofillEnabled ? ' disabled' : '' ?>><?= $h($block['content'] ?? '') ?></textarea>
               <?php else: ?>
                 <textarea name="block_content[]" class="<?= $block['block_type'] === 'html' ? 'code' : '' ?>"<?= $autofillEnabled ? ' disabled' : '' ?>><?= $h($block['content'] ?? '') ?></textarea>
               <?php endif; ?>
@@ -539,6 +603,7 @@ ob_start();
       </div>
     </div>
   </template>
+  <?php endif; ?>
   <style>
   .service-media-modal{position:fixed;inset:0;z-index:1000;display:none;align-items:flex-start;justify-content:center;padding:7vh 24px;background:rgba(15,23,42,.62)}
   .service-media-modal.is-open{display:flex}
@@ -555,8 +620,8 @@ ob_start();
     <div class="service-media-dialog" role="dialog" aria-modal="true" aria-label="Vyber media">
       <div class="service-media-head">
         <div>
-          <div class="card-title" style="margin:0">Vyber ikonu z medii</div>
-          <div class="form-hint">Kliknutim se cesta vlozi do aktualni sluzby.</div>
+          <div class="card-title" style="margin:0">Vyber z medii</div>
+          <div class="form-hint">Kliknutim vlozis cestu do aktualniho pole nebo obrazek do editoru.</div>
         </div>
         <button type="button" class="btn btn-secondary" data-service-media-close>Zavrit</button>
       </div>
@@ -591,34 +656,57 @@ ob_start();
     const modal = document.getElementById('service-media-modal');
     if (!modal) return;
     let activeInput = null;
+    let activeSelectCallback = null;
     const close = () => {
       modal.classList.remove('is-open');
       modal.setAttribute('aria-hidden', 'true');
       activeInput = null;
+      activeSelectCallback = null;
+    };
+    const openModal = () => {
+      modal.classList.add('is-open');
+      modal.setAttribute('aria-hidden', 'false');
     };
     document.addEventListener('click', event => {
       const openBtn = event.target.closest('[data-service-media-open]');
       if (openBtn) {
         const item = openBtn.closest('[data-service-item]');
         activeInput = item ? item.querySelector('[data-service-name="' + (openBtn.dataset.targetName || 'icon_url') + '"]') : null;
-        modal.classList.add('is-open');
-        modal.setAttribute('aria-hidden', 'false');
+        activeSelectCallback = null;
+        openModal();
+      }
+      const pageOpenBtn = event.target.closest('[data-page-media-open]');
+      if (pageOpenBtn) {
+        activeInput = document.getElementById(pageOpenBtn.dataset.targetId || '');
+        activeSelectCallback = null;
+        openModal();
       }
       const mediaItem = event.target.closest('[data-service-media-item]');
-      if (mediaItem && activeInput) {
-        activeInput.value = mediaItem.dataset.url || '';
+      if (mediaItem && (activeInput || activeSelectCallback)) {
+        const url = mediaItem.dataset.url || '';
+        if (activeInput) {
+          activeInput.value = url;
+          activeInput.dispatchEvent(new Event('input', { bubbles: true }));
+          activeInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        if (activeSelectCallback) activeSelectCallback(url);
         close();
       }
       if (event.target.closest('[data-service-media-close]') || event.target === modal) {
         close();
       }
     });
+    document.addEventListener('admin:media-picker:open', event => {
+      if (!event.detail || typeof event.detail.select !== 'function') return;
+      activeInput = null;
+      activeSelectCallback = event.detail.select;
+      openModal();
+    });
     document.addEventListener('keydown', event => {
       if (event.key === 'Escape' && modal.classList.contains('is-open')) close();
     });
   })();
   </script>
-  <?php endif; ?>
   <?php if ($layoutType === 'services'): ?>
   <template id="service-item-template">
     <div class="card" data-service-item style="padding:18px">
@@ -638,8 +726,11 @@ ob_start();
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label>Obrazek / URL</label>
-          <input type="text" data-service-name="image_url" placeholder="/media/...">
+          <label>Obrazek / medium</label>
+          <div class="media-input-row">
+            <input type="text" data-service-name="image_url" placeholder="/media/...">
+            <button type="button" class="btn btn-sm btn-secondary" data-service-media-open data-target-name="image_url">Vybrat</button>
+          </div>
         </div>
         <div class="form-group">
           <label>Ikona / medium</label>

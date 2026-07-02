@@ -178,7 +178,7 @@ Na kazdem publishovani se do `storage/published/llms.txt` zapise soubor dle spec
 Pro media a interni odkazy nepouzivej natvrdo ulozenou domenu tam, kde to neni nutne.
 
 - Interni odkazy preferuj relativni, napr. `/blog`, `/cenik`, `/nase-prace`
-- Media na webu pouzivej jako root-relative cesty, napr. `/storage/media/2026/05/obrazek.webp`
+- Media na webu pouzivej jako root-relative verejne cesty, napr. `/media/2026/05/obrazek.webp`; interni DB `storage_path` zustava `storage/media/...`
 - Absolutni URL jsou potreba hlavne pro SEO vystupy typu `sitemap.xml`
 
 ## Struktura projektu
@@ -350,7 +350,7 @@ Smaze clanek vcetne vazebnich zaznamu galerie.
   "slug":                "nazev-clanku",
   "excerpt":             "Kratky popis...",
   "content":             "<p>HTML obsah...</p>",
-  "featured_image_url":  "https://example.cz/storage/media/2026/05/foto.webp",
+  "featured_image_url":  "https://example.cz/media/2026/05/foto.webp",
   "meta_title":          "SEO title",
   "meta_description":    "SEO popis",
   "status":              "published",
@@ -475,7 +475,7 @@ Smaze polozku a odstrani publikovane staticke HTML soubory.
   "video_thumbnail":  "https://img.youtube.com/vi/xxx/hqdefault.jpg",
   "photos": [
     {
-      "url":    "https://example.cz/storage/media/2026/05/foto.webp",
+      "url":    "https://example.cz/media/2026/05/foto.webp",
       "alt":    "Popis fotky",
       "width":  1920,
       "height": 1080
@@ -542,7 +542,7 @@ Po nahrání se automaticky generuji tri varianty: `webp` (plna velikost), `medi
       "success":       true,
       "media_id":      42,
       "storage_path":  "storage/media/2026/05/foto.webp",
-      "url":           "/storage/media/2026/05/foto.webp",
+      "url":           "/media/2026/05/foto.webp",
       "variant_count": 3,
       "name":          "foto.jpg",
       "width":         1920,
@@ -638,7 +638,7 @@ Pri pokusu o odeslani GA4 eventu runtime zapisuje do konzole `[GA4 Tracking]` st
 - Nahrane obrazky se zpracovavaji pres `MediaIngestionService`: detekce MIME, validace velikosti, presun souboru, zapis do DB
 - Automaticky se generuji varianty: `webp` (plna velikost), `thumb` (max 300 px), `medium` (max 900 px)
 - Logo webu se servuje pres `<picture><source type="image/webp">` — WebP varianta se vyhledava automaticky z `media_variants`
-- Vsechna media na frontendu pouzivaji root-relative cesty (`/storage/media/...`), nikdy natvrdo ulozenou domenu
+- Vsechna media na frontendu pouzivaji root-relative verejne cesty (`/media/...`), nikdy natvrdo ulozenou domenu; uloziste `storage/media/...` zustava interni
 
 ## Poznamky k portfoliu
 

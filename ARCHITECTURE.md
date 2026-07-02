@@ -340,9 +340,10 @@ Tabulka `sites` roste přes migrace. `SiteRepository::writableColumns()` udržuj
 
 ## Media URL
 
-- Vždy root-relative: `/storage/media/YYYY/MM/soubor.webp`
-- Nikdy hardcoded doména ze `sites.domain` (kvůli staging/prod kompatibilitě)
-- Výjimka: sitemap.xml a absolutní OG tagy musí obsahovat absolutní URL
+- Interní DB cesta zůstává `storage/media/YYYY/MM/soubor.webp`.
+- Veřejné URL v admin pickerech, frontendu a publikovaném HTML mají být root-relative přes streamovací route: `/media/YYYY/MM/soubor.webp`.
+- Nikdy hardcoded doména ze `sites.domain` kvůli staging/prod kompatibilitě.
+- Výjimka: sitemap.xml a absolutní OG tagy musí obsahovat absolutní URL.
 
 ---
 

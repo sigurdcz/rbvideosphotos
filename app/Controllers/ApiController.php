@@ -486,7 +486,7 @@ class ApiController
                     'storage_path'  => $result['storage_path'],
                     'variant_count' => $result['variant_count'],
                     'name'          => $file['name'],
-                    'url'           => '/' . ltrim($result['storage_path'], '/'),
+                    'url'           => $this->publicMediaUrl((string)$result['storage_path']),
                     'width'         => $media['width'] ?? null,
                     'height'        => $media['height'] ?? null,
                     'mime_type'     => $media['mime_type'] ?? null,
@@ -527,7 +527,7 @@ class ApiController
         $imgUrl = null;
         if ($p['featured_image_id']) {
             $m = (new MediaRepository())->findById((int)$p['featured_image_id']);
-            if ($m) $imgUrl = $domain . '/' . ltrim($m['storage_path'], '/');
+            if ($m) $imgUrl = $domain . $this->publicMediaUrl((string)$m['storage_path']);
         }
 
         return [
@@ -552,7 +552,7 @@ class ApiController
         $media  = $repo->getMedia($e['id']);
 
         $photos = array_map(fn($m) => [
-            'url'    => $domain . '/' . ltrim($m['storage_path'], '/'),
+            'url'    => $domain . $this->publicMediaUrl((string)$m['storage_path']),
             'alt'    => $m['alt_text'] ?? '',
             'width'  => $m['width'],
             'height' => $m['height'],
@@ -680,5 +680,15 @@ class ApiController
         }
 
         return $origin;
+    }
+
+    private function publicMediaUrl(string $storagePath): string
+    {
+        $normalized = str_replace('\\', '/', trim($storagePath));
+        if ($normalized === '') return '';
+        if (str_starts_with($normalized, '/media/')) return $normalized;
+        if (str_starts_with($normalized, '/storage/media/')) return '/media/' . ltrim(substr($normalized, strlen('/storage/media/')), '/');
+        if (str_starts_with($normalized, 'storage/media/')) return '/media/' . ltrim(substr($normalized, strlen('storage/media/')), '/');
+        return '/' . ltrim($normalized, '/');
     }
 }
