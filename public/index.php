@@ -118,6 +118,7 @@ function tryServeDatabasePage(string $uri, bool $authenticated = false, bool $pr
             $css = ($template['css_source'] ?? '') . "\n" . $themeCss;
             $js  = ($template['js_source']  ?? '') . "\n" . $themeJs;
         }
+        $html = injectHomepageAboutVisualSource($html, (int)$page['id'], $isHome);
         $html = $renderer->injectAssets($html, $css, $js);
         $html = $renderer->injectSeo(
             $html,
@@ -656,6 +657,42 @@ function injectPageHeroImage(string $html, int $pageId): string
     }
 
     return injectBodyCssVariableToken($html, 'theme-page-hero-image', "url('" . str_replace("'", '%27', $heroImage) . "')");
+}
+
+function injectHomepageAboutVisualSource(string $html, int $pageId, bool $isHome): string
+{
+    if (!$isHome) {
+        return $html;
+    }
+
+    try {
+        $block = (new BlockRepository())->findByKey($pageId, 'jb-about-visual__media');
+        $url = $block ? publicMediaUrl((string)($block['content'] ?? '')) : '';
+    } catch (\Throwable $e) {
+        Logger::infoTo('theme-debug', 'theme.about.visual.error', 'Failed to resolve homepage about visual', [
+            'page_id' => $pageId,
+            'error' => $e->getMessage(),
+        ]);
+        return $html;
+    }
+
+    $sourcePattern = '~<img\b[^>]*\bclass=(["\'])[^"\']*\bjb-about-visual__source\b[^"\']*\1[^>]*>~i';
+    if ($url === '') {
+        return preg_replace($sourcePattern, '', $html) ?? $html;
+    }
+
+    $source = '<img class="jb-about-visual__source" src="' . htmlspecialchars($url, ENT_QUOTES) . '" alt="Nase sluzby" loading="lazy" hidden>';
+    $updated = preg_replace($sourcePattern, $source, $html, 1, $count);
+    if ($count > 0 && is_string($updated)) {
+        return $updated;
+    }
+
+    $html = preg_replace('/(<main\b[^>]*>)/i', '$1' . $source, $html, 1, $count) ?? $html;
+    if ($count > 0) {
+        return $html;
+    }
+
+    return preg_replace('/(<body\b[^>]*>)/i', '$1' . $source, $html, 1) ?? $html;
 }
 
 function resolvePageHeroImageUrl(int $pageId): string

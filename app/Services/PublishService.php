@@ -383,7 +383,7 @@ HTML;
             return preg_replace($sourcePattern, '', $html) ?? $html;
         }
 
-        $source = '<img class="jb-about-visual__source" data-media="jb-about-visual__media" src="' . htmlspecialchars($url, ENT_QUOTES) . '" alt="Naše služby" loading="lazy" hidden>';
+        $source = '<img class="jb-about-visual__source" src="' . htmlspecialchars($url, ENT_QUOTES) . '" alt="Nase sluzby" loading="lazy" hidden>';
         $updated = preg_replace($sourcePattern, $source, $html, 1, $count);
         if ($count > 0 && is_string($updated)) {
             return $updated;
