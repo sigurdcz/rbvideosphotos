@@ -34,7 +34,11 @@
 .hp-faq-question{display:block;color:#fff;margin-bottom:8px}
 .hp-faq-answer{color:rgba(255,255,255,.72);line-height:1.6;margin:0}
 .hp-contact-note{margin-bottom:12px}
-.hp-honeypot{display:none!important}
+.hp-honeypot,
+input.hp-honeypot,
+input[name="website"].hp-honeypot,
+.kt-form-block input.hp-honeypot,
+.kt-form-block input[name="website"].hp-honeypot{display:none!important;position:absolute!important;left:-10000px!important;top:auto!important;width:1px!important;height:1px!important;overflow:hidden!important;opacity:0!important;pointer-events:none!important}
 .pt-thumb__placeholder{height:100%;background:#222;display:flex;align-items:center;justify-content:center;font-size:2rem;color:rgba(255,255,255,.3)}
 .blog-title-link{color:inherit;text-decoration:none}
 .hp-section-cta{margin-top:22px;display:flex;justify-content:flex-start}

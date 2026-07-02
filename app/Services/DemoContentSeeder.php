@@ -778,12 +778,12 @@ CSS;
     private function ensurePricingTemplate(int $siteId): int
     {
         $html = <<<'HTML'
-<header class="hero">
+<section class="page-hero">
   <div class="container">
     <h1 data-block="hero_heading"></h1>
-    <p data-block="hero_intro"></p>
+    <p data-block="hero_intro" class="hero-sub"></p>
   </div>
-</header>
+</section>
 <section class="section">
   <div class="container">
     <h2 data-block="pricing_weddings_heading"></h2>
@@ -803,9 +803,10 @@ CSS;
 HTML;
 
         $css = <<<'CSS'
-.hero{background:#1a1a1a;color:#fff;padding:64px 0 72px}
-.hero h1{color:#fff;font-size:clamp(2rem,4vw,2.6rem);font-weight:900;margin-bottom:.6rem}
-.hero p{color:rgba(255,255,255,.65);max-width:760px;margin-bottom:0}
+.page-hero{background:#1a1a1a;color:#fff;padding:96px 0 90px;position:relative;overflow:hidden}
+.page-hero .container{position:relative;z-index:3}
+.page-hero h1{color:#fff;font-size:clamp(2.4rem,5vw,4.5rem);font-weight:700;line-height:1.05;margin:0 0 1rem;max-width:780px}
+.page-hero .hero-sub{color:rgba(255,255,255,.78);max-width:760px;margin:0;line-height:1.75}
 .section{padding:64px 0}
 .section-dark{background:#1a1a1a;padding:64px 0}
 .section-dark h2{color:#fff;font-size:1.6rem;margin-bottom:.5rem}

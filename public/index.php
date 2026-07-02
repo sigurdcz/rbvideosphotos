@@ -86,7 +86,7 @@ function tryServeDatabasePage(string $uri, bool $authenticated = false, bool $pr
         $twImageUrl = resolveSocialImageUrl($mediaRepo, $seo['twitter_image_id'] ?? null, $site);
 
         $html = $renderer->render(
-            $template['html_source'],
+            normalizeLegacyTemplateSource((string)($template['html_source'] ?? '')),
             $blocks,
             $mediaMap,
             $authenticated && !$previewMode
@@ -356,12 +356,21 @@ function normalizeLegacyFrontendMarkup(string $html): string
     $html = str_replace('<p style="color:rgba(255,255,255,.45)">', '<p class="frontend-note">', $html);
     $html = str_replace('<p style="color:rgba(255,255,255,.45);text-align:center;padding:32px 0">', '<p class="frontend-note frontend-note--center">', $html);
     $html = str_replace('<p style="color:rgba(255,255,255,.4)">', '<p class="frontend-note">', $html);
-    $html = str_replace(' style="display:none" tabindex="-1" autocomplete="off"', ' class="hp-honeypot" tabindex="-1" autocomplete="off"', $html);
+    $html = str_replace(' style="display:none" tabindex="-1" autocomplete="off"', ' class="hp-honeypot" style="display:none" tabindex="-1" autocomplete="off"', $html);
     return str_replace(
         '<div style="height:100%;background:#222;display:flex;align-items:center;justify-content:center;font-size:2rem;color:rgba(255,255,255,.3)">&#9654;</div>',
         '<div class="pt-thumb__placeholder">&#9654;</div>',
         $html
     );
+}
+
+function normalizeLegacyTemplateSource(string $html): string
+{
+    return preg_replace(
+        '~<header\s+class=(["\'])hero\1>\s*(<div\s+class=(["\'])container\3>\s*<h1\s+data-block=(["\'])hero_heading\4></h1>\s*<p\s+data-block=(["\'])hero_intro\5)(?:\s+class=(["\'])hero-sub\6)?(></p>\s*</div>)\s*</header>~i',
+        '<section class="page-hero">$2 class="hero-sub"$7</section>',
+        $html
+    ) ?? $html;
 }
 
 function externalizeBodyCssVariables(string $html): string
@@ -2198,6 +2207,7 @@ body{background:#111;color:#fff}
 .kt-form-field--full{grid-column:1/-1!important}
 .kt-form-block label{display:block!important;margin:0 0 7px!important;color:#eadfce!important;font-size:10px!important;font-weight:900!important;line-height:1!important;letter-spacing:.19em!important;text-transform:uppercase!important}
 .kt-form-block input,.kt-form-block textarea,.kt-form-block select{display:block!important;width:100%!important;height:auto!important;margin:0!important;border:1px solid rgba(214,170,95,.16)!important;border-radius:0!important;background:#241914!important;color:#fff8ed!important;padding:12px 13px!important;font-size:13px!important;line-height:1.35!important;box-shadow:none!important}
+.kt-form-block input.hp-honeypot,.kt-form-block input[name="website"].hp-honeypot{display:none!important;position:absolute!important;left:-10000px!important;top:auto!important;width:1px!important;height:1px!important;overflow:hidden!important;opacity:0!important;pointer-events:none!important}
 .kt-form-block textarea{min-height:96px!important;resize:vertical!important}
 .kt-consent{display:flex!important;align-items:flex-start!important;gap:10px!important;margin:15px 0 14px!important;color:#f4e9dc!important;font-size:11.5px!important;line-height:1.45!important;letter-spacing:0!important;text-transform:none!important}
 .kt-consent span{display:block!important;padding-top:1px!important}

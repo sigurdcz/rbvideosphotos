@@ -87,7 +87,7 @@ class PublishService
         $twImageUrl = $this->resolveImageUrl($seo['twitter_image_id'] ?? null, $site);
 
         // Render
-        $html = $this->renderer->render($template['html_source'], $blocks, $mediaMap);
+        $html = $this->renderer->render($this->normalizeLegacyTemplateSource((string)($template['html_source'] ?? '')), $blocks, $mediaMap);
         $theme = $this->themes->resolveForSite($site);
         Logger::infoTo('theme-debug', 'theme.publish.request', 'Publish theme resolution requested', [
             'site_id' => $site['id'] ?? null,
@@ -604,11 +604,21 @@ CSS;
         $html = str_replace('<p style="color:rgba(255,255,255,.72);line-height:1.6;margin:0">', '<p class="hp-faq-answer">', $html);
         $html = str_replace('<p style="color:rgba(255,255,255,.45)">', '<p class="frontend-note">', $html);
         $html = str_replace('<p style="color:rgba(255,255,255,.45);text-align:center;padding:32px 0">', '<p class="frontend-note frontend-note--center">', $html);
+        $html = str_replace(' style="display:none" tabindex="-1" autocomplete="off"', ' class="hp-honeypot" style="display:none" tabindex="-1" autocomplete="off"', $html);
         return str_replace(
             '<div style="height:100%;background:#222;display:flex;align-items:center;justify-content:center;font-size:2rem;color:rgba(255,255,255,.3)">&#9654;</div>',
             '<div class="pt-thumb__placeholder">&#9654;</div>',
             $html
         );
+    }
+
+    private function normalizeLegacyTemplateSource(string $html): string
+    {
+        return preg_replace(
+            '~<header\s+class=(["\'])hero\1>\s*(<div\s+class=(["\'])container\3>\s*<h1\s+data-block=(["\'])hero_heading\4></h1>\s*<p\s+data-block=(["\'])hero_intro\5)(?:\s+class=(["\'])hero-sub\6)?(></p>\s*</div>)\s*</header>~i',
+            '<section class="page-hero">$2 class="hero-sub"$7</section>',
+            $html
+        ) ?? $html;
     }
 
     private function externalizeBodyCssVariables(string $html): string
