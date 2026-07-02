@@ -1959,8 +1959,8 @@ function tryServeKontaktPage(): bool
     if ($siteName === '' || preg_match('~erbez~i', $siteName)) {
         $siteName = 'RB Videos and Photos';
     }
-    $heroTitle = 'Kontakt';
-    $heroSub   = 'Ozvěte se nám. Rádi odpovíme na vaše otázky.';
+    $heroTitle = 'Pojďme si říct o vašem focení nebo videu.';
+    $heroSub   = 'Napište nám termín, místo a představu. Ozveme se vám co nejdříve a navrhneme to nejlepší řešení.';
 
     $page = (new PageRepository())->findPublishedByUrlPath('kontakt');
     if ($page) {
@@ -1978,6 +1978,13 @@ function tryServeKontaktPage(): bool
     $pageBlocks = pageBlockMap($page);
     [$heroTitleKey, $heroTitle, $heroTitleType] = firstBlockValue($pageBlocks, ['hero_h1', 'hero_heading'], $heroTitle);
     [$heroSubKey, $heroSub, $heroSubType] = firstBlockValue($pageBlocks, ['hero_sub', 'hero_intro'], $heroSub);
+    if (trim((string)$heroTitle) === 'Kontakt') {
+        $heroTitle = 'Pojďme si říct o vašem focení nebo videu.';
+    }
+    $plainHeroSub = trim((string)$heroSub);
+    if ($plainHeroSub === 'Ozvěte se nám. Rádi odpovíme na vaše otázky.' || $plainHeroSub === 'Rádi odpovíme na vaše otázky.') {
+        $heroSub = 'Napište nám termín, místo a představu. Ozveme se vám co nejdříve a navrhneme to nejlepší řešení.';
+    }
     $heroTitleAttrs = inlineAttrs($page, $heroTitleKey, $heroTitleType);
     $heroSubAttrs = inlineAttrs($page, $heroSubKey, $heroSubType);
 
@@ -2041,6 +2048,42 @@ function tryServeKontaktPage(): bool
         $mapsHtml = '<a href="' . $h($contact['maps_url']) . '" target="_blank" rel="noopener" class="btn-maps">&#128506; Otevřít v Google Maps</a>';
     }
 
+    $contactCards = [];
+    $phoneLines = [];
+    foreach (['phone_1', 'phone_2', 'phone_3'] as $phoneKey) {
+        $phone = trim((string)($contact[$phoneKey] ?? ''));
+        if ($phone === '') {
+            continue;
+        }
+        $tel = preg_replace('/\s+/', '', $phone);
+        $phoneLines[] = '<a href="tel:' . $h($tel) . '"' . inlineAttrs($page, 'contact:' . $phoneKey, 'text') . '>' . $h($phone) . '</a>';
+    }
+    if ($phoneLines !== []) {
+        $contactCards[] = '<article class="ci-card"><span class="ci-card__icon">☎</span><div><span class="ci-label">Telefon</span><strong>' . implode('', $phoneLines) . '</strong><small>Zavolejte</small></div></article>';
+    }
+    if (!empty($contact['email'])) {
+        $contactCards[] = '<article class="ci-card"><span class="ci-card__icon">✉</span><div><span class="ci-label">E-mail</span><strong><a href="mailto:' . $h($contact['email']) . '"' . inlineAttrs($page, 'contact:email', 'text') . '>' . $h($contact['email']) . '</a></strong><small>Napsat e-mail</small></div></article>';
+    }
+    $addressLines = [];
+    foreach (['address_1', 'address_2'] as $addressKey) {
+        $address = trim((string)($contact[$addressKey] ?? ''));
+        if ($address !== '') {
+            $addressLines[] = '<span' . inlineAttrs($page, 'contact:' . $addressKey, 'text') . '>' . nl2br($h($address)) . '</span>';
+        }
+    }
+    if ($addressLines === []) {
+        $addressLines[] = '<span>Olomouc, Morava<br>celá ČR</span>';
+    }
+    $contactCards[] = '<article class="ci-card"><span class="ci-card__icon">⌖</span><div><span class="ci-label">Lokalita</span><strong>' . implode('', $addressLines) . '</strong></div></article>';
+    $contactCards[] = '<article class="ci-card ci-card--note"><span class="ci-card__icon">◷</span><div><strong>Odpovídáme obvykle do 24 hodin</strong><small>V případě urgentních zakázek nás raději kontaktujte telefonicky.</small></div></article>';
+    if ($socialsHtml !== '') {
+        $contactCards[] = '<div class="ci-socials">' . $socialsHtml . '</div>';
+    }
+    $detailsHtml = implode('', $contactCards);
+    $mapsHtml = !empty($contact['maps_url'])
+        ? '<a href="' . $h($contact['maps_url']) . '" target="_blank" rel="noopener" class="btn-maps">Otevřít mapu</a>'
+        : '';
+
     $kontaktCss = <<<'CSS'
 body{background:#111;color:#fff}
 .kt-hero{background:#1a1a1a;padding:56px 0 32px;text-align:center}
@@ -2072,6 +2115,46 @@ body{background:#111;color:#fff}
 .kt-form-btn:hover{opacity:.9}
 .kt-success{background:#18181c;border-radius:10px;padding:20px;text-align:center;color:#4ade80;margin-bottom:16px}
 @media(min-width:900px){.kt-hero{padding:64px 0 40px}.kt-wrap{padding:56px 0 80px}.kt-grid{grid-template-columns:1fr 1fr;gap:40px}.ci-block,.kt-form-block{padding:32px}.ci-row{flex-direction:row;gap:12px}.ci-label{flex:0 0 80px;padding-top:2px}}
+.kt-hero,.kt-wrap,.kt-process,.kt-faq{background:#17100c;color:#f7efe3}
+.kt-hero{position:relative;overflow:hidden;min-height:420px;padding:96px 0 70px;text-align:left;background:linear-gradient(90deg,rgba(19,12,8,.96) 0%,rgba(29,19,12,.82) 45%,rgba(25,15,9,.42) 100%),var(--theme-page-hero-image,linear-gradient(135deg,#2b2118,#120d0a));background-size:cover;background-position:center right}
+.kt-hero::after{content:"";position:absolute;inset:auto 0 0;z-index:2;height:120px;background:linear-gradient(180deg,rgba(23,16,12,0),#17100c);pointer-events:none}
+.kt-hero .container{position:relative;z-index:3;max-width:1180px}
+.kt-kicker,.kt-section-kicker{display:block;margin-bottom:16px;color:#d6aa5f;font-size:11px;font-weight:900;letter-spacing:.28em;text-transform:uppercase}
+.kt-hero h1{max-width:620px;margin:0 0 18px;color:#fff7ec;font-family:Georgia,serif;font-size:clamp(2.45rem,5vw,4.8rem);font-weight:700;line-height:.98;text-wrap:balance}
+.kt-hero p{max-width:610px;margin:0;color:rgba(255,247,236,.78);font-size:1.04rem;line-height:1.8}
+.kt-hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
+.kt-btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:46px;padding:13px 18px;border:1px solid rgba(214,170,95,.56);background:rgba(214,170,95,.12);color:#f7efe3;text-decoration:none;font-size:12px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}
+.kt-btn--gold{background:#d6aa5f;color:#1b120d;border-color:#d6aa5f;box-shadow:0 18px 34px rgba(0,0,0,.24)}
+.kt-wrap{padding:64px 0 58px}
+.kt-wrap .container,.kt-process .container,.kt-faq .container{max-width:1180px}
+.kt-grid{display:grid;grid-template-columns:minmax(260px,.8fr) minmax(0,1.45fr);gap:54px;align-items:start;max-width:none}
+.ci-block,.kt-form-block{background:transparent;border-radius:0;padding:0;box-shadow:none}
+.ci-title{display:flex;align-items:center;gap:20px;margin:0 0 20px;color:#d6aa5f;font-size:11px;font-weight:900;letter-spacing:.26em;text-transform:uppercase}
+.ci-title::after{content:"";width:64px;height:1px;background:rgba(214,170,95,.42)}
+.ci-card{display:grid;grid-template-columns:48px minmax(0,1fr);gap:16px;align-items:center;margin-bottom:14px;padding:18px;background:rgba(255,255,255,.045);border:1px solid rgba(214,170,95,.08);border-radius:6px}
+.ci-card__icon{display:grid;place-items:center;width:42px;height:42px;border-radius:999px;background:rgba(214,170,95,.1);border:1px solid rgba(214,170,95,.12);color:#d6aa5f}
+.ci-card strong{display:grid;gap:3px;color:#f7efe3;font-size:14px;line-height:1.55}
+.ci-card strong a,.ci-card a{color:#f7efe3;text-decoration:none}
+.ci-card small{display:block;margin-top:5px;color:#d6aa5f;font-size:12px;text-decoration:underline;text-underline-offset:3px}
+.ci-card--note{align-items:start;background:transparent;border-color:rgba(214,170,95,.25)}
+.ci-label{display:block;margin-bottom:4px;color:#d6aa5f;font-size:11px;text-transform:none;letter-spacing:0}
+.ci-socials{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}.ci-social{display:inline-flex;align-items:center;gap:9px;padding:10px 12px;border:1px solid rgba(214,170,95,.2);color:#f7efe3;text-decoration:none;background:rgba(255,255,255,.035)}.ci-social__icon{display:grid;place-items:center}.ci-social__icon svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.75}
+.btn-maps{display:inline-flex;margin-top:12px;color:#d6aa5f;text-decoration:none}
+.kt-form-block{padding:28px;background:rgba(255,255,255,.055);border:1px solid rgba(214,170,95,.13);border-radius:7px}
+.kt-form-intro{margin:-8px 0 20px;color:rgba(255,247,236,.66);font-size:13px;line-height:1.65}
+.kt-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}.kt-form-field--full{grid-column:1/-1}
+.kt-form-block label{margin-bottom:7px;color:rgba(255,247,236,.7);font-size:11px;font-weight:800;letter-spacing:.02em;text-transform:none}
+.kt-form-block input,.kt-form-block textarea,.kt-form-block select{margin:0;width:100%;border:1px solid rgba(214,170,95,.08);border-radius:0;background:#211711;color:#f7efe3;padding:13px 14px;font-size:14px}
+.kt-form-block textarea{min-height:112px}.kt-form-block input::placeholder,.kt-form-block textarea::placeholder{color:rgba(247,239,227,.38)}
+.kt-consent{display:flex;gap:10px;align-items:flex-start;margin:14px 0;color:rgba(255,247,236,.55);font-size:12px}.kt-consent input{width:auto;margin-top:2px}.kt-consent a{color:#d6aa5f}
+.kt-form-btn{width:100%;border:0;border-radius:3px;background:#d6aa5f;color:#1b120d;padding:14px 18px;font-size:12px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}
+.kt-form-safe{margin-top:10px;text-align:center;color:rgba(255,247,236,.44);font-size:12px}
+.kt-success{margin-bottom:16px;border:1px solid rgba(214,170,95,.24);background:rgba(214,170,95,.08);color:#d6f4c6}
+.kt-process{padding:48px 0 34px;border-top:1px solid rgba(214,170,95,.08);border-bottom:1px solid rgba(214,170,95,.08)}
+.kt-section-kicker{text-align:center;margin-bottom:24px}
+.kt-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.kt-step{position:relative;display:grid;grid-template-columns:48px 1fr;gap:14px;align-items:start}.kt-step__num{position:absolute;left:-5px;top:-7px;display:grid;place-items:center;width:18px;height:18px;border-radius:50%;background:#d6aa5f;color:#1b120d;font-size:10px;font-weight:900}.kt-step__icon{display:grid;place-items:center;width:46px;height:46px;border:1px solid rgba(214,170,95,.28);border-radius:50%;color:#d6aa5f;background:rgba(214,170,95,.05)}.kt-step h3{margin:0 0 5px;color:#f7efe3;font-size:15px}.kt-step p{margin:0;color:rgba(255,247,236,.58);font-size:12px;line-height:1.6}
+.kt-faq{padding:34px 0 58px}.kt-faq-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 18px}.kt-faq-item{display:flex;justify-content:space-between;gap:14px;padding:16px 18px;background:rgba(255,255,255,.045);border:1px solid rgba(214,170,95,.08);color:#f7efe3;font-size:13px}.kt-faq-item span:last-child{color:#d6aa5f;font-weight:900}
+@media(max-width:900px){.kt-hero{min-height:auto;padding:82px 0 58px}.kt-grid,.kt-steps,.kt-faq-grid{grid-template-columns:1fr}.kt-form-grid{grid-template-columns:1fr}.kt-form-field--full{grid-column:auto}}
 CSS;
 
     // Contact form HTML
@@ -2087,21 +2170,42 @@ CSS;
     }
     $formHtml .= '<form method="POST" action="/kontakt/odeslat">'
         . '<input type="hidden" name="_csrf" value="' . $h(\App\Core\Auth::csrfToken()) . '">'
-        . '<div><label>Jméno *</label><input type="text" name="name" required placeholder="Vaše jméno"></div>'
+        . '<p class="kt-form-intro">Nemusíte mít všechno připravené do detailu. Stačí pár základních informací a my se vám ozveme zpět s návrhem dalšího postupu.</p>'
+        . '<div class="kt-form-grid">'
+        . '<div><label>Jméno a příjmení *</label><input type="text" name="name" required placeholder="Vaše jméno"></div>'
         . '<div><label>E-mail nebo telefon *</label><input type="text" name="contact_value" required placeholder="email@domena.cz nebo +420..."></div>'
-        . '<div><label>Typ focení *</label><select name="shooting_type" required><option value="">Vyberte typ focení</option><option value="svatebni">Svatební foto a video</option><option value="portret">Portrét</option><option value="rodinne">Rodinné focení</option><option value="firemni">Firemní focení</option><option value="jine">Jiné</option></select></div>'
-        . '<div><label>Zpráva *</label><textarea name="message" required placeholder="Napište nám…"></textarea></div>'
+        . '<div class="kt-form-field--full"><label>Typ focení / videa *</label><select name="shooting_type" required><option value="">Vyberte typ focení nebo videa</option><option value="svatebni">Svatební foto a video</option><option value="portret">Portrét</option><option value="rodinne">Rodinné focení</option><option value="firemni">Firemní focení</option><option value="jine">Jiné</option></select></div>'
+        . '<div><label>Datum akce (pokud víte)</label><input type="text" name="event_date" placeholder="DD.MM.RRRR"></div>'
+        . '<div><label>Místo akce</label><input type="text" name="event_place" placeholder="Město nebo lokalita"></div>'
+        . '<div class="kt-form-field--full"><label>Zpráva</label><textarea name="message" required placeholder="Napište nám o své představě, rozsahu akce atd."></textarea></div>'
+        . '</div>'
+        . '<label class="kt-consent"><input type="checkbox" required><span>Souhlasím se zpracováním osobních údajů. <a href="/podminky-uziti">Více informací</a></span></label>'
         . '<input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off">'
-        . '<button type="submit" class="kt-form-btn">Odeslat zprávu</button>'
+        . '<button type="submit" class="kt-form-btn">Odeslat nezávaznou poptávku</button>'
+        . '<div class="kt-form-safe">Vaše údaje jsou u nás v bezpečí.</div>'
         . '</form>';
 
     $renderer   = new PageRenderer();
     $nav        = resolveThemeNav($site, false);
+    $primaryTel = preg_replace('/\s+/', '', (string)($contact['phone_1'] ?? ''));
+    $emailHref = trim((string)($contact['email'] ?? ''));
+    $heroActionsHtml = '';
+    if ($primaryTel !== '') {
+        $heroActionsHtml .= '<a class="kt-btn kt-btn--gold" href="tel:' . $h($primaryTel) . '">Zavolat</a>';
+    }
+    if ($emailHref !== '') {
+        $heroActionsHtml .= '<a class="kt-btn" href="mailto:' . $h($emailHref) . '">Napsat e-mail</a>';
+    }
+    $heroActionsHtml .= '<a class="kt-btn" href="#kontakt-form">Vyplnit poptávku</a>';
     $pageContent = <<<HTML
 <section class="kt-hero">
   <div class="container">
+    <span class="kt-kicker">Kontakt</span>
     <h1{$heroTitleAttrs}>{$h($heroTitle)}</h1>
     <p{$heroSubAttrs}>{$h($heroSub)}</p>
+    <div class="kt-hero-actions">
+      {$heroActionsHtml}
+    </div>
   </div>
 </section>
 <section class="kt-wrap">
@@ -2112,10 +2216,31 @@ CSS;
         {$detailsHtml}
         {$mapsHtml}
       </div>
-      <div class="kt-form-block">
+      <div class="kt-form-block" id="kontakt-form">
         <div class="ci-title">Napište nám</div>
         {$formHtml}
       </div>
+    </div>
+  </div>
+</section>
+<section class="kt-process">
+  <div class="container">
+    <span class="kt-section-kicker">Jak to probíhá?</span>
+    <div class="kt-steps">
+      <article class="kt-step"><span class="kt-step__num">1</span><span class="kt-step__icon">&#9993;</span><div><h3>Pošlete nám poptávku</h3><p>Napište nám termín, místo a typ akce. Čím víc informací, tím lépe.</p></div></article>
+      <article class="kt-step"><span class="kt-step__num">2</span><span class="kt-step__icon">&#9635;</span><div><h3>Ozveme se vám zpět</h3><p>Navrhneme řešení a domluvíme rozsah focení nebo videa.</p></div></article>
+      <article class="kt-step"><span class="kt-step__num">3</span><span class="kt-step__icon">&#10003;</span><div><h3>Potvrdíme termín</h3><p>Po odsouhlasení detailů si rezervujeme váš termín.</p></div></article>
+    </div>
+  </div>
+</section>
+<section class="kt-faq">
+  <div class="container">
+    <span class="kt-section-kicker">Časté otázky</span>
+    <div class="kt-faq-grid">
+      <div class="kt-faq-item"><span>Kdy se mi ozvete zpět?</span><span>+</span></div>
+      <div class="kt-faq-item"><span>Je poptávka nezávazná?</span><span>+</span></div>
+      <div class="kt-faq-item"><span>Působíte pouze v Olomouci?</span><span>+</span></div>
+      <div class="kt-faq-item"><span>Jak dopředu je potřeba rezervovat termín?</span><span>+</span></div>
     </div>
   </div>
 </section>
@@ -2144,11 +2269,8 @@ HTML;
         $html = '<!DOCTYPE html><html lang="cs"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Kontakt | ' . $h($siteName) . '</title>'
             . '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:system-ui,sans-serif;line-height:1.6;background:#111;color:#fff}.container{max-width:1100px;margin:0 auto;padding:0 16px}' . $kontaktCss . '</style>'
             . '</head><body>'
-            . '<section class="kt-hero"><div class="container"><h1>' . $h($heroTitle) . '</h1><p>' . $h($heroSub) . '</p></div></section>'
-            . '<section class="kt-wrap"><div class="container"><div class="kt-grid">'
-            . '<div class="ci-block"><div class="ci-title">Kontaktní informace</div>' . $detailsHtml . $mapsHtml . '</div>'
-            . '<div class="kt-form-block"><div class="ci-title">Napište nám</div>' . $formHtml . '</div>'
-            . '</div></div></section><footer><div class="container">' . $h($siteName) . '</div></footer></body></html>';
+            . $pageContent
+            . '<footer><div class="container">' . $h($siteName) . '</div></footer></body></html>';
     }
 
     header('Content-Type: text/html; charset=UTF-8');
@@ -2577,11 +2699,13 @@ try {
         $name    = $cleanHeaderValue((string) ($_POST['name'] ?? ''));
         $contact = trim((string) ($_POST['contact_value'] ?? ''));
         $shootingType = trim($_POST['shooting_type'] ?? '');
+        $eventDate = trim((string) ($_POST['event_date'] ?? ''));
+        $eventPlace = trim((string) ($_POST['event_place'] ?? ''));
         $message = trim($_POST['message']       ?? '');
         $contactMailSent = false;
         if ($name && $contact && $message && $formEmail && filter_var($formEmail, FILTER_VALIDATE_EMAIL)) {
             $subject = 'Nová zpráva z webu — ' . $name;
-            $body    = "Jméno: {$name}\nKontakt: {$contact}\nTyp focení: {$shootingType}\n\nZpráva:\n{$message}";
+            $body    = "Jméno: {$name}\nKontakt: {$contact}\nTyp focení: {$shootingType}\nDatum akce: {$eventDate}\nMísto akce: {$eventPlace}\n\nZpráva:\n{$message}";
             RequestThrottle::hit('contact_form', $contactThrottleKey, 3, 10 * 60, 10 * 60);
             $appHost = parse_url((string) Config::get('app', 'url', ''), PHP_URL_HOST);
             $mailHost = is_string($appHost) && $appHost !== '' ? $appHost : 'localhost';
