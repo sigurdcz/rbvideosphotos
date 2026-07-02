@@ -2076,9 +2076,6 @@ function tryServeKontaktPage(): bool
     }
     $contactCards[] = '<article class="ci-card"><span class="ci-card__icon">⌖</span><div><span class="ci-label">Lokalita</span><strong>' . implode('', $addressLines) . '</strong></div></article>';
     $contactCards[] = '<article class="ci-card ci-card--note"><span class="ci-card__icon">◷</span><div><strong>Odpovídáme obvykle do 24 hodin</strong><small>V případě urgentních zakázek nás raději kontaktujte telefonicky.</small></div></article>';
-    if ($socialsHtml !== '') {
-        $contactCards[] = '<div class="ci-socials">' . $socialsHtml . '</div>';
-    }
     $detailsHtml = implode('', $contactCards);
     $mapsHtml = !empty($contact['maps_url'])
         ? '<a href="' . $h($contact['maps_url']) . '" target="_blank" rel="noopener" class="btn-maps">Otevřít mapu</a>'
@@ -2174,6 +2171,34 @@ body{background:#111;color:#fff}
 .kt-steps{position:relative;display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:38px;max-width:1060px;margin:0 auto}.kt-steps::before{content:"";position:absolute;left:8%;right:8%;top:29px;height:1px;background:#ead7b4}.kt-step{position:relative;z-index:1;display:block!important;text-align:center;padding:0 10px}.kt-step__num{display:grid;place-items:center;width:64px;height:64px;margin:0 auto 28px;border:1px solid #dfb96e;border-radius:999px;background:#f8f5ef;color:#c79643;font-size:1.1rem;font-weight:700}.kt-step h3{margin:0 0 14px;color:#241914;font-family:Georgia,serif;font-size:clamp(1.65rem,2.4vw,2.35rem);font-weight:400;line-height:1.08}.kt-step p{max-width:210px;margin:0 auto;color:#725d4f;font-size:15px;line-height:1.75}
 .kt-faq{padding:34px 0 50px}.kt-faq .kt-section-kicker{text-align:center;margin-bottom:20px}.kt-faq-grid{display:grid!important;grid-template-columns:1fr 1fr!important;gap:10px 16px;max-width:980px;margin:0 auto}.kt-faq-item{display:flex;justify-content:space-between;gap:14px;padding:13px 16px;background:rgba(255,255,255,.045);border:1px solid rgba(214,170,95,.08);color:#f7efe3;font-size:12px}.kt-faq-item span:last-child{color:#d6aa5f;font-weight:900}
 @media(max-width:900px){.kt-hero{min-height:auto;padding:72px 0 50px}.kt-grid,.kt-steps,.kt-faq-grid{grid-template-columns:1fr!important}.kt-form-grid{grid-template-columns:1fr!important}.kt-form-field--full{grid-column:auto}.kt-grid{max-width:none;gap:28px}.kt-wrap{padding:34px 0}.kt-hero-actions{align-items:stretch}.kt-btn{flex:1 1 180px}.kt-process{padding:56px 0}.kt-process-title{margin-bottom:36px}.kt-steps::before{display:none}.kt-step{padding:0}.kt-step+.kt-step{margin-top:18px}}
+
+/* Final contact-page overrides: keep these last to win over theme and legacy contact CSS. */
+.kt-wrap{background:radial-gradient(circle at 50% 0,rgba(214,170,95,.08),transparent 520px),#4b3525!important;padding:58px 0 66px!important}
+.kt-wrap>.container{width:min(calc(100% - 52px),980px)!important;max-width:980px!important}
+.kt-grid{display:grid!important;grid-template-columns:292px minmax(0,620px)!important;justify-content:center!important;align-items:start!important;gap:46px!important;max-width:958px!important}
+.ci-block{display:block!important;min-width:0!important;padding:0!important;background:transparent!important;border:0!important;border-radius:0!important}
+.kt-form-block{display:block!important;min-width:0!important;width:100%!important;max-width:620px!important;padding:26px 26px 24px!important;background:linear-gradient(145deg,rgba(255,255,255,.065),rgba(255,255,255,.035))!important;border:1px solid rgba(214,170,95,.12)!important;border-radius:7px!important;box-shadow:0 24px 60px rgba(0,0,0,.18)!important}
+.ci-title{display:flex!important;align-items:center!important;gap:18px!important;margin:0 0 18px!important;color:#d6aa5f!important;font-family:inherit!important;font-size:10px!important;font-weight:900!important;line-height:1!important;letter-spacing:.25em!important;text-transform:uppercase!important}
+.ci-title::after{content:""!important;display:block!important;width:58px!important;height:1px!important;background:rgba(214,170,95,.45)!important}
+.ci-card{display:grid!important;grid-template-columns:42px minmax(0,1fr)!important;gap:14px!important;align-items:center!important;margin:0 0 12px!important;padding:18px 16px!important;background:rgba(255,255,255,.045)!important;border:1px solid rgba(214,170,95,.08)!important;border-radius:6px!important}
+.ci-card__icon{width:38px!important;height:38px!important;border-radius:999px!important;background:rgba(214,170,95,.1)!important;border:1px solid rgba(214,170,95,.12)!important;color:#d6aa5f!important}
+.ci-label{display:block!important;margin:0 0 4px!important;color:#d6aa5f!important;font-size:10px!important;font-weight:500!important;letter-spacing:0!important;text-transform:none!important}
+.ci-card strong{display:grid!important;gap:2px!important;color:#fff7ec!important;font-size:12.5px!important;font-weight:700!important;line-height:1.5!important}
+.ci-card small{display:block!important;margin-top:4px!important;color:#d6aa5f!important;font-size:11px!important;line-height:1.3!important}
+.ci-card--note{background:rgba(0,0,0,.06)!important;border-color:rgba(214,170,95,.3)!important}
+.kt-form-block .ci-title{margin-bottom:16px!important}
+.kt-form-intro{max-width:480px!important;margin:0 0 19px!important;color:#f6eadb!important;font-size:12.5px!important;line-height:1.65!important}
+.kt-form-grid{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:14px 14px!important}
+.kt-form-field--full{grid-column:1/-1!important}
+.kt-form-block label{display:block!important;margin:0 0 7px!important;color:#eadfce!important;font-size:10px!important;font-weight:900!important;line-height:1!important;letter-spacing:.19em!important;text-transform:uppercase!important}
+.kt-form-block input,.kt-form-block textarea,.kt-form-block select{display:block!important;width:100%!important;height:auto!important;margin:0!important;border:1px solid rgba(214,170,95,.16)!important;border-radius:0!important;background:#241914!important;color:#fff8ed!important;padding:12px 13px!important;font-size:13px!important;line-height:1.35!important;box-shadow:none!important}
+.kt-form-block textarea{min-height:96px!important;resize:vertical!important}
+.kt-consent{display:flex!important;align-items:flex-start!important;gap:10px!important;margin:15px 0 14px!important;color:#f4e9dc!important;font-size:11.5px!important;line-height:1.45!important;letter-spacing:0!important;text-transform:none!important}
+.kt-consent span{display:block!important;padding-top:1px!important}
+.kt-consent input{appearance:none!important;-webkit-appearance:none!important;display:grid!important;place-items:center!important;flex:0 0 16px!important;width:16px!important;height:16px!important;margin:0!important;border:1px solid rgba(214,170,95,.65)!important;background:#241914!important;border-radius:2px!important}
+.kt-form-btn{display:flex!important;align-items:center!important;justify-content:center!important;width:100%!important;min-height:43px!important;border:0!important;border-radius:3px!important;background:#d9ad61!important;color:#1b120d!important;font-size:11px!important;font-weight:900!important;letter-spacing:.13em!important;text-transform:uppercase!important}
+.kt-form-safe{text-align:center!important;margin-top:11px!important;color:rgba(255,247,236,.58)!important;font-size:11px!important}
+@media(max-width:900px){.kt-wrap>.container{width:min(calc(100% - 32px),640px)!important}.kt-grid{grid-template-columns:1fr!important;gap:28px!important}.kt-form-block{max-width:none!important;padding:22px!important}.kt-form-grid{grid-template-columns:1fr!important}}
 CSS;
 
     // Contact form HTML

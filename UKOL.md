@@ -1,26 +1,23 @@
-# UKOL: Oprava kontaktniho formulare a sekci
+# UKOL: Dolaďení kontaktniho panelu podle reference
 
 Datum: 2026-07-02
-Zadani: Opravit kontaktni stranku: neprekrivajici se inputy, citelne texty, stylovany checkbox, proces jako na HP, FAQ z prvnich 4 FAQ polozek a spravne rozlozeni panelu.
+Zadani: Kontaktni panel musi byt blize referenci: kompaktni leve karty, zadne inline socialni site v panelu, male nadpisy, stabilni dva sloupce a formular jako karta vedle kontaktu.
 
 ## Kroky
 
-- [x] Najit zdroj HP procesu, FAQ dat a kontaktni runtime sablony.
-- [x] Upravit kontaktni formular, CSS sloupce, checkbox a panelove vrstvy.
-- [x] Nahradit rucne psane FAQ na kontaktu prvnimi 4 aktivnimi FAQ polozkami.
-- [x] Overit syntaxi, diff a dopad na dokumentaci.
+- [x] Zkontrolovat aktualni kontaktni sablonu a CSS.
+- [x] Odstranit prvky, ktere rozbiji panelove rozlozeni, a doplnit finalni CSS prepis.
+- [x] Overit syntaxi, diff a lokalni render.
 - [x] Commitnout a pushnout opravu.
 
 ## Poznamky
 
 - Pracovni strom byl pred zacatkem cisty.
-- Kontaktni FAQ nema zustat hardcoded; zdroj ma byt `FaqRepository::allActive()`.
-- Proces ma vizualne odpovidat svetle HP sekci ze screenshotu.
-- Formular ma izolovany grid, citelny intro text a stylovany checkbox.
-- Kontaktni FAQ se generuje z prvnich 4 aktivnich polozek `faq_items`.
-- Lokalni `/kontakt` vraci HTTP 200 a render obsahuje nove bloky `kt-form-grid`, `kt-consent`, `kt-faq-item` a procesovy nadpis.
-- Relevantni dokumentace nevyzaduje zmenu; jde o runtime CSS/HTML kontaktni stranky.
+- Hlavni problem: sablonove/starsi CSS stale zvetsuje `.ci-title` a desktop media query meni `.kt-grid`; inline socialni site prodluzuji levy sloupec oproti referenci.
+- Inline socialni odkazy jsou odstraneny z kontaktniho panelu; socialni site zustavaji ve footeru pres `injectFooterSocials`.
+- Na konec kontaktniho CSS pribyl finalni prepis pro rozmery, fonty, grid a formular.
+- Lokalni `/kontakt` vratil HTTP 200 a generovany CSS obsahoval finalni kontaktni prepis.
 
 ## Vysledek
 
-Kontaktni formular ma izolovane sloupce bez prekryvu, citelny intro text a vlastni checkbox. Sekce procesu je svetla ve stylu HP se 4 kroky a kontaktni FAQ se bere z prvnich 4 aktivnich FAQ polozek. Overeno `php -l public/index.php`, `git diff --check` a lokalnim HTTP 200 pro `/kontakt`.
+Kontaktni panel ma finalni prepis pro kompaktni rozlozeni podle reference: leve karty bez inline socialnich odkazu, male nadpisy, formular jako samostatna karta a pevny dvousloupcovy grid. Overeno `php -l public/index.php`, `git diff --check` a lokalni HTTP 200 pro `/kontakt`.
