@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Core\Database;
 use App\Repositories\BlockRepository;
 use App\Repositories\BlogRepository;
+use App\Repositories\ContactRepository;
 use App\Repositories\FaqRepository;
 use App\Repositories\PageRepository;
 use App\Repositories\PortfolioRepository;
@@ -52,6 +53,7 @@ class DemoContentSeeder
         $this->resetHomepageAutofillBlocks();
         $reviewCount = $this->seedReviewRows($siteId);
         $this->seedCenikCards($siteId);
+        $this->seedDemoContactInfo($siteId);
         $faqCount = $this->seedFaqItems($siteId);
         $this->seedHeroBackgrounds($siteId);
         $this->seedServiceItems($siteId);
@@ -595,6 +597,69 @@ CSS;
             return;
         }
         $pageId = (int)$page['id'];
+        $templateId = $this->ensurePricingTemplate($siteId);
+
+        $this->pages->update($pageId, [
+            'template_id' => $templateId,
+            'status' => 'published',
+        ]);
+
+        $this->blocks->upsert($pageId, 'hero_heading', [
+            'block_type' => 'text',
+            'label' => 'Hero - nadpis',
+            'content' => 'Cenik fotografickych a video sluzeb - Olomouc',
+            'sort_order' => 1,
+            'autofill_disabled' => 1,
+        ]);
+        $this->blocks->upsert($pageId, 'hero_intro', [
+            'block_type' => 'textarea',
+            'label' => 'Hero - intro',
+            'content' => 'Transparentni ceny bez prekvapeni. Kazda zakazka je individualni - vzdy se domluvime na balicku presne pro vas. Pres 150 spokojenych klientu, 8 let praxe.',
+            'sort_order' => 2,
+            'autofill_disabled' => 1,
+        ]);
+        $this->blocks->upsert($pageId, 'pricing_weddings_heading', [
+            'block_type' => 'text',
+            'label' => 'Cenik svatby - nadpis',
+            'content' => 'Svatebni balicky',
+            'sort_order' => 3,
+            'autofill_disabled' => 1,
+        ]);
+        $this->blocks->upsert($pageId, 'pricing_weddings_sub', [
+            'block_type' => 'textarea',
+            'label' => 'Cenik svatby - intro',
+            'content' => 'Vyberte si balicek podle rozsahu svatebniho dne. Kazda zakazka je individualni - finalni nabidku pripravime vzdy na miru. Ceny jsou orientacni, od.',
+            'sort_order' => 4,
+            'autofill_disabled' => 1,
+        ]);
+        $this->blocks->upsert($pageId, 'pricing_other_heading', [
+            'block_type' => 'text',
+            'label' => 'Cenik ostatni - nadpis',
+            'content' => 'Rodinne, portretni a firemni foceni',
+            'sort_order' => 5,
+            'autofill_disabled' => 1,
+        ]);
+        $this->blocks->upsert($pageId, 'pricing_other_sub', [
+            'block_type' => 'textarea',
+            'label' => 'Cenik ostatni - intro',
+            'content' => 'Rodinne foceni od 4 500 Kc - Portretni foceni od 3 000 Kc - Firemni foceni od 6 000 Kc - Zasnuby a maternity od 3 500 Kc - Videografie od 8 000 Kc.',
+            'sort_order' => 6,
+            'autofill_disabled' => 1,
+        ]);
+        $this->blocks->upsert($pageId, 'cta_heading', [
+            'block_type' => 'text',
+            'label' => 'CTA - nadpis',
+            'content' => 'Rezervujte termin jeste dnes',
+            'sort_order' => 7,
+            'autofill_disabled' => 1,
+        ]);
+        $this->blocks->upsert($pageId, 'cta_sub', [
+            'block_type' => 'textarea',
+            'label' => 'CTA - podnadpis',
+            'content' => 'Oblibene soboty se obsazuji rok dopredu - cim drive, tim vetsi vyber. Zavolejte nebo napiste, odpovime do 24 hodin.',
+            'sort_order' => 8,
+            'autofill_disabled' => 1,
+        ]);
 
         // Vicerradkovy popis: 1. radek = souhrn (homepage teaser bere jen prvni
         // radek), zbytek = seznam (.cenik-card-desc ma white-space:pre-line,
@@ -698,6 +763,110 @@ CSS;
     /**
      * Svatebni FAQ (12 otazek) do tabulky faq_items — zdroj pro /faq stranku.
      */
+    private function ensurePricingTemplate(int $siteId): int
+    {
+        $html = <<<'HTML'
+<header class="hero">
+  <div class="container">
+    <h1 data-block="hero_heading"></h1>
+    <p data-block="hero_intro"></p>
+  </div>
+</header>
+<section class="section">
+  <div class="container">
+    <h2 data-block="pricing_weddings_heading"></h2>
+    <p data-block="pricing_weddings_sub"></p>
+    <div data-block="pricing_body"></div>
+    <h2 data-block="pricing_other_heading"></h2>
+    <p data-block="pricing_other_sub"></p>
+  </div>
+</section>
+<section class="section-dark">
+  <div class="container">
+    <h2 data-block="cta_heading"></h2>
+    <p data-block="cta_sub"></p>
+    <div data-block="cta_wrap"></div>
+  </div>
+</section>
+HTML;
+
+        $css = <<<'CSS'
+.hero{background:#1a1a1a;color:#fff;padding:64px 0 72px}
+.hero h1{color:#fff;font-size:clamp(2rem,4vw,2.6rem);font-weight:900;margin-bottom:.6rem}
+.hero p{color:rgba(255,255,255,.65);max-width:760px;margin-bottom:0}
+.section{padding:64px 0}
+.section-dark{background:#1a1a1a;padding:64px 0}
+.section-dark h2{color:#fff;font-size:1.6rem;margin-bottom:.5rem}
+.section-dark p{color:rgba(255,255,255,.6);max-width:760px;margin-bottom:1rem}
+CSS;
+
+        foreach ($this->templates->allBySite($siteId) as $template) {
+            if (($template['name'] ?? '') === 'Demo cenik') {
+                $this->templates->update((int)$template['id'], [
+                    'name' => 'Demo cenik',
+                    'html_source' => $html,
+                    'css_source' => $css,
+                    'js_source' => '',
+                ]);
+                return (int)$template['id'];
+            }
+        }
+
+        return $this->templates->create([
+            'site_id' => $siteId,
+            'name' => 'Demo cenik',
+            'html_source' => $html,
+            'css_source' => $css,
+            'js_source' => '',
+        ]);
+    }
+
+    private function seedDemoContactInfo(int $siteId): void
+    {
+        $phone1 = '+420 792 483 583';
+        $phone2 = '+420 604 225 032';
+        $email = 'rb_vp@volny.cz';
+
+        (new ContactRepository())->upsert($siteId, [
+            'phone_1' => $phone1,
+            'phone_2' => $phone2,
+            'phone_3' => '',
+            'email' => $email,
+            'form_email' => $email,
+        ]);
+
+        foreach (['', 'kontakt'] as $urlPath) {
+            $page = $this->pages->findByUrlPath($urlPath);
+            if (!$page) {
+                continue;
+            }
+
+            $pageId = (int)$page['id'];
+            $contactInfoHtml = '<div class="cta-info"><p><strong>' . $this->h($phone1) . '</strong></p><p><strong>' . $this->h($phone2) . '</strong></p><p><a href="mailto:' . $this->h($email) . '">' . $this->h($email) . '</a></p></div>';
+            $this->blocks->upsert($pageId, 'kontakt_info', [
+                'block_type' => 'html',
+                'label' => 'Kontakt - info',
+                'content' => $contactInfoHtml,
+                'sort_order' => 4,
+                'autofill_disabled' => 1,
+            ]);
+            $this->blocks->upsert($pageId, 'contact_info', [
+                'block_type' => 'html',
+                'label' => 'Kontakt - info',
+                'content' => $contactInfoHtml,
+                'sort_order' => 4,
+                'autofill_disabled' => 1,
+            ]);
+            $this->blocks->upsert($pageId, 'contact_card', [
+                'block_type' => 'html',
+                'label' => 'Kontakt - karta',
+                'content' => '<h3>Ozvete se nam</h3><p class="cta-r-sub">Zavolejte nebo napiste e-mail. Odpovidame rychle.</p><a href="tel:+420792483583" class="cta-btn cta-btn--gold">Zavolat: +420 792 483 583</a><a href="tel:+420604225032" class="cta-btn cta-btn--dark">Zavolat: +420 604 225 032</a><a href="mailto:' . $this->h($email) . '" class="cta-btn cta-btn--dark">E-mail: ' . $this->h($email) . '</a>',
+                'sort_order' => 5,
+                'autofill_disabled' => 1,
+            ]);
+        }
+    }
+
     private function seedFaqItems(int $siteId): int
     {
         $faqs = [
