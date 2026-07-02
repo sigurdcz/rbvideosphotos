@@ -1,23 +1,26 @@
-# UKOL: Vymena kontaktniho e-mailu
+# UKOL: Oprava kontaktniho formulare a sekci
 
 Datum: 2026-07-02
-Zadani: V celem repozitari odstranit puvodni Gmail kontakt a nahradit ho kontaktnim e-mailem `rb_vp@volny.cz`.
+Zadani: Opravit kontaktni stranku: neprekrivajici se inputy, citelne texty, stylovany checkbox, proces jako na HP, FAQ z prvnich 4 FAQ polozek a spravne rozlozeni panelu.
 
 ## Kroky
 
-- [x] Najit vsechny vyskyty stareho e-mailu.
-- [x] Nahradit stare hodnoty za `rb_vp@volny.cz`.
-- [x] Overit, ze stary e-mail nikde nezustal.
-- [x] Overit syntaxi / relevantni dopady a zapsat vysledek.
-- [x] Commitnout a pushnout zmenu.
+- [x] Najit zdroj HP procesu, FAQ dat a kontaktni runtime sablony.
+- [x] Upravit kontaktni formular, CSS sloupce, checkbox a panelove vrstvy.
+- [x] Nahradit rucne psane FAQ na kontaktu prvnimi 4 aktivnimi FAQ polozkami.
+- [x] Overit syntaxi, diff a dopad na dokumentaci.
+- [x] Commitnout a pushnout opravu.
 
 ## Poznamky
 
 - Pracovni strom byl pred zacatkem cisty.
-- Predchozi `UKOL.md` obsahoval zastaraly rozpracovany checkbox, ale zmeny byly uz commitnute a pushnute.
-- Stara adresa byla nalezena pouze v demo seed datech kontaktu a v pracovnim `UKOL.md`.
-- Relevantni dokumentace nevyzaduje zmenu; jde o seed kontaktni hodnoty.
+- Kontaktni FAQ nema zustat hardcoded; zdroj ma byt `FaqRepository::allActive()`.
+- Proces ma vizualne odpovidat svetle HP sekci ze screenshotu.
+- Formular ma izolovany grid, citelny intro text a stylovany checkbox.
+- Kontaktni FAQ se generuje z prvnich 4 aktivnich polozek `faq_items`.
+- Lokalni `/kontakt` vraci HTTP 200 a render obsahuje nove bloky `kt-form-grid`, `kt-consent`, `kt-faq-item` a procesovy nadpis.
+- Relevantni dokumentace nevyzaduje zmenu; jde o runtime CSS/HTML kontaktni stranky.
 
 ## Vysledek
 
-Kontaktni seed pouziva `rb_vp@volny.cz` pro verejny e-mail i cil formularu. Overeno, ze puvodni Gmail adresa mimo `.git` nezustala, a `php -l database/seeds/seed.php` prosel.
+Kontaktni formular ma izolovane sloupce bez prekryvu, citelny intro text a vlastni checkbox. Sekce procesu je svetla ve stylu HP se 4 kroky a kontaktni FAQ se bere z prvnich 4 aktivnich FAQ polozek. Overeno `php -l public/index.php`, `git diff --check` a lokalnim HTTP 200 pro `/kontakt`.

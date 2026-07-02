@@ -2084,6 +2084,23 @@ function tryServeKontaktPage(): bool
         ? '<a href="' . $h($contact['maps_url']) . '" target="_blank" rel="noopener" class="btn-maps">Otevřít mapu</a>'
         : '';
 
+    $contactFaqHtml = '';
+    try {
+        $contactFaqItems = array_slice((new FaqRepository())->allActive((int)$site['id']), 0, 4);
+        foreach ($contactFaqItems as $faqItem) {
+            $question = trim((string)($faqItem['question'] ?? ''));
+            if ($question === '') {
+                continue;
+            }
+            $contactFaqHtml .= '<div class="kt-faq-item"><span>' . $h($question) . '</span><span>+</span></div>';
+        }
+    } catch (\Throwable $e) {
+        $contactFaqHtml = '';
+    }
+    if ($contactFaqHtml === '') {
+        $contactFaqHtml = '<div class="kt-faq-item"><span>Nemáte vyplněné FAQ otázky.</span><span>+</span></div>';
+    }
+
     $kontaktCss = <<<'CSS'
 body{background:#111;color:#fff}
 .kt-hero{background:#1a1a1a;padding:56px 0 32px;text-align:center}
@@ -2115,10 +2132,10 @@ body{background:#111;color:#fff}
 .kt-form-btn:hover{opacity:.9}
 .kt-success{background:#18181c;border-radius:10px;padding:20px;text-align:center;color:#4ade80;margin-bottom:16px}
 @media(min-width:900px){.kt-hero{padding:64px 0 40px}.kt-wrap{padding:56px 0 80px}.kt-grid{grid-template-columns:1fr 1fr;gap:40px}.ci-block,.kt-form-block{padding:32px}.ci-row{flex-direction:row;gap:12px}.ci-label{flex:0 0 80px;padding-top:2px}}
-.kt-hero,.kt-wrap,.kt-process,.kt-faq{background:#17100c;color:#f7efe3}
-.kt-hero{position:relative;overflow:hidden;min-height:350px;padding:62px 0 46px;text-align:left;background:linear-gradient(90deg,rgba(18,11,7,.98) 0%,rgba(30,19,12,.9) 45%,rgba(25,15,9,.34) 100%),var(--theme-page-hero-image,linear-gradient(135deg,#2b2118,#120d0a));background-size:cover;background-position:center right}
+.kt-hero,.kt-wrap,.kt-faq{background:#17100c;color:#f7efe3}
+.kt-hero{position:relative;overflow:hidden;min-height:350px;padding:62px 0 46px;text-align:left;background:linear-gradient(90deg,rgba(18,11,7,.98) 0%,rgba(30,19,12,.9) 45%,rgba(25,15,9,.34) 100%),var(--theme-page-hero-image,linear-gradient(135deg,#2b2118,#120d0a));background-size:cover;background-position:center right;background-repeat:no-repeat}
 .kt-hero::after{content:"";position:absolute;inset:auto 0 0;z-index:2;height:78px;background:linear-gradient(180deg,rgba(23,16,12,0),#17100c);pointer-events:none}
-.kt-hero .container{position:relative;z-index:3;max-width:1060px}
+.kt-hero>.container{position:relative!important;z-index:3;display:block!important;width:min(calc(100% - 48px),1060px)!important;max-width:1060px!important;margin:0 auto!important;padding:0!important}
 .kt-kicker,.kt-section-kicker{display:block;margin-bottom:13px;color:#d6aa5f;font-size:10px;font-weight:900;letter-spacing:.28em;text-transform:uppercase}
 .kt-hero h1{max-width:520px;margin:0 0 14px;color:#fff7ec;font-family:Georgia,serif;font-size:clamp(2.2rem,4.2vw,4rem);font-weight:700;line-height:1.02;text-wrap:balance}
 .kt-hero p{max-width:500px;margin:0;color:rgba(255,247,236,.78);font-size:.96rem;line-height:1.7}
@@ -2126,8 +2143,8 @@ body{background:#111;color:#fff}
 .kt-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:38px;padding:10px 15px;border:1px solid rgba(214,170,95,.56);background:rgba(214,170,95,.1);color:#f7efe3;text-decoration:none;font-size:10.5px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}
 .kt-btn--gold{background:#d6aa5f;color:#1b120d;border-color:#d6aa5f;box-shadow:0 14px 28px rgba(0,0,0,.22)}
 .kt-wrap{padding:38px 0 42px}
-.kt-wrap .container,.kt-process .container,.kt-faq .container{max-width:1060px}
-.kt-grid{display:grid;grid-template-columns:minmax(230px,.74fr) minmax(0,1.46fr);gap:46px;align-items:start;max-width:980px;margin:0 auto}
+.kt-wrap>.container,.kt-faq>.container{display:block!important;width:min(calc(100% - 48px),1060px)!important;max-width:1060px!important;margin:0 auto!important;padding:0!important}
+.kt-grid{display:grid!important;grid-template-columns:minmax(250px,.68fr) minmax(0,1.32fr)!important;gap:42px;align-items:start;max-width:980px;margin:0 auto}
 .ci-block,.kt-form-block{background:transparent;border-radius:0;padding:0;box-shadow:none}
 .ci-title{display:flex;align-items:center;gap:18px;margin:0 0 16px;color:#d6aa5f;font-size:10px;font-weight:900;letter-spacing:.26em;text-transform:uppercase}
 .ci-title::after{content:"";width:58px;height:1px;background:rgba(214,170,95,.42)}
@@ -2140,21 +2157,23 @@ body{background:#111;color:#fff}
 .ci-label{display:block;margin-bottom:3px;color:#d6aa5f;font-size:10.5px;text-transform:none;letter-spacing:0}
 .ci-socials{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}.ci-social{display:inline-flex;align-items:center;gap:8px;padding:9px 11px;border:1px solid rgba(214,170,95,.2);color:#f7efe3;text-decoration:none;background:rgba(255,255,255,.035);font-size:12px}.ci-social__icon{display:grid;place-items:center}.ci-social__icon svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.75}
 .btn-maps{display:inline-flex;margin-top:12px;color:#d6aa5f;text-decoration:none}
-.kt-form-block{padding:22px;background:rgba(255,255,255,.055);border:1px solid rgba(214,170,95,.13);border-radius:7px}
-.kt-form-intro{margin:-5px 0 16px;color:rgba(255,247,236,.66);font-size:12px;line-height:1.6}
-.kt-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px}.kt-form-field--full{grid-column:1/-1}
+.kt-form-block{min-width:0;padding:22px;background:rgba(255,255,255,.055);border:1px solid rgba(214,170,95,.13);border-radius:7px}
+.kt-form-intro{margin:-5px 0 16px;color:#efe5d7!important;font-size:12px;line-height:1.6}
+.kt-form-grid{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:10px 12px}.kt-form-grid>div{min-width:0}.kt-form-field--full{grid-column:1/-1}
 .kt-form-block label{margin-bottom:6px;color:rgba(255,247,236,.7);font-size:10.5px;font-weight:800;letter-spacing:.02em;text-transform:none}
-.kt-form-block input,.kt-form-block textarea,.kt-form-block select{margin:0;width:100%;border:1px solid rgba(214,170,95,.08);border-radius:0;background:#211711;color:#f7efe3;padding:11px 12px;font-size:13px}
+.kt-form-block input,.kt-form-block textarea,.kt-form-block select{display:block;box-sizing:border-box;margin:0!important;width:100%!important;max-width:100%;min-width:0;border:1px solid rgba(214,170,95,.16);border-radius:0;background:#211711;color:#f7efe3;padding:11px 12px;font-size:13px}
 .kt-form-block textarea{min-height:92px}.kt-form-block input::placeholder,.kt-form-block textarea::placeholder{color:rgba(247,239,227,.38)}
-.kt-consent{display:flex;gap:9px;align-items:flex-start;margin:12px 0;color:rgba(255,247,236,.55);font-size:11px}.kt-consent input{width:auto;margin-top:2px}.kt-consent a{color:#d6aa5f}
+.kt-consent{display:flex!important;gap:9px;align-items:flex-start;margin:12px 0;color:#efe5d7!important;font-size:11px;line-height:1.45}.kt-consent input{appearance:none;-webkit-appearance:none;display:grid!important;place-items:center;flex:0 0 16px;width:16px!important;height:16px;margin:0!important;margin-top:1px!important;border:1px solid rgba(214,170,95,.55)!important;background:#211711!important;border-radius:2px}.kt-consent input:checked{background:#d6aa5f!important;border-color:#d6aa5f!important}.kt-consent input:checked::after{content:"";width:8px;height:5px;border-left:2px solid #1b120d;border-bottom:2px solid #1b120d;transform:rotate(-45deg);margin-top:-2px}.kt-consent a{color:#d6aa5f}
 .kt-form-btn{width:100%;border:0;border-radius:3px;background:#d6aa5f;color:#1b120d;padding:12px 16px;font-size:11px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}
 .kt-form-safe{margin-top:8px;text-align:center;color:rgba(255,247,236,.44);font-size:11px}
 .kt-success{margin-bottom:16px;border:1px solid rgba(214,170,95,.24);background:rgba(214,170,95,.08);color:#d6f4c6}
-.kt-process{padding:34px 0 28px;border-top:1px solid rgba(214,170,95,.08);border-bottom:1px solid rgba(214,170,95,.08)}
-.kt-section-kicker{text-align:center;margin-bottom:20px}
-.kt-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:980px;margin:0 auto}.kt-step{position:relative;display:grid;grid-template-columns:42px 1fr;gap:12px;align-items:start}.kt-step__num{position:absolute;left:-5px;top:-7px;display:grid;place-items:center;width:17px;height:17px;border-radius:50%;background:#d6aa5f;color:#1b120d;font-size:9px;font-weight:900}.kt-step__icon{display:grid;place-items:center;width:40px;height:40px;border:1px solid rgba(214,170,95,.28);border-radius:50%;color:#d6aa5f;background:rgba(214,170,95,.05)}.kt-step h3{margin:0 0 4px;color:#f7efe3;font-size:13px}.kt-step p{margin:0;color:rgba(255,247,236,.58);font-size:11px;line-height:1.55}
-.kt-faq{padding:28px 0 46px}.kt-faq-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;max-width:980px;margin:0 auto}.kt-faq-item{display:flex;justify-content:space-between;gap:14px;padding:13px 16px;background:rgba(255,255,255,.045);border:1px solid rgba(214,170,95,.08);color:#f7efe3;font-size:12px}.kt-faq-item span:last-child{color:#d6aa5f;font-weight:900}
-@media(max-width:900px){.kt-hero{min-height:auto;padding:72px 0 50px}.kt-grid,.kt-steps,.kt-faq-grid{grid-template-columns:1fr}.kt-form-grid{grid-template-columns:1fr}.kt-form-field--full{grid-column:auto}.kt-grid{max-width:none;gap:28px}.kt-wrap{padding:34px 0}.kt-hero-actions{align-items:stretch}.kt-btn{flex:1 1 180px}}
+.kt-process{background:#f8f5ef!important;color:#2b211a!important;padding:88px 0 86px;border:0}
+.kt-process>.container{display:block!important;width:min(calc(100% - 48px),1060px)!important;max-width:1060px!important;margin:0 auto!important;padding:0!important}
+.kt-process .kt-section-kicker{text-align:center;margin-bottom:18px;color:#d6aa5f}
+.kt-process-title{margin:0 0 60px;text-align:center;color:#231812;font-family:Georgia,serif;font-size:clamp(2.4rem,4.4vw,4.2rem);font-weight:400;line-height:1.05}.kt-process-title em{color:#d6aa5f;font-style:italic}
+.kt-steps{position:relative;display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:38px;max-width:1060px;margin:0 auto}.kt-steps::before{content:"";position:absolute;left:8%;right:8%;top:29px;height:1px;background:#ead7b4}.kt-step{position:relative;z-index:1;display:block!important;text-align:center;padding:0 10px}.kt-step__num{display:grid;place-items:center;width:64px;height:64px;margin:0 auto 28px;border:1px solid #dfb96e;border-radius:999px;background:#f8f5ef;color:#c79643;font-size:1.1rem;font-weight:700}.kt-step h3{margin:0 0 14px;color:#241914;font-family:Georgia,serif;font-size:clamp(1.65rem,2.4vw,2.35rem);font-weight:400;line-height:1.08}.kt-step p{max-width:210px;margin:0 auto;color:#725d4f;font-size:15px;line-height:1.75}
+.kt-faq{padding:34px 0 50px}.kt-faq .kt-section-kicker{text-align:center;margin-bottom:20px}.kt-faq-grid{display:grid!important;grid-template-columns:1fr 1fr!important;gap:10px 16px;max-width:980px;margin:0 auto}.kt-faq-item{display:flex;justify-content:space-between;gap:14px;padding:13px 16px;background:rgba(255,255,255,.045);border:1px solid rgba(214,170,95,.08);color:#f7efe3;font-size:12px}.kt-faq-item span:last-child{color:#d6aa5f;font-weight:900}
+@media(max-width:900px){.kt-hero{min-height:auto;padding:72px 0 50px}.kt-grid,.kt-steps,.kt-faq-grid{grid-template-columns:1fr!important}.kt-form-grid{grid-template-columns:1fr!important}.kt-form-field--full{grid-column:auto}.kt-grid{max-width:none;gap:28px}.kt-wrap{padding:34px 0}.kt-hero-actions{align-items:stretch}.kt-btn{flex:1 1 180px}.kt-process{padding:56px 0}.kt-process-title{margin-bottom:36px}.kt-steps::before{display:none}.kt-step{padding:0}.kt-step+.kt-step{margin-top:18px}}
 CSS;
 
     // Contact form HTML
@@ -2226,10 +2245,12 @@ CSS;
 <section class="kt-process">
   <div class="container">
     <span class="kt-section-kicker">Jak to probíhá?</span>
+    <h2 class="kt-process-title">Cesta k vašim <em>dokonalým fotkám</em></h2>
     <div class="kt-steps">
-      <article class="kt-step"><span class="kt-step__num">1</span><span class="kt-step__icon">&#9993;</span><div><h3>Pošlete nám poptávku</h3><p>Napište nám termín, místo a typ akce. Čím víc informací, tím lépe.</p></div></article>
-      <article class="kt-step"><span class="kt-step__num">2</span><span class="kt-step__icon">&#9635;</span><div><h3>Ozveme se vám zpět</h3><p>Navrhneme řešení a domluvíme rozsah focení nebo videa.</p></div></article>
-      <article class="kt-step"><span class="kt-step__num">3</span><span class="kt-step__icon">&#10003;</span><div><h3>Potvrdíme termín</h3><p>Po odsouhlasení detailů si rezervujeme váš termín.</p></div></article>
+      <article class="kt-step"><span class="kt-step__num">01</span><h3>Seznámení</h3><p>Nezávazná konzultace, kde probereme vaše představy, styl a termín focení nebo svatby.</p></article>
+      <article class="kt-step"><span class="kt-step__num">02</span><h3>Plánování</h3><p>Společně nastavíme harmonogram, lokace a důležité momenty, které chceme zachytit.</p></article>
+      <article class="kt-step"><span class="kt-step__num">03</span><h3>Váš den</h3><p>Diskrétně zachytím emoce, detaily i spontánní okamžiky tak, aby vše působilo přirozeně.</p></article>
+      <article class="kt-step"><span class="kt-step__num">04</span><h3>Předání</h3><p>Hotové výstupy dostanete v online galerii a ve finální podobě připravené pro sdílení i tisk.</p></article>
     </div>
   </div>
 </section>
@@ -2237,10 +2258,7 @@ CSS;
   <div class="container">
     <span class="kt-section-kicker">Časté otázky</span>
     <div class="kt-faq-grid">
-      <div class="kt-faq-item"><span>Kdy se mi ozvete zpět?</span><span>+</span></div>
-      <div class="kt-faq-item"><span>Je poptávka nezávazná?</span><span>+</span></div>
-      <div class="kt-faq-item"><span>Působíte pouze v Olomouci?</span><span>+</span></div>
-      <div class="kt-faq-item"><span>Jak dopředu je potřeba rezervovat termín?</span><span>+</span></div>
+      {$contactFaqHtml}
     </div>
   </div>
 </section>
