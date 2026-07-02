@@ -258,11 +258,11 @@ class MediaController extends Controller
             }
         }
 
-        // Thumbnail 300px (skip GIF — preserve animation)
+        // Thumbnail 240px (skip GIF — preserve animation)
         if (!$isGif) {
             $thumbName = uniqid('img_', true) . '_th.webp';
             $thumbDest = $fullDir . '/' . $thumbName;
-            if ($svc->createResized($dest, $thumbDest, 300)) {
+            if ($svc->createResized($dest, $thumbDest, 240)) {
                 [$tw, $th] = $svc->getDimensions($thumbDest);
                 $repo->addVariant($mediaId, [
                     'format'   => 'thumb',
@@ -277,11 +277,11 @@ class MediaController extends Controller
             }
         }
 
-        // Medium 900px (only if original is wider; skip GIF)
-        if (!$isGif && $w > 900) {
+        // Medium 720px (only if original is wider; skip GIF)
+        if (!$isGif && $w > 720) {
             $medName = uniqid('img_', true) . '_md.webp';
             $medDest = $fullDir . '/' . $medName;
-            if ($svc->createResized($dest, $medDest, 900)) {
+            if ($svc->createResized($dest, $medDest, 720)) {
                 [$mw, $mh] = $svc->getDimensions($medDest);
                 $repo->addVariant($mediaId, [
                     'format'   => 'medium',

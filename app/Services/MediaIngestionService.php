@@ -202,7 +202,7 @@ class MediaIngestionService
         if (!$isGif) {
             $thumbName = uniqid('img_', true) . '_th.webp';
             $thumbDest = $fullDir . '/' . $thumbName;
-            if ($this->variants->createResized($dest, $thumbDest, 300)) {
+            if ($this->variants->createResized($dest, $thumbDest, 240)) {
                 [$tw, $th] = $this->variants->getDimensions($thumbDest);
                 $this->media->addVariant($mediaId, [
                     'format' => 'thumb',
@@ -215,10 +215,10 @@ class MediaIngestionService
             }
         }
 
-        if (!$isGif && $w > 900) {
+        if (!$isGif && $w > 720) {
             $medName = uniqid('img_', true) . '_md.webp';
             $medDest = $fullDir . '/' . $medName;
-            if ($this->variants->createResized($dest, $medDest, 900)) {
+            if ($this->variants->createResized($dest, $medDest, 720)) {
                 [$mw, $mh] = $this->variants->getDimensions($medDest);
                 $this->media->addVariant($mediaId, [
                     'format' => 'medium',

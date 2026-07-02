@@ -4,7 +4,7 @@ namespace App\Services;
 
 class ImageVariantService
 {
-    public function createWebP(string $sourcePath, string $destPath, int $quality = 85): bool
+    public function createWebP(string $sourcePath, string $destPath, int $quality = 75): bool
     {
         if (!$this->supportsWebP()) return false;
         $info = @getimagesize($sourcePath);
@@ -20,7 +20,7 @@ class ImageVariantService
      * Create a resized variant, saved as WebP (falls back to JPEG).
      * If source is smaller than maxW, the original is just converted/copied.
      */
-    public function createResized(string $sourcePath, string $destPath, int $maxW, int $quality = 82): bool
+    public function createResized(string $sourcePath, string $destPath, int $maxW, int $quality = 72): bool
     {
         if (!extension_loaded('gd')) return false;
         $info = @getimagesize($sourcePath);
@@ -72,7 +72,7 @@ class ImageVariantService
      * Vytvori variantu s presnymi rozmery (cover crop, vystred). Vhodne pro
      * OG/Twitter nahledy (napr. 1200x630), kde je potreba pevny pomer stran.
      */
-    public function createCropped(string $sourcePath, string $destPath, int $targetW, int $targetH, int $quality = 82): bool
+    public function createCropped(string $sourcePath, string $destPath, int $targetW, int $targetH, int $quality = 72): bool
     {
         if (!extension_loaded('gd')) return false;
         $info = @getimagesize($sourcePath);

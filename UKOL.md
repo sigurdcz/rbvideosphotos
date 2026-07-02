@@ -1,20 +1,21 @@
-# UKOL: Posunout druhe cenikove texty niz
+# UKOL: Zmensit obrazky a nahledy
 
 Datum: 2026-07-02
-Zadani: Posunout sekci s textem Rodinne, portretni a firemni foceni niz pod balicky na /cenik, aby ji neprekryval obsah nad ni.
+Zadani: Zmensit velke PNG obrazky v demo assets i storage a zestrucnit generovani thumbnailu, aby blog, nase prace a podobne nahledy mely nizsi velikost souboru.
 
 ## Kroky
 
 - [x] Zapsat aktualni zadani do UKOL.md
-- [x] Najit misto, kde se vykresluje druhy cenikovy nadpis a popis
-- [x] Posunout spacing za balicky tak, aby text nebyl prekryty
-- [x] Overit render /cenik po uprave
+- [x] Najit a prepsat velke PNG soubory v demo assets a storage
+- [x] Zmensit kvalitu a rozmery generovanych nahledu pro nove uploady
+- [x] Overit velikosti a render po uprave
 
 ## Poznamky
 
-- Oprava musi byt v runtime i v demo seederu, aby se po reseedu vracelo stejne rozlozeni.
-- Jde jen o vertikalni mezery, ne o zmenu obsahu.
+- `weare2.png` a dalsi demo PNG byly zmensene pres resize a paletizaci bez zmeny cest.
+- WebP a JPG varianty v media storage byly znovu prekreslene na nizsi kvalitu, aby se snizila velikost souboru.
+- U variant pro novy upload jsou thumb/medium mensi a s nizsi kvalitou vystupu.
 
 ## Vysledek
 
-Sekce `Rodinne, portretni a firemni foceni` ma nyni vetsi spodni rezervu po balickach, takze uz neskace pod vizualni prekryv predchoziho gridu. Uprava je v runtime CSS i v demo seederu, aby se po reseedu nevracela stara mezera.
+Velke PNG i WebP media byla zmensena na disku a novy upload pipeline ma nizsi thumb/medium kvalitu i rozmery. Klicove soubory jako `weare2.png` a velke nahledy na blogu / nasi praci jsou citelne mensi.
