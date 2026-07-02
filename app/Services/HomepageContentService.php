@@ -114,8 +114,11 @@ class HomepageContentService
         $this->applyBlockFallback($blocks, 'sluzby_cta', fn() => $this->buildSectionCtaHtml('/sluzby', 'Všechny služby'));
         $this->applyBlockFallback($blocks, 'portfolio-tiles', fn() => $this->buildPortfolioHtml($siteId));
         $this->applyBlockFallback($blocks, 'portfolio_cta', fn() => $this->buildSectionCtaHtml('/nase-prace', 'Všechny práce'));
+        $this->applyBlockFallback($blocks, 'portfolio_btns', fn() => $this->buildSectionCtaHtml('/nase-prace', 'Všechny práce'));
         $this->applyBlockFallback($blocks, 'cenik_body', fn() => $this->buildPricingHtml());
+        $this->applyBlockFallback($blocks, 'pricing_body', fn() => $this->buildPricingHtml());
         $this->applyBlockFallback($blocks, 'cenik_cta', fn() => $this->buildSectionCtaHtml('/cenik', 'Celý ceník'));
+        $this->applyBlockFallback($blocks, 'pricing_cta', fn() => $this->buildSectionCtaHtml('/cenik', 'Celý ceník'));
         $this->applyBlockFallback($blocks, 'reviews_demo', fn() => $this->reviewContent->buildHomepageHtml($siteId, 6));
         $this->applyBlockFallback($blocks, 'reviews_cta', fn() => $this->buildSectionCtaHtml('/hodnoceni', 'Vsechny recenze'));
         $this->applyBlockFallback($blocks, 'kontakt_info', fn() => $this->buildContactHtml($siteId));
@@ -131,17 +134,23 @@ class HomepageContentService
             'hero_label' => 'Fotograf a kameraman - Olomouc, Praha',
             'hero_h1' => 'Zachytíme váš příběh <span>navždy</span>.',
             'hero_sub' => 'Profesionální svatební fotografie a videografie v Olomouci a po celé České republice. Každý okamžik si zaslouží být nezapomenutelný.',
+            'services_title' => 'Naše služby',
+            'services_intro' => 'Každý příběh je jedinečný. Naše služby přizpůsobíme přesně vám.',
             'sluzby_title' => 'Naše služby',
             'sluzby_intro' => 'Každý příběh je jedinečný. Naše služby přizpůsobíme přesně vám.',
             'portfolio_title' => 'Naše práce',
             'portfolio_intro' => 'Ukázka projektů a realizací.',
             'blog_title' => 'Nejnovější články',
             'blog_intro' => 'Rady a novinky z naší praxe.',
+            'pricing_title' => 'Ceník',
+            'pricing_intro' => 'Orientační přehled cen. Každá zakázka je individuální.',
             'cenik_title' => 'Ceník',
             'cenik_intro' => 'Orientační přehled cen. Každá zakázka je individuální.',
             'faq_title' => 'Časté dotazy',
             'reviews_title' => 'Co o nas rikaji klienti',
             'reviews_intro' => 'Vybrane reference klientu, kterym jsme dodali fotografie nebo video.',
+            'cta_title' => 'Kontakt',
+            'cta_sub' => 'Ozvěte se nám. Rádi odpovíme na vaše otázky.',
             'kontakt_title' => 'Kontakt',
             'kontakt_sub' => 'Ozvěte se nám. Rádi odpovíme na vaše otázky.',
         ];

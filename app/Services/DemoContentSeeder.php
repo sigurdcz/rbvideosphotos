@@ -835,35 +835,19 @@ CSS;
             'form_email' => $email,
         ]);
 
+        $keys = ['kontakt_info', 'contact_info', 'contact_card'];
+        $placeholders = implode(',', array_fill(0, count($keys), '?'));
+
         foreach (['', 'kontakt'] as $urlPath) {
             $page = $this->pages->findByUrlPath($urlPath);
             if (!$page) {
                 continue;
             }
 
-            $pageId = (int)$page['id'];
-            $contactInfoHtml = '<div class="cta-info"><p><strong>' . $this->h($phone1) . '</strong></p><p><strong>' . $this->h($phone2) . '</strong></p><p><a href="mailto:' . $this->h($email) . '">' . $this->h($email) . '</a></p></div>';
-            $this->blocks->upsert($pageId, 'kontakt_info', [
-                'block_type' => 'html',
-                'label' => 'Kontakt - info',
-                'content' => $contactInfoHtml,
-                'sort_order' => 4,
-                'autofill_disabled' => 1,
-            ]);
-            $this->blocks->upsert($pageId, 'contact_info', [
-                'block_type' => 'html',
-                'label' => 'Kontakt - info',
-                'content' => $contactInfoHtml,
-                'sort_order' => 4,
-                'autofill_disabled' => 1,
-            ]);
-            $this->blocks->upsert($pageId, 'contact_card', [
-                'block_type' => 'html',
-                'label' => 'Kontakt - karta',
-                'content' => '<h3>Ozvete se nam</h3><p class="cta-r-sub">Zavolejte nebo napiste e-mail. Odpovidame rychle.</p><a href="tel:+420792483583" class="cta-btn cta-btn--gold">Zavolat: +420 792 483 583</a><a href="tel:+420604225032" class="cta-btn cta-btn--dark">Zavolat: +420 604 225 032</a><a href="mailto:' . $this->h($email) . '" class="cta-btn cta-btn--dark">E-mail: ' . $this->h($email) . '</a>',
-                'sort_order' => 5,
-                'autofill_disabled' => 1,
-            ]);
+            $stmt = $this->db->prepare(
+                "UPDATE content_blocks SET content = '', autofill_disabled = 0 WHERE page_id = ? AND block_key IN ({$placeholders})"
+            );
+            $stmt->execute([(int)$page['id'], ...$keys]);
         }
     }
 
@@ -1185,6 +1169,12 @@ CSS;
         }
 
         $keys = [
+            'services_title',
+            'services_intro',
+            'sluzby_title',
+            'sluzby_intro',
+            'portfolio_title',
+            'portfolio_intro',
             'sluzby_items',
             'sluzby_grid',
             'service_1',
@@ -1192,10 +1182,32 @@ CSS;
             'service_3',
             'service_4',
             'portfolio-tiles',
+            'portfolio_btns',
+            'blog_title',
+            'blog_intro',
             'blog_1',
             'blog_2',
             'blog_3',
             'blog_cta',
+            'cenik_title',
+            'cenik_intro',
+            'pricing_title',
+            'pricing_intro',
+            'cenik_body',
+            'pricing_body',
+            'pricing_cta',
+            'cenik_cta',
+            'reviews_title',
+            'reviews_intro',
+            'reviews_demo',
+            'reviews_cta',
+            'kontakt_title',
+            'kontakt_sub',
+            'cta_title',
+            'cta_sub',
+            'kontakt_info',
+            'contact_info',
+            'contact_card',
             'portfolio_cta',
         ];
 
@@ -1204,6 +1216,44 @@ CSS;
             "UPDATE content_blocks SET content = '', autofill_disabled = 0 WHERE page_id = ? AND block_key IN ({$placeholders})"
         );
         $stmt->execute([(int)$homepage['id'], ...$keys]);
+
+        $this->normalizeHomepageTemplateLabels($homepage);
+    }
+
+    private function normalizeHomepageTemplateLabels(array $homepage): void
+    {
+        $templateId = (int)($homepage['template_id'] ?? 0);
+        if ($templateId <= 0) {
+            return;
+        }
+
+        $template = $this->templates->findById($templateId);
+        if (!$template) {
+            return;
+        }
+
+        $html = (string)($template['html_source'] ?? '');
+        if ($html === '') {
+            return;
+        }
+
+        $updated = preg_replace_callback(
+            '~(<section\b[^>]*\bid=(["\'])nase-prace\2[^>]*>(?:(?!</section>).)*?)(<p\b[^>]*\bclass=(["\'])section-label\4[^>]*>)(.*?)(</p>)~is',
+            static fn(array $m): string => $m[1] . $m[3] . 'Naše práce' . $m[6],
+            $html,
+            1
+        ) ?? $html;
+
+        if ($updated === $html) {
+            return;
+        }
+
+        $this->templates->update($templateId, [
+            'name' => $template['name'],
+            'html_source' => $updated,
+            'css_source' => $template['css_source'] ?? '',
+            'js_source' => $template['js_source'] ?? '',
+        ]);
     }
 
     private function seedImageSet(int $siteId, string $prefix, string $topic, string $bg, string $fg, int $count): array
