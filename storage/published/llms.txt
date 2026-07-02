@@ -1,0 +1,17 @@
+# RB Photos & Videos
+
+> Webové stránky RB Photos & Videos.
+
+## Stránky
+
+- [Fotograf & Videograf Olomouc | RB Photos & Videos](https://rbvideosphotos.kvalitne.cz/)
+- [Blog | RB Photos & Videos](https://rbvideosphotos.kvalitne.cz/blog/)
+- [Ceník fotografa Olomouc | RB Photos & Videos](https://rbvideosphotos.kvalitne.cz/cenik/)
+- [Časté otázky | Fotograf Olomouc — RB Photos & Videos](https://rbvideosphotos.kvalitne.cz/faq/)
+- [Podmínky užití](https://rbvideosphotos.kvalitne.cz/podminky-uziti/)
+- [10 tipů jak se připravit na dokonalé svatební focení | RB Photos & Videos](https://rbvideosphotos.kvalitne.cz/priprava-na-svatebni-foceni/)
+- [Rodinné focení s dětmi — tipy pro přirozené snímky | RB Photos & Videos](https://rbvideosphotos.kvalitne.cz/rodinne-foceni-s-detmi/)
+
+## Volitelné
+
+- [Sitemap](https://rbvideosphotos.kvalitne.cz/sitemap.xml): XML sitemap — přehled všech URL stránek
