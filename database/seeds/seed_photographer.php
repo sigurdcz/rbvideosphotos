@@ -543,12 +543,12 @@ $tplHomeFull = tpl($pdo, $siteId, 'Homepage', $htmlHomeFull, $cssHomeFull, $jsHo
 // ─── Template: Ceník ──────────────────────────────────────────────────────────
 
 $htmlCenik = <<<'HTML'
-<header class="hero">
+<section class="page-hero">
   <div class="container">
     <h1 data-block="hero_heading"></h1>
-    <p data-block="hero_intro"></p>
+    <p data-block="hero_intro" class="hero-sub"></p>
   </div>
-</header>
+</section>
 <section class="section">
   <div class="container">
     <h2 data-block="pricing_weddings_heading"></h2>

@@ -1,24 +1,61 @@
-# UKOL: Mobilni formular a FAQ na kontaktu
+# UKOL: Oprava rozbité stránky /cenik
 
 Datum: 2026-07-02
-Zadani: Opravit mobilni sirku kontaktniho formulare a udelat kontaktni FAQ jako rozbalovaci dotazy s odpovedmi a tlacitkem na vsechny FAQ.
+Zadání: Samostatná stránka /cenik má nečitelný hero (tmavý/nekontrastní text na fotce) a rozbitý layout (zdvojený obrázek).
+Hotovo když: /cenik pod aktivním tématem editorial-gold zobrazuje čitelný hero s tmavým překryvem a světlým textem, bez zdvojeného obrázku — stejně jako ostatní podstránky.
+
+## Příčina (zjištěno)
+
+- Šablona /cenik používá `<header class="hero">` (holá třída `.hero`).
+- Ostatní podstránky používají tématové třídy (`page-hero`, `fq-hero`, `kt-hero`, `bl-hero`, `pf-hero`),
+  které téma editorial-gold plně styluje (tmavý overlay, min-height, absolutně napozicovaný hero obrázek, světlý text).
+- Holé `.hero` téma nestyluje → injektovaný hero obrázek se zobrazí jako druhý pás a text je nečitelný.
+- Referenční funkční vzor: stránka `podminky-uziti` používá `<section class="page-hero">`.
 
 ## Kroky
 
-- [x] Zkontrolovat stav pracovniku a cil opravy.
-- [x] Upravit mobilni CSS formulare, aby nepretekal pres sirku telefonu.
-- [x] Prestavet kontaktni FAQ na accordion s odpovedmi a CTA odkazem na `/faq`.
-- [x] Overit syntaxi, diff a lokalni render.
-- [x] Commitnout a pushnout opravu.
+- [x] Reprodukovat lokálně přes `?theme_preview=editorial-gold`
+- [x] Najít příčinu (mismatch hero třídy vs. téma)
+- [x] Ověřit vzor funkční podstránky (page-hero)
+- [x] Upravit šablonu Ceník v lokální DB: `hero` → `page-hero`, přidat `class="hero-sub"` na podnadpis
+- [x] Upravit seed (seed_photographer.php) na stejný vzor
+- [x] Verifikovat re-renderem (čitelný hero, jeden obrázek)
+- [x] Připravit SQL pro produkci
+- [x] Commit
 
-## Poznamky
+## Poznámky
 
-- Pracovni strom byl pred zacatkem cisty.
-- Oprava se tyka specialni kontaktni runtime sablony v `public/index.php`.
-- Mobilni formular ma `box-sizing` a `max-width` prepis i pro vnitrni prvky formulare.
-- Kontaktni FAQ generuje otazku, odpoved, accordion toggle a CTA `Vsechny FAQ`.
-- Lokalni `/kontakt` vratil HTTP 200; HTML obsahuje FAQ toggle, odpovedi a `/faq` odkaz, generovany CSS obsahuje mobilni sirku formulare.
+- Produkce je řízená z DB (templates), téma je soubor (deploy přes FTP).
+- `page-hero` stylují jen editorial-gold a jemna-bezova; ostatní 3 témata ji nestylují — stejné chování jako u
+  existující `podminky-uziti`, takže nejde o regresi.
 
-## Vysledek
+## Výsledek
 
-Mobilni formular ma prisnejsi sirku a `box-sizing` i pro vnitrni prvky, aby se nezvetsoval mimo viewport. Kontaktni FAQ je accordion s odpovedmi a tlacitkem `Vsechny FAQ` na `/faq`. Overeno `php -l public/index.php`, `git diff --check` a lokalnim HTTP 200 pro `/kontakt`.
+Šablona /cenik používala holé `<header class="hero">`, které aktivní téma editorial-gold nestyluje jako
+podstránkový hero — injektovaný hero obrázek se proto zobrazil bez tmavého překryvu a text (bílý na světlé
+fotce) byl nečitelný, plus vznikal dojem zdvojeného obrázku. Změněno na `<section class="page-hero">`
+s `class="hero-sub"` na podnadpisu, čímž hero získává stejné tématové stylování jako ostatní podstránky
+(tmavý overlay `::before`/`::after`, absolutně napozicovaný cover obrázek, světlý nadpis `--eg-text` a
+podnadpis `#d5cec2`). Struktura renderu je teď identická s funkční stránkou `podminky-uziti`.
+
+Změněno:
+- Lokální DB (`templates` id=3, stránka /cenik) — html_source hero → page-hero.
+- `database/seeds/seed_photographer.php` (`$htmlCenik`) — pro budoucí seedy.
+
+Produkce (nutné aplikovat na produkční MySQL — lokální `test` DB ≠ produkce):
+```sql
+UPDATE templates t
+JOIN pages p ON p.template_id = t.id
+SET t.html_source =
+  REPLACE(
+    REPLACE(
+      REPLACE(t.html_source, '<header class="hero">', '<section class="page-hero">'),
+      '</header>', '</section>'),
+    'data-block="hero_intro"></p>', 'data-block="hero_intro" class="hero-sub"></p>')
+WHERE p.url_path = '/cenik';
+```
+Pozn.: šablona Ceník obsahuje jediný `<header>` (hero) a jediný `</header>`, takže REPLACE je bezpečný.
+Alternativně jde stejná úprava provést v adminu přes editor šablon (Layouts/Templates) → uložit → publikovat.
+
+Ověřeno: `?theme_preview=editorial-gold` render /cenik nyní obsahuje `<section class="page-hero">`, tématový
+overlay a světlý text; holé `<header class="hero">` zmizelo; DOM/CSS shodné s funkční `podminky-uziti`.
