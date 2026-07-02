@@ -430,7 +430,10 @@ class DemoContentSeeder
     <span class="hero-tag" data-block="hero_tag"></span>
     <h1 data-block="hero_heading"></h1>
     <p data-block="hero_sub"></p>
-    <a href="/kontakt" class="btn">Nezávazná poptávka</a>
+    <div class="svc-actions">
+      <a href="/kontakt" class="btn btn-primary">Nezávazná poptávka</a>
+      <a href="/sluzby" class="btn btn-secondary">Zpět na služby</a>
+    </div>
   </div>
 </header>
 <section class="section">
@@ -440,26 +443,35 @@ class DemoContentSeeder
   <div class="container">
     <h2 data-block="cta_heading"></h2>
     <p data-block="cta_sub"></p>
-    <a href="tel:792483583" class="btn">&#128222; 792&#160;483&#160;583</a>
+    <div class="svc-actions">
+      <a href="tel:792483583" class="btn btn-primary">&#128222; 792&#160;483&#160;583</a>
+      <a href="/sluzby" class="btn btn-secondary">Zpět na služby</a>
+    </div>
   </div>
 </section>
 HTML;
 
         $css = <<<'CSS'
-.hero{background:#1a1a1a;color:#fff;padding:64px 0 72px}
-.hero .hero-tag{display:inline-block;font-size:11px;color:#c4963c;text-transform:uppercase;letter-spacing:.18em;margin-bottom:14px}
-.hero h1{color:#fff;font-size:clamp(2rem,4vw,2.6rem);font-weight:900;margin-bottom:.6rem}
-.hero p{color:rgba(255,255,255,.65);max-width:640px;margin-bottom:0}
+.hero{background:linear-gradient(135deg,#241a13 0%,#161311 62%,#30241b 100%);color:#fff;padding:92px 0 104px}
+.svc-hero .container,.section-dark .container{max-width:980px}
+.hero .hero-tag{display:inline-flex;border:1px solid rgba(214,174,105,.55);padding:9px 18px;font-size:11px;color:#f1cf8b;text-transform:uppercase;letter-spacing:.18em;margin-bottom:24px;background:rgba(255,255,255,.04)}
+.hero h1{color:#fff7ed;font-size:clamp(2.4rem,4vw,4.4rem);font-weight:900;line-height:1;margin:0 0 20px;text-shadow:0 12px 34px rgba(0,0,0,.32)}
+.hero p{color:rgba(255,247,237,.82);font-size:1.06rem;line-height:1.75;max-width:720px;margin:0}
 .section{padding:64px 0}
-.section-dark{background:#1a1a1a;padding:64px 0}
-.section-dark h2{color:#fff;font-size:1.6rem;margin-bottom:.5rem}
-.section-dark p{color:rgba(255,255,255,.6);max-width:640px;margin-bottom:1rem}
+.section-dark{background:linear-gradient(135deg,#241a13 0%,#151311 100%);padding:72px 0;border-top:1px solid rgba(214,174,105,.22);border-bottom:1px solid rgba(214,174,105,.22)}
+.section-dark h2{color:#fff7ed;font-size:clamp(1.8rem,3vw,3rem);line-height:1.12;margin:0 0 14px}
+.section-dark p{color:rgba(255,247,237,.78);font-size:1.02rem;line-height:1.75;max-width:720px;margin:0}
 .svc-detail__img{width:100%;height:auto;margin-bottom:28px;border-radius:6px}
 .svc-detail h2{font-size:1.4rem;margin:30px 0 10px;color:#222}
 .svc-detail p{color:#555;line-height:1.8;margin-bottom:1rem}
 .svc-detail ul{margin:0 0 1rem 1.2rem;color:#555;line-height:1.8}
-.btn{display:inline-block;background:#c4963c;color:#fff !important;padding:12px 26px;font-size:13px;font-weight:700;letter-spacing:.04em;margin-top:18px}
-.btn:hover{background:#b5853a}
+.svc-actions{display:flex;flex-wrap:wrap;gap:14px;margin-top:30px}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:14px 24px;font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;text-decoration:none}
+.btn-primary{background:#d2a13f;color:#17110c !important;border:1px solid #d2a13f;box-shadow:0 18px 34px rgba(0,0,0,.22)}
+.btn-primary:hover{background:#e2b85e;border-color:#e2b85e}
+.btn-secondary{background:transparent;color:#fff7ed !important;border:1px solid rgba(255,247,237,.45)}
+.btn-secondary:hover{border-color:#d2a13f;color:#f1cf8b !important}
+@media(max-width:720px){.hero{padding:72px 0 82px}.svc-actions{flex-direction:column}.btn{width:100%}}
 CSS;
 
         foreach ($this->templates->allBySite($siteId) as $t) {
