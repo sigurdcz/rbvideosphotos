@@ -38,24 +38,10 @@ s `class="hero-sub"` na podnadpisu, čímž hero získává stejné tématové s
 (tmavý overlay `::before`/`::after`, absolutně napozicovaný cover obrázek, světlý nadpis `--eg-text` a
 podnadpis `#d5cec2`). Struktura renderu je teď identická s funkční stránkou `podminky-uziti`.
 
-Změněno:
-- Lokální DB (`templates` id=3, stránka /cenik) — html_source hero → page-hero.
-- `database/seeds/seed_photographer.php` (`$htmlCenik`) — pro budoucí seedy.
+Změněno (přes git, žádné ruční SQL ani zásahy na serveru):
+- `database/seeds/seed_photographer.php` (`$htmlCenik`) — hero → page-hero + `hero-sub`.
 
-Produkce (nutné aplikovat na produkční MySQL — lokální `test` DB ≠ produkce):
-```sql
-UPDATE templates t
-JOIN pages p ON p.template_id = t.id
-SET t.html_source =
-  REPLACE(
-    REPLACE(
-      REPLACE(t.html_source, '<header class="hero">', '<section class="page-hero">'),
-      '</header>', '</section>'),
-    'data-block="hero_intro"></p>', 'data-block="hero_intro" class="hero-sub"></p>')
-WHERE p.url_path = '/cenik';
-```
-Pozn.: šablona Ceník obsahuje jediný `<header>` (hero) a jediný `</header>`, takže REPLACE je bezpečný.
-Alternativně jde stejná úprava provést v adminu přes editor šablon (Layouts/Templates) → uložit → publikovat.
-
-Ověřeno: `?theme_preview=editorial-gold` render /cenik nyní obsahuje `<section class="page-hero">`, tématový
-overlay a světlý text; holé `<header class="hero">` zmizelo; DOM/CSS shodné s funkční `podminky-uziti`.
+Nasazení na produkci: čistě přes git + seeder. Funkce `tpl()` v seederu je idempotentní upsert podle
+`site_id + name` — při běhu seederu se existující šablona „Ceník" přepíše (UPDATE html_source), takže
+oprava se propíše i do existující produkční DB bez resetu a bez ručního SQL. Postup: deploy commitu →
+spustit seeder (admin Setup → načtení dat). Zdroj pravdy je seeder, ne ručně editovaná DB.
