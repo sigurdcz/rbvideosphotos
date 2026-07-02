@@ -268,16 +268,18 @@ TILE;
         if ($normalized === '') return '';
 
         if (preg_match('~https?://[^/]+(/storage/media/.*)$~i', $normalized, $m)) {
-            return $m[1];
+            return '/media/' . ltrim(substr($m[1], strlen('/storage/media/')), '/');
         }
-        if (str_starts_with($normalized, '/storage/media/')) return $normalized;
-        if (str_starts_with($normalized, 'storage/media/')) return '/' . $normalized;
+        if (str_starts_with($normalized, '/media/')) return $normalized;
+        if (str_starts_with($normalized, '/storage/media/')) return '/media/' . ltrim(substr($normalized, strlen('/storage/media/')), '/');
+        if (str_starts_with($normalized, 'storage/media/')) return '/media/' . ltrim(substr($normalized, strlen('storage/media/')), '/');
 
         return '/' . ltrim($normalized, '/');
     }
 
     private function sanitizeHtml(string $html): string
     {
-        return preg_replace('~https?://localhost(?::\d+)?/storage/media/~i', '/storage/media/', $html) ?? $html;
+        $html = preg_replace('~https?://localhost(?::\d+)?/storage/media/~i', '/media/', $html) ?? $html;
+        return str_replace('/storage/media/', '/media/', $html);
     }
 }

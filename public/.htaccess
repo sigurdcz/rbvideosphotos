@@ -9,7 +9,7 @@ RewriteRule ^admin(/.*)?$ /admin/index.php [L,QSA]
 RewriteRule ^admin/assets/(.*)$ /admin/assets/$1 [L]
 
 # Media files stay private in storage and must be streamed through the front controller.
-RewriteRule ^storage/media/.*$ /public/index.php [L,QSA]
+RewriteRule ^media/.*$ /public/index.php [L,QSA]
 
 # Public front
 RewriteCond %{REQUEST_FILENAME} !-f

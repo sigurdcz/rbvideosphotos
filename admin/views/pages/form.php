@@ -13,7 +13,7 @@ $fixedSocials = [
     5 => ['key' => 'linkedin', 'label' => 'LinkedIn'],
 ];
 $media = $media ?? [];
-$mediaUrl = fn(array $m): string => '/' . ltrim((string)($m['storage_path'] ?? ''), '/');
+$mediaUrl = fn(array $m): string => '/media/' . ltrim(preg_replace('~^storage/media/~', '', str_replace('\\', '/', (string)($m['storage_path'] ?? ''))) ?? '', '/');
 $mediaThumb = function(array $m) use ($mediaUrl): string {
     foreach (($m['variants'] ?? []) as $variant) {
         if (($variant['format'] ?? '') === 'thumb' && !empty($variant['path'])) {
@@ -63,9 +63,9 @@ $renderBlockField = function (string $key, string $label, string $type = 'text',
       <?php if (in_array($inputType, ['text', 'link'], true)): ?>
         <input type="text" name="block_content[]" value="<?= $h($value) ?>">
       <?php elseif ($inputType === 'image'): ?>
-        <input type="text" name="block_content[]" value="<?= $h($value) ?>" placeholder="/storage/media/...">
+        <input type="text" name="block_content[]" value="<?= $h($value) ?>" placeholder="/media/...">
       <?php elseif ($inputType === 'video'): ?>
-        <input type="url" name="block_content[]" value="<?= $h($value) ?>" placeholder="https://... nebo /storage/media/...">
+        <input type="url" name="block_content[]" value="<?= $h($value) ?>" placeholder="https://... nebo /media/...">
       <?php else: ?>
         <textarea name="block_content[]" class="<?= $inputType === 'html' ? 'code' : '' ?>"><?= $h($value) ?></textarea>
       <?php endif; ?>
@@ -178,7 +178,7 @@ ob_start();
           Kdyz necelate prazdne obe, stranka pouzije vychozi hero video ze sekce Nastaveni.
         </p>
         <?php $renderBlockField('hero_video', 'Hero video — Vimeo / YouTube URL', 'link', 'Napr. https://vimeo.com/123456789, https://youtu.be/... nebo https://www.youtube.com/watch?v=...'); ?>
-        <?php $renderBlockField('hero_bg', 'Hero foto — URL nebo /storage/media/...', 'image', 'Pouzije se jako pozadi hero sekce, kdyz neni vyplnene hero video.'); ?>
+        <?php $renderBlockField('hero_bg', 'Hero foto — URL nebo /media/...', 'image', 'Pouzije se jako pozadi hero sekce, kdyz neni vyplnene hero video.'); ?>
       </div>
       <?php endif; ?>
     </div>
@@ -394,12 +394,12 @@ ob_start();
             <div class="form-row">
               <div class="form-group">
                 <label>Obrazek / URL</label>
-                <input type="text" data-service-name="image_url" value="<?= $h($item['image_url'] ?? '') ?>" placeholder="/storage/media/...">
+                <input type="text" data-service-name="image_url" value="<?= $h($item['image_url'] ?? '') ?>" placeholder="/media/...">
               </div>
               <div class="form-group">
                 <label>Ikona / medium</label>
                 <div style="display:flex;gap:8px">
-                  <input type="text" data-service-name="icon_url" value="<?= $h($item['icon_url'] ?? '') ?>" placeholder="/storage/media/..." style="flex:1">
+                  <input type="text" data-service-name="icon_url" value="<?= $h($item['icon_url'] ?? '') ?>" placeholder="/media/..." style="flex:1">
                   <button type="button" class="btn btn-sm btn-secondary" data-service-media-open data-target-name="icon_url">Vybrat</button>
                 </div>
                 <div class="form-hint">Doporuceni: jednoducha SVG/PNG ikona, idealne 96x96 px.</div>
@@ -465,10 +465,10 @@ ob_start();
               <?php if (in_array($block['block_type'], ['text','link'], true)): ?>
                 <input type="text" name="block_content[]" value="<?= $h($block['content'] ?? '') ?>"<?= $autofillEnabled ? ' disabled' : '' ?>>
               <?php elseif ($block['block_type'] === 'image'): ?>
-                <input type="text" name="block_content[]" value="<?= $h($block['content'] ?? '') ?>" placeholder="/storage/media/..."<?= $autofillEnabled ? ' disabled' : '' ?>>
+                <input type="text" name="block_content[]" value="<?= $h($block['content'] ?? '') ?>" placeholder="/media/..."<?= $autofillEnabled ? ' disabled' : '' ?>>
                 <div class="form-hint">URL nebo cesta k obrazku</div>
               <?php elseif (($block['block_type'] === 'video') || $block['block_key'] === 'hero_video'): ?>
-                <input type="url" name="block_content[]" value="<?= $h($block['content'] ?? '') ?>" placeholder="https://... nebo /storage/media/..."<?= $autofillEnabled ? ' disabled' : '' ?>>
+                <input type="url" name="block_content[]" value="<?= $h($block['content'] ?? '') ?>" placeholder="https://... nebo /media/..."<?= $autofillEnabled ? ' disabled' : '' ?>>
                 <div class="form-hint">URL videa pro pozadí v hero sekci homepage.</div>
               <?php else: ?>
                 <textarea name="block_content[]" class="<?= $block['block_type'] === 'html' ? 'code' : '' ?>"<?= $autofillEnabled ? ' disabled' : '' ?>><?= $h($block['content'] ?? '') ?></textarea>
@@ -639,12 +639,12 @@ ob_start();
       <div class="form-row">
         <div class="form-group">
           <label>Obrazek / URL</label>
-          <input type="text" data-service-name="image_url" placeholder="/storage/media/...">
+          <input type="text" data-service-name="image_url" placeholder="/media/...">
         </div>
         <div class="form-group">
           <label>Ikona / medium</label>
           <div style="display:flex;gap:8px">
-            <input type="text" data-service-name="icon_url" placeholder="/storage/media/..." style="flex:1">
+            <input type="text" data-service-name="icon_url" placeholder="/media/..." style="flex:1">
             <button type="button" class="btn btn-sm btn-secondary" data-service-media-open data-target-name="icon_url">Vybrat</button>
           </div>
           <div class="form-hint">Doporuceni: jednoducha SVG/PNG ikona, idealne 96x96 px.</div>

@@ -284,7 +284,8 @@ HTML;
 
 function sanitizeFrontendHtml(string $html, ?array $site = null): string
 {
-    $html = preg_replace('~https?://localhost(?::\d+)?/storage/media/~i', '/storage/media/', $html) ?? $html;
+    $html = preg_replace('~https?://localhost(?::\d+)?/storage/media/~i', '/media/', $html) ?? $html;
+    $html = str_replace('/storage/media/', '/media/', $html);
     $html = normalizeLegacyFrontendMarkup($html);
     $html = externalizeBodyCssVariables($html);
     $html = injectGlobalVideoOverlayStyles($html, $site);
@@ -1411,15 +1412,19 @@ function publicMediaUrl(string $storagePath): string
     }
 
     if (preg_match('~https?://[^/]+(/storage/media/.*)$~i', $normalized, $m)) {
-        return $m[1];
+        return '/media/' . ltrim(substr($m[1], strlen('/storage/media/')), '/');
     }
 
-    if (str_starts_with($normalized, '/storage/media/')) {
+    if (str_starts_with($normalized, '/media/')) {
         return $normalized;
     }
 
+    if (str_starts_with($normalized, '/storage/media/')) {
+        return '/media/' . ltrim(substr($normalized, strlen('/storage/media/')), '/');
+    }
+
     if (str_starts_with($normalized, 'storage/media/')) {
-        return '/' . $normalized;
+        return '/media/' . ltrim(substr($normalized, strlen('storage/media/')), '/');
     }
 
     return '/' . ltrim($normalized, '/');
@@ -2497,9 +2502,10 @@ try {
         }
     }
 
-    if (str_starts_with($uri, '/storage/media/')) {
+    if (str_starts_with($uri, '/media/')) {
         $mediaBase = realpath(dirname(__DIR__) . '/storage/media');
-        $file      = realpath(dirname(__DIR__) . $uri);
+        $relative  = ltrim(substr($uri, strlen('/media/')), '/');
+        $file      = realpath(dirname(__DIR__) . '/storage/media/' . $relative);
         if ($mediaBase !== false && $file !== false && str_starts_with($file, $mediaBase . DIRECTORY_SEPARATOR)) {
             $ext  = strtolower(pathinfo($file, PATHINFO_EXTENSION));
             $mime = match ($ext) {

@@ -2,7 +2,7 @@
 $pageTitle = 'Nastaveni webu';
 $h = fn($v) => htmlspecialchars((string)($v ?? ''));
 $media = $media ?? [];
-$mediaUrl = fn(array $m): string => '/' . ltrim((string)($m['storage_path'] ?? ''), '/');
+$mediaUrl = fn(array $m): string => '/media/' . ltrim(preg_replace('~^storage/media/~', '', str_replace('\\', '/', (string)($m['storage_path'] ?? ''))) ?? '', '/');
 $mediaThumb = function(array $m) use ($mediaUrl): string {
     foreach (($m['variants'] ?? []) as $v) {
         if (($v['format'] ?? '') === 'thumb' && !empty($v['path'])) {

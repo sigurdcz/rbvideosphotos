@@ -7,9 +7,9 @@ $fmtBytes  = fn(int $b): string => $b >= 1_048_576
 
 $mediaThumb = function(array $m): string {
     foreach ($m['variants'] as $v) {
-        if ($v['format'] === 'thumb') return '/' . $v['path'];
+        if ($v['format'] === 'thumb') return '/media/' . ltrim(preg_replace('~^storage/media/~', '', str_replace('\\', '/', (string)$v['path'])) ?? '', '/');
     }
-    return '/' . $m['storage_path'];
+    return '/media/' . ltrim(preg_replace('~^storage/media/~', '', str_replace('\\', '/', (string)$m['storage_path'])) ?? '', '/');
 };
 
 $variantMap = function(array $m): array {
