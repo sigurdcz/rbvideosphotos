@@ -180,9 +180,6 @@ $renderServiceItemsEditor = function (string $cardTitle, string $cardHint) use (
         <?php endforeach; ?>
       </div>
 
-      <?php if (empty($serviceItems)): ?>
-      <p class="form-hint" id="service-empty-state">Zatim tu nejsou zadne sluzby. Pridate je tlacitkem nahore.</p>
-      <?php endif; ?>
     </div>
     <?php
 };
@@ -215,6 +212,9 @@ ob_start();
         <button type="button" class="tab-btn" data-tab="page-content">Obsah stranky</button>
         <button type="button" class="tab-btn" data-tab="services-items">Polozky sluzeb</button>
         <button type="button" class="tab-btn" data-tab="services-grid">Sluzby</button>
+        <?php if ($isHomepage): ?>
+          <button type="button" class="tab-btn" data-tab="homepage-services">Sluzby homepage</button>
+        <?php endif; ?>
       <?php else: ?>
         <button type="button" class="tab-btn" data-tab="blocks">Bloky obsahu <?= !empty($visibleBlocks) ? '(' . count($visibleBlocks) . ')' : '' ?></button>
         <?php if ($isHomepage): ?>
@@ -573,9 +573,6 @@ ob_start();
           <?php endforeach; ?>
         </div>
 
-        <?php if (empty($serviceItems)): ?>
-        <p class="form-hint" id="service-empty-state">Zatim tu nejsou zadne sluzby. Pridate je tlacitkem nahore.</p>
-        <?php endif; ?>
       </div>
     </div>
     <div class="tab-pane" id="tab-services-grid">

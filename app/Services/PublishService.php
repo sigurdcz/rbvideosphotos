@@ -375,17 +375,19 @@ HTML;
             return $html;
         }
 
-        if (str_contains($html, 'jb-about-visual__source')) {
-            return $html;
-        }
-
         $block = $this->blocks->findByKey($pageId, 'jb-about-visual__media');
         $url = $block ? $this->normalizePublicAssetUrl((string)($block['content'] ?? '')) : '';
+        $sourcePattern = '~<img\b[^>]*\bclass=(["\'])[^"\']*\bjb-about-visual__source\b[^"\']*\1[^>]*>~i';
+
         if ($url === '') {
-            return $html;
+            return preg_replace($sourcePattern, '', $html) ?? $html;
         }
 
         $source = '<img class="jb-about-visual__source" data-media="jb-about-visual__media" src="' . htmlspecialchars($url, ENT_QUOTES) . '" alt="Naše služby" loading="lazy" hidden>';
+        $updated = preg_replace($sourcePattern, $source, $html, 1, $count);
+        if ($count > 0 && is_string($updated)) {
+            return $updated;
+        }
 
         $count = 0;
         $html = preg_replace('/(<main\b[^>]*>)/i', '$1' . $source, $html, 1, $count);
