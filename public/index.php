@@ -2086,16 +2086,22 @@ function tryServeKontaktPage(): bool
         $contactFaqItems = array_slice((new FaqRepository())->allActive((int)$site['id']), 0, 4);
         foreach ($contactFaqItems as $faqItem) {
             $question = trim((string)($faqItem['question'] ?? ''));
+            $answer = trim((string)($faqItem['answer'] ?? ''));
             if ($question === '') {
                 continue;
             }
-            $contactFaqHtml .= '<div class="kt-faq-item"><span>' . $h($question) . '</span><span>+</span></div>';
+            $contactFaqHtml .= '<article class="kt-faq-item">'
+                . '<button type="button" class="kt-faq-toggle" aria-expanded="false">'
+                . '<span>' . $h($question) . '</span><span class="kt-faq-plus">+</span>'
+                . '</button>'
+                . '<div class="kt-faq-answer">' . nl2br($h($answer)) . '</div>'
+                . '</article>';
         }
     } catch (\Throwable $e) {
         $contactFaqHtml = '';
     }
     if ($contactFaqHtml === '') {
-        $contactFaqHtml = '<div class="kt-faq-item"><span>Nemáte vyplněné FAQ otázky.</span><span>+</span></div>';
+        $contactFaqHtml = '<article class="kt-faq-item"><button type="button" class="kt-faq-toggle" aria-expanded="false"><span>Nemáte vyplněné FAQ otázky.</span><span class="kt-faq-plus">+</span></button><div class="kt-faq-answer">Doplňte otázky v administraci FAQ.</div></article>';
     }
 
     $kontaktCss = <<<'CSS'
@@ -2169,7 +2175,7 @@ body{background:#111;color:#fff}
 .kt-process .kt-section-kicker{text-align:center;margin-bottom:18px;color:#d6aa5f}
 .kt-process-title{margin:0 0 60px;text-align:center;color:#231812;font-family:Georgia,serif;font-size:clamp(2.4rem,4.4vw,4.2rem);font-weight:400;line-height:1.05}.kt-process-title em{color:#d6aa5f;font-style:italic}
 .kt-steps{position:relative;display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:38px;max-width:1060px;margin:0 auto}.kt-steps::before{content:"";position:absolute;left:8%;right:8%;top:29px;height:1px;background:#ead7b4}.kt-step{position:relative;z-index:1;display:block!important;text-align:center;padding:0 10px}.kt-step__num{display:grid;place-items:center;width:64px;height:64px;margin:0 auto 28px;border:1px solid #dfb96e;border-radius:999px;background:#f8f5ef;color:#c79643;font-size:1.1rem;font-weight:700}.kt-step h3{margin:0 0 14px;color:#241914;font-family:Georgia,serif;font-size:clamp(1.65rem,2.4vw,2.35rem);font-weight:400;line-height:1.08}.kt-step p{max-width:210px;margin:0 auto;color:#725d4f;font-size:15px;line-height:1.75}
-.kt-faq{padding:34px 0 50px}.kt-faq .kt-section-kicker{text-align:center;margin-bottom:20px}.kt-faq-grid{display:grid!important;grid-template-columns:1fr 1fr!important;gap:10px 16px;max-width:980px;margin:0 auto}.kt-faq-item{display:flex;justify-content:space-between;gap:14px;padding:13px 16px;background:rgba(255,255,255,.045);border:1px solid rgba(214,170,95,.08);color:#f7efe3;font-size:12px}.kt-faq-item span:last-child{color:#d6aa5f;font-weight:900}
+.kt-faq{padding:34px 0 50px}.kt-faq .kt-section-kicker{text-align:center;margin-bottom:20px}.kt-faq-grid{display:grid!important;grid-template-columns:1fr 1fr!important;gap:10px 16px;max-width:980px;margin:0 auto}.kt-faq-item{display:block;background:rgba(255,255,255,.045);border:1px solid rgba(214,170,95,.08);color:#f7efe3;font-size:12px}.kt-faq-toggle{display:flex!important;align-items:center;justify-content:space-between;gap:14px;width:100%;border:0;background:transparent;color:#f7efe3;padding:13px 16px;text-align:left;font:inherit;font-weight:800;cursor:pointer}.kt-faq-plus{color:#d6aa5f;font-weight:900;transition:transform .2s}.kt-faq-item.is-open .kt-faq-plus{transform:rotate(45deg)}.kt-faq-answer{display:none;padding:0 16px 15px;color:rgba(247,239,227,.72);font-size:12px;line-height:1.65}.kt-faq-item.is-open .kt-faq-answer{display:block}.kt-faq-cta{display:flex;justify-content:center;margin-top:22px}.kt-faq-link{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:11px 18px;border:1px solid rgba(214,170,95,.5);color:#f7efe3;text-decoration:none;font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase}
 @media(max-width:900px){.kt-hero{min-height:auto;padding:72px 0 50px}.kt-grid,.kt-steps,.kt-faq-grid{grid-template-columns:1fr!important}.kt-form-grid{grid-template-columns:1fr!important}.kt-form-field--full{grid-column:auto}.kt-grid{max-width:none;gap:28px}.kt-wrap{padding:34px 0}.kt-hero-actions{align-items:stretch}.kt-btn{flex:1 1 180px}.kt-process{padding:56px 0}.kt-process-title{margin-bottom:36px}.kt-steps::before{display:none}.kt-step{padding:0}.kt-step+.kt-step{margin-top:18px}}
 
 /* Final contact-page overrides: keep these last to win over theme and legacy contact CSS. */
@@ -2198,7 +2204,7 @@ body{background:#111;color:#fff}
 .kt-consent input{appearance:none!important;-webkit-appearance:none!important;display:grid!important;place-items:center!important;flex:0 0 16px!important;width:16px!important;height:16px!important;margin:0!important;border:1px solid rgba(214,170,95,.65)!important;background:#241914!important;border-radius:2px!important}
 .kt-form-btn{display:flex!important;align-items:center!important;justify-content:center!important;width:100%!important;min-height:43px!important;border:0!important;border-radius:3px!important;background:#d9ad61!important;color:#1b120d!important;font-size:11px!important;font-weight:900!important;letter-spacing:.13em!important;text-transform:uppercase!important}
 .kt-form-safe{text-align:center!important;margin-top:11px!important;color:rgba(255,247,236,.58)!important;font-size:11px!important}
-@media(max-width:900px){html,body{max-width:100%!important;overflow-x:hidden!important}.theme-main,.kt-hero,.kt-wrap,.kt-faq{max-width:100%!important;overflow-x:hidden!important}.kt-hero>.container,.kt-wrap>.container,.kt-faq>.container{width:calc(100% - 32px)!important;max-width:640px!important;margin-left:auto!important;margin-right:auto!important;padding-left:0!important;padding-right:0!important}.kt-grid{grid-template-columns:minmax(0,1fr)!important;gap:28px!important;width:100%!important;max-width:none!important}.ci-card{grid-template-columns:38px minmax(0,1fr)!important;padding:16px 14px!important}.kt-form-block{width:100%!important;max-width:none!important;padding:20px 18px 22px!important;overflow:hidden!important}.kt-form-grid{grid-template-columns:minmax(0,1fr)!important;gap:14px!important}.kt-form-block input,.kt-form-block textarea,.kt-form-block select{max-width:100%!important}.kt-consent{margin:20px 0 18px!important;gap:9px!important;align-items:flex-start!important;color:#eadfce!important;font-size:10px!important;font-weight:400!important;line-height:1.45!important;letter-spacing:.02em!important;text-transform:none!important}.kt-consent span{padding-top:0!important}.kt-consent input{flex:0 0 15px!important;width:15px!important;height:15px!important;margin-top:1px!important}.kt-form-btn{width:min(100%,320px)!important;margin:0 auto!important;min-height:50px!important;text-align:center!important}.kt-form-safe{text-align:center!important}.kt-process{display:none!important}}
+@media(max-width:900px){html,body{max-width:100%!important;overflow-x:hidden!important}.theme-main,.kt-hero,.kt-wrap,.kt-faq{max-width:100%!important;overflow-x:hidden!important}.kt-hero>.container,.kt-wrap>.container,.kt-faq>.container{box-sizing:border-box!important;width:calc(100% - 32px)!important;max-width:640px!important;margin-left:auto!important;margin-right:auto!important;padding-left:0!important;padding-right:0!important}.kt-grid{grid-template-columns:minmax(0,1fr)!important;gap:28px!important;width:100%!important;max-width:none!important;min-width:0!important}.ci-card{grid-template-columns:38px minmax(0,1fr)!important;padding:16px 14px!important}.kt-form-block{box-sizing:border-box!important;width:100%!important;max-width:100%!important;min-width:0!important;padding:20px 18px 22px!important;overflow:hidden!important}.kt-form-block *{box-sizing:border-box!important;max-width:100%!important}.kt-form-grid{grid-template-columns:minmax(0,1fr)!important;gap:14px!important;width:100%!important;min-width:0!important}.kt-form-block input,.kt-form-block textarea,.kt-form-block select{max-width:100%!important;min-width:0!important}.kt-consent{margin:20px 0 18px!important;gap:9px!important;align-items:flex-start!important;color:#eadfce!important;font-size:10px!important;font-weight:400!important;line-height:1.45!important;letter-spacing:.02em!important;text-transform:none!important}.kt-consent span{padding-top:0!important}.kt-consent input{flex:0 0 15px!important;width:15px!important;height:15px!important;margin-top:1px!important}.kt-form-btn{width:min(100%,320px)!important;margin:0 auto!important;min-height:50px!important;text-align:center!important}.kt-form-safe{text-align:center!important}.kt-process{display:none!important}.kt-faq-grid{grid-template-columns:1fr!important}.kt-faq-link{width:min(100%,320px)}}
 CSS;
 
     // Contact form HTML
@@ -2285,8 +2291,19 @@ CSS;
     <div class="kt-faq-grid">
       {$contactFaqHtml}
     </div>
+    <div class="kt-faq-cta"><a class="kt-faq-link" href="/faq">Všechny FAQ</a></div>
   </div>
 </section>
+<script>
+document.querySelectorAll('.kt-faq-toggle').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var item = btn.closest('.kt-faq-item');
+    if (!item) return;
+    var open = item.classList.toggle('is-open');
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+});
+</script>
 HTML;
     [$pageContent, $themeCss, $themeJs, $themeActive] = applyThemeTemplate(
         $renderer,
