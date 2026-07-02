@@ -899,6 +899,29 @@ $reviewStmt->execute([$siteId, 'Marketa a Tomas', 'Svatebni video', 5, 'Video vy
 $reviewStmt->execute([$siteId, 'Lucie Novakova', 'Portretni foceni', 5, 'Foceni bylo uvolnene a bez stresu. Vysledek pusobi prirozene a profesionalne.', 5, 1]);
 $reviewStmt->execute([$siteId, 'Petr Maly', 'Firemni akce', 5, 'Rychla domluva, jistota na miste a vystupy pouzitelne rovnou na web i socialni site.', 6, 1]);
 
+$reviewStmt->execute([$siteId, 'Ellie Lachnitova', 'Foceni s Bannym', 5, 'Foceni s Bannym me moc bavilo. Super pristup, atmosfera i fotky. Rozhodne doporucuji! :)', 7, 1]);
+$reviewStmt->execute([$siteId, 'Michael Latal', 'Foceni', 5, 'Velmi super pristup i fotky.', 8, 1]);
+$reviewStmt->execute([$siteId, 'Roman Vrana', 'Svatebni foceni', 5, 'Rychlost, super provedeni, nadherne fotky, ktere rychle dodal upravene. 11/10, jeste jednou moc dekujeme <3', 9, 1]);
+$reviewStmt->execute([$siteId, 'Tomas Pavlat', 'Portretni foceni', 5, 'Profesionalita, ochota, vstricnost a hlavne poradi i se scenou. Chces mit profi foto a nevis komu rict a poradit s kompozici? Tak ted uz vis.', 10, 1]);
+$reviewStmt->execute([$siteId, 'Lucie Fedorova', 'Foceni', 5, 'Lepsiho fotografa neznam. :) Uzasny pristup, nadherny fotky. Doporucuji.', 11, 1]);
+$reviewStmt->execute([$siteId, 'Zuzana Horakova', 'Rodinne foceni', 5, 'Perfektni. Foceni velmi prijemne a fotky krasne. Doporucuji vsemi deseti.', 12, 1]);
+$reviewStmt->execute([$siteId, 'Martina Bobkova', 'Foceni', 5, 'Super fotky a super pokec :) doporucuji moc moc.', 13, 1]);
+$reviewStmt->execute([$siteId, 'Darca Polaskova', 'Svatebni foceni', 5, 'Super domluva, zabava a vtipky pri samotnem foceni, fotky skvele a je jich hodne :3 Rozhodne doporucuji :)', 14, 1]);
+$reviewStmt->execute([$siteId, 'Dana Kneblova', 'Foceni', 5, 'Bylo to zabavne a uplne pohodove foceni ;)', 15, 1]);
+$reviewStmt->execute([$siteId, 'Veronika Bokova', 'Rodinne foceni', 5, 'Domluva skvela, foceni zabavne, takze z cloveka hned odpadne nervozita a fotky paradni...Doporucuji! :)', 16, 1]);
+$reviewStmt->execute([$siteId, 'Michal Kucera', 'Foceni', 5, 'Skvela komunikace, super fotky jen doporucuji.', 17, 1]);
+$reviewStmt->execute([$siteId, 'Dominika Jecminkova', 'Foceni', 5, 'Skvela komunikace, skvele fotky ^^ Kdykoliv se jde domluvit, aby to vyhovovalo obema stranam :) Muzu jen doporucit.', 18, 1]);
+$reviewStmt->execute([$siteId, 'Rose De Clermont', 'Foceni', 5, 'Velka spokojenost! Dvakrat nam foceni zrusilo spatne pocasi, ale diky dobre komunikaci s fotografem se foceni fakt uskutecnilo :) I po foceni je paradni domluva, kdyz chci jeste nejakou dalsi z fotek upravit. Doporucuji :)', 19, 1]);
+$reviewStmt->execute([$siteId, 'Aneta Jenesova', 'Foceni', 5, 'Super fotky a skvela domluva s panem fotografem doporucuji :)', 20, 1]);
+$reviewStmt->execute([$siteId, 'Jenny Molatova', 'Foceni', 5, 'Super fotky ^^', 21, 1]);
+$reviewStmt->execute([$siteId, 'Martin Jenes', 'Foceni', 5, 'Vrele doporucuji. Perfektni prace pana fotografa.', 22, 1]);
+$reviewStmt->execute([$siteId, 'Vojtech Vrana', 'Hudebni klip', 5, 'Cerstvy klip z nove desky WE ARE HERE. Jsme nataceli s RB - Videos & Photos, jsou to sikovni panove.', 23, 1]);
+$reviewStmt->execute([$siteId, 'Veronika Saskova', 'Celodenni foceni', 5, 'Diky klukum z rbvideosphotos jsem mela moznost vyzkouset si celodenni foceni v pronajatem apartmanu, kde se vystridalo nekolik modelek. Byla to fajn zkusenost :)', 24, 1]);
+$reviewStmt->execute([$siteId, 'Diana Smidova', 'Foceni', 5, 'Dekujeme za nejkrasnejsi vzpominku! Super prace.', 25, 1]);
+$reviewStmt->execute([$siteId, 'Clarissa cosplayer', 'Photo shoot', 5, 'Today is nice day. I already have photos from the photo shoot. Thank you so much to the photographer for the photos and video.', 26, 1]);
+$reviewStmt->execute([$siteId, 'Tomas Fyfty Fiala', 'Hudebni klip', 5, 'A je to venku. Klip k novemu songu SVETLO. Velke diky klukum z RB - Videos & Photos.', 27, 1]);
+$reviewStmt->execute([$siteId, 'Katerina Vaclavkova', 'Foceni', 5, 'Super :) :)', 28, 1]);
+$reviewStmt->execute([$siteId, 'Radka Polynkova', 'Foceni', 5, 'Moc dekujeme za uzasne fotky <3', 29, 1]);
 (new \App\Services\ReviewContentService())->ensureHomepageSection($siteId);
 echo "Recenze vytvoreny.\n";
 

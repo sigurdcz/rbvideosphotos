@@ -120,7 +120,7 @@ class HomepageContentService
         $this->applyBlockFallback($blocks, 'pricing_body', fn() => $this->buildPricingHtml());
         $this->applyBlockFallback($blocks, 'cenik_cta', fn() => $this->buildSectionCtaHtml('/cenik', 'Celý ceník'));
         $this->applyBlockFallback($blocks, 'pricing_cta', fn() => $this->buildSectionCtaHtml('/cenik', 'Celý ceník'));
-        $this->applyBlockFallback($blocks, 'reviews_demo', fn() => $this->reviewContent->buildHomepageHtml($siteId, 6));
+        $this->applyBlockFallback($blocks, 'reviews_demo', fn() => $this->reviewContent->buildHomepageHtml($siteId, 10));
         $this->applyBlockFallback($blocks, 'reviews_cta', fn() => $this->buildSectionCtaHtml('/hodnoceni', 'Vsechny recenze'));
         $this->applyBlockFallback($blocks, 'kontakt_info', fn() => $this->buildContactHtml($siteId));
         $this->applyBlockFallback($blocks, 'contact_info', fn() => $this->buildContactHtml($siteId));
