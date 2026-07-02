@@ -156,6 +156,7 @@ class PublishService
         $html        = $this->injectSiteLogo($html, $site);
         $html        = $this->injectPageHeroImage($html, (int)$page['id']);
         $html = $this->injectPageHeroVideo($html, $site, (int)$page['id']);
+        $html = $this->injectBodyPageKey($html, $pageKey);
         $html = $this->normalizeLegacyFrontendMarkup($html);
         $html = $this->injectSharedFrontendAssets($html);
         $html = $this->externalizeBodyCssVariables($html);
@@ -983,6 +984,23 @@ CSS;
             $attrs = preg_replace('/\s' . preg_quote($attrName, '/') . '=(["\']).*?\1/i', ' ' . $attrName . '="' . $attrValue . '"', $attrs, 1) ?? $attrs;
         } else {
             $attrs .= ' ' . $attrName . '="' . $attrValue . '"';
+        }
+
+        return preg_replace('/<body([^>]*)>/i', '<body' . $attrs . '>', $html, 1) ?? $html;
+    }
+
+    private function injectBodyPageKey(string $html, string $pageKey): string
+    {
+        if ($pageKey === '' || !preg_match('/<body([^>]*)>/i', $html, $m)) {
+            return $html;
+        }
+
+        $attrs = $m[1];
+        $attrValue = htmlspecialchars($pageKey, ENT_QUOTES);
+        if (preg_match('/\sdata-cms-page-key=(["\']).*?\1/i', $attrs)) {
+            $attrs = preg_replace('/\sdata-cms-page-key=(["\']).*?\1/i', ' data-cms-page-key="' . $attrValue . '"', $attrs, 1) ?? $attrs;
+        } else {
+            $attrs .= ' data-cms-page-key="' . $attrValue . '"';
         }
 
         return preg_replace('/<body([^>]*)>/i', '<body' . $attrs . '>', $html, 1) ?? $html;

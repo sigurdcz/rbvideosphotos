@@ -724,6 +724,73 @@ CSS;
             ],
         ];
 
+        $pricingPackages = <<<'HTML'
+<div class="ckp-grid">
+  <div class="ckp-card">
+    <h3 class="ckp-title">Zakladni svatba</h3>
+    <div class="ckp-price">od 14 900 Kc</div>
+    <p class="ckp-desc">Pro mensi svatby, obrad, gratulace, skupinove fotografie a kratke foceni novomanzelu.</p>
+    <ul class="ckp-feats">
+      <li>foceni cca 3 hodiny</li>
+      <li>obrad, gratulace, skupinove fotografie</li>
+      <li>kratke parove foceni novomanzelu</li>
+      <li>minimalne 100 upravenych fotografii</li>
+      <li>online galerie</li>
+      <li>predani fotek ke stazeni</li>
+      <li>archivace hotovych vystupu na 2 roky</li>
+    </ul>
+  </div>
+  <div class="ckp-card ckp-card--featured">
+    <span class="ckp-badge">Nejoblibenejsi</span>
+    <h3 class="ckp-title">Standardni svatba</h3>
+    <div class="ckp-price">od 24 900 Kc</div>
+    <p class="ckp-desc">Nejoblibenejsi volba pro vetsinu paru. Pokryje hlavni cast svatebniho dne od priprav po prvni tanec nebo vecerni program.</p>
+    <ul class="ckp-feats">
+      <li>foceni cca 8 hodin</li>
+      <li>pripravy, obrad, gratulace, skupinky</li>
+      <li>parove foceni novomanzelu</li>
+      <li>hostina, detaily a atmosfera dne</li>
+      <li>minimalne 300 az 500 upravenych fotografii</li>
+      <li>svatebni video nebo sestrih dne</li>
+      <li>online galerie</li>
+      <li>konzultace pred svatbou</li>
+      <li>archivace hotovych vystupu na 2 roky</li>
+    </ul>
+  </div>
+  <div class="ckp-card">
+    <h3 class="ckp-title">Premiova svatba</h3>
+    <div class="ckp-price">od 34 900 Kc</div>
+    <p class="ckp-desc">Kompletni zachyceni celeho svatebniho dne bez spechu a kompromisu.</p>
+    <ul class="ckp-feats">
+      <li>foceni cca 10 az 12 hodin</li>
+      <li>cely den od priprav az po vecerni zabavu</li>
+      <li>vetsi pocet upravenych fotografii</li>
+      <li>detailni zachyceni atmosfery, hostu a momentu</li>
+      <li>svatebni video a kratky sestrih nebo reels v cene</li>
+      <li>online galerie a video ke stazeni</li>
+      <li>konzultace pred svatbou</li>
+      <li>prioritni zpracovani</li>
+      <li>archivace hotovych vystupu na 5 let</li>
+    </ul>
+  </div>
+</div>
+HTML;
+
+        $this->blocks->upsert($pageId, 'pricing_packages', [
+            'block_type' => 'html',
+            'label' => 'Cenik svatby - balicky',
+            'content' => $pricingPackages,
+            'sort_order' => 5,
+            'autofill_disabled' => 1,
+        ]);
+        $this->blocks->upsert($pageId, 'pricing_body', [
+            'block_type' => 'html',
+            'label' => 'Cenik svatby - legacy balicky',
+            'content' => $pricingPackages,
+            'sort_order' => 5,
+            'autofill_disabled' => 1,
+        ]);
+
         $order = 10;
         foreach ($cards as $i => [$title, $desc, $price]) {
             $this->blocks->upsert($pageId, 'cenik_card_' . $i . '_title', [
@@ -750,12 +817,7 @@ CSS;
         }
 
         // Poznamka pod cenik (do CTA bloku) + zachovani tlacitka poptavky.
-        $note = '<style>'
-            . '.cenik-note{max-width:760px;margin:4px auto 30px;text-align:center}'
-            . '.cenik-note p{color:#5f5143;line-height:1.7;margin:0 0 8px}'
-            . '.cenik-note__fine{font-size:.82rem;color:#8a7a68}'
-            . '</style>'
-            . '<div class="cenik-note">'
+        $note = '<div class="cenik-note">'
             . '<p>Hotové výstupy archivuji podle zvoleného balíčku po dobu 2 nebo 5 let. '
             . 'Díky tomu je možné fotografie nebo video v případě ztráty znovu obnovit.</p>'
             . '<p class="cenik-note__fine">Archivace se vztahuje na finálně předané výstupy, '
@@ -788,7 +850,7 @@ CSS;
   <div class="container">
     <h2 data-block="pricing_weddings_heading"></h2>
     <p data-block="pricing_weddings_sub"></p>
-    <div data-block="pricing_body"></div>
+    <div data-block="pricing_packages"></div>
     <h2 data-block="pricing_other_heading"></h2>
     <p data-block="pricing_other_sub"></p>
   </div>
@@ -797,20 +859,41 @@ CSS;
   <div class="container">
     <h2 data-block="cta_heading"></h2>
     <p data-block="cta_sub"></p>
-    <div data-block="cta_wrap"></div>
+    <div class="cenik-cta-wrap" data-block="cta_wrap"></div>
   </div>
 </section>
 HTML;
 
         $css = <<<'CSS'
-.page-hero{background:#1a1a1a;color:#fff;padding:96px 0 90px;position:relative;overflow:hidden}
-.page-hero .container{position:relative;z-index:3}
-.page-hero h1{color:#fff;font-size:clamp(2.4rem,5vw,4.5rem);font-weight:700;line-height:1.05;margin:0 0 1rem;max-width:780px}
-.page-hero .hero-sub{color:rgba(255,255,255,.78);max-width:760px;margin:0;line-height:1.75}
-.section{padding:64px 0}
-.section-dark{background:#1a1a1a;padding:64px 0}
-.section-dark h2{color:#fff;font-size:1.6rem;margin-bottom:.5rem}
-.section-dark p{color:rgba(255,255,255,.6);max-width:760px;margin-bottom:1rem}
+.page-hero{background:#1a1a1a;color:#fff;padding:104px 0 96px;position:relative;overflow:hidden}
+.page-hero .container{position:relative;z-index:3;max-width:920px;margin:0 auto;text-align:center;display:flex;flex-direction:column;align-items:center}
+.page-hero h1{color:#fff;font-size:clamp(2.6rem,5vw,4.7rem);font-weight:700;line-height:1.03;margin:0 0 1rem;max-width:760px}
+.page-hero .hero-sub{color:rgba(255,255,255,.82);max-width:720px;margin:0;line-height:1.78}
+.section{background:#f7f2ea;padding:76px 0 84px}
+.section .container,.section-dark .container{max-width:1060px;margin:0 auto;padding:0 24px}
+.section h2{color:#241914;font-family:Georgia,serif;font-size:clamp(1.8rem,3vw,2.7rem);line-height:1.08;margin:0 0 14px}
+.section p{max-width:860px;color:#6b5948;line-height:1.75}
+.ckp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;align-items:stretch;margin:26px 0 42px}
+.ckp-card{position:relative;display:flex;flex-direction:column;gap:18px;height:100%;padding:30px 26px;background:#fff;border:1px solid #e7ddd0;border-radius:22px;box-shadow:0 18px 48px rgba(39,27,18,.08)}
+.ckp-card--featured{border-color:#c79a49;box-shadow:0 24px 58px rgba(199,154,73,.18)}
+.ckp-badge{position:absolute;top:-12px;left:24px;padding:5px 12px;background:#c79a49;color:#fff;font-size:.66rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase;border-radius:999px}
+.ckp-title{margin:0;color:#241914;font-family:Georgia,serif;font-size:1.9rem;line-height:1.02}
+.ckp-price{margin:0;color:#c4963c;font-size:1.45rem;font-weight:900}
+.ckp-desc{margin:0;color:#5f5143;line-height:1.72}
+.ckp-feats{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.ckp-feats li{position:relative;padding-left:20px;color:#5f5143;line-height:1.6}
+.ckp-feats li::before{content:"\2713";position:absolute;left:0;top:0;color:#c79a49;font-weight:900}
+.section-dark{background:radial-gradient(circle at top,rgba(214,170,95,.12),transparent 45%),linear-gradient(135deg,#1c140f,#120d09);padding:88px 0 92px;border-top:1px solid rgba(214,170,95,.16)}
+.section-dark .container{display:flex;flex-direction:column;align-items:center;text-align:center}
+.section-dark h2{max-width:760px;color:#fff7ec;font-family:Georgia,serif;font-size:clamp(2rem,3.8vw,3.4rem);line-height:1.04;margin:0 0 16px}
+.section-dark p{max-width:760px;color:rgba(247,239,227,.78);line-height:1.78;margin:0 auto 14px}
+.cenik-cta-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;max-width:760px;gap:18px}
+.cenik-note{max-width:760px;margin:6px auto 8px;text-align:center}
+.cenik-note p{color:rgba(247,239,227,.76);line-height:1.72;margin:0 0 8px}
+.cenik-note__fine{font-size:.82rem;color:rgba(247,239,227,.52)}
+.btn-primary{display:inline-flex;align-items:center;justify-content:center;min-width:260px;min-height:52px;padding:14px 26px;background:#d6aa5f;color:#1b120d!important;border:1px solid #d6aa5f;border-radius:0;text-decoration:none;font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;box-shadow:0 18px 36px rgba(0,0,0,.22)}
+.btn-primary:hover{background:#e0b866;border-color:#e0b866;color:#120d09!important}
+@media(max-width:720px){.section .container,.section-dark .container{padding:0 18px}.ckp-grid{grid-template-columns:1fr}.ckp-card{padding:24px 20px}.btn-primary{width:min(100%,320px)}}
 CSS;
 
         foreach ($this->templates->allBySite($siteId) as $template) {

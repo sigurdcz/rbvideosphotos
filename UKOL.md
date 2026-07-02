@@ -1,26 +1,25 @@
-# UKOL: Skryt honeypot a opravit stranku Cenik
+# UKOL: Dorovnat vzhled stranky Cenik
 
 Datum: 2026-07-02
-Zadani: Vysvetlit a znovu spravne skryt anti-spam honeypot ve formulari a opravit samostatnou stranku /cenik, kde je hero text necitelny a layout rozbity.
+Zadani: Opravit vzhled samostatne stranky /cenik, kde jsou texty a balicky rozbite po demo seederu a rezrvacni CTA panel je nevycentrovany a nevzhledny.
 
 ## Kroky
 
 - [x] Zapsat aktualni zadani do UKOL.md
-- [x] Zkontrolovat aktualni markup/CSS pro kontaktni honeypot a stranku /cenik
-- [x] Opravit viditelny honeypot bez odstraneni anti-spam ochrany
-- [x] Opravit citelnost a rozlozeni samostatne stranky /cenik
-- [x] Overit PHP syntaxi, diff a lokalni render /kontakt + /cenik
-- [x] Commitnout a pushnout souvisejici zmeny
+- [x] Zjistit, ktera sablona a ktere bloky realne rozbijeji /cenik
+- [x] Sjednotit demo cenik s fotografickym frontend vzorem
+- [x] Overit lokalni render /cenik a mobilni rozlozeni
+- [-] Commitnout a pushnout souvisejici zmeny
 
 ## Poznamky
 
-- Honeypot je schvalne skryte pole proti spamu. Nesmi byt videt ani zabirat misto ve formulari.
-- /cenik musi mit citelny hero text na tmavem prekryvu a obsah nesmi byt nalepeny na levy kraj.
-- Renderer pred vykreslenim normalizuje starou cenikovou sablonu `<header class="hero">` na `<section class="page-hero">`.
-- DemoContentSeeder uz novou cenikovou sablonu generuje jako `page-hero`, takze se oprava neprepise pri znovunacteni demo obsahu.
-- Honeypot zustava ve formulari jako anti-spam pole, ale ma silnejsi CSS skryti i uvnitr `.kt-form-block`.
-- Overeno: `php -l public/index.php`, `php -l app/Services/PublishService.php`, `php -l app/Services/DemoContentSeeder.php`, `git diff --check`, lokalni HTTP 200 pro `/kontakt` a `/cenik`.
+- Problem neni jen hero; demo seeder ma jinou strukturu ceníku nez `seed_photographer.php`.
+- Demo sablona stale renderuje `pricing_body`, zatimco fotograficky ceník pouziva `pricing_packages` a vlastni `ckp-*` karty.
+- CTA cast v demo sablone nema centrovaci wrapper ani sladene CTA styly, proto vypada vlevo a rozpada se.
+- Pridano `data-cms-page-key="cenik"` do renderu i publishe, aby slo zacit opravovat stavajici legacy markup bez vedlejsich zasahu do ostatnich stranek.
+- Frontend runtime ted obsahuje page-specific rescue styly pro `/cenik`: hero, legacy karty i tmavy CTA panel.
+- DemoContentSeeder ted zapisuje `pricing_packages` i `pricing_body` se stejnym obsahem kvuli kompatibilite se starym i novym template markupem.
 
 ## Vysledek
 
-Honeypot zustal zachovany jako anti-spam ochrana, ale je znovu skutecne skryty i proti silnejsim formularovym CSS pravidlum. Stranka /cenik se pred renderem a pri publishi normalizuje ze stareho `header.hero` na `section.page-hero`; demo seeder uz zapisuje opravenou sablonu.
+Stranka `/cenik` ma opravene page-specific styly pro cteni textu a centrovany CTA panel i pro starsi obsah v DB. Demo ceník byl sjednocen s fotografickym frontend vzorem, takze dalsi nacteni demo obsahu uz znovu nevytvori rozbity levy CTA blok ani bledy cenik.
