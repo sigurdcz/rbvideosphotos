@@ -444,7 +444,7 @@ class DemoContentSeeder
     <h2 data-block="cta_heading"></h2>
     <p data-block="cta_sub"></p>
     <div class="svc-actions">
-      <a href="tel:792483583" class="btn btn-primary">&#128222; 792&#160;483&#160;583</a>
+      <a href="tel:792483583" class="btn btn-primary">792&#160;483&#160;583</a>
       <a href="/sluzby" class="btn btn-secondary">Zpět na služby</a>
     </div>
   </div>
@@ -453,19 +453,19 @@ HTML;
 
         $css = <<<'CSS'
 .hero{background:linear-gradient(135deg,#241a13 0%,#161311 62%,#30241b 100%);color:#fff;padding:92px 0 104px}
-.svc-hero .container,.section-dark .container{max-width:980px}
+.svc-hero .container,.section-dark .container{max-width:980px;margin-left:auto;margin-right:auto;text-align:center;display:flex;flex-direction:column;align-items:center}
 .hero .hero-tag{display:inline-flex;border:1px solid rgba(214,174,105,.55);padding:9px 18px;font-size:11px;color:#f1cf8b;text-transform:uppercase;letter-spacing:.18em;margin-bottom:24px;background:rgba(255,255,255,.04)}
 .hero h1{color:#fff7ed;font-size:clamp(2.4rem,4vw,4.4rem);font-weight:900;line-height:1;margin:0 0 20px;text-shadow:0 12px 34px rgba(0,0,0,.32)}
-.hero p{color:rgba(255,247,237,.82);font-size:1.06rem;line-height:1.75;max-width:720px;margin:0}
+.hero p{color:rgba(255,247,237,.82);font-size:1.06rem;line-height:1.75;max-width:720px;margin:0 auto}
 .section{padding:64px 0}
 .section-dark{background:linear-gradient(135deg,#241a13 0%,#151311 100%);padding:72px 0;border-top:1px solid rgba(214,174,105,.22);border-bottom:1px solid rgba(214,174,105,.22)}
 .section-dark h2{color:#fff7ed;font-size:clamp(1.8rem,3vw,3rem);line-height:1.12;margin:0 0 14px}
-.section-dark p{color:rgba(255,247,237,.78);font-size:1.02rem;line-height:1.75;max-width:720px;margin:0}
+.section-dark p{color:rgba(255,247,237,.78);font-size:1.02rem;line-height:1.75;max-width:720px;margin:0 auto}
 .svc-detail__img{width:100%;height:auto;margin-bottom:28px;border-radius:6px}
 .svc-detail h2{font-size:1.4rem;margin:30px 0 10px;color:#222}
 .svc-detail p{color:#555;line-height:1.8;margin-bottom:1rem}
 .svc-detail ul{margin:0 0 1rem 1.2rem;color:#555;line-height:1.8}
-.svc-actions{display:flex;flex-wrap:wrap;gap:14px;margin-top:30px}
+.svc-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:14px;margin-top:30px}
 .btn{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:14px 24px;font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;text-decoration:none}
 .btn-primary{background:#d2a13f;color:#17110c !important;border:1px solid #d2a13f;box-shadow:0 18px 34px rgba(0,0,0,.22)}
 .btn-primary:hover{background:#e2b85e;border-color:#e2b85e}
