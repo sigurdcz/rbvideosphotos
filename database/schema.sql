@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS `sites` (
   `layout_nav_home`       LONGTEXT DEFAULT NULL,
   `layout_nav_sub`        LONGTEXT DEFAULT NULL,
   `active_theme_key`      VARCHAR(120) DEFAULT NULL,
+  `media_image_quality`    TINYINT UNSIGNED NOT NULL DEFAULT 90,
   `created_at`            DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at`            DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   KEY `idx_sites_active_theme_key` (`active_theme_key`),

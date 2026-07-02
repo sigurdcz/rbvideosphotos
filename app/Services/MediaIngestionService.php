@@ -5,15 +5,18 @@ namespace App\Services;
 use App\Core\Config;
 use App\Core\Logger;
 use App\Repositories\MediaRepository;
+use App\Repositories\SiteRepository;
 
 class MediaIngestionService
 {
     private MediaRepository $media;
+    private SiteRepository $sites;
     private ImageVariantService $variants;
 
     public function __construct()
     {
         $this->media = new MediaRepository();
+        $this->sites = new SiteRepository();
         $this->variants = new ImageVariantService();
     }
 
@@ -156,7 +159,7 @@ class MediaIngestionService
 
         $variantCount = 0;
         if (!$isVideo) {
-            $variantCount = $this->generateVariants($mediaId, $absolutePath, dirname($relativePath), dirname($absolutePath), $w, $h, $ext);
+            $variantCount = $this->generateVariants($siteId, $mediaId, $absolutePath, dirname($relativePath), dirname($absolutePath), $w, $h, $ext);
         }
 
         return [
@@ -168,6 +171,7 @@ class MediaIngestionService
     }
 
     private function generateVariants(
+        int $siteId,
         int $mediaId,
         string $dest,
         string $storagePath,
@@ -183,11 +187,12 @@ class MediaIngestionService
 
         $isGif = $ext === 'gif';
         $created = 0;
+        $quality = $this->mediaQuality($siteId);
 
         if (!$isGif && $ext !== 'webp' && $this->variants->supportsWebP()) {
             $webpName = uniqid('img_', true) . '.webp';
             $webpDest = $fullDir . '/' . $webpName;
-            if ($this->variants->createWebP($dest, $webpDest)) {
+            if ($this->variants->createWebP($dest, $webpDest, $quality)) {
                 $this->media->addVariant($mediaId, [
                     'format' => 'webp',
                     'width' => $w,
@@ -202,7 +207,7 @@ class MediaIngestionService
         if (!$isGif) {
             $thumbName = uniqid('img_', true) . '_th.webp';
             $thumbDest = $fullDir . '/' . $thumbName;
-            if ($this->variants->createResized($dest, $thumbDest, 240)) {
+            if ($this->variants->createResized($dest, $thumbDest, 240, $quality)) {
                 [$tw, $th] = $this->variants->getDimensions($thumbDest);
                 $this->media->addVariant($mediaId, [
                     'format' => 'thumb',
@@ -218,7 +223,7 @@ class MediaIngestionService
         if (!$isGif && $w > 720) {
             $medName = uniqid('img_', true) . '_md.webp';
             $medDest = $fullDir . '/' . $medName;
-            if ($this->variants->createResized($dest, $medDest, 720)) {
+            if ($this->variants->createResized($dest, $medDest, 720, $quality)) {
                 [$mw, $mh] = $this->variants->getDimensions($medDest);
                 $this->media->addVariant($mediaId, [
                     'format' => 'medium',
@@ -235,7 +240,7 @@ class MediaIngestionService
         if (!$isGif) {
             $ogName = uniqid('img_', true) . '_og.webp';
             $ogDest = $fullDir . '/' . $ogName;
-            if ($this->variants->createCropped($dest, $ogDest, 1200, 630)) {
+            if ($this->variants->createCropped($dest, $ogDest, 1200, 630, $quality)) {
                 $this->media->addVariant($mediaId, [
                     'format' => 'og',
                     'width' => 1200,
@@ -284,5 +289,15 @@ class MediaIngestionService
         $key = preg_replace('~[^a-z0-9-]+~', '-', $key) ?? 'demo';
         $key = trim($key, '-');
         return $key !== '' ? $key : 'demo';
+    }
+
+    private function mediaQuality(int $siteId): int
+    {
+        $site = $this->sites->findById($siteId);
+        $quality = (int)($site['media_image_quality'] ?? 90);
+        if ($quality <= 0) {
+            $quality = 90;
+        }
+        return max(1, min(100, $quality));
     }
 }

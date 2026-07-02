@@ -134,6 +134,7 @@ class SiteRepository
             'apple_touch_icon_url',
             'default_hero_video_url',
             'default_hero_poster_url',
+            'media_image_quality',
             'video_overlay_opacity',
             'tracking_enabled',
             'tracking_require_consent',

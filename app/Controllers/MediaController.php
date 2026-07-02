@@ -59,6 +59,7 @@ class MediaController extends Controller
         $ingest  = new MediaIngestionService();
         $repo    = new MediaRepository();
         $svc     = new ImageVariantService();
+        $quality = $this->mediaQuality($site);
 
         foreach ($files as $file) {
             if ($file['error'] === UPLOAD_ERR_INI_SIZE || $file['error'] === UPLOAD_ERR_FORM_SIZE) {
@@ -117,7 +118,7 @@ class MediaController extends Controller
 
             $variantWarning = null;
             if (!$isVideo) {
-                $variantCount = $this->generateVariants($repo, $svc, $mediaId, $dest, $storagePath, $fullDir, $w, $h, $ext);
+                $variantCount = $this->generateVariants($repo, $svc, $quality, $mediaId, $dest, $storagePath, $fullDir, $w, $h, $ext);
                 if ($variantCount === 0) {
                     $variantWarning = 'Varianty nebyly vygenerovány (GD extension nedostupná nebo nepodporuje tento formát).';
                 }
@@ -226,6 +227,7 @@ class MediaController extends Controller
     private function generateVariants(
         MediaRepository   $repo,
         ImageVariantService $svc,
+        int $quality,
         int    $mediaId,
         string $dest,
         string $storagePath,
@@ -246,7 +248,7 @@ class MediaController extends Controller
         if (!$isGif && $ext !== 'webp' && $svc->supportsWebP()) {
             $webpName = uniqid('img_', true) . '.webp';
             $webpDest = $fullDir . '/' . $webpName;
-            if ($svc->createWebP($dest, $webpDest)) {
+            if ($svc->createWebP($dest, $webpDest, $quality)) {
                 $repo->addVariant($mediaId, [
                     'format'   => 'webp',
                     'width'    => $w,
@@ -262,7 +264,7 @@ class MediaController extends Controller
         if (!$isGif) {
             $thumbName = uniqid('img_', true) . '_th.webp';
             $thumbDest = $fullDir . '/' . $thumbName;
-            if ($svc->createResized($dest, $thumbDest, 240)) {
+            if ($svc->createResized($dest, $thumbDest, 240, $quality)) {
                 [$tw, $th] = $svc->getDimensions($thumbDest);
                 $repo->addVariant($mediaId, [
                     'format'   => 'thumb',
@@ -281,7 +283,7 @@ class MediaController extends Controller
         if (!$isGif && $w > 720) {
             $medName = uniqid('img_', true) . '_md.webp';
             $medDest = $fullDir . '/' . $medName;
-            if ($svc->createResized($dest, $medDest, 720)) {
+            if ($svc->createResized($dest, $medDest, 720, $quality)) {
                 [$mw, $mh] = $svc->getDimensions($medDest);
                 $repo->addVariant($mediaId, [
                     'format'   => 'medium',
@@ -295,5 +297,14 @@ class MediaController extends Controller
         }
 
         return $created;
+    }
+
+    private function mediaQuality(array $site): int
+    {
+        $quality = (int)($site['media_image_quality'] ?? 90);
+        if ($quality <= 0) {
+            $quality = 90;
+        }
+        return max(1, min(100, $quality));
     }
 }

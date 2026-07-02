@@ -43,6 +43,9 @@ class SettingsController extends Controller
         $site = $sites->findFirst();
         $videoOverlayOpacity = str_replace(',', '.', trim((string)($_POST['video_overlay_opacity'] ?? '')));
         $videoOverlayOpacity = $videoOverlayOpacity === '' ? 0.62 : max(0, min(1, (float)$videoOverlayOpacity));
+        $mediaImageQuality = trim((string)($_POST['media_image_quality'] ?? ''));
+        $mediaImageQuality = $mediaImageQuality === '' ? 90 : (int) $mediaImageQuality;
+        $mediaImageQuality = max(1, min(100, $mediaImageQuality));
 
         $data = [
             'name' => trim($_POST['name'] ?? ''),
@@ -70,6 +73,7 @@ class SettingsController extends Controller
             'apple_touch_icon_url' => trim($_POST['apple_touch_icon_url'] ?? ''),
             'default_hero_video_url' => trim($_POST['default_hero_video_url'] ?? ''),
             'default_hero_poster_url' => trim($_POST['default_hero_poster_url'] ?? ''),
+            'media_image_quality' => $mediaImageQuality,
             'video_overlay_opacity' => $videoOverlayOpacity,
             'tracking_enabled' => isset($_POST['tracking_enabled']) ? 1 : 0,
             'tracking_require_consent' => isset($_POST['tracking_require_consent']) ? 1 : 0,

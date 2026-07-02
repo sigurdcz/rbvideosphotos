@@ -32,6 +32,12 @@ $storedDomain = trim((string)($site['domain'] ?? ''));
 $isLocalDomain = $storedDomain === '' || str_contains($storedDomain, 'localhost');
 $isRequestLocal = $requestUrl === '' || str_contains($requestUrl, 'localhost');
 $domainValue = ($isLocalDomain && !$isRequestLocal) ? $requestUrl : $storedDomain;
+$videoOverlayValue = (string)($site['video_overlay_opacity'] ?? '0.62');
+$mediaImageQuality = (int)($site['media_image_quality'] ?? 90);
+if ($mediaImageQuality <= 0) {
+    $mediaImageQuality = 90;
+}
+$mediaImageQuality = max(1, min(100, $mediaImageQuality));
 
 ob_start();
 ?>
@@ -189,13 +195,26 @@ ob_start();
       <div class="help-text" style="margin-bottom:8px">Globální nastavení pro vsechna hero videa a video playery s overlayem. <code>0</code> = bez ztmaveni, <code>1</code> = maximalni tmavy prekryv.</div>
       <div class="form-row" style="align-items:end">
         <div class="form-group" style="flex:1">
-          <input type="range" id="video-overlay-opacity-range" min="0" max="1" step="0.01" value="<?= $h($site['video_overlay_opacity'] ?? '0.62') ?>">
+          <input type="range" id="video-overlay-opacity-range" min="0" max="1" step="0.01" value="<?= $h($videoOverlayValue) ?>">
         </div>
         <div class="form-group" style="max-width:140px">
-          <input type="number" name="video_overlay_opacity" id="video-overlay-opacity-input" min="0" max="1" step="0.01" value="<?= $h($site['video_overlay_opacity'] ?? '0.62') ?>" placeholder="0.62">
+          <input type="number" name="video_overlay_opacity" id="video-overlay-opacity-input" min="0" max="1" step="0.01" value="<?= $h($videoOverlayValue) ?>" placeholder="0.62">
         </div>
       </div>
-      <div class="help-text">Aktualni hodnota: <strong id="video-overlay-opacity-value"><?= $h($site['video_overlay_opacity'] ?? '0.62') ?></strong></div>
+      <div class="help-text">Aktualni hodnota: <strong id="video-overlay-opacity-value"><?= $h($videoOverlayValue) ?></strong></div>
+    </div>
+    <div class="form-group" style="margin-top:20px">
+      <label>Kvalita komprese medií (1-100)</label>
+      <div class="help-text" style="margin-bottom:8px">Vyssi hodnota = hezci obraz, ale vetsi soubory. Doporučení je 85-90.</div>
+      <div class="form-row" style="align-items:end">
+        <div class="form-group" style="flex:1">
+          <input type="range" id="media-image-quality-range" min="1" max="100" step="1" value="<?= $h((string)$mediaImageQuality) ?>">
+        </div>
+        <div class="form-group" style="max-width:140px">
+          <input type="number" name="media_image_quality" id="media-image-quality-input" min="1" max="100" step="1" value="<?= $h((string)$mediaImageQuality) ?>" placeholder="90">
+        </div>
+      </div>
+      <div class="help-text">Aktualni hodnota: <strong id="media-image-quality-value"><?= $h((string)$mediaImageQuality) ?></strong></div>
     </div>
   </div>
 
@@ -472,26 +491,32 @@ ob_start();
 </style>
 <script>
 (function(){
-  var range = document.getElementById('video-overlay-opacity-range');
-  var input = document.getElementById('video-overlay-opacity-input');
-  var value = document.getElementById('video-overlay-opacity-value');
-  if(!range || !input || !value) return;
-  function normalize(v){
-    var n = parseFloat(String(v).replace(',', '.'));
-    if (!Number.isFinite(n)) n = 0.62;
-    n = Math.max(0, Math.min(1, n));
-    return n.toFixed(2);
+  function bindRangeNumber(rangeId, inputId, valueId, fallback, decimals){
+    var range = document.getElementById(rangeId);
+    var input = document.getElementById(inputId);
+    var value = document.getElementById(valueId);
+    if(!range || !input || !value) return;
+    function normalize(v){
+      var n = parseFloat(String(v).replace(',', '.'));
+      if (!Number.isFinite(n)) n = fallback;
+      if (range.min !== '') n = Math.max(parseFloat(range.min), n);
+      if (range.max !== '') n = Math.min(parseFloat(range.max), n);
+      return n.toFixed(decimals);
+    }
+    function syncFrom(source, target){
+      var normalized = normalize(source.value);
+      source.value = normalized;
+      target.value = normalized;
+      value.textContent = normalized;
+    }
+    range.addEventListener('input', function(){ syncFrom(range, input); });
+    input.addEventListener('input', function(){ syncFrom(input, range); });
+    input.addEventListener('change', function(){ syncFrom(input, range); });
+    syncFrom(input, range);
   }
-  function syncFrom(source, target){
-    var normalized = normalize(source.value);
-    source.value = normalized;
-    target.value = normalized;
-    value.textContent = normalized;
-  }
-  range.addEventListener('input', function(){ syncFrom(range, input); });
-  input.addEventListener('input', function(){ syncFrom(input, range); });
-  input.addEventListener('change', function(){ syncFrom(input, range); });
-  syncFrom(input, range);
+
+  bindRangeNumber('video-overlay-opacity-range', 'video-overlay-opacity-input', 'video-overlay-opacity-value', 0.62, 2);
+  bindRangeNumber('media-image-quality-range', 'media-image-quality-input', 'media-image-quality-value', 90, 0);
 })();
 </script>
 

@@ -76,6 +76,7 @@ $migrationAlreadySatisfied = static function (PDO $pdo, string $name) use ($tabl
         '004_create_service_items.sql' => $tableExists($pdo, 'service_items'),
         '005_add_active_theme_key_to_sites.sql' => $columnExists($pdo, 'sites', 'active_theme_key'),
         '006_expand_content_blocks_block_type_to_video.sql' => $columnEnumContains($pdo, 'content_blocks', 'block_type', 'video'),
+        '019_add_media_image_quality_to_sites.sql' => $columnExists($pdo, 'sites', 'media_image_quality'),
         default => false,
     };
 };

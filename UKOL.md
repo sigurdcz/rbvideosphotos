@@ -1,22 +1,23 @@
-# UKOL: Weare media pro homepage
+# UKOL: Kvalita komprese medii
 
 Datum: 2026-07-02
-Zadani: Presunout fotku weare na spravu pres media, pouzit zmenseny soubor z media storage a pridat moznost menit tento obrazek na homepage pres media picker.
+Zadani: Pridat do administrace nastaveni kvality komprese mediovych fotek a zvysit vychozi kvalitu oproti soucasnemu stavu.
 
 ## Kroky
 
 - [x] Zapsat aktualni zadani do UKOL.md
-- [x] Najit, kde se homepage weare obrazek nacita a jak se dnes vybere
-- [x] Napojit homepage na media vyber misto hardcoded souboru
-- [x] Zajistit, aby se weare soubor po uploadu automaticky zmensoval a pouzival jeho zmensena verze
-- [ ] Overit upload, render homepage a velikost vystupu
+- [ ] Najit vsechny upload cesty a misto, kde se kvalita nastavuje natvrdo
+- [ ] Pridat do administrace nastaveni kvality komprese medii
+- [ ] Napojit upload a generovani variant na nastavitelne kvality
+- [ ] Zvysit vychozi kvalitu komprese
+- [ ] Overit syntax a chovani zmen
 
 ## Poznamky
 
-- Cilem je stejne chovani jako u ostatnich medii: upload do media knihovny, zpracovani variant, a pak vyber z adminu.
-- Pokud je weare dnes jen demo asset, treba jej prevest na normalni mediovy zaznam a nenechat staticky PNG v layoutu.
-- Homepage ted edituje sdilenou sadu `service_items` primo z homepage adminu a render bere preferovane media varianty (`medium`, `webp`, `thumb`) misto puvodniho originalu.
+- Kvalita se dnes ridi natvrdo v `ImageVariantService` a upload pipeline generuje varianty pri uploadu.
+- Nastaveni ma byt per web, stejne jako ostatni site konfigurace v tabulce `sites`.
+- Pridan `sites.media_image_quality` s defaultem 90, napojene settings UI a synchronizace kvality pro `MediaController` i `MediaIngestionService`.
 
 ## Vysledek
 
-Hotovo v kodu, zbyva jen pripadne manualni browser overeni.
+Plni se.
