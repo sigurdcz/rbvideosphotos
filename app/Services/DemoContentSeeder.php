@@ -873,8 +873,8 @@ HTML;
 .section .container,.section-dark .container{max-width:1060px;margin:0 auto;padding:0 24px}
 .section h2{color:#241914;font-family:Georgia,serif;font-size:clamp(1.8rem,3vw,2.7rem);line-height:1.08;margin:0 0 14px}
 .section p{max-width:860px;color:#6b5948;line-height:1.75}
-.ckp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;align-items:stretch;margin:26px 0 42px}
-.ckp-grid+h2{margin-top:34px}
+.ckp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;align-items:stretch;margin:26px 0 84px}
+.ckp-grid+h2{margin-top:0}
 .ckp-card{position:relative;display:flex;flex-direction:column;gap:18px;height:100%;padding:30px 26px;background:#fff;border:1px solid #e7ddd0;border-radius:22px;box-shadow:0 18px 48px rgba(39,27,18,.08)}
 .ckp-card--featured{border-color:#c79a49;box-shadow:0 24px 58px rgba(199,154,73,.18)}
 .ckp-badge{position:absolute;top:-12px;left:24px;padding:5px 12px;background:#c79a49;color:#fff;font-size:.66rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase;border-radius:999px}
