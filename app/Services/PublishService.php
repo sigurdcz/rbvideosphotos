@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Core\Config;
 use App\Core\Logger;
 use App\Core\Version;
+use App\Repositories\BlogRepository;
 use App\Repositories\BlockRepository;
 use App\Repositories\ContactRepository;
 use App\Repositories\MediaRepository;
@@ -32,6 +33,7 @@ class PublishService
     private SeoRepository $seo;
     private SiteRepository $sites;
     private MediaRepository $media;
+    private BlogRepository $blog;
     private RedirectRepository $redirects;
     private PublishHistoryRepository $history;
     private ThemeTemplateRegistry $themes;
@@ -51,6 +53,7 @@ class PublishService
         $this->seo        = new SeoRepository();
         $this->sites      = new SiteRepository();
         $this->media      = new MediaRepository();
+        $this->blog       = new BlogRepository();
         $this->redirects  = new RedirectRepository();
         $this->history    = new PublishHistoryRepository();
         $this->themes     = new ThemeTemplateRegistry();
@@ -220,9 +223,10 @@ class PublishService
     private function regenerateSitemapAndRobots(int $siteId, array $site): void
     {
         $pages = $this->pages->findPublishedBySite($siteId);
+        $sitemapItems = array_merge($pages, $this->blogPostsAsSitemapItems($siteId));
 
         $seoCfg  = Config::get('seo');
-        $sitemapXml = $this->sitemap->generate($pages, $site['domain'], $seoCfg['sitemap_changefreq'], $seoCfg['sitemap_priority']);
+        $sitemapXml = $this->sitemap->generate($sitemapItems, $site['domain'], $seoCfg['sitemap_changefreq'], $seoCfg['sitemap_priority']);
         file_put_contents($this->publishedDir . '/sitemap.xml', $sitemapXml);
 
         $robotsTxt = $this->robots->generate($site['domain']);
@@ -230,6 +234,25 @@ class PublishService
 
         $llmsTxt = (new LlmsTxtGenerator())->generate($site, $pages);
         file_put_contents($this->publishedDir . '/llms.txt', $llmsTxt);
+    }
+
+    private function blogPostsAsSitemapItems(int $siteId): array
+    {
+        $items = [];
+        foreach ($this->blog->allPublished($siteId) as $post) {
+            $slug = trim((string)($post['slug'] ?? ''), '/');
+            if ($slug === '') {
+                continue;
+            }
+
+            $items[] = [
+                'url_path' => $slug,
+                'published_at' => $post['published_at'] ?? null,
+                'updated_at' => $post['updated_at'] ?? null,
+            ];
+        }
+
+        return $items;
     }
 
     public function generateHtaccess(int $siteId): void
