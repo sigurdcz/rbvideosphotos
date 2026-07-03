@@ -9,7 +9,7 @@ Zadani: Odstranit zbytecne vykreslenou source fotku z `theme-main` a zmensit adm
 - [x] Upravit hidden source tak, aby nebyl viditelny obrazek v hlavnim obsahu
 - [x] Zmensit admin nahled pro homepage about visual picker
 - [x] Overit syntax a hledane HTML/CSS/JS vystupy
-- [-] Commit a push
+- [x] Commit a push
 
 ## Poznamky
 
@@ -18,4 +18,4 @@ Zadani: Odstranit zbytecne vykreslenou source fotku z `theme-main` a zmensit adm
 
 ## Vysledek
 
-Oprava je pripravena: source hodnota pro `jb-about-visual__media` se vklada jako skryty `span` s `data-src`, ne jako realny obrazek v `theme-main`. Theme JS cte `data-src` a admin nahled ma omezene rozmery. Overeno pres `php -l` pro upravene PHP soubory a `git diff --check`.
+Oprava je dokoncena: source hodnota pro `jb-about-visual__media` se vklada jako skryty `span` s `data-src`, ne jako realny obrazek v `theme-main`. Theme JS cte `data-src` a admin nahled ma omezene rozmery. Overeno pres `php -l` pro upravene PHP soubory a `git diff --check`.
