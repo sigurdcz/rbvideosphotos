@@ -51,30 +51,6 @@ jobs:
           mkdir -p _deploy/storage/published
           mkdir -p _deploy/storage/templates
 
-      - name: Write dev .env from GitHub secrets
-        env:
-          DEV_APP_URL:       ${{ secrets.DEV_APP_URL }}
-          DEV_DB_HOST:       ${{ secrets.DEV_DB_HOST }}
-          DEV_DB_PORT:       ${{ secrets.DEV_DB_PORT }}
-          DEV_DB_NAME:       ${{ secrets.DEV_DB_NAME }}
-          DEV_DB_USER:       ${{ secrets.DEV_DB_USER }}
-          DEV_DB_PASS:       ${{ secrets.DEV_DB_PASS }}
-          DEV_MIGRATE_TOKEN: ${{ secrets.DEV_MIGRATE_TOKEN }}
-          DEV_API_KEY:       ${{ secrets.DEV_API_KEY }}
-        run: |
-          {
-            echo "APP_URL=${DEV_APP_URL:-http://localhost:8000}"
-            echo "APP_DEBUG=true"
-            echo "DB_DRIVER=mysql"
-            echo "DB_HOST=${DEV_DB_HOST}"
-            echo "DB_PORT=${DEV_DB_PORT:-3306}"
-            echo "DB_NAME=${DEV_DB_NAME}"
-            echo "DB_USER=${DEV_DB_USER}"
-            echo "DB_PASS=${DEV_DB_PASS}"
-            echo "MIGRATE_TOKEN=${DEV_MIGRATE_TOKEN}"
-            echo "API_KEY=${DEV_API_KEY}"
-          } > _deploy/.env
-
       - name: Install lftp
         run: |
           sudo apt-get update
@@ -97,6 +73,6 @@ jobs:
           set ftp:ssl-protect-data true
           set ssl:verify-certificate no
           open -u "$FTP_USER","$FTP_PASS" "ftp://$FTP_HOST:21"
-          mirror -R --verbose=1 --parallel=1 --continue ./_deploy/ /web/dev/
+          mirror -R --verbose=1 --parallel=1 --continue --exclude-glob .env --exclude-glob ".env.*" ./_deploy/ /web/dev/
           bye
           EOF
