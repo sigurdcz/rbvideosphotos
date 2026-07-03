@@ -317,7 +317,7 @@ ob_start();
         </div>
         <div class="brand-asset-picker" data-homepage-about-visual-picker>
           <input type="hidden" name="homepage_about_visual_url" id="homepage-about-visual-url" value="<?= $h($aboutVisualUrl) ?>">
-          <div class="brand-asset-preview" data-homepage-about-visual-preview>
+          <div class="brand-asset-preview homepage-about-visual-preview" data-homepage-about-visual-preview>
             <?php if ($aboutVisualUrl !== ''): ?>
               <img src="<?= $h($aboutVisualUrl) ?>" alt="Homepage vizuál služby">
             <?php else: ?>
@@ -719,6 +719,8 @@ ob_start();
   .service-media-thumb{height:104px;display:flex;align-items:center;justify-content:center;background:#fff}
   .service-media-thumb img{width:100%;height:100%;object-fit:cover;display:block}
   .service-media-name{padding:8px;font-size:11px;color:var(--c-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .homepage-about-visual-preview{width:min(360px,100%);height:220px;min-height:220px;align-items:center;justify-content:center;overflow:hidden}
+  .homepage-about-visual-preview img{width:100%;height:100%;object-fit:cover;display:block}
   </style>
   <div class="service-media-modal" id="service-media-modal" aria-hidden="true">
     <div class="service-media-dialog" role="dialog" aria-modal="true" aria-label="Vyber media">

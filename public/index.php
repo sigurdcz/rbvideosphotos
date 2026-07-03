@@ -676,12 +676,12 @@ function injectHomepageAboutVisualSource(string $html, int $pageId, bool $isHome
         return $html;
     }
 
-    $sourcePattern = '~<img\b[^>]*\bclass=(["\'])[^"\']*\bjb-about-visual__source\b[^"\']*\1[^>]*>~i';
+    $sourcePattern = '~<(?:img|span)\b[^>]*\bclass=(["\'])[^"\']*\bjb-about-visual__source\b[^"\']*\1[^>]*(?:>.*?</span>|>)~is';
     if ($url === '') {
         return preg_replace($sourcePattern, '', $html) ?? $html;
     }
 
-    $source = '<img class="jb-about-visual__source" src="' . htmlspecialchars($url, ENT_QUOTES) . '" alt="Nase sluzby" loading="lazy" hidden>';
+    $source = '<span class="jb-about-visual__source" data-src="' . htmlspecialchars($url, ENT_QUOTES) . '" hidden></span>';
     $updated = preg_replace($sourcePattern, $source, $html, 1, $count);
     if ($count > 0 && is_string($updated)) {
         return $updated;

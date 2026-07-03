@@ -158,8 +158,11 @@
 
     function pickVisualImage() {
       var sourceImage = qs('.jb-about-visual__source');
-      if (sourceImage && sourceImage.getAttribute('src')) {
-        return sourceImage.getAttribute('src');
+      if (sourceImage) {
+        var sourceSrc = sourceImage.getAttribute('data-src') || sourceImage.getAttribute('src') || '';
+        if (sourceSrc) {
+          return sourceSrc;
+        }
       }
       var serviceImage = qs('.hp-svc-card__media img, .svc-card img', grid);
       if (serviceImage && serviceImage.getAttribute('src')) {

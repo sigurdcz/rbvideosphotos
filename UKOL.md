@@ -1,22 +1,21 @@
-# UKOL: Oprava homepage about visual media
+# UKOL: About visual source a admin nahled
 
 Datum: 2026-07-03
-Zadani: Najit proc se ulozeny obrazek `jb-about-visual__media` z administrace realne nepropisuje na homepage a zobrazuje se stale stejna fotka.
+Zadani: Odstranit zbytecne vykreslenou source fotku z `theme-main` a zmensit admin nahled obrazku pro homepage sekci Nase sluzby.
 
 ## Kroky
 
 - [x] Zapsat aktualni zadani do UKOL.md
-- [x] Projit ulozeni bloku, publish injekci a frontend pouziti obrazku
-- [x] Opravit misto, kde se ulozeny obrazek ignoruje nebo prepisuje
-- [x] Overit syntax a konkretni vystup homepage
-- [-] Commit a push podle aktualniho kontextu
+- [x] Upravit hidden source tak, aby nebyl viditelny obrazek v hlavnim obsahu
+- [x] Zmensit admin nahled pro homepage about visual picker
+- [x] Overit syntax a hledane HTML/CSS/JS vystupy
+- [-] Commit a push
 
 ## Poznamky
 
-- V pracovnim stromu jsou pred zacatkem starsi generovane zmeny `storage/published/*` a `public/assets/generated/*`; nebudou zahrnuty do teto opravy.
-- Pricina: verejny DB render v `public/index.php` nevkladal `jb-about-visual__source`, tak si `Templates/jemna-bezova/assets/theme.js` bral fallback z prvni sluzby.
-- Oprava: `public/index.php` vklada source pred theme JS; `PublishService` uz nevklada `data-media`, aby se source znovu neprepisoval media mapou.
+- Pricina viditelne fotky: source byl vlozen jako `<img class="jb-about-visual__source">`; theme CSS pro obrazky ho dokazalo zobrazit v `theme-main`.
+- Cilem je ponechat hodnotu pro theme JS, ale bez realne vykresleneho obrazku mimo zamysleny panel.
 
 ## Vysledek
 
-Oprava je pripravena: verejny render homepage uz pred spustenim theme JS vklada ulozeny `jb-about-visual__source`; staticky publish source uz nema `data-media`, aby nedoslo k nechtenemu premapovani. Overeno pres `php -l` pro `public/index.php` a `app/Services/PublishService.php`.
+Oprava je pripravena: source hodnota pro `jb-about-visual__media` se vklada jako skryty `span` s `data-src`, ne jako realny obrazek v `theme-main`. Theme JS cte `data-src` a admin nahled ma omezene rozmery. Overeno pres `php -l` pro upravene PHP soubory a `git diff --check`.
