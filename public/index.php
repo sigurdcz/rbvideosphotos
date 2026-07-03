@@ -131,6 +131,10 @@ function tryServeDatabasePage(string $uri, bool $authenticated = false, bool $pr
         $html = injectHomepageHeroImage($html, (int)$site['id'], $isHome);
         $html = injectPageHeroVideo($html, $site, (int)$page['id'], $themeKey);
         $html = injectBodyPageKey($html, $themeKey);
+        if (!$isHome) {
+            $pagePath = normalizeBreadcrumbUrl((string)($page['url_path'] ?? ''));
+            $html = injectBreadcrumbTrail($html, $site, breadcrumbItems((string)($page['title'] ?? 'Stranka'), $pagePath));
+        }
         $html = sanitizeFrontendHtml($html, $site);
 
         if ($authenticated) {
@@ -289,6 +293,9 @@ function sanitizeFrontendHtml(string $html, ?array $site = null): string
     $html = preg_replace('~https?://localhost(?::\d+)?/storage/media/~i', '/media/', $html) ?? $html;
     $html = str_replace('/storage/media/', '/media/', $html);
     $html = normalizeLegacyFrontendMarkup($html);
+    $html = ensureMainContentAnchor($html);
+    $html = injectSkipLink($html);
+    $html = normalizeExternalLinkRel($html);
     $html = externalizeBodyCssVariables($html);
     $html = injectGlobalVideoOverlayStyles($html, $site);
     $html = injectEditorialGoldOverrides($html);
@@ -298,6 +305,151 @@ function sanitizeFrontendHtml(string $html, ?array $site = null): string
     $html = extractInlineStyleBlocks($html);
     $html = extractInlineBodyScripts($html);
     return $html;
+}
+
+function ensureMainContentAnchor(string $html): string
+{
+    return preg_replace_callback('/<main\b([^>]*)>/i', static function (array $match): string {
+        $attrs = (string)($match[1] ?? '');
+        if (preg_match('/\sid=(["\']).*?\1/i', $attrs)) {
+            return $match[0];
+        }
+        return '<main' . $attrs . ' id="main-content">';
+    }, $html, 1) ?? $html;
+}
+
+function injectSkipLink(string $html): string
+{
+    if (str_contains($html, 'class="skip-link"') || str_contains($html, "class='skip-link'")) {
+        return $html;
+    }
+    if (!preg_match('/<main\b/i', $html)) {
+        return $html;
+    }
+
+    $skipLink = '<a class="skip-link" href="#main-content">Preskocit na hlavni obsah</a>';
+    return preg_replace('/(<body\b[^>]*>)/i', '$1' . $skipLink, $html, 1) ?? $html;
+}
+
+function normalizeExternalLinkRel(string $html): string
+{
+    return preg_replace_callback('/<a\b[^>]*target=(["\'])_blank\1[^>]*>/i', static function (array $match): string {
+        $tag = $match[0];
+        if (preg_match('/\srel=(["\'])(.*?)\1/i', $tag, $relMatch)) {
+            $rel = strtolower(trim((string)($relMatch[2] ?? '')));
+            $parts = array_values(array_filter(preg_split('/\s+/', $rel) ?: []));
+            foreach (['noopener', 'noreferrer'] as $needed) {
+                if (!in_array($needed, $parts, true)) {
+                    $parts[] = $needed;
+                }
+            }
+            return preg_replace('/\srel=(["\'])(.*?)\1/i', ' rel="' . implode(' ', $parts) . '"', $tag, 1) ?? $tag;
+        }
+
+        return preg_replace('/>$/', ' rel="noopener noreferrer">', $tag, 1) ?? $tag;
+    }, $html) ?? $html;
+}
+
+function breadcrumbItems(string $currentLabel, string $currentUrl, array $parents = []): array
+{
+    $items = [
+        ['label' => 'Uvod', 'url' => '/'],
+    ];
+    foreach ($parents as $parent) {
+        if (!is_array($parent) || empty($parent['label']) || empty($parent['url'])) {
+            continue;
+        }
+        $items[] = [
+            'label' => (string)$parent['label'],
+            'url' => normalizeBreadcrumbUrl((string)$parent['url']),
+        ];
+    }
+    $items[] = [
+        'label' => trim($currentLabel) !== '' ? trim($currentLabel) : 'Stranka',
+        'url' => normalizeBreadcrumbUrl($currentUrl),
+    ];
+    return $items;
+}
+
+function normalizeBreadcrumbUrl(string $url): string
+{
+    $url = trim($url);
+    if ($url === '') {
+        return '/';
+    }
+    if (preg_match('~^https?://~i', $url)) {
+        return $url;
+    }
+    return '/' . ltrim($url, '/');
+}
+
+function injectBreadcrumbTrail(string $html, array $site, array $items): string
+{
+    if (count($items) < 2 || str_contains($html, 'data-cms-breadcrumbs')) {
+        return $html;
+    }
+
+    $nav = renderBreadcrumbNav($items);
+    $html = preg_replace('/(<main\b[^>]*>)/i', '$1' . $nav, $html, 1, $count) ?? $html;
+    if ($count === 0) {
+        $html = preg_replace('/(<\/header>)/i', '$1' . $nav, $html, 1, $headerCount) ?? $html;
+        if ($headerCount === 0) {
+            $html = preg_replace('/(<body\b[^>]*>)/i', '$1' . $nav, $html, 1) ?? $html;
+        }
+    }
+
+    $schema = renderBreadcrumbJsonLd($items, (string)($site['domain'] ?? ''));
+    if ($schema !== '' && stripos($html, '</head>') !== false && !str_contains($html, 'BreadcrumbList')) {
+        $html = str_replace('</head>', "\n" . $schema . "\n</head>", $html);
+    }
+
+    return $html;
+}
+
+function renderBreadcrumbNav(array $items): string
+{
+    $h = static fn($value): string => htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
+    $lastIndex = count($items) - 1;
+    $html = '<nav class="breadcrumbs" aria-label="Drobeckova navigace" data-cms-breadcrumbs><ol class="breadcrumbs__inner">';
+    foreach ($items as $index => $item) {
+        $label = $h($item['label'] ?? '');
+        $url = normalizeBreadcrumbUrl((string)($item['url'] ?? ''));
+        $html .= '<li class="breadcrumbs__item">';
+        if ($index === $lastIndex) {
+            $html .= '<span aria-current="page">' . $label . '</span>';
+        } else {
+            $html .= '<a href="' . $h($url) . '">' . $label . '</a>';
+        }
+        $html .= '</li>';
+    }
+    return $html . '</ol></nav>';
+}
+
+function renderBreadcrumbJsonLd(array $items, string $domain): string
+{
+    $domain = rtrim(trim($domain), '/');
+    if ($domain === '') {
+        return '';
+    }
+
+    $elements = [];
+    foreach ($items as $index => $item) {
+        $url = normalizeBreadcrumbUrl((string)($item['url'] ?? ''));
+        $elements[] = [
+            '@type' => 'ListItem',
+            'position' => $index + 1,
+            'name' => (string)($item['label'] ?? ''),
+            'item' => preg_match('~^https?://~i', $url) ? $url : $domain . $url,
+        ];
+    }
+
+    $json = json_encode([
+        '@context' => 'https://schema.org',
+        '@type' => 'BreadcrumbList',
+        'itemListElement' => $elements,
+    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
+    return $json ? '<script type="application/ld+json" data-cms-breadcrumb-schema>' . $json . '</script>' : '';
 }
 
 /**
@@ -359,11 +511,26 @@ function normalizeLegacyFrontendMarkup(string $html): string
     $html = str_replace('<p style="color:rgba(255,255,255,.45);text-align:center;padding:32px 0">', '<p class="frontend-note frontend-note--center">', $html);
     $html = str_replace('<p style="color:rgba(255,255,255,.4)">', '<p class="frontend-note">', $html);
     $html = str_replace(' style="display:none" tabindex="-1" autocomplete="off"', ' class="hp-honeypot" style="display:none" tabindex="-1" autocomplete="off"', $html);
+    $html = normalizeContactFormAccessibility($html);
     return str_replace(
         '<div style="height:100%;background:#222;display:flex;align-items:center;justify-content:center;font-size:2rem;color:rgba(255,255,255,.3)">&#9654;</div>',
         '<div class="pt-thumb__placeholder">&#9654;</div>',
         $html
     );
+}
+
+function normalizeContactFormAccessibility(string $html): string
+{
+    $html = str_replace('<p class="kt-form-intro">', '<p class="kt-form-intro" id="kontakt-form-intro">', $html);
+    $html = preg_replace('~<label>([^<]*\*)</label><input type="text" name="name"~u', '<label for="kontakt-name">$1</label><input id="kontakt-name" type="text" name="name" autocomplete="name"', $html) ?? $html;
+    $html = preg_replace('~<label>([^<]*\*)</label><input type="text" name="contact_value"~u', '<label for="kontakt-value">$1</label><input id="kontakt-value" type="text" name="contact_value" autocomplete="email" inputmode="email"', $html) ?? $html;
+    $html = preg_replace('~<label>([^<]*\*)</label><select name="shooting_type"~u', '<label for="kontakt-shooting-type">$1</label><select id="kontakt-shooting-type" name="shooting_type"', $html) ?? $html;
+    $html = preg_replace('~<label>([^<]*)</label><input type="text" name="event_date"~u', '<label for="kontakt-event-date">$1</label><input id="kontakt-event-date" type="text" name="event_date" autocomplete="off"', $html) ?? $html;
+    $html = preg_replace('~<label>([^<]*)</label><input type="text" name="event_place"~u', '<label for="kontakt-event-place">$1</label><input id="kontakt-event-place" type="text" name="event_place" autocomplete="address-level2"', $html) ?? $html;
+    $html = preg_replace('~<label>([^<]*)</label><textarea name="message"~u', '<label for="kontakt-message">$1</label><textarea id="kontakt-message" name="message"', $html) ?? $html;
+    $html = str_replace('<label class="kt-consent"><input type="checkbox" required>', '<label class="kt-consent" for="kontakt-consent"><input id="kontakt-consent" type="checkbox" name="privacy_consent" required>', $html);
+    $html = str_replace('name="website" class="hp-honeypot" style="display:none" tabindex="-1" autocomplete="off"', 'name="website" class="hp-honeypot" style="display:none" tabindex="-1" autocomplete="off" aria-hidden="true"', $html);
+    return str_replace('<div class="kt-form-safe">', '<div class="kt-form-safe" id="kontakt-form-safe">', $html);
 }
 
 function normalizeLegacyTemplateSource(string $html): string
@@ -1719,6 +1886,7 @@ HTML;
         $html = injectPageHeroVideo($html, $site, findPageIdForHeroPath('nase-prace', (int)$site['id']), 'portfolio');
         $html = injectFooterSocials($html, (int)$site['id']);
         $html = injectCmsEditorChrome($html, $uri, $heroTitle, isset($page['id']) ? (int)$page['id'] : null, Auth::check() && isset($_GET['cms_preview']));
+        $html = injectBreadcrumbTrail($html, $site, breadcrumbItems('Nase prace', '/nase-prace'));
         echo sanitizeFrontendHtml($html, $site);
         return true;
     }
@@ -1892,7 +2060,11 @@ HTML;
         }
 
         header('Content-Type: text/html; charset=UTF-8');
-        echo sanitizeFrontendHtml(injectFooterSocials($html, (int)$site['id']), $site);
+        $html = injectFooterSocials($html, (int)$site['id']);
+        $html = injectBreadcrumbTrail($html, $site, breadcrumbItems($entry['title'] ?? 'Detail prace', '/' . $slug, [
+            ['label' => 'Nase prace', 'url' => '/nase-prace'],
+        ]));
+        echo sanitizeFrontendHtml($html, $site);
         return true;
     }
 
@@ -2010,6 +2182,7 @@ HTML;
     $html = injectPageHeroVideo($html, $site, findPageIdForHeroPath('faq', (int)$site['id']), 'faq');
     $html = injectFooterSocials($html, (int)$site['id']);
     $html = injectCmsEditorChrome($html, '/faq', $heroTitle, isset($page['id']) ? (int)$page['id'] : null, Auth::check() && isset($_GET['cms_preview']));
+    $html = injectBreadcrumbTrail($html, $site, breadcrumbItems('FAQ', '/faq'));
     echo sanitizeFrontendHtml($html, $site);
     return true;
 }
@@ -2293,7 +2466,7 @@ CSS;
     } elseif (!$formSent && isset($_GET['sent']) && $_GET['sent'] === 'error') {
         $formHtml = '<div class="kt-success" style="color:#fca5a5">&#9888; Zpravu se nepodarilo odeslat. Zkontrolujte prosim nastaveni kontaktniho e-mailu a zkuste to znovu.</div>';
     }
-    $formHtml .= '<form method="POST" action="/kontakt/odeslat">'
+    $formHtml .= '<form method="POST" action="/kontakt/odeslat" aria-describedby="kontakt-form-intro kontakt-form-safe">'
         . '<input type="hidden" name="_csrf" value="' . $h(\App\Core\Auth::csrfToken()) . '">'
         . '<p class="kt-form-intro">Nemusíte mít všechno připravené do detailu. Stačí pár základních informací a my se vám ozveme zpět s návrhem dalšího postupu.</p>'
         . '<div class="kt-form-grid">'
@@ -2412,6 +2585,7 @@ HTML;
     $html = injectFooterSocials($html, (int)$site['id']);
     $html = injectPageHeroVideo($html, $site, isset($page['id']) ? (int)$page['id'] : findPageIdForHeroPath('kontakt', (int)$site['id']), 'contact');
     $html = injectCmsEditorChrome($html, '/kontakt', $heroTitle, isset($page['id']) ? (int)$page['id'] : null, Auth::check() && isset($_GET['cms_preview']));
+    $html = injectBreadcrumbTrail($html, $site, breadcrumbItems('Kontakt', '/kontakt'));
     echo sanitizeFrontendHtml($html, $site);
     return true;
 }
@@ -2549,6 +2723,7 @@ HTML;
     $html = injectFooterSocials($html, (int)$site['id']);
     $html = injectPageHeroVideo($html, $site, isset($page['id']) ? (int)$page['id'] : findPageIdForHeroPath('blog', (int)$site['id']), 'blog');
     $html = injectCmsEditorChrome($html, '/blog', $heroTitle, isset($page['id']) ? (int)$page['id'] : null, Auth::check() && isset($_GET['cms_preview']));
+    $html = injectBreadcrumbTrail($html, $site, breadcrumbItems('Blog', '/blog'));
     echo sanitizeFrontendHtml($html, $site);
     return true;
 }
@@ -2629,10 +2804,10 @@ body{background:#111;color:#fff}
 .bp-lightbox{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.92);align-items:center;justify-content:center}
 .bp-lightbox.active{display:flex}
 .bp-lb-img{max-width:92vw;max-height:88vh;object-fit:contain;border-radius:8px}
-.bp-lb-close{position:absolute;top:20px;right:24px;font-size:2rem;color:#fff;cursor:pointer;line-height:1;opacity:.7}
-.bp-lb-close:hover{opacity:1}
-.bp-lb-prev,.bp-lb-next{position:absolute;top:50%;transform:translateY(-50%);font-size:2.5rem;color:#fff;cursor:pointer;padding:12px;opacity:.6;user-select:none}
-.bp-lb-prev:hover,.bp-lb-next:hover{opacity:1}
+.bp-lb-close{position:absolute;top:20px;right:24px;font-size:2rem;color:#fff;cursor:pointer;line-height:1;opacity:.7;background:transparent;border:0}
+.bp-lb-close:hover,.bp-lb-close:focus-visible{opacity:1}
+.bp-lb-prev,.bp-lb-next{position:absolute;top:50%;transform:translateY(-50%);font-size:2.5rem;color:#fff;cursor:pointer;padding:12px;opacity:.6;user-select:none;background:transparent;border:0}
+.bp-lb-prev:hover,.bp-lb-next:hover,.bp-lb-prev:focus-visible,.bp-lb-next:focus-visible{opacity:1}
 .bp-lb-prev{left:16px}
 .bp-lb-next{right:16px}
 CSS;
@@ -2643,11 +2818,11 @@ CSS;
     }
 
     $lightboxHtml = $galleryHtml !== '' ? <<<'HTML'
-<div class="bp-lightbox" id="bp-lightbox">
-  <span class="bp-lb-close" id="bp-lb-close">&times;</span>
-  <span class="bp-lb-prev" id="bp-lb-prev">&#8249;</span>
+<div class="bp-lightbox" id="bp-lightbox" role="dialog" aria-modal="true" aria-label="Galerie clanku">
+  <button type="button" class="bp-lb-close" id="bp-lb-close" aria-label="Zavrit galerii">&times;</button>
+  <button type="button" class="bp-lb-prev" id="bp-lb-prev" aria-label="Predchozi fotka">&#8249;</button>
   <img class="bp-lb-img" id="bp-lb-img" src="" alt="">
-  <span class="bp-lb-next" id="bp-lb-next">&#8250;</span>
+  <button type="button" class="bp-lb-next" id="bp-lb-next" aria-label="Dalsi fotka">&#8250;</button>
 </div>
 <script>
 (function(){
@@ -2726,7 +2901,11 @@ HTML;
     }
 
     header('Content-Type: text/html; charset=UTF-8');
-    echo sanitizeFrontendHtml(injectFooterSocials($html, (int)$site['id']), $site);
+    $html = injectFooterSocials($html, (int)$site['id']);
+    $html = injectBreadcrumbTrail($html, $site, breadcrumbItems($post['title'] ?? 'Clanek', '/' . $slug, [
+        ['label' => 'Blog', 'url' => '/blog'],
+    ]));
+    echo sanitizeFrontendHtml($html, $site);
     return true;
 }
 
