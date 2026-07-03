@@ -376,7 +376,7 @@ HTML;
         }
 
         $block = $this->blocks->findByKey($pageId, 'jb-about-visual__media');
-        $url = $block ? $this->normalizePublicAssetUrl((string)($block['content'] ?? '')) : '';
+        $url = $block ? $this->homepageContent->resolveOptimizedMediaUrl((int)$page['site_id'], (string)($block['content'] ?? ''), 102400) : '';
         $sourcePattern = '~<(?:img|span)\b[^>]*\bclass=(["\'])[^"\']*\bjb-about-visual__source\b[^"\']*\1[^>]*(?:>.*?</span>|>)~is';
 
         if ($url === '') {

@@ -118,7 +118,7 @@ function tryServeDatabasePage(string $uri, bool $authenticated = false, bool $pr
             $css = ($template['css_source'] ?? '') . "\n" . $themeCss;
             $js  = ($template['js_source']  ?? '') . "\n" . $themeJs;
         }
-        $html = injectHomepageAboutVisualSource($html, (int)$page['id'], $isHome);
+        $html = injectHomepageAboutVisualSource($html, (int)$page['id'], (int)$page['site_id'], $isHome);
         $html = $renderer->injectAssets($html, $css, $js);
         $html = $renderer->injectSeo(
             $html,
@@ -659,7 +659,7 @@ function injectPageHeroImage(string $html, int $pageId): string
     return injectBodyCssVariableToken($html, 'theme-page-hero-image', "url('" . str_replace("'", '%27', $heroImage) . "')");
 }
 
-function injectHomepageAboutVisualSource(string $html, int $pageId, bool $isHome): string
+function injectHomepageAboutVisualSource(string $html, int $pageId, int $siteId, bool $isHome): string
 {
     if (!$isHome) {
         return $html;
@@ -667,7 +667,7 @@ function injectHomepageAboutVisualSource(string $html, int $pageId, bool $isHome
 
     try {
         $block = (new BlockRepository())->findByKey($pageId, 'jb-about-visual__media');
-        $url = $block ? publicMediaUrl((string)($block['content'] ?? '')) : '';
+        $url = $block ? (new HomepageContentService())->resolveOptimizedMediaUrl($siteId, (string)($block['content'] ?? ''), 102400) : '';
     } catch (\Throwable $e) {
         Logger::infoTo('theme-debug', 'theme.about.visual.error', 'Failed to resolve homepage about visual', [
             'page_id' => $pageId,
@@ -2271,12 +2271,15 @@ body{background:#111;color:#fff}
 .kt-form-block input,.kt-form-block textarea,.kt-form-block select{display:block!important;width:100%!important;height:auto!important;margin:0!important;border:1px solid rgba(214,170,95,.16)!important;border-radius:0!important;background:#241914!important;color:#fff8ed!important;padding:12px 13px!important;font-size:13px!important;line-height:1.35!important;box-shadow:none!important}
 .kt-form-block input.hp-honeypot,.kt-form-block input[name="website"].hp-honeypot{display:none!important;position:absolute!important;left:-10000px!important;top:auto!important;width:1px!important;height:1px!important;overflow:hidden!important;opacity:0!important;pointer-events:none!important}
 .kt-form-block textarea{min-height:96px!important;resize:vertical!important}
-.kt-consent{display:flex!important;align-items:flex-start!important;gap:10px!important;margin:15px 0 14px!important;color:#f4e9dc!important;font-size:11.5px!important;line-height:1.45!important;letter-spacing:0!important;text-transform:none!important}
-.kt-consent span{display:block!important;padding-top:1px!important}
-.kt-consent input{appearance:none!important;-webkit-appearance:none!important;display:grid!important;place-items:center!important;flex:0 0 16px!important;width:16px!important;height:16px!important;margin:0!important;border:1px solid rgba(214,170,95,.65)!important;background:#241914!important;border-radius:2px!important}
+.kt-consent{display:flex!important;align-items:center!important;gap:10px!important;margin:18px 0 16px!important;color:#f4e9dc!important;font-size:10.5px!important;font-weight:700!important;line-height:1.35!important;letter-spacing:.08em!important;text-transform:uppercase!important}
+.kt-consent span{display:inline!important;padding:0!important}
+.kt-consent input{appearance:none!important;-webkit-appearance:none!important;display:grid!important;place-items:center!important;flex:0 0 18px!important;width:18px!important;min-width:18px!important;max-width:18px!important;height:18px!important;min-height:18px!important;max-height:18px!important;margin:0!important;padding:0!important;border:1px solid rgba(214,170,95,.75)!important;background:#241914!important;border-radius:3px!important;box-shadow:inset 0 0 0 2px rgba(36,25,20,.95)!important}
+.kt-consent input:checked{background:#d9ad61!important;border-color:#d9ad61!important}
+.kt-consent input:checked::after{content:""!important;width:8px!important;height:5px!important;border-left:2px solid #1b120d!important;border-bottom:2px solid #1b120d!important;transform:rotate(-45deg)!important;margin-top:-2px!important}
 .kt-form-btn{display:flex!important;align-items:center!important;justify-content:center!important;width:100%!important;min-height:43px!important;border:0!important;border-radius:3px!important;background:#d9ad61!important;color:#1b120d!important;font-size:11px!important;font-weight:900!important;letter-spacing:.13em!important;text-transform:uppercase!important}
 .kt-form-safe{text-align:center!important;margin-top:11px!important;color:rgba(255,247,236,.58)!important;font-size:11px!important}
 @media(max-width:900px){html,body{max-width:100%!important;overflow-x:hidden!important}.theme-main,.kt-hero,.kt-wrap,.kt-faq{max-width:100%!important;overflow-x:hidden!important}.kt-hero>.container,.kt-wrap>.container,.kt-faq>.container{box-sizing:border-box!important;width:calc(100% - 32px)!important;max-width:640px!important;margin-left:auto!important;margin-right:auto!important;padding-left:0!important;padding-right:0!important}.kt-grid{grid-template-columns:minmax(0,1fr)!important;gap:28px!important;width:100%!important;max-width:none!important;min-width:0!important}.ci-card{grid-template-columns:38px minmax(0,1fr)!important;padding:16px 14px!important}.kt-form-block{box-sizing:border-box!important;width:100%!important;max-width:100%!important;min-width:0!important;padding:20px 18px 22px!important;overflow:hidden!important}.kt-form-block *{box-sizing:border-box!important;max-width:100%!important}.kt-form-grid{grid-template-columns:minmax(0,1fr)!important;gap:14px!important;width:100%!important;min-width:0!important}.kt-form-block input,.kt-form-block textarea,.kt-form-block select{max-width:100%!important;min-width:0!important}.kt-consent{margin:20px 0 18px!important;gap:9px!important;align-items:flex-start!important;color:#eadfce!important;font-size:10px!important;font-weight:400!important;line-height:1.45!important;letter-spacing:.02em!important;text-transform:none!important}.kt-consent span{padding-top:0!important}.kt-consent input{flex:0 0 15px!important;width:15px!important;height:15px!important;margin-top:1px!important}.kt-form-btn{width:min(100%,320px)!important;margin:0 auto!important;min-height:50px!important;text-align:center!important}.kt-form-safe{text-align:center!important}.kt-process{display:none!important}.kt-faq-grid{grid-template-columns:1fr!important}.kt-faq-link{width:min(100%,320px)}}
+@media(max-width:900px){.kt-consent{align-items:center!important;gap:9px!important;margin:18px 0 16px!important;font-size:9.5px!important;font-weight:700!important;line-height:1.35!important;letter-spacing:.06em!important;text-transform:uppercase!important}.kt-consent span{display:inline!important;padding:0!important}.kt-consent input{flex:0 0 17px!important;width:17px!important;min-width:17px!important;max-width:17px!important;height:17px!important;min-height:17px!important;max-height:17px!important;margin:0!important;padding:0!important}}
 CSS;
 
     // Contact form HTML

@@ -738,7 +738,7 @@ HTML;
         return '/' . ltrim($normalized, '/');
     }
 
-    private function resolveServiceImageUrl(int $siteId, string $storagePath): string
+    public function resolveOptimizedMediaUrl(int $siteId, string $storagePath, int $maxBytes = 0): string
     {
         $normalized = str_replace('\\', '/', trim($storagePath));
         if ($normalized === '') {
@@ -772,21 +772,35 @@ HTML;
             return $publicUrl;
         }
 
-        $variantPaths = [];
+        $variants = [];
         foreach ($this->media->variantsByMediaId((int)$media['id']) as $variant) {
             $format = (string)($variant['format'] ?? '');
             $path = (string)($variant['path'] ?? '');
             if ($format !== '' && $path !== '') {
-                $variantPaths[$format] = $path;
+                $variants[$format] = $variant;
+            }
+        }
+
+        if ($maxBytes > 0) {
+            foreach (['medium', 'thumb'] as $format) {
+                $filesize = (int)($variants[$format]['filesize'] ?? 0);
+                if (!empty($variants[$format]['path']) && $filesize > 0 && $filesize <= $maxBytes) {
+                    return $this->publicMediaUrl((string)$variants[$format]['path']);
+                }
             }
         }
 
         foreach (['medium', 'webp', 'thumb'] as $format) {
-            if (!empty($variantPaths[$format])) {
-                return $this->publicMediaUrl($variantPaths[$format]);
+            if (!empty($variants[$format]['path'])) {
+                return $this->publicMediaUrl((string)$variants[$format]['path']);
             }
         }
 
         return $publicUrl;
+    }
+
+    private function resolveServiceImageUrl(int $siteId, string $storagePath): string
+    {
+        return $this->resolveOptimizedMediaUrl($siteId, $storagePath);
     }
 }

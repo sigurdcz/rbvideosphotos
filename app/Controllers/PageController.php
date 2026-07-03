@@ -310,10 +310,16 @@ class PageController extends Controller
     private function syncHomepageAboutVisualBlock(int $pageId): void
     {
         $blockRepo = new BlockRepository();
+        $page = (new PageRepository())->findById($pageId);
+        $siteId = (int)($page['site_id'] ?? 0);
+        $submittedUrl = trim((string)($_POST['homepage_about_visual_url'] ?? ''));
+        $content = $siteId > 0
+            ? (new HomepageContentService())->resolveOptimizedMediaUrl($siteId, $submittedUrl, 102400)
+            : $submittedUrl;
         $blockRepo->upsert($pageId, 'jb-about-visual__media', [
             'block_type' => 'image',
             'label' => 'Homepage - vizual sekce Naše služby',
-            'content' => trim((string)($_POST['homepage_about_visual_url'] ?? '')),
+            'content' => $content,
             'sort_order' => 13,
             'autofill_disabled' => 0,
         ]);
