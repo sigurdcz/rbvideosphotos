@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - dev
+  workflow_dispatch:
+
+concurrency:
+  group: dev-deploy
+  cancel-in-progress: false
 
 jobs:
   deploy:
@@ -11,7 +16,7 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup PHP & Composer
         uses: shivammathur/setup-php@v2
@@ -38,6 +43,7 @@ jobs:
             --exclude='storage/media/' \
             --exclude='storage/cache/' \
             --exclude='storage/logs/' \
+            --exclude='vendor/bin/' \
             ./ _deploy/
           mkdir -p _deploy/storage/cache
           mkdir -p _deploy/storage/logs
@@ -69,20 +75,28 @@ jobs:
             echo "API_KEY=${DEV_API_KEY}"
           } > _deploy/.env
 
-      - name: Deploy via FTP (dev)
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server:     ${{ secrets.FTP_HOST }}
-          username:   ${{ secrets.FTP_USER }}
-          password:   ${{ secrets.FTP_PASS }}
-          port:       21
-          protocol:   ftps
-          security:   loose
-          timeout:    120000
-          local-dir:  ./_deploy/
-          server-dir: /web/dev/
-          exclude: |
-            **/.git*
-            **/.git*/**
-            **/node_modules/**
-            **/_deploy/**
+      - name: Install lftp
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends lftp
+
+      - name: Deploy via FTPS with retry (dev)
+        env:
+          FTP_HOST: ${{ secrets.FTP_HOST }}
+          FTP_USER: ${{ secrets.FTP_USER }}
+          FTP_PASS: ${{ secrets.FTP_PASS }}
+        run: |
+          lftp <<EOF
+          set cmd:fail-exit true
+          set net:max-retries 5
+          set net:reconnect-interval-base 5
+          set net:reconnect-interval-multiplier 2
+          set net:timeout 45
+          set ftp:passive-mode true
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate no
+          open -u "$FTP_USER","$FTP_PASS" "ftp://$FTP_HOST:21"
+          mirror -R --verbose=1 --parallel=1 --continue ./_deploy/ /web/dev/
+          bye
+          EOF
