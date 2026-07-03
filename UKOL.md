@@ -1,11 +1,11 @@
 # UKOL: Elegant White template
 
 Datum: 2026-07-04
-Zadani: Vytvorit novou sablonu `Elegant White` jako kopii `Jemne bezova` s bilym, zlatym a svetle bezovym vizualem bez ostrych hran a bez ramecku.
+Zadani: Dopracovat novou sablonu `Elegant White` tak, aby vizualne odpovidala aktualni referenci z noveho screenshotu a zustala samostatnou kopii `Jemne bezova`.
 
 ## Cil
 
-Nova sablona ma byt samostatne volitelna v administraci, ale ma vychazet z existujiciho rozvrzeni `Jemne bezova`. Hlavni zmena je vizualni: vice bileho prostoru, jemne zlato, svetle bezove akcenty, zaoblene prvky a zadne tvrde oramovani.
+Nova sablona ma byt samostatne volitelna v administraci, ale ma vychazet z existujiciho rozvrzeni `Jemne bezova`. Hlavni zmena je vizualni: vice bileho prostoru, jemne zlato, svetle bezove akcenty, zaoblene prvky a bez tvrdych ramecku, s kompozici blizsi aktualni referenci.
 
 ## Kroky
 
@@ -26,8 +26,8 @@ Nova sablona ma byt samostatne volitelna v administraci, ale ma vychazet z exist
   Hotovo kdyz: Navbar, hero, karty, formulare, footer i CTA pusobi jako svetla elegantni varianta bezove sablony.
 
 - [x] 5. Projit layouty a komponenty po vizualni strance
-  Popis: Zkontrolovat, ze stary motiv zustal nedotcen a novy motiv ma vlastni zjemneni, radiusy a stiny.
-  Hotovo kdyz: Zmeny jsou omezeny na novou sablonu a nedochazi k vedlejsim dopadum na `Jemne bezova`.
+  Popis: Zkontrolovat, ze stary motiv zustal nedotcen a novy motiv se vizualne blizi aktualni referenci.
+  Hotovo kdyz: Zmeny jsou omezeny na novou sablonu a odpovidaji nove cilove kompozici.
 
 - [x] 6. Validace a commit
   Popis: Projit diff, zkontrolovat syntax relevantnich souboru a vytvorit commit.
@@ -39,7 +39,8 @@ Nova sablona ma byt samostatne volitelna v administraci, ale ma vychazet z exist
 - Zachovavam kompatibilitu se starym `theme-jemna-bezova`, aby nedoslo k rozbiti existujiciho obsahu a JS logiky.
 - Cilem je samostatna sablona v administraci, ne prepis stavajiciho motivu.
 - Kontrola diffu probehla; novy motiv ma vlastni manifest, layout, JS guard i CSS override vrstvu.
+- Aktualni reference posouva design vic do bilych ploch, jemneho zlata a svetle bezeva, s lehcimi kartami a vyrazne cistsim hero/layoutem.
 
 ## Vysledek
 
-Nova sablona `Elegant White` je pripravena jako samostatna kopie `Jemne bezova` s bilym, zlatym a svetle bezovym vizualem.
+Nova sablona `Elegant White` je pripravena jako samostatna kopie `Jemne bezova` a priblizuje se aktualni svetle luxusni reference.
