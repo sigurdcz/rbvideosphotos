@@ -41,7 +41,7 @@ Web ma zustat vizualne stejny nebo lepsi, ale musi byt technicky citelnejsi pro 
   Popis: Spustit dostupne lokalni kontroly: PHP syntax, diff check a kontrolu zmen.
   Hotovo kdyz: Existuje seznam provedenych kontrol a jasne oznacene rucni kontroly, ktere nelze automaticky overit lokalne.
 
-- [-] 9. Commit a push
+- [x] 9. Commit a push
   Popis: Zmeny rozdelit podle kontextu, commitnout a pushnout.
   Hotovo kdyz: `git status` je cisty a zmeny jsou na `origin/master`.
 
@@ -59,4 +59,4 @@ Web ma zustat vizualne stejny nebo lepsi, ale musi byt technicky citelnejsi pro 
 
 ## Vysledek
 
-Implementace je hotova. Zbyva commit a push.
+Implementace je hotova a pripravena v commitu/pushi.
