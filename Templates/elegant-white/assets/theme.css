@@ -3471,3 +3471,239 @@ body.theme-elegant-white .hp-faq-item,
 .theme-elegant-white .hp-faq-item {
   box-shadow: 0 18px 40px rgba(89, 67, 42, .05) !important;
 }
+
+body.theme-elegant-white .theme-header.is-scrolled,
+.theme-elegant-white .theme-header.is-scrolled {
+  background: rgba(255, 255, 255, .96) !important;
+  border-bottom: 1px solid rgba(213, 165, 72, .10) !important;
+  box-shadow: 0 10px 24px rgba(63, 44, 26, .04) !important;
+}
+
+body.theme-elegant-white .theme-header.is-scrolled .theme-brand,
+body.theme-elegant-white .theme-header.is-scrolled .theme-nav-wrap .nav-links a,
+.theme-elegant-white .theme-header.is-scrolled .theme-brand,
+.theme-elegant-white .theme-header.is-scrolled .theme-nav-wrap .nav-links a {
+  color: var(--theme-text) !important;
+}
+
+body.theme-elegant-white .theme-header.is-scrolled .theme-nav-wrap .nav-links a:hover,
+body.theme-elegant-white .theme-header.is-scrolled .theme-nav-wrap .nav-links a.nav-active,
+.theme-elegant-white .theme-header.is-scrolled .theme-nav-wrap .nav-links a:hover,
+.theme-elegant-white .theme-header.is-scrolled .theme-nav-wrap .nav-links a.nav-active {
+  color: var(--theme-accent) !important;
+}
+
+body.theme-elegant-white .jb-about-section .container,
+.theme-elegant-white .jb-about-section .container {
+  width: min(1240px, calc(100% - 48px));
+}
+
+body.theme-elegant-white .jb-about-shell,
+.theme-elegant-white .jb-about-shell {
+  grid-template-columns: minmax(380px, 460px) minmax(0, 1fr);
+  gap: clamp(36px, 5vw, 72px);
+  align-items: center;
+}
+
+body.theme-elegant-white .jb-about-visual,
+.theme-elegant-white .jb-about-visual {
+  max-width: 460px;
+  margin: 0 auto;
+}
+
+body.theme-elegant-white .jb-about-copy,
+.theme-elegant-white .jb-about-copy {
+  max-width: 680px;
+}
+
+body.theme-elegant-white .jb-about-badge,
+.theme-elegant-white .jb-about-badge {
+  left: -14px;
+  bottom: -14px;
+  border-radius: 26px !important;
+  background: rgba(64, 49, 34, .92) !important;
+  color: #fff7eb !important;
+}
+
+body.theme-elegant-white .jb-about-badge strong,
+.theme-elegant-white .jb-about-badge strong {
+  color: #e4b663 !important;
+}
+
+body.theme-elegant-white .jb-about-highlight strong,
+.theme-elegant-white .jb-about-highlight strong {
+  color: var(--theme-text) !important;
+}
+
+body.theme-elegant-white .jb-about-highlight p,
+body.theme-elegant-white .jb-about-copy .section-intro,
+.theme-elegant-white .jb-about-highlight p,
+.theme-elegant-white .jb-about-copy .section-intro {
+  color: rgba(74, 64, 56, .86) !important;
+}
+
+body.theme-elegant-white #cenik,
+.theme-elegant-white #cenik {
+  background: linear-gradient(180deg, #5f4b37, #4f3d2d) !important;
+}
+
+body.theme-elegant-white #cenik .section-label,
+body.theme-elegant-white #cenik .section-title,
+body.theme-elegant-white #cenik .section-intro,
+.theme-elegant-white #cenik .section-label,
+.theme-elegant-white #cenik .section-title,
+.theme-elegant-white #cenik .section-intro {
+  color: #fff9f1 !important;
+}
+
+body.theme-elegant-white .hp-cenik-card,
+.theme-elegant-white .hp-cenik-card {
+  background: rgba(255, 250, 243, .92) !important;
+  color: var(--theme-text) !important;
+  border-radius: 26px !important;
+  border: 0 !important;
+  box-shadow: 0 18px 44px rgba(42, 30, 18, .14) !important;
+}
+
+body.theme-elegant-white .hp-cenik-card--featured,
+.theme-elegant-white .hp-cenik-card--featured {
+  background: rgba(255, 251, 246, .96) !important;
+}
+
+body.theme-elegant-white .hp-cenik-card-title,
+body.theme-elegant-white .hp-cenik-card__title,
+.theme-elegant-white .hp-cenik-card-title,
+.theme-elegant-white .hp-cenik-card__title {
+  color: var(--theme-text) !important;
+}
+
+body.theme-elegant-white .hp-cenik-card-desc,
+body.theme-elegant-white .hp-cenik-card__desc,
+.theme-elegant-white .hp-cenik-card-desc,
+.theme-elegant-white .hp-cenik-card__desc {
+  color: rgba(74, 64, 56, .78) !important;
+}
+
+body.theme-elegant-white .hp-cenik-card-price,
+body.theme-elegant-white .hp-cenik-card__price,
+.theme-elegant-white .hp-cenik-card-price,
+.theme-elegant-white .hp-cenik-card__price {
+  color: var(--theme-accent) !important;
+}
+
+body.theme-elegant-white #hodnoceni,
+.theme-elegant-white #hodnoceni {
+  background: linear-gradient(180deg, #fbf6ef, #fffdf9) !important;
+}
+
+body.theme-elegant-white #hodnoceni .section-title,
+body.theme-elegant-white #hodnoceni .section-intro,
+.theme-elegant-white #hodnoceni .section-title,
+.theme-elegant-white #hodnoceni .section-intro {
+  color: var(--theme-text) !important;
+}
+
+body.theme-elegant-white .hp-faq-item,
+.theme-elegant-white .hp-faq-item {
+  background: rgba(255, 255, 255, .92) !important;
+  color: var(--theme-text) !important;
+  border-radius: 22px !important;
+  border: 0 !important;
+  box-shadow: 0 14px 34px rgba(74, 64, 56, .06) !important;
+}
+
+body.theme-elegant-white .hp-faq-question,
+body.theme-elegant-white .hp-faq-item strong,
+body.theme-elegant-white .faq-q,
+.theme-elegant-white .hp-faq-question,
+.theme-elegant-white .hp-faq-item strong,
+.theme-elegant-white .faq-q {
+  color: var(--theme-text) !important;
+}
+
+body.theme-elegant-white .hp-faq-answer,
+body.theme-elegant-white .hp-faq-item p,
+body.theme-elegant-white .faq-a,
+.theme-elegant-white .hp-faq-answer,
+.theme-elegant-white .hp-faq-item p,
+.theme-elegant-white .faq-a {
+  color: rgba(74, 64, 56, .82) !important;
+}
+
+body.theme-elegant-white #kontakt,
+.theme-elegant-white #kontakt {
+  background: linear-gradient(180deg, #5b4635, #4c3a2b) !important;
+}
+
+body.theme-elegant-white #kontakt .section-label,
+body.theme-elegant-white #kontakt .section-title,
+body.theme-elegant-white #kontakt .section-intro,
+.theme-elegant-white #kontakt .section-label,
+.theme-elegant-white #kontakt .section-title,
+.theme-elegant-white #kontakt .section-intro {
+  color: #fff8ef !important;
+}
+
+body.theme-elegant-white .hp-contact-box,
+.theme-elegant-white .hp-contact-box {
+  background: rgba(255, 250, 243, .12) !important;
+  color: #fff8ef !important;
+  border: 0 !important;
+  border-radius: 26px !important;
+}
+
+body.theme-elegant-white .hp-contact-box strong,
+.theme-elegant-white .hp-contact-box strong {
+  color: #fffaf2 !important;
+}
+
+body.theme-elegant-white .hp-contact-box a,
+.theme-elegant-white .hp-contact-box a {
+  color: #fff0d1 !important;
+}
+
+body.theme-elegant-white .hp-contact-form,
+.theme-elegant-white .hp-contact-form {
+  background: rgba(255, 250, 243, .10) !important;
+  border-radius: 28px !important;
+  border: 0 !important;
+}
+
+body.theme-elegant-white .hp-contact-form label,
+.theme-elegant-white .hp-contact-form label {
+  color: rgba(255, 248, 239, .92) !important;
+}
+
+body.theme-elegant-white .hp-contact-form input,
+body.theme-elegant-white .hp-contact-form textarea,
+body.theme-elegant-white .hp-cenik-modal input,
+body.theme-elegant-white .hp-cenik-modal textarea,
+.theme-elegant-white .hp-contact-form input,
+.theme-elegant-white .hp-contact-form textarea,
+.theme-elegant-white .hp-cenik-modal input,
+.theme-elegant-white .hp-cenik-modal textarea {
+  background: rgba(255, 255, 255, .94) !important;
+  color: var(--theme-text) !important;
+  border-radius: 18px !important;
+  border: 1px solid rgba(213, 165, 72, .16) !important;
+}
+
+body.theme-elegant-white .hp-contact-form button,
+body.theme-elegant-white .hp-cenik-modal__submit,
+.theme-elegant-white .hp-contact-form button,
+.theme-elegant-white .hp-cenik-modal__submit {
+  border-radius: 999px !important;
+  border: 0 !important;
+  background: linear-gradient(135deg, #ddb25f, #c98d28) !important;
+  color: #fff !important;
+}
+
+body.theme-elegant-white .theme-footer,
+.theme-elegant-white .theme-footer {
+  background: linear-gradient(180deg, rgba(255, 252, 246, .94), rgba(248, 241, 231, .98)) !important;
+}
+
+body.theme-elegant-white .theme-footer__brand,
+.theme-elegant-white .theme-footer__brand {
+  color: var(--theme-text) !important;
+}

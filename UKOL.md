@@ -25,7 +25,7 @@ Nova sablona ma byt samostatne volitelna v administraci, ale ma vychazet z exist
   Popis: Pridat nove CSS override vrstvy pro svetly minimalni vzhled bez ostrych hran, ramecku a tvrdych kontrastu.
   Hotovo kdyz: Navbar, hero, karty, formulare, footer i CTA pusobi jako svetla elegantni varianta bezove sablony.
 
-- [x] 5. Projit layouty a komponenty po vizualni strance
+- [-] 5. Projit layouty a komponenty po vizualni strance
   Popis: Zkontrolovat, ze stary motiv zustal nedotcen a novy motiv se vizualne blizi aktualni referenci.
   Hotovo kdyz: Zmeny jsou omezeny na novou sablonu a odpovidaji nove cilove kompozici.
 
@@ -40,6 +40,7 @@ Nova sablona ma byt samostatne volitelna v administraci, ale ma vychazet z exist
 - Cilem je samostatna sablona v administraci, ne prepis stavajiciho motivu.
 - Kontrola diffu probehla; novy motiv ma vlastni manifest, layout, JS guard i CSS override vrstvu.
 - Aktualni reference posouva design vic do bilych ploch, jemneho zlata a svetle bezeva, s lehcimi kartami a vyrazne cistsim hero/layoutem.
+- Po dalsi korekci se odstranila zavislost na wrapperu `theme-jemna-bezova`, aby Elegant White neprebiral hnedo-bezovy styling z puvodni sablony.
 
 ## Vysledek
 
