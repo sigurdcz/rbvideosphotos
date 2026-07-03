@@ -1,62 +1,45 @@
-# UKOL: SEO, accessibility a breadcrumbs
+# UKOL: Elegant White template
 
-Datum: 2026-07-03
-Zadani: Provest relevantni kroky z auditu v `UKOL.md` a pridat drobeckovou navigaci na vsechny verejne stranky krome homepage.
+Datum: 2026-07-04
+Zadani: Vytvorit novou sablonu `Elegant White` jako kopii `Jemne bezova` s bilym, zlatym a svetle bezovym vizualem bez ostrych hran a bez ramecku.
 
 ## Cil
 
-Web ma zustat vizualne stejny nebo lepsi, ale musi byt technicky citelnejsi pro vyhledavace, AI agenty, ctecky obrazovky a Lighthouse. Neupravovat design od nuly, neprepisovat web na jiny framework a nevymyslet neexistujici obsah.
+Nova sablona ma byt samostatne volitelna v administraci, ale ma vychazet z existujiciho rozvrzeni `Jemne bezova`. Hlavni zmena je vizualni: vice bileho prostoru, jemne zlato, svetle bezove akcenty, zaoblene prvky a zadne tvrde oramovani.
 
 ## Kroky
 
-- [x] 1. Inventura projektu a zdroju pravdy
-  Popis: Zmapovat verejny render, publish pipeline, sablony, theme CSS/JS, admin formulare, media pipeline, sitemap, robots, llms, SEO renderer a JSON-LD.
-  Hotovo kdyz: Je jasne, ktere soubory ovlivnuji homepage, sluzby, nase prace, blog, cenik, FAQ, kontakt, sitemap, robots a llms.
+- [x] 1. Zkontrolovat zdrojovou sablonu a loader
+  Popis: Overit, jak se sablony nacitaji z `Templates/` a jak se registruje jejich `key`, `name` a layout.
+  Hotovo kdyz: Je jasne, co je treba kopirovat a co jen prejmenovat.
 
-- [x] 2. Baseline audit pred upravami
-  Popis: Ziskat aktualni stav hlavni produkcni stranky a dulezitych URL z lokalniho kodu.
-  Hotovo kdyz: Existuje seznam realnych problemu rozdeleny na SEO, accessibility, performance, strukturovana data, crawlability a agentic browsing.
+- [x] 2. Vytvorit novou sablonu z kopie `Jemne bezova`
+  Popis: Nakopirovat existujici sablonu do nove slozky `Templates/elegant-white` a upravit identitu sablony.
+  Hotovo kdyz: V repu existuje nova samostatna slozka sablony s vlastnim manifestem.
 
-- [x] 3. Semanticka struktura HTML a drobeckova navigace
-  Popis: Pridat skip link, stabilni `main` kotvu a drobeckovou navigaci na vsechny verejne stranky mimo homepage.
-  Hotovo kdyz: Homepage drobecky nema, ostatni stranky maji viditelne breadcrumbs a BreadcrumbList JSON-LD.
+- [x] 3. Prevest identitu na `Elegant White`
+  Popis: Zmenit `template.json`, layout a podporne skripty tak, aby se sablona v administraci zobrazovala jako `Elegant White`.
+  Hotovo kdyz: Sablona ma novy `key`, novy display name a bez konfliktu zustava kompatibilni s existujicim renderem.
 
-- [x] 4. Navigace, odkazy a interni prolinkovani
-  Popis: Zkontrolovat dulezite odkazy a doplnit bezpecne `rel` pro externi odkazy otevrene v novem okne.
-  Hotovo kdyz: Externi odkazy s `target="_blank"` maji `noopener noreferrer`.
+- [x] 4. Prepsat vizual na bily, zlaty a svetle bezovy
+  Popis: Pridat nove CSS override vrstvy pro svetly minimalni vzhled bez ostrych hran, ramecku a tvrdych kontrastu.
+  Hotovo kdyz: Navbar, hero, karty, formulare, footer i CTA pusobi jako svetla elegantni varianta bezove sablony.
 
-- [x] 5. Accessibility tree a klavesnice
-  Popis: Zlepsit programove nazvy, `aria` atributy, skip link a ovladani modal/lightbox prvku.
-  Hotovo kdyz: Interaktivni prvky maji jasny nazev a web jde zakladne ovladat klavesnici.
+- [x] 5. Projit layouty a komponenty po vizualni strance
+  Popis: Zkontrolovat, ze stary motiv zustal nedotcen a novy motiv ma vlastni zjemneni, radiusy a stiny.
+  Hotovo kdyz: Zmeny jsou omezeny na novou sablonu a nedochazi k vedlejsim dopadum na `Jemne bezova`.
 
-- [x] 6. Formulare pro lidi i AI agenty
-  Popis: U kontaktniho formulare doplnit `label for/id`, `name`, `autocomplete`, typy poli a popisky bez zhorseni UX.
-  Hotovo kdyz: Agent i ctecka poznaji ucel formulare, povinna pole, kontaktni udaje, typ sluzby, termin, zpravu, souhlas a vysledek po odeslani.
-
-- [x] 7. SEO metadata a JSON-LD
-  Popis: Doplnit BreadcrumbList JSON-LD podle realne viditelne drobeckove navigace.
-  Hotovo kdyz: JSON-LD odpovida realnemu obsahu a nic si nedomysli.
-
-- [x] 8. Validace po upravach
-  Popis: Spustit dostupne lokalni kontroly: PHP syntax, diff check a kontrolu zmen.
-  Hotovo kdyz: Existuje seznam provedenych kontrol a jasne oznacene rucni kontroly, ktere nelze automaticky overit lokalne.
-
-- [x] 9. Commit a push
-  Popis: Zmeny rozdelit podle kontextu, commitnout a pushnout.
-  Hotovo kdyz: `git status` je cisty a zmeny jsou na `origin/master`.
+- [x] 6. Validace a commit
+  Popis: Projit diff, zkontrolovat syntax relevantnich souboru a vytvorit commit.
+  Hotovo kdyz: Repo je pripraveno k pushi nebo uz je pushnuto, podle dalsiho zadani.
 
 ## Poznamky
 
-- Priorita pro tento implementacni pruchod: drobeckova navigace, BreadcrumbList schema, skip link, kontaktni formular, lightbox ovladani a bezpecne odkazy.
-- Nezavadet skryte fallbacky, ktere maskuji chybu. Pokud chybi data pro schema, cenu, lokalitu nebo kontakt, oznacit to jako TODO misto domysleni.
-- Zachovat brand, barvy a layout. Upravovat hlavne HTML strukturu, atributy, metadata, schema a drobne CSS pro pristupnost.
-- `public/index.php`: doplneny centralni helpery pro skip link, `main-content`, bezpecne `rel`, BreadcrumbList JSON-LD a viditelne breadcrumbs pro verejne stranky mimo homepage.
-- `public/index.php`: kontaktni formular se normalizuje na propojene label/input atributy, autocomplete, pojmenovany consent checkbox a skryty honeypot s `aria-hidden`.
-- `public/index.php`: blogovy lightbox pouziva `button` prvky s aria popisky misto klikacich `span`.
-- `public/assets/frontend-runtime.css`: doplnen styl pro skip link a breadcrumbs vcetne mobilni sirky.
-- Overeno: `php -l public/index.php` bez chyb.
-- Overeno: `git diff --check` bez chyb; Git pouze hlasi standardni CRLF warningy pro Windows checkout.
+- Nova sablona vyuziva stavajici layout jako vychozi bod, ale dostava vlastni `theme-elegant-white` vrstvu pro vizualni override.
+- Zachovavam kompatibilitu se starym `theme-jemna-bezova`, aby nedoslo k rozbiti existujiciho obsahu a JS logiky.
+- Cilem je samostatna sablona v administraci, ne prepis stavajiciho motivu.
+- Kontrola diffu probehla; novy motiv ma vlastni manifest, layout, JS guard i CSS override vrstvu.
 
 ## Vysledek
 
-Implementace je hotova a pripravena v commitu/pushi.
+Nova sablona `Elegant White` je pripravena jako samostatna kopie `Jemne bezova` s bilym, zlatym a svetle bezovym vizualem.

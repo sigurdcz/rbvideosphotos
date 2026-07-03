@@ -1,0 +1,26 @@
+{
+  "key": "elegant-white",
+  "name": "Elegant White",
+  "description": "Svetla editorialni sablona s bilym, zlatym a svetle bezovym stylem inspirovana luxusnim svatebnim webem.",
+  "version": "1.0.0",
+  "author": "SEO CMS",
+  "sort_order": 55,
+  "layout_html": "layout.html",
+  "layout_css": "assets/theme.css",
+  "layout_js": "assets/theme.js",
+  "pages": [
+    "homepage",
+    "sluzby",
+    "portfolio",
+    "portfolio-detail",
+    "blog",
+    "blog-post",
+    "cenik",
+    "faq",
+    "kontakt"
+  ],
+  "assets": {
+    "css": [],
+    "js": []
+  }
+}
