@@ -99,13 +99,7 @@
   }
 
   function pickContactVisual() {
-    var heroBg = qs('.theme-hero-video');
-    var style = heroBg ? (heroBg.getAttribute('style') || '') : '';
-    var match = style.match(/url\(['"]?([^'")]+)['"]?\)/i);
-    if (match && match[1]) return match[1];
-
-    var portfolio = qsa('#nase-prace .pt-thumb img')[3] || qs('#nase-prace .pt-thumb img');
-    return getImageSrc(portfolio);
+    return '/media/2026/07/kontakt.png';
   }
 
   function ensureNavCta() {
@@ -147,14 +141,14 @@
 
     var intro = qs('.hero-sub', hero);
     if (intro) {
-      intro.textContent = 'Svatební, rodinné, portrétní i firemní focení a video s důrazem na emoce, detaily a profesionální výsledek.';
+      intro.textContent = 'Emoce, které cítíte, si zaslouží zůstat navždy. S láskou, světlem a vášní tvoříme příběhy, ke kterým se budete rádi vracet.';
     }
 
     var cta = qs('.hero-cta-wrap', hero);
     if (cta) {
       cta.innerHTML =
-        '<a href="#nase-prace" class="btn-primary">Podívat se na práce</a>' +
-        '<a href="#kontakt" class="btn-secondary ew-hero-secondary">Domluvit termín</a>';
+        '<a href="#nase-prace" class="btn-primary">Podívat se na ukázky</a>' +
+        '<a href="#kontakt" class="btn-secondary ew-hero-secondary">Přehrát video</a>';
     }
 
     var cue = qs('.jb-scroll-cue', hero);
@@ -195,9 +189,9 @@
       '  <div class="ew-about-copy">' +
       '    <p class="section-label">O nás</p>' +
       '    <h2 class="section-title">Příběhy, které stojí za to vyprávět</h2>' +
-      '    <p class="section-intro">Jsme RB Videos & Photos - tým fotografů a kameramanů z Olomouce. Milujeme přirozené emoce, poctivou práci a moderní vizuální styl.</p>' +
+      '    <p class="section-intro">Jsme dvojice kameramanů a fotografů, kterou spojuje vášeň pro zachycení přirozených emocí, poctivá práce a cit pro detail.</p>' +
       '    <div class="ew-about-points">' +
-      '      <span>Profesionální přístup</span><span>Rychlá komunikace</span><span>Kvalitní technika</span><span>Přirozené momenty</span><span>Individuální přístup</span><span>Nadčasový výsledek</span>' +
+      '      <span>Profesionální přístup</span><span>Rychlá komunikace</span><span>Kvalitní technika</span><span>Přirozené momenty</span><span>Zkušenosti</span><span>Moderní a stylová tvorba</span>' +
       '    </div>' +
       '  </div>' +
       '</div>';
@@ -206,9 +200,31 @@
   }
 
   function buildServicesOverview(services, afterSection) {
-    if (!services.length || qs('.ew-services-overview')) return;
+    if (qs('.ew-services-overview')) return;
 
-    var icons = ['camera', 'people', 'briefcase', 'calendar'];
+    var summaries = [
+      'Zachytíme váš svatební den od příprav až po poslední tanec v přirozeném stylu.',
+      'Přirozené momenty, emoce a vzpomínky, které vydrží navždy.',
+      'Profesionální obsah pro vaše podnikání, značku, web nebo sociální sítě.',
+      'Kreativní videoklipy, story a obsah, který zaujme a odliší vaši tvorbu.'
+    ];
+    var fallback = [
+      { title: 'Svatební foto & video', desc: summaries[0] },
+      { title: 'Rodinné & portrétní focení', desc: summaries[1] },
+      { title: 'Reklamní foto & video', desc: summaries[2] },
+      { title: 'Music & videoklipy', desc: summaries[3] }
+    ];
+    var items = services.slice(0, 4).map(function (item, index) {
+      return {
+        title: item.title || fallback[index].title,
+        desc: summaries[index] || item.desc || fallback[index].desc
+      };
+    });
+    while (items.length < 4) {
+      items.push(fallback[items.length]);
+    }
+
+    var icons = ['camera', 'people', 'briefcase', 'music'];
     var section = document.createElement('section');
     section.className = 'section ew-services-overview';
     section.innerHTML =
@@ -218,7 +234,7 @@
       '    <h2 class="section-title">Nabízíme kompletní vizuální služby</h2>' +
       '  </div>' +
       '  <div class="ew-services-list">' +
-      services.slice(0, 4).map(function (item, index) {
+      items.map(function (item, index) {
         return '<article class="ew-service-card">' +
           '<div class="ew-service-icon ew-service-icon--' + icons[index % icons.length] + '" aria-hidden="true"></div>' +
           '<h3>' + escapeHtml(item.title) + '</h3>' +
@@ -226,7 +242,7 @@
           '</article>';
       }).join('') +
       '  </div>' +
-      '  <div class="ew-section-cta"><a href="#kontakt" class="btn-primary">Kontaktujte nás</a></div>' +
+      '  <div class="ew-section-cta"><a href="#sluzby" class="btn-primary">Zobrazit všechny služby</a></div>' +
       '</div>';
 
     var portfolio = qs('#nase-prace');
@@ -334,9 +350,9 @@
     ];
     var items = existing.concat(defaults).slice(0, 6);
 
-    list.innerHTML = items.map(function (item, index) {
-      return '<article class="hp-faq-item ew-faq-item' + (index === 0 ? ' is-open' : '') + '">' +
-        '<button class="ew-faq-question" type="button" aria-expanded="' + (index === 0 ? 'true' : 'false') + '">' +
+    list.innerHTML = items.map(function (item) {
+      return '<article class="hp-faq-item ew-faq-item">' +
+        '<button class="ew-faq-question" type="button" aria-expanded="false">' +
         '<span>' + escapeHtml(item.question) + '</span><span class="ew-faq-plus" aria-hidden="true"></span>' +
         '</button>' +
         '<div class="ew-faq-answer"><p>' + escapeHtml(item.answer || 'Odpověď najdete v kompletní sekci FAQ.') + '</p></div>' +
@@ -358,7 +374,7 @@
       ctaWrap.className = 'hp-section-cta ew-section-cta';
       list.parentNode.appendChild(ctaWrap);
     }
-    ctaWrap.innerHTML = '<a href="/faq" class="btn-secondary">Všechny FAQ</a>';
+    ctaWrap.innerHTML = '<a href="/faq" class="btn-secondary">Zobrazit další FAQ</a>';
   }
 
   function buildProcess() {
@@ -374,10 +390,11 @@
       '    <h2 class="section-title">Jednoduchý proces, skvělý výsledek</h2>' +
       '  </div>' +
       '  <div class="ew-process-list">' +
-      '    <article><span>01</span><i class="ew-process-icon ew-process-icon--date"></i><h3>Domluva termínu</h3><p>Ozvěte se nám a společně si domluvíme detaily.</p></article>' +
-      '    <article><span>02</span><i class="ew-process-icon ew-process-icon--camera"></i><h3>Focení / natáčení</h3><p>Přirozeně zachytíme váš příběh a emoce.</p></article>' +
-      '    <article><span>03</span><i class="ew-process-icon ew-process-icon--edit"></i><h3>Úprava</h3><p>Pečlivě vybereme a upravíme nejlepší záběry.</p></article>' +
-      '    <article><span>04</span><i class="ew-process-icon ew-process-icon--send"></i><h3>Předání</h3><p>Dostanete hotové fotografie a video v nejvyšší kvalitě.</p></article>' +
+      '    <article><span>01</span><i class="ew-process-icon ew-process-icon--date"></i><h3>Nezávazná poptávka</h3><p>Ozvěte se nám a probereme vaše představy a požadavky.</p></article>' +
+      '    <article><span>02</span><i class="ew-process-icon ew-process-icon--plan"></i><h3>Konzultace s plán</h3><p>Společně naplánujeme průběh a detaily.</p></article>' +
+      '    <article><span>03</span><i class="ew-process-icon ew-process-icon--camera"></i><h3>Focení & natáčení</h3><p>Zachytíme přirozené momenty bez zbytečných zásahů.</p></article>' +
+      '    <article><span>04</span><i class="ew-process-icon ew-process-icon--edit"></i><h3>Úpravy & výběr</h3><p>Pečlivě upravíme a připravíme ty nejlepší záběry.</p></article>' +
+      '    <article><span>05</span><i class="ew-process-icon ew-process-icon--send"></i><h3>Dodání & sdílení</h3><p>Předáme hotové fotografie a video v nejvyšší kvalitě.</p></article>' +
       '  </div>' +
       '</div>';
     contact.parentNode.insertBefore(section, contact);

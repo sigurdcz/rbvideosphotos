@@ -1,39 +1,38 @@
-# UKOL: Elegant White homepage alignment
+# UKOL: Elegant White final homepage tuning
 
 Datum: 2026-07-04
-Zadani: Upravit homepage sablony `Elegant White` podle prilozeneho aktualniho HTML tak, aby se kompozici a kontrastem priblizila cilovemu screenshotu.
+Zadani: Doladit sablonu `Elegant White` podle noveho ciloveho screenshotu, protoze aktualni stav je stale prilis uzky, vybledly a ma nepresne texty/sekce.
 
 ## Cil
 
-Nova sablona ma byt samostatne volitelna v administraci, ale homepage musi z realneho DOMu poskladat cilovou svetlou kompozici: hero vlevo text a vpravo fotka, about blok s fotkou a textem, vodorovne portfolio, samostatne sluzby, recenze, FAQ, proces a kontakt bez tmavych puvodnich bloku.
+Homepage Elegant White ma byt vyrazne bliz cilovemu screenshotu: vetsi kontrast a meritko, sirsi hero s citelnym textem, vetsi about/portfolio/sluzby bloky, recenze a FAQ ve spravnem stylu, 5 kroku procesu a kontakt s fotkou kamery.
 
 ## Kroky
 
-- [x] 1. Nacist aktualni HTML a zjistit realny DOM homepage
-  Popis: Pouzit prilozene HTML jako zdroj pravdy pro tridy, bloky a dostupny obsah.
-  Hotovo kdyz: Je jasne, ktere existujici sekce musi CSS/JS prekomponovat.
+- [x] 1. Zkontrolovat aktualni JS/CSS pro Elegant White
+  Popis: Najit mista, ktera zpusobuji male meritko, vybledly hero, useknute FAQ a chybejici 5. procesni krok.
+  Hotovo kdyz: Je jasne, ktere selektory a DOM transformace upravit.
 
-- [x] 2. Prestavet homepage JS pro cilovou skladbu
-  Popis: Upravit `theme.js`, aby z existujicich sekci vytvoril about blok, vodorovne portfolio, sluzby s ikonami, recenze, FAQ, proces a kontakt podle cilove reference.
-  Hotovo kdyz: Elegant White nevypada jako puvodni bezova homepage a hlavni sekce maji cilove poradi a strukturu.
+- [x] 2. Upravit JS obsah a zdroje sekci
+  Popis: Doladit textace hero/about/sluzby/FAQ/proces a vybrat kontaktni vizual tak, aby primarne pouzil kamerovou fotku misto svatebni.
+  Hotovo kdyz: DOM transformace odpovida cilovemu poradi a obsahu.
 
-- [x] 3. Dodelat CSS pro cilovy svetly vzhled
-  Popis: Upravit `theme.css` pro kontrastni text, svetlou navigaci, spravne rozmery, zaobleni, stiny, tlacitka a responsivitu.
-  Hotovo kdyz: Sekce uz nejsou vybledle nebo tmave a kompozice odpovida cilovemu screenshotu.
+- [x] 3. Upravit CSS meritko, kontrast a layout
+  Popis: Zvetsit hlavni bloky, omezit vybledlost hero, zlepsit kontrast, portfolio a sluzby roztahnout jako v cili a formular/karty zaoblit.
+  Hotovo kdyz: Vzhled je citelne blize referenci a nepusobi zmensene.
 
-- [x] 4. Validace bez rozbiti ostatnich temat
-  Popis: Projit diff, zkontrolovat, ze zmeny zustaly ve `Templates/elegant-white` a `UKOL.md`.
-  Hotovo kdyz: Kontroly nehlasi chyby a worktree neobsahuje docasne soubory.
+- [x] 4. Otestovat diff a syntaxi dostupnymi nastroji
+  Popis: Spustit dostupne kontroly a zkontrolovat pracovni strom.
+  Hotovo kdyz: `git diff --check` projde a jsou vypsana pripadna omezeni.
 
 ## Poznamky
 
-- Prilozeny aktualni zdrojak uz obsahuje `body.theme-elegant-white`, takze dalsi oprava ma mirit na CSS/JS kompozici homepage.
-- Cilovy screenshot ma podstatne jinou skladbu nez aktualni stav: soucasne centrovane sekce jsou prilis uzke, vybledle a chybi cilove bloky `about`, `services`, `process` a kontakt s obrazkem.
-- `Templates/elegant-white/assets/theme.js` je prepsany tak, aby homepage skladal cilove poradi sekci: hero, about, portfolio strip, sluzby, recenze, FAQ, proces a kontakt.
-- `Templates/elegant-white/assets/theme.css` obsahuje zaverecne homepage-only override pro svetle bile/zlate schema, oble rohy, kontrastni text, skryti homepage blog/cenik sekci a responzivni rozvrzeni.
-- Navigace na homepage upravuje odkazy Blog/Cenik na samostatne URL, protoze tyto sekce jsou v cilove kompozici schovane.
-- Homepage JS explicitne radi sekce podle cile: recenze jsou pred FAQ a proces zustava pred kontaktem.
+- Aktualni cilovy screenshot ma silnejsi text, vetsi obsahovy kontejner a mene vybledly hero nez soucasny stav.
+- `theme.js` upravuje obsah Elegant White homepage: silnejsi hero text, nove CTA, kontaktni vizual pevne na `/media/2026/07/kontakt.png`, 4 prehledove sluzby vcetne fallbacku, FAQ zavrene ve vychozim stavu a proces na 5 kroku.
+- `theme.css` dostal finalni override pro homepage: sirsi kontejnery, vetsi hero/about/portfolio/sluzby, vyssi kontrast textu, vetsi ikony, sirsi FAQ/proces a vetsi kontaktni panel.
+- Dokumentace mimo `UKOL.md` neni menena, protoze jde o konkretni sablonovy styling bez zmeny verejne API nebo obsluhy administrace.
+- Overeni: `git diff --check` proslo. `node --check Templates\elegant-white\assets\theme.js` neslo spustit, protoze `node` neni v aktualnim shellu dostupny.
 
 ## Vysledek
 
-Hotovo. Upraveny byly pouze `Templates/elegant-white/assets/theme.js`, `Templates/elegant-white/assets/theme.css` a `UKOL.md`. `git diff --check` prosel bez chyb; lokalne neni dostupny `node`, proto neslo spustit `node --check`.
+Elegant White homepage je doladena dalsim pass-em: texty a CTA jsou bliz cilovemu screenshotu, kontakt pouziva explicitni kamerovy obrazek, sluzby maji stabilni 4 polozky, FAQ je zavrene ve vychozim stavu, proces ma 5 kroku a CSS zvetsuje meritko/kontrast hlavni homepage kompozice.
