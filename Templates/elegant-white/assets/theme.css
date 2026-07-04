@@ -5019,3 +5019,45 @@ body.theme-elegant-white .site-footer-social {
     grid-template-columns: 1fr !important;
   }
 }
+
+/* Hero content must stay clear; no white wash over copy or CTAs. */
+body.theme-elegant-white[data-cms-page-key="homepage"] .ew-hero {
+  isolation: isolate !important;
+}
+
+body.theme-elegant-white[data-cms-page-key="homepage"] .ew-hero::before {
+  background: radial-gradient(circle at 88% 24%, rgba(223, 184, 112, .16), transparent 32%) !important;
+  opacity: .55 !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+}
+
+body.theme-elegant-white[data-cms-page-key="homepage"] .ew-hero > .container {
+  position: relative !important;
+  z-index: 3 !important;
+}
+
+body.theme-elegant-white[data-cms-page-key="homepage"] .ew-hero h1,
+body.theme-elegant-white[data-cms-page-key="homepage"] .ew-hero .hero-sub,
+body.theme-elegant-white[data-cms-page-key="homepage"] .ew-hero .hero-cta-wrap {
+  opacity: 1 !important;
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+body.theme-elegant-white[data-cms-page-key="homepage"] .ew-hero h1 {
+  color: #2a211b !important;
+}
+
+body.theme-elegant-white[data-cms-page-key="homepage"] .ew-hero h1 span {
+  color: #c98d39 !important;
+}
+
+body.theme-elegant-white[data-cms-page-key="homepage"] .ew-hero .hero-sub {
+  color: rgba(42, 33, 27, .82) !important;
+}
+
+body.theme-elegant-white[data-cms-page-key="homepage"] .ew-hero .theme-hero-video::after,
+body.theme-elegant-white[data-cms-page-key="homepage"] .hero .theme-hero-video::after {
+  background: linear-gradient(90deg, rgba(255, 253, 249, .18), rgba(255, 253, 249, .04) 38%, rgba(255, 253, 249, 0) 72%) !important;
+}
