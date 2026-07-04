@@ -128,7 +128,7 @@ function tryServeDatabasePage(string $uri, bool $authenticated = false, bool $pr
         );
         $html = injectFooterSocials($html, (int)$site['id']);
         $html = injectSiteLogo($html, $site);
-        $html = injectPageHeroImage($html, (int)$page['id']);
+        $html = injectPageHeroImage($html, (int)$page['id'], $site);
         $html = injectHomepageHeroImage($html, (int)$site['id'], $isHome);
         $html = injectPageHeroVideo($html, $site, (int)$page['id'], $themeKey);
         $html = injectBodyPageKey($html, $themeKey);
@@ -1138,9 +1138,12 @@ function injectHomepageHeroImage(string $html, int $siteId, bool $isHome): strin
     return injectBodyCssVariableToken($html, 'theme-hero-image', "url('" . str_replace("'", '%27', $heroImage) . "')");
 }
 
-function injectPageHeroImage(string $html, int $pageId): string
+function injectPageHeroImage(string $html, int $pageId, array $site = []): string
 {
     $heroImage = resolvePageHeroImageUrl($pageId);
+    if ($heroImage === '') {
+        $heroImage = normalizePublicAssetUrl((string)($site['default_hero_poster_url'] ?? ''));
+    }
     if ($heroImage === '') {
         return $html;
     }
@@ -1320,7 +1323,7 @@ function injectPageHeroVideo(string $html, array $site, ?int $pageId, string $pa
     $posterUrl = normalizePublicAssetUrl((string)($site['default_hero_poster_url'] ?? ''));
 
     $isHomepage = $pageKey === 'homepage';
-    // Priorita: 1) page hero_video, 2) homepage site default video, 3) page hero_bg foto, 4) site default video.
+    // Priorita: 1) page hero_video, 2) homepage site default video, 3) page hero_bg foto, 4) site default poster foto, 5) site default video.
     $videoHtml = '';
     $pageVideo = ($pageId !== null && $pageId > 0) ? resolvePageBlockUrl($pageId, 'hero_video') : '';
     if ($pageVideo !== '') {
@@ -1334,6 +1337,10 @@ function injectPageHeroVideo(string $html, array $site, ?int $pageId, string $pa
         $pagePhoto = ($pageId !== null && $pageId > 0) ? resolvePageHeroImageUrl($pageId) : '';
         if ($videoHtml === '' && $pagePhoto !== '') {
             $videoHtml = buildHeroImageHtml($pagePhoto);
+        }
+
+        if ($videoHtml === '' && $posterUrl !== '') {
+            $videoHtml = buildHeroImageHtml($posterUrl);
         }
 
         if ($videoHtml === '' && $defaultVideo !== '') {

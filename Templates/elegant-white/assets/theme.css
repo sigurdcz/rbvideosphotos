@@ -5108,3 +5108,96 @@ body.theme-elegant-white[data-cms-page-key="homepage"] .hero .hero-cta-wrap {
   position: relative !important;
   z-index: 2 !important;
 }
+
+/* Full-bleed hero media and parallax for every Elegant White hero. */
+body.theme-elegant-white .hp-hero,
+body.theme-elegant-white .ew-hero,
+body.theme-elegant-white .hero,
+body.theme-elegant-white .page-hero,
+body.theme-elegant-white .pf-hero,
+body.theme-elegant-white .bl-hero,
+body.theme-elegant-white .kt-hero,
+body.theme-elegant-white .fq-hero,
+body.theme-elegant-white .bp-hero,
+body.theme-elegant-white .pf-detail-hero,
+body.theme-elegant-white .bp-detail-hero {
+  position: relative !important;
+  overflow: hidden !important;
+  isolation: isolate !important;
+}
+
+body.theme-elegant-white .hp-hero .theme-hero-video,
+body.theme-elegant-white .hp-hero .hero-video,
+body.theme-elegant-white .ew-hero .theme-hero-video,
+body.theme-elegant-white .ew-hero .hero-video,
+body.theme-elegant-white .hero .theme-hero-video,
+body.theme-elegant-white .hero .hero-video,
+body.theme-elegant-white .page-hero .theme-hero-video,
+body.theme-elegant-white .page-hero .hero-video,
+body.theme-elegant-white .pf-hero .theme-hero-video,
+body.theme-elegant-white .pf-hero .hero-video,
+body.theme-elegant-white .bl-hero .theme-hero-video,
+body.theme-elegant-white .bl-hero .hero-video,
+body.theme-elegant-white .kt-hero .theme-hero-video,
+body.theme-elegant-white .kt-hero .hero-video,
+body.theme-elegant-white .fq-hero .theme-hero-video,
+body.theme-elegant-white .fq-hero .hero-video,
+body.theme-elegant-white .bp-hero .theme-hero-video,
+body.theme-elegant-white .bp-hero .hero-video,
+body.theme-elegant-white .pf-detail-hero .theme-hero-video,
+body.theme-elegant-white .pf-detail-hero .hero-video,
+body.theme-elegant-white .bp-detail-hero .theme-hero-video,
+body.theme-elegant-white .bp-detail-hero .hero-video {
+  inset: -70px 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  top: -70px !important;
+  bottom: -70px !important;
+  width: 100% !important;
+  height: calc(100% + 140px) !important;
+  min-width: 100% !important;
+  max-width: none !important;
+  object-fit: cover !important;
+  background-size: cover !important;
+  background-position: center !important;
+  transform: translate3d(0, var(--ew-hero-parallax-y, 0px), 0) scale(1.04) !important;
+  transform-origin: center !important;
+  will-change: transform !important;
+}
+
+body.theme-elegant-white .hp-hero .theme-hero-video--image,
+body.theme-elegant-white .ew-hero .theme-hero-video--image,
+body.theme-elegant-white .hero .theme-hero-video--image,
+body.theme-elegant-white .page-hero .theme-hero-video--image,
+body.theme-elegant-white .pf-hero .theme-hero-video--image,
+body.theme-elegant-white .bl-hero .theme-hero-video--image,
+body.theme-elegant-white .kt-hero .theme-hero-video--image,
+body.theme-elegant-white .fq-hero .theme-hero-video--image,
+body.theme-elegant-white .bp-hero .theme-hero-video--image,
+body.theme-elegant-white .pf-detail-hero .theme-hero-video--image,
+body.theme-elegant-white .bp-detail-hero .theme-hero-video--image {
+  background-attachment: fixed !important;
+}
+
+body.theme-elegant-white .hp-hero .theme-hero-video iframe,
+body.theme-elegant-white .ew-hero .theme-hero-video iframe,
+body.theme-elegant-white .hero .theme-hero-video iframe,
+body.theme-elegant-white .page-hero .theme-hero-video iframe,
+body.theme-elegant-white .pf-hero .theme-hero-video iframe,
+body.theme-elegant-white .bl-hero .theme-hero-video iframe,
+body.theme-elegant-white .kt-hero .theme-hero-video iframe,
+body.theme-elegant-white .fq-hero .theme-hero-video iframe,
+body.theme-elegant-white .bp-hero .theme-hero-video iframe,
+body.theme-elegant-white .pf-detail-hero .theme-hero-video iframe,
+body.theme-elegant-white .bp-detail-hero .theme-hero-video iframe {
+  width: 100vw !important;
+  height: 56.25vw !important;
+  min-width: 177.78vh !important;
+  min-height: 100vh !important;
+}
+
+@media (max-width: 900px) {
+  body.theme-elegant-white .theme-hero-video--image {
+    background-attachment: scroll !important;
+  }
+}

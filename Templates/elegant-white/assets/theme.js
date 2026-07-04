@@ -522,6 +522,38 @@
     }).join('');
   }
 
+  function initHeroParallax() {
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var heroes = qsa('.hp-hero, .ew-hero, .hero, .page-hero, .pf-hero, .bl-hero, .kt-hero, .fq-hero, .bp-hero, .pf-detail-hero, .bp-detail-hero')
+      .filter(function (hero) {
+        return !!qs('.theme-hero-video, .hero-video', hero);
+      });
+    if (!heroes.length) return;
+
+    var ticking = false;
+    function sync() {
+      ticking = false;
+      var viewport = window.innerHeight || document.documentElement.clientHeight || 1;
+      heroes.forEach(function (hero) {
+        var rect = hero.getBoundingClientRect();
+        if (rect.bottom < 0 || rect.top > viewport) return;
+        var centerOffset = (rect.top + rect.height / 2) - viewport / 2;
+        var shift = Math.max(-52, Math.min(52, centerOffset * -0.08));
+        hero.style.setProperty('--ew-hero-parallax-y', shift.toFixed(2) + 'px');
+      });
+    }
+
+    function requestSync() {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(sync);
+    }
+
+    window.addEventListener('scroll', requestSync, { passive: true });
+    window.addEventListener('resize', requestSync);
+    sync();
+  }
+
   function initReveals() {
     var elements = qsa('.ew-about-grid, .pt-tile, .ew-service-card, .hp-review-card, .ew-faq-item, .ew-process-list article, .ew-contact-panel');
     if (!elements.length) return;
@@ -565,5 +597,6 @@
   }
 
   syncFooterContactFromSection();
+  initHeroParallax();
   initReveals();
 })();

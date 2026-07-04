@@ -160,7 +160,7 @@ class PublishService
         $html        = $this->renderer->injectSeo($html, $seoHead, $bodyScripts);
         $html        = $this->injectRichFooter($html, $site);
         $html        = $this->injectSiteLogo($html, $site);
-        $html        = $this->injectPageHeroImage($html, (int)$page['id']);
+        $html        = $this->injectPageHeroImage($html, (int)$page['id'], $site);
         $html = $this->injectPageHeroVideo($html, $site, (int)$page['id']);
         $html = $this->injectBodyPageKey($html, $pageKey);
         $html = $this->normalizeLegacyFrontendMarkup($html);
@@ -408,10 +408,13 @@ HTML;
         return rtrim($site['domain'], '/') . '/' . ltrim($path, '/');
     }
 
-    private function injectPageHeroImage(string $html, int $pageId): string
+    private function injectPageHeroImage(string $html, int $pageId, array $site = []): string
     {
         $block = $this->blocks->findByKey($pageId, 'hero_bg');
         $url = $block ? $this->normalizePublicAssetUrl((string)($block['content'] ?? '')) : '';
+        if ($url === '') {
+            $url = $this->normalizePublicAssetUrl((string)($site['default_hero_poster_url'] ?? ''));
+        }
         if ($url === '') {
             return $html;
         }
@@ -546,7 +549,7 @@ HTML;
 
         $page = $this->pages->findById($pageId);
         $isHomepage = trim((string)($page['url_path'] ?? '')) === '';
-        // Priorita: 1) page hero_video, 2) homepage site default video, 3) page hero_bg foto, 4) site default video.
+        // Priorita: 1) page hero_video, 2) homepage site default video, 3) page hero_bg foto, 4) site default poster foto, 5) site default video.
         $videoBlock = $this->blocks->findByKey($pageId, 'hero_video');
         $pageVideo = $videoBlock ? $this->normalizePublicAssetUrl((string)($videoBlock['content'] ?? '')) : '';
 
@@ -563,6 +566,10 @@ HTML;
             $pagePhoto = $photoBlock ? $this->normalizePublicAssetUrl((string)($photoBlock['content'] ?? '')) : '';
             if ($videoHtml === '' && $pagePhoto !== '') {
                 $videoHtml = $this->buildHeroImageHtml($pagePhoto);
+            }
+
+            if ($videoHtml === '' && $posterUrl !== '') {
+                $videoHtml = $this->buildHeroImageHtml($posterUrl);
             }
 
             if ($videoHtml === '' && $defaultVideo !== '') {
