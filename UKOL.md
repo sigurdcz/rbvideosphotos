@@ -1,23 +1,22 @@
-# UKOL: Dodelani Elegant White podle aktualni kontroly
+# UKOL: Diagnostika obrazku na live webu
 
 Datum: 2026-07-04
-Zadani: Opravit zbyvajici problemy na homepage po kontrole live webu: spatne kontakty v paticce, chybejici adresa, necitelna tlacitka a footer, prilis kontrastni kontaktni sekce, proces podle reference, sjednoceni sekce Co nabizime a znovunahrani obrazku.
+Zadani: Zjistit proc se obrazky na live webu stale nevykresluji, i kdyz request v prohlizeci vraci 200 OK a `Content-Type: image/webp`.
 
 ## Kroky
 
-- [x] 1. Opravit demo kontaktni data vcetne adresy a cisteho renderingu paticky
-- [x] 2. Sjednotit HP sekci Co nabizime do jedne horni sekce s obrazkem
-- [x] 3. Upravit viditelnost tlacitek, footer a jemnejsi kontaktni barevne schema
-- [x] 4. Upravit sekci Jak to probiha podle referencniho navrhu
-- [x] 5. Upravit deploy tak, aby se repo media znovu nahrala na server
-- [x] 6. Overit syntaxi, diff a pripravit commit/push
+- [x] 1. Overit live URL obrazku a obsah odpovedi
+- [x] 2. Porovnat live HTML/CSS s aktualnim kodem a zjistit, zda obrazky nekryje styl nebo runtime
+- [x] 3. Opravit primarni pricinu bez tiche nahrady
+- [x] 4. Overit vysledek a podle potreby commit/push
 
 ## Poznamky
 
-- Success signal: footer na HP ukazuje spravne telefony, email a adresu; spodni odkazy jsou citelne; CTA tlacitka maji citelnou textaci; kontaktni sekce je jemne kremovo-zlata; Co nabizime neni duplicitni; proces ma 5 kroku z reference; obrazky se po deployi maji odkud nacist.
+- Success signal: konkretni live URL obrazku vraci platny obrazovy soubor a karta/sekce na homepage ho viditelne vykresli, ne jen placeholder s 200 odpovedi.
+- Nalezeno: live obrazek vracel `EF BB BF` pred `RIFF`, tedy PHP posilalo UTF-8 BOM pred binarni WebP data.
+- Oprava: odstraneny BOM z `public/index.php`, ktery obsluhuje `/media/...`; odstranen i BOM z `admin/views/settings/index.php`, aby se stejny problem nevracel v admin renderu.
+- Overeno lokalne: media response zacina `RIFF....WEBP`, bez `EF BB BF`.
 
 ## Vysledek
 
-- Footer bere ciste serverove kontaktni radky, doplni demo adresu pro RB kontakt a JS uz nelepi labely do hodnot.
-- Homepage ma jednu sekci Co nabizime s `weare2.png` zdrojem, proces ma 5 referencnich kroku a CTA/footer/kontakt maji citelnejsi schema.
-- Deploy znovu zahrnuje `storage/media`, cache a logy zustavaji vynechane.
+Primarni pricina byla UTF-8 BOM na zacatku `public/index.php`, ktery obsluhuje `/media/...`. Po odstraneni BOM lokalni media response zacina validni WebP hlavickou `RIFF....WEBP`; stejne byl odstranen BOM z admin settings view.

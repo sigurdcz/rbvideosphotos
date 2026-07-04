@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $pageTitle = 'Nastaveni webu';
 $h = fn($v) => htmlspecialchars((string)($v ?? ''));
 $media = $media ?? [];
