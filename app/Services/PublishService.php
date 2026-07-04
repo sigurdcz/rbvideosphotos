@@ -151,6 +151,7 @@ class PublishService
                 'page_key' => $pageKey,
             ]);
         }
+        $html = $this->injectHomepageMissingSections($html, $blocks, $isHome);
         $html = $this->injectHomepageAboutVisualSource($html, (int)$page['id']);
         $html = $this->renderer->injectAssets($html, $css, $js);
 
@@ -446,6 +447,89 @@ HTML;
         }
 
         return preg_replace('/(<body\b[^>]*>)/i', '$1' . $source, $html, 1) ?? $html;
+    }
+
+    private function blockContent(array $blocks, string $key): string
+    {
+        foreach ($blocks as $block) {
+            if (($block['block_key'] ?? '') === $key) {
+                return trim((string)($block['content'] ?? ''));
+            }
+        }
+
+        return '';
+    }
+
+    private function injectHomepageMissingSections(string $html, array $blocks, bool $isHome): string
+    {
+        if (!$isHome) {
+            return $html;
+        }
+
+        $sections = '';
+        if (!preg_match('~<section\b[^>]*\bid=(["\'])cenik\1~i', $html)) {
+            $pricingBody = $this->blockContent($blocks, 'pricing_body') ?: $this->blockContent($blocks, 'cenik_body');
+            if ($pricingBody !== '') {
+                $pricingTitle = $this->blockContent($blocks, 'pricing_title') ?: $this->blockContent($blocks, 'cenik_title') ?: 'Cenik';
+                $pricingIntro = $this->blockContent($blocks, 'pricing_intro') ?: $this->blockContent($blocks, 'cenik_intro');
+                $pricingCta = $this->blockContent($blocks, 'pricing_cta') ?: $this->blockContent($blocks, 'cenik_cta');
+                $sections .= '<section class="section ew-pricing hp-pricing" id="cenik"><div class="container">'
+                    . '<p class="section-label">Cenik</p>'
+                    . '<h2 class="section-title">' . $pricingTitle . '</h2>'
+                    . ($pricingIntro !== '' ? '<p class="section-intro">' . $pricingIntro . '</p>' : '')
+                    . $pricingBody
+                    . $pricingCta
+                    . '</div></section>';
+            }
+        }
+
+        if (!preg_match('~<section\b[^>]*\bid=(["\'])blog\1~i', $html)) {
+            $blogCards = $this->blockContent($blocks, 'blog_1') . $this->blockContent($blocks, 'blog_2') . $this->blockContent($blocks, 'blog_3');
+            if (trim($blogCards) !== '') {
+                $blogTitle = $this->blockContent($blocks, 'blog_title') ?: 'Blog a clanky';
+                $blogIntro = $this->blockContent($blocks, 'blog_intro');
+                $blogCta = $this->blockContent($blocks, 'blog_cta');
+                $sections .= '<section class="section ew-blog hp-blog-section" id="blog"><div class="container">'
+                    . '<p class="section-label">Blog</p>'
+                    . '<h2 class="section-title">' . $blogTitle . '</h2>'
+                    . ($blogIntro !== '' ? '<p class="section-intro">' . $blogIntro . '</p>' : '')
+                    . '<div class="hp-blog-grid">' . $blogCards . '</div>'
+                    . $blogCta
+                    . '</div></section>';
+            }
+        }
+
+        if (!preg_match('~<section\b[^>]*\bid=(["\'])proces\1~i', $html)) {
+            $processBody = $this->blockContent($blocks, 'process_body');
+            if ($processBody === '') {
+                $processBody = '<div class="ew-process-list">'
+                    . '<article><span>01</span><i class="ew-process-icon ew-process-icon--date"></i><h3>Domluva terminu</h3><p>Ozvete se nam a spolecne si domluvime detaily.</p></article>'
+                    . '<article><span>02</span><i class="ew-process-icon ew-process-icon--plan"></i><h3>Foceni / nataceni</h3><p>Prirozene zachytime vas pribeh a emoce.</p></article>'
+                    . '<article><span>03</span><i class="ew-process-icon ew-process-icon--camera"></i><h3>Uprava</h3><p>Peclive vybereme a upravime nejlepsi zabery.</p></article>'
+                    . '<article><span>04</span><i class="ew-process-icon ew-process-icon--send"></i><h3>Predani</h3><p>Dostanete hotove fotografie a video v nejvyssi kvalite.</p></article>'
+                    . '</div>';
+            }
+            $processLabel = $this->blockContent($blocks, 'process_label') ?: 'Jak to probiha';
+            $processTitle = $this->blockContent($blocks, 'process_title') ?: 'Jednoduchy proces, skvely vysledek';
+            $processIntro = $this->blockContent($blocks, 'process_intro');
+            $sections .= '<section class="section hp-process" id="proces"><div class="container">'
+                . '<p class="section-label">' . $processLabel . '</p>'
+                . '<h2 class="section-title">' . $processTitle . '</h2>'
+                . ($processIntro !== '' ? '<p class="section-intro">' . $processIntro . '</p>' : '')
+                . $processBody
+                . '</div></section>';
+        }
+
+        if ($sections === '') {
+            return $html;
+        }
+
+        $inserted = preg_replace('~(<section\b[^>]*\bid=(["\'])kontakt\2[^>]*>)~i', $sections . '$1', $html, 1, $count);
+        if ($count > 0 && is_string($inserted)) {
+            return $inserted;
+        }
+
+        return preg_replace('~(</main>)~i', $sections . '$1', $html, 1) ?? $html;
     }
 
     private function injectPageHeroVideo(string $html, array $site, int $pageId): string
@@ -895,6 +979,63 @@ CSS;
         return $icons[$type] ?? $icons['link'];
     }
 
+    private function normalizePhoneForHref(string $phone): string
+    {
+        $normalized = preg_replace('/[^\d+]/', '', $phone) ?? '';
+        if (str_starts_with($normalized, '00')) {
+            $normalized = '+' . substr($normalized, 2);
+        }
+        if (str_starts_with($normalized, '420') && strlen($normalized) === 12) {
+            $normalized = '+' . $normalized;
+        }
+        return $normalized;
+    }
+
+    private function formatPhoneForDisplay(string $phone): string
+    {
+        $normalized = $this->normalizePhoneForHref($phone);
+        $digits = ltrim($normalized, '+');
+        if (strlen($digits) === 12 && str_starts_with($digits, '420')) {
+            return '+420 ' . substr($digits, 3, 3) . ' ' . substr($digits, 6, 3) . ' ' . substr($digits, 9, 3);
+        }
+        if (strlen($digits) === 9) {
+            return substr($digits, 0, 3) . ' ' . substr($digits, 3, 3) . ' ' . substr($digits, 6, 3);
+        }
+        return trim($phone);
+    }
+
+    private function extractPhoneNumbersFromText(string $plain): array
+    {
+        $phones = [];
+        if (preg_match_all('/(?:\+?\d[\d\s().\-]{7,}\d)/u', $plain, $matches)) {
+            foreach ($matches[0] as $candidate) {
+                $normalized = $this->normalizePhoneForHref((string)$candidate);
+                $digits = ltrim($normalized, '+');
+                if (strlen($digits) === 18) {
+                    foreach (str_split($digits, 9) as $chunk) {
+                        if (strlen($chunk) === 9 && !in_array($chunk, $phones, true)) {
+                            $phones[] = $chunk;
+                        }
+                    }
+                    continue;
+                }
+                if (strlen($digits) === 24 && str_starts_with($digits, '420')) {
+                    foreach (str_split($digits, 12) as $chunk) {
+                        if (strlen($chunk) === 12 && !in_array('+' . $chunk, $phones, true)) {
+                            $phones[] = '+' . $chunk;
+                        }
+                    }
+                    continue;
+                }
+                if (strlen($digits) >= 9 && !in_array($normalized, $phones, true)) {
+                    $phones[] = $normalized;
+                }
+            }
+        }
+
+        return $phones;
+    }
+
     private function enrichContactWithLegacyBlocks(int $siteId, array $contact): array
     {
         $hasPrimaryContact = false;
@@ -935,18 +1076,7 @@ CSS;
             $contact['email'] = $m[0];
         }
 
-        $phones = [];
-        if (preg_match_all('/(?:\+?\d[\d\s().\-]{7,}\d)/u', $plain, $matches)) {
-            foreach ($matches[0] as $candidate) {
-                $normalized = preg_replace('/[^\d+]/', '', $candidate) ?? '';
-                if (strlen(ltrim($normalized, '+')) < 9) {
-                    continue;
-                }
-                if (!in_array($normalized, $phones, true)) {
-                    $phones[] = $normalized;
-                }
-            }
-        }
+        $phones = $this->extractPhoneNumbersFromText($plain);
 
         foreach (['phone_1', 'phone_2', 'phone_3'] as $index => $key) {
             if (trim((string)($contact[$key] ?? '')) === '' && isset($phones[$index])) {
@@ -1009,8 +1139,8 @@ CSS;
             if ($phone === '') {
                 continue;
             }
-            $tel = preg_replace('/\s+/', '', $phone);
-            $contactItems[] = '<a class="site-footer-contact__item" href="tel:' . $h($tel) . '"><span>Telefon</span><strong>' . $h($phone) . '</strong></a>';
+            $tel = $this->normalizePhoneForHref($phone);
+            $contactItems[] = '<a class="site-footer-contact__item" href="tel:' . $h($tel) . '"><span>Telefon</span><strong>' . $h($this->formatPhoneForDisplay($phone)) . '</strong></a>';
         }
 
         $email = trim((string)($contact['email'] ?? ''));

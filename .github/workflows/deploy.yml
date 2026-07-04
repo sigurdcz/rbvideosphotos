@@ -71,3 +71,6 @@ jobs:
             **/_deploy/**
             **/.env
             **/.env.*
+            **/storage/media/**
+            **/storage/cache/**
+            **/storage/logs/**

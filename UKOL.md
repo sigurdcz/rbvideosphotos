@@ -1,39 +1,26 @@
-# UKOL: SEO a accessibility audit verejneho webu
+# UKOL: Oprava regresi Elegant White frontendu
 
 Datum: 2026-07-04
-Zadani: Provest audit verejneho webu v `seo-editor` a udelat cilene upravy pro SEO, accessibility, agentic browsing, crawlery a stabilitu frontendu bez rozbiti designu.
+Zadani: Opravit regresi verejneho webu po poslednich upravach grafiky a SEO, hlavne chybejici HP sekce, kontrast paticky, kontaktni blok, hero overlay a nacitani obrazku.
 
 ## Kroky
 
-- [x] 1. Zmapovat runtime vystupy a auditovat kriticke body
-  Popis: Projit `public/index.php`, SEO renderery, publish pipeline a verejne routy, najit hlavni problemy v semantice, metadatach, formularech, schema datech, `llms.txt`, `robots.txt` a `sitemap.xml`.
-  Hotovo kdyz: Existuje konkretni seznam problemu a mist v kodu, kde se maji opravy udelat.
-
-- [x] 2. Upravit globalni runtime pro semantiku, accessibility a metadata
-  Popis: Opravit sdileny frontend rendering tak, aby mel spolehlivejsi landmarky, programove nazvy, skip-link, focus states, bezpecne odkazy, favicon/meta injekci a stabilnejsi HTML pro crawlery.
-  Hotovo kdyz: Verejne stranky dostanou lepsi semanticky a pristupny zaklad bez zbytecnych vizualnich regresi.
-
-- [x] 3. Upravit specialni stranky a formulare
-  Popis: Zkontrolovat blog, portfolio, FAQ, kontakt a dalsi specialni handlery, doplnit chybejici metadata, JSON-LD, popisy formulare a strojove citelne prvky.
-  Hotovo kdyz: Kriticke verejne stranky splnuji pozadovane SEO/accessibility minimum a formular je srozumitelny i bez vizualniho kontextu.
-
-- [x] 4. Zrevidovat publish vystupy pro crawlery a AI
-  Popis: Overit a upravit generatory `llms.txt`, `robots.txt` a `sitemap.xml`, pripadne navrh WebMCP pouze dokumentacne, pokud v projektu nema realnou podporu.
-  Hotovo kdyz: Publikovane discovery soubory odpovidaji realnym URL a neblokuji dulezity obsah.
-
-- [x] 5. Overit zmeny a zapsat dopady do dokumentace
-  Popis: Spustit dostupne kontroly, zkontrolovat diff, vyhodnotit relevantni `.md` dokumentaci a pripravit zaverecny checklist i rizika.
-  Hotovo kdyz: Zmeny jsou overene v dostupnem rozsahu a finalni shrnuti pokryje audit, upravy i otevrene body k rucnimu testu.
+- [x] 1. Najit zdroj regresi v aktualnim HTML/CSS runtime
+- [x] 2. Vratit chybejici HP sekce Blog/clanky, Cenik a Jak to probiha
+- [x] 3. Opravit hero overlay tak, aby se nerozmazavaly CTA a obsah
+- [x] 4. Opravit kontrast kontaktni sekce a paticek vcetne kontaktu
+- [x] 5. Opravit nacitani obrazku na kartach a verejnych strankach
+- [x] 6. Overit verejne routy lokalne a pripravit commit/push
 
 ## Poznamky
 
-- V worktree uz existuji nesouvisejici rozdelane zmeny v `Templates/elegant-white/assets/theme.js`, `app/Services/DemoContentSeeder.php` a `app/Services/HomepageContentService.php`; nesmi se potichu prepsat ani revertovat.
-- Audit se soustredi hlavne na verejny runtime `public/index.php`, SEO/render sluzby a publish pipeline, protoze odtud se generuje HTML i discovery soubory pro crawlery.
-- Dosavadni nalezy: relativni canonical na homepage, specialni stranky bez sdileneho SEO headu, FAQ akordeon bez skutecnych button ovladacu, blog post title zdvojoval nazev webu, contact POST neoveroval CSRF a `llms.txt`/`sitemap.xml` mely zastaralou strukturu URL.
-- Rozpracovane soubory tohoto ukolu: `app/Services/SeoRenderer.php`, `app/Services/SitemapGenerator.php`, `app/Services/LlmsTxtGenerator.php`, `public/index.php`, `public/assets/frontend-runtime.css`.
-- Overeni: `php -l` probehl pro vsechny upravene PHP soubory; HTTP kontrola probehla pro `/`, `/faq`, `/kontakt`, `/blog`, jeden blog post, `llms.txt`, `sitemap.xml` a `robots.txt`.
-- Dokumentace upravena v `README.md`, aby odpovidala nove strukture `llms.txt` a zahrnuti dynamickych rout do sitemap.
+- Success signal: homepage znovu obsahuje sekce Blog/clanky, Cenik a Jak to probiha; hero tlacitka a obsah nejsou bile zastrene; kontakt ma citelne zlute pozadi/panel; paticky jsou citelne na vsech typech stran; kontakty v paticce maji spravnou textaci; obrazky se znovu nacitaji.
+- Nalezeno: aktualni homepage HTML vubec neobsahovalo `#blog`, `#cenik` ani `#proces`; `theme.js` je navic umel skryvat tridou `ew-home-hidden`.
+- Upraveno `public/index.php`: chybejici homepage sekce se doplnuji z fallback bloku a footer umi rozdelit/stylovat slepene telefonni hodnoty.
+- Upraveno `PublishService.php`: stejne doplneni homepage sekci a cisteni telefonu se pouzije i pro publikovane HTML.
+- Upraveno `Templates/elegant-white/assets/theme.js` a `theme.css`: `#blog`/`#cenik` se neschovavaji, hero iframe neni nulove pruhledny a kontakt/footer dostaly citelny kontrast.
+- Upraveny deploy workflow exclude: `storage/media`, `storage/cache` a `storage/logs` zustavaji serverove adresare a FTP sync je nema mazat.
 
 ## Vysledek
 
-Verejny web ma opravene canonical a social metadata, specialni stranky dostaly sdileny SEO head a JSON-LD, FAQ je ovladatelne pres skutecna tlacitka, kontaktnimu POST pribyla CSRF a explicitni validace, a discovery soubory byly zregenerovany do aktualni podoby.
+Opraveny regresni chyby Elegant White: homepage runtime doplnuje chybejici sekce Cenik, Blog a Jak to probiha, hero video zustava viditelne, kontaktni blok ma zlute pozadi, paticky maji tmavy kontrast a ciste telefony. Deploy workflow uz necha `storage/media`, cache a logy mimo FTP sync, aby serverova media nemizela.

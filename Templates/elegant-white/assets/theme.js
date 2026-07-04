@@ -28,7 +28,7 @@
   }
 
   function isHomepage() {
-    return body.getAttribute('data-cms-page-key') === 'homepage' || !!qs('.hp-hero');
+    return body.getAttribute('data-cms-page-key') === 'homepage' || !!qs('.hp-hero, header.hero, .hero#hero');
   }
 
   function initHeaderScroll() {
@@ -145,7 +145,7 @@
   }
 
   function enhanceHero() {
-    var hero = qs('.hp-hero');
+    var hero = qs('.hp-hero, header.hero, .hero#hero');
     if (!hero) return;
     hero.classList.add('ew-hero');
     qsa('.hero-cta-wrap a, .hp-hero a.btn, .hp-hero .btn-primary, .hp-hero .btn-secondary', hero).forEach(function (link) {
@@ -258,9 +258,8 @@
   }
 
   function hideNonTargetHomeSections() {
-    ['blog', 'cenik'].forEach(function (id) {
-      var section = qs('#' + id);
-      if (section) section.classList.add('ew-home-hidden');
+    qsa('#blog, #cenik').forEach(function (section) {
+      section.classList.remove('ew-home-hidden');
     });
   }
 
