@@ -924,6 +924,7 @@ CSS;
         $phone1 = '+420 792 483 583';
         $phone2 = '+420 604 225 032';
         $email = 'rb_vp@volny.cz';
+        $address = 'Horní nám. 583, 779 11 Olomouc';
         $formEmail = ContactRepository::DEFAULT_FORM_EMAIL;
 
         (new ContactRepository())->upsert($siteId, [
@@ -931,6 +932,8 @@ CSS;
             'phone_2' => $phone2,
             'phone_3' => '',
             'email' => $email,
+            'address_1' => $address,
+            'address_2' => '',
             'form_email' => $formEmail,
             'social_1_type' => 'instagram',
             'social_1_url' => 'https://www.instagram.com/rb_videos_photos/',
@@ -1364,6 +1367,7 @@ CSS;
             'contact_info',
             'contact_card',
             'contact_visual',
+            'jb-about-visual__media',
             'process_label',
             'process_title',
             'process_intro',
@@ -1419,6 +1423,19 @@ CSS;
             'autofill_disabled' => 1,
         ]);
 
+        if (!empty($this->demoMedia['weare2.png'])) {
+            $visual = $this->mediaPathById((int) $this->demoMedia['weare2.png']);
+            if ($visual !== '') {
+                $this->blocks->upsert($pageId, 'jb-about-visual__media', [
+                    'block_type' => 'image',
+                    'label' => 'Co nabizime - vizual',
+                    'content' => $visual,
+                    'sort_order' => 86,
+                    'autofill_disabled' => 1,
+                ]);
+            }
+        }
+
         if (!empty($this->demoMedia['kontakt.png'])) {
             $visual = $this->mediaPathById((int) $this->demoMedia['kontakt.png']);
             if ($visual !== '') {
@@ -1436,10 +1453,11 @@ CSS;
     private function homepageProcessHtml(): string
     {
         $steps = [
-            ['01', 'ew-process-icon--date', 'Domluva terminu', 'Ozvete se nam a spolecne si domluvime detaily.'],
-            ['02', 'ew-process-icon--plan', 'Foceni / nataceni', 'Prirozene zachytime vas pribeh a emoce.'],
-            ['03', 'ew-process-icon--camera', 'Uprava', 'Peclive vybereme a upravime nejlepsi zabery.'],
-            ['04', 'ew-process-icon--send', 'Predani', 'Dostanete hotove fotografie a video v nejvyssi kvalite.'],
+            ['01', 'ew-process-icon--form', 'Nezavazna poptavka', 'Ozvete se nam a probereme vase predstavy a pozadavky.'],
+            ['02', 'ew-process-icon--plan', 'Konzultace s planem', 'Spolecne naplanujeme prubeh a detaily.'],
+            ['03', 'ew-process-icon--camera', 'Foceni & nataceni', 'Zachytime prirozene momenty bez zbytecnych zasahu.'],
+            ['04', 'ew-process-icon--edit', 'Upravy & vyber', 'Peclive upravime a pripravime ty nejlepsi zabery.'],
+            ['05', 'ew-process-icon--send', 'Dodani & sdileni', 'Predame hotove fotografie a video v nejvyssi kvalite.'],
         ];
 
         $html = '<div class="ew-process-list">';

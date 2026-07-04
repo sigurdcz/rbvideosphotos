@@ -428,6 +428,9 @@ HTML;
 
         $block = $this->blocks->findByKey($pageId, 'jb-about-visual__media');
         $url = $block ? $this->homepageContent->resolveOptimizedMediaUrl((int)$page['site_id'], (string)($block['content'] ?? ''), 102400) : '';
+        if ($url === '') {
+            $url = $this->resolveDemoMediaUrlByFilename((int)$page['site_id'], 'weare2.png');
+        }
         $sourcePattern = '~<(?:img|span)\b[^>]*\bclass=(["\'])[^"\']*\bjb-about-visual__source\b[^"\']*\1[^>]*(?:>.*?</span>|>)~is';
 
         if ($url === '') {
@@ -503,10 +506,11 @@ HTML;
             $processBody = $this->blockContent($blocks, 'process_body');
             if ($processBody === '') {
                 $processBody = '<div class="ew-process-list">'
-                    . '<article><span>01</span><i class="ew-process-icon ew-process-icon--date"></i><h3>Domluva terminu</h3><p>Ozvete se nam a spolecne si domluvime detaily.</p></article>'
-                    . '<article><span>02</span><i class="ew-process-icon ew-process-icon--plan"></i><h3>Foceni / nataceni</h3><p>Prirozene zachytime vas pribeh a emoce.</p></article>'
-                    . '<article><span>03</span><i class="ew-process-icon ew-process-icon--camera"></i><h3>Uprava</h3><p>Peclive vybereme a upravime nejlepsi zabery.</p></article>'
-                    . '<article><span>04</span><i class="ew-process-icon ew-process-icon--send"></i><h3>Predani</h3><p>Dostanete hotove fotografie a video v nejvyssi kvalite.</p></article>'
+                    . '<article><span>01</span><i class="ew-process-icon ew-process-icon--form"></i><h3>Nezavazna poptavka</h3><p>Ozvete se nam a probereme vase predstavy a pozadavky.</p></article>'
+                    . '<article><span>02</span><i class="ew-process-icon ew-process-icon--plan"></i><h3>Konzultace s planem</h3><p>Spolecne naplanujeme prubeh a detaily.</p></article>'
+                    . '<article><span>03</span><i class="ew-process-icon ew-process-icon--camera"></i><h3>Foceni &amp; nataceni</h3><p>Zachytime prirozene momenty bez zbytecnych zasahu.</p></article>'
+                    . '<article><span>04</span><i class="ew-process-icon ew-process-icon--edit"></i><h3>Upravy &amp; vyber</h3><p>Peclive upravime a pripravime ty nejlepsi zabery.</p></article>'
+                    . '<article><span>05</span><i class="ew-process-icon ew-process-icon--send"></i><h3>Dodani &amp; sdileni</h3><p>Predame hotove fotografie a video v nejvyssi kvalite.</p></article>'
                     . '</div>';
             }
             $processLabel = $this->blockContent($blocks, 'process_label') ?: 'Jak to probiha';
@@ -1036,6 +1040,27 @@ CSS;
         return $phones;
     }
 
+    private function ensureRbDemoContactAddress(array $contact): array
+    {
+        $address = trim((string)($contact['address_1'] ?? '')) ?: trim((string)($contact['address_2'] ?? ''));
+        if ($address !== '') {
+            return $contact;
+        }
+
+        $email = strtolower(trim((string)($contact['email'] ?? '')));
+        $phones = preg_replace('/\D+/', '', implode(' ', [
+            (string)($contact['phone_1'] ?? ''),
+            (string)($contact['phone_2'] ?? ''),
+            (string)($contact['phone_3'] ?? ''),
+        ])) ?? '';
+
+        if ($email === 'rb_vp@volny.cz' || str_contains($phones, '792483583') || str_contains($phones, '604225032')) {
+            $contact['address_1'] = 'Horní nám. 583, 779 11 Olomouc';
+        }
+
+        return $contact;
+    }
+
     private function enrichContactWithLegacyBlocks(int $siteId, array $contact): array
     {
         $hasPrimaryContact = false;
@@ -1047,7 +1072,7 @@ CSS;
         }
 
         if ($hasPrimaryContact) {
-            return $contact;
+            return $this->ensureRbDemoContactAddress($contact);
         }
 
         $htmlChunks = [];
@@ -1122,7 +1147,7 @@ CSS;
                 : self::DEFAULT_FORM_EMAIL;
         }
 
-        return $contact;
+        return $this->ensureRbDemoContactAddress($contact);
     }
 
     private function buildRichFooterHtml(array $site): string
@@ -1230,6 +1255,38 @@ CSS;
             return $normalized;
         }
         return '/' . ltrim($normalized, '/');
+    }
+
+    private function resolveDemoMediaUrlByFilename(int $siteId, string $filename): string
+    {
+        try {
+            foreach ($this->media->allBySiteWithVariants($siteId) as $media) {
+                if ((string)($media['original_filename'] ?? '') !== $filename) {
+                    continue;
+                }
+
+                $path = '';
+                foreach (($media['variants'] ?? []) as $variant) {
+                    if (($variant['format'] ?? '') === 'medium' && trim((string)($variant['path'] ?? '')) !== '') {
+                        $path = (string)$variant['path'];
+                        break;
+                    }
+                }
+                if ($path === '') {
+                    $path = (string)($media['storage_path'] ?? '');
+                }
+
+                return $this->normalizePublicAssetUrl($path);
+            }
+        } catch (\Throwable $e) {
+            Logger::infoTo('theme-debug', 'theme.demo.media.error', 'Failed to resolve demo media', [
+                'site_id' => $siteId,
+                'filename' => $filename,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        return '';
     }
 
     private function hasHeroVideoElement(string $html): bool

@@ -210,7 +210,7 @@
       '  </div>' +
       '</div>';
 
-    buildServicesOverview(services, section, sourceContent);
+    section.classList.add('ew-services-single');
   }
 
   function buildServicesOverview(services, afterSection, sourceContent) {
@@ -448,31 +448,77 @@
     var footer = qs('.site-footer-contact');
     if (!footer) return;
 
-    var rows = qsa('a[href^="tel:"], a[href^="mailto:"]', document).map(function (link) {
-      var href = link.getAttribute('href') || '';
-      var value = text(link);
+    function formatPhone(value) {
+      var normalized = (value || '').replace(/[^\d+]/g, '');
+      if (!normalized) return '';
+      if (normalized.indexOf('00420') === 0) normalized = '+420' + normalized.slice(5);
+      if (normalized.charAt(0) !== '+' && normalized.length === 9) {
+        return normalized.replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3');
+      }
+      if (normalized.indexOf('+420') === 0) {
+        var rest = normalized.slice(4).replace(/\D/g, '');
+        if (rest.length === 9) return '+420 ' + rest.replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3');
+      }
+      return value;
+    }
+
+    function cleanContactValue(label, href, value) {
+      var cleaned = (value || '').replace(/\s+/g, ' ').trim();
+      cleaned = cleaned.replace(/^(telefon|tel\.?|e-?mail|email|adresa)\s*[:\-]?/i, '').trim();
+      if (/^tel:/i.test(href)) {
+        var fromHref = href.replace(/^tel:/i, '');
+        var formatted = formatPhone(fromHref);
+        return formatted || formatPhone(cleaned) || cleaned;
+      }
+      if (/^mailto:/i.test(href) && (!cleaned || cleaned.indexOf('@') === -1)) {
+        return href.replace(/^mailto:/i, '').trim();
+      }
+      return cleaned;
+    }
+
+    var rows = qsa('.site-footer-contact__item', footer).map(function (item) {
+      var link = item.matches && item.matches('a') ? item : qs('a', item);
+      var href = link ? (link.getAttribute('href') || '') : '';
+      var labelNode = qs('span', item);
+      var strongNode = qs('strong', item);
+      var label = text(labelNode) || (/^tel:/i.test(href) ? 'Telefon' : (/^mailto:/i.test(href) ? 'E-mail' : 'Adresa'));
+      var value = text(strongNode) || (link ? text(link) : text(item).replace(text(labelNode), ''));
+      value = cleanContactValue(label, href, value);
       if (!value) return null;
-      return {
-        label: /^tel:/i.test(href) ? 'Telefon' : 'E-mail',
-        href: href,
-        value: value
-      };
+      return { label: label, href: href, value: value };
     }).filter(Boolean);
+
+    if (!rows.length) {
+      rows = qsa('a[href^="tel:"], a[href^="mailto:"]', document).map(function (link) {
+        var href = link.getAttribute('href') || '';
+        var label = /^tel:/i.test(href) ? 'Telefon' : 'E-mail';
+        var value = cleanContactValue(label, href, text(link));
+        if (!value) return null;
+        return {
+          label: label,
+          href: href,
+          value: value
+        };
+      }).filter(Boolean);
+    }
 
     var unique = [];
     rows.forEach(function (row) {
-      if (!unique.some(function (item) { return item.href === row.href; })) unique.push(row);
+      var key = row.href || (row.label + ':' + row.value);
+      if (!unique.some(function (item) { return (item.href || (item.label + ':' + item.value)) === key; })) unique.push(row);
     });
-    unique = unique.slice(0, 3);
+    unique = unique.slice(0, 4);
     if (!unique.length) return;
 
     var title = qs('.site-footer-title', footer);
     var titleHtml = title ? title.outerHTML : '';
     footer.innerHTML = titleHtml + unique.map(function (item) {
-      return '<a class="site-footer-contact__item" href="' + escapeHtml(item.href) + '">' +
+      var tag = item.href ? 'a' : 'div';
+      var href = item.href ? ' href="' + escapeHtml(item.href) + '"' : '';
+      return '<' + tag + ' class="site-footer-contact__item"' + href + '>' +
         '<span>' + escapeHtml(item.label) + '</span>' +
         '<strong>' + escapeHtml(item.value) + '</strong>' +
-      '</a>';
+      '</' + tag + '>';
     }).join('');
   }
 

@@ -634,7 +634,7 @@ Pri pokusu o odeslani GA4 eventu runtime zapisuje do konzole `[GA4 Tracking]` st
 - Staging bezi z branche `dev`
 - Deploy probiha pres GitHub Actions a FTP
 - `.env` se nedeployuje
-- `storage/media` se nedeployuje jako soucast buildu
+- `storage/media` se deployuje jako soucast buildu, aby verejne demo/public obrazky byly na hostingu dostupne
 - `public/assets/generated/` se nedeployuje — generuje se pri publishovani
 
 ## Media a obrazky

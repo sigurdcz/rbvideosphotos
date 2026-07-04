@@ -40,7 +40,6 @@ jobs:
             --exclude='storage/database.sqlite' \
             --exclude='storage/database.sqlite-shm' \
             --exclude='storage/database.sqlite-wal' \
-            --exclude='storage/media/' \
             --exclude='storage/cache/' \
             --exclude='storage/logs/' \
             --exclude='vendor/bin/' \
@@ -71,6 +70,5 @@ jobs:
             **/_deploy/**
             **/.env
             **/.env.*
-            **/storage/media/**
             **/storage/cache/**
             **/storage/logs/**

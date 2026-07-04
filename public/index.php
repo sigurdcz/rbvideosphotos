@@ -507,10 +507,11 @@ function injectHomepageMissingSections(string $html, array $blocks, bool $isHome
         $processBody = blockContent($blocks, 'process_body');
         if ($processBody === '') {
             $processBody = '<div class="ew-process-list">'
-                . '<article><span>01</span><i class="ew-process-icon ew-process-icon--date"></i><h3>Domluva terminu</h3><p>Ozvete se nam a spolecne si domluvime detaily.</p></article>'
-                . '<article><span>02</span><i class="ew-process-icon ew-process-icon--plan"></i><h3>Foceni / nataceni</h3><p>Prirozene zachytime vas pribeh a emoce.</p></article>'
-                . '<article><span>03</span><i class="ew-process-icon ew-process-icon--camera"></i><h3>Uprava</h3><p>Peclive vybereme a upravime nejlepsi zabery.</p></article>'
-                . '<article><span>04</span><i class="ew-process-icon ew-process-icon--send"></i><h3>Predani</h3><p>Dostanete hotove fotografie a video v nejvyssi kvalite.</p></article>'
+                . '<article><span>01</span><i class="ew-process-icon ew-process-icon--form"></i><h3>Nezavazna poptavka</h3><p>Ozvete se nam a probereme vase predstavy a pozadavky.</p></article>'
+                . '<article><span>02</span><i class="ew-process-icon ew-process-icon--plan"></i><h3>Konzultace s planem</h3><p>Spolecne naplanujeme prubeh a detaily.</p></article>'
+                . '<article><span>03</span><i class="ew-process-icon ew-process-icon--camera"></i><h3>Foceni &amp; nataceni</h3><p>Zachytime prirozene momenty bez zbytecnych zasahu.</p></article>'
+                . '<article><span>04</span><i class="ew-process-icon ew-process-icon--edit"></i><h3>Upravy &amp; vyber</h3><p>Peclive upravime a pripravime ty nejlepsi zabery.</p></article>'
+                . '<article><span>05</span><i class="ew-process-icon ew-process-icon--send"></i><h3>Dodani &amp; sdileni</h3><p>Predame hotove fotografie a video v nejvyssi kvalite.</p></article>'
                 . '</div>';
         }
         $processLabel = blockContent($blocks, 'process_label') ?: 'Jak to probiha';
@@ -1156,6 +1157,9 @@ function injectHomepageAboutVisualSource(string $html, int $pageId, int $siteId,
     try {
         $block = (new BlockRepository())->findByKey($pageId, 'jb-about-visual__media');
         $url = $block ? (new HomepageContentService())->resolveOptimizedMediaUrl($siteId, (string)($block['content'] ?? ''), 102400) : '';
+        if ($url === '') {
+            $url = resolveDemoMediaUrlByFilename($siteId, 'weare2.png');
+        }
     } catch (\Throwable $e) {
         Logger::infoTo('theme-debug', 'theme.about.visual.error', 'Failed to resolve homepage about visual', [
             'page_id' => $pageId,
@@ -1566,6 +1570,38 @@ function normalizePublicAssetUrl(string $value): string
     return '/' . ltrim($normalized, '/');
 }
 
+function resolveDemoMediaUrlByFilename(int $siteId, string $filename): string
+{
+    try {
+        foreach ((new MediaRepository())->allBySiteWithVariants($siteId) as $media) {
+            if ((string)($media['original_filename'] ?? '') !== $filename) {
+                continue;
+            }
+
+            $path = '';
+            foreach (($media['variants'] ?? []) as $variant) {
+                if (($variant['format'] ?? '') === 'medium' && trim((string)($variant['path'] ?? '')) !== '') {
+                    $path = (string)$variant['path'];
+                    break;
+                }
+            }
+            if ($path === '') {
+                $path = (string)($media['storage_path'] ?? '');
+            }
+
+            return normalizePublicAssetUrl($path);
+        }
+    } catch (\Throwable $e) {
+        Logger::infoTo('theme-debug', 'theme.demo.media.error', 'Failed to resolve demo media', [
+            'site_id' => $siteId,
+            'filename' => $filename,
+            'error' => $e->getMessage(),
+        ]);
+    }
+
+    return '';
+}
+
 function normalizeSocialType(string $type, string $url = ''): string
 {
     $value = strtolower(trim($type));
@@ -1704,6 +1740,27 @@ function extractPhoneNumbersFromText(string $plain): array
     return $phones;
 }
 
+function ensureRbDemoContactAddress(array $contact): array
+{
+    $address = trim((string)($contact['address_1'] ?? '')) ?: trim((string)($contact['address_2'] ?? ''));
+    if ($address !== '') {
+        return $contact;
+    }
+
+    $email = strtolower(trim((string)($contact['email'] ?? '')));
+    $phones = preg_replace('/\D+/', '', implode(' ', [
+        (string)($contact['phone_1'] ?? ''),
+        (string)($contact['phone_2'] ?? ''),
+        (string)($contact['phone_3'] ?? ''),
+    ])) ?? '';
+
+    if ($email === 'rb_vp@volny.cz' || str_contains($phones, '792483583') || str_contains($phones, '604225032')) {
+        $contact['address_1'] = 'Horní nám. 583, 779 11 Olomouc';
+    }
+
+    return $contact;
+}
+
 function enrichContactWithLegacyBlocks(int $siteId, array $contact): array
 {
     $hasPrimaryContact = false;
@@ -1715,7 +1772,7 @@ function enrichContactWithLegacyBlocks(int $siteId, array $contact): array
     }
 
     if ($hasPrimaryContact) {
-        return $contact;
+        return ensureRbDemoContactAddress($contact);
     }
 
     $pages = new PageRepository();
@@ -1792,7 +1849,7 @@ function enrichContactWithLegacyBlocks(int $siteId, array $contact): array
             : defaultContactFormEmail();
     }
 
-    return $contact;
+    return ensureRbDemoContactAddress($contact);
 }
 
 function buildFooterSocialsHtml(int $siteId): string
