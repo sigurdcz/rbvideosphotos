@@ -1,38 +1,39 @@
-# UKOL: Elegant White final homepage tuning
+# UKOL: Elegant White data driven audit
 
 Datum: 2026-07-04
-Zadani: Doladit sablonu `Elegant White` podle noveho ciloveho screenshotu, protoze aktualni stav je stale prilis uzky, vybledly a ma nepresne texty/sekce.
+Zadani: Zrevidovat sablonu `Elegant White` a odstranit obsahove hardcody tak, aby fotky, texty a bloky vychazely z DB/demo seederu misto z JS nebo statickeho HTML.
 
 ## Cil
 
-Homepage Elegant White ma byt vyrazne bliz cilovemu screenshotu: vetsi kontrast a meritko, sirsi hero s citelnym textem, vetsi about/portfolio/sluzby bloky, recenze a FAQ ve spravnem stylu, 5 kroku procesu a kontakt s fotkou kamery.
+`Elegant White` smi v JS/CSS resit strukturu, rozlozeni a styl, ale nesmi si vymyslet obsah. Texty, fotky, sluzby, reference, FAQ, kontakt a proces musi prichazet z runtime DOMu vygenerovaneho z databaze, pripadne byt zalozene demo seederem jako normalni obsah.
 
 ## Kroky
 
-- [x] 1. Zkontrolovat aktualni JS/CSS pro Elegant White
-  Popis: Najit mista, ktera zpusobuji male meritko, vybledly hero, useknute FAQ a chybejici 5. procesni krok.
-  Hotovo kdyz: Je jasne, ktere selektory a DOM transformace upravit.
+- [x] 1. Najit obsahove hardcody v `Elegant White`
+  Popis: Projit JS/HTML sablony a identifikovat staticke texty, obrazky a fallbacky, ktere obchazi DB.
+  Vysledek: `theme.js` obsahoval hardcoded hero, navigacni CTA, about texty, fallback sluzby, FAQ, proces a `/media/2026/07/kontakt.png`.
 
-- [x] 2. Upravit JS obsah a zdroje sekci
-  Popis: Doladit textace hero/about/sluzby/FAQ/proces a vybrat kontaktni vizual tak, aby primarne pouzil kamerovou fotku misto svatebni.
-  Hotovo kdyz: DOM transformace odpovida cilovemu poradi a obsahu.
+- [x] 2. Zkontrolovat dostupna DB/demo data
+  Popis: Projit demo seeder, runtime renderery a existujici bloky/sluzby/FAQ/reference, aby bylo jasne, odkud se obsah ma brat.
+  Vysledek: Sluzby, portfolio, FAQ, reference a kontakt uz maji DB zdroje. Pro Elegant White chybely explicitni homepage bloky pro proces a kontaktni vizual.
 
-- [x] 3. Upravit CSS meritko, kontrast a layout
-  Popis: Zvetsit hlavni bloky, omezit vybledlost hero, zlepsit kontrast, portfolio a sluzby roztahnout jako v cili a formular/karty zaoblit.
-  Hotovo kdyz: Vzhled je citelne blize referenci a nepusobi zmensene.
+- [x] 3. Upravit `Elegant White` na datove rizene transformace
+  Popis: Odstranit hardcoded texty/fotky/fallback obsah z JS a nechat JS pouze prekladat existujici DOM/data atributy do cilove kompozice.
+  Vysledek: JS uz neprepisuje obsahove texty ani nevklada staticke obrazky. Pokud data chybi, sekci nevymysli skrytym fallbackem.
 
-- [x] 4. Otestovat diff a syntaxi dostupnymi nastroji
-  Popis: Spustit dostupne kontroly a zkontrolovat pracovni strom.
-  Hotovo kdyz: `git diff --check` projde a jsou vypsana pripadna omezeni.
+- [x] 4. Doplnit demo seeder, pokud chybi obsah
+  Popis: Presunout potrebne vychozi textace/media do demo obsahu misto do sablonoveho JS.
+  Vysledek: Demo seeder zaklada `process_*` bloky a `contact_visual` image blok a doplni pro ne placeholdery do homepage template.
+
+- [x] 5. Otestovat diff a dostupne kontroly
+  Popis: Spustit dostupne kontroly a overit, ze nezustaly staticke obsahove fallbacky.
+  Vysledek: PHP lint pro upravene sluzby prosel, `git diff --check` prosel. `node --check` neslo spustit, protoze v prostredi neni `node`.
 
 ## Poznamky
 
-- Aktualni cilovy screenshot ma silnejsi text, vetsi obsahovy kontejner a mene vybledly hero nez soucasny stav.
-- `theme.js` upravuje obsah Elegant White homepage: silnejsi hero text, nove CTA, kontaktni vizual pevne na `/media/2026/07/kontakt.png`, 4 prehledove sluzby vcetne fallbacku, FAQ zavrene ve vychozim stavu a proces na 5 kroku.
-- `theme.css` dostal finalni override pro homepage: sirsi kontejnery, vetsi hero/about/portfolio/sluzby, vyssi kontrast textu, vetsi ikony, sirsi FAQ/proces a vetsi kontaktni panel.
-- Dokumentace mimo `UKOL.md` neni menena, protoze jde o konkretni sablonovy styling bez zmeny verejne API nebo obsluhy administrace.
-- Overeni: `git diff --check` proslo. `node --check Templates\elegant-white\assets\theme.js` neslo spustit, protoze `node` neni v aktualnim shellu dostupny.
+- Web se podle zadani nema brat jako lokalne provozovana instance, proto nebylo delano runtime/browser overeni.
+- Dodrzeno pravidlo bez tichych fallbacku: chybejici obsah se nema zamaskovat smyslenymi texty nebo obrazky v JS.
 
 ## Vysledek
 
-Elegant White homepage je doladena dalsim pass-em: texty a CTA jsou bliz cilovemu screenshotu, kontakt pouziva explicitni kamerovy obrazek, sluzby maji stabilni 4 polozky, FAQ je zavrene ve vychozim stavu, proces ma 5 kroku a CSS zvetsuje meritko/kontrast hlavni homepage kompozice.
+Elegant White je prepracovana na datove rizeny frontend: obsah bere z DB renderu nebo z demo seederu, ne z hardcodu v sablonovem JS.

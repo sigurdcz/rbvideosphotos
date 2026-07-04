@@ -14,6 +14,10 @@
     return node ? (node.textContent || '').replace(/\s+/g, ' ').trim() : '';
   }
 
+  function html(node) {
+    return node ? (node.innerHTML || '').trim() : '';
+  }
+
   function escapeHtml(value) {
     return String(value || '')
       .replace(/&/g, '&amp;')
@@ -47,14 +51,6 @@
     var links = qs('.nav-links', nav);
     if (!toggle || !label || !links) return;
 
-    if (!qs('a[href="/"]', links) && !qs('a[href="/#uvod"]', links)) {
-      var home = document.createElement('a');
-      home.href = '/';
-      home.textContent = 'Uvod';
-      home.className = 'nav-home-link';
-      links.insertBefore(home, links.firstChild);
-    }
-
     function syncState() {
       var open = toggle.checked === true;
       label.classList.toggle('is-active', open);
@@ -85,164 +81,159 @@
     return img.getAttribute('data-src') || img.getAttribute('src') || '';
   }
 
+  function firstNode(selectors, scope) {
+    for (var i = 0; i < selectors.length; i += 1) {
+      var node = qs(selectors[i], scope);
+      if (node) return node;
+    }
+    return null;
+  }
+
+  function sectionContent(section) {
+    if (!section) return { label: '', title: '', intro: '', cta: null };
+    var cta = firstNode(['.hp-section-cta a', '.hero-cta-wrap a', '.btn-primary', '.btn-secondary'], section);
+    return {
+      label: html(firstNode(['.section-label', '.hero-tag', '.hero__eyebrow'], section)),
+      title: html(firstNode(['.section-title', 'h1', 'h2'], section)),
+      intro: html(firstNode(['.section-intro', '.hero-sub', '.lead'], section)),
+      cta: cta ? { href: cta.getAttribute('href') || '', label: text(cta) } : null
+    };
+  }
+
+  function renderSectionHeader(content, center) {
+    var label = content && content.label ? '<p class="section-label">' + content.label + '</p>' : '';
+    var title = content && content.title ? '<h2 class="section-title">' + content.title + '</h2>' : '';
+    var intro = content && content.intro ? '<p class="section-intro">' + content.intro + '</p>' : '';
+    var cls = center ? ' class="ew-section-center"' : '';
+    return label || title || intro ? '<div' + cls + '>' + label + title + intro + '</div>' : '';
+  }
+
   function pickAboutVisual() {
-    var source = qs('.jb-about-visual__source');
-    var sourceSrc = getImageSrc(source);
-    if (sourceSrc) return sourceSrc;
-
-    var service = qs('#sluzby .hp-svc-card__media img, #sluzby .svc-card img');
-    var serviceSrc = getImageSrc(service);
-    if (serviceSrc) return serviceSrc;
-
-    var portfolio = qs('#nase-prace .pt-thumb img');
-    return getImageSrc(portfolio);
+    var candidates = [
+      '.jb-about-visual__source',
+      '.ew-about-visual-source',
+      '[data-ew-about-visual] img',
+      '#sluzby .hp-svc-card__media img',
+      '#sluzby .svc-card img'
+    ];
+    for (var i = 0; i < candidates.length; i += 1) {
+      var src = getImageSrc(qs(candidates[i]));
+      if (src) return src;
+    }
+    return '';
   }
 
   function pickContactVisual() {
-    return '/media/2026/07/kontakt.png';
+    var candidates = [
+      '.ew-contact-visual-source',
+      '[data-ew-contact-visual] img',
+      '#kontakt .hp-contact-visual img',
+      '#kontakt img'
+    ];
+    for (var i = 0; i < candidates.length; i += 1) {
+      var src = getImageSrc(qs(candidates[i]));
+      if (src) return src;
+    }
+    return '';
   }
 
   function ensureNavCta() {
     var links = qs('.theme-nav-wrap .nav-links');
     if (!links) return;
-    qsa('a', links).forEach(function (link) {
-      var label = text(link).toLowerCase();
-      if (label === 'blog') link.setAttribute('href', '/blog');
-      if (label === 'ceník' || label === 'cenik') link.setAttribute('href', '/cenik');
-    });
-
     var existing = qs('.nav-cta', links);
-    if (existing) {
-      existing.classList.add('ew-nav-cta');
-      existing.href = '#kontakt';
-      existing.textContent = 'Kontaktujte nas';
-      return;
-    }
-    if (qs('.ew-nav-cta', links)) return;
-    var cta = document.createElement('a');
-    cta.className = 'ew-nav-cta nav-cta';
-    cta.href = '#kontakt';
-    cta.textContent = 'Kontaktujte nas';
-    links.appendChild(cta);
+    if (existing) existing.classList.add('ew-nav-cta');
   }
 
   function enhanceHero() {
     var hero = qs('.hp-hero');
     if (!hero) return;
     hero.classList.add('ew-hero');
-
-    var label = qs('.section-label', hero);
-    if (label) label.textContent = 'Fotograf a kameraman';
-
-    var heading = qs('h1', hero);
-    if (heading) {
-      heading.innerHTML = 'Zachytíme vaše nejkrásnější chvíle <span>fotografií a videem</span>';
-    }
-
-    var intro = qs('.hero-sub', hero);
-    if (intro) {
-      intro.textContent = 'Emoce, které cítíte, si zaslouží zůstat navždy. S láskou, světlem a vášní tvoříme příběhy, ke kterým se budete rádi vracet.';
-    }
-
-    var cta = qs('.hero-cta-wrap', hero);
-    if (cta) {
-      cta.innerHTML =
-        '<a href="#nase-prace" class="btn-primary">Podívat se na ukázky</a>' +
-        '<a href="#kontakt" class="btn-secondary ew-hero-secondary">Přehrát video</a>';
-    }
-
+    qsa('.hero-cta-wrap a, .hp-hero a.btn, .hp-hero .btn-primary, .hp-hero .btn-secondary', hero).forEach(function (link) {
+      link.classList.add('ew-hero-action');
+    });
     var cue = qs('.jb-scroll-cue', hero);
-    if (cue) cue.remove();
+    if (cue) cue.classList.add('ew-scroll-cue');
   }
 
   function collectServices() {
     return qsa('#sluzby .hp-svc-card, #sluzby .svc-card').map(function (card, index) {
       var img = qs('.hp-svc-card__media img, img', card);
-      var title = qs('.hp-svc-card__title, h3', card);
-      var desc = qs('.hp-svc-card__desc, p', card);
-      var link = qs('.hp-svc-card__btn, a', card);
+      var title = firstNode(['.hp-svc-card__title', 'h3', 'h2'], card);
+      var desc = firstNode(['.hp-svc-card__desc', 'p'], card);
+      var link = firstNode(['.hp-svc-card__btn', 'a'], card);
       return {
         num: String(index + 1).padStart(2, '0'),
-        title: text(title) || 'Sluzba',
+        title: text(title),
         desc: text(desc),
-        href: link ? (link.getAttribute('href') || '#kontakt') : '#kontakt',
+        href: link ? (link.getAttribute('href') || '') : '',
+        buttonText: link ? text(link) : '',
         image: getImageSrc(img)
       };
+    }).filter(function (item) {
+      return item.title || item.desc || item.image || item.href;
     });
   }
 
-  function enhanceAboutAndServices() {
+  function iconClassFromTitle(title, index) {
+    var normalized = (title || '').toLowerCase();
+    if (normalized.indexOf('rodin') !== -1 || normalized.indexOf('portr') !== -1) return 'people';
+    if (normalized.indexOf('reklam') !== -1 || normalized.indexOf('firm') !== -1) return 'briefcase';
+    if (normalized.indexOf('hud') !== -1 || normalized.indexOf('klip') !== -1 || normalized.indexOf('music') !== -1) return 'music';
+    if (normalized.indexOf('akce') !== -1 || normalized.indexOf('udal') !== -1 || normalized.indexOf('udál') !== -1) return 'calendar';
+    if (normalized.indexOf('video') !== -1 || normalized.indexOf('foto') !== -1 || normalized.indexOf('svat') !== -1) return 'camera';
+    return ['camera', 'people', 'briefcase', 'calendar'][index % 4];
+  }
+
+  function enhanceServicesSection() {
     var section = qs('#sluzby');
     if (!section || section.classList.contains('ew-about-ready')) return;
     var container = qs('.container', section);
     if (!container) return;
 
     var services = collectServices();
+    var sourceContent = sectionContent(section);
     var aboutImage = pickAboutVisual();
+    var cta = sourceContent.cta;
 
     section.classList.add('ew-about-ready', 'ew-about-section');
     container.innerHTML =
       '<div class="ew-about-grid">' +
       '  <div class="ew-about-media">' +
-      (aboutImage ? '    <img src="' + escapeHtml(aboutImage) + '" alt="RB Videos & Photos" loading="lazy">' : '') +
+      (aboutImage ? '    <img src="' + escapeHtml(aboutImage) + '" alt="" loading="lazy">' : '') +
       '  </div>' +
       '  <div class="ew-about-copy">' +
-      '    <p class="section-label">O nás</p>' +
-      '    <h2 class="section-title">Příběhy, které stojí za to vyprávět</h2>' +
-      '    <p class="section-intro">Jsme dvojice kameramanů a fotografů, kterou spojuje vášeň pro zachycení přirozených emocí, poctivá práce a cit pro detail.</p>' +
-      '    <div class="ew-about-points">' +
-      '      <span>Profesionální přístup</span><span>Rychlá komunikace</span><span>Kvalitní technika</span><span>Přirozené momenty</span><span>Zkušenosti</span><span>Moderní a stylová tvorba</span>' +
-      '    </div>' +
+      renderSectionHeader(sourceContent, false) +
+      (services.length ? '    <div class="ew-about-points">' + services.slice(0, 6).map(function (item, index) {
+        return '<span class="ew-about-point ew-about-point--' + iconClassFromTitle(item.title, index) + '">' + escapeHtml(item.title || item.desc) + '</span>';
+      }).join('') + '</div>' : '') +
+      (cta && cta.href && cta.label ? '<div class="hp-section-cta"><a href="' + escapeHtml(cta.href) + '" class="btn-secondary">' + escapeHtml(cta.label) + '</a></div>' : '') +
       '  </div>' +
       '</div>';
 
-    buildServicesOverview(services, section);
+    buildServicesOverview(services, section, sourceContent);
   }
 
-  function buildServicesOverview(services, afterSection) {
-    if (qs('.ew-services-overview')) return;
+  function buildServicesOverview(services, afterSection, sourceContent) {
+    if (!services.length || qs('.ew-services-overview')) return;
 
-    var summaries = [
-      'Zachytíme váš svatební den od příprav až po poslední tanec v přirozeném stylu.',
-      'Přirozené momenty, emoce a vzpomínky, které vydrží navždy.',
-      'Profesionální obsah pro vaše podnikání, značku, web nebo sociální sítě.',
-      'Kreativní videoklipy, story a obsah, který zaujme a odliší vaši tvorbu.'
-    ];
-    var fallback = [
-      { title: 'Svatební foto & video', desc: summaries[0] },
-      { title: 'Rodinné & portrétní focení', desc: summaries[1] },
-      { title: 'Reklamní foto & video', desc: summaries[2] },
-      { title: 'Music & videoklipy', desc: summaries[3] }
-    ];
-    var items = services.slice(0, 4).map(function (item, index) {
-      return {
-        title: item.title || fallback[index].title,
-        desc: summaries[index] || item.desc || fallback[index].desc
-      };
-    });
-    while (items.length < 4) {
-      items.push(fallback[items.length]);
-    }
-
-    var icons = ['camera', 'people', 'briefcase', 'music'];
     var section = document.createElement('section');
     section.className = 'section ew-services-overview';
     section.innerHTML =
       '<div class="container">' +
-      '  <div class="ew-section-center">' +
-      '    <p class="section-label">Naše služby</p>' +
-      '    <h2 class="section-title">Nabízíme kompletní vizuální služby</h2>' +
-      '  </div>' +
+      renderSectionHeader(sourceContent, true) +
       '  <div class="ew-services-list">' +
-      items.map(function (item, index) {
+      services.slice(0, 4).map(function (item, index) {
+        var href = item.href || '';
+        var title = item.title || item.desc || '';
+        var body = item.desc || '';
         return '<article class="ew-service-card">' +
-          '<div class="ew-service-icon ew-service-icon--' + icons[index % icons.length] + '" aria-hidden="true"></div>' +
-          '<h3>' + escapeHtml(item.title) + '</h3>' +
-          '<p>' + escapeHtml(item.desc) + '</p>' +
+          '<div class="ew-service-icon ew-service-icon--' + iconClassFromTitle(title, index) + '" aria-hidden="true"></div>' +
+          (title ? '<h3>' + escapeHtml(title) + '</h3>' : '') +
+          (body ? '<p>' + escapeHtml(body) + '</p>' : '') +
+          (href && item.buttonText ? '<a href="' + escapeHtml(href) + '">' + escapeHtml(item.buttonText) + '</a>' : '') +
           '</article>';
       }).join('') +
       '  </div>' +
-      '  <div class="ew-section-cta"><a href="#sluzby" class="btn-primary">Zobrazit všechny služby</a></div>' +
       '</div>';
 
     var portfolio = qs('#nase-prace');
@@ -258,23 +249,12 @@
     if (!section) return;
     section.classList.add('ew-portfolio');
 
-    var label = qs('.section-label', section);
-    if (label) label.textContent = 'Naše práce';
-    var title = qs('.section-title', section);
-    if (title) title.textContent = 'Vybrané momenty';
-    var intro = qs('.section-intro', section);
-    if (intro) intro.textContent = 'Ukázka projektů a realizací.';
-
     qsa('.pt-tile', section).forEach(function (tile) {
       tile.classList.remove('jb-pt-tile--tall', 'jb-pt-tile--wide');
-      var caption = qs('.pt-caption', tile);
-      if (caption) caption.remove();
-      var labelNode = qs('.jb-pt-label', tile);
-      if (labelNode) labelNode.remove();
     });
 
     var cta = qs('.hp-section-cta a, .hp-section-cta .btn-secondary', section);
-    if (cta) cta.textContent = 'Prohlédnout další práce';
+    if (cta) cta.classList.add('ew-section-link');
   }
 
   function hideNonTargetHomeSections() {
@@ -286,7 +266,7 @@
 
   function initialsFromName(name) {
     var parts = (name || '').trim().split(/\s+/).filter(Boolean);
-    if (!parts.length) return 'RB';
+    if (!parts.length) return '';
     return parts.slice(0, 2).map(function (part) {
       return part.charAt(0).toUpperCase();
     }).join('');
@@ -297,11 +277,6 @@
     if (!section) return;
     section.classList.add('ew-reviews');
 
-    var label = qs('.section-label', section);
-    if (label) label.textContent = 'Co o nás říkají klienti';
-    var title = qs('.section-title', section);
-    if (title) title.textContent = 'Vaše spokojenost je pro nás důležitá';
-
     qsa('.hp-review-card', section).forEach(function (card, index) {
       if (index > 2) {
         card.classList.add('ew-hidden-review');
@@ -311,11 +286,15 @@
       if (!qs('.jb-review-meta', card)) {
         var strong = qs('strong', card);
         var span = qs('span', card);
+        var name = text(strong);
         var meta = document.createElement('div');
         meta.className = 'jb-review-meta';
         meta.innerHTML =
-          '<div class="jb-review-avatar">' + escapeHtml(initialsFromName(text(strong))) + '</div>' +
-          '<div class="jb-review-person"><strong>' + escapeHtml(text(strong)) + '</strong><span>' + escapeHtml(text(span) || 'Klient') + '</span></div>';
+          (name ? '<div class="jb-review-avatar">' + escapeHtml(initialsFromName(name)) + '</div>' : '') +
+          '<div class="jb-review-person">' +
+          (name ? '<strong>' + escapeHtml(name) + '</strong>' : '') +
+          (text(span) ? '<span>' + escapeHtml(text(span)) + '</span>' : '') +
+          '</div>';
         card.appendChild(meta);
       }
     });
@@ -324,38 +303,26 @@
   function enhanceFaq() {
     var section = qs('#faq');
     if (!section || section.classList.contains('ew-faq-ready')) return;
-    section.classList.add('ew-faq-ready');
-
-    var label = qs('.section-label', section);
-    if (label) label.textContent = 'Časté otázky';
-    var title = qs('.section-title', section);
-    if (title) title.textContent = 'Máte otázky? Máme odpovědi.';
-
     var list = qs('.hp-faq', section);
     if (!list) return;
 
-    var existing = qsa('.hp-faq-item', list).map(function (item) {
+    var items = qsa('.hp-faq-item', list).map(function (item) {
       return {
-        question: text(qs('.hp-faq-question, strong', item)),
-        answer: text(qs('.hp-faq-answer, p', item))
+        question: html(firstNode(['.hp-faq-question', 'strong', 'h3', 'button'], item)),
+        answer: html(firstNode(['.hp-faq-answer', 'p', '.answer'], item))
       };
     }).filter(function (item) {
       return item.question;
     });
 
-    var defaults = [
-      { question: 'Dostaneme i neupravené fotky (RAW)?', answer: 'Neupravené RAW soubory standardně nepředáváme. Dodáváme hotový výběr upravený v jednotném stylu.' },
-      { question: 'Fotíte i video?', answer: 'Ano, focení i video umíme spojit do jednoho výstupu podle rozsahu akce.' },
-      { question: 'Za jak dlouho dostaneme hotové fotografie?', answer: 'Termín záleží na rozsahu zakázky. Přesný termín si potvrdíme při domluvě.' }
-    ];
-    var items = existing.concat(defaults).slice(0, 6);
-
-    list.innerHTML = items.map(function (item) {
+    if (!items.length) return;
+    section.classList.add('ew-faq-ready');
+    list.innerHTML = items.slice(0, 6).map(function (item) {
       return '<article class="hp-faq-item ew-faq-item">' +
         '<button class="ew-faq-question" type="button" aria-expanded="false">' +
-        '<span>' + escapeHtml(item.question) + '</span><span class="ew-faq-plus" aria-hidden="true"></span>' +
+        '<span>' + item.question + '</span><span class="ew-faq-plus" aria-hidden="true"></span>' +
         '</button>' +
-        '<div class="ew-faq-answer"><p>' + escapeHtml(item.answer || 'Odpověď najdete v kompletní sekci FAQ.') + '</p></div>' +
+        '<div class="ew-faq-answer">' + (item.answer ? '<p>' + item.answer + '</p>' : '') + '</div>' +
         '</article>';
     }).join('');
 
@@ -369,35 +336,29 @@
     });
 
     var ctaWrap = qs('.hp-section-cta', section);
-    if (!ctaWrap) {
-      ctaWrap = document.createElement('div');
-      ctaWrap.className = 'hp-section-cta ew-section-cta';
-      list.parentNode.appendChild(ctaWrap);
-    }
-    ctaWrap.innerHTML = '<a href="/faq" class="btn-secondary">Zobrazit další FAQ</a>';
+    if (ctaWrap) ctaWrap.classList.add('ew-section-cta');
   }
 
-  function buildProcess() {
-    var contact = qs('#kontakt');
-    if (!contact || qs('.ew-process')) return;
+  function enhanceProcess() {
+    var section = qs('#proces, .hp-process, .jb-process, [data-ew-process-source]');
+    if (!section) return;
+    section.classList.add('ew-process');
+    qsa('.section-intro', section).forEach(function (intro) {
+      if (!text(intro)) intro.remove();
+    });
 
-    var section = document.createElement('section');
-    section.className = 'section ew-process';
-    section.innerHTML =
-      '<div class="container">' +
-      '  <div class="ew-section-center">' +
-      '    <p class="section-label">Jak to probíhá</p>' +
-      '    <h2 class="section-title">Jednoduchý proces, skvělý výsledek</h2>' +
-      '  </div>' +
-      '  <div class="ew-process-list">' +
-      '    <article><span>01</span><i class="ew-process-icon ew-process-icon--date"></i><h3>Nezávazná poptávka</h3><p>Ozvěte se nám a probereme vaše představy a požadavky.</p></article>' +
-      '    <article><span>02</span><i class="ew-process-icon ew-process-icon--plan"></i><h3>Konzultace s plán</h3><p>Společně naplánujeme průběh a detaily.</p></article>' +
-      '    <article><span>03</span><i class="ew-process-icon ew-process-icon--camera"></i><h3>Focení & natáčení</h3><p>Zachytíme přirozené momenty bez zbytečných zásahů.</p></article>' +
-      '    <article><span>04</span><i class="ew-process-icon ew-process-icon--edit"></i><h3>Úpravy & výběr</h3><p>Pečlivě upravíme a připravíme ty nejlepší záběry.</p></article>' +
-      '    <article><span>05</span><i class="ew-process-icon ew-process-icon--send"></i><h3>Dodání & sdílení</h3><p>Předáme hotové fotografie a video v nejvyšší kvalitě.</p></article>' +
-      '  </div>' +
-      '</div>';
-    contact.parentNode.insertBefore(section, contact);
+    var list = qs('.ew-process-list, .hp-process-list, .jb-process-list', section);
+    if (!list) {
+      var steps = qsa('.hp-process-step, .jb-process-step, article, li', section);
+      if (!steps.length) return;
+      list = document.createElement('div');
+      list.className = 'ew-process-list';
+      steps[0].parentNode.insertBefore(list, steps[0]);
+      steps.forEach(function (step) {
+        list.appendChild(step);
+      });
+    }
+    list.classList.add('ew-process-list');
   }
 
   function reorderHomeSections() {
@@ -421,7 +382,7 @@
 
     var hidden = qsa('input[type="hidden"]', form);
     var submit = qs('button[type="submit"], button:not([type])', form);
-    var fields = [];
+    var pairs = [];
     var nodes = qsa('label, input:not([type="hidden"]), textarea, select', form);
 
     for (var i = 0; i < nodes.length; i += 1) {
@@ -432,56 +393,51 @@
       var field = document.createElement('div');
       field.className = 'ew-field';
       if (control.tagName.toLowerCase() === 'textarea') field.classList.add('ew-field--wide');
-      field.appendChild(node.cloneNode(true));
-      field.appendChild(control.cloneNode(true));
-      fields.push(field);
+      field.appendChild(node);
+      field.appendChild(control);
+      pairs.push(field);
       i += 1;
     }
 
     form.innerHTML = '';
     hidden.forEach(function (input) {
-      form.appendChild(input.cloneNode(true));
+      form.appendChild(input);
     });
-    fields.forEach(function (field) {
+    pairs.forEach(function (field) {
       form.appendChild(field);
     });
-    if (submit) {
-      form.appendChild(submit.cloneNode(true));
-    }
+    if (submit) form.appendChild(submit);
   }
 
   function enhanceContact() {
     var section = qs('#kontakt');
     if (!section || section.classList.contains('ew-contact-ready')) return;
-    section.classList.add('ew-contact-ready');
-
     var container = qs('.container', section);
-    var title = qs('.section-title', section);
-    var label = qs('.section-label', section);
-    var intro = qs('.section-intro', section);
     var form = qs('form', section);
     if (!container || !form) return;
 
-    if (label) label.textContent = 'Kontakt';
-    if (title) title.textContent = 'Pojďme si říct o vašem focení nebo videu.';
-    if (intro) intro.textContent = 'Ozvěte se nám. Odpovídáme rychle.';
+    section.classList.add('ew-contact-ready');
     normalizeContactForm(form);
 
-    var visual = pickContactVisual();
     var header = document.createElement('div');
     header.className = 'ew-contact-header';
-    if (label) header.appendChild(label);
-    if (title) header.appendChild(title);
-    if (intro) header.appendChild(intro);
+    var label = firstNode(['.section-label', '.hero-tag'], section);
+    var title = firstNode(['.section-title', 'h2'], section);
+    var intro = firstNode(['.section-intro', '.lead'], section);
+    [label, title, intro].forEach(function (node) {
+      if (node) header.appendChild(node);
+    });
 
-    var formCard = form.closest('.hp-contact-box') || form.parentNode;
+    var visual = pickContactVisual();
     var layout = document.createElement('div');
-    layout.className = 'ew-contact-panel';
-    layout.innerHTML = '<div class="ew-contact-image">' + (visual ? '<img src="' + escapeHtml(visual) + '" alt="Kontakt RB Videos & Photos" loading="lazy">' : '') + '</div>';
+    layout.className = 'ew-contact-panel' + (visual ? '' : ' ew-contact-panel--no-image');
+    if (visual) {
+      layout.innerHTML = '<div class="ew-contact-image"><img src="' + escapeHtml(visual) + '" alt="" loading="lazy"></div>';
+    }
 
     var right = document.createElement('div');
     right.className = 'ew-contact-form-wrap';
-    right.appendChild(header);
+    if (header.childNodes.length) right.appendChild(header);
     right.appendChild(form);
     layout.appendChild(right);
 
@@ -490,9 +446,8 @@
   }
 
   function syncFooterContactFromSection() {
-    var section = qs('#kontakt');
     var footer = qs('.site-footer-contact');
-    if (!section || !footer) return;
+    if (!footer) return;
 
     var rows = qsa('a[href^="tel:"], a[href^="mailto:"]', document).map(function (link) {
       var href = link.getAttribute('href') || '';
@@ -513,7 +468,7 @@
     if (!unique.length) return;
 
     var title = qs('.site-footer-title', footer);
-    var titleHtml = title ? title.outerHTML : '<div class="site-footer-title">Kontakt</div>';
+    var titleHtml = title ? title.outerHTML : '';
     footer.innerHTML = titleHtml + unique.map(function (item) {
       return '<a class="site-footer-contact__item" href="' + escapeHtml(item.href) + '">' +
         '<span>' + escapeHtml(item.label) + '</span>' +
@@ -554,12 +509,12 @@
 
   if (isHomepage()) {
     enhanceHero();
-    enhanceAboutAndServices();
+    enhanceServicesSection();
     enhancePortfolio();
     hideNonTargetHomeSections();
     enhanceReviews();
     enhanceFaq();
-    buildProcess();
+    enhanceProcess();
     reorderHomeSections();
     enhanceContact();
   }

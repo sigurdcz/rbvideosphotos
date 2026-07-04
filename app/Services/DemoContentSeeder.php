@@ -51,6 +51,7 @@ class DemoContentSeeder
         $blogCount = $this->seedBlogPosts($siteId);
         $portfolioCount = $this->seedPortfolioEntries($siteId);
         $this->resetHomepageAutofillBlocks();
+        $this->seedHomepageElegantWhiteBlocks($siteId);
         $reviewCount = $this->seedReviewRows($siteId);
         $this->seedCenikCards($siteId);
         $this->seedDemoContactInfo($siteId);
@@ -1362,6 +1363,11 @@ CSS;
             'kontakt_info',
             'contact_info',
             'contact_card',
+            'contact_visual',
+            'process_label',
+            'process_title',
+            'process_intro',
+            'process_body',
             'portfolio_cta',
         ];
 
@@ -1372,6 +1378,148 @@ CSS;
         $stmt->execute([(int)$homepage['id'], ...$keys]);
 
         $this->normalizeHomepageTemplateLabels($homepage);
+    }
+
+    private function seedHomepageElegantWhiteBlocks(int $siteId): void
+    {
+        $homepage = $this->pages->findByUrlPath('');
+        if (!$homepage) {
+            return;
+        }
+
+        $this->ensureElegantWhiteHomepageSources($homepage);
+        $pageId = (int) $homepage['id'];
+
+        $this->blocks->upsert($pageId, 'process_label', [
+            'block_type' => 'text',
+            'label' => 'Proces - stitek',
+            'content' => 'Jak to probiha',
+            'sort_order' => 82,
+            'autofill_disabled' => 1,
+        ]);
+        $this->blocks->upsert($pageId, 'process_title', [
+            'block_type' => 'text',
+            'label' => 'Proces - nadpis',
+            'content' => 'Jednoduchy proces, skvely vysledek',
+            'sort_order' => 83,
+            'autofill_disabled' => 1,
+        ]);
+        $this->blocks->upsert($pageId, 'process_intro', [
+            'block_type' => 'textarea',
+            'label' => 'Proces - uvod',
+            'content' => '',
+            'sort_order' => 84,
+            'autofill_disabled' => 1,
+        ]);
+        $this->blocks->upsert($pageId, 'process_body', [
+            'block_type' => 'html',
+            'label' => 'Proces - kroky',
+            'content' => $this->homepageProcessHtml(),
+            'sort_order' => 85,
+            'autofill_disabled' => 1,
+        ]);
+
+        if (!empty($this->demoMedia['kontakt.png'])) {
+            $visual = $this->mediaPathById((int) $this->demoMedia['kontakt.png']);
+            if ($visual !== '') {
+                $this->blocks->upsert($pageId, 'contact_visual', [
+                    'block_type' => 'image',
+                    'label' => 'Kontaktni vizual',
+                    'content' => $visual,
+                    'sort_order' => 90,
+                    'autofill_disabled' => 1,
+                ]);
+            }
+        }
+    }
+
+    private function homepageProcessHtml(): string
+    {
+        $steps = [
+            ['01', 'ew-process-icon--date', 'Domluva terminu', 'Ozvete se nam a spolecne si domluvime detaily.'],
+            ['02', 'ew-process-icon--plan', 'Foceni / nataceni', 'Prirozene zachytime vas pribeh a emoce.'],
+            ['03', 'ew-process-icon--camera', 'Uprava', 'Peclive vybereme a upravime nejlepsi zabery.'],
+            ['04', 'ew-process-icon--send', 'Predani', 'Dostanete hotove fotografie a video v nejvyssi kvalite.'],
+        ];
+
+        $html = '<div class="ew-process-list">';
+        foreach ($steps as [$num, $icon, $title, $text]) {
+            $html .= '<article>'
+                . '<span>' . $this->h($num) . '</span>'
+                . '<i class="ew-process-icon ' . $this->h($icon) . '"></i>'
+                . '<h3>' . $this->h($title) . '</h3>'
+                . '<p>' . $this->h($text) . '</p>'
+                . '</article>';
+        }
+        return $html . '</div>';
+    }
+
+    private function ensureElegantWhiteHomepageSources(array $homepage): void
+    {
+        $templateId = (int)($homepage['template_id'] ?? 0);
+        if ($templateId <= 0) {
+            return;
+        }
+
+        $template = $this->templates->findById($templateId);
+        if (!$template) {
+            return;
+        }
+
+        $html = (string)($template['html_source'] ?? '');
+        if ($html === '') {
+            return;
+        }
+
+        $updated = $html;
+
+        if (!str_contains($updated, 'contact_visual')) {
+            $contactSource = "\n    <div class=\"ew-data-source\" data-ew-contact-visual hidden><img class=\"ew-contact-visual-source\" data-block=\"contact_visual\" alt=\"\"></div>\n";
+            $updatedWithContact = preg_replace_callback(
+                '~(<section\b[^>]*\bid=(["\'])kontakt\2[^>]*>\s*<div\b[^>]*\bclass=(["\'])(?=[^"\']*\bcontainer\b)[^"\']*\3[^>]*>)~i',
+                static fn(array $m): string => $m[1] . $contactSource,
+                $updated,
+                1,
+                $count
+            );
+            if ($updatedWithContact && $count > 0) {
+                $updated = $updatedWithContact;
+            } else {
+                $updated .= $contactSource;
+            }
+        }
+
+        if (!str_contains($updated, 'process_body')) {
+            $processSection = <<<'HTML'
+
+<section class="section hp-process" id="proces">
+  <div class="container">
+    <p class="section-label" data-block="process_label"></p>
+    <h2 class="section-title" data-block="process_title"></h2>
+    <p class="section-intro" data-block="process_intro"></p>
+    <div data-block="process_body"></div>
+  </div>
+</section>
+HTML;
+
+            $updatedWithProcess = preg_replace('~(<section\b[^>]*id=(["\'])kontakt\2[^>]*>)~i', $processSection . "\n$1", $updated, 1, $count);
+            if ($updatedWithProcess && $count > 0) {
+                $updated = $updatedWithProcess;
+            } else {
+                $updated .= $processSection;
+            }
+        }
+
+        if ($updated === $html) {
+            return;
+        }
+
+        $this->templates->update($templateId, [
+            'name' => $template['name'],
+            'html_source' => $updated,
+            'css_source' => $template['css_source'] ?? '',
+            'js_source' => $template['js_source'] ?? '',
+        ]);
     }
 
     private function normalizeHomepageTemplateLabels(array $homepage): void

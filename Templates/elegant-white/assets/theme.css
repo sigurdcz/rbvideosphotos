@@ -4716,6 +4716,11 @@ body.theme-elegant-white[data-cms-page-key="homepage"] .ew-contact-panel {
   border-radius: 24px !important;
 }
 
+body.theme-elegant-white[data-cms-page-key="homepage"] .ew-contact-panel--no-image {
+  grid-template-columns: minmax(0, 760px) !important;
+  justify-content: center !important;
+}
+
 body.theme-elegant-white[data-cms-page-key="homepage"] .ew-contact-image {
   min-height: 520px !important;
 }

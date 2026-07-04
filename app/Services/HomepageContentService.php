@@ -34,6 +34,11 @@ class HomepageContentService
         'faq_5' => ['label' => 'FAQ 5', 'hint' => 'Automaticky doplnit z aktivních FAQ položek.'],
         'kontakt_info' => ['label' => 'Kontakt', 'hint' => 'Automaticky doplnit z kontaktních údajů.'],
         'contact_info' => ['label' => 'Kontakt', 'hint' => 'Automaticky doplnit z kontaktních údajů.'],
+        'contact_visual' => ['label' => 'Kontaktni vizual', 'hint' => 'Obrazek pro kontaktni panel na homepage. Doplni demo obsah.'],
+        'process_label' => ['label' => 'Proces - stitek', 'hint' => 'Textovy blok z demo obsahu.'],
+        'process_title' => ['label' => 'Proces - nadpis', 'hint' => 'Textovy blok z demo obsahu.'],
+        'process_intro' => ['label' => 'Proces - uvod', 'hint' => 'Textovy blok z demo obsahu.'],
+        'process_body' => ['label' => 'Proces - kroky', 'hint' => 'HTML blok z demo obsahu.'],
         'reviews_demo' => ['label' => 'Recenze na homepage', 'hint' => 'Automaticky doplnit z aktivnich recenzi.'],
         'reviews_body' => ['label' => 'Stranka recenzi', 'hint' => 'Automaticky doplnit z aktivnich recenzi.'],
     ];
