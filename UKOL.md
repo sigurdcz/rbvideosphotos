@@ -1,19 +1,18 @@
-# UKOL: Odstraneni bileho prechodu pres hero obsah
+# UKOL: Spravne vrstveni hero overlaye
 
 Datum: 2026-07-04
-Zadani: Odstranit bily prechod/overlay z homepage hero casti tam, kde prekryva nadpis, textaci a tlacitka.
+Zadani: Opravit homepage hero stacking order tak, aby video/foto bylo dole, `::after` overlay nad nim a text s CTA tlacitky nad overlayem.
 
 ## Kroky
 
-- [x] 1. Najit aktualni CSS pravidla pro hero overlay a video prechod
-- [x] 2. Upravit overlay tak, aby neprekryval textovy sloupec a CTA
-- [x] 3. Overit CSS/PHP diff a commit/push opravy
+- [x] 1. Upravit CSS vrstveni `video/foto -> overlay -> text/CTA`
+- [x] 2. Overit diff a commit/push
 
 ## Poznamky
 
-- Success signal: hero nadpis, podnadpis a tlacitko nejsou sede/bile zastrene; jemny prechod muze zustat jen nad obrazovou/video casti.
-- Upraven `Templates/elegant-white/assets/theme.css`: final override odstranuje bily wash z textoveho sloupce, zveda hero container nad dekorace a ponechava jen jemny prechod v media vrstve.
+- Success signal: `::after` muze zustat jako overlay pres video/foto, ale nesmi sedet nad textaci, podnadpisem ani CTA tlacitky.
+- Upraveno v `Templates/elegant-white/assets/theme.css`: hero media vrstva ma `z-index: 0`, pseudo-elementy a media overlay `z-index: 1`, container/text/CTA `z-index: 2`.
 
 ## Vysledek
 
-Hero overlay uz nema bily linearni wash pres texty a CTA. Textovy container je nad dekoracemi a video prechod zustava jen jemne v media vrstve.
+Hero vrstvy jsou explicitne nastavene jako `video/foto -> overlay -> text/CTA`, aby `::after` zustal pod textem a tlacitky.

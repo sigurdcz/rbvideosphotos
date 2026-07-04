@@ -5061,3 +5061,50 @@ body.theme-elegant-white[data-cms-page-key="homepage"] .ew-hero .theme-hero-vide
 body.theme-elegant-white[data-cms-page-key="homepage"] .hero .theme-hero-video::after {
   background: linear-gradient(90deg, rgba(255, 253, 249, .18), rgba(255, 253, 249, .04) 38%, rgba(255, 253, 249, 0) 72%) !important;
 }
+
+/* Correct hero stacking: media, overlay, then copy/CTA. */
+body.theme-elegant-white[data-cms-page-key="homepage"] .hp-hero,
+body.theme-elegant-white[data-cms-page-key="homepage"] .ew-hero,
+body.theme-elegant-white[data-cms-page-key="homepage"] .hero {
+  position: relative !important;
+  isolation: isolate !important;
+}
+
+body.theme-elegant-white[data-cms-page-key="homepage"] .hp-hero .theme-hero-video,
+body.theme-elegant-white[data-cms-page-key="homepage"] .ew-hero .theme-hero-video,
+body.theme-elegant-white[data-cms-page-key="homepage"] .hero .theme-hero-video,
+body.theme-elegant-white[data-cms-page-key="homepage"] .hp-hero .hero-video,
+body.theme-elegant-white[data-cms-page-key="homepage"] .ew-hero .hero-video,
+body.theme-elegant-white[data-cms-page-key="homepage"] .hero .hero-video {
+  position: absolute !important;
+  z-index: 0 !important;
+}
+
+body.theme-elegant-white[data-cms-page-key="homepage"] .hp-hero::before,
+body.theme-elegant-white[data-cms-page-key="homepage"] .ew-hero::before,
+body.theme-elegant-white[data-cms-page-key="homepage"] .hero::before,
+body.theme-elegant-white[data-cms-page-key="homepage"] .hp-hero::after,
+body.theme-elegant-white[data-cms-page-key="homepage"] .ew-hero::after,
+body.theme-elegant-white[data-cms-page-key="homepage"] .hero::after,
+body.theme-elegant-white[data-cms-page-key="homepage"] .hp-hero .theme-hero-video::after,
+body.theme-elegant-white[data-cms-page-key="homepage"] .ew-hero .theme-hero-video::after,
+body.theme-elegant-white[data-cms-page-key="homepage"] .hero .theme-hero-video::after {
+  z-index: 1 !important;
+  pointer-events: none !important;
+}
+
+body.theme-elegant-white[data-cms-page-key="homepage"] .hp-hero > .container,
+body.theme-elegant-white[data-cms-page-key="homepage"] .ew-hero > .container,
+body.theme-elegant-white[data-cms-page-key="homepage"] .hero > .container,
+body.theme-elegant-white[data-cms-page-key="homepage"] .hp-hero h1,
+body.theme-elegant-white[data-cms-page-key="homepage"] .ew-hero h1,
+body.theme-elegant-white[data-cms-page-key="homepage"] .hero h1,
+body.theme-elegant-white[data-cms-page-key="homepage"] .hp-hero .hero-sub,
+body.theme-elegant-white[data-cms-page-key="homepage"] .ew-hero .hero-sub,
+body.theme-elegant-white[data-cms-page-key="homepage"] .hero .hero-sub,
+body.theme-elegant-white[data-cms-page-key="homepage"] .hp-hero .hero-cta-wrap,
+body.theme-elegant-white[data-cms-page-key="homepage"] .ew-hero .hero-cta-wrap,
+body.theme-elegant-white[data-cms-page-key="homepage"] .hero .hero-cta-wrap {
+  position: relative !important;
+  z-index: 2 !important;
+}
