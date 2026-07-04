@@ -1,5 +1,6 @@
 (function () {
-  if (!document.body.classList.contains('theme-elegant-white') && !document.querySelector('.theme-elegant-white')) return;
+  var body = document.body;
+  if (!body || (!body.classList.contains('theme-elegant-white') && !document.querySelector('.theme-elegant-white'))) return;
 
   function qs(selector, scope) {
     return (scope || document).querySelector(selector);
@@ -9,14 +10,21 @@
     return Array.prototype.slice.call((scope || document).querySelectorAll(selector));
   }
 
-  function accentLastWord(element) {
-    if (!element || element.querySelector('.jb-title-accent')) return;
-    var text = (element.textContent || '').replace(/\s+/g, ' ').trim();
-    if (!text) return;
-    var words = text.split(' ');
-    if (words.length < 2) return;
-    var accent = words.pop();
-    element.innerHTML = words.join(' ') + ' <span class="jb-title-accent">' + accent + '</span>';
+  function text(node) {
+    return node ? (node.textContent || '').replace(/\s+/g, ' ').trim() : '';
+  }
+
+  function escapeHtml(value) {
+    return String(value || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  function isHomepage() {
+    return body.getAttribute('data-cms-page-key') === 'homepage' || !!qs('.hp-hero');
   }
 
   function initHeaderScroll() {
@@ -42,7 +50,7 @@
     if (!qs('a[href="/"]', links) && !qs('a[href="/#uvod"]', links)) {
       var home = document.createElement('a');
       home.href = '/';
-      home.textContent = 'Úvod';
+      home.textContent = 'Uvod';
       home.className = 'nav-home-link';
       links.insertBefore(home, links.firstChild);
     }
@@ -51,7 +59,7 @@
       var open = toggle.checked === true;
       label.classList.toggle('is-active', open);
       label.setAttribute('aria-expanded', open ? 'true' : 'false');
-      document.body.classList.toggle('jb-nav-open', open);
+      body.classList.toggle('ew-nav-open', open);
     }
 
     toggle.addEventListener('change', syncState);
@@ -72,17 +80,433 @@
     syncState();
   }
 
-  function markReveals() {
-    qsa(
-      '.jb-about-shell, .pt-tile, .hp-blog-card, .hp-cenik-card, .hp-review-card, .hp-faq-item, .jb-process-step, .hp-section-cta, .jb-contact-meta'
-    ).forEach(function (element) {
-      element.classList.add('jb-reveal');
+  function getImageSrc(img) {
+    if (!img) return '';
+    return img.getAttribute('data-src') || img.getAttribute('src') || '';
+  }
+
+  function pickAboutVisual() {
+    var source = qs('.jb-about-visual__source');
+    var sourceSrc = getImageSrc(source);
+    if (sourceSrc) return sourceSrc;
+
+    var service = qs('#sluzby .hp-svc-card__media img, #sluzby .svc-card img');
+    var serviceSrc = getImageSrc(service);
+    if (serviceSrc) return serviceSrc;
+
+    var portfolio = qs('#nase-prace .pt-thumb img');
+    return getImageSrc(portfolio);
+  }
+
+  function pickContactVisual() {
+    var heroBg = qs('.theme-hero-video');
+    var style = heroBg ? (heroBg.getAttribute('style') || '') : '';
+    var match = style.match(/url\(['"]?([^'")]+)['"]?\)/i);
+    if (match && match[1]) return match[1];
+
+    var portfolio = qsa('#nase-prace .pt-thumb img')[3] || qs('#nase-prace .pt-thumb img');
+    return getImageSrc(portfolio);
+  }
+
+  function ensureNavCta() {
+    var links = qs('.theme-nav-wrap .nav-links');
+    if (!links) return;
+    qsa('a', links).forEach(function (link) {
+      var label = text(link).toLowerCase();
+      if (label === 'blog') link.setAttribute('href', '/blog');
+      if (label === 'ceník' || label === 'cenik') link.setAttribute('href', '/cenik');
+    });
+
+    var existing = qs('.nav-cta', links);
+    if (existing) {
+      existing.classList.add('ew-nav-cta');
+      existing.href = '#kontakt';
+      existing.textContent = 'Kontaktujte nas';
+      return;
+    }
+    if (qs('.ew-nav-cta', links)) return;
+    var cta = document.createElement('a');
+    cta.className = 'ew-nav-cta nav-cta';
+    cta.href = '#kontakt';
+    cta.textContent = 'Kontaktujte nas';
+    links.appendChild(cta);
+  }
+
+  function enhanceHero() {
+    var hero = qs('.hp-hero');
+    if (!hero) return;
+    hero.classList.add('ew-hero');
+
+    var label = qs('.section-label', hero);
+    if (label) label.textContent = 'Fotograf a kameraman';
+
+    var heading = qs('h1', hero);
+    if (heading) {
+      heading.innerHTML = 'Zachytíme vaše nejkrásnější chvíle <span>fotografií a videem</span>';
+    }
+
+    var intro = qs('.hero-sub', hero);
+    if (intro) {
+      intro.textContent = 'Svatební, rodinné, portrétní i firemní focení a video s důrazem na emoce, detaily a profesionální výsledek.';
+    }
+
+    var cta = qs('.hero-cta-wrap', hero);
+    if (cta) {
+      cta.innerHTML =
+        '<a href="#nase-prace" class="btn-primary">Podívat se na práce</a>' +
+        '<a href="#kontakt" class="btn-secondary ew-hero-secondary">Domluvit termín</a>';
+    }
+
+    var cue = qs('.jb-scroll-cue', hero);
+    if (cue) cue.remove();
+  }
+
+  function collectServices() {
+    return qsa('#sluzby .hp-svc-card, #sluzby .svc-card').map(function (card, index) {
+      var img = qs('.hp-svc-card__media img, img', card);
+      var title = qs('.hp-svc-card__title, h3', card);
+      var desc = qs('.hp-svc-card__desc, p', card);
+      var link = qs('.hp-svc-card__btn, a', card);
+      return {
+        num: String(index + 1).padStart(2, '0'),
+        title: text(title) || 'Sluzba',
+        desc: text(desc),
+        href: link ? (link.getAttribute('href') || '#kontakt') : '#kontakt',
+        image: getImageSrc(img)
+      };
     });
   }
 
+  function enhanceAboutAndServices() {
+    var section = qs('#sluzby');
+    if (!section || section.classList.contains('ew-about-ready')) return;
+    var container = qs('.container', section);
+    if (!container) return;
+
+    var services = collectServices();
+    var aboutImage = pickAboutVisual();
+
+    section.classList.add('ew-about-ready', 'ew-about-section');
+    container.innerHTML =
+      '<div class="ew-about-grid">' +
+      '  <div class="ew-about-media">' +
+      (aboutImage ? '    <img src="' + escapeHtml(aboutImage) + '" alt="RB Videos & Photos" loading="lazy">' : '') +
+      '  </div>' +
+      '  <div class="ew-about-copy">' +
+      '    <p class="section-label">O nás</p>' +
+      '    <h2 class="section-title">Příběhy, které stojí za to vyprávět</h2>' +
+      '    <p class="section-intro">Jsme RB Videos & Photos - tým fotografů a kameramanů z Olomouce. Milujeme přirozené emoce, poctivou práci a moderní vizuální styl.</p>' +
+      '    <div class="ew-about-points">' +
+      '      <span>Profesionální přístup</span><span>Rychlá komunikace</span><span>Kvalitní technika</span><span>Přirozené momenty</span><span>Individuální přístup</span><span>Nadčasový výsledek</span>' +
+      '    </div>' +
+      '  </div>' +
+      '</div>';
+
+    buildServicesOverview(services, section);
+  }
+
+  function buildServicesOverview(services, afterSection) {
+    if (!services.length || qs('.ew-services-overview')) return;
+
+    var icons = ['camera', 'people', 'briefcase', 'calendar'];
+    var section = document.createElement('section');
+    section.className = 'section ew-services-overview';
+    section.innerHTML =
+      '<div class="container">' +
+      '  <div class="ew-section-center">' +
+      '    <p class="section-label">Naše služby</p>' +
+      '    <h2 class="section-title">Nabízíme kompletní vizuální služby</h2>' +
+      '  </div>' +
+      '  <div class="ew-services-list">' +
+      services.slice(0, 4).map(function (item, index) {
+        return '<article class="ew-service-card">' +
+          '<div class="ew-service-icon ew-service-icon--' + icons[index % icons.length] + '" aria-hidden="true"></div>' +
+          '<h3>' + escapeHtml(item.title) + '</h3>' +
+          '<p>' + escapeHtml(item.desc) + '</p>' +
+          '</article>';
+      }).join('') +
+      '  </div>' +
+      '  <div class="ew-section-cta"><a href="#kontakt" class="btn-primary">Kontaktujte nás</a></div>' +
+      '</div>';
+
+    var portfolio = qs('#nase-prace');
+    if (portfolio && portfolio.parentNode) {
+      portfolio.parentNode.insertBefore(section, portfolio.nextSibling);
+      return;
+    }
+    afterSection.parentNode.insertBefore(section, afterSection.nextSibling);
+  }
+
+  function enhancePortfolio() {
+    var section = qs('#nase-prace');
+    if (!section) return;
+    section.classList.add('ew-portfolio');
+
+    var label = qs('.section-label', section);
+    if (label) label.textContent = 'Naše práce';
+    var title = qs('.section-title', section);
+    if (title) title.textContent = 'Vybrané momenty';
+    var intro = qs('.section-intro', section);
+    if (intro) intro.textContent = 'Ukázka projektů a realizací.';
+
+    qsa('.pt-tile', section).forEach(function (tile) {
+      tile.classList.remove('jb-pt-tile--tall', 'jb-pt-tile--wide');
+      var caption = qs('.pt-caption', tile);
+      if (caption) caption.remove();
+      var labelNode = qs('.jb-pt-label', tile);
+      if (labelNode) labelNode.remove();
+    });
+
+    var cta = qs('.hp-section-cta a, .hp-section-cta .btn-secondary', section);
+    if (cta) cta.textContent = 'Prohlédnout další práce';
+  }
+
+  function hideNonTargetHomeSections() {
+    ['blog', 'cenik'].forEach(function (id) {
+      var section = qs('#' + id);
+      if (section) section.classList.add('ew-home-hidden');
+    });
+  }
+
+  function initialsFromName(name) {
+    var parts = (name || '').trim().split(/\s+/).filter(Boolean);
+    if (!parts.length) return 'RB';
+    return parts.slice(0, 2).map(function (part) {
+      return part.charAt(0).toUpperCase();
+    }).join('');
+  }
+
+  function enhanceReviews() {
+    var section = qs('#hodnoceni');
+    if (!section) return;
+    section.classList.add('ew-reviews');
+
+    var label = qs('.section-label', section);
+    if (label) label.textContent = 'Co o nás říkají klienti';
+    var title = qs('.section-title', section);
+    if (title) title.textContent = 'Vaše spokojenost je pro nás důležitá';
+
+    qsa('.hp-review-card', section).forEach(function (card, index) {
+      if (index > 2) {
+        card.classList.add('ew-hidden-review');
+        return;
+      }
+
+      if (!qs('.jb-review-meta', card)) {
+        var strong = qs('strong', card);
+        var span = qs('span', card);
+        var meta = document.createElement('div');
+        meta.className = 'jb-review-meta';
+        meta.innerHTML =
+          '<div class="jb-review-avatar">' + escapeHtml(initialsFromName(text(strong))) + '</div>' +
+          '<div class="jb-review-person"><strong>' + escapeHtml(text(strong)) + '</strong><span>' + escapeHtml(text(span) || 'Klient') + '</span></div>';
+        card.appendChild(meta);
+      }
+    });
+  }
+
+  function enhanceFaq() {
+    var section = qs('#faq');
+    if (!section || section.classList.contains('ew-faq-ready')) return;
+    section.classList.add('ew-faq-ready');
+
+    var label = qs('.section-label', section);
+    if (label) label.textContent = 'Časté otázky';
+    var title = qs('.section-title', section);
+    if (title) title.textContent = 'Máte otázky? Máme odpovědi.';
+
+    var list = qs('.hp-faq', section);
+    if (!list) return;
+
+    var existing = qsa('.hp-faq-item', list).map(function (item) {
+      return {
+        question: text(qs('.hp-faq-question, strong', item)),
+        answer: text(qs('.hp-faq-answer, p', item))
+      };
+    }).filter(function (item) {
+      return item.question;
+    });
+
+    var defaults = [
+      { question: 'Dostaneme i neupravené fotky (RAW)?', answer: 'Neupravené RAW soubory standardně nepředáváme. Dodáváme hotový výběr upravený v jednotném stylu.' },
+      { question: 'Fotíte i video?', answer: 'Ano, focení i video umíme spojit do jednoho výstupu podle rozsahu akce.' },
+      { question: 'Za jak dlouho dostaneme hotové fotografie?', answer: 'Termín záleží na rozsahu zakázky. Přesný termín si potvrdíme při domluvě.' }
+    ];
+    var items = existing.concat(defaults).slice(0, 6);
+
+    list.innerHTML = items.map(function (item, index) {
+      return '<article class="hp-faq-item ew-faq-item' + (index === 0 ? ' is-open' : '') + '">' +
+        '<button class="ew-faq-question" type="button" aria-expanded="' + (index === 0 ? 'true' : 'false') + '">' +
+        '<span>' + escapeHtml(item.question) + '</span><span class="ew-faq-plus" aria-hidden="true"></span>' +
+        '</button>' +
+        '<div class="ew-faq-answer"><p>' + escapeHtml(item.answer || 'Odpověď najdete v kompletní sekci FAQ.') + '</p></div>' +
+        '</article>';
+    }).join('');
+
+    qsa('.ew-faq-question', list).forEach(function (button) {
+      button.addEventListener('click', function () {
+        var item = button.closest('.ew-faq-item');
+        var open = !item.classList.contains('is-open');
+        item.classList.toggle('is-open', open);
+        button.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+    });
+
+    var ctaWrap = qs('.hp-section-cta', section);
+    if (!ctaWrap) {
+      ctaWrap = document.createElement('div');
+      ctaWrap.className = 'hp-section-cta ew-section-cta';
+      list.parentNode.appendChild(ctaWrap);
+    }
+    ctaWrap.innerHTML = '<a href="/faq" class="btn-secondary">Všechny FAQ</a>';
+  }
+
+  function buildProcess() {
+    var contact = qs('#kontakt');
+    if (!contact || qs('.ew-process')) return;
+
+    var section = document.createElement('section');
+    section.className = 'section ew-process';
+    section.innerHTML =
+      '<div class="container">' +
+      '  <div class="ew-section-center">' +
+      '    <p class="section-label">Jak to probíhá</p>' +
+      '    <h2 class="section-title">Jednoduchý proces, skvělý výsledek</h2>' +
+      '  </div>' +
+      '  <div class="ew-process-list">' +
+      '    <article><span>01</span><i class="ew-process-icon ew-process-icon--date"></i><h3>Domluva termínu</h3><p>Ozvěte se nám a společně si domluvíme detaily.</p></article>' +
+      '    <article><span>02</span><i class="ew-process-icon ew-process-icon--camera"></i><h3>Focení / natáčení</h3><p>Přirozeně zachytíme váš příběh a emoce.</p></article>' +
+      '    <article><span>03</span><i class="ew-process-icon ew-process-icon--edit"></i><h3>Úprava</h3><p>Pečlivě vybereme a upravíme nejlepší záběry.</p></article>' +
+      '    <article><span>04</span><i class="ew-process-icon ew-process-icon--send"></i><h3>Předání</h3><p>Dostanete hotové fotografie a video v nejvyšší kvalitě.</p></article>' +
+      '  </div>' +
+      '</div>';
+    contact.parentNode.insertBefore(section, contact);
+  }
+
+  function reorderHomeSections() {
+    var faq = qs('#faq');
+    var reviews = qs('#hodnoceni');
+    var process = qs('.ew-process');
+    var contact = qs('#kontakt');
+
+    if (faq && reviews && faq.parentNode === reviews.parentNode) {
+      faq.parentNode.insertBefore(reviews, faq);
+    }
+
+    if (process && contact && process.parentNode === contact.parentNode) {
+      contact.parentNode.insertBefore(process, contact);
+    }
+  }
+
+  function normalizeContactForm(form) {
+    if (!form || form.classList.contains('ew-form-ready')) return;
+    form.classList.add('ew-form-ready');
+
+    var hidden = qsa('input[type="hidden"]', form);
+    var submit = qs('button[type="submit"], button:not([type])', form);
+    var fields = [];
+    var nodes = qsa('label, input:not([type="hidden"]), textarea, select', form);
+
+    for (var i = 0; i < nodes.length; i += 1) {
+      var node = nodes[i];
+      if (!node || node.tagName.toLowerCase() !== 'label') continue;
+      var control = nodes[i + 1];
+      if (!control || control.tagName.toLowerCase() === 'label') continue;
+      var field = document.createElement('div');
+      field.className = 'ew-field';
+      if (control.tagName.toLowerCase() === 'textarea') field.classList.add('ew-field--wide');
+      field.appendChild(node.cloneNode(true));
+      field.appendChild(control.cloneNode(true));
+      fields.push(field);
+      i += 1;
+    }
+
+    form.innerHTML = '';
+    hidden.forEach(function (input) {
+      form.appendChild(input.cloneNode(true));
+    });
+    fields.forEach(function (field) {
+      form.appendChild(field);
+    });
+    if (submit) {
+      form.appendChild(submit.cloneNode(true));
+    }
+  }
+
+  function enhanceContact() {
+    var section = qs('#kontakt');
+    if (!section || section.classList.contains('ew-contact-ready')) return;
+    section.classList.add('ew-contact-ready');
+
+    var container = qs('.container', section);
+    var title = qs('.section-title', section);
+    var label = qs('.section-label', section);
+    var intro = qs('.section-intro', section);
+    var form = qs('form', section);
+    if (!container || !form) return;
+
+    if (label) label.textContent = 'Kontakt';
+    if (title) title.textContent = 'Pojďme si říct o vašem focení nebo videu.';
+    if (intro) intro.textContent = 'Ozvěte se nám. Odpovídáme rychle.';
+    normalizeContactForm(form);
+
+    var visual = pickContactVisual();
+    var header = document.createElement('div');
+    header.className = 'ew-contact-header';
+    if (label) header.appendChild(label);
+    if (title) header.appendChild(title);
+    if (intro) header.appendChild(intro);
+
+    var formCard = form.closest('.hp-contact-box') || form.parentNode;
+    var layout = document.createElement('div');
+    layout.className = 'ew-contact-panel';
+    layout.innerHTML = '<div class="ew-contact-image">' + (visual ? '<img src="' + escapeHtml(visual) + '" alt="Kontakt RB Videos & Photos" loading="lazy">' : '') + '</div>';
+
+    var right = document.createElement('div');
+    right.className = 'ew-contact-form-wrap';
+    right.appendChild(header);
+    right.appendChild(form);
+    layout.appendChild(right);
+
+    container.innerHTML = '';
+    container.appendChild(layout);
+  }
+
+  function syncFooterContactFromSection() {
+    var section = qs('#kontakt');
+    var footer = qs('.site-footer-contact');
+    if (!section || !footer) return;
+
+    var rows = qsa('a[href^="tel:"], a[href^="mailto:"]', document).map(function (link) {
+      var href = link.getAttribute('href') || '';
+      var value = text(link);
+      if (!value) return null;
+      return {
+        label: /^tel:/i.test(href) ? 'Telefon' : 'E-mail',
+        href: href,
+        value: value
+      };
+    }).filter(Boolean);
+
+    var unique = [];
+    rows.forEach(function (row) {
+      if (!unique.some(function (item) { return item.href === row.href; })) unique.push(row);
+    });
+    unique = unique.slice(0, 3);
+    if (!unique.length) return;
+
+    var title = qs('.site-footer-title', footer);
+    var titleHtml = title ? title.outerHTML : '<div class="site-footer-title">Kontakt</div>';
+    footer.innerHTML = titleHtml + unique.map(function (item) {
+      return '<a class="site-footer-contact__item" href="' + escapeHtml(item.href) + '">' +
+        '<span>' + escapeHtml(item.label) + '</span>' +
+        '<strong>' + escapeHtml(item.value) + '</strong>' +
+      '</a>';
+    }).join('');
+  }
+
   function initReveals() {
-    markReveals();
-    var elements = qsa('.jb-reveal');
+    var elements = qsa('.ew-about-grid, .pt-tile, .ew-service-card, .hp-review-card, .ew-faq-item, .ew-process-list article, .ew-contact-panel');
     if (!elements.length) return;
 
     if (!('IntersectionObserver' in window)) {
@@ -101,398 +525,28 @@
     }, { threshold: 0.12, rootMargin: '0px 0px -48px 0px' });
 
     elements.forEach(function (element, index) {
-      element.style.transitionDelay = Math.min(index * 70, 280) + 'ms';
+      element.classList.add('ew-reveal');
+      element.style.transitionDelay = Math.min(index * 45, 180) + 'ms';
       observer.observe(element);
     });
   }
 
-  function enhanceHero() {
-    var hero = qs('.hp-hero');
-    if (!hero) return;
-    var container = qs('.container', hero);
-    if (!container) return;
-
-    hero.classList.add('jb-hero');
-
-    var cta = qs('.hero-cta-wrap', hero);
-    if (cta && !qs('.jb-hero-secondary', cta)) {
-      var secondary = document.createElement('a');
-      secondary.className = 'btn-secondary jb-hero-secondary';
-      secondary.href = '#nase-prace';
-      secondary.textContent = 'Portfolio';
-      cta.appendChild(secondary);
-    }
-
-    var heading = qs('h1', hero);
-    if (heading && !heading.querySelector('span')) {
-      accentLastWord(heading);
-    }
-
-    var cue = qs('.jb-scroll-cue', hero);
-    if (!cue) {
-      cue = document.createElement('div');
-      cue.className = 'jb-scroll-cue';
-      cue.innerHTML = '<span>Scroll</span>';
-    }
-
-    if (cue.parentNode !== container) {
-      container.appendChild(cue);
-    }
-  }
-
-  function enhanceServices() {
-    var section = qs('#sluzby');
-    if (!section || qs('.jb-about-shell', section)) return;
-    var container = qs('.container', section);
-    var label = qs('.section-label', section);
-    var title = qs('.section-title', section);
-    var intro = qs('.section-intro', section);
-    var grid = qs('.hp-services-grid, .svc-grid', section);
-    if (!container || !label || !title || !intro || !grid) return;
-
-    accentLastWord(title);
-    section.classList.add('jb-about-section');
-
-    var shell = document.createElement('div');
-    shell.className = 'jb-about-shell';
-
-    function pickVisualImage() {
-      var sourceImage = qs('.jb-about-visual__source');
-      if (sourceImage) {
-        var sourceSrc = sourceImage.getAttribute('data-src') || sourceImage.getAttribute('src') || '';
-        if (sourceSrc) {
-          return sourceSrc;
-        }
-      }
-      var serviceImage = qs('.hp-svc-card__media img, .svc-card img', grid);
-      if (serviceImage && serviceImage.getAttribute('src')) {
-        return serviceImage.getAttribute('src');
-      }
-      var portfolioImage = qs('#nase-prace .pt-thumb img');
-      if (portfolioImage && portfolioImage.getAttribute('src')) {
-        return portfolioImage.getAttribute('src');
-      }
-      var blogImage = qs('.hp-blog-thumb img');
-      return blogImage ? blogImage.getAttribute('src') : '';
-    }
-
-    var visualImage = pickVisualImage();
-    var visualInner = visualImage
-      ? '<img class="jb-about-visual__media" src="' + visualImage + '" alt="Nase sluzby" loading="lazy">'
-      : '<span>[ Vase fotografie ]</span>';
-
-    var visual = document.createElement('div');
-    visual.className = 'jb-about-visual jb-reveal';
-    visual.innerHTML =
-      '<div class="jb-about-visual__frame"></div>' +
-      '<div class="jb-about-visual__panel' + (visualImage ? ' has-image' : '') + '">' + visualInner + '</div>' +
-      '<div class="jb-about-badge"><strong>10+</strong><span>let zkusenosti</span></div>';
-
-    var copy = document.createElement('div');
-    copy.className = 'jb-about-copy jb-reveal';
-    copy.appendChild(label);
-    copy.appendChild(title);
-    copy.appendChild(intro);
-
-    var highlights = document.createElement('div');
-    highlights.className = 'jb-about-highlights';
-    qsa('.hp-svc-card, .svc-card', grid).slice(0, 4).forEach(function (card) {
-      card.classList.add('jb-panel-card');
-      var item = document.createElement('div');
-      item.className = 'jb-about-highlight';
-      var cardTitle = qs('.hp-svc-card__title, h3', card);
-      var cardDesc = qs('.hp-svc-card__desc, p', card);
-      item.innerHTML =
-        '<span class="jb-about-highlight__icon" aria-hidden="true"><span></span></span>' +
-        '<div><strong>' + ((cardTitle && cardTitle.textContent) ? cardTitle.textContent.trim() : 'Sluzba') + '</strong>' +
-        '<p>' + ((cardDesc && cardDesc.textContent) ? cardDesc.textContent.trim() : '') + '</p></div>';
-      highlights.appendChild(item);
-    });
-
-    if (highlights.children.length < 4) {
-      var extra = document.createElement('div');
-      extra.className = 'jb-about-highlight jb-about-highlight--accent';
-      extra.innerHTML =
-        '<span class="jb-about-highlight__icon" aria-hidden="true"><span></span></span>' +
-        '<div><strong>Akce & události</strong>' +
-        '<p>Konference, kulturní akce, plesy i firemní večery. Zachytím důležité momenty, které se stanou součástí vaší značky.</p></div>';
-      highlights.appendChild(extra);
-    }
-
-    copy.appendChild(highlights);
-    shell.appendChild(visual);
-    shell.appendChild(copy);
-    container.insertBefore(shell, grid);
-
-    if (qs('.hp-hero')) {
-      grid.style.display = 'none';
-    }
-  }
-
-  function enhancePortfolio() {
-    var section = qs('#nase-prace');
-    if (!section) return;
-    var title = qs('.section-title', section);
-    if (title) accentLastWord(title);
-
-    qsa('.pt-tile', section).forEach(function (tile, index) {
-      tile.classList.add('jb-panel-card');
-      var thumb = qs('.pt-thumb', tile);
-      var caption = qs('.pt-caption', tile);
-      if (thumb && caption && !qs('.jb-pt-label', thumb)) {
-        var label = document.createElement('div');
-        label.className = 'jb-pt-label';
-        label.textContent = (caption.textContent || '').trim();
-        thumb.appendChild(label);
-        caption.remove();
-      }
-
-      if (index === 0) tile.classList.add('jb-pt-tile--tall');
-      if (index === 3) tile.classList.add('jb-pt-tile--wide');
-    });
-  }
-
-  function enhancePricing() {
-    var section = qs('#cenik');
-    if (!section) return;
-    var title = qs('.section-title', section);
-    if (title) accentLastWord(title);
-
-    var icons = ['basic', 'standard', 'premium'];
-    qsa('.hp-cenik-card', section).forEach(function (card, index) {
-      card.classList.add('jb-panel-card');
-      if (!qs('.jb-price-icon', card)) {
-        var icon = document.createElement('div');
-        icon.className = 'jb-price-icon jb-price-icon--' + (icons[index] || 'spark');
-        card.insertBefore(icon, card.firstChild);
-      }
-
-      if (card.classList.contains('hp-cenik-card--featured') && !qs('.jb-price-badge', card)) {
-        var badge = document.createElement('div');
-        badge.className = 'jb-price-badge';
-        badge.textContent = 'Nejoblibenejsi';
-        card.appendChild(badge);
-      }
-    });
-  }
-
-  function initialsFromName(name) {
-    var parts = (name || '').trim().split(/\s+/).filter(Boolean);
-    if (!parts.length) return 'R';
-    return parts.slice(0, 2).map(function (part) {
-      return part.charAt(0).toUpperCase();
-    }).join('&');
-  }
-
-  function enhanceReviews() {
-    var section = qs('#hodnoceni');
-    if (!section) return;
-    var title = qs('.section-title', section);
-    if (title) accentLastWord(title);
-
-    qsa('.hp-review-card', section).forEach(function (card, index) {
-      card.classList.add('jb-panel-card');
-      if (index > 2) {
-        card.classList.add('jb-review-card--hidden');
-        return;
-      }
-
-      if (!qs('.jb-review-meta', card)) {
-        var strong = qs('strong', card);
-        var span = qs('span', card);
-        var meta = document.createElement('div');
-        meta.className = 'jb-review-meta';
-        meta.innerHTML =
-          '<div class="jb-review-avatar">' + initialsFromName(strong ? strong.textContent : '') + '</div>' +
-          '<div class="jb-review-person"><strong>' + (strong ? strong.textContent : '') + '</strong><span>' + (span ? span.textContent : '') + '</span></div>';
-        card.appendChild(meta);
-      }
-    });
-  }
-
-  function enhanceFaq() {
-    var section = qs('#faq');
-    if (!section) return;
-    var title = qs('.section-title', section);
-    if (title) accentLastWord(title);
-
-    qsa('.hp-faq-item', section).forEach(function (item) {
-      item.classList.add('jb-panel-card');
-
-      var question = qs('.hp-faq-question, strong', item);
-      if (question) {
-        var text = (question.textContent || '').trim();
-        if (text.length > 30) {
-          question.textContent = text.slice(0, 30).trimEnd() + '…';
-        }
-      }
-
-      var answer = qs('.hp-faq-answer, p', item);
-      if (answer) {
-        var answerText = (answer.textContent || '').trim();
-        answer.textContent = answerText.length > 20
-          ? answerText.slice(0, 20).trimEnd() + '…'
-          : answerText;
-        answer.className = 'hp-faq-excerpt';
-        if (question) {
-          var hr = document.createElement('hr');
-          hr.className = 'hp-faq-hr';
-          question.insertAdjacentElement('afterend', hr);
-        }
-      }
-
-      item.style.cursor = 'pointer';
-      item.addEventListener('click', function () {
-        window.location.href = '/faq';
-      });
-    });
-  }
-
-  function buildStaticProcess() {
-    var reviews = qs('#hodnoceni');
-    var contact = qs('#kontakt');
-    if (!contact || qs('.jb-process')) return;
-
-    var section = document.createElement('section');
-    section.className = 'section jb-process';
-    section.innerHTML =
-      '<div class="container">' +
-      '  <div class="jb-process__header jb-reveal">' +
-      '    <p class="section-label">Jak to probiha</p>' +
-      '    <h2 class="section-title">Cesta k vasim <span>dokonalym fotkam</span></h2>' +
-      '  </div>' +
-      '  <div class="jb-process__steps">' +
-      '    <article class="jb-process-step jb-reveal"><div class="jb-process-step__num">01</div><h3>Seznameni</h3><p>Nezavazna konzultace, kde probereme vase predstavy, styl a termin foceni nebo svatby.</p></article>' +
-      '    <article class="jb-process-step jb-reveal"><div class="jb-process-step__num">02</div><h3>Planovani</h3><p>Spolecne nastavime harmonogram, lokace a dulezite momenty, ktere chceme zachytit.</p></article>' +
-      '    <article class="jb-process-step jb-reveal"><div class="jb-process-step__num">03</div><h3>Vas den</h3><p>Diskretne zachytim emoce, detaily i spontanni okamziky tak, aby vse pusobilo prirozene.</p></article>' +
-      '    <article class="jb-process-step jb-reveal"><div class="jb-process-step__num">04</div><h3>Predani</h3><p>Hotove vystupy dostanete v online galerii a ve finalni podobe pripravene pro dalsi sdileni i tisk.</p></article>' +
-      '  </div>' +
-      '</div>';
-
-    if (reviews && reviews.parentNode) {
-      reviews.parentNode.insertBefore(section, contact);
-      return;
-    }
-    contact.parentNode.insertBefore(section, contact);
-  }
-
-  function detectSocialNetwork(name, href) {
-    var text = ((name || '') + ' ' + (href || '')).toLowerCase();
-    if (/instagram/.test(text)) return 'instagram';
-    if (/facebook|fb\.com/.test(text)) return 'facebook';
-    if (/youtube/.test(text)) return 'youtube';
-    if (/tiktok/.test(text)) return 'tiktok';
-    if (/linkedin/.test(text)) return 'linkedin';
-    if (/pinterest/.test(text)) return 'pinterest';
-    return 'link';
-  }
-
-  function enhanceContact() {
-    var section = qs('#kontakt');
-    if (!section || qs('.jb-contact-meta', section)) return;
-    var title = qs('.section-title', section);
-    if (title) accentLastWord(title);
-
-    var infoBox = qsa('.hp-contact-box', section)[0];
-    var formBox = qsa('.hp-contact-box', section)[1];
-    if (!infoBox || !formBox) return;
-
-    var meta = document.createElement('div');
-    meta.className = 'jb-contact-meta jb-reveal';
-
-    var socialLinks = [];
-
-    qsa('.hp-contact-row', infoBox).forEach(function (row) {
-      var label = qs('.hp-contact-label', row);
-      var link = qs('a', row);
-      var labelText = ((label && label.textContent) || '').toLowerCase();
-      if (!link) return;
-
-      var labelNorm = labelText.normalize('NFD').replace(/[̀-ͯ]/g, '');
-      if (/sit|site|social|instagram|facebook|youtube|tiktok|linkedin|pinterest|telegram|whatsapp/.test(labelNorm)) {
-        socialLinks.push({ href: link.getAttribute('href'), name: link.textContent.trim() });
-        return;
-      }
-
-      var item = document.createElement('div');
-      item.className = 'jb-contact-meta__item';
-      item.innerHTML =
-        '<span class="jb-contact-meta__label">' + (label ? label.textContent.trim() : '') + '</span>' +
-        '<a href="' + link.getAttribute('href') + '">' + link.textContent.trim() + '</a>';
-      meta.appendChild(item);
-    });
-
-    if (socialLinks.length) {
-      var socialsWrap = document.createElement('div');
-      socialsWrap.className = 'jb-contact-socials';
-      socialLinks.forEach(function (s) {
-        var network = detectSocialNetwork(s.name, s.href);
-        var btn = document.createElement('a');
-        btn.className = 'jb-contact-social-btn';
-        btn.href = s.href;
-        btn.target = '_blank';
-        btn.rel = 'noopener';
-        btn.innerHTML =
-          '<span class="jb-contact-social-btn__icon jb-contact-social-btn__icon--' + network + '"></span>' +
-          '<span class="jb-contact-social-btn__label">' + s.name + '</span>';
-        socialsWrap.appendChild(btn);
-      });
-      meta.appendChild(socialsWrap);
-    }
-
-    formBox.appendChild(meta);
-    formBox.classList.add('jb-panel-card');
-    infoBox.classList.add('jb-contact-box--hidden');
-  }
-
-  function syncFooterContactFromSection() {
-    var section = qs('#kontakt');
-    var footer = qs('.site-footer-contact');
-    if (!section || !footer) return;
-
-    var rows = qsa('.hp-contact-row', section).map(function (row) {
-      var label = qs('.hp-contact-label', row);
-      var link = qs('a', row);
-      var labelText = ((label && label.textContent) || '').trim();
-      var labelKey = labelText.toLowerCase();
-      var href = link ? (link.getAttribute('href') || '') : '';
-      if (!link) return null;
-      var labelKeyNorm = labelKey.normalize('NFD').replace(/[̀-ͯ]/g, '');
-      if (/sit|site|social|instagram|facebook|youtube|tiktok|linkedin|pinterest|telegram|whatsapp/.test(labelKeyNorm)) {
-        return null;
-      }
-      if (!/^(tel:|mailto:)/i.test(href)) {
-        return null;
-      }
-      return {
-        label: labelText,
-        href: href,
-        value: (link.textContent || '').trim()
-      };
-    }).filter(Boolean);
-
-    if (!rows.length) return;
-
-    var title = qs('.site-footer-title', footer);
-    var titleHtml = title ? title.outerHTML : '<div class="site-footer-title">Kontakt</div>';
-    footer.innerHTML = titleHtml + rows.map(function (item) {
-      return '<a class="site-footer-contact__item" href="' + item.href + '">' +
-        '<span>' + item.label + '</span>' +
-        '<strong>' + item.value + '</strong>' +
-      '</a>';
-    }).join('');
-  }
-
   initHeaderScroll();
   initMobileNav();
-  enhanceHero();
-  enhanceServices();
-  enhancePortfolio();
-  enhancePricing();
-  enhanceReviews();
-  enhanceFaq();
-  buildStaticProcess();
-  enhanceContact();
+  ensureNavCta();
+
+  if (isHomepage()) {
+    enhanceHero();
+    enhanceAboutAndServices();
+    enhancePortfolio();
+    hideNonTargetHomeSections();
+    enhanceReviews();
+    enhanceFaq();
+    buildProcess();
+    reorderHomeSections();
+    enhanceContact();
+  }
+
   syncFooterContactFromSection();
   initReveals();
 })();
