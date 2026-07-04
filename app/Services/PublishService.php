@@ -223,7 +223,11 @@ class PublishService
     private function regenerateSitemapAndRobots(int $siteId, array $site): void
     {
         $pages = $this->pages->findPublishedBySite($siteId);
-        $sitemapItems = array_merge($pages, $this->blogPostsAsSitemapItems($siteId));
+        $sitemapItems = array_merge(
+            $pages,
+            $this->builtInPublicRouteSitemapItems($pages),
+            $this->blogPostsAsSitemapItems($siteId)
+        );
 
         $seoCfg  = Config::get('seo');
         $sitemapXml = $this->sitemap->generate($sitemapItems, $site['domain'], $seoCfg['sitemap_changefreq'], $seoCfg['sitemap_priority']);
@@ -234,6 +238,29 @@ class PublishService
 
         $llmsTxt = (new LlmsTxtGenerator())->generate($site, $pages);
         file_put_contents($this->publishedDir . '/llms.txt', $llmsTxt);
+    }
+
+    private function builtInPublicRouteSitemapItems(array $pages): array
+    {
+        $existingPaths = [];
+        foreach ($pages as $page) {
+            $existingPaths[] = trim((string)($page['url_path'] ?? ''), '/');
+        }
+
+        $items = [];
+        foreach (['kontakt', 'nase-prace'] as $path) {
+            if (in_array($path, $existingPaths, true)) {
+                continue;
+            }
+
+            $items[] = [
+                'url_path' => $path,
+                'published_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s'),
+            ];
+        }
+
+        return $items;
     }
 
     private function blogPostsAsSitemapItems(int $siteId): array

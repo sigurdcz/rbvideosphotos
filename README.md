@@ -171,7 +171,11 @@ php database/seeds/seed_photographer.php --fresh
 
 ### /llms.txt
 
-Na kazdem publishovani se do `storage/published/llms.txt` zapise soubor dle specifikace [llmstxt.org](https://llmstxt.org/). Obsahuje nazev webu, popis a seznam vsech stranek s URL a meta popisky — pro AI indexery analogicky jako `sitemap.xml` pro crawlery.
+Na kazdem publishovani se do `storage/published/llms.txt` zapise soubor dle specifikace [llmstxt.org](https://llmstxt.org/). Neni to jen prosty seznam URL: generuje strukturovany prehled hlavniho ucelu webu, dulezitych stranek, cen, kontaktu, instrukci pro AI agenty a odkazu na discovery soubory.
+
+### /sitemap.xml
+
+Publikovana `sitemap.xml` obsahuje vsechny bezne indexovatelne CMS stranky, root-slug blog clanky a take verejne dynamicke routy jako `/kontakt` a `/nase-prace`, i kdyz nejsou ulozene jako bezna publikovana CMS stranka.
 
 ## Dulezite URL pravidlo
 

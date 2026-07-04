@@ -22,7 +22,7 @@ class SeoRenderer
             $lines[] = '<meta name="keywords" content="' . $this->e($seo['meta_keywords']) . '">';
         }
         $lines[] = '<meta name="robots" content="' . implode(',', $robots) . '">';
-        $canonical = !empty($seo['canonical_url']) ? $seo['canonical_url'] : $pageUrl;
+        $canonical = $this->normalizeUrl((string)($seo['canonical_url'] ?? ''), $site, $pageUrl);
         $lines[] = '<link rel="canonical" href="' . $this->e($canonical) . '">';
 
         if (!empty($site['favicon_ico_url'])) {
@@ -43,6 +43,7 @@ class SeoRenderer
         if ($ogTitle) $lines[] = '<meta property="og:title" content="' . $this->e($ogTitle) . '">';
         if ($ogDesc)  $lines[] = '<meta property="og:description" content="' . $this->e($ogDesc) . '">';
         $lines[] = '<meta property="og:type" content="website">';
+        $lines[] = '<meta property="og:site_name" content="' . $this->e((string)($site['name'] ?? '')) . '">';
         $lines[] = '<meta property="og:url" content="' . $this->e($canonical) . '">';
         if ($ogImageUrl) $lines[] = '<meta property="og:image" content="' . $this->e($ogImageUrl) . '">';
 
@@ -125,6 +126,29 @@ HTML;
     private function e(string $v): string
     {
         return htmlspecialchars($v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    }
+
+    private function normalizeUrl(string $candidate, array $site, string $fallback): string
+    {
+        $candidate = trim($candidate);
+        if ($candidate === '') {
+            return $fallback;
+        }
+
+        if (preg_match('~^https?://~i', $candidate)) {
+            return $candidate;
+        }
+
+        $domain = rtrim((string)($site['domain'] ?? ''), '/');
+        if ($domain === '') {
+            return $candidate;
+        }
+
+        if ($candidate === '/') {
+            return $domain . '/';
+        }
+
+        return $domain . '/' . ltrim($candidate, '/');
     }
 
     public function renderConsentRuntime(array $site): string

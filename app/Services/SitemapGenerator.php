@@ -11,8 +11,8 @@ class SitemapGenerator
         $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
 
         foreach ($pages as $page) {
-            $path    = ltrim($page['url_path'], '/');
-            $loc     = $path === '' ? $domain . '/' : $domain . '/' . $path . '/';
+            $path    = trim((string)($page['url_path'] ?? ''), '/');
+            $loc     = $this->buildUrl($domain, $path);
             $lastmod = date('Y-m-d', strtotime($page['published_at'] ?? $page['updated_at'] ?? 'now'));
             $xml .= "  <url>\n";
             $xml .= "    <loc>" . htmlspecialchars($loc, ENT_XML1) . "</loc>\n";
@@ -24,5 +24,14 @@ class SitemapGenerator
 
         $xml .= '</urlset>';
         return $xml;
+    }
+
+    private function buildUrl(string $domain, string $path): string
+    {
+        if ($path === '') {
+            return $domain . '/';
+        }
+
+        return $domain . '/' . ltrim($path, '/');
     }
 }

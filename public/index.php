@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /*
  * Public front-end entry point.
  *
@@ -452,6 +452,243 @@ function renderBreadcrumbJsonLd(array $items, string $domain): string
     return $json ? '<script type="application/ld+json" data-cms-breadcrumb-schema>' . $json . '</script>' : '';
 }
 
+function absolutePublicUrl(array $site, string $path = '/'): string
+{
+    $domain = rtrim(trim((string)($site['domain'] ?? '')), '/');
+    $normalizedPath = trim($path);
+    if ($normalizedPath === '') {
+        $normalizedPath = '/';
+    }
+
+    if ($domain === '') {
+        return $normalizedPath === '/' ? '/' : '/' . ltrim($normalizedPath, '/');
+    }
+
+    if ($normalizedPath === '/') {
+        return $domain . '/';
+    }
+
+    return $domain . '/' . ltrim($normalizedPath, '/');
+}
+
+function normalizeCanonicalUrl(string $candidate, array $site, string $fallbackPath): string
+{
+    $candidate = trim($candidate);
+    if ($candidate === '') {
+        return absolutePublicUrl($site, $fallbackPath);
+    }
+
+    if (preg_match('~^https?://~i', $candidate)) {
+        return $candidate;
+    }
+
+    return absolutePublicUrl($site, $candidate);
+}
+
+function upsertHeadTag(string $html, string $pattern, string $tag): string
+{
+    if (preg_match($pattern, $html)) {
+        return preg_replace($pattern, $tag, $html, 1) ?? $html;
+    }
+
+    if (stripos($html, '</head>') === false) {
+        return $html;
+    }
+
+    return str_replace('</head>', $tag . "\n</head>", $html);
+}
+
+function injectPageHeadMetadata(string $html, array $site, array $meta): string
+{
+    if (stripos($html, '</head>') === false) {
+        return $html;
+    }
+
+    $title = htmlspecialchars((string)($meta['title'] ?? ($site['name'] ?? 'Web')), ENT_QUOTES, 'UTF-8');
+    $description = htmlspecialchars(trim((string)($meta['description'] ?? '')), ENT_QUOTES, 'UTF-8');
+    $path = (string)($meta['path'] ?? '/');
+    $canonical = htmlspecialchars(normalizeCanonicalUrl((string)($meta['canonical'] ?? ''), $site, $path), ENT_QUOTES, 'UTF-8');
+    $robots = htmlspecialchars((string)($meta['robots'] ?? 'index,follow'), ENT_QUOTES, 'UTF-8');
+    $ogType = htmlspecialchars((string)($meta['og_type'] ?? 'website'), ENT_QUOTES, 'UTF-8');
+    $siteName = htmlspecialchars((string)($site['name'] ?? 'Web'), ENT_QUOTES, 'UTF-8');
+    $ogImage = trim((string)($meta['og_image'] ?? ''));
+    $twitterImage = trim((string)($meta['twitter_image'] ?? $ogImage));
+
+    if (!preg_match('~<meta\s+charset=~i', $html)) {
+        $html = str_replace('<head>', "<head>\n<meta charset=\"UTF-8\">", $html);
+    }
+    if (!preg_match('~<meta\s+name=(["\'])viewport\1~i', $html)) {
+        $html = str_replace('</head>', "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n</head>", $html);
+    }
+
+    $html = upsertHeadTag($html, '~<title\b[^>]*>.*?</title>~is', '<title>' . $title . '</title>');
+    if ($description !== '') {
+        $html = upsertHeadTag($html, '~<meta\s+name=(["\'])description\1[^>]*>~i', '<meta name="description" content="' . $description . '">');
+    }
+    $html = upsertHeadTag($html, '~<meta\s+name=(["\'])robots\1[^>]*>~i', '<meta name="robots" content="' . $robots . '">');
+    $html = upsertHeadTag($html, '~<link\s+rel=(["\'])canonical\1[^>]*>~i', '<link rel="canonical" href="' . $canonical . '">');
+    $html = upsertHeadTag($html, '~<meta\s+property=(["\'])og:title\1[^>]*>~i', '<meta property="og:title" content="' . $title . '">');
+    if ($description !== '') {
+        $html = upsertHeadTag($html, '~<meta\s+property=(["\'])og:description\1[^>]*>~i', '<meta property="og:description" content="' . $description . '">');
+        $html = upsertHeadTag($html, '~<meta\s+name=(["\'])twitter:description\1[^>]*>~i', '<meta name="twitter:description" content="' . $description . '">');
+    }
+    $html = upsertHeadTag($html, '~<meta\s+property=(["\'])og:type\1[^>]*>~i', '<meta property="og:type" content="' . $ogType . '">');
+    $html = upsertHeadTag($html, '~<meta\s+property=(["\'])og:url\1[^>]*>~i', '<meta property="og:url" content="' . $canonical . '">');
+    $html = upsertHeadTag($html, '~<meta\s+property=(["\'])og:site_name\1[^>]*>~i', '<meta property="og:site_name" content="' . $siteName . '">');
+    $html = upsertHeadTag($html, '~<meta\s+name=(["\'])twitter:card\1[^>]*>~i', '<meta name="twitter:card" content="summary_large_image">');
+    $html = upsertHeadTag($html, '~<meta\s+name=(["\'])twitter:title\1[^>]*>~i', '<meta name="twitter:title" content="' . $title . '">');
+    if ($ogImage !== '') {
+        $safeOgImage = htmlspecialchars($ogImage, ENT_QUOTES, 'UTF-8');
+        $html = upsertHeadTag($html, '~<meta\s+property=(["\'])og:image\1[^>]*>~i', '<meta property="og:image" content="' . $safeOgImage . '">');
+    }
+    if ($twitterImage !== '') {
+        $safeTwitterImage = htmlspecialchars($twitterImage, ENT_QUOTES, 'UTF-8');
+        $html = upsertHeadTag($html, '~<meta\s+name=(["\'])twitter:image\1[^>]*>~i', '<meta name="twitter:image" content="' . $safeTwitterImage . '">');
+    }
+
+    foreach (($meta['json_ld'] ?? []) as $index => $jsonLd) {
+        $jsonLd = trim((string)$jsonLd);
+        if ($jsonLd === '') {
+            continue;
+        }
+        $marker = 'data-cms-page-schema="' . $index . '"';
+        if (str_contains($html, $marker)) {
+            continue;
+        }
+        $html = str_replace('</head>', '<script type="application/ld+json" ' . $marker . '>' . $jsonLd . '</script>' . "\n</head>", $html);
+    }
+
+    return injectFaviconLinks($html, $site);
+}
+
+function jsonLd(array $payload): string
+{
+    return (string)(json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?: '');
+}
+
+function renderFaqPageJsonLd(array $site, array $items): string
+{
+    $questions = [];
+    foreach ($items as $item) {
+        $question = trim((string)($item['question'] ?? ''));
+        $answer = trim((string)($item['answer'] ?? ''));
+        if ($question === '' || $answer === '') {
+            continue;
+        }
+        $questions[] = [
+            '@type' => 'Question',
+            'name' => $question,
+            'acceptedAnswer' => [
+                '@type' => 'Answer',
+                'text' => $answer,
+            ],
+        ];
+    }
+
+    if ($questions === []) {
+        return '';
+    }
+
+    return jsonLd([
+        '@context' => 'https://schema.org',
+        '@type' => 'FAQPage',
+        'mainEntity' => $questions,
+    ]);
+}
+
+function renderContactPageJsonLd(array $site, array $contact): string
+{
+    $graph = [[
+        '@type' => 'ContactPage',
+        'name' => 'Kontakt',
+        'url' => absolutePublicUrl($site, '/kontakt'),
+        'isPartOf' => absolutePublicUrl($site, '/'),
+    ]];
+
+    $contactPoint = ['@type' => 'ContactPoint'];
+    $hasContactPoint = false;
+    if (!empty($contact['email'])) {
+        $contactPoint['email'] = trim((string)$contact['email']);
+        $hasContactPoint = true;
+    }
+    if (!empty($contact['phone_1'])) {
+        $contactPoint['telephone'] = trim((string)$contact['phone_1']);
+        $hasContactPoint = true;
+    }
+    if ($hasContactPoint) {
+        $contactPoint['contactType'] = 'customer support';
+        $graph[] = $contactPoint;
+    }
+
+    return jsonLd([
+        '@context' => 'https://schema.org',
+        '@graph' => $graph,
+    ]);
+}
+
+function renderBlogListingJsonLd(array $site, array $posts): string
+{
+    $blogPosts = [];
+    foreach ($posts as $post) {
+        $slug = trim((string)($post['slug'] ?? ''), '/');
+        $title = trim((string)($post['title'] ?? ''));
+        if ($slug === '' || $title === '') {
+            continue;
+        }
+        $blogPost = [
+            '@type' => 'BlogPosting',
+            'headline' => $title,
+            'url' => absolutePublicUrl($site, '/' . $slug),
+        ];
+        if (!empty($post['published_at'])) {
+            $blogPost['datePublished'] = date(DATE_ATOM, strtotime((string)$post['published_at']));
+        }
+        if (!empty($post['updated_at'])) {
+            $blogPost['dateModified'] = date(DATE_ATOM, strtotime((string)$post['updated_at']));
+        }
+        $description = trim((string)($post['meta_description'] ?? $post['excerpt'] ?? ''));
+        if ($description !== '') {
+            $blogPost['description'] = $description;
+        }
+        $blogPosts[] = $blogPost;
+    }
+
+    return jsonLd([
+        '@context' => 'https://schema.org',
+        '@type' => 'Blog',
+        'name' => 'Blog',
+        'url' => absolutePublicUrl($site, '/blog'),
+        'blogPost' => $blogPosts,
+    ]);
+}
+
+function renderBlogPostJsonLd(array $site, array $post, string $canonical, ?string $imageUrl = null): string
+{
+    $payload = [
+        '@context' => 'https://schema.org',
+        '@type' => 'BlogPosting',
+        'headline' => trim((string)($post['title'] ?? '')),
+        'url' => $canonical,
+        'mainEntityOfPage' => $canonical,
+    ];
+
+    $description = trim((string)($post['meta_description'] ?? $post['excerpt'] ?? ''));
+    if ($description !== '') {
+        $payload['description'] = $description;
+    }
+    if (!empty($post['published_at'])) {
+        $payload['datePublished'] = date(DATE_ATOM, strtotime((string)$post['published_at']));
+    }
+    if (!empty($post['updated_at'])) {
+        $payload['dateModified'] = date(DATE_ATOM, strtotime((string)$post['updated_at']));
+    }
+    if ($imageUrl !== null && trim($imageUrl) !== '') {
+        $payload['image'] = $imageUrl;
+    }
+
+    return jsonLd($payload);
+}
+
 /**
  * Centralni doplneni favicon odkazu do <head> pro vsechny stranky.
  * Specialni handlery (FAQ, Kontakt, portfolio, hodnoceni, blog) vkladaji do
@@ -525,7 +762,7 @@ function normalizeContactFormAccessibility(string $html): string
     $html = preg_replace('~<label>([^<]*\*)</label><input type="text" name="name"~u', '<label for="kontakt-name">$1</label><input id="kontakt-name" type="text" name="name" autocomplete="name"', $html) ?? $html;
     $html = preg_replace('~<label>([^<]*\*)</label><input type="text" name="contact_value"~u', '<label for="kontakt-value">$1</label><input id="kontakt-value" type="text" name="contact_value" autocomplete="email" inputmode="email"', $html) ?? $html;
     $html = preg_replace('~<label>([^<]*\*)</label><select name="shooting_type"~u', '<label for="kontakt-shooting-type">$1</label><select id="kontakt-shooting-type" name="shooting_type"', $html) ?? $html;
-    $html = preg_replace('~<label>([^<]*)</label><input type="text" name="event_date"~u', '<label for="kontakt-event-date">$1</label><input id="kontakt-event-date" type="text" name="event_date" autocomplete="off"', $html) ?? $html;
+    $html = preg_replace('~<label>([^<]*)</label><input type="text" name="event_date"~u', '<label for="kontakt-event-date">$1</label><input id="kontakt-event-date" type="date" name="event_date" autocomplete="off"', $html) ?? $html;
     $html = preg_replace('~<label>([^<]*)</label><input type="text" name="event_place"~u', '<label for="kontakt-event-place">$1</label><input id="kontakt-event-place" type="text" name="event_place" autocomplete="address-level2"', $html) ?? $html;
     $html = preg_replace('~<label>([^<]*)</label><textarea name="message"~u', '<label for="kontakt-message">$1</label><textarea id="kontakt-message" name="message"', $html) ?? $html;
     $html = str_replace('<label class="kt-consent"><input type="checkbox" required>', '<label class="kt-consent" for="kontakt-consent"><input id="kontakt-consent" type="checkbox" name="privacy_consent" required>', $html);
@@ -2105,10 +2342,10 @@ function tryServeFaqPage(): bool
     foreach ($items as $item) {
         $questionAttrs = inlineAttrs($page, 'faq:' . (int)$item['id'] . ':question', 'text');
         $answerAttrs = inlineAttrs($page, 'faq:' . (int)$item['id'] . ':answer', 'text');
-        $faqHtml .= '<div class="faq-item">'
-            . '<h3 class="faq-q"' . $questionAttrs . '>' . $h($item['question']) . '</h3>'
-            . '<div class="faq-a"' . $answerAttrs . '>' . nl2br($h($item['answer'])) . '</div>'
-            . '</div>';
+        $faqHtml .= '<article class="faq-item">'
+            . '<h3 class="faq-q-wrap"><button type="button" class="faq-q" aria-expanded="false"' . $questionAttrs . '><span>' . $h($item['question']) . '</span></button></h3>'
+            . '<div class="faq-a" hidden' . $answerAttrs . '>' . nl2br($h($item['answer'])) . '</div>'
+            . '</article>';
     }
     if ($faqHtml === '') {
         $faqHtml = '<p class="faq-empty">Zatím žádné otázky. Napište nám a rádi odpovíme.</p>';
@@ -2117,10 +2354,11 @@ function tryServeFaqPage(): bool
     $faqCss = <<<'CSS'
 .fq-wrap{padding:56px 0 80px}
 .fq-wrap .faq-list{display:flex;flex-direction:column;gap:14px;max-width:840px;margin:0 auto}
-.fq-wrap .faq-item{padding:2px 28px;background:rgba(255,255,255,.6);border:1px solid rgba(122,95,65,.16);border-radius:12px;cursor:pointer;transition:border-color .2s,box-shadow .2s,background .2s}
+.fq-wrap .faq-item{padding:2px 28px;background:rgba(255,255,255,.6);border:1px solid rgba(122,95,65,.16);border-radius:12px;transition:border-color .2s,box-shadow .2s,background .2s}
 .fq-wrap .faq-item:hover{border-color:rgba(212,176,111,.5)}
 .fq-wrap .faq-item.open{border-color:rgba(212,176,111,.62);background:rgba(255,255,255,.85);box-shadow:0 10px 30px rgba(48,38,30,.08)}
-.fq-wrap .faq-q{font-family:"Manrope",system-ui,sans-serif!important;font-size:1.06rem!important;min-height:0!important;letter-spacing:0!important;text-transform:none!important;color:#1a1610!important;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:18px;line-height:1.45;margin:0;padding:22px 0}
+.fq-wrap .faq-q-wrap{margin:0}
+.fq-wrap .faq-q{width:100%;border:0;background:transparent;font-family:"Manrope",system-ui,sans-serif!important;font-size:1.06rem!important;min-height:0!important;letter-spacing:0!important;text-transform:none!important;color:#1a1610!important;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:18px;line-height:1.45;margin:0;padding:22px 0;text-align:left;cursor:pointer}
 .fq-wrap .faq-q::after{content:"＋";flex-shrink:0;font-size:1.4rem;font-weight:400;color:#c4963c;transition:transform .25s}
 .fq-wrap .faq-item.open .faq-q::after{transform:rotate(45deg)}
 .fq-wrap .faq-a{color:#5f5143!important;font-size:.97rem!important;line-height:1.72;margin:0!important;padding:0 0 22px;max-width:none;display:none}
@@ -2143,8 +2381,15 @@ $pageContent = <<<HTML
   </div>
 </section>
 <script>
-document.querySelectorAll('.faq-item').forEach(function(el){
-  el.addEventListener('click',function(){el.classList.toggle('open');});
+document.querySelectorAll('.faq-q').forEach(function(button){
+  button.addEventListener('click',function(){
+    var item = button.closest('.faq-item');
+    var answer = item ? item.querySelector('.faq-a') : null;
+    if(!item || !answer) return;
+    var open = item.classList.toggle('open');
+    button.setAttribute('aria-expanded', open ? 'true' : 'false');
+    answer.hidden = !open;
+  });
 });
 </script>
 HTML;
@@ -2160,13 +2405,12 @@ HTML;
         $nav,
         isset($_GET['theme_preview']) ? trim((string)$_GET['theme_preview']) : null
     );
+    $faqDescription = trim((string)$heroSub) !== '' ? trim((string)$heroSub) : 'Odpovedi na caste dotazy k rezervaci, terminum, foceni a vystupum.';
     if ($themeActive) {
         $html = $pageContent;
-        $html = str_replace('</head>', "\n<title>" . $h('FAQ | ' . $siteName) . "</title>\n</head>", $html);
         $html = $renderer->injectAssets($html, $faqCss . "\n" . $themeCss, $themeJs);
     } elseif (!empty($site['layout_html'])) {
         $html = $renderer->applyLayout($site['layout_html'], $pageContent, $siteName, $nav);
-        $html = str_replace('</head>', "\n<title>" . $h('FAQ | ' . $siteName) . "</title>\n</head>", $html);
         $html = $renderer->injectAssets($html, ($site['layout_css'] ?? '') . "\n" . $faqCss . "\n" . $themeCss, ($site['layout_js'] ?? '') . "\n" . $themeJs);
     } else {
         $html = '<!DOCTYPE html><html lang="cs"><head><meta charset="UTF-8"><title>FAQ | ' . $h($siteName) . '</title>'
@@ -2183,6 +2427,12 @@ HTML;
     $html = injectFooterSocials($html, (int)$site['id']);
     $html = injectCmsEditorChrome($html, '/faq', $heroTitle, isset($page['id']) ? (int)$page['id'] : null, Auth::check() && isset($_GET['cms_preview']));
     $html = injectBreadcrumbTrail($html, $site, breadcrumbItems('FAQ', '/faq'));
+    $html = injectPageHeadMetadata($html, $site, [
+        'title' => 'FAQ | ' . $siteName,
+        'description' => $faqDescription,
+        'path' => '/faq',
+        'json_ld' => [renderFaqPageJsonLd($site, $items)],
+    ]);
     echo sanitizeFrontendHtml($html, $site);
     return true;
 }
@@ -2565,13 +2815,12 @@ HTML;
         $nav,
         isset($_GET['theme_preview']) ? trim((string)$_GET['theme_preview']) : null
     );
+    $contactDescription = trim((string)$heroSub) !== '' ? trim((string)$heroSub) : 'Kontaktni formular a informace pro poptavku foceni nebo videa.';
     if ($themeActive) {
         $html = $pageContent;
-        $html = str_replace('</head>', "\n<title>" . $h('Kontakt | ' . $siteName) . "</title>\n</head>", $html);
         $html = $renderer->injectAssets($html, $kontaktCss . "\n" . $themeCss, $themeJs);
     } elseif (!empty($site['layout_html'])) {
         $html = $renderer->applyLayout($site['layout_html'], $pageContent, $siteName, $nav);
-        $html = str_replace('</head>', "\n<title>" . $h('Kontakt | ' . $siteName) . "</title>\n</head>", $html);
         $html = $renderer->injectAssets($html, ($site['layout_css'] ?? '') . "\n" . $kontaktCss . "\n" . $themeCss, ($site['layout_js'] ?? '') . "\n" . $themeJs);
     } else {
         $html = '<!DOCTYPE html><html lang="cs"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Kontakt | ' . $h($siteName) . '</title>'
@@ -2586,6 +2835,12 @@ HTML;
     $html = injectPageHeroVideo($html, $site, isset($page['id']) ? (int)$page['id'] : findPageIdForHeroPath('kontakt', (int)$site['id']), 'contact');
     $html = injectCmsEditorChrome($html, '/kontakt', $heroTitle, isset($page['id']) ? (int)$page['id'] : null, Auth::check() && isset($_GET['cms_preview']));
     $html = injectBreadcrumbTrail($html, $site, breadcrumbItems('Kontakt', '/kontakt'));
+    $html = injectPageHeadMetadata($html, $site, [
+        'title' => 'Kontakt | ' . $siteName,
+        'description' => $contactDescription,
+        'path' => '/kontakt',
+        'json_ld' => [renderContactPageJsonLd($site, $contact)],
+    ]);
     echo sanitizeFrontendHtml($html, $site);
     return true;
 }
@@ -2695,15 +2950,12 @@ HTML;
         $nav,
         isset($_GET['theme_preview']) ? trim((string)$_GET['theme_preview']) : null
     );
-    $titleTag = '<title>' . $h("Blog | {$siteName}") . '</title>';
-    $metaTag  = '<meta name="description" content="' . $h('Tipy a inspirace od fotografa z Olomouce.') . '">';
+    $blogDescription = trim((string)$heroSub) !== '' ? trim((string)$heroSub) : 'Tipy, odpovedi a inspirace z oblasti foceni a videa.';
     if ($themeActive) {
         $html = $pageContent;
-        $html = str_replace('</head>', "\n{$titleTag}\n{$metaTag}\n</head>", $html);
         $html = $renderer->injectAssets($html, $blogCss . "\n" . $themeCss, $themeJs);
     } elseif (!empty($site['layout_html'])) {
         $html = $renderer->applyLayout($site['layout_html'], $pageContent, $siteName, $nav);
-        $html = str_replace('</head>', "\n{$titleTag}\n{$metaTag}\n</head>", $html);
         $html = $renderer->injectAssets($html, ($site['layout_css'] ?? '') . "\n" . $blogCss . "\n" . $themeCss, ($site['layout_js'] ?? '') . "\n" . $themeJs);
     } else {
         $siteNameEsc = $h($siteName);
@@ -2724,6 +2976,12 @@ HTML;
     $html = injectPageHeroVideo($html, $site, isset($page['id']) ? (int)$page['id'] : findPageIdForHeroPath('blog', (int)$site['id']), 'blog');
     $html = injectCmsEditorChrome($html, '/blog', $heroTitle, isset($page['id']) ? (int)$page['id'] : null, Auth::check() && isset($_GET['cms_preview']));
     $html = injectBreadcrumbTrail($html, $site, breadcrumbItems('Blog', '/blog'));
+    $html = injectPageHeadMetadata($html, $site, [
+        'title' => 'Blog | ' . $siteName,
+        'description' => $blogDescription,
+        'path' => '/blog',
+        'json_ld' => [renderBlogListingJsonLd($site, $posts)],
+    ]);
     echo sanitizeFrontendHtml($html, $site);
     return true;
 }
@@ -2767,17 +3025,28 @@ function tryServeBlogPostPage(string $uri): bool
         $tSrc = publicMediaUrl((string)($gItem['thumb_path'] ?? $gItem['medium_path'] ?? $gItem['storage_path'] ?? ''));
         $fSrc = publicMediaUrl((string)($gItem['storage_path'] ?? ''));
         $alt  = $h($gItem['alt_text'] ?? '');
-        $galleryHtml .= '<div class="bg-item" data-full="' . $h($fSrc) . '" data-idx="' . $idx . '">'
+        $galleryLabel = trim((string)($gItem['alt_text'] ?? '')) !== '' ? trim((string)$gItem['alt_text']) : ('Fotka ' . ($idx + 1));
+        $galleryHtml .= '<button type="button" class="bg-item" data-full="' . $h($fSrc) . '" data-idx="' . $idx . '" aria-label="' . $h('Otevrit galerii: ' . $galleryLabel) . '">'
             . '<img src="' . $h($tSrc) . '" alt="' . $alt . '" loading="lazy">'
-            . '</div>';
+            . '</button>';
     }
 
     $date      = !empty($post['published_at']) ? date('j. n. Y', strtotime($post['published_at'])) : '';
     $title     = $h($post['title']);
     $excerpt   = $h($post['excerpt'] ?? '');
     $content   = (string)($post['content'] ?? '');
-    $metaTitle = $h($post['meta_title'] ?: $post['title']);
+    $rawMetaTitle = trim((string)($post['meta_title'] ?? ''));
+    $fullTitle = $rawMetaTitle !== '' ? $rawMetaTitle : (string)$post['title'];
+    if ($siteName !== '' && !preg_match('~\|\s*' . preg_quote($siteName, '~') . '\s*$~u', $fullTitle)) {
+        $fullTitle .= ' | ' . $siteName;
+    }
+    $metaTitle = $h($fullTitle);
     $metaDesc  = $h($post['meta_description'] ?: $post['excerpt'] ?: '');
+    $canonical = absolutePublicUrl($site, '/' . $slug);
+    $featuredImageUrl = null;
+    if (preg_match('~src="([^"]+)"~', $imgHtml, $imgMatch)) {
+        $featuredImageUrl = absolutePublicUrl($site, $imgMatch[1]);
+    }
 
     $blogPostCss = <<<'CSS'
 body{background:#111;color:#fff}
@@ -2798,7 +3067,7 @@ body{background:#111;color:#fff}
 .bp-back a{color:#c4963c;text-decoration:none;font-weight:700}
 .bp-back a:hover{text-decoration:underline}
 .bg-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin:40px 0}
-.bg-item{cursor:pointer;border-radius:10px;overflow:hidden;background:#1b1b1f}
+.bg-item{padding:0;border:0;cursor:pointer;border-radius:10px;overflow:hidden;background:#1b1b1f}
 .bg-item img{width:100%;height:160px;object-fit:cover;display:block;transition:transform .2s}
 .bg-item:hover img{transform:scale(1.04)}
 .bp-lightbox{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.92);align-items:center;justify-content:center}
@@ -2873,15 +3142,11 @@ HTML;
         $nav,
         isset($_GET['theme_preview']) ? trim((string)$_GET['theme_preview']) : null
     );
-    $titleTag    = '<title>' . $metaTitle . ' | ' . $h($siteName) . '</title>';
-    $metaDescTag = '<meta name="description" content="' . $metaDesc . '">';
     if ($themeActive) {
         $html = $pageContent;
-        $html = str_replace('</head>', "\n{$titleTag}\n{$metaDescTag}\n</head>", $html);
         $html = $renderer->injectAssets($html, $blogPostCss . "\n" . $themeCss, $themeJs);
     } elseif (!empty($site['layout_html'])) {
         $html = $renderer->applyLayout($site['layout_html'], $pageContent, $siteName, $nav);
-        $html = str_replace('</head>', "\n{$titleTag}\n{$metaDescTag}\n</head>", $html);
         $html = $renderer->injectAssets($html, ($site['layout_css'] ?? '') . "\n" . $blogPostCss . "\n" . $themeCss, ($site['layout_js'] ?? '') . "\n" . $themeJs);
     } else {
         $siteNameEsc = $h($siteName);
@@ -2905,6 +3170,15 @@ HTML;
     $html = injectBreadcrumbTrail($html, $site, breadcrumbItems($post['title'] ?? 'Clanek', '/' . $slug, [
         ['label' => 'Blog', 'url' => '/blog'],
     ]));
+    $html = injectPageHeadMetadata($html, $site, [
+        'title' => $fullTitle,
+        'description' => html_entity_decode($metaDesc, ENT_QUOTES, 'UTF-8'),
+        'path' => '/' . $slug,
+        'canonical' => $canonical,
+        'og_type' => 'article',
+        'og_image' => $featuredImageUrl ?? '',
+        'json_ld' => [renderBlogPostJsonLd($site, $post, $canonical, $featuredImageUrl)],
+    ]);
     echo sanitizeFrontendHtml($html, $site);
     return true;
 }
@@ -2988,6 +3262,10 @@ try {
 
     if ($uri === '/kontakt/odeslat' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         \App\Core\Auth::start();
+        if (!\App\Core\Auth::csrfVerify((string)($_POST['_csrf'] ?? ''))) {
+            header('Location: /kontakt?sent=csrf');
+            exit;
+        }
         // Honeypot spam check
         if (!empty($_POST['website'])) {
             header('Location: /kontakt');
@@ -3019,8 +3297,9 @@ try {
         $eventDate = trim((string) ($_POST['event_date'] ?? ''));
         $eventPlace = trim((string) ($_POST['event_place'] ?? ''));
         $message = trim($_POST['message']       ?? '');
+        $privacyConsent = !empty($_POST['privacy_consent']);
         $contactMailSent = false;
-        if ($name && $contact && $message && $formEmail && filter_var($formEmail, FILTER_VALIDATE_EMAIL)) {
+        if ($name && $contact && $shootingType && $message && $privacyConsent && $formEmail && filter_var($formEmail, FILTER_VALIDATE_EMAIL)) {
             $subject = 'Nová zpráva z webu — ' . $name;
             $body    = "Jméno: {$name}\nKontakt: {$contact}\nTyp focení: {$shootingType}\nDatum akce: {$eventDate}\nMísto akce: {$eventPlace}\n\nZpráva:\n{$message}";
             RequestThrottle::hit('contact_form', $contactThrottleKey, 3, 10 * 60, 10 * 60);
@@ -3039,11 +3318,14 @@ try {
                 'ip' => RequestThrottle::currentIp(),
                 'has_name' => $name !== '',
                 'has_contact' => $contact !== '',
+                'has_shooting_type' => $shootingType !== '',
                 'has_message' => $message !== '',
+                'has_privacy_consent' => $privacyConsent,
                 'has_valid_recipient' => $formEmail !== null && filter_var((string) $formEmail, FILTER_VALIDATE_EMAIL) !== false,
             ]);
         }
-        header('Location: /kontakt?sent=' . ($contactMailSent ? '1' : 'error'));
+        $redirectStatus = $contactMailSent ? '1' : (($name && $contact && $shootingType && $message && $privacyConsent) ? 'error' : 'invalid');
+        header('Location: /kontakt?sent=' . $redirectStatus);
         exit;
     }
 

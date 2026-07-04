@@ -1,17 +1,60 @@
 # RB Photos & Videos
 
-> Webové stránky RB Photos & Videos.
+Web prezentace RB Photos & Videos.
 
-## Stránky
+## Hlavni ucel webu
+
+Web slouzi k predstaveni nabidky, ukazek prace, cenovych informaci a kontaktniho formulare.
+
+## Dulezite stranky
+
+- Hlavni stranka: https://rbvideosphotos.kvalitne.cz/
+- Cenik: https://rbvideosphotos.kvalitne.cz/cenik
+- Portfolio: https://rbvideosphotos.kvalitne.cz/nase-prace
+- Blog: https://rbvideosphotos.kvalitne.cz/blog
+- FAQ: https://rbvideosphotos.kvalitne.cz/faq
+- Kontakt: https://rbvideosphotos.kvalitne.cz/kontakt
+
+## Nabizene sluzby
+
+- Viz hlavni stranku a cenik pro aktualni prehled sluzeb a balicku.
+
+## Lokality
+
+- Viz kontaktni stranku a obsah jednotlivych stranek; generator nedoplni lokality, ktere nejsou explicitne uvedene v obsahu.
+
+## Ceny
+
+- Ceny a balicky jsou na strance Cenik: https://rbvideosphotos.kvalitne.cz/cenik
+
+## Kontakt
+
+- Kontaktni formular a kontaktni informace: https://rbvideosphotos.kvalitne.cz/kontakt
+
+## Pro AI agenty
+
+- Hlavni nabidka a vysvetleni sluzeb jsou na homepage a na obsahovych podstrankach.
+- Ceny a balicky hledejte na strance Cenik.
+- Poptavka se odesila pres formular na strance Kontakt.
+- Blog obsahuje poradenske a informacni clanky: https://rbvideosphotos.kvalitne.cz/blog
+- Portfolio a ukazky prace jsou na strance Portfolio: https://rbvideosphotos.kvalitne.cz/nase-prace
+- Casto kladene dotazy jsou na strance FAQ: https://rbvideosphotos.kvalitne.cz/faq
+
+## Dalsi indexovatelne stranky
 
 - [Fotograf & Videograf Olomouc | RB Photos & Videos](https://rbvideosphotos.kvalitne.cz/)
-- [Blog | RB Photos & Videos](https://rbvideosphotos.kvalitne.cz/blog/)
-- [Ceník fotografa Olomouc | RB Photos & Videos](https://rbvideosphotos.kvalitne.cz/cenik/)
-- [Časté otázky | Fotograf Olomouc — RB Photos & Videos](https://rbvideosphotos.kvalitne.cz/faq/)
-- [Podmínky užití](https://rbvideosphotos.kvalitne.cz/podminky-uziti/)
-- [10 tipů jak se připravit na dokonalé svatební focení | RB Photos & Videos](https://rbvideosphotos.kvalitne.cz/priprava-na-svatebni-foceni/)
-- [Rodinné focení s dětmi — tipy pro přirozené snímky | RB Photos & Videos](https://rbvideosphotos.kvalitne.cz/rodinne-foceni-s-detmi/)
+- [Blog | RB Photos & Videos](https://rbvideosphotos.kvalitne.cz/blog)
+- [Ceník fotografa Olomouc | RB Photos & Videos](https://rbvideosphotos.kvalitne.cz/cenik)
+- [Časté otázky | Fotograf Olomouc — RB Photos & Videos](https://rbvideosphotos.kvalitne.cz/faq)
+- [Podmínky užití](https://rbvideosphotos.kvalitne.cz/podminky-uziti)
+- [10 tipů jak se připravit na dokonalé svatební focení | RB Photos & Videos](https://rbvideosphotos.kvalitne.cz/priprava-na-svatebni-foceni)
+- [Rodinné focení s dětmi — tipy pro přirozené snímky | RB Photos & Videos](https://rbvideosphotos.kvalitne.cz/rodinne-foceni-s-detmi)
 
-## Volitelné
+## Posledni aktualizace
 
-- [Sitemap](https://rbvideosphotos.kvalitne.cz/sitemap.xml): XML sitemap — přehled všech URL stránek
+- 2026-07-04
+
+## Technicke discovery soubory
+
+- [Sitemap](https://rbvideosphotos.kvalitne.cz/sitemap.xml): XML sitemap vsech indexovatelnych URL.
+- [Robots](https://rbvideosphotos.kvalitne.cz/robots.txt): pravidla pro crawlery.

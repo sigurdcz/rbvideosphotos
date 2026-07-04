@@ -1,39 +1,39 @@
-# UKOL: Elegant White data driven audit
+# UKOL: SEO a accessibility audit verejneho webu
 
 Datum: 2026-07-04
-Zadani: Zrevidovat sablonu `Elegant White` a odstranit obsahove hardcody tak, aby fotky, texty a bloky vychazely z DB/demo seederu misto z JS nebo statickeho HTML.
-
-## Cil
-
-`Elegant White` smi v JS/CSS resit strukturu, rozlozeni a styl, ale nesmi si vymyslet obsah. Texty, fotky, sluzby, reference, FAQ, kontakt a proces musi prichazet z runtime DOMu vygenerovaneho z databaze, pripadne byt zalozene demo seederem jako normalni obsah.
+Zadani: Provest audit verejneho webu v `seo-editor` a udelat cilene upravy pro SEO, accessibility, agentic browsing, crawlery a stabilitu frontendu bez rozbiti designu.
 
 ## Kroky
 
-- [x] 1. Najit obsahove hardcody v `Elegant White`
-  Popis: Projit JS/HTML sablony a identifikovat staticke texty, obrazky a fallbacky, ktere obchazi DB.
-  Vysledek: `theme.js` obsahoval hardcoded hero, navigacni CTA, about texty, fallback sluzby, FAQ, proces a `/media/2026/07/kontakt.png`.
+- [x] 1. Zmapovat runtime vystupy a auditovat kriticke body
+  Popis: Projit `public/index.php`, SEO renderery, publish pipeline a verejne routy, najit hlavni problemy v semantice, metadatach, formularech, schema datech, `llms.txt`, `robots.txt` a `sitemap.xml`.
+  Hotovo kdyz: Existuje konkretni seznam problemu a mist v kodu, kde se maji opravy udelat.
 
-- [x] 2. Zkontrolovat dostupna DB/demo data
-  Popis: Projit demo seeder, runtime renderery a existujici bloky/sluzby/FAQ/reference, aby bylo jasne, odkud se obsah ma brat.
-  Vysledek: Sluzby, portfolio, FAQ, reference a kontakt uz maji DB zdroje. Pro Elegant White chybely explicitni homepage bloky pro proces a kontaktni vizual.
+- [x] 2. Upravit globalni runtime pro semantiku, accessibility a metadata
+  Popis: Opravit sdileny frontend rendering tak, aby mel spolehlivejsi landmarky, programove nazvy, skip-link, focus states, bezpecne odkazy, favicon/meta injekci a stabilnejsi HTML pro crawlery.
+  Hotovo kdyz: Verejne stranky dostanou lepsi semanticky a pristupny zaklad bez zbytecnych vizualnich regresi.
 
-- [x] 3. Upravit `Elegant White` na datove rizene transformace
-  Popis: Odstranit hardcoded texty/fotky/fallback obsah z JS a nechat JS pouze prekladat existujici DOM/data atributy do cilove kompozice.
-  Vysledek: JS uz neprepisuje obsahove texty ani nevklada staticke obrazky. Pokud data chybi, sekci nevymysli skrytym fallbackem.
+- [x] 3. Upravit specialni stranky a formulare
+  Popis: Zkontrolovat blog, portfolio, FAQ, kontakt a dalsi specialni handlery, doplnit chybejici metadata, JSON-LD, popisy formulare a strojove citelne prvky.
+  Hotovo kdyz: Kriticke verejne stranky splnuji pozadovane SEO/accessibility minimum a formular je srozumitelny i bez vizualniho kontextu.
 
-- [x] 4. Doplnit demo seeder, pokud chybi obsah
-  Popis: Presunout potrebne vychozi textace/media do demo obsahu misto do sablonoveho JS.
-  Vysledek: Demo seeder zaklada `process_*` bloky a `contact_visual` image blok a doplni pro ne placeholdery do homepage template.
+- [x] 4. Zrevidovat publish vystupy pro crawlery a AI
+  Popis: Overit a upravit generatory `llms.txt`, `robots.txt` a `sitemap.xml`, pripadne navrh WebMCP pouze dokumentacne, pokud v projektu nema realnou podporu.
+  Hotovo kdyz: Publikovane discovery soubory odpovidaji realnym URL a neblokuji dulezity obsah.
 
-- [x] 5. Otestovat diff a dostupne kontroly
-  Popis: Spustit dostupne kontroly a overit, ze nezustaly staticke obsahove fallbacky.
-  Vysledek: PHP lint pro upravene sluzby prosel, `git diff --check` prosel. `node --check` neslo spustit, protoze v prostredi neni `node`.
+- [x] 5. Overit zmeny a zapsat dopady do dokumentace
+  Popis: Spustit dostupne kontroly, zkontrolovat diff, vyhodnotit relevantni `.md` dokumentaci a pripravit zaverecny checklist i rizika.
+  Hotovo kdyz: Zmeny jsou overene v dostupnem rozsahu a finalni shrnuti pokryje audit, upravy i otevrene body k rucnimu testu.
 
 ## Poznamky
 
-- Web se podle zadani nema brat jako lokalne provozovana instance, proto nebylo delano runtime/browser overeni.
-- Dodrzeno pravidlo bez tichych fallbacku: chybejici obsah se nema zamaskovat smyslenymi texty nebo obrazky v JS.
+- V worktree uz existuji nesouvisejici rozdelane zmeny v `Templates/elegant-white/assets/theme.js`, `app/Services/DemoContentSeeder.php` a `app/Services/HomepageContentService.php`; nesmi se potichu prepsat ani revertovat.
+- Audit se soustredi hlavne na verejny runtime `public/index.php`, SEO/render sluzby a publish pipeline, protoze odtud se generuje HTML i discovery soubory pro crawlery.
+- Dosavadni nalezy: relativni canonical na homepage, specialni stranky bez sdileneho SEO headu, FAQ akordeon bez skutecnych button ovladacu, blog post title zdvojoval nazev webu, contact POST neoveroval CSRF a `llms.txt`/`sitemap.xml` mely zastaralou strukturu URL.
+- Rozpracovane soubory tohoto ukolu: `app/Services/SeoRenderer.php`, `app/Services/SitemapGenerator.php`, `app/Services/LlmsTxtGenerator.php`, `public/index.php`, `public/assets/frontend-runtime.css`.
+- Overeni: `php -l` probehl pro vsechny upravene PHP soubory; HTTP kontrola probehla pro `/`, `/faq`, `/kontakt`, `/blog`, jeden blog post, `llms.txt`, `sitemap.xml` a `robots.txt`.
+- Dokumentace upravena v `README.md`, aby odpovidala nove strukture `llms.txt` a zahrnuti dynamickych rout do sitemap.
 
 ## Vysledek
 
-Elegant White je prepracovana na datove rizeny frontend: obsah bere z DB renderu nebo z demo seederu, ne z hardcodu v sablonovem JS.
+Verejny web ma opravene canonical a social metadata, specialni stranky dostaly sdileny SEO head a JSON-LD, FAQ je ovladatelne pres skutecna tlacitka, kontaktnimu POST pribyla CSRF a explicitni validace, a discovery soubory byly zregenerovany do aktualni podoby.
