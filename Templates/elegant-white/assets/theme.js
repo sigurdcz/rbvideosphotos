@@ -1,5 +1,5 @@
 (function () {
-  if (!document.body.classList.contains('theme-elegant-white')) return;
+  if (!document.body.classList.contains('theme-elegant-white') && !document.querySelector('.theme-elegant-white')) return;
 
   function qs(selector, scope) {
     return (scope || document).querySelector(selector);

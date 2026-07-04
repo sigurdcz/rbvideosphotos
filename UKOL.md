@@ -36,7 +36,7 @@ Nova sablona ma byt samostatne volitelna v administraci, ale ma vychazet z exist
 ## Poznamky
 
 - Nova sablona vyuziva stavajici layout jako vychozi bod, ale dostava vlastni `theme-elegant-white` vrstvu pro vizualni override.
-- Zachovavam kompatibilitu se starym `theme-jemna-bezova`, aby nedoslo k rozbiti existujiciho obsahu a JS logiky.
+- Elegant White ma byt plne samostatna sablona bez zavislosti na `theme-jemna-bezova`, aby se nevracel puvodni tmavy styling.
 - Cilem je samostatna sablona v administraci, ne prepis stavajiciho motivu.
 - Kontrola diffu probehla; novy motiv ma vlastni manifest, layout, JS guard i CSS override vrstvu.
 - Aktualni reference posouva design vic do bilych ploch, jemneho zlata a svetle bezeva, s lehcimi kartami a vyrazne cistsim hero/layoutem.
