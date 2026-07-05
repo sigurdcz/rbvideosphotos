@@ -292,6 +292,24 @@ class ThemeTemplateRegistry
   flex: 1;
 }
 
+.theme-shell .hp-svc-card__icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: rgba(196,150,60,.14);
+  border: 1px solid rgba(196,150,60,.45);
+}
+
+.theme-shell .hp-svc-card__icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 7px;
+}
+
 .theme-shell .hp-svc-card__num,
 .theme-shell .hp-cenik-card-price {
   color: var(--theme-accent, #c4963c);
@@ -315,6 +333,98 @@ class ThemeTemplateRegistry
 .theme-shell .section-intro,
 .theme-shell .ci-row {
   color: var(--theme-muted, rgba(255,255,255,.68));
+}
+
+.theme-shell .hp-svc-card__desc,
+.theme-shell .hp-cenik-card-desc,
+.theme-shell .hp-service-detail__desc {
+  white-space: pre-line;
+}
+
+.theme-shell .hp-service-details {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 20px;
+  margin-top: 6px;
+}
+
+.theme-shell .hp-service-detail {
+  display: grid;
+  grid-template-columns: minmax(220px, 320px) minmax(0, 1fr);
+  gap: 24px;
+  max-height: 0;
+  overflow: hidden;
+  padding: 0 24px;
+  border-radius: 18px;
+  background: var(--theme-surface, rgba(255,255,255,.78));
+  border: 1px solid var(--theme-border, rgba(122,95,65,.14));
+  box-shadow: var(--theme-shadow, 0 18px 40px rgba(48,38,30,.08));
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px);
+  transition: max-height .35s ease, opacity .25s ease, transform .25s ease, padding .25s ease;
+  scroll-margin-top: 120px;
+}
+
+.theme-shell .hp-service-detail:target {
+  max-height: 1200px;
+  padding: 24px;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.theme-shell .hp-service-detail__media {
+  min-height: 220px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: rgba(0,0,0,.12);
+}
+
+.theme-shell .hp-service-detail__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.theme-shell .hp-service-detail__body {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+
+.theme-shell .hp-service-detail__eyebrow {
+  font-size: .74rem;
+  font-weight: 800;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--theme-accent, #c4963c);
+}
+
+.theme-shell .hp-service-detail__title {
+  margin: 0;
+  color: var(--theme-text, #fff);
+  font-size: 1.75rem;
+  line-height: 1.1;
+}
+
+.theme-shell .hp-service-detail__desc {
+  margin: 0;
+  color: var(--theme-muted, rgba(255,255,255,.68));
+  line-height: 1.8;
+}
+
+.theme-shell .hp-service-detail__cta {
+  display: inline-flex;
+  width: max-content;
+  max-width: 100%;
+  padding: 12px 18px;
+  border-radius: 999px;
+  background: var(--theme-accent, #c4963c);
+  color: #111;
+  text-decoration: none;
+  font-weight: 700;
 }
 
 .theme-shell .hp-svc-card__btn,
@@ -534,6 +644,15 @@ class ThemeTemplateRegistry
   aspect-ratio: 4 / 3;
 }
 
+.theme-shell .pt-thumb-placeholder {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: var(--theme-muted, rgba(255,255,255,.3));
+}
+
 .theme-shell .pt-play {
   position: absolute;
   left: 50%;
@@ -597,6 +716,23 @@ class ThemeTemplateRegistry
   gap: 12px;
 }
 
+.theme-shell .hp-blog-title {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.35;
+}
+
+.theme-shell .hp-blog-title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.theme-shell .hp-blog-excerpt {
+  margin: 0;
+  line-height: 1.55;
+  flex: 1;
+}
+
 .theme-shell .hp-blog-link {
   color: var(--theme-accent, #c4963c);
   font-weight: 800;
@@ -607,6 +743,16 @@ class ThemeTemplateRegistry
 
 .theme-shell .hp-contact-grid {
   gap: 24px;
+}
+
+.theme-shell .hp-contact-box {
+  min-width: 0;
+}
+
+.theme-shell .hp-contact-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .theme-shell .hp-contact-row {
@@ -630,9 +776,38 @@ class ThemeTemplateRegistry
 
 .theme-shell .hp-contact-map-embed {
   width: 100%;
+  aspect-ratio: 4 / 3;
   min-height: 280px;
   border: 0;
   border-radius: 20px;
+}
+
+.theme-shell .hp-contact-map {
+  display: inline-flex;
+  margin-top: 16px;
+  padding: 12px 18px;
+  border-radius: 999px;
+  background: var(--theme-accent, #c4963c);
+  color: #111;
+  text-decoration: none;
+  font-weight: 800;
+}
+
+.theme-shell .hp-contact-empty {
+  margin: 0 0 12px;
+  color: var(--theme-muted, rgba(255,255,255,.52));
+}
+
+.theme-shell .hp-contact-form button {
+  width: fit-content;
+  max-width: 100%;
+  padding: 14px 18px;
+  border-radius: 999px;
+  background: var(--theme-accent, #c4963c);
+  color: #111;
+  border: 0;
+  font-weight: 800;
+  cursor: pointer;
 }
 
 .theme-shell .theme-footer {
@@ -751,6 +926,32 @@ class ThemeTemplateRegistry
   .theme-shell .hp-contact-grid > :first-child,
   .theme-shell .hp-contact-grid > :last-child {
     order: initial;
+  }
+}
+
+@media (min-width: 760px) {
+  .theme-shell .hp-contact-grid {
+    grid-template-columns: 1.2fr .8fr;
+  }
+
+  .theme-shell .hp-contact-row {
+    flex-direction: row;
+    gap: 12px;
+  }
+
+  .theme-shell .hp-contact-label {
+    flex: 0 0 90px;
+    padding-top: 2px;
+  }
+}
+
+@media (max-width: 820px) {
+  .theme-shell .hp-service-detail {
+    grid-template-columns: 1fr;
+  }
+
+  .theme-shell .hp-service-detail__media {
+    min-height: 200px;
   }
 }
 CSS;

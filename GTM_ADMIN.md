@@ -1,21 +1,28 @@
 # Google Tag Manager administrace
 
-Tento dokument popisuje novou admin sekci `/admin/gtm`, která slouží k přípravě a správě Google Tag Manager konfigurace přes API. Neřeší runtime trackování na webu. Nezasahuje do `public/assets/tracking.js` ani do současné GA4 logiky.
+Tento dokument popisuje admin sekci `/admin/gtm`, ktera slouzi ke sprave Google Tag Manager konfigurace pres API. Neresi runtime emitovani eventu na webu a neprepisuje `public/assets/tracking.js`.
 
-## 1. Quick setup
+## Co tato sekce umi
 
-### Co je potřeba v Google účtu
+- OAuth pripojeni Google uctu
+- vyber GTM accountu, containeru a workspace
+- nacteni a ulozeni inventory snapshotu
+- spravu katalogu GTM event definic
+- plan/apply workflow pro zapis zmen do workspace
+- tvorbu a publikaci GTM verzi
 
-1. V Google Cloud projektu povolit Google Tag Manager API.
-2. Vytvořit OAuth klienta pro webovou aplikaci.
-3. Přidat redirect URI na:
+## Quick setup
+
+### Google strana
+
+1. V Google Cloud projektu povol Google Tag Manager API.
+2. Vytvor OAuth klienta typu web application.
+3. Pridej redirect URI:
    `https://tvoje-domena/admin/gtm/oauth/callback`
-   nebo použít vlastní hodnotu z `GTM_REDIRECT_URI`.
-4. Ověřit, že účet má přístup k GTM účtu, kontejneru a workspace, které chceš spravovat.
+   nebo pouzij vlastni `GTM_REDIRECT_URI`.
+4. Over, ze ucet ma pristup k pozadovanemu GTM accountu, containeru a workspace.
 
-### Co je potřeba v `.env`
-
-Nastav tyto hodnoty:
+### `.env`
 
 ```env
 GTM_CLIENT_ID=
@@ -28,159 +35,104 @@ GTM_API_BASE_URI=https://tagmanager.googleapis.com/tagmanager/v2
 GTM_REQUEST_TIMEOUT=20
 GTM_CONNECT_TIMEOUT=10
 GTM_RETRY_DELAY_MS=500
+GTM_MIN_REQUEST_INTERVAL_MS=300
 ```
 
-`GTM_ENCRYPTION_KEY` musí být 32-byte klíč pro šifrování refresh tokenu.
+`GTM_ENCRYPTION_KEY` musi byt 32-byte klic pro sifrovani refresh tokenu.
 
-### Rychlý postup v administraci
+Kdyz `GTM_REDIRECT_URI` neni nastavene, aplikace sklada callback z `APP_URL` a fallbackne na `http://localhost:8000/admin/gtm/oauth/callback`.
 
-1. Otevři `/admin/gtm`.
-2. Klikni na připojení Google účtu.
-3. Uděl OAuth autorizaci.
-4. Vyber GTM účet, kontejner a workspace.
-5. Načti inventář GTM.
-6. Zkontroluj eventy a případně uprav definice.
-7. Vygeneruj plán.
-8. Aplikuj plán do workspace.
-9. Vytvoř verzi.
-10. Pokud je vše správně, publikuj verzi.
+## Doporuceny workflow
 
-### Co je důležité
+1. Otevri `/admin/gtm`.
+2. Pripoj Google ucet.
+3. Vyber GTM account, container a workspace.
+4. Spust `Nacist inventar`.
+5. Zkontroluj event definice.
+6. Spust `Sestavit plan`.
+7. Az po kontrole spus `Aplikovat plan`.
+8. Vytvor verzi.
+9. Publikuj verzi samostatnym krokem.
 
-- Refresh token se ukládá šifrovaně.
-- Publikace není automatická, je to samostatný krok.
-- Externí entity v GTM se nemění bez explicitního potvrzení.
-- Pokud chybí OAuth konfigurace, administrace to zobrazí jako blokující stav.
+Publikace neni automaticka soucast apply kroku.
 
-## 2. Popis admin sekce
+## Hlavni obrazovky
 
-### Přehled `/admin/gtm`
+### `/admin/gtm`
 
-Toto je hlavní rozcestník celé GTM administrace. Zobrazuje:
+Prehled zobrazuje:
 
-- stav OAuth připojení
-- vybraný GTM účet, kontejner a workspace
-- poslední synchronizaci
-- poslední GTM verzi
-- dostupnost konfigurace a případné chyby
+- stav OAuth pripojeni
+- vybrany account, container a workspace
+- posledni inventory sync
+- posledni GTM verzi
+- pripraveny plan a posledni run
 
-Z přehledu jde rovnou přejít na eventy, entity a verze.
+### `/admin/gtm/events`
 
-### Eventy `/admin/gtm/events`
+Sprava lokaniho katalogu event definic, ze ktereho se kompiluje GTM konfigurace.
 
-Tady se spravuje katalog předpřipravených událostí. Každý záznam odpovídá jednomu business eventu, například:
+Priklady eventu v katalogu:
 
 - `lead_form_submit`
 - `phone_click`
 - `email_click`
+- `pricing_click`
 - `cta_click`
+- `gallery_open`
+- `video_play`
 - `scroll_90`
 - `booking_complete`
 
-V této části se řeší:
+Poznamka: katalog GTM eventu je sirsi nez aktualni runtime tracking v `public/assets/tracking.js`. To je zamerne; GTM katalog muze obsahovat i budouci nebo manualne mapovane eventy.
 
-- název eventu
-- popis
-- kategorie
-- zda je event aktivní
-- typ triggeru
-- typ tagu
-- parametry tagu a triggeru
-- poznámky a metadata
+### `/admin/gtm/entities`
 
-Smysl této sekce je mít jeden centrální katalog, ze kterého se generuje GTM konfigurace konzistentně a bez ručního skládání JSONu.
+Ukazuje spravovane entity a diff proti inventory snapshotu. Pouziva se pro:
 
-### Detail eventu `/admin/gtm/events/edit`
+- kontrolu, co je lokalne spravovane
+- adopci existujici GTM entity pod spravu aplikace
+- odstraneni entity z GTM nebo z lokalni spravy
 
-Detail eventu slouží k jemnému nastavení konkrétní definice.
+### `/admin/gtm/versions`
 
-Přehledná část formuláře je určená pro běžnou správu. Pokročilá část umožňuje upravit strukturované GTM parametry, které se ukládají jako JSON.
+Slouzi pro:
 
-Používej ji tehdy, když je potřeba:
+- vytvoreni container verze z aktualniho workspace
+- zobrazeni historie verzi
+- publikaci vybrane verze
 
-- upravit názvy tagů a triggerů
-- změnit defaultní parametry
-- doplnit metadata pro plánování a validaci
+## Inventory snapshot a plan/apply
 
-### Entity `/admin/gtm/entities`
+Po kliknuti na `Nacist inventar` se aktualni stav workspace ulozi lokalne. `Plan` a `Apply` pak pracuji s timto snapshotem, ne s live list endpointy pri kazdem behu.
 
-Sekce entity ukazuje, co je v GTM aktuálně spravované a co je jen lokálně připravené.
+To prinasi:
 
-Typicky zde najdeš:
+- stabilnejsi diff
+- nizsi API kvotu
+- jasne oddeleni mezi refresh a zapisovou operaci
 
-- tagy
-- triggery
-- proměnné
-- vygenerované nebo importované položky
-- vazbu na lokální `management_key`
+`Plan` nic nezapisuje, jen ukaze:
 
-Účel této části:
+- co se vytvori
+- co se upravi
+- co zustane beze zmeny
+- konflikty a nejasnosti
 
-- odlišit entity spravované aplikací od externích entit
-- zkontrolovat duplicitní nebo konfliktní položky
-- adoptovat existující GTM entitu pod správu aplikace
-- odstranit entitu z lokální správy, pokud už ji nechceš řídit z administrace
+`Apply` zapisuje zmeny do workspace a uklada auditni stopu.
 
-### Inventář a synchronizace
+## Bezpecnostni pravidla
 
-Inventář GTM se načítá z vybraného account/container/workspace. Tím se zobrazuje aktuální stav a umožňuje porovnání s lokálním katalogem.
+- refresh tokeny se ukladaji sifrovane
+- GTM chyby se nezamlcuji; UI je ma zobrazit explicitne
+- publikace verze je oddelena od vytvoreni verze
+- externi entity se nemaji menit bez potvrzeni nebo adopce pod spravu
 
-Po kliknutí na `Nacist inventar` se stav uloží jako lokální snapshot. `Sestavit plan` a `Aplikovat plan` už nad GTM nevolají live list endpointy, ale pracují s tímto uloženým snapshotem. Tím se drží API kvóta a současně je jasně oddělený refresh od plánování.
+## Co tato sekce neresi
 
-Tahle vrstva slouží k tomu, aby šlo:
+- runtime emitovani eventu z verejneho webu
+- logiku consent gate
+- upravy `public/assets/tracking.js`
+- automaticke publikovani po kazde zmene
 
-- načíst aktuální stav GTM
-- detekovat rozdíl mezi lokálním záměrem a skutečným workspace stavem
-- připravit plán změn před zápisem
-- zabránit duplicitám při opakovaném spuštění
-
-### Plan / Apply
-
-Tohle je hlavní bezpečnostní mechanismus celé GTM administrace.
-
-`Plan`:
-
-- spočítá, co se má vytvořit, upravit nebo zachovat
-- nezapisuje do GTM
-- ukáže konflikty, duplicity a nejasnosti
-
-`Apply`:
-
-- zapíše připravený plán do workspace
-- používá stabilní management keys
-- ukládá auditní stopu
-- po úspěchu uloží stav lokálně, aby další běh neprodukoval duplicity
-
-### Verze `/admin/gtm/versions`
-
-Sekce verzí řeší práci s container verzemi.
-
-Umí:
-
-- vytvořit verzi z aktuálního workspace
-- uložit metadata verze
-- zobrazit historii verzí
-- publikovat konkrétní verzi
-
-Publikace je samostatná akce. Vytvoření verze neznamená automatickou publikaci.
-
-### Chování při chybě
-
-Administrace má být hlasitá, ne tichá.
-
-To znamená:
-
-- OAuth chyba se zobrazí přímo v UI
-- chybějící scope nebo práva se nezamlčí
-- API error se uloží do auditního logu
-- konfliktní stav se ukáže jako konflikt, ne jako úspěch
-
-### Co se v této fázi nemění
-
-Tato implementace zatím neřeší:
-
-- runtime odesílání eventů z webu do GTM
-- přepsání současného GA4 tracking runtime
-- automatické publishování po každé úpravě
-
-To je až další krok refaktoru.
+Tyto oblasti patri do runtime trackingu a architektury webu, ne do GTM admin orchestracni vrstvy.

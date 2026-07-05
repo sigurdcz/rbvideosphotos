@@ -115,84 +115,22 @@ class HomepageContentService
 
     private function fillHomepageFallbacks(array &$blocks, int $siteId): void
     {
-        $this->fillHomepageTextDefaults($blocks);
         $this->applyBlockFallback($blocks, 'sluzby_items', fn() => $this->buildServicesGridHtml($siteId, 3));
-        $this->applyBlockFallback($blocks, 'sluzby_cta', fn() => $this->buildSectionCtaHtml('/sluzby', 'Všechny služby'));
+        $this->applyBlockFallback($blocks, 'sluzby_cta', fn() => $this->buildPageCtaHtml($siteId, 'sluzby'));
         $this->applyBlockFallback($blocks, 'portfolio-tiles', fn() => $this->buildPortfolioHtml($siteId));
-        $this->applyBlockFallback($blocks, 'portfolio_cta', fn() => $this->buildSectionCtaHtml('/nase-prace', 'Všechny práce'));
-        $this->applyBlockFallback($blocks, 'portfolio_btns', fn() => $this->buildSectionCtaHtml('/nase-prace', 'Všechny práce'));
+        $this->applyBlockFallback($blocks, 'portfolio_cta', fn() => $this->buildPageCtaHtml($siteId, 'nase-prace'));
+        $this->applyBlockFallback($blocks, 'portfolio_btns', fn() => $this->buildPageCtaHtml($siteId, 'nase-prace'));
         $this->applyBlockFallback($blocks, 'cenik_body', fn() => $this->buildPricingHtml());
         $this->applyBlockFallback($blocks, 'pricing_body', fn() => $this->buildPricingHtml());
-        $this->applyBlockFallback($blocks, 'cenik_cta', fn() => $this->buildSectionCtaHtml('/cenik', 'Celý ceník'));
-        $this->applyBlockFallback($blocks, 'pricing_cta', fn() => $this->buildSectionCtaHtml('/cenik', 'Celý ceník'));
+        $this->applyBlockFallback($blocks, 'cenik_cta', fn() => $this->buildPageCtaHtml($siteId, 'cenik'));
+        $this->applyBlockFallback($blocks, 'pricing_cta', fn() => $this->buildPageCtaHtml($siteId, 'cenik'));
         $this->applyBlockFallback($blocks, 'reviews_demo', fn() => $this->reviewContent->buildHomepageHtml($siteId, 10));
-        $this->applyBlockFallback($blocks, 'reviews_cta', fn() => $this->buildSectionCtaHtml('/hodnoceni', 'Vsechny recenze'));
+        $this->applyBlockFallback($blocks, 'reviews_cta', fn() => $this->buildPageCtaHtml($siteId, 'hodnoceni'));
         $this->applyBlockFallback($blocks, 'kontakt_info', fn() => $this->buildContactHtml($siteId));
         $this->applyBlockFallback($blocks, 'contact_info', fn() => $this->buildContactHtml($siteId));
-        $this->applyBlockFallback($blocks, 'faq_cta', fn() => $this->buildSectionCtaHtml('/faq', 'Všechny otázky'));
-        $this->applyBlockFallback($blocks, 'blog_cta', fn() => $this->buildSectionCtaHtml('/blog', 'Všechny články'));
-        $this->applyBlockFallback($blocks, 'kontakt_cta', fn() => $this->buildSectionCtaHtml('/kontakt', 'Kontakt'));
-    }
-
-    private function fillHomepageTextDefaults(array &$blocks): void
-    {
-        $defaults = [
-            'hero_label' => 'Fotograf a kameraman - Olomouc, Praha',
-            'hero_h1' => 'Zachytíme váš příběh <span>navždy</span>.',
-            'hero_sub' => 'Profesionální svatební fotografie a videografie v Olomouci a po celé České republice. Každý okamžik si zaslouží být nezapomenutelný.',
-            'services_title' => 'Naše služby',
-            'services_intro' => 'Každý příběh je jedinečný. Naše služby přizpůsobíme přesně vám.',
-            'sluzby_title' => 'Naše služby',
-            'sluzby_intro' => 'Každý příběh je jedinečný. Naše služby přizpůsobíme přesně vám.',
-            'portfolio_title' => 'Naše práce',
-            'portfolio_intro' => 'Ukázka projektů a realizací.',
-            'blog_title' => 'Nejnovější články',
-            'blog_intro' => 'Rady a novinky z naší praxe.',
-            'pricing_title' => 'Ceník',
-            'pricing_intro' => 'Orientační přehled cen. Každá zakázka je individuální.',
-            'cenik_title' => 'Ceník',
-            'cenik_intro' => 'Orientační přehled cen. Každá zakázka je individuální.',
-            'faq_title' => 'Časté dotazy',
-            'reviews_title' => 'Co o nas rikaji klienti',
-            'reviews_intro' => 'Vybrane reference klientu, kterym jsme dodali fotografie nebo video.',
-            'cta_title' => 'Kontakt',
-            'cta_sub' => 'Ozvěte se nám. Rádi odpovíme na vaše otázky.',
-            'kontakt_title' => 'Kontakt',
-            'kontakt_sub' => 'Ozvěte se nám. Rádi odpovíme na vaše otázky.',
-        ];
-
-        foreach ($blocks as &$block) {
-            $key = (string)($block['block_key'] ?? '');
-            if ($key === '' || !array_key_exists($key, $defaults)) {
-                continue;
-            }
-
-            if ($this->isBlankHtml($block['content'] ?? '')) {
-                $block['content'] = $defaults[$key];
-            }
-        }
-        unset($block);
-
-        foreach ($defaults as $key => $content) {
-            $found = false;
-            foreach ($blocks as $block) {
-                if (($block['block_key'] ?? '') === $key) {
-                    $found = true;
-                    break;
-                }
-            }
-
-            if (!$found) {
-                $blocks[] = [
-                    'block_key' => $key,
-                    'block_type' => 'text',
-                    'label' => $key,
-                    'content' => $content,
-                    'sort_order' => 0,
-                    'autofill_disabled' => 0,
-                ];
-            }
-        }
+        $this->applyBlockFallback($blocks, 'faq_cta', fn() => $this->buildPageCtaHtml($siteId, 'faq'));
+        $this->applyBlockFallback($blocks, 'blog_cta', fn() => $this->buildPageCtaHtml($siteId, 'blog'));
+        $this->applyBlockFallback($blocks, 'kontakt_cta', fn() => $this->buildPageCtaHtml($siteId, 'kontakt'));
     }
 
     private function fillPortfolioFallbacks(array &$blocks, int $siteId): void
@@ -345,33 +283,7 @@ class HomepageContentService
             $cards .= $this->buildServiceCardHtml($item, $idx + 1, '', $siteId);
         }
 
-        $css = '<style>'
-            . '.hp-svc-card,.svc-card{background:#1b1b1f;border-radius:14px;overflow:hidden;box-shadow:0 14px 30px rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;width:100%;min-width:0}'
-            . '.hp-svc-card__media{height:190px;background:#0e0e11;overflow:hidden}'
-            . '.hp-svc-card__media img{width:100%;height:100%;object-fit:cover;display:block}'
-            . '.hp-svc-card__body{padding:20px;display:flex;flex-direction:column;gap:12px;flex:1}'
-            . '.hp-svc-card__icon{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;overflow:hidden;background:rgba(196,150,60,.14);border:1px solid rgba(196,150,60,.45)}'
-            . '.hp-svc-card__icon img{width:100%;height:100%;object-fit:contain;padding:7px}'
-            . '.hp-svc-card__num{font-size:.72rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#c4963c}'
-            . '.hp-svc-card__title{font-size:1.15rem;font-weight:800;color:#fff;line-height:1.25}'
-            . '.hp-svc-card__desc{color:rgba(255,255,255,.68);line-height:1.65;font-size:.95rem;white-space:pre-line}'
-            . '.hp-svc-card__btn{display:inline-flex;align-self:flex-start;margin-top:auto;padding:11px 16px;border-radius:6px;background:#c4963c;color:#fff;text-decoration:none;font-weight:700;font-size:.86rem}'
-            . '.hp-svc-card__btn:hover{background:#d4a64c}'
-            . '.hp-service-details{grid-column:1/-1;display:grid;gap:20px;margin-top:6px}'
-            . '.hp-service-detail{display:grid;grid-template-columns:minmax(220px,320px) minmax(0,1fr);gap:24px;max-height:0;overflow:hidden;padding:0 24px;border-radius:18px;background:rgba(255,255,255,.78);border:1px solid rgba(122,95,65,.14);box-shadow:0 18px 40px rgba(48,38,30,.08);opacity:0;pointer-events:none;transform:translateY(8px);transition:max-height .35s ease, opacity .25s ease, transform .25s ease, padding .25s ease;scroll-margin-top:120px}'
-            . '.hp-service-detail:target{max-height:1200px;padding:24px;opacity:1;pointer-events:auto;transform:translateY(0)}'
-            . '.hp-service-detail__media{min-height:220px;border-radius:14px;overflow:hidden;background:linear-gradient(135deg,#d5c3ad,#a6917a)}'
-            . '.hp-service-detail__media img{width:100%;height:100%;object-fit:cover;display:block}'
-            . '.hp-service-detail__body{display:grid;gap:14px;align-content:start}'
-            . '.hp-service-detail__eyebrow{font-size:.74rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#c4963c}'
-            . '.hp-service-detail__title{margin:0;color:#231912;font-size:1.75rem;line-height:1.1}'
-            . '.hp-service-detail__desc{margin:0;color:#5f5143;line-height:1.8;white-space:pre-line}'
-            . '.hp-service-detail__cta{display:inline-flex;width:max-content;padding:12px 18px;border-radius:999px;background:#231912;color:#fff;text-decoration:none;font-weight:700}'
-            . '.hp-service-detail__cta:hover{background:#3a2b1f}'
-            . '@media(max-width:820px){.hp-service-detail{grid-template-columns:1fr}.hp-service-detail__media{min-height:200px}}'
-            . '</style>';
-
-        return $css . $cards;
+        return $cards;
     }
 
     private function buildServiceCardHtml(?array $service, int $index = 0, string $detailId = '', int $siteId = 0): string
@@ -464,7 +376,7 @@ class HomepageContentService
 
             $thumbHtml = $thumb !== ''
                 ? '<img src="' . $h($thumb) . '" alt="' . $h($entry['title']) . '" loading="lazy">'
-                : '<div style="height:100%;background:#222;display:flex;align-items:center;justify-content:center;font-size:2rem;color:rgba(255,255,255,.3)">&#9654;</div>';
+                : '<div class="pt-thumb-placeholder">&#9654;</div>';
             $playIcon = $hasVideo ? '<span class="pt-play">&#9654;</span>' : '';
 
             $extraHtml = '';
@@ -485,20 +397,7 @@ class HomepageContentService
 HTML;
         }
 
-        $css = '<style>'
-            . '.pt-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px}'
-            . '.pt-tile{display:flex;flex-direction:column;text-decoration:none;color:inherit;background:#1b1b1f;border-radius:14px;overflow:hidden;box-shadow:0 14px 30px rgba(0,0,0,.25);transition:transform .2s,box-shadow .2s}'
-            . '.pt-tile:hover{transform:translateY(-3px);box-shadow:0 20px 40px rgba(0,0,0,.4)}'
-            . '.pt-thumb{position:relative;height:200px;background:#0e0e11;overflow:hidden}'
-            . '.pt-thumb img{width:100%;height:100%;object-fit:cover;display:block}'
-            . '.pt-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:56px;height:56px;border-radius:50%;background:rgba(196,150,60,.92);display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:#fff}'
-            . '.pt-photos{display:flex;gap:3px;height:72px;background:#17171a;padding:3px}'
-            . '.pt-photos img{flex:1;min-width:0;height:100%;object-fit:cover;display:block}'
-            . '.pt-caption{display:flex;align-items:center;min-height:64px;padding:14px 16px;font-weight:700;font-size:.95rem;line-height:1.35;color:#fff;background:#17171a;border-bottom:1px solid rgba(255,255,255,.08)}'
-            . '@media(max-width:600px){.pt-grid{grid-template-columns:1fr}}'
-            . '</style>';
-
-        return $css . '<div class="pt-grid">' . $tiles . '</div>';
+        return '<div class="pt-grid">' . $tiles . '</div>';
     }
 
     private function buildBlogCardHtml(int $siteId, int $index): string
@@ -529,17 +428,7 @@ HTML;
             }
         }
 
-        $css = '<style>'
-            . '.hp-blog-card{background:#1b1b1f;border-radius:14px;overflow:hidden;box-shadow:0 14px 30px rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.06)}'
-            . '.hp-blog-thumb{height:200px;background:#0e0e11;overflow:hidden}'
-            . '.hp-blog-thumb img{width:100%;height:100%;object-fit:cover;display:block}'
-            . '.hp-blog-body{padding:20px;display:flex;flex-direction:column;height:100%}'
-            . '.hp-blog-title{margin:0 0 10px;font-size:1rem;color:#fff;line-height:1.35}'
-            . '.hp-blog-excerpt{color:rgba(255,255,255,.65);font-size:.875rem;line-height:1.55;margin:0 0 16px;flex:1}'
-            . '.hp-blog-link{color:#c4963c;font-weight:700;font-size:.875rem;text-decoration:none;margin-top:auto}'
-            . '</style>';
-
-        return $css . '<article class="hp-blog-card">'
+        return '<article class="hp-blog-card">'
             . $imageHtml
             . '<div class="hp-blog-body">'
             . '<h3 class="hp-blog-title"><a href="/' . $h($post['slug']) . '" class="blog-title-link">'
@@ -579,27 +468,28 @@ HTML;
                 . '</div>';
         }
 
-        $css = '<style>'
-            . '.hp-cenik-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px}'
-            . '.hp-cenik-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:28px;display:flex;flex-direction:column;gap:20px;text-align:left;width:100%;color:inherit}'
-            . '.hp-cenik-card--featured{border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.09)}'
-            . '.hp-cenik-card-body{flex:1}'
-            . '.hp-cenik-card-title{font-size:1.25rem;font-weight:700;color:#fff;margin-bottom:12px}'
-            . '.hp-cenik-card-desc{color:rgba(255,255,255,.65);line-height:1.7;font-size:.95rem;white-space:pre-line}'
-            . '</style>';
-
-        return $css . '<div class="hp-cenik-grid">' . $cards . '</div>';
+        return '<div class="hp-cenik-grid">' . $cards . '</div>';
     }
 
-    private function buildSectionCtaHtml(string $url, string $label): string
+    private function buildPageCtaHtml(int $siteId, string $urlPath): string
     {
+        $page = $this->pages->findByUrlPath(trim($urlPath, '/'));
+        if (!$page || (int)($page['site_id'] ?? 0) !== $siteId) {
+            return '';
+        }
+
+        $label = trim((string)($page['title'] ?? ''));
+        if ($label === '') {
+            return '';
+        }
+
+        $url = '/' . trim((string)($page['url_path'] ?? $urlPath), '/');
+        if ($url === '/') {
+            return '';
+        }
+
         $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
-        return '<style>'
-            . '.hp-section-cta{margin-top:22px;display:flex;justify-content:flex-start}'
-            . '.hp-section-cta .btn-secondary{display:inline-flex;align-items:center;justify-content:center;padding:12px 18px;border:1px solid rgba(255,255,255,.18);border-radius:8px;color:#fff;text-decoration:none;font-weight:700}'
-            . '.hp-section-cta .btn-secondary:hover{background:#c4963c;border-color:#c4963c;color:#111}'
-            . '</style>'
-            . '<div class="hp-section-cta"><a href="' . $h($url) . '" class="btn-secondary">' . $h($label) . '</a></div>';
+        return '<div class="hp-section-cta"><a href="' . $h($url) . '" class="btn-secondary">' . $h($label) . '</a></div>';
     }
 
     private function buildFaqItemHtml(int $siteId, int $index): string
@@ -651,7 +541,7 @@ HTML;
         }
 
         if ($lines === []) {
-            $lines[] = '<p style="color:rgba(255,255,255,.45)">Doplňte kontaktní informace v administraci.</p>';
+            $lines[] = '<p class="hp-contact-empty">Doplňte kontaktní informace v administraci.</p>';
         }
 
         $map = '';
@@ -682,37 +572,13 @@ HTML;
             . '<button type="submit">Odeslat zprávu</button>'
             . '</form>';
         if ($recipient === '') {
-            $form = '<p style="color:rgba(255,255,255,.45);margin-bottom:12px">Formulář je připravený, ale chybí cílový e-mail pro odeslání.</p>' . $form;
+            $form = '<p class="hp-contact-empty">Formulář je připravený, ale chybí cílový e-mail pro odeslání.</p>' . $form;
         }
 
-        $css = '<style>'
-            . '.hp-contact-grid{display:grid;grid-template-columns:1fr;gap:20px}'
-            . '.hp-contact-grid > :first-child{order:2}'
-            . '.hp-contact-grid > :last-child{order:1}'
-            . '.hp-contact-box{background:#18181c;border-radius:14px;padding:20px;min-width:0}'
-            . '.hp-contact-lines{display:flex;flex-direction:column;gap:12px}'
-            . '.hp-contact-row{display:flex;flex-direction:column;gap:4px;line-height:1.55;color:rgba(255,255,255,.86)}'
-            . '.hp-contact-label{font-size:.78rem;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.04em}'
-            . '.hp-contact-row a{color:#c4963c;text-decoration:none}'
-            . '.hp-contact-socials{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}'
-            . '.hp-contact-social{display:inline-flex;align-items:center;padding:8px 14px;border-radius:8px;background:#202028;color:#fff;text-decoration:none;font-size:.9rem}'
-            . '.hp-contact-map{display:inline-flex;margin-top:16px;padding:12px 18px;background:#c4963c;color:#fff;text-decoration:none;border-radius:8px;font-weight:800}'
-            . '.hp-contact-map-embed{display:block;width:100%;aspect-ratio:4/3;min-height:260px;border:0;border-radius:12px;margin-top:16px;background:#0f0f12}'
-            . '.hp-contact-cta{margin-top:20px}'
-            . '.hp-contact-cta .btn-secondary{display:inline-flex;align-items:center;justify-content:center;padding:12px 18px;border:1px solid rgba(255,255,255,.18);border-radius:8px;color:#fff;text-decoration:none;font-weight:700}'
-            . '.hp-contact-cta .btn-secondary:hover{background:#c4963c;border-color:#c4963c;color:#111}'
-            . '.hp-contact-form{display:grid;gap:10px}'
-            . '.hp-contact-form label{font-size:.82rem;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.04em}'
-            . '.hp-contact-form input,.hp-contact-form textarea{width:100%;background:#111;border:1px solid rgba(255,255,255,.12);color:#fff;padding:12px 14px;border-radius:8px;font-size:.95rem;font-family:inherit}'
-            . '.hp-contact-form textarea{min-height:120px;resize:vertical}'
-            . '.hp-contact-form button{padding:14px 18px;background:#c4963c;color:#fff;border:none;border-radius:8px;font-weight:800;cursor:pointer}'
-            . '.hp-contact-form button:hover{background:#d4a64c}'
-            . '@media(min-width:760px){.hp-contact-grid{grid-template-columns:1.2fr .8fr;gap:24px}.hp-contact-grid > :first-child{order:1}.hp-contact-grid > :last-child{order:2}.hp-contact-box{padding:24px}.hp-contact-row{flex-direction:row;gap:12px}.hp-contact-label{flex:0 0 90px;padding-top:2px}}'
-            . '</style>';
+        $contactCta = $this->buildPageCtaHtml($siteId, 'kontakt');
 
-        return $css
-            . '<div class="hp-contact-grid">'
-            . '<div class="hp-contact-box"><div class="hp-contact-lines">' . implode('', $lines) . '</div>' . $map . '<div class="hp-contact-cta"><a href="/kontakt" class="btn-secondary">Kontakt</a></div></div>'
+        return '<div class="hp-contact-grid">'
+            . '<div class="hp-contact-box"><div class="hp-contact-lines">' . implode('', $lines) . '</div>' . $map . '<div class="hp-contact-cta">' . $contactCta . '</div></div>'
             . '<div class="hp-contact-box">' . $form . '</div>'
             . '</div>';
     }

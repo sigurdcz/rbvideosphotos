@@ -1598,7 +1598,7 @@ body.theme-elegant-white {
     align-items: baseline;
   }
 
-  /* About sekce na mobilu: cista vertikalni skladba, aby titulek "Nase sluzby"
+  /* About sekce na mobilu: cista vertikalni skladba, aby nadpis
      neprekryval fotku a byl citelny. */
   .theme-elegant-white .jb-about-shell {
     display: flex;

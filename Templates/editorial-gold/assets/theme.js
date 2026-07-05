@@ -5,18 +5,7 @@
     return (scope || document).querySelector(selector);
   }
 
-  function createStats() {
-    var hero = qs('.hp-hero');
-    if (qs('.eg-stats') || !hero) return;
-    var stats = document.createElement('section');
-    stats.className = 'eg-stats';
-    stats.innerHTML =
-      '<div><strong>150+</strong><span>spokojenych klientu</span></div>' +
-      '<div><strong>8+</strong><span>let zkusenosti</span></div>' +
-      '<div><strong>5 let</strong><span>zalohy fotek zdarma</span></div>' +
-      '<div><strong>2</strong><span>fotograf & kameraman</span></div>';
-    hero.insertAdjacentElement('afterend', stats);
-  }
+  function createStats() {}
 
   function enhanceHero() {
     var hero = qs('.hp-hero');
@@ -25,22 +14,7 @@
     if (cta && !qs('.eg-hero-secondary', cta)) {
       var firstPhone = qs('a[href^="tel:"]');
       var primary = qs('.btn-primary', cta) || cta.querySelector('a');
-      if (primary) {
-        primary.textContent = firstPhone ? 'Zavolat: ' + firstPhone.textContent.replace(/^Telefon\s*/i, '').trim() : 'Zavolejte nam';
-        if (firstPhone) primary.href = firstPhone.href;
-      }
-      var services = document.createElement('a');
-      services.className = 'btn-secondary eg-hero-secondary';
-      services.href = '#sluzby';
-      services.textContent = 'Nase sluzby';
-      cta.appendChild(services);
-    }
-    if (!qs('.eg-play-story', hero)) {
-      var play = document.createElement('a');
-      play.className = 'eg-play-story';
-      play.href = '/nase-prace';
-      play.innerHTML = '<span class="eg-play-story__circle">&#9654;</span><span>Podivejte se<br>na nasi praci</span>';
-      hero.appendChild(play);
+      if (primary && firstPhone) primary.href = firstPhone.href;
     }
     if (!qs('.eg-video-toggle', hero) && qs('.theme-hero-video', hero)) {
       var toggle = document.createElement('button');
@@ -150,6 +124,7 @@
   }
 
   function enhanceContactBand() {
+    return;
     var section = qs('#kontakt');
     if (!section || qs('.eg-contact-band', section)) return;
     var infoBox = qs('.hp-contact-box', section);
@@ -174,11 +149,7 @@
     }).join('');
     var band = document.createElement('div');
     band.className = 'eg-contact-band';
-    band.innerHTML =
-      '<div class="eg-contact-band__photo" aria-hidden="true"></div>' +
-      '<div class="eg-contact-band__copy"><p class="section-label">Kontakt</p><h2>Pojdme vytvorit<br><span>neco krasneho</span></h2><p>Nevahajte se nam ozvat. Pripravime nabidku na miru.</p></div>' +
-      '<div class="eg-contact-band__info">' + lines + '</div>' +
-      '<div class="eg-contact-band__actions"><a class="btn-primary" href="' + (contactLink ? contactLink.href : '/kontakt') + '">Kontakt</a>' + socials + '</div>';
+    band.innerHTML = '';
     var container = qs('.container', section);
     if (container) {
       Array.prototype.slice.call(container.children).forEach(function (child) {

@@ -39,14 +39,6 @@
     var links = qs('.nav-links', nav);
     if (!toggle || !label || !links) return;
 
-    if (!qs('a[href="/"]', links) && !qs('a[href="/#uvod"]', links)) {
-      var home = document.createElement('a');
-      home.href = '/';
-      home.textContent = 'Úvod';
-      home.className = 'nav-home-link';
-      links.insertBefore(home, links.firstChild);
-    }
-
     function syncState() {
       var open = toggle.checked === true;
       label.classList.toggle('is-active', open);
@@ -114,15 +106,6 @@
 
     hero.classList.add('jb-hero');
 
-    var cta = qs('.hero-cta-wrap', hero);
-    if (cta && !qs('.jb-hero-secondary', cta)) {
-      var secondary = document.createElement('a');
-      secondary.className = 'btn-secondary jb-hero-secondary';
-      secondary.href = '#nase-prace';
-      secondary.textContent = 'Portfolio';
-      cta.appendChild(secondary);
-    }
-
     var heading = qs('h1', hero);
     if (heading && !heading.querySelector('span')) {
       accentLastWord(heading);
@@ -178,15 +161,14 @@
 
     var visualImage = pickVisualImage();
     var visualInner = visualImage
-      ? '<img class="jb-about-visual__media" src="' + visualImage + '" alt="Nase sluzby" loading="lazy">'
-      : '<span>[ Vase fotografie ]</span>';
+      ? '<img class="jb-about-visual__media" src="' + visualImage + '" alt="" loading="lazy">'
+      : '';
 
     var visual = document.createElement('div');
     visual.className = 'jb-about-visual jb-reveal';
     visual.innerHTML =
       '<div class="jb-about-visual__frame"></div>' +
-      '<div class="jb-about-visual__panel' + (visualImage ? ' has-image' : '') + '">' + visualInner + '</div>' +
-      '<div class="jb-about-badge"><strong>10+</strong><span>let zkusenosti</span></div>';
+      '<div class="jb-about-visual__panel' + (visualImage ? ' has-image' : '') + '">' + visualInner + '</div>';
 
     var copy = document.createElement('div');
     copy.className = 'jb-about-copy jb-reveal';
@@ -208,16 +190,6 @@
         '<p>' + ((cardDesc && cardDesc.textContent) ? cardDesc.textContent.trim() : '') + '</p></div>';
       highlights.appendChild(item);
     });
-
-    if (highlights.children.length < 4) {
-      var extra = document.createElement('div');
-      extra.className = 'jb-about-highlight jb-about-highlight--accent';
-      extra.innerHTML =
-        '<span class="jb-about-highlight__icon" aria-hidden="true"><span></span></span>' +
-        '<div><strong>Akce & události</strong>' +
-        '<p>Konference, kulturní akce, plesy i firemní večery. Zachytím důležité momenty, které se stanou součástí vaší značky.</p></div>';
-      highlights.appendChild(extra);
-    }
 
     copy.appendChild(highlights);
     shell.appendChild(visual);
@@ -267,12 +239,6 @@
         card.insertBefore(icon, card.firstChild);
       }
 
-      if (card.classList.contains('hp-cenik-card--featured') && !qs('.jb-price-badge', card)) {
-        var badge = document.createElement('div');
-        badge.className = 'jb-price-badge';
-        badge.textContent = 'Nejoblibenejsi';
-        card.appendChild(badge);
-      }
     });
   }
 
@@ -348,33 +314,7 @@
     });
   }
 
-  function buildStaticProcess() {
-    var reviews = qs('#hodnoceni');
-    var contact = qs('#kontakt');
-    if (!contact || qs('.jb-process')) return;
-
-    var section = document.createElement('section');
-    section.className = 'section jb-process';
-    section.innerHTML =
-      '<div class="container">' +
-      '  <div class="jb-process__header jb-reveal">' +
-      '    <p class="section-label">Jak to probiha</p>' +
-      '    <h2 class="section-title">Cesta k vasim <span>dokonalym fotkam</span></h2>' +
-      '  </div>' +
-      '  <div class="jb-process__steps">' +
-      '    <article class="jb-process-step jb-reveal"><div class="jb-process-step__num">01</div><h3>Seznameni</h3><p>Nezavazna konzultace, kde probereme vase predstavy, styl a termin foceni nebo svatby.</p></article>' +
-      '    <article class="jb-process-step jb-reveal"><div class="jb-process-step__num">02</div><h3>Planovani</h3><p>Spolecne nastavime harmonogram, lokace a dulezite momenty, ktere chceme zachytit.</p></article>' +
-      '    <article class="jb-process-step jb-reveal"><div class="jb-process-step__num">03</div><h3>Vas den</h3><p>Diskretne zachytim emoce, detaily i spontanni okamziky tak, aby vse pusobilo prirozene.</p></article>' +
-      '    <article class="jb-process-step jb-reveal"><div class="jb-process-step__num">04</div><h3>Predani</h3><p>Hotove vystupy dostanete v online galerii a ve finalni podobe pripravene pro dalsi sdileni i tisk.</p></article>' +
-      '  </div>' +
-      '</div>';
-
-    if (reviews && reviews.parentNode) {
-      reviews.parentNode.insertBefore(section, contact);
-      return;
-    }
-    contact.parentNode.insertBefore(section, contact);
-  }
+  function buildStaticProcess() {}
 
   function detectSocialNetwork(name, href) {
     var text = ((name || '') + ' ' + (href || '')).toLowerCase();

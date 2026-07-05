@@ -1,22 +1,26 @@
-# UKOL: Hero media cover, default background a parallax
+# UKOL: Kriticke CR SEO editoru a DB-driven sablony
 
-Datum: 2026-07-04
-Zadani: Opravit hero sekce tak, aby video/foto vyplnilo celou sirku a vysku hero, defaultni background obrazek z nastaveni se propsal i bez videa a vsechny hero sekce mely parallax efekt.
+Datum: 2026-07-05
+Zadani: Udelat velke kriticke CR se zamerenim na cil systemu jako SEO editor a content manager, odstranit data ze sablon tak, aby sablony jen pouzivaly data z DB, a optimalizovat PHP, JS a hlavne CSS.
 
 ## Kroky
 
-- [x] 1. Najit renderovani defaultniho hero obrazku, videa a CSS hero vrstev
-- [x] 2. Opravit propsani defaultniho background obrazku bez videa
-- [x] 3. Nastavit hero media cover pres celou plochu a parallax pro vsechny hero sekce
-- [x] 4. Overit a commit/push
+- [x] 1. Zmapovat sablony, frontend runtime a admin/content flow kvuli hardcoded datum mimo DB
+- [x] 2. Najit kriticke rozpory s cilem SEO editor/content manager a vybrat opravitelne zmeny s nejvetsim dopadem
+- [x] 3. Upravit PHP/JS/CSS tak, aby sablony zustaly prezencni vrstva a data sla z DB nebo placeholderu
+- [x] 4. Overit syntax, diff, zakladni runtime predpoklady a markdown dopady
+- [-] 5. Dodat kriticke CR/report s nalezy, provedenymi zmenami a zbyvajicimi riziky
 
 ## Poznamky
 
-- Success signal: hero media se roztahne pres celou hero sekci, nastaveny defaultni background obrazek se zobrazi i bez videa a hero sekce maji parallax vrstvu.
-- Nalezeno: Elegant White CSS stale obsahovalo starsi `left: 42%` / `width: 58%` pro hero media, ktere prebilo full-bleed zamer.
-- Opraveno: `default_hero_poster_url` se pouzije jako defaultni hero image bez videa; hero media je full-bleed a Elegant White JS nastavuje parallax promennou pro vsechny hero sekce.
-- Oprava pokryva injektovanou `.theme-hero-video` i nativni `<video class="hero-video">`, ktere je videt v DOM na live screenshotu.
+- Success signal: sablony nenesou klientsky/demo obsah, hlavni obsahove texty a media jsou DB-driven, CSS/JS/PHP zmeny nezmensuji schopnost editoru spravovat obsah.
+- Pred startem byly v pracovnim stromu pending dokumentacni zmeny z predchozi konsolidace MD souboru; jsou souvisejici s aktualnim CR a zustavaji v rozsahu.
+- Nalezeno: nejvetsi rozpor s cilem CMS byl v `HomepageContentService`, kde PHP doplnovalo fotograficke homepage texty, hardcoded CTA labely a vkladalo inline CSS do generovaneho obsahu.
+- Upraveno: homepage marketingove textove fallbacky byly odstraneny, CTA fallbacky berou text z titulku DB stranek a styly karet/kontaktu/portfolia se presunuly do shared theme CSS.
+- Upraveno: layouty temat uz ve footeru nepublikuji nazvy sablon jako obsah, ale pouze `{site_name}`.
+- Upraveno: `jemna-bezova` a `editorial-gold` JS uz nepridavaji vlastni marketingove sekce, staty, proces ani kontaktní copy mimo DB.
+- Overeno: `php -l` pro `HomepageContentService` a `ThemeTemplateRegistry` prosel, `git diff --check` nema chyby, cilene `rg` na odstranene marketingove texty je ciste. JS syntax check pres `node --check` nesel spustit, protoze `node` neni v prostredi dostupny.
 
 ## Vysledek
 
-Hero media se explicitne roztahuje pres celou hero plochu, defaultni poster z nastaveni funguje jako background bez videa a Elegant White hero sekce maji parallax posun pro video i foto vrstvy.
+Kod a dokumentace jsou upravene pro prisnejsi pravidlo: sablony a theme assety nesmi nest klientsky obsah, ale jen prezentovat DB-driven data. Zbyva predat kriticky CR/report.
