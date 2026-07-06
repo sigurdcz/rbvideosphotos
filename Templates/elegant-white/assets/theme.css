@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Manrope:wght@300;400;500;600&display=swap');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css');
 
 :root {
   --jb-ivory: #faf7f2;
@@ -4091,18 +4092,20 @@ body.theme-elegant-white[data-cms-page-key="homepage"] .ew-process-icon {
   box-shadow: inset 0 0 0 1px rgba(209, 155, 63, .12) !important;
 }
 
-body.theme-elegant-white[data-cms-page-key="homepage"] .ew-service-icon::before,
 body.theme-elegant-white[data-cms-page-key="homepage"] .ew-process-icon::before {
   font-size: 1.9rem !important;
   line-height: 1 !important;
 }
 
-body.theme-elegant-white[data-cms-page-key="homepage"] .ew-service-icon--camera::before,
+/* .ew-service-icon ted obsahuje realnou Font Awesome <i> ikonu (viz theme.js) misto
+   ::before unicode glyfu — velikost/barva glyfu se resi primo pres .ew-service-icon i. */
+body.theme-elegant-white[data-cms-page-key="homepage"] .ew-service-icon i {
+  font-size: 1.9rem !important;
+  line-height: 1 !important;
+}
+
 body.theme-elegant-white[data-cms-page-key="homepage"] .ew-process-icon--camera::before { content: "▣"; }
-body.theme-elegant-white[data-cms-page-key="homepage"] .ew-service-icon--people::before { content: "◉"; }
-body.theme-elegant-white[data-cms-page-key="homepage"] .ew-service-icon--briefcase::before,
 body.theme-elegant-white[data-cms-page-key="homepage"] .ew-process-icon--edit::before { content: "▤"; }
-body.theme-elegant-white[data-cms-page-key="homepage"] .ew-service-icon--calendar::before,
 body.theme-elegant-white[data-cms-page-key="homepage"] .ew-process-icon--date::before { content: "□"; }
 body.theme-elegant-white[data-cms-page-key="homepage"] .ew-process-icon--send::before { content: "▱"; }
 
@@ -4655,12 +4658,14 @@ body.theme-elegant-white[data-cms-page-key="homepage"] .ew-process-icon {
   height: 86px !important;
 }
 
-body.theme-elegant-white[data-cms-page-key="homepage"] .ew-service-icon::before,
 body.theme-elegant-white[data-cms-page-key="homepage"] .ew-process-icon::before {
   font-size: 2.05rem !important;
 }
 
-body.theme-elegant-white[data-cms-page-key="homepage"] .ew-service-icon--music::before { content: "♪"; font-size: 2.35rem !important; }
+body.theme-elegant-white[data-cms-page-key="homepage"] .ew-service-icon i {
+  font-size: 2.05rem !important;
+}
+
 body.theme-elegant-white[data-cms-page-key="homepage"] .ew-process-icon--plan::before { content: "▦"; }
 
 body.theme-elegant-white[data-cms-page-key="homepage"] .ew-service-card h3 {
@@ -5761,4 +5766,36 @@ body.theme-elegant-white #cenik .section-dark p {
 body.theme-elegant-white #cenik .section-dark .btn {
   background: #c4963c !important;
   color: #fff !important;
+}
+
+/* ── Finalni guardraily (drzet na konci souboru — musi vyhrat nad vsemi predchozimi pravidly) ── */
+
+/* Kontakt tlacitko v navu: frontend-runtime.js prida .nav-active na aktualni/aktivni odkaz
+   vcetne .nav-cta. Obecne pravidlo pro nav odkazy (a:hover, a.nav-active) barvi text zlate
+   (var(--theme-accent) / var(--ew-gold-dark)) se specificitou vyssi nez puvodni "bily text"
+   pravidla pro .nav-cta, takze na zlatem/hnedem pozadi tlacitka text splyva. Tento blok cili
+   vyhradne na .nav-cta (Kontakt) a drzi bily text ve vsech stavech; ostatni nav odkazy (FAQ,
+   Blog, ...) zustavaji zlate beze zmeny. */
+body.theme-elegant-white .theme-nav-wrap .nav-links a.nav-cta,
+body.theme-elegant-white .theme-nav-wrap .nav-links a.nav-cta:hover,
+body.theme-elegant-white .theme-nav-wrap .nav-links a.nav-cta.nav-active,
+body.theme-elegant-white[data-cms-page-key="homepage"] .theme-nav-wrap .nav-links a.nav-cta,
+body.theme-elegant-white[data-cms-page-key="homepage"] .theme-nav-wrap .nav-links a.nav-cta:hover,
+body.theme-elegant-white[data-cms-page-key="homepage"] .theme-nav-wrap .nav-links a.nav-cta.nav-active {
+  color: #fffdfa !important;
+}
+
+/* Kontaktni formular na homepage (.hp-contact-form > .ew-field): grid track ma
+   grid-template-columns:repeat(2,minmax(0,1fr)), ale grid polozka .ew-field nikde nema
+   min-width:0. Bez toho polozka odmita zmensit se pod intrinsic min-content sirku vlozeneho
+   inputu, coz pri uzsi sirce zpusobi preteceni a vizualni prekryv dvou poli vedle sebe.
+   Analogicka standalone /kontakt stranka uz ma tento safeguard (.kt-form-grid>div{min-width:0}),
+   homepage varianta ho postradala. */
+body.theme-elegant-white .ew-field,
+body.theme-elegant-white .hp-contact-form input,
+body.theme-elegant-white .hp-contact-form textarea,
+body.theme-elegant-white .hp-contact-form select {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
 }

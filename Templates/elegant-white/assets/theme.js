@@ -184,6 +184,17 @@
     return ['camera', 'people', 'briefcase', 'calendar'][index % 4];
   }
 
+  function faIconFromKey(key) {
+    var map = {
+      camera: 'fa-camera',
+      people: 'fa-users',
+      briefcase: 'fa-briefcase',
+      calendar: 'fa-calendar-days',
+      music: 'fa-music'
+    };
+    return map[key] || 'fa-camera';
+  }
+
   function enhanceServicesSection() {
     var section = qs('#sluzby');
     if (!section || section.classList.contains('ew-about-ready')) return;
@@ -226,8 +237,11 @@
         var href = item.href || '';
         var title = item.title || item.desc || '';
         var body = item.desc || '';
+        var iconKey = iconClassFromTitle(title, index);
         return '<article class="ew-service-card">' +
-          '<div class="ew-service-icon ew-service-icon--' + iconClassFromTitle(title, index) + '" aria-hidden="true"></div>' +
+          '<div class="ew-service-icon ew-service-icon--' + iconKey + '" aria-hidden="true">' +
+          '<i class="fa-solid ' + faIconFromKey(iconKey) + '"></i>' +
+          '</div>' +
           (title ? '<h3>' + escapeHtml(title) + '</h3>' : '') +
           (body ? '<p>' + escapeHtml(body) + '</p>' : '') +
           (href && item.buttonText ? '<a href="' + escapeHtml(href) + '">' + escapeHtml(item.buttonText) + '</a>' : '') +
