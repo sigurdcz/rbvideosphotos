@@ -558,7 +558,7 @@ $htmlCenik = <<<'HTML'
     <p data-block="pricing_other_sub"></p>
   </div>
 </section>
-<section class="section-dark">
+<section class="section section-light">
   <div class="container">
     <h2 data-block="cta_heading"></h2>
     <p data-block="cta_sub"></p>
@@ -934,14 +934,14 @@ $pricingPackages = <<<'HTML'
 </div>
 HTML;
 
-block($pdo, $pidCenik, 'hero_heading',            'text',     'Hero Nadpis',       'CenÄ‚Â­k fotografickÄ‚Ëťch a video sluÄąÄľeb Ă˘â‚¬â€ť Olomouc', 1);
+block($pdo, $pidCenik, 'hero_heading',            'text',     'Hero Nadpis',       'Ceník', 1);
 block($pdo, $pidCenik, 'hero_intro',              'textarea', 'Hero Intro',        'TransparentnÄ‚Â­ ceny bez pÄąâ„˘ekvapenÄ‚Â­. KaÄąÄľdÄ‚Ë‡ zakÄ‚Ë‡zka je individuÄ‚Ë‡lnÄ‚Â­ Ă˘â‚¬â€ť vÄąÄľdy se domluvÄ‚Â­me na balÄ‚Â­Ă„Ĺ¤ku pÄąâ„˘esnĂ„â€ş pro vÄ‚Ë‡s. PÄąâ„˘es 150 spokojenÄ‚Ëťch klientÄąĹ», 8 let praxe.', 2);
 block($pdo, $pidCenik, 'pricing_weddings_heading','text',     'CenÄ‚Â­k Svatby',      'SvatebnÄ‚Â­ balÄ‚Â­Ă„Ĺ¤ky', 3);
 block($pdo, $pidCenik, 'pricing_weddings_sub',    'textarea', 'CenÄ‚Â­k Svatby Info', 'Vyberte si balÄ‚Â­Ă„Ĺ¤ek podle rozsahu svatebnÄ‚Â­ho dne. KaÄąÄľdÄ‚Ë‡ zakÄ‚Ë‡zka je individuÄ‚Ë‡lnÄ‚Â­ Ă˘â‚¬â€ť finÄ‚Ë‡lnÄ‚Â­ nabÄ‚Â­dku pÄąâ„˘ipravÄ‚Â­me vÄąÄľdy na mÄ‚Â­ru. Ceny jsou orientaĂ„Ĺ¤nÄ‚Â­, Ă˘â‚¬Ĺľod".', 4);
 block($pdo, $pidCenik, 'pricing_packages',        'html',     'SvatebnÄ‚Â­ balÄ‚Â­Ă„Ĺ¤ky',  $pricingPackages, 5);
 block($pdo, $pidCenik, 'pricing_other_heading',   'text',     'CenÄ‚Â­k OstatnÄ‚Â­',     'RodinnÄ‚Â©, portrÄ‚Â©tnÄ‚Â­ a firemnÄ‚Â­ focenÄ‚Â­', 5);
 block($pdo, $pidCenik, 'pricing_other_sub',       'textarea', 'CenÄ‚Â­k OstatnÄ‚Â­ Info','RodinnÄ‚Â© focenÄ‚Â­ od 4 500 KĂ„Ĺ¤ Ă‚Â· PortrÄ‚Â©tnÄ‚Â­ focenÄ‚Â­ od 3 000 KĂ„Ĺ¤ Ă‚Â· FiremnÄ‚Â­ focenÄ‚Â­ od 6 000 KĂ„Ĺ¤ Ă‚Â· ZÄ‚Ë‡snuby & Maternity od 3 500 KĂ„Ĺ¤ Ă‚Â· Videografie od 8 000 KĂ„Ĺ¤.', 6);
-block($pdo, $pidCenik, 'cta_heading',             'text',     'CTA Nadpis',        'Rezervujte termÄ‚Â­n jeÄąË‡tĂ„â€ş dnes', 7);
+block($pdo, $pidCenik, 'cta_heading',             'text',     'CTA Nadpis',        'Domluvme termín', 7);
 block($pdo, $pidCenik, 'cta_sub',                 'textarea', 'CTA Sub',           'OblÄ‚Â­benÄ‚Â© soboty se obsazujÄ‚Â­ rok dopÄąâ„˘edu Ă˘â‚¬â€ť Ă„Ĺ¤Ä‚Â­m dÄąâ„˘Ä‚Â­ve, tÄ‚Â­m vĂ„â€ştÄąË‡Ä‚Â­ vÄ‚ËťbĂ„â€şr. Zavolejte nebo napiÄąË‡te, odpovÄ‚Â­me do 24 hodin.', 8);
 
 // BalÄ‚Â­Ă„Ĺ¤ky Ă˘â‚¬â€ť renderuje buildPricingHtml() na homepage a cenik strÄ‚Ë‡nce
@@ -1031,7 +1031,7 @@ seo($pdo, $pidHome, [
     'og_title'    => 'SvatebnĂ­ foto a video Olomouc, Morava | RB Videos Photos',
     'og_desc'     => 'SvatebnĂ­ fotografie a video z Olomouce pro pĂˇry z celĂ© Moravy. PĹ™irozenĂ© focenĂ­ a filmovĂ© svatebnĂ­ video.',
     'schema_type' => 'LocalBusiness',
-    'schema_json' => '{"@context":"https://schema.org","@graph":[{"@type":"LocalBusiness","name":"RB Videos Photos","url":"' . $d . '/","telephone":"+420604225032","areaServed":["Olomouc","OlomouckĂ˝ kraj","Morava","ÄŚeskĂˇ republika"],"priceRange":"$$","sameAs":["https://www.facebook.com/rbvideosandphotos","https://www.instagram.com/rb_videos_photos/"]},{"@type":"WebSite","name":"RB Videos Photos","url":"' . $d . '/"}]}',
+    'schema_json' => '{"@context":"https://schema.org","@graph":[{"@type":"LocalBusiness","name":"RB Videos Photos","url":"' . $d . '/","telephone":"+420604225032","address":{"@type":"PostalAddress","streetAddress":"Horní náměstí 583/1","postalCode":"779 00","addressLocality":"Olomouc","addressCountry":"CZ"},"areaServed":["Olomouc","Olomoucký kraj","Morava","Česká republika"],"priceRange":"$$","sameAs":["https://www.facebook.com/rbvideosandphotos","https://www.instagram.com/rb_videos_photos/"]},{"@type":"WebSite","name":"RB Videos Photos","url":"' . $d . '/"}]}' ,
 ]);
 
 seo($pdo, $pidCenik, [

@@ -4925,6 +4925,432 @@ body.theme-elegant-white[data-cms-page-key="homepage"] .hp-contact-form {
   color: #221914 !important;
 }
 
+/* Critical visual consistency fixes:
+   - all hero sections keep light text and a soft overlay
+   - pricing cards use the same light palette as the rest of the site
+   - service/about layouts no longer stretch the same image across the page
+   - homepage section transitions fade instead of hard-cutting between colors */
+body.theme-elegant-white .hp-hero,
+body.theme-elegant-white .ew-hero,
+body.theme-elegant-white .hero,
+body.theme-elegant-white .page-hero,
+body.theme-elegant-white .pf-hero,
+body.theme-elegant-white .bl-hero,
+body.theme-elegant-white .kt-hero,
+body.theme-elegant-white .fq-hero,
+body.theme-elegant-white .bp-hero,
+body.theme-elegant-white .pf-detail-hero,
+body.theme-elegant-white .bp-detail-hero {
+  color: #fff !important;
+}
+
+body.theme-elegant-white .hp-hero::before,
+body.theme-elegant-white .ew-hero::before,
+body.theme-elegant-white .hero::before,
+body.theme-elegant-white .page-hero::before,
+body.theme-elegant-white .pf-hero::before,
+body.theme-elegant-white .bl-hero::before,
+body.theme-elegant-white .kt-hero::before,
+body.theme-elegant-white .fq-hero::before,
+body.theme-elegant-white .bp-hero::before,
+body.theme-elegant-white .pf-detail-hero::before,
+body.theme-elegant-white .bp-detail-hero::before {
+  background: linear-gradient(180deg, rgba(18, 12, 9, .18), rgba(18, 12, 9, .06) 34%, rgba(18, 12, 9, .38)) !important;
+}
+
+body.theme-elegant-white .hp-hero .theme-hero-video,
+body.theme-elegant-white .hp-hero .hero-video,
+body.theme-elegant-white .ew-hero .theme-hero-video,
+body.theme-elegant-white .ew-hero .hero-video,
+body.theme-elegant-white .hero .theme-hero-video,
+body.theme-elegant-white .hero .hero-video,
+body.theme-elegant-white .page-hero .theme-hero-video,
+body.theme-elegant-white .page-hero .hero-video,
+body.theme-elegant-white .pf-hero .theme-hero-video,
+body.theme-elegant-white .pf-hero .hero-video,
+body.theme-elegant-white .bl-hero .theme-hero-video,
+body.theme-elegant-white .bl-hero .hero-video,
+body.theme-elegant-white .kt-hero .theme-hero-video,
+body.theme-elegant-white .kt-hero .hero-video,
+body.theme-elegant-white .fq-hero .theme-hero-video,
+body.theme-elegant-white .fq-hero .hero-video,
+body.theme-elegant-white .bp-hero .theme-hero-video,
+body.theme-elegant-white .bp-hero .hero-video,
+body.theme-elegant-white .pf-detail-hero .theme-hero-video,
+body.theme-elegant-white .pf-detail-hero .hero-video,
+body.theme-elegant-white .bp-detail-hero .theme-hero-video,
+body.theme-elegant-white .bp-detail-hero .hero-video {
+  inset: -72px 0 !important;
+  top: -72px !important;
+  bottom: -72px !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  height: calc(100% + 144px) !important;
+  min-width: 100% !important;
+  max-width: none !important;
+  object-fit: cover !important;
+  object-position: center center !important;
+  background-position: center center !important;
+  transform: translate3d(0, var(--ew-hero-parallax-y, 0px), 0) scale(1.06) !important;
+  transform-origin: center !important;
+}
+
+body.theme-elegant-white .hp-hero .theme-hero-video iframe,
+body.theme-elegant-white .ew-hero .theme-hero-video iframe,
+body.theme-elegant-white .hero .theme-hero-video iframe,
+body.theme-elegant-white .page-hero .theme-hero-video iframe,
+body.theme-elegant-white .pf-hero .theme-hero-video iframe,
+body.theme-elegant-white .bl-hero .theme-hero-video iframe,
+body.theme-elegant-white .kt-hero .theme-hero-video iframe,
+body.theme-elegant-white .fq-hero .theme-hero-video iframe,
+body.theme-elegant-white .bp-hero .theme-hero-video iframe,
+body.theme-elegant-white .pf-detail-hero .theme-hero-video iframe,
+body.theme-elegant-white .bp-detail-hero .theme-hero-video iframe {
+  left: 50% !important;
+  top: 50% !important;
+  width: 100vw !important;
+  height: 56.25vw !important;
+  min-width: 177.78vh !important;
+  min-height: 100vh !important;
+  transform: translate(-50%, -50%) !important;
+}
+
+body.theme-elegant-white .hp-hero > .container,
+body.theme-elegant-white .ew-hero > .container,
+body.theme-elegant-white .hero > .container,
+body.theme-elegant-white .page-hero > .container,
+body.theme-elegant-white .pf-hero > .container,
+body.theme-elegant-white .bl-hero > .container,
+body.theme-elegant-white .kt-hero > .container,
+body.theme-elegant-white .fq-hero > .container,
+body.theme-elegant-white .bp-hero > .container,
+body.theme-elegant-white .pf-detail-hero > .container,
+body.theme-elegant-white .bp-detail-hero > .container {
+  position: relative !important;
+  z-index: 3 !important;
+}
+
+body.theme-elegant-white .hp-hero h1,
+body.theme-elegant-white .ew-hero h1,
+body.theme-elegant-white .hero h1,
+body.theme-elegant-white .page-hero h1,
+body.theme-elegant-white .pf-hero h1,
+body.theme-elegant-white .bl-hero h1,
+body.theme-elegant-white .kt-hero h1,
+body.theme-elegant-white .fq-hero h1,
+body.theme-elegant-white .bp-hero h1,
+body.theme-elegant-white .pf-detail-hero h1,
+body.theme-elegant-white .bp-detail-hero h1 {
+  color: #fff !important;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, .28) !important;
+}
+
+body.theme-elegant-white .hp-hero .section-label,
+body.theme-elegant-white .ew-hero .section-label,
+body.theme-elegant-white .hero .section-label,
+body.theme-elegant-white .page-hero .section-label,
+body.theme-elegant-white .pf-hero .section-label,
+body.theme-elegant-white .bl-hero .section-label,
+body.theme-elegant-white .kt-hero .section-label,
+body.theme-elegant-white .fq-hero .section-label,
+body.theme-elegant-white .bp-hero .section-label,
+body.theme-elegant-white .pf-detail-hero .section-label,
+body.theme-elegant-white .bp-detail-hero .section-label,
+body.theme-elegant-white .hp-hero .hero-sub,
+body.theme-elegant-white .ew-hero .hero-sub,
+body.theme-elegant-white .hero .hero-sub,
+body.theme-elegant-white .page-hero .hero-sub,
+body.theme-elegant-white .pf-hero .hero-sub,
+body.theme-elegant-white .bl-hero .hero-sub,
+body.theme-elegant-white .kt-hero .hero-sub,
+body.theme-elegant-white .fq-hero .hero-sub,
+body.theme-elegant-white .bp-hero .hero-sub,
+body.theme-elegant-white .pf-detail-hero .hero-sub,
+body.theme-elegant-white .bp-detail-hero .hero-sub {
+  color: rgba(255, 255, 255, .84) !important;
+}
+
+body.theme-elegant-white[data-cms-page-key="homepage"] #sluzby,
+body.theme-elegant-white[data-cms-page-key="homepage"] #nase-prace,
+body.theme-elegant-white[data-cms-page-key="homepage"] #blog,
+body.theme-elegant-white[data-cms-page-key="homepage"] #cenik,
+body.theme-elegant-white[data-cms-page-key="homepage"] #faq,
+body.theme-elegant-white[data-cms-page-key="homepage"] #hodnoceni,
+body.theme-elegant-white[data-cms-page-key="homepage"] #proces,
+body.theme-elegant-white[data-cms-page-key="homepage"] #kontakt {
+  position: relative !important;
+}
+
+body.theme-elegant-white[data-cms-page-key="homepage"] #sluzby {
+  background: linear-gradient(180deg, #fffdf9 0%, #f8f1e6 100%) !important;
+}
+
+body.theme-elegant-white[data-cms-page-key="homepage"] #nase-prace {
+  background: linear-gradient(180deg, #f8f1e6 0%, #fffdfa 100%) !important;
+}
+
+body.theme-elegant-white[data-cms-page-key="homepage"] #blog {
+  background: linear-gradient(180deg, #fffdfa 0%, #f9f2e8 100%) !important;
+}
+
+body.theme-elegant-white[data-cms-page-key="homepage"] #cenik {
+  background: linear-gradient(180deg, #f9f2e8 0%, #fffdfa 100%) !important;
+}
+
+body.theme-elegant-white[data-cms-page-key="homepage"] #faq {
+  background: linear-gradient(180deg, #fffdfa 0%, #f7efe4 100%) !important;
+}
+
+body.theme-elegant-white[data-cms-page-key="homepage"] #hodnoceni {
+  background: linear-gradient(180deg, #f7efe4 0%, #fffdfa 100%) !important;
+}
+
+body.theme-elegant-white[data-cms-page-key="homepage"] #proces {
+  background: linear-gradient(180deg, #fffdfa 0%, #f8f1e6 100%) !important;
+}
+
+body.theme-elegant-white[data-cms-page-key="homepage"] #kontakt {
+  background: linear-gradient(180deg, #f8f1e6 0%, #fffdfa 100%) !important;
+}
+
+body.theme-elegant-white #sluzby.jb-about-section,
+body.theme-elegant-white #sluzby.ew-services-single {
+  background: linear-gradient(180deg, #fffdf9 0%, #f7efe4 100%) !important;
+}
+
+body.theme-elegant-white .jb-about-shell {
+  grid-template-columns: minmax(320px, 460px) minmax(0, 1fr) !important;
+  gap: clamp(40px, 6vw, 88px) !important;
+  align-items: center !important;
+}
+
+body.theme-elegant-white .jb-about-visual {
+  min-height: clamp(420px, 52vw, 620px) !important;
+}
+
+body.theme-elegant-white .jb-about-visual__frame {
+  right: -18px !important;
+  width: 58% !important;
+  height: 64% !important;
+}
+
+body.theme-elegant-white .jb-about-visual__panel,
+body.theme-elegant-white .jb-about-visual__media {
+  background-repeat: no-repeat !important;
+  background-position: center center !important;
+}
+
+body.theme-elegant-white .jb-about-visual__media {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: center center !important;
+}
+
+body.theme-elegant-white .jb-about-copy {
+  max-width: 700px !important;
+}
+
+body.theme-elegant-white #cenik .section-title {
+  max-width: 640px !important;
+  font-size: clamp(2.6rem, 4vw, 4.2rem) !important;
+  line-height: 1.02 !important;
+  text-wrap: balance !important;
+}
+
+body.theme-elegant-white #cenik .ckp-grid {
+  display: grid !important;
+  grid-template-columns: minmax(0, .9fr) minmax(0, 1.16fr) minmax(0, .9fr) !important;
+  gap: 18px !important;
+  align-items: stretch !important;
+  margin: 18px 0 44px !important;
+}
+
+body.theme-elegant-white #cenik .ckp-card {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  padding: 28px 24px 26px !important;
+  border-radius: 24px !important;
+  background: rgba(255, 250, 243, .94) !important;
+  border: 1px solid rgba(194, 150, 60, .14) !important;
+  box-shadow: 0 18px 44px rgba(42, 30, 18, .08) !important;
+}
+
+body.theme-elegant-white #cenik .ckp-card--featured {
+  transform: translateY(-10px) scale(1.02) !important;
+  border-color: rgba(194, 150, 60, .34) !important;
+  background: rgba(255, 253, 248, .98) !important;
+  box-shadow: 0 26px 56px rgba(42, 30, 18, .12) !important;
+}
+
+body.theme-elegant-white #cenik .ckp-card .ckp-title {
+  order: 1 !important;
+  margin: 0 !important;
+  color: var(--ew-text) !important;
+  font-size: 1.55rem !important;
+  line-height: 1.08 !important;
+}
+
+body.theme-elegant-white #cenik .ckp-card .ckp-price {
+  order: 2 !important;
+  margin: 10px 0 12px !important;
+  padding-top: 0 !important;
+  border-top: 0 !important;
+  color: #c4963c !important;
+  font-size: 1.38rem !important;
+  font-weight: 900 !important;
+}
+
+body.theme-elegant-white #cenik .ckp-card .ckp-desc {
+  order: 3 !important;
+  margin: 0 !important;
+  color: rgba(41, 34, 30, .74) !important;
+}
+
+body.theme-elegant-white #cenik .ckp-card .ckp-feats {
+  order: 4 !important;
+  margin-top: 18px !important;
+  padding-left: 18px !important;
+}
+
+body.theme-elegant-white #cenik .ckp-card .ckp-feats li {
+  color: rgba(41, 34, 30, .82) !important;
+}
+
+body.theme-elegant-white #cenik .cta-2col {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, .92fr) !important;
+  gap: 28px !important;
+  align-items: start !important;
+  margin-top: 40px !important;
+  padding: 30px !important;
+  border-radius: 28px !important;
+  border: 1px solid rgba(194, 150, 60, .12) !important;
+  background: rgba(255, 250, 243, .84) !important;
+  box-shadow: 0 20px 50px rgba(42, 30, 18, .08) !important;
+}
+
+body.theme-elegant-white #cenik .cta-l h2 {
+  color: var(--ew-text) !important;
+  font-size: clamp(2rem, 4vw, 3rem) !important;
+  line-height: 1.06 !important;
+  text-wrap: balance !important;
+}
+
+body.theme-elegant-white #cenik .cta-l p,
+body.theme-elegant-white #cenik .cta-info p {
+  color: rgba(41, 34, 30, .78) !important;
+}
+
+body.theme-elegant-white #cenik .cta-r {
+  padding: 28px !important;
+  border-radius: 24px !important;
+  border: 1px solid rgba(194, 150, 60, .16) !important;
+  background: linear-gradient(180deg, rgba(255, 251, 245, .98), rgba(244, 231, 212, .96)) !important;
+  color: #221914 !important;
+  box-shadow: 0 18px 44px rgba(42, 30, 18, .08) !important;
+}
+
+body.theme-elegant-white #cenik .cta-r h3 {
+  color: #221914 !important;
+}
+
+body.theme-elegant-white #cenik .cta-r-sub {
+  color: rgba(41, 34, 30, .72) !important;
+}
+
+body.theme-elegant-white #cenik .cta-btn {
+  border-radius: 999px !important;
+}
+
+body.theme-elegant-white #cenik .cta-btn--gold {
+  background: #c4963c !important;
+  color: #fff !important;
+}
+
+body.theme-elegant-white #cenik .cta-btn--dark {
+  background: rgba(255, 255, 255, .7) !important;
+  color: #4b3525 !important;
+  border: 1px solid rgba(194, 150, 60, .16) !important;
+}
+
+body.theme-elegant-white #cenik .section-title,
+body.theme-elegant-white #cenik .section-intro,
+body.theme-elegant-white #cenik .section-label {
+  color: var(--ew-text) !important;
+}
+
+body.theme-elegant-white .hp-cenik-grid {
+  grid-template-columns: minmax(0, .9fr) minmax(0, 1.18fr) minmax(0, .9fr) !important;
+}
+
+body.theme-elegant-white .hp-cenik-card {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 14px !important;
+}
+
+body.theme-elegant-white .hp-cenik-card--featured {
+  transform: translateY(-10px) scale(1.02) !important;
+}
+
+body.theme-elegant-white .hp-cenik-card-title,
+body.theme-elegant-white .hp-cenik-card__title {
+  order: 1 !important;
+}
+
+body.theme-elegant-white .hp-cenik-card-price,
+body.theme-elegant-white .hp-cenik-card__price {
+  order: 2 !important;
+  margin-top: 0 !important;
+}
+
+body.theme-elegant-white .hp-cenik-card-desc,
+body.theme-elegant-white .hp-cenik-card__desc {
+  order: 3 !important;
+}
+
+body.theme-elegant-white[data-cms-page-key="homepage"] .ew-hero .theme-hero-video,
+body.theme-elegant-white[data-cms-page-key="homepage"] .hero .theme-hero-video {
+  filter: saturate(1.04) brightness(.96) contrast(1.02) !important;
+}
+
+body.theme-elegant-white[data-cms-page-key="homepage"] .ew-hero .theme-hero-video::after,
+body.theme-elegant-white[data-cms-page-key="homepage"] .hero .theme-hero-video::after {
+  background: linear-gradient(90deg, rgba(255, 253, 249, .42), rgba(255, 253, 249, .08) 42%, rgba(255, 253, 249, 0)) !important;
+}
+
+body.theme-elegant-white[data-cms-page-key="homepage"] .ew-blog,
+body.theme-elegant-white[data-cms-page-key="homepage"] .ew-pricing,
+body.theme-elegant-white[data-cms-page-key="homepage"] .hp-process {
+  background: transparent !important;
+}
+
+body.theme-elegant-white[data-cms-page-key="homepage"] .ew-section-center,
+body.theme-elegant-white[data-cms-page-key="homepage"] .ew-portfolio .container > .section-label,
+body.theme-elegant-white[data-cms-page-key="homepage"] .ew-portfolio .container > .section-title,
+body.theme-elegant-white[data-cms-page-key="homepage"] .ew-portfolio .container > .section-intro {
+  text-align: center !important;
+}
+
+body.theme-elegant-white[data-cms-page-key="homepage"] .ew-services-overview,
+body.theme-elegant-white[data-cms-page-key="homepage"] .ew-blog,
+body.theme-elegant-white[data-cms-page-key="homepage"] .ew-pricing,
+body.theme-elegant-white[data-cms-page-key="homepage"] .ew-process,
+body.theme-elegant-white[data-cms-page-key="homepage"] .ew-faq-ready,
+body.theme-elegant-white[data-cms-page-key="homepage"] #hodnoceni.ew-reviews,
+body.theme-elegant-white[data-cms-page-key="homepage"] #kontakt.ew-contact-ready {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7);
+}
+
+body.theme-elegant-white .site-footer,
+body.theme-elegant-white .site-footer-rich {
+  transition: background-color .25s ease, color .25s ease;
+}
+
 body.theme-elegant-white[data-cms-page-key="homepage"] .ew-services-overview {
   display: none !important;
 }
@@ -5200,4 +5626,139 @@ body.theme-elegant-white .bp-detail-hero .theme-hero-video iframe {
   body.theme-elegant-white .theme-hero-video--image {
     background-attachment: scroll !important;
   }
+}
+
+/* Final runtime guardrails: keep hero copy light, center media, and stop legacy dark sections from leaking back in. */
+body.theme-elegant-white .hp-hero,
+body.theme-elegant-white .ew-hero,
+body.theme-elegant-white .hero,
+body.theme-elegant-white .page-hero,
+body.theme-elegant-white .pf-hero,
+body.theme-elegant-white .bl-hero,
+body.theme-elegant-white .kt-hero,
+body.theme-elegant-white .fq-hero,
+body.theme-elegant-white .bp-hero,
+body.theme-elegant-white .pf-detail-hero,
+body.theme-elegant-white .bp-detail-hero {
+  position: relative !important;
+  isolation: isolate !important;
+  overflow: hidden !important;
+}
+
+body.theme-elegant-white .hp-hero::before,
+body.theme-elegant-white .ew-hero::before,
+body.theme-elegant-white .hero::before,
+body.theme-elegant-white .page-hero::before,
+body.theme-elegant-white .pf-hero::before,
+body.theme-elegant-white .bl-hero::before,
+body.theme-elegant-white .kt-hero::before,
+body.theme-elegant-white .fq-hero::before,
+body.theme-elegant-white .bp-hero::before,
+body.theme-elegant-white .pf-detail-hero::before,
+body.theme-elegant-white .bp-detail-hero::before {
+  background: linear-gradient(180deg, rgba(18, 12, 9, .18), rgba(18, 12, 9, .08) 34%, rgba(18, 12, 9, .42)) !important;
+}
+
+body.theme-elegant-white .hp-hero h1,
+body.theme-elegant-white .ew-hero h1,
+body.theme-elegant-white .hero h1,
+body.theme-elegant-white .page-hero h1,
+body.theme-elegant-white .pf-hero h1,
+body.theme-elegant-white .bl-hero h1,
+body.theme-elegant-white .kt-hero h1,
+body.theme-elegant-white .fq-hero h1,
+body.theme-elegant-white .bp-hero h1,
+body.theme-elegant-white .pf-detail-hero h1,
+body.theme-elegant-white .bp-detail-hero h1,
+body.theme-elegant-white .hp-hero .hero-sub,
+body.theme-elegant-white .ew-hero .hero-sub,
+body.theme-elegant-white .hero .hero-sub,
+body.theme-elegant-white .page-hero .hero-sub,
+body.theme-elegant-white .pf-hero .hero-sub,
+body.theme-elegant-white .bl-hero .hero-sub,
+body.theme-elegant-white .kt-hero .hero-sub,
+body.theme-elegant-white .fq-hero .hero-sub,
+body.theme-elegant-white .bp-hero .hero-sub,
+body.theme-elegant-white .pf-detail-hero .hero-sub,
+body.theme-elegant-white .bp-detail-hero .hero-sub {
+  color: #fff !important;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, .28) !important;
+}
+
+body.theme-elegant-white .hp-hero .theme-hero-video,
+body.theme-elegant-white .ew-hero .theme-hero-video,
+body.theme-elegant-white .hero .theme-hero-video,
+body.theme-elegant-white .page-hero .theme-hero-video,
+body.theme-elegant-white .pf-hero .theme-hero-video,
+body.theme-elegant-white .bl-hero .theme-hero-video,
+body.theme-elegant-white .kt-hero .theme-hero-video,
+body.theme-elegant-white .fq-hero .theme-hero-video,
+body.theme-elegant-white .bp-hero .theme-hero-video,
+body.theme-elegant-white .pf-detail-hero .theme-hero-video,
+body.theme-elegant-white .bp-detail-hero .theme-hero-video {
+  inset: -70px 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  top: -70px !important;
+  bottom: -70px !important;
+  width: 100% !important;
+  height: calc(100% + 140px) !important;
+  min-width: 100% !important;
+  max-width: none !important;
+  object-fit: cover !important;
+  background-size: cover !important;
+  background-position: center center !important;
+  transform: translate3d(0, var(--ew-hero-parallax-y, 0px), 0) scale(1.04) !important;
+}
+
+body.theme-elegant-white .hp-hero .theme-hero-video iframe,
+body.theme-elegant-white .ew-hero .theme-hero-video iframe,
+body.theme-elegant-white .hero .theme-hero-video iframe,
+body.theme-elegant-white .page-hero .theme-hero-video iframe,
+body.theme-elegant-white .pf-hero .theme-hero-video iframe,
+body.theme-elegant-white .bl-hero .theme-hero-video iframe,
+body.theme-elegant-white .kt-hero .theme-hero-video iframe,
+body.theme-elegant-white .fq-hero .theme-hero-video iframe,
+body.theme-elegant-white .bp-hero .theme-hero-video iframe,
+body.theme-elegant-white .pf-detail-hero .theme-hero-video iframe,
+body.theme-elegant-white .bp-detail-hero .theme-hero-video iframe {
+  left: 50% !important;
+  top: 50% !important;
+  width: 100vw !important;
+  height: 56.25vw !important;
+  min-width: 177.78vh !important;
+  min-height: 100vh !important;
+  transform: translate(-50%, -50%) !important;
+}
+
+body.theme-elegant-white .jb-about-visual__panel,
+body.theme-elegant-white .jb-about-visual__media {
+  background-repeat: no-repeat !important;
+  background-size: cover !important;
+  background-position: center center !important;
+}
+
+body.theme-elegant-white #sluzby .jb-about-visual__panel,
+body.theme-elegant-white #sluzby .jb-about-visual__media {
+  min-height: inherit !important;
+}
+
+body.theme-elegant-white #cenik .section-dark {
+  background: linear-gradient(180deg, #fffaf3, #f8f0e4) !important;
+  color: #221914 !important;
+  border-top: 1px solid rgba(194, 150, 60, .12) !important;
+  border-bottom: 1px solid rgba(194, 150, 60, .12) !important;
+}
+
+body.theme-elegant-white #cenik .section-dark h2 {
+  color: #221914 !important;
+}
+
+body.theme-elegant-white #cenik .section-dark p {
+  color: rgba(41, 34, 30, .78) !important;
+}
+
+body.theme-elegant-white #cenik .section-dark .btn {
+  background: #c4963c !important;
+  color: #fff !important;
 }

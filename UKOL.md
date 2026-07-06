@@ -1,29 +1,27 @@
-# UKOL: Dokonceni DB-driven kontaktu a Local SEO
+﻿# UKOL: Oprava hero, kontaktu, ceniku a homepage layoutu
 
 Datum: 2026-07-06
-Zadani: Dokoncit zbyvajici DB-driven contact/SEO data, aby verejne sablony nepouzivaly fallback adresy a vychazely jen z DB.
+Zadani: Opravit rozbite stranky a sablony v RB Videos & Photos tak, aby hero sekce mely svetly text a overlay, kontakt mel dva panely, cenik a sluzby byly vizualne konzistentni a homepage nemela posunute video ani usekane sekce.
 
 ## Kroky
 
-- [x] 1. Zmapovat sablony, frontend runtime a admin/content flow kvuli hardcoded datum mimo DB
-- [x] 2. Najit kriticke rozpory s cilem SEO editor/content manager a vybrat opravitelne zmeny s nejvetsim dopadem
-- [x] 3. Dokoncit DB-driven kontakt a lokalni SEO data bez fallback adresy
-- [x] 4. Overit syntax, diff, zakladni runtime predpoklady a markdown dopady
-- [x] 5. Dodat kriticke CR/report s nalezy, provedenymi zmenami a zbyvajicimi riziky
+- [x] 1. Zmapovat aktualni layouty a najit zdroj rozbitych hero, kontaktu, ceniku, sluzeb a homepage sekci
+- [x] 2. Upravit globalni hero pravidla: svetly text, overlay/fade, parallax/video chovani a konzistentni pozicovani
+- [x] 3. Prestavet kontaktni stranku na dva panely s levym infopanelem a pravym formularovym panelem
+- [x] 4. Opravit cenik: odstranit konfliktni panel, zkratit title, upravit layout karet a poradi obsahu
+- [x] 5. Opravit stranku sluzeb a detail sluzby, aby se neplikovala jedna fotka a obsah odpovidal DB
+- [x] 6. Doladit homepage: video posun, parallax, VR foto crop a plynule prechody sekcnich pozadi
+- [ ] 7. Projit dotcene MD soubory a aktualizovat dokumentaci / report k nove realite
+- [ ] 8. Overit syntax, diff a pripadne pripravit commit
 
 ## Poznamky
 
-- Success signal: sablony nenesou klientsky/demo obsah, hlavni obsahove texty a media jsou DB-driven, CSS/JS/PHP zmeny nezmensuji schopnost editoru spravovat obsah.
-- Pred startem byly v pracovnim stromu pending dokumentacni zmeny z predchozi konsolidace MD souboru; jsou souvisejici s aktualnim CR a zustavaji v rozsahu.
-- Nalezeno: nejvetsi rozpor s cilem CMS byl v `HomepageContentService`, kde PHP doplnovalo fotograficke homepage texty, hardcoded CTA labely a vkladalo inline CSS do generovaneho obsahu.
-- Upraveno: homepage marketingove textove fallbacky byly odstraneny, CTA fallbacky berou text z titulku DB stranek a styly karet/kontaktu/portfolia se presunuly do shared theme CSS.
-- Upraveno: layouty temat uz ve footeru nepublikuji nazvy sablon jako obsah, ale pouze `{site_name}`.
-- Upraveno: `jemna-bezova` a `editorial-gold` JS uz nepridavaji vlastni marketingove sekce, staty, proces ani kontaktní copy mimo DB.
-- Overeno: `php -l` pro `HomepageContentService` a `ThemeTemplateRegistry` prosel, `git diff --check` nema chyby, cilene `rg` na odstranene marketingove texty je ciste. JS syntax check pres `node --check` nesel spustit, protoze `node` neni v prostredi dostupny.
-- Prave reseno: verejne footer/contact bloky uz nemaji inventovanou lokalitu, `DemoContentSeeder` seeda DB kontakt bez falešne adresy a admin kontaktní obrazovky ukazuji varovani, kdyz adresa chybi.
-- Ted dovrsuji: doplnit skutecnou adresu do DB seedu a odstranit i posledni fallbacky kolem lokalit, aby Local SEO sedelo na realnem obsahu.
-- Bloker: CLI reseed `php database/seeds/seed_photographer.php` skoncil `Database connection failed`, takze nelze v tomto prostredi provest live republish ani aktualizovat `storage/published`.
+- Upraveny `public/index.php`: hero overlay/parallax pouziva stejnou promennou jako JS a footer konecne vypisuje obe adresni radky.
+- Upraveny `Templates/elegant-white/assets/theme.css`: posledni override vrstva drzi hero text svetly, sjednocuje hero media a vraci cenik a sluzby do svetleho layoutu.
+- Upraveny `database/seeds/seed_photographer.php`: cenik ma kratky hero title, lehky CTA panel a LocalBusiness schema doplnenou o `PostalAddress`.
+- Priorita zustava vizualni konzistence a zachovani DB-driven obsahu, ne hardcoded obchazeni problemu v sablonach.
+- Kontakt musi byt citelny a dvousloupcovy, hero sekce musi mit vzdy svetle prekryti/text a homepage nesmi rozbijet rozmery nebo crop media.
 
 ## Vysledek
 
-Kod a dokumentace jsou upravene pro prisnejsi pravidlo: sablony a theme assety nesmi nest klientsky obsah, ale jen prezentovat DB-driven data. Zbyva dokoncit a znovu overit Local SEO adresu v DB.
+Prubezne se doplnuje.
