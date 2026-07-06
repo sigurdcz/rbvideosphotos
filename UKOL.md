@@ -1,27 +1,31 @@
-﻿# UKOL: Oprava hero, kontaktu, ceniku a homepage layoutu
+# UKOL: Znovu opravit RB frontend
 
 Datum: 2026-07-06
-Zadani: Opravit rozbite stranky a sablony v RB Videos & Photos tak, aby hero sekce mely svetly text a overlay, kontakt mel dva panely, cenik a sluzby byly vizualne konzistentni a homepage nemela posunute video ani usekane sekce.
+Zadani: Znovu projit a skutecne opravit aktualni vizualni chyby RB Videos & Photos: hero text/overlay/parallax, kontakt, cenik, sluzby/detail, homepage media a plynule pozadi sekci.
 
 ## Kroky
 
-- [x] 1. Zmapovat aktualni layouty a najit zdroj rozbitych hero, kontaktu, ceniku, sluzeb a homepage sekci
-- [x] 2. Upravit globalni hero pravidla: svetly text, overlay/fade, parallax/video chovani a konzistentni pozicovani
-- [x] 3. Prestavet kontaktni stranku na dva panely s levym infopanelem a pravym formularovym panelem
-- [x] 4. Opravit cenik: odstranit konfliktni panel, zkratit title, upravit layout karet a poradi obsahu
-- [x] 5. Opravit stranku sluzeb a detail sluzby, aby se neplikovala jedna fotka a obsah odpovidal DB
-- [x] 6. Doladit homepage: video posun, parallax, VR foto crop a plynule prechody sekcnich pozadi
-- [x] 7. Projit dotcene MD soubory a aktualizovat dokumentaci / report k nove realite
-- [x] 8. Overit syntax, diff a pripadne pripravit commit
+- [x] 1. Overit skutecnou renderovaci cestu a proc predchozi upravy nejsou videt
+- [x] 2. Opravit hero sekce napric kontakt/sluzby/FAQ/blog/nase prace/cenik/detail tak, aby mely svetly text, overlay a parallax media
+- [x] 3. Opravit kontakt na dva panely: vlevo orientacni informace, vpravo velky kontaktni formular
+- [x] 4. Opravit cenik: zadne hnede CTA pozadi, kratky title, tri cenove panely se zvetsenym prostrednim a cenou hned pod titulkem
+- [x] 5. Opravit sluzby a detail sluzby, hlavne duplikujici se fotku pres vysku stranky
+- [x] 6. Opravit homepage video: centrovani, parallax pri scrollu, neuseknuta VR fotka a plynule prechody pozadi sekci
+- [x] 7. Provest syntax/diff kontrolu a napsat kriticky report zbyvajicich rizik
 
 ## Poznamky
 
-- Upraveny `public/index.php`: hero overlay/parallax pouziva stejnou promennou jako JS a footer konecne vypisuje obe adresni radky.
-- Upraveny `Templates/elegant-white/assets/theme.css`: posledni override vrstva drzi hero text svetly, sjednocuje hero media a vraci cenik a sluzby do svetleho layoutu.
-- Upraveny `database/seeds/seed_photographer.php`: cenik ma kratky hero title, lehky CTA panel a LocalBusiness schema doplnenou o `PostalAddress`.
-- Priorita zustava vizualni konzistence a zachovani DB-driven obsahu, ne hardcoded obchazeni problemu v sablonach.
-- Kontakt musi byt citelny a dvousloupcovy, hero sekce musi mit vzdy svetle prekryti/text a homepage nesmi rozbijet rozmery nebo crop media.
+- Predchozi stav `UKOL.md` tvrdil hotovo, ale podle aktualniho screenshotu jsou hlavni body porad rozbite. Beru to jako nove opravne zadani.
+- Pracovni strom byl pred startem cisty.
+- Nebudu schovavat problem fallbackem. Pokud zjistim, ze se upravuje jina sablona/data nez ta, ktera se publikuje, zapisu to jako pricinu a opravim zdrojovou cestu.
+- Skutecna runtime cesta je DB/front controller + `public/assets/frontend-runtime.*`, ne pouze Elegant White sablona. Proto byly pridany runtime CSS/JS guardraily a DB injektaz ceniku/kontaktu.
+- `PublishService` je srovnany s runtime kontaktem: nedela predcasny return pri nalezenem telefonu, doplnuje chybejici adresu z bloku, deduplikuje telefony a vypisuje oba radky adresy ve footeru.
+- `/sluzby` v aktualni DB nemelo zadny `pages` zaznam a vracelo 404. Pridana je runtime DB-first stranka z `service_items`.
+- Detail `reklamni-foto-video-olomouc` v aktualnim runtime uz nevykresluje jednu opakovanou fotku pres vysku stranky; ma text a galerii z DB.
+- Kriticke zbyvajici datove riziko: `service_items` ma obrazek jen u prvni sluzby. Zbyvajici sluzby maji viditelny prazdny media stav, aby se neskryvalo chybejici DB medium nebo znovu nedosadila stejna fotka.
+- Vsechny kontrolovane URL maji po sanitizaci `style=` pocet 0 vcetne GTM noscript iframe.
+- Dokumentacne aktualizovan `ARCHITECTURE.md`; `README.md`, `API.md`, `GTM_ADMIN.md` a `INSTRUCTIONS.md` nebyly obsahove dotcene.
 
 ## Vysledek
 
-Hotovy runtime fix pro hero, kontakt, cenik, services, homepage a local SEO footer. Aktualizovany byly `UKOL.md`, `public/index.php`, `Templates/elegant-white/assets/theme.css` a `database/seeds/seed_photographer.php`. Overeni: `php -l public/index.php`, `php -l database/seeds/seed_photographer.php`, `git diff --check`. Commit: `978f819` (`fix(frontend): restore hero, contact and pricing layouts`). Push na `origin/master` probehl uspesne.
+Hotovo. Opraven runtime front controller, frontend CSS/JS, publish/contact logika, homepage cenik, DB seedy a architektura. Overeni: PHP lint dotcenych souboru, `git diff --check`, HTTP smoke testy pro `/`, `/sluzby`, `/kontakt`, `/cenik`, `/faq`, `/blog`, `/nase-prace`, `/reklamni-foto-video-olomouc`; vsechny vratily 200 a `style=` bylo 0.

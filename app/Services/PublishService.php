@@ -1015,6 +1015,12 @@ CSS;
         return trim($phone);
     }
 
+    private function phoneDedupKey(string $phone): string
+    {
+        $digits = preg_replace('/\D+/', '', $this->normalizePhoneForHref($phone)) ?? '';
+        return strlen($digits) > 9 ? substr($digits, -9) : $digits;
+    }
+
     private function extractPhoneNumbersFromText(string $plain): array
     {
         $phones = [];
@@ -1054,18 +1060,6 @@ CSS;
 
     private function enrichContactWithLegacyBlocks(int $siteId, array $contact): array
     {
-        $hasPrimaryContact = false;
-        foreach (['phone_1', 'phone_2', 'phone_3', 'email'] as $key) {
-            if (trim((string)($contact[$key] ?? '')) !== '') {
-                $hasPrimaryContact = true;
-                break;
-            }
-        }
-
-        if ($hasPrimaryContact) {
-            return $this->ensureRbDemoContactAddress($contact);
-        }
-
         $htmlChunks = [];
         foreach (['kontakt', ''] as $path) {
             $page = $this->pages->findByUrlPath($path);
@@ -1086,7 +1080,8 @@ CSS;
         }
 
         $html = implode("\n", $htmlChunks);
-        $plain = preg_replace('/\x{00A0}/u', ' ', strip_tags($html)) ?? '';
+        $textHtml = preg_replace('~<\s*br\s*/?\s*>|</\s*(?:p|div|li|article|section|h[1-6])\s*>~i', "\n", $html) ?? $html;
+        $plain = preg_replace('/\x{00A0}/u', ' ', strip_tags($textHtml)) ?? '';
 
         if (trim((string)($contact['email'] ?? '')) === '' && preg_match('/[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}/i', $plain, $m)) {
             $contact['email'] = $m[0];
@@ -1094,9 +1089,47 @@ CSS;
 
         $phones = $this->extractPhoneNumbersFromText($plain);
 
-        foreach (['phone_1', 'phone_2', 'phone_3'] as $index => $key) {
-            if (trim((string)($contact[$key] ?? '')) === '' && isset($phones[$index])) {
-                $contact[$key] = $phones[$index];
+        $existingPhoneKeys = [];
+        foreach (['phone_1', 'phone_2', 'phone_3'] as $key) {
+            $phoneKey = $this->phoneDedupKey((string)($contact[$key] ?? ''));
+            if ($phoneKey !== '') {
+                $existingPhoneKeys[$phoneKey] = true;
+            }
+        }
+        foreach (['phone_1', 'phone_2', 'phone_3'] as $key) {
+            if (trim((string)($contact[$key] ?? '')) !== '') {
+                continue;
+            }
+            foreach ($phones as $phone) {
+                $phoneKey = $this->phoneDedupKey((string)$phone);
+                if ($phoneKey === '' || isset($existingPhoneKeys[$phoneKey])) {
+                    continue;
+                }
+                $contact[$key] = $phone;
+                $existingPhoneKeys[$phoneKey] = true;
+                break;
+            }
+        }
+
+        if (trim((string)($contact['address_1'] ?? '')) === '' || trim((string)($contact['address_2'] ?? '')) === '') {
+            $lines = array_values(array_filter(array_map(
+                static fn($line) => trim(preg_replace('/\s+/u', ' ', (string)$line) ?? ''),
+                preg_split('/\R+/', $plain) ?: []
+            )));
+            foreach ($lines as $index => $line) {
+                if (trim((string)($contact['address_2'] ?? '')) === '' && preg_match('/\b\d{3}\s?\d{2}\b.*\bOlomouc\b/iu', $line)) {
+                    $contact['address_2'] = $line;
+                    for ($i = $index - 1; $i >= 0; $i--) {
+                        $candidate = $lines[$i] ?? '';
+                        if ($candidate === '' || preg_match('/@|telefon|facebook|instagram|youtube|\+?\d[\d\s().-]{7,}\d/iu', $candidate)) {
+                            continue;
+                        }
+                        if (trim((string)($contact['address_1'] ?? '')) === '') {
+                            $contact['address_1'] = $candidate;
+                        }
+                        break;
+                    }
+                }
             }
         }
 
@@ -1164,9 +1197,12 @@ CSS;
             $contactItems[] = '<a class="site-footer-contact__item" href="mailto:' . $h($email) . '"><span>E-mail</span><strong>' . $h($email) . '</strong></a>';
         }
 
-        $address = trim((string)($contact['address_1'] ?? '')) ?: trim((string)($contact['address_2'] ?? ''));
-        if ($address !== '') {
-            $contactItems[] = '<div class="site-footer-contact__item"><span>Lokalita</span><strong>' . nl2br($h($address)) . '</strong></div>';
+        $addressLines = array_values(array_filter([
+            trim((string)($contact['address_1'] ?? '')),
+            trim((string)($contact['address_2'] ?? '')),
+        ]));
+        if ($addressLines !== []) {
+            $contactItems[] = '<div class="site-footer-contact__item"><span>Lokalita</span><strong>' . implode('<br>', array_map($h, $addressLines)) . '</strong></div>';
         }
 
         $socialItems = [];

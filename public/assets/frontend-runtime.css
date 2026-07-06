@@ -106,3 +106,51 @@ input[name="website"].hp-honeypot,
 [data-cms-page-key="cenik"] .section-dark .btn,[data-cms-page-key="cenik"] .section-dark .btn-primary{display:inline-flex;align-items:center;justify-content:center;min-width:260px;min-height:52px;padding:14px 26px;background:#d6aa5f!important;border:1px solid #d6aa5f!important;border-radius:0;color:#1b120d!important;font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;text-decoration:none;box-shadow:0 18px 36px rgba(0,0,0,.22)}
 [data-cms-page-key="cenik"] .section-dark .btn:hover,[data-cms-page-key="cenik"] .section-dark .btn-primary:hover{background:#e0b866!important;border-color:#e0b866!important;color:#120d09!important}
 @media(max-width:720px){[data-cms-page-key="cenik"] .section>.container,[data-cms-page-key="cenik"] .section-dark>.container{padding:0 18px}[data-cms-page-key="cenik"] .section .cenik-grid,[data-cms-page-key="cenik"] .section .ckp-grid,[data-cms-page-key="cenik"] .section .hp-cenik-grid{grid-template-columns:1fr}[data-cms-page-key="cenik"] .section .cenik-card,[data-cms-page-key="cenik"] .section .ckp-card,[data-cms-page-key="cenik"] .section .hp-cenik-card{padding:24px 20px}[data-cms-page-key="cenik"] .section-dark .btn,[data-cms-page-key="cenik"] .section-dark .btn-primary{width:min(100%,320px)}}
+
+/* RB runtime repair layer. Targets the real DB-rendered pages, not only theme bodies. */
+.hero,.hp-hero,.page-hero,.pf-hero,.bl-hero,.kt-hero,.fq-hero,.bp-hero,.pf-detail-hero,.bp-detail-hero,.services-hero{position:relative!important;isolation:isolate!important;overflow:hidden!important}
+.hero .hero-bg,.hp-hero .hero-bg,.page-hero .hero-bg,.pf-hero .hero-bg,.bl-hero .hero-bg,.kt-hero .hero-bg,.fq-hero .hero-bg,.bp-hero .hero-bg,.pf-detail-hero .hero-bg,.bp-detail-hero .hero-bg,.services-hero .hero-bg{position:absolute!important;inset:-70px 0!important;width:100%!important;height:calc(100% + 140px)!important;max-width:none!important;object-fit:cover!important;object-position:center!important;transform:translate3d(0,var(--ew-hero-parallax-y,0px),0) scale(1.04)!important;will-change:transform!important;z-index:0!important}
+.hero-overlay,.hero::before,.hp-hero::before,.page-hero::before,.pf-hero::before,.bl-hero::before,.kt-hero::before,.fq-hero::before,.bp-hero::before,.pf-detail-hero::before,.bp-detail-hero::before,.services-hero::before{content:""!important;position:absolute!important;inset:0!important;z-index:1!important;pointer-events:none!important;background:linear-gradient(90deg,rgba(16,10,7,.66),rgba(16,10,7,.28) 44%,rgba(16,10,7,.58)),linear-gradient(180deg,rgba(16,10,7,.18),rgba(16,10,7,.48))!important}
+.hero>.container,.hero-body,.hp-hero>.container,.page-hero>.container,.pf-hero>.container,.bl-hero>.container,.kt-hero>.container,.fq-hero>.container,.bp-hero>.container,.pf-detail-hero>.container,.bp-detail-hero>.container,.services-hero>.container{position:relative!important;z-index:3!important}
+.hero h1,.hp-hero h1,.page-hero h1,.pf-hero h1,.bl-hero h1,.kt-hero h1,.fq-hero h1,.bp-hero h1,.pf-detail-hero h1,.bp-detail-hero h1,.services-hero h1{color:#fff!important;text-shadow:0 3px 24px rgba(0,0,0,.38)!important}
+.hero p,.hero .hero-sub,.hp-hero .hero-sub,.page-hero .hero-sub,.pf-hero .hero-sub,.bl-hero .hero-sub,.kt-hero p,.fq-hero .hero-sub,.bp-hero .hero-sub,.pf-detail-hero .hero-sub,.bp-detail-hero .hero-sub,.services-hero p{color:rgba(255,255,255,.86)!important;text-shadow:0 2px 14px rgba(0,0,0,.30)!important}
+.theme-hero-video{inset:-70px 0!important;width:100%!important;height:calc(100% + 140px)!important;max-width:none!important;transform:translate3d(0,var(--ew-hero-parallax-y,0px),0) scale(1.04)!important;background-position:center!important;background-size:cover!important}
+.theme-hero-video iframe{left:50%!important;top:50%!important;width:100vw!important;height:56.25vw!important;min-width:177.78vh!important;min-height:100vh!important;transform:translate(-50%,-50%)!important}
+
+[data-cms-page-key="contact"] .kt-grid,[data-cms-page-key="kontakt"] .kt-grid,body:not([data-cms-page-key]) .kt-grid{grid-template-columns:minmax(300px,.82fr) minmax(0,1.18fr)!important;gap:36px!important;align-items:stretch!important;max-width:1120px!important}
+.ci-block,.kt-form-block{border-radius:24px!important;box-shadow:0 24px 64px rgba(92,61,24,.12)!important}
+.ci-block{padding:30px!important;background:rgba(255,255,255,.82)!important;border:1px solid rgba(194,150,60,.14)!important;color:#221914!important}
+.kt-form-block{padding:34px!important;background:rgba(255,255,255,.92)!important;border:1px solid rgba(194,150,60,.18)!important;color:#221914!important}
+.ci-card{background:#fffdfa!important}
+.ci-card strong,.ci-card strong a,.ci-card a{color:#221914!important}
+.kt-form-safe{color:rgba(95,81,67,.68)!important}
+
+[data-cms-page-key="cenik"] .page-hero{min-height:clamp(420px,52vh,620px)!important}
+[data-cms-page-key="cenik"] .page-hero h1{max-width:620px!important;font-size:clamp(3rem,6vw,5.2rem)!important}
+[data-cms-page-key="cenik"] .cenik-packages{background:#fbf7f1!important;padding:78px 0 88px!important}
+[data-cms-page-key="cenik"] .cenik-packages .container{max-width:1120px!important}
+[data-cms-page-key="cenik"] .cenik-intro{max-width:760px!important;margin:0 0 28px!important;color:#6b5948!important}
+[data-cms-page-key="cenik"] .section .ckp-grid,[data-cms-page-key="cenik"] .section .hp-cenik-grid{display:grid!important;grid-template-columns:minmax(0,.92fr) minmax(0,1.16fr) minmax(0,.92fr)!important;gap:24px!important;align-items:center!important;margin:30px 0 54px!important}
+[data-cms-page-key="cenik"] .section .ckp-card,[data-cms-page-key="cenik"] .section .hp-cenik-card{position:relative!important;display:flex!important;flex-direction:column!important;gap:14px!important;min-height:420px!important;padding:30px 28px!important;background:#fff!important;border:1px solid #e7ddd0!important;border-radius:22px!important;box-shadow:0 18px 48px rgba(39,27,18,.08)!important;color:#241914!important}
+[data-cms-page-key="cenik"] .section .ckp-card--featured,[data-cms-page-key="cenik"] .section .hp-cenik-card--featured{min-height:480px!important;border-color:#c79a49!important;box-shadow:0 28px 64px rgba(199,154,73,.20)!important;transform:none!important}
+[data-cms-page-key="cenik"] .section .ckp-title,[data-cms-page-key="cenik"] .section .hp-cenik-card-title{order:1!important;margin:0!important;color:#241914!important;font-family:Georgia,serif!important;font-size:clamp(1.7rem,2.6vw,2.15rem)!important;line-height:1.04!important}
+[data-cms-page-key="cenik"] .section .ckp-price,[data-cms-page-key="cenik"] .section .hp-cenik-card-price{order:2!important;margin:0!important;padding:0 0 16px!important;border:0!important;border-bottom:1px solid #eadfce!important;color:#c4963c!important;font-size:1.45rem!important;font-weight:900!important}
+[data-cms-page-key="cenik"] .section .ckp-desc,[data-cms-page-key="cenik"] .section .hp-cenik-card-desc{order:3!important;margin:0 0 auto!important;color:#5f5143!important;line-height:1.72!important}
+[data-cms-page-key="cenik"] .section .ckp-feats{order:4!important;margin:auto 0 0!important;padding:0!important;list-style:none!important;display:grid!important;gap:10px!important;color:#5f5143!important}
+[data-cms-page-key="cenik"] .section .ckp-feats li{position:relative!important;padding-left:22px!important;color:#5f5143!important;line-height:1.55!important}
+[data-cms-page-key="cenik"] .section .ckp-feats li::before{content:"✓"!important;position:absolute!important;left:0!important;color:#c4963c!important;font-weight:900!important}
+[data-cms-page-key="cenik"] .ckp-badge{position:absolute!important;top:-13px!important;left:24px!important;padding:5px 12px!important;border-radius:999px!important;background:#c4963c!important;color:#fffaf3!important;font-size:10px!important;font-weight:900!important;letter-spacing:.08em!important;text-transform:uppercase!important}
+[data-cms-page-key="cenik"] .cenik-other{max-width:860px!important;margin:0!important}
+[data-cms-page-key="cenik"] .cenik-cta{background:linear-gradient(180deg,#fffaf3,#f4eadc)!important;color:#241914!important;text-align:center!important;padding:78px 0!important;border-top:1px solid rgba(194,150,60,.14)!important}
+[data-cms-page-key="cenik"] .cenik-cta h2{color:#241914!important}
+[data-cms-page-key="cenik"] .cenik-cta p{max-width:760px!important;margin:0 auto 18px!important;color:#6b5948!important}
+@media(max-width:900px){[data-cms-page-key="contact"] .kt-grid,[data-cms-page-key="kontakt"] .kt-grid,body:not([data-cms-page-key]) .kt-grid,[data-cms-page-key="cenik"] .section .ckp-grid,[data-cms-page-key="cenik"] .section .hp-cenik-grid{grid-template-columns:1fr!important}.ci-block,.kt-form-block{padding:22px!important}[data-cms-page-key="cenik"] .section .ckp-card,[data-cms-page-key="cenik"] .section .hp-cenik-card,[data-cms-page-key="cenik"] .section .ckp-card--featured,[data-cms-page-key="cenik"] .section .hp-cenik-card--featured{min-height:0!important}}
+
+[data-cms-page-key="cenik"] .section .ckp-feats li::before{content:"\2713"!important}
+[data-cms-page-key="homepage"] .section{position:relative;overflow:hidden}
+[data-cms-page-key="homepage"] .section::before{content:"";position:absolute;inset:-90px 0 auto;height:180px;pointer-events:none;background:linear-gradient(180deg,rgba(251,247,241,0),rgba(251,247,241,.92) 52%,rgba(251,247,241,0));z-index:0}
+[data-cms-page-key="homepage"] .section>*{position:relative;z-index:1}
+[data-cms-page-key="homepage"] .section-light,[data-cms-page-key="homepage"] .ew-pricing,[data-cms-page-key="homepage"] .ew-blog,[data-cms-page-key="homepage"] .hp-process{background:linear-gradient(180deg,#fbf7f1 0%,#f4eadc 52%,#fbf7f1 100%)!important}
+[data-cms-page-key="homepage"] .section-dark,[data-cms-page-key="homepage"] .section--dark{background:radial-gradient(circle at 18% 0,rgba(214,170,95,.13),transparent 34%),linear-gradient(180deg,#211711 0%,#17110d 54%,#241914 100%)!important}
+.jb-about-visual__media,.jb-about-visual{overflow:hidden!important}
+.jb-about-visual__media img,.jb-about-visual img,.hp-svc-card__media img,.service-card__media img{max-width:none!important;object-fit:cover!important;object-position:center!important}

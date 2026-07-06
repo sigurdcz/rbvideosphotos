@@ -621,7 +621,7 @@ CSS;
         $this->blocks->upsert($pageId, 'hero_heading', [
             'block_type' => 'text',
             'label' => 'Hero - nadpis',
-            'content' => 'Cenik fotografickych a video sluzeb - Olomouc',
+            'content' => 'Ceník',
             'sort_order' => 1,
             'autofill_disabled' => 1,
         ]);
@@ -663,7 +663,7 @@ CSS;
         $this->blocks->upsert($pageId, 'cta_heading', [
             'block_type' => 'text',
             'label' => 'CTA - nadpis',
-            'content' => 'Rezervujte termin jeste dnes',
+            'content' => 'Domluvme termín',
             'sort_order' => 7,
             'autofill_disabled' => 1,
         ]);
@@ -925,7 +925,8 @@ CSS;
         $phone1 = '+420 792 483 583';
         $phone2 = '+420 604 225 032';
         $email = 'rb_vp@volny.cz';
-        $address = "Horní náměstí 583/1\n779 00 Olomouc";
+        $address1 = 'Horní náměstí 583/1';
+        $address2 = '779 00 Olomouc';
         $formEmail = ContactRepository::DEFAULT_FORM_EMAIL;
 
         (new ContactRepository())->upsert($siteId, [
@@ -933,8 +934,8 @@ CSS;
             'phone_2' => $phone2,
             'phone_3' => '',
             'email' => $email,
-            'address_1' => $address,
-            'address_2' => '',
+            'address_1' => $address1,
+            'address_2' => $address2,
             'form_email' => $formEmail,
             'social_1_type' => 'instagram',
             'social_1_url' => 'https://www.instagram.com/rb_videos_photos/',

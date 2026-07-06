@@ -837,11 +837,11 @@ $pdo->prepare('
         social_1_type, social_1_url,
         social_2_type, social_2_url,
         social_3_type, social_3_url
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ')->execute([
     $siteId,
-    '+420704182130',
-    '704182130',
+    '+420 792 483 583',
+    '+420 604 225 032',
     'rb_vp@volny.cz',
     'Horní náměstí 583/1',
     '779 00 Olomouc',

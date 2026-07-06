@@ -10,6 +10,7 @@
 !.env.example
 config/database.local.php
 _deploy/
+/public/assets/generated/
 .DS_Store
 .idea/
 .vscode/

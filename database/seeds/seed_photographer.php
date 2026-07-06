@@ -1096,6 +1096,38 @@ echo 'FAQ items seeded: ' . count($faqItems) . "\n";
 
 // Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬ Publish Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬
 
+// Runtime repair overrides for RB frontend. Keep these after legacy block inserts
+// so publish uses the corrected DB source of truth.
+block($pdo, $pidHome, 'contact_info', 'html', 'Kontakt - info', '<div class="cta-info"><p><strong>+420&nbsp;792&nbsp;483&nbsp;583</strong></p><p><strong>+420&nbsp;604&nbsp;225&nbsp;032</strong></p><p>Horní náměstí 583/1<br>779 00 Olomouc</p><p><a href="mailto:rb_vp@volny.cz">rb_vp@volny.cz</a></p><p><a href="https://www.facebook.com/rbvideosandphotos" target="_blank" rel="noopener noreferrer">Facebook: RB Videos &amp; Photos</a></p><p><a href="https://www.instagram.com/rb_videos_photos/" target="_blank" rel="noopener noreferrer">Instagram: @rb_videos_photos</a></p><p><a href="https://www.youtube.com/@rbvideosandphotos" target="_blank" rel="noopener noreferrer">YouTube kanál</a></p></div>', 62);
+block($pdo, $pidKontakt, 'contact_info', 'html', 'Kontakt - info', '<div class="cta-info"><p><strong>+420&nbsp;792&nbsp;483&nbsp;583</strong></p><p><strong>+420&nbsp;604&nbsp;225&nbsp;032</strong></p><p>Horní náměstí 583/1<br>779 00 Olomouc</p><p><a href="mailto:rb_vp@volny.cz">rb_vp@volny.cz</a></p><p><a href="https://www.facebook.com/rbvideosandphotos" target="_blank" rel="noopener noreferrer">Facebook: RB Videos &amp; Photos</a></p><p><a href="https://www.instagram.com/rb_videos_photos/" target="_blank" rel="noopener noreferrer">Instagram: @rb_videos_photos</a></p><p><a href="https://www.youtube.com/@rbvideosandphotos" target="_blank" rel="noopener noreferrer">YouTube kanál</a></p></div>', 4);
+block($pdo, $pidCenik, 'hero_heading', 'text', 'Hero Nadpis', 'Ceník', 1);
+block($pdo, $pidCenik, 'pricing_weddings_heading', 'text', 'Ceník Svatby', 'Svatební balíčky', 3);
+block($pdo, $pidCenik, 'cta_heading', 'text', 'CTA Nadpis', 'Domluvme termín', 7);
+
+$pdo->prepare('DELETE FROM contact_info WHERE site_id = ?')->execute([$siteId]);
+$pdo->prepare('
+    INSERT INTO contact_info (
+        site_id, phone_1, phone_2, email, address_1, address_2, form_email,
+        social_1_type, social_1_url,
+        social_2_type, social_2_url,
+        social_3_type, social_3_url
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+')->execute([
+    $siteId,
+    '+420 792 483 583',
+    '+420 604 225 032',
+    'rb_vp@volny.cz',
+    'Horní náměstí 583/1',
+    '779 00 Olomouc',
+    'rb_vp@volny.cz',
+    'instagram',
+    'https://www.instagram.com/rb_videos_photos/',
+    'facebook',
+    'https://www.facebook.com/rbvideosandphotos',
+    'youtube',
+    'https://www.youtube.com/@rbvideosandphotos',
+]);
+
 $pub    = new PublishService();
 $result = $pub->publishSite($siteId, $userId);
 $errors = $result['errors'] ?? [];

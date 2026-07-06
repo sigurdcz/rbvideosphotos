@@ -456,6 +456,7 @@ HTML;
         for ($i = 1; $i <= 3; $i++) {
             $featured = $i === 2 ? ' hp-cenik-card--featured' : '';
             $fullDesc = trim((string)($map['cenik_card_' . $i . '_desc'] ?? ''));
+            $price = trim((string)($map['cenik_card_' . $i . '_price'] ?? ''));
             // Homepage prehled = prvni odstavec (do prazdneho radku). Detailni
             // "Obsahuje" seznam za prazdnym radkem se na homepage nezobrazi —
             // ten patri jen na /cenik. Jednoradkove popisy zustanou beze zmeny.
@@ -463,6 +464,7 @@ HTML;
             $cards .= '<div class="hp-cenik-card' . $featured . '">'
                 . '<div class="hp-cenik-card-body">'
                 . '<h3 class="hp-cenik-card-title">' . $h($map['cenik_card_' . $i . '_title'] ?? '') . '</h3>'
+                . ($price !== '' ? '<div class="hp-cenik-card-price">' . $h($price) . '</div>' : '')
                 . ($summary !== '' ? '<div class="hp-cenik-card-desc">' . $h($summary) . '</div>' : '')
                 . '</div>'
                 . '</div>';

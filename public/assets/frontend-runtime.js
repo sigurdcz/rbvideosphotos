@@ -374,9 +374,42 @@
     document.documentElement.style.setProperty('--cms-adminbar-offset', bar.offsetHeight + 'px');
   }
 
+  function initHeroParallax() {
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var heroes = Array.prototype.slice.call(document.querySelectorAll('.hp-hero,.hero,.page-hero,.pf-hero,.bl-hero,.kt-hero,.fq-hero,.bp-hero,.pf-detail-hero,.bp-detail-hero,.services-hero'))
+      .filter(function(hero) {
+        return !!hero.querySelector('.theme-hero-video,.hero-bg');
+      });
+    if (!heroes.length) return;
+
+    var ticking = false;
+    function sync() {
+      ticking = false;
+      var viewport = window.innerHeight || document.documentElement.clientHeight || 1;
+      heroes.forEach(function(hero) {
+        var rect = hero.getBoundingClientRect();
+        if (rect.bottom < 0 || rect.top > viewport) return;
+        var centerOffset = (rect.top + rect.height / 2) - viewport / 2;
+        var shift = Math.max(-54, Math.min(54, centerOffset * -0.08));
+        hero.style.setProperty('--ew-hero-parallax-y', shift.toFixed(2) + 'px');
+      });
+    }
+
+    function requestSync() {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(sync);
+    }
+
+    window.addEventListener('scroll', requestSync, { passive: true });
+    window.addEventListener('resize', requestSync);
+    sync();
+  }
+
   initActiveNav();
   initPricingModal();
   initEditorialGoldEnhancements();
+  initHeroParallax();
   syncAdminBarOffset();
   window.addEventListener('resize', syncAdminBarOffset);
   window.addEventListener('load', syncAdminBarOffset);

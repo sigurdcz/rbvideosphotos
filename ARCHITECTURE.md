@@ -50,13 +50,16 @@ request -> admin/index.php -> Core\Router -> Controller -> Repository/Service ->
 2. /assets/*            -> readfile s realpath ochranou
 3. /storage/media/*     -> readfile s realpath ochranou
 4. legacy /blog/* nebo /nase-prace/* -> 301 redirect na prime slugy
-5. /nase-prace          -> tryServePortfolioPage() listing
-6. /blog                -> tryServeBlogListingPage()
-7. CMS stranka z DB     -> tryServeDatabasePage()
-8. Blog detail          -> tryServeBlogPostPage()
-9. Portfolio detail     -> tryServePortfolioPage(..., true)
-10. storage/published/* -> sitemap, robots, llms.txt a portfolio exporty
-11. 404
+5. /sluzby              -> tryServeServicesPage() z `service_items`
+6. /nase-prace          -> tryServePortfolioPage() listing
+7. /blog                -> tryServeBlogListingPage()
+8. /faq                 -> tryServeFaqPage() z `faq_items`
+9. /kontakt             -> tryServeKontaktPage() z `contact_info`
+10. CMS stranka z DB    -> tryServeDatabasePage()
+11. Blog detail         -> tryServeBlogPostPage()
+12. Portfolio detail    -> tryServePortfolioPage(..., true)
+13. storage/published/* -> sitemap, robots, llms.txt a portfolio exporty
+14. 404
 ```
 
 ## Obsahovy model
@@ -65,7 +68,8 @@ request -> admin/index.php -> Core\Router -> Controller -> Repository/Service ->
 
 - `pages` drzi bezne CMS stranky navazane na `templates`
 - `content_blocks` drzi editovatelne bloky podle `data-block="key"`
-- specialni layouty `faq`, `kontakt`, `cenik` a `sluzby` maji cast logiky mimo generic bloky
+- specialni layouty `faq`, `kontakt`, `cenik`, `sluzby`, `blog` a `nase-prace` maji cast logiky mimo generic bloky
+- specialni verejne stranky musi porad cist obsah z DB tabulek (`service_items`, `faq_items`, `contact_info`, `blog_posts`, `portfolio_entries`) a nesmi doplnovat obsahova data ze sablon
 
 ### Blog a portfolio
 

@@ -23,6 +23,7 @@ use App\Repositories\MediaRepository;
 use App\Repositories\PageRepository;
 use App\Repositories\PortfolioRepository;
 use App\Repositories\SeoRepository;
+use App\Repositories\ServiceRepository;
 use App\Repositories\SiteRepository;
 use App\Repositories\TemplateRepository;
 use App\Services\HomepageContentService;
@@ -119,6 +120,7 @@ function tryServeDatabasePage(string $uri, bool $authenticated = false, bool $pr
             $js  = ($template['js_source']  ?? '') . "\n" . $themeJs;
         }
         $html = injectHomepageMissingSections($html, $blocks, $isHome);
+        $html = injectCenikPageLayout($html, $blocks, $themeKey);
         $html = injectHomepageAboutVisualSource($html, (int)$page['id'], (int)$page['site_id'], $isHome);
         $html = $renderer->injectAssets($html, $css, $js);
         $html = $renderer->injectSeo(
@@ -294,9 +296,11 @@ function sanitizeFrontendHtml(string $html, ?array $site = null): string
     $html = preg_replace('~https?://localhost(?::\d+)?/storage/media/~i', '/media/', $html) ?? $html;
     $html = str_replace('/storage/media/', '/media/', $html);
     $html = normalizeLegacyFrontendMarkup($html);
+    $html = convertInlineHeroBackgrounds($html);
     $html = ensureMainContentAnchor($html);
     $html = injectSkipLink($html);
     $html = normalizeExternalLinkRel($html);
+    $html = normalizeGtmNoscriptInlineStyle($html);
     $html = externalizeBodyCssVariables($html);
     $html = injectGlobalVideoOverlayStyles($html, $site);
     $html = injectEditorialGoldOverrides($html);
@@ -306,6 +310,44 @@ function sanitizeFrontendHtml(string $html, ?array $site = null): string
     $html = extractInlineStyleBlocks($html);
     $html = extractInlineBodyScripts($html);
     return $html;
+}
+
+function convertInlineHeroBackgrounds(string $html): string
+{
+    return preg_replace_callback(
+        '~<div([^>]*\bclass=(["\'])(?=[^"\']*\btheme-hero-video\b)([^"\']*)\2[^>]*)\bstyle=(["\'])background-image\s*:\s*url\((["\']?)(.*?)\5\)\s*;?\4([^>]*)>\s*</div>~is',
+        static function (array $match): string {
+            $attrs = trim((string)($match[1] ?? '') . ' ' . (string)($match[7] ?? ''));
+            $src = html_entity_decode((string)($match[6] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            if (trim($src) === '') {
+                return $match[0];
+            }
+            $aria = preg_match('/\baria-hidden=/i', $attrs) ? '' : ' aria-hidden="true"';
+            return '<img class="hero-bg" src="' . htmlspecialchars($src, ENT_QUOTES) . '" alt=""' . $aria . '>';
+        },
+        $html
+    ) ?? $html;
+}
+
+function normalizeGtmNoscriptInlineStyle(string $html): string
+{
+    return preg_replace_callback(
+        '~<iframe\b([^>]*googletagmanager\.com/ns\.html[^>]*)>~i',
+        static function (array $match): string {
+            $attrs = preg_replace('/\sstyle=(["\']).*?\1/i', '', (string)$match[1]) ?? (string)$match[1];
+            if (preg_match('/\sclass=(["\'])(.*?)\1/i', $attrs, $classMatch)) {
+                $classes = preg_split('/\s+/', trim((string)$classMatch[2])) ?: [];
+                if (!in_array('gtm-noscript', $classes, true)) {
+                    $classes[] = 'gtm-noscript';
+                }
+                $attrs = preg_replace('/\sclass=(["\'])(.*?)\1/i', ' class="' . implode(' ', array_filter($classes)) . '"', $attrs, 1) ?? $attrs;
+            } else {
+                $attrs .= ' class="gtm-noscript"';
+            }
+            return '<iframe' . $attrs . '>';
+        },
+        $html
+    ) ?? $html;
 }
 
 function ensureMainContentAnchor(string $html): string
@@ -462,6 +504,103 @@ function blockContent(array $blocks, string $key): string
     }
 
     return '';
+}
+
+function buildCenikPackageCardsHtml(array $blocks, bool $detailed = false): string
+{
+    $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
+    $cards = '';
+
+    for ($i = 1; $i <= 3; $i++) {
+        $title = blockContent($blocks, 'cenik_card_' . $i . '_title');
+        $price = blockContent($blocks, 'cenik_card_' . $i . '_price');
+        $desc = blockContent($blocks, 'cenik_card_' . $i . '_desc');
+
+        if ($title === '' && $price === '' && $desc === '') {
+            continue;
+        }
+
+        $parts = preg_split('/\n\s*\n/', trim($desc)) ?: [];
+        $summary = trim((string)($parts[0] ?? ''));
+        $details = trim(implode("\n\n", array_slice($parts, 1)));
+        $featuresHtml = '';
+
+        if ($detailed && $details !== '') {
+            $features = preg_split('/\R+/', $details) ?: [];
+            foreach ($features as $feature) {
+                $feature = trim(preg_replace('/^\s*[-*•]\s*/u', '', (string)$feature));
+                if (preg_match('/^obsahuje:?$/iu', $feature)) {
+                    continue;
+                }
+                if ($feature !== '') {
+                    $featuresHtml .= '<li>' . $h($feature) . '</li>';
+                }
+            }
+            if ($featuresHtml !== '') {
+                $featuresHtml = '<ul class="ckp-feats">' . $featuresHtml . '</ul>';
+            }
+        }
+
+        $featured = $i === 2 ? ' ckp-card--featured hp-cenik-card--featured' : '';
+        $cards .= '<article class="ckp-card hp-cenik-card' . $featured . '">'
+            . ($i === 2 ? '<div class="ckp-badge">Nejoblibenejsi</div>' : '')
+            . '<h3 class="ckp-title hp-cenik-card-title">' . $h($title) . '</h3>'
+            . ($price !== '' ? '<div class="ckp-price hp-cenik-card-price">' . $h($price) . '</div>' : '')
+            . ($summary !== '' ? '<p class="ckp-desc hp-cenik-card-desc">' . $h($summary) . '</p>' : '')
+            . $featuresHtml
+            . '</article>';
+    }
+
+    return $cards !== '' ? '<div class="ckp-grid hp-cenik-grid">' . $cards . '</div>' : '';
+}
+
+function injectCenikPageLayout(string $html, array $blocks, string $pageKey): string
+{
+    if (getThemeTemplateRegistry()->normalizePageKey($pageKey) !== 'cenik') {
+        return $html;
+    }
+
+    $cardsHtml = buildCenikPackageCardsHtml($blocks, true);
+    if ($cardsHtml === '') {
+        return $html;
+    }
+
+    $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
+    $heading = blockContent($blocks, 'pricing_weddings_heading') ?: 'Svatebni balicky';
+    $intro = blockContent($blocks, 'pricing_weddings_sub');
+    $otherHeading = blockContent($blocks, 'pricing_other_heading');
+    $otherText = blockContent($blocks, 'pricing_other_sub');
+    $ctaHeading = blockContent($blocks, 'cta_heading') ?: 'Domluvme termin';
+    $ctaText = blockContent($blocks, 'cta_text');
+    $ctaWrap = blockContent($blocks, 'cta_wrap');
+
+    $content = '<section class="section cenik-packages"><div class="container">'
+        . '<h2>' . $h($heading) . '</h2>'
+        . ($intro !== '' ? '<p class="cenik-intro">' . $h($intro) . '</p>' : '')
+        . $cardsHtml
+        . ($otherHeading !== '' || $otherText !== ''
+            ? '<div class="cenik-other">' . ($otherHeading !== '' ? '<h2>' . $h($otherHeading) . '</h2>' : '') . ($otherText !== '' ? '<p>' . $h($otherText) . '</p>' : '') . '</div>'
+            : '')
+        . '</div></section>'
+        . '<section class="section cenik-cta"><div class="container">'
+        . '<h2>' . $h($ctaHeading) . '</h2>'
+        . ($ctaText !== '' ? '<p>' . $h($ctaText) . '</p>' : '')
+        . ($ctaWrap !== '' ? $ctaWrap : '<a href="/kontakt" class="btn btn-primary">Nezavazna poptavka</a>')
+        . '</div></section>';
+
+    $updated = preg_replace(
+        '~(<section\b[^>]*\bclass=(["\'])[^"\']*\bpage-hero\b[^"\']*\2[^>]*>.*?</section>)\s*.*?(<footer\b)~is',
+        '$1' . $content . '$3',
+        $html,
+        1,
+        $count
+    );
+
+    if ($count > 0 && is_string($updated)) {
+        return $updated;
+    }
+
+    return preg_replace('~(<footer\b)~i', $content . '$1', $html, 1) ?? $html;
 }
 
 function injectHomepageMissingSections(string $html, array $blocks, bool $isHome): string
@@ -1777,6 +1916,12 @@ function formatPhoneForDisplay(string $phone): string
     return trim($phone);
 }
 
+function phoneDedupKey(string $phone): string
+{
+    $digits = preg_replace('/\D+/', '', normalizePhoneForHref($phone)) ?? '';
+    return strlen($digits) > 9 ? substr($digits, -9) : $digits;
+}
+
 function extractPhoneNumbersFromText(string $plain): array
 {
     $phones = [];
@@ -1816,18 +1961,6 @@ function ensureRbDemoContactAddress(array $contact): array
 
 function enrichContactWithLegacyBlocks(int $siteId, array $contact): array
 {
-    $hasPrimaryContact = false;
-    foreach (['phone_1', 'phone_2', 'phone_3', 'email'] as $key) {
-        if (trim((string)($contact[$key] ?? '')) !== '') {
-            $hasPrimaryContact = true;
-            break;
-        }
-    }
-
-    if ($hasPrimaryContact) {
-        return ensureRbDemoContactAddress($contact);
-    }
-
     $pages = new PageRepository();
     $blocks = new BlockRepository();
     $htmlChunks = [];
@@ -1851,7 +1984,8 @@ function enrichContactWithLegacyBlocks(int $siteId, array $contact): array
     }
 
     $html = implode("\n", $htmlChunks);
-    $plain = preg_replace('/\x{00A0}/u', ' ', strip_tags($html)) ?? '';
+    $textHtml = preg_replace('~<\s*br\s*/?\s*>|</\s*(?:p|div|li|article|section|h[1-6])\s*>~i', "\n", $html) ?? $html;
+    $plain = preg_replace('/\x{00A0}/u', ' ', strip_tags($textHtml)) ?? '';
 
     if (trim((string)($contact['email'] ?? '')) === '' && preg_match('/[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}/i', $plain, $m)) {
         $contact['email'] = $m[0];
@@ -1859,9 +1993,47 @@ function enrichContactWithLegacyBlocks(int $siteId, array $contact): array
 
     $phones = extractPhoneNumbersFromText($plain);
 
-    foreach (['phone_1', 'phone_2', 'phone_3'] as $index => $key) {
-        if (trim((string)($contact[$key] ?? '')) === '' && isset($phones[$index])) {
-            $contact[$key] = $phones[$index];
+    $existingPhoneKeys = [];
+    foreach (['phone_1', 'phone_2', 'phone_3'] as $key) {
+        $phoneKey = phoneDedupKey((string)($contact[$key] ?? ''));
+        if ($phoneKey !== '') {
+            $existingPhoneKeys[$phoneKey] = true;
+        }
+    }
+    foreach (['phone_1', 'phone_2', 'phone_3'] as $key) {
+        if (trim((string)($contact[$key] ?? '')) !== '') {
+            continue;
+        }
+        foreach ($phones as $phone) {
+            $phoneKey = phoneDedupKey((string)$phone);
+            if ($phoneKey === '' || isset($existingPhoneKeys[$phoneKey])) {
+                continue;
+            }
+            $contact[$key] = $phone;
+            $existingPhoneKeys[$phoneKey] = true;
+            break;
+        }
+    }
+
+    if (trim((string)($contact['address_1'] ?? '')) === '' || trim((string)($contact['address_2'] ?? '')) === '') {
+        $lines = array_values(array_filter(array_map(
+            static fn($line) => trim(preg_replace('/\s+/u', ' ', (string)$line) ?? ''),
+            preg_split('/\R+/', $plain) ?: []
+        )));
+        foreach ($lines as $index => $line) {
+            if (trim((string)($contact['address_2'] ?? '')) === '' && preg_match('/\b\d{3}\s?\d{2}\b.*\bOlomouc\b/iu', $line)) {
+                $contact['address_2'] = $line;
+                for ($i = $index - 1; $i >= 0; $i--) {
+                    $candidate = $lines[$i] ?? '';
+                    if ($candidate === '' || preg_match('/@|telefon|facebook|instagram|youtube|\+?\d[\d\s().-]{7,}\d/iu', $candidate)) {
+                        continue;
+                    }
+                    if (trim((string)($contact['address_1'] ?? '')) === '') {
+                        $contact['address_1'] = $candidate;
+                    }
+                    break;
+                }
+            }
         }
     }
 
@@ -2155,6 +2327,7 @@ function renderPortfolioNav(string $siteName, string $active = 'portfolio'): str
 {
     $h = fn($v) => htmlspecialchars($v, ENT_QUOTES);
     $brand = $h($siteName);
+    $servicesClass = $active === 'services' ? ' class="nav-active"' : '';
     $portfolioClass = $active === 'portfolio' ? ' class="nav-active"' : '';
 
     return <<<HTML
@@ -2162,7 +2335,7 @@ function renderPortfolioNav(string $siteName, string $active = 'portfolio'): str
   <div class="container nav-inner">
     <a href="/" class="brand">{$brand}</a>
     <div class="nav-links">
-      <a href="/#sluzby">Sluzby</a>
+      <a href="/sluzby"{$servicesClass}>Sluzby</a>
       <a href="/#nase-prace"{$portfolioClass}>Nase prace</a>
       <a href="/#reference">Reference</a>
       <a href="/#kontakt" class="nav-cta">Kontakt</a>
@@ -2170,6 +2343,125 @@ function renderPortfolioNav(string $siteName, string $active = 'portfolio'): str
   </div>
 </nav>
 HTML;
+}
+
+function tryServeServicesPage(string $uri): bool
+{
+    if ($uri !== '/sluzby') {
+        return false;
+    }
+
+    $site = (new SiteRepository())->findFirst();
+    if (!$site) {
+        return false;
+    }
+
+    $repo = new ServiceRepository();
+    $items = $repo->allActive((int)$site['id']);
+    $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
+    $siteName = (string)($site['name'] ?? 'RB Videos & Photos');
+
+    $cards = '';
+    $heroImage = '';
+    foreach ($items as $index => $item) {
+        $title = trim((string)($item['title'] ?? ''));
+        $description = trim((string)($item['description'] ?? ''));
+        $image = normalizePublicAssetUrl((string)($item['image_url'] ?? ''));
+        if ($image === '') {
+            $image = publicMediaUrl((string)($item['image_url'] ?? ''));
+        }
+        if ($heroImage === '' && $image !== '') {
+            $heroImage = $image;
+        }
+        $buttonText = trim((string)($item['button_text'] ?? '')) ?: 'Více informací';
+        $buttonUrl = trim((string)($item['button_url'] ?? '')) ?: '/kontakt';
+        $number = str_pad((string)($index + 1), 2, '0', STR_PAD_LEFT);
+        $media = $image !== ''
+            ? '<div class="service-card__media"><img src="' . $h($image) . '" alt="' . $h($title) . '" loading="lazy"></div>'
+            : '<div class="service-card__media service-card__media--empty"></div>';
+
+        $cards .= '<article class="service-card">'
+            . $media
+            . '<div class="service-card__body">'
+            . '<span class="service-card__num">' . $h($number) . '</span>'
+            . '<h2>' . $h($title) . '</h2>'
+            . '<p>' . nl2br($h($description)) . '</p>'
+            . '<a href="' . $h($buttonUrl) . '">' . $h($buttonText) . '</a>'
+            . '</div></article>';
+    }
+
+    if ($cards === '') {
+        $cards = '<p class="services-empty">Zatím nejsou publikované žádné služby.</p>';
+    }
+
+    $heroBg = $heroImage !== ''
+        ? '<img class="hero-bg" src="' . $h($heroImage) . '" alt="" aria-hidden="true">'
+        : '';
+    $nav = renderPortfolioNav($siteName, 'services');
+    $footer = buildRichFooterHtml((int)$site['id']);
+    $css = <<<'CSS'
+body{margin:0;background:#fbf7f1;color:#241914;font-family:Georgia,"Times New Roman",serif}
+.nav{position:relative;z-index:5;background:#fffaf4;border-bottom:1px solid rgba(36,25,20,.08)}
+.nav-inner{width:min(calc(100% - 48px),1180px);margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:24px;min-height:76px}
+.brand{font-size:1.2rem;letter-spacing:.14em;text-transform:uppercase;color:#45372e;text-decoration:none;font-weight:800}
+.nav-links{display:flex;gap:24px;align-items:center}
+.nav-links a{color:#5d5148;text-decoration:none;font-size:.78rem;font-weight:900;letter-spacing:.13em;text-transform:uppercase}
+.nav-links a:hover,.nav-links .nav-active{color:#c4963c}
+.nav-cta{padding:10px 16px;border:1px solid rgba(196,150,60,.35);border-radius:999px}
+.services-hero{min-height:clamp(420px,56vh,620px);display:flex;align-items:center;background:linear-gradient(135deg,#37271c,#13100e);padding:72px 0;color:#fff}
+.services-hero .container,.services-wrap .container{width:min(calc(100% - 48px),1120px);margin:0 auto}
+.services-hero h1{max-width:760px;margin:0;font-size:clamp(3.2rem,7vw,6rem);line-height:.95;color:#fff}
+.services-hero p{max-width:680px;margin:18px 0 0;color:rgba(255,255,255,.84);font-family:Arial,Helvetica,sans-serif;line-height:1.75}
+.services-wrap{padding:84px 0 96px;background:linear-gradient(180deg,#fbf7f1 0%,#f5ecde 48%,#fbf7f1 100%)}
+.services-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px}
+.service-card{display:grid;grid-template-columns:minmax(220px,.82fr) minmax(0,1.18fr);overflow:hidden;min-height:300px;background:#fff;border:1px solid rgba(196,150,60,.16);border-radius:26px;box-shadow:0 22px 54px rgba(61,43,26,.10)}
+.service-card__media{min-height:100%;background:#e9ded0;overflow:hidden}
+.service-card__media img{width:100%;height:100%;display:block;object-fit:cover;object-position:center}
+.service-card__media--empty{background:linear-gradient(135deg,#e8dccb,#fff8ec)}
+.service-card__body{display:flex;flex-direction:column;padding:30px 30px 28px}
+.service-card__num{color:#c4963c;font-size:.74rem;font-weight:900;letter-spacing:.16em}
+.service-card h2{margin:18px 0 12px;color:#2a1f19;font-size:clamp(1.7rem,3vw,2.35rem);line-height:1}
+.service-card p{margin:0 0 26px;color:#6b5948;font-family:Arial,Helvetica,sans-serif;line-height:1.72}
+.service-card a{margin-top:auto;color:#c4963c;text-decoration:none;font-size:.8rem;font-weight:900;letter-spacing:.15em;text-transform:uppercase}
+.services-empty{padding:40px;background:#fff;border-radius:18px;color:#6b5948}
+footer{background:#17120f;color:#f7f1e8;padding:58px 24px}
+@media(max-width:900px){.nav-inner{width:calc(100% - 32px);flex-direction:column;align-items:flex-start;padding:16px 0}.nav-links{flex-wrap:wrap;gap:14px}.services-hero .container,.services-wrap .container{width:calc(100% - 32px)}.services-grid{grid-template-columns:1fr}.service-card{grid-template-columns:1fr}.service-card__media{height:220px}}
+CSS;
+
+    $title = $h('Služby | ' . $siteName);
+    $html = <<<HTML
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{$title}</title>
+  <meta name="description" content="Svatební, rodinné, portrétní a reklamní foto a video služby v Olomouci a po celé ČR.">
+</head>
+<body data-cms-page-key="sluzby">
+{$nav}
+<main>
+  <section class="services-hero">
+    {$heroBg}
+    <div class="container">
+      <h1>Naše služby</h1>
+      <p>Od svateb přes portréty až po firemní vizuál. Každou zakázku stavíme na emocích, detailu a profesionálním výsledku.</p>
+    </div>
+  </section>
+  <section class="services-wrap">
+    <div class="container">
+      <div class="services-grid">{$cards}</div>
+    </div>
+  </section>
+</main>
+<footer>{$footer}</footer>
+</body>
+</html>
+HTML;
+
+    $html = (new PageRenderer())->injectAssets($html, $css, '');
+    echo sanitizeFrontendHtml($html, $site);
+    return true;
 }
 
 function tryRedirectLegacyContentPath(string $uri): bool
@@ -2689,7 +2981,7 @@ function tryServeKontaktPage(): bool
     if (!$site) return false;
 
     try {
-        $contact = (new ContactRepository())->findBySite((int)$site['id']) ?: [];
+        $contact = enrichContactWithLegacyBlocks((int)$site['id'], (new ContactRepository())->findBySite((int)$site['id']) ?: []);
     } catch (\Throwable $e) {
         return false;
     }
@@ -3484,6 +3776,12 @@ try {
 
     if (tryRedirectLegacyContentPath($uri)) {
         exit;
+    }
+
+    if ($uri === '/sluzby') {
+        if (tryServeServicesPage($uri)) {
+            exit;
+        }
     }
 
     if ($uri === '/nase-prace') {
