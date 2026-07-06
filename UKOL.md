@@ -11,8 +11,8 @@ Zadani: Opravit rozbite stranky a sablony v RB Videos & Photos tak, aby hero sek
 - [x] 4. Opravit cenik: odstranit konfliktni panel, zkratit title, upravit layout karet a poradi obsahu
 - [x] 5. Opravit stranku sluzeb a detail sluzby, aby se neplikovala jedna fotka a obsah odpovidal DB
 - [x] 6. Doladit homepage: video posun, parallax, VR foto crop a plynule prechody sekcnich pozadi
-- [ ] 7. Projit dotcene MD soubory a aktualizovat dokumentaci / report k nove realite
-- [ ] 8. Overit syntax, diff a pripadne pripravit commit
+- [x] 7. Projit dotcene MD soubory a aktualizovat dokumentaci / report k nove realite
+- [x] 8. Overit syntax, diff a pripadne pripravit commit
 
 ## Poznamky
 
@@ -24,4 +24,4 @@ Zadani: Opravit rozbite stranky a sablony v RB Videos & Photos tak, aby hero sek
 
 ## Vysledek
 
-Prubezne se doplnuje.
+Hotovy runtime fix pro hero, kontakt, cenik, services, homepage a local SEO footer. Aktualizovany byly `UKOL.md`, `public/index.php`, `Templates/elegant-white/assets/theme.css` a `database/seeds/seed_photographer.php`. Overeni: `php -l public/index.php`, `php -l database/seeds/seed_photographer.php`, `git diff --check`. Commit: `978f819` (`fix(frontend): restore hero, contact and pricing layouts`). Push na `origin/master` probehl uspesne.
