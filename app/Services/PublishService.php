@@ -782,7 +782,7 @@ CSS;
         $html = str_replace('<p style="color:rgba(255,255,255,.72);line-height:1.6;margin:0">', '<p class="hp-faq-answer">', $html);
         $html = str_replace('<p style="color:rgba(255,255,255,.45)">', '<p class="frontend-note">', $html);
         $html = str_replace('<p style="color:rgba(255,255,255,.45);text-align:center;padding:32px 0">', '<p class="frontend-note frontend-note--center">', $html);
-        $html = str_replace(' style="display:none" tabindex="-1" autocomplete="off"', ' class="hp-honeypot" style="display:none" tabindex="-1" autocomplete="off"', $html);
+        $html = str_replace(' style="display:none" tabindex="-1" autocomplete="off"', ' class="hp-honeypot" tabindex="-1" autocomplete="off"', $html);
         return str_replace(
             '<div style="height:100%;background:#222;display:flex;align-items:center;justify-content:center;font-size:2rem;color:rgba(255,255,255,.3)">&#9654;</div>',
             '<div class="pt-thumb__placeholder">&#9654;</div>',
@@ -1049,22 +1049,6 @@ CSS;
 
     private function ensureRbDemoContactAddress(array $contact): array
     {
-        $address = trim((string)($contact['address_1'] ?? '')) ?: trim((string)($contact['address_2'] ?? ''));
-        if ($address !== '') {
-            return $contact;
-        }
-
-        $email = strtolower(trim((string)($contact['email'] ?? '')));
-        $phones = preg_replace('/\D+/', '', implode(' ', [
-            (string)($contact['phone_1'] ?? ''),
-            (string)($contact['phone_2'] ?? ''),
-            (string)($contact['phone_3'] ?? ''),
-        ])) ?? '';
-
-        if ($email === 'rb_vp@volny.cz' || str_contains($phones, '792483583') || str_contains($phones, '604225032')) {
-            $contact['address_1'] = 'Horní nám. 583, 779 11 Olomouc';
-        }
-
         return $contact;
     }
 
@@ -1182,7 +1166,7 @@ CSS;
 
         $address = trim((string)($contact['address_1'] ?? '')) ?: trim((string)($contact['address_2'] ?? ''));
         if ($address !== '') {
-            $contactItems[] = '<div class="site-footer-contact__item"><span>Adresa</span><strong>' . nl2br($h($address)) . '</strong></div>';
+            $contactItems[] = '<div class="site-footer-contact__item"><span>Lokalita</span><strong>' . nl2br($h($address)) . '</strong></div>';
         }
 
         $socialItems = [];
@@ -1210,7 +1194,7 @@ CSS;
             . '@media(max-width:820px){footer .site-footer-rich,.theme-footer .site-footer-rich,.site-footer .site-footer-rich{grid-template-columns:1fr;gap:24px}.site-footer-bottom{text-align:left}}'
             . '</style>'
             . '<div class="site-footer-rich">'
-            . '<div class="site-footer-brand">' . $brand . '<div class="site-footer-brand__name">' . $h($siteName) . '</div><div class="site-footer-brand__note">Svatebni fotografie a video. Olomouc, Morava a cela CR.</div></div>'
+            . '<div class="site-footer-brand">' . $brand . '<div class="site-footer-brand__name">' . $h($siteName) . '</div></div>'
             . '<div class="site-footer-contact"><div class="site-footer-title">Kontakt</div>' . ($contactItems !== [] ? implode('', $contactItems) : '<div class="site-footer-contact__item"><span>Kontakt</span><strong>Doplnte kontaktni udaje v administraci.</strong></div>') . '</div>'
             . '<div class="site-footer-socials"><div class="site-footer-title">Socialni site</div><div class="site-footer-socials__list">' . ($socialItems !== [] ? implode('', $socialItems) : '<span class="site-footer-brand__note">Doplnte socialni site v kontaktu.</span>') . '</div></div>'
             . '<div class="site-footer-bottom">&copy; ' . date('Y') . ' ' . $h($siteName) . ' · <a href="/podminky-uziti">Podmínky užití</a></div>'

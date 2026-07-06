@@ -833,16 +833,18 @@ echo "FAQ položky vytvořeny.\n";
 $pdo->exec("DELETE FROM contact_info WHERE site_id = {$siteId}");
 $pdo->prepare('
     INSERT INTO contact_info (
-        site_id, phone_1, phone_2, email, form_email,
+        site_id, phone_1, phone_2, email, address_1, address_2, form_email,
         social_1_type, social_1_url,
         social_2_type, social_2_url,
         social_3_type, social_3_url
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ')->execute([
     $siteId,
     '+420704182130',
     '704182130',
     'rb_vp@volny.cz',
+    'Horní náměstí 583/1',
+    '779 00 Olomouc',
     'rb_vp@volny.cz',
     'instagram',
     'https://www.instagram.com/rb_videos_photos/',

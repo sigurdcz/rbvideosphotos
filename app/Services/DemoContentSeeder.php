@@ -264,8 +264,8 @@ class DemoContentSeeder
                     ['Foto i video pohromadě', 'Fotografie zastaví konkrétní okamžik, video k němu přidá pohyb, hlasy a atmosféru. Dohromady vznikne vzpomínka, ke které se budete vracet celý život. Vše ladím tak, aby výstupy působily jednotně a opravdově.'],
                     ['Co je součástí', '<ul><li>celodenní nebo půldenní focení dle balíčku</li><li>filmový sestřih / svatební video</li><li>online galerie a předání ke stažení</li><li>archivace hotových výstupů</li></ul>'],
                 ],
-                'seo_title' => 'Svatební foto & video Olomouc | RB Photos & Videos',
-                'seo_desc' => 'Svatební fotografie a filmové video v Olomouci a po celé ČR. Přirozené reportážní záběry vašeho dne. Nezávazná poptávka — 792 483 583.',
+                'seo_title' => 'Svatební foto a video | RB Videos Photos',
+                'seo_desc' => 'Svatební focení a video od jednoho týmu. Přirozené momenty, filmový výstup, rychlé dodání a působnost Olomouc, Morava i celá ČR.',
                 'seo_kw' => 'svatební foto video Olomouc, svatební fotograf, svatební kameraman, svatební video',
             ],
             [
@@ -278,8 +278,8 @@ class DemoContentSeeder
                     ['Vzpomínky, ke kterým se vracíte', 'Těhotenské focení, křtiny, rodinné portréty i osobní fotky na míru tomu, k čemu je potřebujete. Společně vybereme místo i styl tak, aby snímky působily uvolněně a opravdově.'],
                     ['Kde fotíme', '<ul><li>v přírodě, parku nebo na místě, které máte rádi</li><li>ateliérové i venkovní portréty</li><li>kratší session vhodná i pro malé děti</li></ul>'],
                 ],
-                'seo_title' => 'Rodinné & portrétní focení Olomouc | RB Photos & Videos',
-                'seo_desc' => 'Rodinné, těhotenské a portrétní focení v Olomouci. Přirozené a nenucené snímky bez stresu, ke kterým se budete rádi vracet.',
+                'seo_title' => 'Rodinné a portrétní focení | RB Videos Photos',
+                'seo_desc' => 'Rodinné, těhotenské a portrétní focení v Olomouci. Přirozené snímky bez stresu, ke kterým se budete rádi vracet.',
                 'seo_kw' => 'rodinné focení Olomouc, portrétní focení, těhotenské focení, focení dětí',
             ],
             [
@@ -292,8 +292,8 @@ class DemoContentSeeder
                     ['Podle toho, kde se obsah použije', 'Web, sociální sítě, reklama nebo Google profil — každé využití potřebuje trochu jiný přístup. Když to promyslíme dopředu, vznikne materiál, se kterým se dá dlouhodobě pracovat.'],
                     ['Pro koho', '<ul><li>firmy, e-shopy a lokální značky</li><li>produktové a reklamní foto i video</li><li>kapely, klipy a firemní prezentace</li></ul>'],
                 ],
-                'seo_title' => 'Reklamní foto & video pro firmy | RB Photos & Videos',
-                'seo_desc' => 'Profesionální reklamní foto a video pro firmy, produkty i značky. Vizuální obsah, který buduje důvěru a prodává. Olomouc a celá ČR.',
+                'seo_title' => 'Reklamní foto a video pro firmy | RB Videos Photos',
+                'seo_desc' => 'Profesionální reklamní foto a video pro firmy, produkty i značky. Vizuální obsah, který buduje důvěru a prodává.',
                 'seo_kw' => 'reklamní foto video, firemní focení, produktové foto, video pro firmy Olomouc',
             ],
             [
@@ -306,8 +306,8 @@ class DemoContentSeeder
                     ['Rychlé a použitelné výstupy', 'Z akce dostanete fotografie i případný videosestřih ve formě, kterou rovnou využijete na web i sociální sítě. Termín, rozsah i způsob předání domluvíme podle konkrétní události.'],
                     ['Co nafotím', '<ul><li>konference, semináře a firemní akce</li><li>plesy, koncerty a kulturní události</li><li>reportážní foto i krátké video</li></ul>'],
                 ],
-                'seo_title' => 'Foto & video akcí a událostí | RB Photos & Videos',
-                'seo_desc' => 'Profesionální dokumentace akcí — konference, plesy, koncerty i firemní večery. Foto i video bez kompromisů. Olomouc a celá ČR.',
+                'seo_title' => 'Akce a události | RB Videos Photos',
+                'seo_desc' => 'Profesionální dokumentace akcí, konferencí, plesů, koncertů i firemních večerů. Foto i video bez kompromisů.',
                 'seo_kw' => 'focení akcí Olomouc, fotograf konference, foto plesy koncerty, dokumentace události',
             ],
         ];
@@ -587,12 +587,13 @@ CSS;
         }
         if ($type === 'LocalBusiness') {
             $data['telephone'] = '+420 792 483 583';
-            $data['areaServed'] = 'Olomouc a celá ČR';
-            $data['address'] = [
-                '@type' => 'PostalAddress',
-                'addressLocality' => 'Olomouc',
-                'addressCountry' => 'CZ',
+            $data['areaServed'] = [
+                'Olomouc',
+                'Olomoucký kraj',
+                'Morava',
+                'Česká republika',
             ];
+            $data['priceRange'] = '$$';
         }
 
         return (string) json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
@@ -924,7 +925,7 @@ CSS;
         $phone1 = '+420 792 483 583';
         $phone2 = '+420 604 225 032';
         $email = 'rb_vp@volny.cz';
-        $address = 'Horní nám. 583, 779 11 Olomouc';
+        $address = "Horní náměstí 583/1\n779 00 Olomouc";
         $formEmail = ContactRepository::DEFAULT_FORM_EMAIL;
 
         (new ContactRepository())->upsert($siteId, [

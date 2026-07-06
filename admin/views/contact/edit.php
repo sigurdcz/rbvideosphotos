@@ -55,6 +55,11 @@ ob_start();
 
       <div class="card">
         <div class="card-title">Adresa</div>
+        <?php if (trim((string)($c['address_1'] ?? '')) === '' && trim((string)($c['address_2'] ?? '')) === ''): ?>
+        <div class="alert alert-warning" style="margin-bottom:12px">
+          Adresa neni vyplnena v databazi. Ve verejnem footeru se pak nezobrazi zadna lokalita.
+        </div>
+        <?php endif; ?>
         <div class="form-group">
           <label>Adresa 1</label>
           <textarea name="address_1" style="min-height:70px" placeholder="Priklad ulice 123&#10;785 01 Mesto"><?= $v('address_1') ?></textarea>

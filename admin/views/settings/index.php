@@ -79,6 +79,11 @@ ob_start();
 
   <div class="card">
     <div class="card-title">Kontaktni komunikace</div>
+    <?php if (trim((string)($contact['address_1'] ?? '')) === '' && trim((string)($contact['address_2'] ?? '')) === ''): ?>
+    <div class="alert alert-warning" style="margin-bottom:12px">
+      Adresa neni vyplnena v databazi. Public footer a Local SEO z ni proto nic nevykresli.
+    </div>
+    <?php endif; ?>
     <div class="form-group">
       <label>E-mail pro prijem zprav z formularu</label>
       <input type="email" name="form_email" value="<?= $h($contact['form_email'] ?? '') ?>" placeholder="sigurd.gnezdilov@gmail.com">
