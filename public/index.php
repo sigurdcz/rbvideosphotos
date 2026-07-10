@@ -120,6 +120,7 @@ function tryServeDatabasePage(string $uri, bool $authenticated = false, bool $pr
             $js  = ($template['js_source']  ?? '') . "\n" . $themeJs;
         }
         $html = injectHomepageMissingSections($html, $blocks, $isHome);
+        $html = injectHomepageThemeDataSources($html, $blocks, $isHome);
         $html = injectCenikPageLayout($html, $blocks, $themeKey);
         $html = injectHomepageAboutVisualSource($html, (int)$page['id'], (int)$page['site_id'], $isHome);
         $html = $renderer->injectAssets($html, $css, $js);
@@ -642,6 +643,26 @@ function injectHomepageMissingSections(string $html, array $blocks, bool $isHome
         }
     }
 
+    if (str_contains($html, 'theme-elegant-white') && !preg_match('~<section\b[^>]*\bid=(["\'])faq\1~i', $html)) {
+        $faqItems = '';
+        for ($i = 1; $i <= 4; $i++) {
+            $faqItem = blockContent($blocks, 'faq_' . $i);
+            if (trim(strip_tags($faqItem)) !== '') {
+                $faqItems .= '<article class="hp-faq-item">' . $faqItem . '</article>';
+            }
+        }
+        if ($faqItems !== '') {
+            $faqTitle = blockContent($blocks, 'faq_title') ?: 'Časté dotazy';
+            $faqCta = blockContent($blocks, 'faq_cta');
+            $sections .= '<section class="section" id="faq"><div class="container">'
+                . '<p class="section-label">Otázky</p>'
+                . '<h2 class="section-title">' . $faqTitle . '</h2>'
+                . '<div class="hp-faq">' . $faqItems . '</div>'
+                . $faqCta
+                . '</div></section>';
+        }
+    }
+
     if (!preg_match('~<section\b[^>]*\bid=(["\'])proces\1~i', $html)) {
         $processBody = blockContent($blocks, 'process_body');
         if ($processBody === '') {
@@ -674,6 +695,24 @@ function injectHomepageMissingSections(string $html, array $blocks, bool $isHome
     }
 
     return preg_replace('~(</main>)~i', $sections . '$1', $html, 1) ?? $html;
+}
+
+function injectHomepageThemeDataSources(string $html, array $blocks, bool $isHome): string
+{
+    if (!$isHome || !str_contains($html, 'theme-elegant-white') || str_contains($html, 'data-ew-home-faq-source')) {
+        return $html;
+    }
+
+    $faqItem = blockContent($blocks, 'faq_4');
+    if (trim(strip_tags($faqItem)) === '') {
+        return $html;
+    }
+
+    $source = '<div data-ew-home-faq-source hidden><article class="hp-faq-item">'
+        . $faqItem
+        . '</article></div>';
+
+    return preg_replace('~(<main\b[^>]*>)~i', '$1' . $source, $html, 1) ?? $html;
 }
 
 function absolutePublicUrl(array $site, string $path = '/'): string

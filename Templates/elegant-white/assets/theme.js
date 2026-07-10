@@ -379,18 +379,25 @@
     var list = qs('.hp-faq', section);
     if (!list) return;
 
-    var items = qsa('.hp-faq-item', list).map(function (item) {
+    var source = qs('[data-ew-home-faq-source]');
+    var sourceItems = source ? qsa('.hp-faq-item', source) : [];
+    var seenQuestions = {};
+    var items = qsa('.hp-faq-item', list).concat(sourceItems).map(function (item) {
       return {
         question: html(firstNode(['.hp-faq-question', 'strong', 'h3', 'button'], item)),
         answer: html(firstNode(['.hp-faq-answer', 'p', '.answer'], item))
       };
     }).filter(function (item) {
-      return item.question;
+      var key = item.question.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().toLocaleLowerCase();
+      if (!key || seenQuestions[key]) return false;
+      seenQuestions[key] = true;
+      return true;
     });
 
     if (!items.length) return;
+    if (source) source.remove();
     section.classList.add('ew-faq-ready');
-    list.innerHTML = items.slice(0, 6).map(function (item) {
+    list.innerHTML = items.slice(0, 4).map(function (item) {
       return '<article class="hp-faq-item ew-faq-item">' +
         '<button class="ew-faq-question" type="button" aria-expanded="false">' +
         '<span>' + item.question + '</span><span class="ew-faq-plus" aria-hidden="true"></span>' +
@@ -415,7 +422,11 @@
   function enhanceProcess() {
     var section = qs('#proces, .hp-process, .jb-process, [data-ew-process-source]');
     if (!section) return;
-    section.classList.add('ew-process');
+    section.classList.add('ew-process', 'kt-process', 'ew-contact-process');
+    var kicker = qs('.section-label', section);
+    var title = qs('.section-title, h2', section);
+    if (kicker) kicker.classList.add('kt-section-kicker');
+    if (title) title.classList.add('kt-process-title');
     qsa('.section-intro', section).forEach(function (intro) {
       if (!text(intro)) intro.remove();
     });
@@ -431,7 +442,16 @@
         list.appendChild(step);
       });
     }
-    list.classList.add('ew-process-list');
+    list.classList.add('ew-process-list', 'kt-steps');
+    qsa('article, li', list).forEach(function (step, index) {
+      if (index > 3) {
+        step.remove();
+        return;
+      }
+      step.classList.add('kt-step');
+      var number = qs('span', step);
+      if (number) number.classList.add('kt-step__num');
+    });
   }
 
   function reorderHomeSections() {

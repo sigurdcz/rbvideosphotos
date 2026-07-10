@@ -152,7 +152,7 @@ class InlineController extends Controller
 
     private function maybeSyncFaqToHomepage(array $page, string $key, string $content): void
     {
-        if (!in_array($key, ['faq_1', 'faq_2', 'faq_3'], true)) return;
+        if (!in_array($key, ['faq_1', 'faq_2', 'faq_3', 'faq_4'], true)) return;
         if (ltrim((string)($page['url_path'] ?? ''), '/') !== 'faq') return;
 
         $homePage = (new PageRepository())->findByUrlPath('');

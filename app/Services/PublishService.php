@@ -152,6 +152,7 @@ class PublishService
             ]);
         }
         $html = $this->injectHomepageMissingSections($html, $blocks, $isHome);
+        $html = $this->injectHomepageThemeDataSources($html, $blocks, $isHome);
         $html = $this->injectHomepageAboutVisualSource($html, (int)$page['id']);
         $html = $this->renderer->injectAssets($html, $css, $js);
 
@@ -505,6 +506,26 @@ HTML;
             }
         }
 
+        if (str_contains($html, 'theme-elegant-white') && !preg_match('~<section\b[^>]*\bid=(["\'])faq\1~i', $html)) {
+            $faqItems = '';
+            for ($i = 1; $i <= 4; $i++) {
+                $faqItem = $this->blockContent($blocks, 'faq_' . $i);
+                if (trim(strip_tags($faqItem)) !== '') {
+                    $faqItems .= '<article class="hp-faq-item">' . $faqItem . '</article>';
+                }
+            }
+            if ($faqItems !== '') {
+                $faqTitle = $this->blockContent($blocks, 'faq_title') ?: 'Časté dotazy';
+                $faqCta = $this->blockContent($blocks, 'faq_cta');
+                $sections .= '<section class="section" id="faq"><div class="container">'
+                    . '<p class="section-label">Otázky</p>'
+                    . '<h2 class="section-title">' . $faqTitle . '</h2>'
+                    . '<div class="hp-faq">' . $faqItems . '</div>'
+                    . $faqCta
+                    . '</div></section>';
+            }
+        }
+
         if (!preg_match('~<section\b[^>]*\bid=(["\'])proces\1~i', $html)) {
             $processBody = $this->blockContent($blocks, 'process_body');
             if ($processBody === '') {
@@ -537,6 +558,24 @@ HTML;
         }
 
         return preg_replace('~(</main>)~i', $sections . '$1', $html, 1) ?? $html;
+    }
+
+    private function injectHomepageThemeDataSources(string $html, array $blocks, bool $isHome): string
+    {
+        if (!$isHome || !str_contains($html, 'theme-elegant-white') || str_contains($html, 'data-ew-home-faq-source')) {
+            return $html;
+        }
+
+        $faqItem = $this->blockContent($blocks, 'faq_4');
+        if (trim(strip_tags($faqItem)) === '') {
+            return $html;
+        }
+
+        $source = '<div data-ew-home-faq-source hidden><article class="hp-faq-item">'
+            . $faqItem
+            . '</article></div>';
+
+        return preg_replace('~(<main\b[^>]*>)~i', '$1' . $source, $html, 1) ?? $html;
     }
 
     private function injectPageHeroVideo(string $html, array $site, int $pageId): string

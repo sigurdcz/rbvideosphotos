@@ -125,11 +125,11 @@ class FaqController extends Controller
         $page = (new PageRepository())->findByUrlPath('');
         if (!$page) return;
 
-        $items  = array_slice($repo->allActive($siteId), 0, 3);
+        $items  = array_slice($repo->allActive($siteId), 0, 4);
         $blocks = new BlockRepository();
         $h      = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
 
-        for ($i = 0; $i < 3; $i++) {
+        for ($i = 0; $i < 4; $i++) {
             $key = 'faq_' . ($i + 1);
             if (isset($items[$i])) {
                 $item    = $items[$i];
