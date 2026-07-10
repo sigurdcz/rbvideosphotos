@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{site_name}</title>
+  <meta name="theme-color" content="#FDFCF8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..500;1,9..144,300..400&amp;family=Jost:wght@300;400;500&amp;display=swap" rel="stylesheet">
+</head>
+<body class="theme-elegant-white2">
+  <div class="theme-shell theme-elegant-white2">
+    <div class="ew2-ambient ew2-ambient--one" aria-hidden="true"></div>
+    <div class="ew2-ambient ew2-ambient--two" aria-hidden="true"></div>
+
+    <header class="theme-header">
+      <div class="container theme-header__inner">
+        <a href="/" class="theme-brand">{site_name}</a>
+        <div class="theme-nav-wrap">
+          {nav}
+          <nav class="nav ew2-default-nav" aria-label="Hlavní navigace" data-ew2-default-nav>
+            <div class="nav-inner">
+              <div class="nav-links">
+                <a href="/">Úvod</a>
+                <a href="/sluzby">Služby</a>
+                <a href="/nase-prace">Naše práce</a>
+                <a href="/blog">Blog</a>
+                <a href="/cenik">Ceník</a>
+                <a href="/faq">FAQ</a>
+                <a href="/kontakt" class="nav-cta">Kontakt</a>
+              </div>
+            </div>
+          </nav>
+        </div>
+      </div>
+    </header>
+
+    <main class="theme-main">
+      <svg class="ew2-thread" viewBox="0 0 100 1000" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <linearGradient id="ew2-thread-gradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#DCC17A"></stop>
+            <stop offset=".52" stop-color="#B08A3C"></stop>
+            <stop offset="1" stop-color="#8A6B28"></stop>
+          </linearGradient>
+        </defs>
+        <path class="ew2-thread__path" pathLength="1" vector-effect="non-scaling-stroke" d="M12 0 C8 72 36 105 31 178 S8 292 22 368 S77 456 69 536 S27 651 42 728 S92 842 78 918 S44 976 50 1000"></path>
+      </svg>
+      <div class="ew2-page-content">{page_content}</div>
+    </main>
+
+    <footer class="theme-footer">
+      <div class="container theme-footer__inner">
+        <div class="theme-footer__brand">{site_name}</div>
+        <div class="theme-footer__meta">{site_name}</div>
+      </div>
+    </footer>
+
+    <div class="ew2-grain" aria-hidden="true"></div>
+  </div>
+</body>
+</html>

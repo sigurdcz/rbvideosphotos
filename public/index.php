@@ -643,7 +643,7 @@ function injectHomepageMissingSections(string $html, array $blocks, bool $isHome
         }
     }
 
-    if (str_contains($html, 'theme-elegant-white') && !preg_match('~<section\b[^>]*\bid=(["\'])faq\1~i', $html)) {
+    if (preg_match('~\btheme-elegant-white2?\b~', $html) && !preg_match('~<section\b[^>]*\bid=(["\'])faq\1~i', $html)) {
         $faqItems = '';
         for ($i = 1; $i <= 4; $i++) {
             $faqItem = blockContent($blocks, 'faq_' . $i);
@@ -699,7 +699,7 @@ function injectHomepageMissingSections(string $html, array $blocks, bool $isHome
 
 function injectHomepageThemeDataSources(string $html, array $blocks, bool $isHome): string
 {
-    if (!$isHome || !str_contains($html, 'theme-elegant-white') || str_contains($html, 'data-ew-home-faq-source')) {
+    if (!$isHome || !preg_match('~\btheme-elegant-white2?\b~', $html) || str_contains($html, 'data-ew-home-faq-source')) {
         return $html;
     }
 

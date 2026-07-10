@@ -48,6 +48,7 @@ Aktualne dostupna temata:
 | Minimal Dark | `minimal-dark` |
 | Editorial Gold | `editorial-gold` |
 | Elegant White | `elegant-white` |
+| Elegant White 2 | `elegant-white2` |
 
 Aktivni tema se nastavuje v `Nastaveni -> Tema`. Technicke chovani theme aplikace je v `ARCHITECTURE.md`.
 
