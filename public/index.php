@@ -2360,6 +2360,16 @@ function tryServeServicesPage(string $uri): bool
     $items = $repo->allActive((int)$site['id']);
     $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
     $siteName = (string)($site['name'] ?? 'RB Videos & Photos');
+    $page = publicPageForPath('sluzby');
+    $pageBlocks = pageBlockMap($page);
+    [$heroTitleKey, $heroTitle, $heroTitleType] = firstBlockValue($pageBlocks, ['hero_h1', 'hero_heading'], 'Naše služby');
+    [$heroSubKey, $heroSub, $heroSubType] = firstBlockValue(
+        $pageBlocks,
+        ['hero_sub', 'hero_intro'],
+        'Od svateb přes portréty až po firemní vizuál. Každou zakázku stavíme na emocích, detailu a profesionálním výsledku.'
+    );
+    $heroTitleAttrs = inlineAttrs($page, $heroTitleKey, $heroTitleType);
+    $heroSubAttrs = inlineAttrs($page, $heroSubKey, $heroSubType);
 
     $cards = '';
     $heroImage = '';
@@ -2397,8 +2407,6 @@ function tryServeServicesPage(string $uri): bool
     $heroBg = $heroImage !== ''
         ? '<img class="hero-bg" src="' . $h($heroImage) . '" alt="" aria-hidden="true">'
         : '';
-    $nav = renderPortfolioNav($siteName, 'services');
-    $footer = buildRichFooterHtml((int)$site['id']);
     $css = <<<'CSS'
 body{margin:0;background:#fbf7f1;color:#241914;font-family:Georgia,"Times New Roman",serif}
 .nav{position:relative;z-index:5;background:#fffaf4;border-bottom:1px solid rgba(36,25,20,.08)}
@@ -2428,38 +2436,58 @@ footer{background:#17120f;color:#f7f1e8;padding:58px 24px}
 @media(max-width:900px){.nav-inner{width:calc(100% - 32px);flex-direction:column;align-items:flex-start;padding:16px 0}.nav-links{flex-wrap:wrap;gap:14px}.services-hero .container,.services-wrap .container{width:calc(100% - 32px)}.services-grid{grid-template-columns:1fr}.service-card{grid-template-columns:1fr}.service-card__media{height:220px}}
 CSS;
 
-    $title = $h('Služby | ' . $siteName);
-    $html = <<<HTML
-<!DOCTYPE html>
-<html lang="cs">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{$title}</title>
-  <meta name="description" content="Svatební, rodinné, portrétní a reklamní foto a video služby v Olomouci a po celé ČR.">
-</head>
-<body data-cms-page-key="sluzby">
-{$nav}
-<main>
-  <section class="services-hero">
-    {$heroBg}
-    <div class="container">
-      <h1>Naše služby</h1>
-      <p>Od svateb přes portréty až po firemní vizuál. Každou zakázku stavíme na emocích, detailu a profesionálním výsledku.</p>
-    </div>
-  </section>
-  <section class="services-wrap">
-    <div class="container">
-      <div class="services-grid">{$cards}</div>
-    </div>
-  </section>
-</main>
-<footer>{$footer}</footer>
-</body>
-</html>
+    $renderer = new PageRenderer();
+    $nav = resolveThemeNav($site, false);
+    $pageContent = <<<HTML
+<section class="services-hero">
+  {$heroBg}
+  <div class="container">
+    <h1{$heroTitleAttrs}>{$h($heroTitle)}</h1>
+    <p{$heroSubAttrs}>{$h($heroSub)}</p>
+  </div>
+</section>
+<section class="services-wrap">
+  <div class="container">
+    <div class="services-grid">{$cards}</div>
+  </div>
+</section>
 HTML;
+    [$pageContent, $themeCss, $themeJs, $themeActive] = applyThemeTemplate(
+        $renderer,
+        $site,
+        'sluzby',
+        $siteName,
+        $pageContent,
+        '',
+        '',
+        '',
+        $nav,
+        isset($_GET['theme_preview']) ? trim((string)$_GET['theme_preview']) : null
+    );
 
-    $html = (new PageRenderer())->injectAssets($html, $css, '');
+    if ($themeActive) {
+        $html = $renderer->injectAssets($pageContent, $css . "\n" . $themeCss, $themeJs);
+    } else {
+        $fallbackNav = renderPortfolioNav($siteName, 'services');
+        $fallbackFooter = buildRichFooterHtml((int)$site['id']);
+        $html = <<<HTML
+<!DOCTYPE html><html lang="cs"><head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>{$h('Služby | ' . $siteName)}</title>
+</head><body data-cms-page-key="sluzby">{$fallbackNav}<main>{$pageContent}</main><footer>{$fallbackFooter}</footer></body></html>
+HTML;
+        $html = $renderer->injectAssets($html, $css, '');
+    }
+
+    $html = injectFooterSocials($html, (int)$site['id']);
+    $html = injectPageHeroVideo($html, $site, isset($page['id']) ? (int)$page['id'] : findPageIdForHeroPath('sluzby', (int)$site['id']), 'sluzby');
+    $html = injectCmsEditorChrome($html, '/sluzby', $heroTitle, isset($page['id']) ? (int)$page['id'] : null, Auth::check() && isset($_GET['cms_preview']));
+    $html = injectBreadcrumbTrail($html, $site, breadcrumbItems('Služby', '/sluzby'));
+    $html = injectPageHeadMetadata($html, $site, [
+        'title' => 'Služby | ' . $siteName,
+        'description' => trim((string)$heroSub),
+        'path' => '/sluzby',
+    ]);
     echo sanitizeFrontendHtml($html, $site);
     return true;
 }

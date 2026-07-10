@@ -70,6 +70,7 @@ request -> admin/index.php -> Core\Router -> Controller -> Repository/Service ->
 - `content_blocks` drzi editovatelne bloky podle `data-block="key"`
 - specialni layouty `faq`, `kontakt`, `cenik`, `sluzby`, `blog` a `nase-prace` maji cast logiky mimo generic bloky
 - specialni verejne stranky musi porad cist obsah z DB tabulek (`service_items`, `faq_items`, `contact_info`, `blog_posts`, `portfolio_entries`) a nesmi doplnovat obsahova data ze sablon
+- specialni renderery predavaji hotovy DB-driven `pageContent` pres `applyThemeTemplate()`; plati to i pro `/sluzby`, aby aktivni tema vzdy dostalo stejny layout, navigaci, footer a theme assety jako ostatni verejne stranky
 
 ### Blog a portfolio
 
