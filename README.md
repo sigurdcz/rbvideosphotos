@@ -28,7 +28,7 @@ Pri rozporu mezi dokumentaci a kodem je zdrojem pravdy aktualni implementace.
 - Blog a portfolio s primymi slugy bez `/blog/` a `/nase-prace/` prefixu v detailu
 - Inline editor na frontendu pro prihlasene uzivatele
 - Media pipeline s variantami `webp`, `medium` a `thumb`
-- Publish flow pro sitemap, robots, llms.txt a portfolio detail/listing exporty
+- Publish flow pro sitemap, robots, llms.txt, security.txt a portfolio detail/listing exporty
 - Theme system nad adresarem `Templates/`
 - Consent-aware tracking a GTM/GA4 konfigurace v adminu
 
@@ -51,6 +51,35 @@ Aktualne dostupna temata:
 | Elegant White 2 | `elegant-white2` |
 
 Aktivni tema se nastavuje v `Nastaveni -> Tema`. Technicke chovani theme aplikace je v `ARCHITECTURE.md`.
+
+## Security.txt
+
+CMS umi generovat strojove citelny kontakt pro odpovedne hlaseni zranitelnosti podle [RFC 9116](https://www.rfc-editor.org/rfc/rfc9116.html).
+
+- Nastaveni: `/admin/security-txt` (pouze role `admin`)
+- Kanonicky endpoint: `/.well-known/security.txt`
+- Kompatibilni endpoint: `/security.txt` -> trvaly redirect na kanonickou cestu
+- Povinny obsah pri zapnuti: alespon jeden `Contact` a prave jeden budoucí `Expires`
+- Vychozi expirace nove konfigurace: 180 dnu; ulozena hodnota se pri HTTP requestech automaticky neposouva
+- Vypnuta, neplatna nebo expirovana konfigurace vraci na obou URL 404
+
+Volitelne lze nastavit `Canonical`, `Encryption`, `Policy`, `Acknowledgments`, `Preferred-Languages`, `Hiring` a komentare. Webove odkazy musi byt HTTPS. Do `Encryption` patri pouze URL verejneho klice, nikdy soukromy klic ani vlozeny klicovy blok.
+
+Zverejneni `security.txt` samo o sobe neudeluje opravneni k bezpecnostnimu testovani. Rozsah a pravidla patri do odkazovane bezpecnostni politiky.
+
+Overeni HTTP odpovedi:
+
+```bash
+curl -i https://example.com/.well-known/security.txt
+curl -I https://example.com/.well-known/security.txt
+curl -I https://example.com/security.txt
+```
+
+Automaticke testy generatoru a endpointu:
+
+```bash
+php tests/run.php
+```
 
 ## Pozadavky
 
@@ -149,7 +178,7 @@ php database/seeds/seed_photographer.php --fresh
 - Media a interni odkazy preferuji root-relative cesty jako `/media/...`, `/blog`, `/cenik`
 - Absolutni URL jsou potreba hlavne pro sitemap, canonical a Open Graph vystupy
 - `public/assets/generated/` se negituje a pri publishi se regeneruje
-- `storage/published/llms.txt` se generuje pri publishi spolu se sitemap a portfolio vystupy
+- `storage/published/llms.txt` a aktivni `.well-known/security.txt` se generuji pri publishi spolu se sitemap a portfolio vystupy
 - Konverzni tracking a consent flow jsou popsane v `ARCHITECTURE.md`
 
 ## Dalsi dokumentace

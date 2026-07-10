@@ -97,6 +97,10 @@ try {
     $router->get('/admin/settings',        'SettingsController', 'index');
     $router->post('/admin/settings/update','SettingsController', 'update');
 
+    // RFC 9116 security.txt
+    $router->get('/admin/security-txt',         'SecurityTxtController', 'index');
+    $router->post('/admin/security-txt/update', 'SecurityTxtController', 'update');
+
     // Google Tag Manager
     $router->get('/admin/gtm', 'GtmController', 'index');
     $router->get('/admin/gtm/connect', 'GtmOAuthController', 'connect');

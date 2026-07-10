@@ -29,6 +29,8 @@ use App\Repositories\TemplateRepository;
 use App\Services\HomepageContentService;
 use App\Services\PageRenderer;
 use App\Services\SeoRenderer;
+use App\Services\SecurityTxtHttpResponder;
+use App\Services\SecurityTxtService;
 use App\Services\ThemeTemplateRegistry;
 use App\Security\RequestThrottle;
 use App\Support\FrontendAssetManager;
@@ -38,6 +40,43 @@ Env::load(dirname(__DIR__) . '/.env');
 date_default_timezone_set(Config::get('app', 'timezone', 'Europe/Prague'));
 Runtime::boot('public');
 Runtime::startRequest();
+
+function tryServeSecurityTxt(string $uri): bool
+{
+    if (!in_array($uri, ['/.well-known/security.txt', '/security.txt'], true)) {
+        return false;
+    }
+
+    $site = (new SiteRepository())->findFirst();
+    $payload = $site
+        ? (new SecurityTxtService())->publicPayload($site)
+        : ['enabled' => false, 'valid' => false, 'status' => 'site_missing'];
+    $requestHeaders = [
+        'If-None-Match' => (string) ($_SERVER['HTTP_IF_NONE_MATCH'] ?? ''),
+        'If-Modified-Since' => (string) ($_SERVER['HTTP_IF_MODIFIED_SINCE'] ?? ''),
+    ];
+    $response = (new SecurityTxtHttpResponder())->build(
+        $uri,
+        (string) ($_SERVER['REQUEST_METHOD'] ?? 'GET'),
+        $payload,
+        $requestHeaders
+    );
+
+    http_response_code((int) $response['status']);
+    foreach ($response['headers'] as $name => $value) {
+        if ($value !== '') {
+            header($name . ': ' . $value);
+        }
+    }
+    echo (string) $response['body'];
+    return true;
+}
+
+$earlyUri = parse_url((string) ($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH);
+$earlyUri = rtrim((string) $earlyUri, '/') ?: '/';
+if (tryServeSecurityTxt($earlyUri)) {
+    exit;
+}
 Auth::start();
 
 function tryServeDatabasePage(string $uri, bool $authenticated = false, bool $previewMode = false): bool

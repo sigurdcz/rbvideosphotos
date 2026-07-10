@@ -20,6 +20,131 @@
   --shadow:     0 1px 4px rgba(0,0,0,.08);
 }
 
+/* RFC 9116 security.txt */
+.security-txt-header p,
+.security-form p,
+.security-preview-card > p,
+.security-note p {
+  margin: 6px 0 0;
+  color: var(--c-muted);
+  line-height: 1.55;
+}
+.security-status-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.security-status-card {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--c-border);
+  border-left: 3px solid var(--c-muted);
+  border-radius: var(--radius);
+  background: var(--c-surface);
+}
+.security-status-card span,
+.security-status-card small {
+  color: var(--c-muted);
+  font-size: 12px;
+}
+.security-status-card strong { overflow-wrap: anywhere; }
+.security-status-card--ok { border-left-color: var(--c-success); }
+.security-status-card--warning { border-left-color: #d6932c; }
+.security-status-card--error { border-left-color: var(--c-error); }
+.security-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(320px, .75fr);
+  gap: 20px;
+  align-items: start;
+}
+.security-form fieldset {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+}
+.security-form fieldset:disabled { opacity: .58; }
+.security-toggle-row,
+.security-field-heading,
+.security-form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.security-toggle-row {
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--c-border);
+}
+.toggle-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.toggle-switch input { width: 20px; height: 20px; }
+.security-contacts { display: grid; gap: 9px; }
+.security-contact-row {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto auto auto;
+  gap: 7px;
+  align-items: center;
+}
+.security-contact-handle {
+  color: var(--c-muted);
+  text-align: center;
+  cursor: grab;
+}
+.security-contact-row .btn { min-width: 36px; padding-inline: 9px; }
+.security-form .form-help {
+  margin: 5px 0 9px;
+  font-size: 12px;
+}
+.security-form .required { color: var(--c-error); font-size: 11px; font-weight: 500; }
+.security-form-actions {
+  justify-content: flex-start;
+  margin-top: 22px;
+}
+.security-form-actions span { color: var(--c-muted); font-size: 12px; }
+.security-preview-card {
+  position: sticky;
+  top: 82px;
+}
+.security-preview-card pre {
+  min-height: 360px;
+  max-height: 70vh;
+  margin: 16px 0 0;
+  padding: 18px;
+  overflow: auto;
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  background: #101318;
+  color: #e8edf5;
+  font: 12px/1.65 Consolas, "Courier New", monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.security-error-list { margin: 8px 0 0 20px; }
+.security-note { margin-top: 20px; }
+@media (max-width: 1100px) {
+  .security-status-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .security-layout { grid-template-columns: 1fr; }
+  .security-preview-card { position: static; }
+}
+@media (max-width: 680px) {
+  .security-status-grid { grid-template-columns: 1fr; }
+  .security-toggle-row,
+  .security-field-heading,
+  .security-form-actions { align-items: flex-start; flex-direction: column; }
+  .security-contact-row { grid-template-columns: 20px minmax(0, 1fr) repeat(3, 34px); }
+  .security-contact-row input { grid-column: 2 / -1; }
+  .security-contact-row .security-contact-handle { grid-row: 1 / span 2; }
+}
+
 body { font-family: system-ui, -apple-system, sans-serif; font-size: 14px; color: var(--c-text); background: var(--c-bg); }
 
 .admin-loading-bar {

@@ -27,6 +27,7 @@
       <li><a href="/admin/reviews" class="<?= strpos($requestUri, '/admin/reviews') === 0 ? 'active' : '' ?>">Recenze</a></li>
       <li><a href="/admin/redirects" class="<?= strpos($requestUri, '/admin/redirects') === 0 ? 'active' : '' ?>">Redirecty</a></li>
       <li><a href="/admin/publish" class="<?= strpos($requestUri, '/admin/publish') === 0 ? 'active' : '' ?>">Publikovani</a></li>
+      <li><a href="/admin/security-txt" class="<?= strpos($requestUri, '/admin/security-txt') === 0 ? 'active' : '' ?>">Security.txt</a></li>
       <li><a href="/admin/settings" class="<?= strpos($requestUri, '/admin/settings') === 0 ? 'active' : '' ?>">Nastaveni</a></li>
       <li><a href="/admin/gtm" class="<?= strpos($requestUri, '/admin/gtm') === 0 ? 'active' : '' ?>">Google Tag Manager</a></li>
       <li><a href="/admin/setup" class="<?= strpos($requestUri, '/admin/setup') === 0 ? 'active' : '' ?>">Pocatecni data</a></li>

@@ -27,6 +27,7 @@ class PublishService
     private SeoRenderer $seoRenderer;
     private SitemapGenerator $sitemap;
     private RobotsGenerator $robots;
+    private SecurityTxtService $securityTxt;
     private PageRepository $pages;
     private TemplateRepository $templates;
     private BlockRepository $blocks;
@@ -47,6 +48,7 @@ class PublishService
         $this->seoRenderer= new SeoRenderer();
         $this->sitemap    = new SitemapGenerator();
         $this->robots     = new RobotsGenerator();
+        $this->securityTxt = new SecurityTxtService();
         $this->pages      = new PageRepository();
         $this->templates  = new TemplateRepository();
         $this->blocks     = new BlockRepository();
@@ -240,6 +242,8 @@ class PublishService
 
         $llmsTxt = (new LlmsTxtGenerator())->generate($site, $pages);
         file_put_contents($this->publishedDir . '/llms.txt', $llmsTxt);
+
+        $this->generateSecurityTxt($siteId);
     }
 
     private function builtInPublicRouteSitemapItems(array $pages): array
@@ -288,11 +292,50 @@ class PublishService
     {
         $redirects = $this->redirects->allBySite($siteId);
         $lines = ["Options -Indexes", "RewriteEngine On", "ErrorDocument 404 /404.html", ""];
+        $site = $this->sites->findById($siteId);
+        if ($site) {
+            $payload = $this->securityTxt->publicPayload($site);
+            if (!empty($payload['enabled']) && !empty($payload['valid'])) {
+                $lines[] = 'Redirect 301 /security.txt /.well-known/security.txt';
+            }
+        }
         foreach ($redirects as $r) {
             $lines[] = "Redirect {$r['status_code']} {$r['from_path']} {$r['to_path']}";
         }
         $lines[] = "";
         file_put_contents($this->publishedDir . '/.htaccess', implode("\n", $lines));
+    }
+
+    public function generateSecurityTxt(int $siteId): void
+    {
+        $site = $this->sites->findById($siteId);
+        if (!$site) {
+            return;
+        }
+
+        $payload = $this->securityTxt->publicPayload($site);
+        $directory = $this->publishedDir . '/.well-known';
+        $target = $directory . '/security.txt';
+        $legacyFile = $this->publishedDir . '/security.txt';
+
+        if (empty($payload['enabled']) || empty($payload['valid'])) {
+            $this->removeSecurityTxtFile($target);
+            $this->removeSecurityTxtFile($legacyFile);
+            return;
+        }
+
+        $this->ensureDir($directory);
+        if (file_put_contents($target, (string) $payload['content'], LOCK_EX) === false) {
+            throw new \RuntimeException('Nepodarilo se vygenerovat .well-known/security.txt.');
+        }
+        $this->removeSecurityTxtFile($legacyFile);
+    }
+
+    private function removeSecurityTxtFile(string $path): void
+    {
+        if (is_file($path) && !@unlink($path)) {
+            throw new \RuntimeException('Nepodarilo se odstranit zastaraly security.txt vystup: ' . $path);
+        }
     }
 
     public function generate404(array $site): void

@@ -46,21 +46,24 @@ request -> admin/index.php -> Core\Router -> Controller -> Repository/Service ->
 `public/index.php` odbavuje requesty v tomto poradi:
 
 ```text
-1. /api/v1/*            -> ApiController::dispatch()
-2. /assets/*            -> readfile s realpath ochranou
-3. /storage/media/*     -> readfile s realpath ochranou
-4. legacy /blog/* nebo /nase-prace/* -> 301 redirect na prime slugy
-5. /sluzby              -> tryServeServicesPage() z `service_items`
-6. /nase-prace          -> tryServePortfolioPage() listing
-7. /blog                -> tryServeBlogListingPage()
-8. /faq                 -> tryServeFaqPage() z `faq_items`
-9. /kontakt             -> tryServeKontaktPage() z `contact_info`
-10. CMS stranka z DB    -> tryServeDatabasePage()
-11. Blog detail         -> tryServeBlogPostPage()
-12. Portfolio detail    -> tryServePortfolioPage(..., true)
-13. storage/published/* -> sitemap, robots, llms.txt a portfolio exporty
-14. 404
+1. /.well-known/security.txt a /security.txt -> SecurityTxtHttpResponder
+2. /api/v1/*            -> ApiController::dispatch()
+3. /assets/*            -> readfile s realpath ochranou
+4. /storage/media/*     -> readfile s realpath ochranou
+5. legacy /blog/* nebo /nase-prace/* -> 301 redirect na prime slugy
+6. /sluzby              -> tryServeServicesPage() z `service_items`
+7. /nase-prace          -> tryServePortfolioPage() listing
+8. /blog                -> tryServeBlogListingPage()
+9. /faq                 -> tryServeFaqPage() z `faq_items`
+10. /kontakt            -> tryServeKontaktPage() z `contact_info`
+11. CMS stranka z DB    -> tryServeDatabasePage()
+12. Blog detail         -> tryServeBlogPostPage()
+13. Portfolio detail    -> tryServePortfolioPage(..., true)
+14. storage/published/* -> sitemap, robots, llms.txt, security.txt a portfolio exporty
+15. 404
 ```
+
+Security endpointy jsou zamerne pred `Auth::start()`: verejny strojovy soubor nesmi zakladat PHP session ani posilat session cookie.
 
 ## Obsahovy model
 
@@ -128,11 +131,19 @@ Publish vrstva dela vic nez jen ulozeni textu:
 - regeneruje hashovane CSS/JS do `public/assets/generated/`
 - cisti stare generovane assety
 - publikuje portfolio listing/detail do `storage/published/nase-prace`
-- generuje `sitemap.xml`, `robots.txt` a `llms.txt`
+- generuje `sitemap.xml`, `robots.txt`, `llms.txt` a aktivni `.well-known/security.txt`
 
 `FrontendAssetManager` minifikuje layout CSS/JS pres `AssetMinifier` a zapisuje hashovane soubory. `public/assets/generated/` neni verzovany v gitu.
 
 Shared theme komponenty z `ThemeTemplateRegistry::getSharedComponentCss()` drzi spolecne styly pro automaticky renderovane DB bloky. Generator obsahu nema vkladat velke inline `<style>` bloky do HTML obsahu, protoze by se tim michala data a prezentace.
+
+## Security.txt
+
+RFC 9116 konfigurace je DB-driven a neni soucasti sablony. `SecurityTxtRepository` nacita jeden config webu a serazene kontakty, `SecurityTxtValidator` provadi serverovou validaci, `SecurityTxtGenerator` sklada deterministicky UTF-8/LF dokument a `SecurityTxtService` koordinuje data s uzce zamerenou souborovou cache v `storage/cache/security_txt/`.
+
+Verejny `SecurityTxtHttpResponder` obsluhuje GET a HEAD, conditional requesty pres ETag/Last-Modified a stavy 200/304/404. `/security.txt` presmeruje na `/.well-known/security.txt` jen kdyz je konfigurace zapnuta, platna a neexpirovana; jinak obe URL vraceji 404. Vystup je vzdy `text/plain; charset=utf-8` a neprochazi HTML layoutem.
+
+Administrace `/admin/security-txt` vyzaduje roli admin a CSRF. Po ulozeni se invaliduje cache, synchronizuje staticky publish soubor a obnovi `.htaccess`. Chybejici migrace se nezakryva defaultem: repository vrati `schema_available=false` a verejny endpoint zustane vypnuty.
 
 ## Inline editor
 
@@ -218,6 +229,7 @@ Hlavni tabulky:
 | `faq_items`, `service_items`, `contact_info`, `reviews` | specialni obsahove oblasti |
 | `redirects` | URL presmerovani |
 | `publish_history` | historie publishu |
+| `security_txt_configs`, `security_txt_contacts` | RFC 9116 konfigurace a serazene kontaktni URI |
 
 Klicove skupiny sloupcu v `sites`:
 
@@ -262,6 +274,7 @@ Klientske demo seed varianty patri do samostatnych souboru, napriklad `seed_phot
 - kazda schema nebo datova zmena jde pres novou migraci
 - cislovani musi navazovat na nejvyssi existujici migraci
 - migrace maji byt idempotentni, kdyz je to technicky mozne
+- MySQL/MariaDB DDL se v runneru neobaluje falesnou transakci, protoze DDL provadi implicitni commit; zaznam do `schema_migrations` vznikne az po uspesnem SQL
 
 ## Deploy
 

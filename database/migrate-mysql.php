@@ -104,15 +104,22 @@ foreach ($files as $file) {
         throw new RuntimeException('Unable to read migration: ' . $name);
     }
 
-    $pdo->beginTransaction();
+    $transactionalDdl = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME) !== 'mysql';
+    if ($transactionalDdl) {
+        $pdo->beginTransaction();
+    }
     try {
         $pdo->exec($sql);
         $stmt = $pdo->prepare('INSERT INTO schema_migrations (migration) VALUES (?)');
         $stmt->execute([$name]);
-        $pdo->commit();
+        if ($pdo->inTransaction()) {
+            $pdo->commit();
+        }
         echo "OK   {$name}\n";
     } catch (Throwable $e) {
-        $pdo->rollBack();
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
         throw $e;
     }
 }

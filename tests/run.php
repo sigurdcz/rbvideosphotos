@@ -1,0 +1,188 @@
+<?php
+
+declare(strict_types=1);
+
+require dirname(__DIR__) . '/vendor/autoload.php';
+
+use App\Services\SecurityTxtCache;
+use App\Services\SecurityTxtGenerator;
+use App\Services\SecurityTxtHttpResponder;
+use App\Services\SecurityTxtValidator;
+
+$validator = new SecurityTxtValidator();
+$generator = new SecurityTxtGenerator();
+$responder = new SecurityTxtHttpResponder();
+$now = new DateTimeImmutable('2026-07-10T00:00:00Z');
+$validInput = [
+    'enabled' => 1,
+    'contacts' => ['mailto:security@example.com'],
+    'expires' => '2026-12-01T12:00:00Z',
+    'canonical_url' => 'https://example.com/.well-known/security.txt',
+    'preferred_languages' => 'cs, en',
+];
+
+$tests = [];
+$test = static function (string $name, callable $callback) use (&$tests): void {
+    $tests[] = [$name, $callback];
+};
+$assert = static function (bool $condition, string $message = 'Assertion failed'): void {
+    if (!$condition) throw new RuntimeException($message);
+};
+$validPayload = static function () use ($validator, $generator, $validInput, $now, $assert): array {
+    $result = $validator->validate($validInput, true, $now);
+    $content = $generator->generate($result['config']);
+    $assert(!str_starts_with($content, "\xEF\xBB\xBF"), 'Output contains a UTF-8 BOM.');
+    $assert(str_ends_with($content, "\n"), 'Output must end with LF.');
+    return [
+        'enabled' => true,
+        'valid' => true,
+        'content' => $content,
+        'etag' => '"' . hash('sha256', $content) . '"',
+        'last_modified' => 'Fri, 10 Jul 2026 00:00:00 GMT',
+    ];
+};
+
+$test('valid minimal configuration', function () use ($validator, $validInput, $now, $assert): void {
+    $result = $validator->validate($validInput, true, $now);
+    $assert($result['valid'] === true);
+    $assert($result['config']['expires_at'] === '2026-12-01T12:00:00Z');
+});
+
+$test('multiple contacts preserve preference order', function () use ($validator, $generator, $validInput, $now, $assert): void {
+    $input = $validInput;
+    $input['contacts'] = ['mailto:first@example.com', 'https://example.com/report', 'tel:+420123456789'];
+    $result = $validator->validate($input, true, $now);
+    $content = $generator->generate($result['config']);
+    $assert(strpos($content, 'Contact: mailto:first@example.com') < strpos($content, 'Contact: https://example.com/report'));
+    $assert(strpos($content, 'Contact: https://example.com/report') < strpos($content, 'Contact: tel:+420123456789'));
+});
+
+$test('missing contact is rejected', function () use ($validator, $validInput, $now, $assert): void {
+    $input = $validInput; $input['contacts'] = [];
+    $result = $validator->validate($input, true, $now);
+    $assert(isset($result['errors']['contacts']));
+});
+
+$test('missing expires is rejected', function () use ($validator, $validInput, $now, $assert): void {
+    $input = $validInput; unset($input['expires']);
+    $result = $validator->validate($input, true, $now);
+    $assert(isset($result['errors']['expires']));
+});
+
+$test('multiple expires values are rejected', function () use ($validator, $validInput, $now, $assert): void {
+    $input = $validInput; $input['expires'] = ['2026-12-01T12:00:00Z', '2026-12-02T12:00:00Z'];
+    $result = $validator->validate($input, true, $now);
+    $assert(isset($result['errors']['expires']));
+});
+
+$test('expired date is rejected', function () use ($validator, $validInput, $now, $assert): void {
+    $input = $validInput; $input['expires'] = '2026-07-09T23:59:59Z';
+    $result = $validator->validate($input, true, $now);
+    $assert(isset($result['errors']['expires']));
+});
+
+$test('invalid date format is rejected', function () use ($validator, $validInput, $now, $assert): void {
+    $input = $validInput; $input['expires'] = '2026-12-01 12:00:00';
+    $result = $validator->validate($input, true, $now);
+    $assert(isset($result['errors']['expires']));
+});
+
+$test('http URL is rejected', function () use ($validator, $validInput, $now, $assert): void {
+    $input = $validInput; $input['policy_url'] = 'http://example.com/policy';
+    $result = $validator->validate($input, true, $now);
+    $assert(isset($result['errors']['policy_url']));
+});
+
+$test('newline and encoded header injection are rejected', function () use ($validator, $validInput, $now, $assert): void {
+    $input = $validInput; $input['contacts'] = ["mailto:security@example.com\nExpires: 2099-01-01T00:00:00Z"];
+    $result = $validator->validate($input, true, $now);
+    $assert(isset($result['errors']['contacts.0']));
+    $input['contacts'] = ['https://example.com/report%0aPolicy:https://attacker.example'];
+    $result = $validator->validate($input, true, $now);
+    $assert(isset($result['errors']['contacts.0']));
+});
+
+$test('invalid language tag is rejected', function () use ($validator, $validInput, $now, $assert): void {
+    $input = $validInput; $input['preferred_languages'] = 'cs, bad_tag';
+    $result = $validator->validate($input, true, $now);
+    $assert(isset($result['errors']['preferred_languages']));
+});
+
+$test('disabled generator returns plain 404', function () use ($responder, $assert): void {
+    $response = $responder->build('/.well-known/security.txt', 'GET', ['enabled' => false, 'valid' => false]);
+    $assert($response['status'] === 404);
+    $assert($response['headers']['Content-Type'] === 'text/plain; charset=utf-8');
+});
+
+$test('primary endpoint returns content', function () use ($responder, $validPayload, $assert): void {
+    $response = $responder->build('/.well-known/security.txt', 'GET', $validPayload());
+    $assert($response['status'] === 200);
+    $assert(str_starts_with($response['body'], '# Security contact information'));
+});
+
+$test('legacy endpoint redirects permanently', function () use ($responder, $validPayload, $assert): void {
+    $response = $responder->build('/security.txt', 'GET', $validPayload());
+    $assert($response['status'] === 308);
+    $assert($response['headers']['Location'] === '/.well-known/security.txt');
+    $assert($response['headers']['Content-Type'] === 'text/plain; charset=utf-8');
+});
+
+$test('content type is RFC compliant', function () use ($responder, $validPayload, $assert): void {
+    $response = $responder->build('/.well-known/security.txt', 'GET', $validPayload());
+    $assert($response['headers']['Content-Type'] === 'text/plain; charset=utf-8');
+});
+
+$test('HEAD returns headers without body', function () use ($responder, $validPayload, $assert): void {
+    $response = $responder->build('/.well-known/security.txt', 'HEAD', $validPayload());
+    $assert($response['status'] === 200);
+    $assert($response['body'] === '');
+    $assert($response['headers']['ETag'] !== '');
+});
+
+$test('cache invalidation publishes next payload', function () use ($assert): void {
+    $directory = sys_get_temp_dir() . '/seo-cms-security-test-' . bin2hex(random_bytes(5));
+    $cache = new SecurityTxtCache($directory);
+    try {
+        $cache->put(1, ['etag' => 'one']);
+        $assert(($cache->get(1)['etag'] ?? '') === 'one');
+        $cache->forget(1);
+        $assert($cache->get(1) === null);
+        $cache->put(1, ['etag' => 'two']);
+        $assert(($cache->get(1)['etag'] ?? '') === 'two');
+        file_put_contents($directory . '/site-1.json', '{broken');
+        $thrown = false;
+        try { $cache->get(1); } catch (RuntimeException) { $thrown = true; }
+        $assert($thrown, 'Corrupt cache must be surfaced instead of becoming a silent miss.');
+    } finally {
+        foreach (glob($directory . '/*') ?: [] as $file) @unlink($file);
+        @rmdir($directory);
+    }
+});
+
+$test('response never contains HTML layout', function () use ($responder, $validPayload, $assert): void {
+    $response = $responder->build('/.well-known/security.txt', 'GET', $validPayload());
+    $assert(strip_tags($response['body']) === $response['body']);
+    $assert(!str_contains(strtolower($response['body']), '<!doctype'));
+});
+
+$test('conditional request returns 304', function () use ($responder, $validPayload, $assert): void {
+    $payload = $validPayload();
+    $response = $responder->build('/.well-known/security.txt', 'GET', $payload, ['If-None-Match' => $payload['etag']]);
+    $assert($response['status'] === 304);
+    $assert($response['body'] === '');
+    $assert($response['headers']['Content-Type'] === 'text/plain; charset=utf-8');
+});
+
+$failures = 0;
+foreach ($tests as [$name, $callback]) {
+    try {
+        $callback();
+        echo "PASS {$name}\n";
+    } catch (Throwable $e) {
+        $failures++;
+        echo "FAIL {$name}: {$e->getMessage()}\n";
+    }
+}
+
+echo sprintf("\n%d tests, %d failures\n", count($tests), $failures);
+exit($failures === 0 ? 0 : 1);

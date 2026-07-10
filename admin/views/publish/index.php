@@ -10,7 +10,7 @@ ob_start();
 <?php if ($site): ?>
 <div class="card publish-card">
   <div class="card-title">Publikovat celý web</div>
-  <p style="color:var(--c-muted);margin-bottom:16px">Vygeneruje statické HTML soubory, sitemap.xml, robots.txt a .htaccess pro všechny publikované stránky.</p>
+  <p style="color:var(--c-muted);margin-bottom:16px">Vygeneruje statické HTML soubory, sitemap.xml, robots.txt, llms.txt, aktivní security.txt a .htaccess pro všechny publikované stránky.</p>
   <form method="POST" action="/admin/publish/site" data-confirm="Publikovat celý web?">
     <input type="hidden" name="_csrf" value="<?= $h($_csrfToken) ?>">
     <input type="hidden" name="site_id" value="<?= (int)$site['id'] ?>">
