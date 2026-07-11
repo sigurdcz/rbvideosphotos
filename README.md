@@ -27,7 +27,7 @@ Pri rozporu mezi dokumentaci a kodem je zdrojem pravdy aktualni implementace.
 - CMS stranky s editovatelnymi bloky a vlastnim layoutem
 - Blog a portfolio s primymi slugy bez `/blog/` a `/nase-prace/` prefixu v detailu
 - Inline editor na frontendu pro prihlasene uzivatele
-- Media pipeline s variantami `webp`, `medium` a `thumb`
+- Media pipeline s variantami `webp`, `medium`, `thumb` a Open Graph cropem `og`
 - Publish flow pro sitemap, robots, llms.txt, security.txt a portfolio detail/listing exporty
 - Theme system nad adresarem `Templates/`
 - Consent-aware tracking a GTM/GA4 konfigurace v adminu
@@ -85,7 +85,10 @@ php tests/run.php
 
 - PHP 8.0+
 - MySQL 8+ nebo MariaDB 10.4+
-- Rozsireni: `PDO`, `pdo_mysql`, `DOM`, `GD` nebo `Imagick`
+- Rozsireni pro bezny provoz: `PDO`, `pdo_mysql`, `DOM`, `mbstring`, `fileinfo` a `GD`
+- Pro GTM administraci navic: `curl` a `OpenSSL`
+
+`Imagick` muze pomoct s detekci podpory WebP, ale aktualni generator obrazovych variant pouziva funkce z rozsireni `GD`; samotny Imagick proto GD nenahrazuje.
 
 ## Konfigurace
 

@@ -38,7 +38,7 @@ GTM_RETRY_DELAY_MS=500
 GTM_MIN_REQUEST_INTERVAL_MS=300
 ```
 
-`GTM_ENCRYPTION_KEY` musi byt 32-byte klic pro sifrovani refresh tokenu.
+`GTM_ENCRYPTION_KEY` musi byt neprazdny, nahodny a dostatecne dlouhy secret. Aplikace z nej pres SHA-256 odvozuje 32byte AES-256-GCM klic; pro sifrovani tokenu musi byt dostupne PHP rozsireni OpenSSL. Volani GTM API navic vyzaduje rozsireni cURL.
 
 Kdyz `GTM_REDIRECT_URI` neni nastavene, aplikace sklada callback z `APP_URL` a fallbackne na `http://localhost:8000/admin/gtm/oauth/callback`.
 

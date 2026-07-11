@@ -56,11 +56,12 @@ request -> admin/index.php -> Core\Router -> Controller -> Repository/Service ->
 8. /blog                -> tryServeBlogListingPage()
 9. /faq                 -> tryServeFaqPage() z `faq_items`
 10. /kontakt            -> tryServeKontaktPage() z `contact_info`
-11. CMS stranka z DB    -> tryServeDatabasePage()
-12. Blog detail         -> tryServeBlogPostPage()
-13. Portfolio detail    -> tryServePortfolioPage(..., true)
-14. storage/published/* -> sitemap, robots, llms.txt, security.txt a portfolio exporty
-15. 404
+11. POST /kontakt/odeslat -> CSRF, honeypot, throttling a `mail()`
+12. CMS stranka z DB    -> tryServeDatabasePage()
+13. Blog detail         -> tryServeBlogPostPage()
+14. Portfolio detail    -> tryServePortfolioPage(..., true)
+15. storage/published/* -> explicitni soubory podle pripony (napr. sitemap, robots, llms.txt a ikony)
+16. 404
 ```
 
 Security endpointy jsou zamerne pred `Auth::start()`: verejny strojovy soubor nesmi zakladat PHP session ani posilat session cookie.
@@ -92,7 +93,7 @@ Prime slugy bez `/blog/` a `/nase-prace/` prefixu jsou zamerne. `tryRedirectLega
 
 - DB uchovava interni `storage_path` jako `storage/media/YYYY/MM/file.webp`
 - verejny frontend i API vraci root-relative URL `/media/YYYY/MM/file.webp`
-- `MediaIngestionService` validuje MIME, uklada original a generuje varianty `webp`, `medium`, `thumb`
+- `MediaIngestionService` validuje MIME i priponu, uklada original a pres GD generuje varianty `webp`, `medium`, `thumb` a `og`
 
 ### Temata
 

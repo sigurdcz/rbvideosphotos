@@ -25,7 +25,7 @@ Neplatny nebo chybejici klic vraci `401 Unauthorized`.
 - duplicitni slug vraci `409 Conflict`
 - chybejici povinne pole vraci `400 Bad Request`
 - nenalezeny zdroj vraci `404 Not Found`
-- `OPTIONS` vraci `204 No Content`
+- `OPTIONS` vraci `204 No Content`; CORS hlavicka `Access-Control-Allow-Origin` se posila jen pro origin odpovidajici `APP_URL`
 
 ## Dostupne endpointy
 
@@ -197,7 +197,7 @@ Pouziva `multipart/form-data`.
 | `alt_text` | `string` | ano | alt text pro vsechny nahravane soubory |
 | `title` | `string` | ne | kdyz chybi, pouzije se `alt_text` |
 
-Povolene MIME typy zaviseji na `MediaIngestionService`, typicky obrazky jako `jpeg`, `png`, `webp`, `gif`, `svg+xml`.
+Aktualne povolene obrazky jsou `jpeg`, `png`, `webp` a `gif`. Video upload podporuje `mp4`, `mov`, `webm`, `avi` a `mkv`; server overuje MIME typ i priponu podle `config/app.php`.
 
 Odpoved:
 
@@ -234,5 +234,5 @@ Smaze medium vcetne vsech variant ze souboroveho systemu a DB.
 | `POST` portfolio se stavem `published` | publikace statickeho HTML do `storage/published/nase-prace/` |
 | `PUT` portfolio se stavem `published` | prepsani publikovanych souboru a sync homepage dlazdic |
 | `DELETE` portfolio | smazani publikovanych souboru a sync homepage dlazdic |
-| `POST` media | generovani variant `webp`, `medium`, `thumb` |
+| `POST` media | generovani variant `webp`, `medium`, `thumb` a `og`, pokud je dostupne GD |
 | `DELETE` media | smazani vsech variant ze souboroveho systemu a DB |
