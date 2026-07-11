@@ -1,28 +1,41 @@
-# UKOL: Audit projektovych znalostnich Markdownu
+# UKOL: Migrace cele work wiki na dossier v2
 
-Datum: 2026-07-11
-Zadani: Overit vsechny projektove `.md` soubory proti aktualnimu kodu, konfiguraci, databazovemu schematu a runtime cestam a opravit nepresna nebo zastarala tvrzeni.
-
-Hotovo kdyz: vsechny projektove Markdowny maji jasnou roli, jejich overitelna tvrzeni odpovidaji aktualnimu repozitari, odkazy a prikazy jsou platne a dokumentace si vzajemne neodporuje.
+Datum: 2026-07-12
+Zadani: Projit vsech 12 projektu jeden po druhem, z realneho kodu vytvorit uplny vnoreneny dossier, opakovat rebuild test Ralph loopem a nakonec uzavrit wiki lintem a cistym repozitarem.
 
 ## Kroky
 
-- [x] Zmapovat role a obsah vsech projektovych `.md` souboru
-- [x] Overit dokumentovana tvrzeni proti aktualnimu kodu, routam, konfiguraci a databazi
-- [x] Opravit nalezene nepresnosti a zaznamenat rozsah zmen
-- [x] Provest kontrolu odkazu, prikazu, Markdown formatovani a finalni diff review
+- [x] Nacist standard skillu, inventarizovat wiki a potvrdit zdrojove cesty
+- [x] Sjednotit strom: jeden top-level hub na projekt, domeny v `projects/<slug>/`
+- [x] DirectionSails - audit, 7 domen, rebuild audit, commit `809c3df` + tree fix `07cc432`
+- [x] SEO Editor - audit, 7 domen + skill zaznam, rebuild audit, commit `680055c`
+- [x] test combat v5 - audit, 7 domen + WorldVar, rebuild audit, commit `f1a47a6`
+- [x] SCP Mobile Story - audit, 7 domen, rebuild audit, commit `536ab6a`
+- [x] IGEN - audit kodu a dokumentu, 7 domen, rebuild audit, commit `ebb7e8d`
+- [x] test physics tools - 8 sekci, rebuild audit a odkazy OK, commit `a5d40a7`; zdroj nema Git metadata
+- [x] Escape of Frontline - 8 sekci, rebuild audit a odkazy OK, commit `d80efeb`; integrations a pipeline pravdive partial
+- [x] SCP Initiative - 7 sekci, rebuild audit a odkazy OK, commit `a12aacc`; integrations a pipeline pravdive partial
+- [x] DracakHada - 7 sekci, rebuild audit a odkazy OK, commit `227f70a`; Selenium live test blokovan chybejicim modulem, pipeline partial
+- [x] OMTop remove background - 6 relevantnich sekci, synteticky algoritmicky rebuild a odkazy OK, commit `1d387d3`; rembg clean install a vizualni regression partial
+- [x] Mocap Skeleton Video DualCam - 7 sekci, compile/config/naming/smoothing rebuild a odkazy OK, commit `90cee36`; 3D fusion a live video encode partial
+- [x] work-wiki-knowledge-base - Codex + Claude audit, 7 domen, parity/rebuild audit a odkazy OK, commit `31bbb45`; automaticky parity test chybi
+- [x] Regenerovat `index.html`, overit `llms.txt` limit a vsechny vnorene stromy
+- [x] Spustit finalni lint: coverage, checklist, anti-generic, delete/rebuild, links, secrets
+- [x] Vytvorit finalni lint report, opravit povolene nalezy a commitnout `555b0e5`
+- [x] Provest completion audit vsech akceptacnich kriterii a overit cisty wiki worktree
 
 ## Poznamky
 
-- Audit zahrnuje `README.md`, `ARCHITECTURE.md`, `API.md`, `GTM_ADMIN.md`, `INSTRUCTIONS.md` a tento prubezny `UKOL.md`.
-- Osobni HTML wiki v `C:\Wiki` neni soucasti zadani; kontroluji se znalostni Markdowny aktualniho projektu `seo-editor`.
-- `README.md`: seznam media variant a PHP rozsireni byl srovnan s `MediaIngestionService`, `ImageVariantService`, GTM klientem a token cipherem.
-- `ARCHITECTURE.md`: request flow nyni obsahuje POST kontaktniho formulare a presneji popisuje obecnou published-file vetev; media pipeline doplnuje `og` variantu a zavislost na GD.
-- `API.md`: odstranena nepravdiva podpora SVG uploadu, doplneny aktualni video typy, `og` varianta a skutecne CORS omezeni na origin z `APP_URL`.
-- `GTM_ADMIN.md`: opraveno tvrzeni o encryption key; kod prijima neprazdny secret a odvozuje z nej 32byte klic pres SHA-256. Doplneny OpenSSL a cURL zavislosti.
-- `INSTRUCTIONS.md`: obsah byl overen proti migracnimu, DB-first, URL, security a git workflow; nebyla nalezena vecna nepresnost, proto zustal beze zmeny.
-- Finalni kontrola prosla: `git diff --check` bez chyb a `php tests/run.php` vratil 18/18 uspesnych testu. Odkazy na projektove Markdowny a konkretni runtime soubory existuji; zbyvajici relativni nazvy jsou zamerne priklady souboru uvnitr temat nebo generovane verejne vystupy.
+Hotovo 12/12 projektu. Completion audit: 12 hubu, 87 vnorenych stran, coverage u vsech hubu, `llms.txt` 15/30, finalni report, vsechny projektove commity a cisty `C:\Wiki` worktree.
+
+Pravidlo dokonceni projektu: vsechny relevantni domeny maji vlastni vnorenenou stranku s excerptem a cisly; `ok` jen pri splnenem checklistu, jinak pravdive `partial` s konkretni mezerou. Hub obsahuje coverage a Tree obsahuje projekt jednou. Po link/security/rebuild kontrole nasleduje samostatny wiki commit.
+
+Zdrojove projektove worktrees se pouze ctou. Existujici rozpracovane zmeny uzivatele se nemeni.
+
+IGEN dokoncen 2026-07-12: architecture/data-model/domain-logic/algorithms/tools = ok; integrations = partial kvuli neoverenym provider cenam/quota/retry; pipelines = partial kvuli rozpracovanemu APP_BASE_PATH a Range/HEAD source flow bez stabilniho smoke testu. Wiki commit `ebb7e8d`.
+
+Po IGEN commitu zustaly v C:\Wiki cizi soubezne zmeny DirectionSails testing pipeline a novy pattern `patterns/unity-editmode-batch-testing.html`. Nebyly zahrnuty do IGEN commitu a musi se zachovat/overit pred finalnim lintem.
 
 ## Vysledek
 
-Vsech sest projektovych Markdownu bylo zkontrolovano proti aktualnimu repozitari. Vecne opravy byly provedeny v `README.md`, `ARCHITECTURE.md`, `API.md` a `GTM_ADMIN.md`; `INSTRUCTIONS.md` zustal beze zmeny, protoze odpovida implementaci. Audit opravil media varianty a zavislosti, public request flow, podporovane upload formaty, CORS popis a skutecne zpracovani GTM encryption secretu. Kontroly diffu a vsech 18 automatickych testu prosly.
+Vsech 12 projektu ma jeden hub a vnorene relevantni domeny. Finalni report je `C:\Wiki\reports\wiki-lint-2026-07-12.html`; globalni opravy jsou v commitu `555b0e5`. Completion audit prosel a wiki repozitar je cisty.
