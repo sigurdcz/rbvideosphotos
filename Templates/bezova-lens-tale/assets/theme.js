@@ -82,7 +82,11 @@
   [sections.services, sections.portfolio, sections.process, sections.pricing, sections.reviews, sections.blog, sections.contact]
     .filter(Boolean)
     .forEach(function (section) {
-      if (legacyFooter) content.insertBefore(section, legacyFooter);
+      if (legacyFooter) {
+        content.insertBefore(section, legacyFooter);
+      } else {
+        content.appendChild(section);
+      }
       section.classList.add('blt-chapter');
     });
 
@@ -224,7 +228,7 @@
   var contactSource = qs('[data-blt-contact-source]');
   var faqSource = qs('[data-blt-faq-source]');
   if (sections.contact) {
-    sections.contact.classList.add('blt-contact');
+    sections.contact.classList.add('blt-contact', 'blt-contact-with-faq');
     var contactContainer = qs(':scope > .container', sections.contact);
     var contactGrid = qs('.cta-2col', sections.contact);
     var legacyIntro = contactGrid ? qs('.cta-l', contactGrid) : null;

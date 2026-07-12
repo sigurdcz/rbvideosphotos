@@ -1,36 +1,30 @@
-# UKOL: Screenshot QA — iterace 01 homepage
+# UKOL: Bezova Lens & Tale — cilova homepage kompozice
 
 Datum: 2026-07-12
-Zadani: Provést první porovnávací iteraci homepage vůči dodanému cílovému návrhu. Každý testovací screenshot musí používat viewport alespoň 1280 CSS px široký.
+Zadani: Opravit homepage aktivniho tematu `bezova-lens-tale` tak, aby se na desktopu vizualne a strukturou priblizila dodanemu cilovemu navrhu Lens & Tale.
 
 ## Kroky
 
-- [x] Ověřit lokální server a určit srovnávací viewport
-- [x] Definovat měřitelná vizuální kritéria
-- [x] Pořídit baseline screenshot na viewportu 1280 px
-- [x] Porovnat aktuální výsledek s cílovým návrhem a stanovit skóre
-- [x] Sepsat největší rozdíly a první následnou korekci
+- [x] Zmapovat aktualni theme template, CSS, runtime data a dostupna demo media
+- [x] Prestavet hero, editorialni kapitoly a portfolio na cilovou kompozici
+- [x] Sjednotit proces, cenik, reference, blog a zaverecny kontakt/FAQ
+- [x] Overit homepage pri viewportu nejmene 1280 px a vyhodnotit druhou iteraci
+- [x] Aktualizovat relevantni dokumentaci a provest Wiki Reflection
 
-## Kritéria a výsledek
+## Poznamky
 
-Viewport baseline: 1280 × 10000 CSS px, URL `http://127.0.0.1:8766/`. Homepage vrátila HTTP 200. Artefakty screenshotů jsou lokální a mimo Git.
+Success signal: screenshot na desktopovem viewportu alespon 1280 CSS px obsahuje svetlou editorialni kompozici se zlatym filmovym pasem vlevo, velkym hero s levym textem, sekcemi O nas, portfolio, proces, cenik, reference, blog a kombinovanym kontaktem/FAQ. Zachovaji se DB-driven data a funkcni odkazy/formulare.
 
-| Oblast | Váha | Skóre iterace 01 | Zjištění |
-| --- | ---: | ---: | --- |
-| Struktura a pořadí sekcí | 20 | 10 | Hlavní obsahové bloky existují, ale jejich hierarchie a pořadí neodpovídají cílové editorial kompozici. |
-| Hero kompozice | 20 | 8 | Výchozí fotografie je viditelná, ale titul, kontrast, velikost a rozložení se výrazně liší od cíle. |
-| Typografie a vertikální rytmus | 15 | 5 | Text je příliš malý a sekce jsou roztažené či stlačené jinak než v předloze. |
-| Portfolio a karty | 15 | 6 | Média fungují, ale chybí cílová koláž a světlá editorial prezentace. |
-| Ceník, reference a proces | 15 | 7 | Obsahové bloky jsou přítomné, avšak karty, orientace a proporce neodpovídají cíli. |
-| Barvy, ornamenty a filmový pás | 10 | 7 | Krémová/zlatá paleta i filmový pás jsou rozpoznatelné, ale tmavé plochy a prázdné bloky narušují shodu. |
-| Kontakt a FAQ | 5 | 3 | Cílové spojení kontaktu a FAQ do závěrečného layoutu chybí. |
+Predchozi screenshoty `homepage-current.png` a `homepage-iteration-01-1280.png` jsou lokalni artefakty mimo Git.
 
-Celkové skóre: **46 / 100**. Skóre hodnotí vizuální shodu, nikoli funkčnost jednotlivých modulů.
+Audit odhalil hlavni pricinu: kompletni desktopova korekcni vrstva pro cilovou kompozici byla omylem uzavrena do `@media (max-width: 0px)` a pro realne viewporty se nikdy neaplikovala. Odstraneni teto nedostupne media query aktivuje existujici, DB-driven editorialni layout bez nahrazovani dat.
 
-## Následující korekce
+Druhy screenshot potvrdil aktivaci kompozice. Zbyvajici runtime odchylky jsou konkretni: JavaScript radil kapitoly pouze pokud existoval legacy footer uvnitr obsahu (na aktualni homepage neexistuje) a kontaktu chybel modifier pro tri cilove panely. Oprava pouziva append do obsahu, kdyz footer chybi, a explicitne oznacuje kombinovany kontakt/FAQ layout.
 
-Nejvyšší dopad má přestavba hero a nadřazené stránky na cílovou kompozici: plnohodnotný světlý hero blok s levým titulkem, pravým obrazem, správnou výškou a následnou kapitolovou strukturou. Po každé změně se zopakuje screenshot na šířce nejméně 1280 px a aktualizuje toto skóre.
+Hero dostal silnejsi vysoke svetle prekryti vlevo a explicitni vrstvy, aby DB fotografie zustala viditelna vpravo, zatimco editorialni text vlevo je citelny a odpovida predloze.
 
-## Stav
+Overeni: `homepage-iteration-04-1280.png` je aktualni screenshot 1280 x 10000 CSS px z `http://127.0.0.1:8766/`; `php tests/run.php` proslo 26/26 a `git diff --check` je cisty. Druha iterace ma skore 78/100: kompozice, poradi kapitol, svetla paleta, filmovy pas a kontakt/FAQ odpovidaji predloze. Zbyvajici rozdil je zamerne DB-driven jmeno, texty a dostupne fotografie RB Videos & Photos oproti referencnimu obsahu Lens & Tale.
 
-První testovací iterace je dokončena. Žádná implementační změna nebyla v této iteraci provedena; následuje prioritní vizuální korekce hero/layoutu.
+## Vysledek
+
+Aktivni desktopova korekce tematu je opravena. CSS se znovu aplikuje na realne viewporty, JavaScript stabilne radi kapitoly i bez legacy footeru a kontakt s FAQ pouziva cilovy tri-panelovy layout. Relevantni pravidlo je doplneno do `INSTRUCTIONS.md`; wiki reflection uklada reprodukovatelne failure modes vizualniho QA.

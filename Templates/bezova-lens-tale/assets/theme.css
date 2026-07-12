@@ -604,8 +604,6 @@
   .theme-bezova-lens-tale .blt-reveal { opacity: 1; transform: none; }
 }
 
-/* Disabled historical correction block. The final composition above supersedes it. */
-@media (max-width: 0px) {
 /* Target-composition correction: adapt the legacy DB renderer to the Lens & Tale editorial system. */
 .theme-bezova-lens-tale {
   --blt-film-width: 150px;
@@ -637,9 +635,9 @@
 
 /* Hero: left editorial copy over a light, high-key DB image. */
 .theme-bezova-lens-tale .hero { min-height: 710px !important; display: flex; align-items: center; background-position: center !important; background-size: cover !important; color: var(--blt-ink) !important; }
-.theme-bezova-lens-tale .hero::before { background: linear-gradient(90deg,rgba(255,253,247,.97) 0%,rgba(255,253,247,.88) 38%,rgba(255,253,247,.24) 70%,rgba(255,253,247,.04) 100%) !important; }
+.theme-bezova-lens-tale .hero::before { z-index: 3 !important; background: linear-gradient(90deg,#fffefa 0%,rgba(255,254,250,.98) 44%,rgba(255,254,250,.78) 58%,rgba(255,254,250,.28) 76%,rgba(255,254,250,.04) 100%) !important; }
 .theme-bezova-lens-tale .hero .hero-overlay { background: linear-gradient(90deg,rgba(255,253,247,.75),transparent 68%) !important; }
-.theme-bezova-lens-tale .hero .hero-body { width: min(1180px,calc(100% - 96px)); margin: 0 auto; text-align: left !important; }
+.theme-bezova-lens-tale .hero .hero-body { z-index: 4 !important; width: min(1180px,calc(100% - 96px)); margin: 0 auto; text-align: left !important; }
 .theme-bezova-lens-tale .hero .hero-body > * { margin-left: 0 !important; }
 .theme-bezova-lens-tale .hero h1 { max-width: 650px !important; color: var(--blt-ink) !important; font-size: clamp(72px,7.2vw,112px) !important; line-height: .82 !important; text-shadow: none !important; }
 .theme-bezova-lens-tale .hero :is(p,.hero-sub) { max-width: 520px; color: var(--blt-muted) !important; font-size: 16px; text-shadow: none !important; }
@@ -756,5 +754,4 @@
   .theme-bezova-lens-tale .blt-about-section .feat-grid { grid-template-columns: 1fr !important; }
   .theme-bezova-lens-tale .blt-about-section .feat { border-right: 0; border-bottom: 1px solid var(--blt-line); }
   .theme-bezova-lens-tale #kontakt.blt-contact-with-faq .cta-2col { grid-template-columns: 1fr !important; }
-}
 }

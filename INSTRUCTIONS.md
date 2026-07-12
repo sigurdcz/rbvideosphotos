@@ -59,6 +59,7 @@ Tento soubor je obecny pracovni navod pro vsechny AI asistenty i lidske vyvojare
 - Blog a portfolio detaily pouzivaji prime slugy bez prefixu.
 - Absolutni URL pouzivejte hlavne pro canonical, sitemap a Open Graph vystupy.
 - Pri uprave verejneho renderingu overte homepage, bezne CMS stranky, blog listing/detail a portfolio listing/detail.
+- Pri vizualni uprave aktivni sablony overte screenshot homepage na viewportu alespon 1280 CSS px. Desktopove korekce patri do aktivni theme CSS vrstvy; nepouzivejte nedostupne podminky typu `@media (max-width: 0px)` jako docasne vypnuti hotoveho layoutu.
 - Frontend upravy navrhujte mobile-first.
 - Nepridavejte ani neodstranujte sekce jen kvuli kompaktnejsimu vzhledu; upravujte typografii, spacing a grid.
 - Nevkladejte velke inline `<style>` bloky z PHP generatoru obsahu. Sdilene styly patri do theme/shared CSS vrstvy.
