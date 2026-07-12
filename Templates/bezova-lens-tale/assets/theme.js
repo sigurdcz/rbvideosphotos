@@ -10,6 +10,14 @@
   var qsa = function (selector, root) { return Array.prototype.slice.call((root || document).querySelectorAll(selector)); };
   var content = qs('.blt-page-content');
   var legacyFooter = content ? qs(':scope > .footer', content) : null;
+  var promoteEmptyTitle = function (section) {
+    if (!section) return;
+    var title = qs('.section-title', section);
+    var label = qs('.section-label', section);
+    if (title && !title.textContent.trim() && label && label.textContent.trim()) {
+      title.textContent = label.textContent.trim();
+    }
+  };
 
   /* Header: one navigation, stable DB-derived monogram. */
   var brandName = qs('.theme-brand > span:last-child');
@@ -48,6 +56,7 @@
 
   /* Reorder the legacy homepage chapters into the target story sequence. */
   var sections = {
+    hero: qs('#hero, #uvod.hp-hero'),
     services: qs('#sluzby'),
     aboutLegacy: qs('#proc-my'),
     portfolio: qs('#nase-prace'),
@@ -55,11 +64,21 @@
     reviews: qs('#hodnoceni'),
     pricing: qs('#cenik'),
     blog: qs('#blog'),
+    faq: qs('#faq'),
     process: qs('#proces'),
     contact: qs('#kontakt')
   };
+  if (sections.hero) {
+    sections.hero.classList.add('hero');
+    var heroContainer = qs(':scope > .container', sections.hero);
+    if (heroContainer) heroContainer.classList.add('hero-body');
+    var heroActions = qs('.hero-cta-wrap, .hero-btns', sections.hero);
+    if (heroActions) heroActions.classList.add('hero-btns');
+  }
   if (sections.aboutLegacy) sections.aboutLegacy.hidden = true;
   if (sections.reviewsLegacy) sections.reviewsLegacy.hidden = true;
+  [sections.services, sections.portfolio, sections.process, sections.pricing, sections.reviews, sections.blog, sections.contact]
+    .forEach(promoteEmptyTitle);
   [sections.services, sections.portfolio, sections.process, sections.pricing, sections.reviews, sections.blog, sections.contact]
     .filter(Boolean)
     .forEach(function (section) {
@@ -72,9 +91,18 @@
     sections.services.classList.add('blt-about');
     var aboutContainer = qs(':scope > .container', sections.services);
     var aboutHeader = qs('.sec-hdr', sections.services);
-    var servicesGrid = qs('.svc-grid', sections.services);
+    var servicesGrid = qs('.svc-grid, .hp-services-grid', sections.services);
     var firstServiceImage = qs('.hp-svc-card__media img', sections.services);
     var firstServiceLink = qs('.hp-svc-card__btn', sections.services);
+    if (aboutContainer && !aboutHeader) {
+      aboutHeader = document.createElement('div');
+      aboutHeader.className = 'sec-hdr';
+      ['.section-label', '.section-title', '.section-intro'].forEach(function (selector) {
+        var node = qs(':scope > ' + selector, aboutContainer);
+        if (node) aboutHeader.appendChild(node);
+      });
+      aboutContainer.insertBefore(aboutHeader, aboutContainer.firstChild);
+    }
     if (aboutContainer && aboutHeader && servicesGrid) {
       var visual = document.createElement('div');
       visual.className = 'blt-about__visual';
@@ -93,15 +121,48 @@
       servicesGrid.classList.add('blt-offer-rail');
       qsa('.hp-svc-card', servicesGrid).forEach(function (card) {
         card.classList.add('blt-offer-item');
+        if (card.parentElement !== servicesGrid && card.parentElement.children.length === 1) {
+          servicesGrid.appendChild(card);
+        }
       });
     }
   }
 
-  if (sections.portfolio) sections.portfolio.classList.add('blt-portfolio');
-  if (sections.process) sections.process.classList.add('blt-process');
-  if (sections.pricing) sections.pricing.classList.add('blt-pricing');
+  if (sections.portfolio) {
+    sections.portfolio.classList.add('blt-portfolio');
+    var portfolioContainer = qs(':scope > .container', sections.portfolio);
+    if (portfolioContainer && !qs('.sec-hdr', portfolioContainer)) {
+      var portfolioHeader = document.createElement('div');
+      portfolioHeader.className = 'sec-hdr';
+      ['.section-label', '.section-title', '.section-intro'].forEach(function (selector) {
+        var node = qs(':scope > ' + selector, portfolioContainer);
+        if (node) portfolioHeader.appendChild(node);
+      });
+      portfolioContainer.insertBefore(portfolioHeader, portfolioContainer.firstChild);
+    }
+  }
+  if (sections.process) {
+    sections.process.classList.add('blt-process');
+    var processContainer = qs(':scope > .container', sections.process);
+    var processList = qs('.ew-process-list', sections.process);
+    if (processContainer && processList && processList.parentElement !== processContainer) processContainer.appendChild(processList);
+  }
+  if (sections.pricing) {
+    sections.pricing.classList.add('blt-pricing');
+    var pricingContainer = qs(':scope > .container', sections.pricing);
+    var pricingGrid = qs('.hp-cenik-grid', sections.pricing);
+    if (pricingContainer && pricingGrid && pricingGrid.parentElement !== pricingContainer) pricingContainer.appendChild(pricingGrid);
+  }
   if (sections.blog) {
     sections.blog.classList.add('blt-blog');
+    var blogGrid = qs('.hp-blog-grid', sections.blog);
+    if (blogGrid) {
+      qsa(':scope > .hp-blog-card > .hp-blog-card', blogGrid).forEach(function (innerCard) {
+        var wrapper = innerCard.parentElement;
+        blogGrid.insertBefore(innerCard, wrapper);
+        wrapper.remove();
+      });
+    }
     qsa('.hp-blog-card', sections.blog).forEach(function (card, index) {
       card.hidden = index > 1;
     });
@@ -111,6 +172,8 @@
   if (sections.reviews) {
     sections.reviews.classList.add('blt-reviews');
     var reviewGrid = qs('.hp-reviews-grid', sections.reviews);
+    var reviewContainer = qs(':scope > .container', sections.reviews);
+    if (reviewContainer && reviewGrid && reviewGrid.parentElement !== reviewContainer) reviewContainer.appendChild(reviewGrid);
     var reviewCards = reviewGrid ? qsa('.hp-review-card', reviewGrid) : [];
     if (reviewGrid && reviewCards.length) {
       var reviewPage = 0;
@@ -160,12 +223,25 @@
   /* Contact: DB intro + DB form + DB FAQ in three target panels. */
   var contactSource = qs('[data-blt-contact-source]');
   var faqSource = qs('[data-blt-faq-source]');
-  if (sections.contact && contactSource) {
+  if (sections.contact) {
     sections.contact.classList.add('blt-contact');
+    var contactContainer = qs(':scope > .container', sections.contact);
     var contactGrid = qs('.cta-2col', sections.contact);
     var legacyIntro = contactGrid ? qs('.cta-l', contactGrid) : null;
-    var sourceGrid = qs('.hp-contact-grid', contactSource);
+    var sourceGrid = qs('.hp-contact-grid', sections.contact) || (contactSource ? qs('.hp-contact-grid', contactSource) : null);
     var sourceBoxes = sourceGrid ? qsa(':scope > .hp-contact-box', sourceGrid) : [];
+    if (!contactGrid && contactContainer) {
+      contactGrid = document.createElement('div');
+      contactGrid.className = 'cta-2col';
+      legacyIntro = document.createElement('div');
+      legacyIntro.className = 'cta-l';
+      ['.section-label', '.section-title', '.section-intro'].forEach(function (selector) {
+        var node = qs(':scope > ' + selector, contactContainer);
+        if (node) legacyIntro.appendChild(node);
+      });
+      if (sourceBoxes[0]) legacyIntro.appendChild(sourceBoxes[0]);
+      contactContainer.appendChild(contactGrid);
+    }
     if (contactGrid && legacyIntro && sourceBoxes.length >= 2) {
       contactGrid.innerHTML = '';
       legacyIntro.classList.add('blt-contact__intro');
@@ -175,10 +251,11 @@
       var faqPanel = document.createElement('aside');
       faqPanel.className = 'blt-contact-faq';
       faqPanel.innerHTML = '<span class="section-label">Časté dotazy</span><h3>Než nám napíšete</h3>';
-      if (faqSource) {
+      var activeFaqSource = sections.faq || faqSource;
+      if (activeFaqSource) {
         var faqList = document.createElement('div');
         faqList.className = 'blt-faq-list';
-        qsa('.hp-faq-item', faqSource).slice(0, 4).forEach(function (item) {
+        qsa('.hp-faq-item', activeFaqSource).slice(0, 4).forEach(function (item) {
           faqList.appendChild(item);
         });
         faqPanel.appendChild(faqList);
@@ -189,6 +266,7 @@
       faqLink.textContent = 'Všechny dotazy →';
       faqPanel.appendChild(faqLink);
       contactGrid.appendChild(faqPanel);
+      if (sections.faq) sections.faq.hidden = true;
     }
   }
 
