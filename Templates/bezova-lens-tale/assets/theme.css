@@ -133,3 +133,155 @@
   .theme-bezova-lens-tale *, .theme-bezova-lens-tale *::before, .theme-bezova-lens-tale *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
   .theme-bezova-lens-tale .blt-reveal { opacity: 1; transform: none; }
 }
+
+/* Target-composition correction: adapt the legacy DB renderer to the Lens & Tale editorial system. */
+.theme-bezova-lens-tale {
+  --blt-film-width: 150px;
+  background: #ebe7e1;
+}
+.theme-bezova-lens-tale .theme-shell { width: min(1530px, calc(100% - 72px)); }
+.theme-bezova-lens-tale .container { width: min(1180px, calc(100% - 96px)); }
+.theme-bezova-lens-tale .blt-film { position: fixed; left: max(36px, calc((100vw - 1530px) / 2)); height: 100vh; }
+.theme-bezova-lens-tale .blt-film__track { gap: 7px; padding: 12px 20px; }
+.theme-bezova-lens-tale .blt-film__track i { height: 114px; border-color: #d6bd78; background-position: center; background-size: cover; filter: grayscale(.7) sepia(.25) contrast(.9); }
+.theme-bezova-lens-tale .blt-film__track i:nth-child(4n) { filter: sepia(.16) saturate(.8); }
+.theme-bezova-lens-tale .blt-film::before, .theme-bezova-lens-tale .blt-film::after { width: 13px; background: repeating-linear-gradient(to bottom,#ead9a8 0 11px,transparent 11px 20px); }
+.theme-bezova-lens-tale .blt-film::before { left: 4px; }
+.theme-bezova-lens-tale .blt-film::after { right: 4px; }
+.theme-bezova-lens-tale .theme-header__inner { min-height: 112px; }
+.theme-bezova-lens-tale .theme-brand { font-size: 25px; }
+.theme-bezova-lens-tale .theme-brand__mark { width: 54px; height: 66px; }
+.theme-bezova-lens-tale .theme-nav-wrap a { font-size: 12px; }
+.theme-bezova-lens-tale .theme-nav-wrap .nav-cta { padding: 17px 31px; }
+.theme-bezova-lens-tale .theme-main { position: relative; background: #fffefa; }
+.theme-bezova-lens-tale .blt-storyline { position: absolute; z-index: 3; inset: 0 auto 0 64px; width: 2px; background: linear-gradient(var(--blt-gold),rgba(189,139,47,.45)); pointer-events: none; }
+.theme-bezova-lens-tale .blt-page-content > section, .theme-bezova-lens-tale .blt-page-content > .section { position: relative; background: rgba(255,254,250,.96) !important; color: var(--blt-ink) !important; }
+.theme-bezova-lens-tale .blt-page-content > section::before, .theme-bezova-lens-tale .blt-page-content > .section::before { content: attr(data-blt-chapter); position: absolute; z-index: 4; left: 49px; top: 62px; display: grid; place-items: center; width: 30px; height: 30px; border: 2px solid var(--blt-gold); border-radius: 50%; color: var(--blt-gold); background: #fffefa; font: 600 9px/1 var(--blt-sans); }
+.theme-bezova-lens-tale .blt-page-content :is(.section,.section-light,.section-dark,.section--dark) { padding-block: 78px !important; border-bottom: 1px solid var(--blt-line); background: #fffefa !important; color: var(--blt-ink) !important; }
+.theme-bezova-lens-tale .blt-page-content :is(.section,.section-light,.section-dark,.section--dark) :is(h1,h2,h3,p,blockquote) { color: inherit; }
+.theme-bezova-lens-tale .blt-page-content .sec-hdr { display: grid; grid-template-columns: minmax(250px,.72fr) minmax(300px,1.28fr); align-items: end; gap: 50px; margin-bottom: 44px; text-align: left; }
+.theme-bezova-lens-tale .blt-page-content :is(.sec-hdr h2,.section-title) { max-width: 620px; margin-bottom: 16px; color: var(--blt-ink) !important; font: 500 clamp(46px,5.1vw,78px)/.9 var(--blt-serif) !important; letter-spacing: -.045em; text-transform: uppercase; }
+.theme-bezova-lens-tale .blt-page-content :is(.section-label,.sec-hdr::before) { color: var(--blt-gold) !important; }
+
+/* Hero: left editorial copy over a light, high-key DB image. */
+.theme-bezova-lens-tale .hero { min-height: 710px !important; display: flex; align-items: center; background-position: center !important; background-size: cover !important; color: var(--blt-ink) !important; }
+.theme-bezova-lens-tale .hero::before { background: linear-gradient(90deg,rgba(255,253,247,.97) 0%,rgba(255,253,247,.88) 38%,rgba(255,253,247,.24) 70%,rgba(255,253,247,.04) 100%) !important; }
+.theme-bezova-lens-tale .hero .hero-overlay { background: linear-gradient(90deg,rgba(255,253,247,.75),transparent 68%) !important; }
+.theme-bezova-lens-tale .hero .hero-body { width: min(1180px,calc(100% - 96px)); margin: 0 auto; text-align: left !important; }
+.theme-bezova-lens-tale .hero .hero-body > * { margin-left: 0 !important; }
+.theme-bezova-lens-tale .hero h1 { max-width: 650px !important; color: var(--blt-ink) !important; font-size: clamp(72px,7.2vw,112px) !important; line-height: .82 !important; text-shadow: none !important; }
+.theme-bezova-lens-tale .hero :is(p,.hero-sub) { max-width: 520px; color: var(--blt-muted) !important; font-size: 16px; text-shadow: none !important; }
+.theme-bezova-lens-tale .hero .hero-btns { justify-content: flex-start !important; }
+.theme-bezova-lens-tale .stats-bar { display: none !important; }
+
+/* Service cards become a compact, image-led editorial row. */
+.theme-bezova-lens-tale .svc-grid { display: grid !important; grid-template-columns: repeat(3,minmax(0,1fr)) !important; gap: 24px !important; }
+.theme-bezova-lens-tale .svc-card, .theme-bezova-lens-tale .hp-svc-card { min-height: 0 !important; padding: 0 !important; border: 1px solid var(--blt-line) !important; border-radius: 28px 0 28px 0 !important; color: var(--blt-ink) !important; background: #fff !important; box-shadow: 0 18px 45px rgba(62,47,27,.08) !important; }
+.theme-bezova-lens-tale .hp-svc-card__media { height: 250px !important; }
+.theme-bezova-lens-tale .hp-svc-card__media img { width: 100%; height: 100%; object-fit: cover; filter: sepia(.08) saturate(.9); }
+.theme-bezova-lens-tale .hp-svc-card__body { padding: 25px !important; }
+
+/* Portfolio mosaic and reviews return to the light target palette. */
+.theme-bezova-lens-tale #nase-prace .pt-grid { grid-template-columns: 1.45fr 1fr 1fr !important; grid-auto-rows: 205px; gap: 14px !important; }
+.theme-bezova-lens-tale #nase-prace .pt-tile { min-height: 0 !important; border-radius: 24px 0 24px 0 !important; overflow: hidden; }
+.theme-bezova-lens-tale #nase-prace .pt-tile:first-child { grid-row: span 2; }
+.theme-bezova-lens-tale #nase-prace .pt-thumb, .theme-bezova-lens-tale #nase-prace img { width: 100%; height: 100% !important; object-fit: cover; }
+.theme-bezova-lens-tale :is(.rev-grid,.hp-reviews-grid) { display: grid !important; grid-template-columns: repeat(3,minmax(0,1fr)) !important; gap: 22px !important; }
+.theme-bezova-lens-tale :is(.rev-card,.hp-review-card) { min-height: 210px; padding: 35px !important; border: 1px solid var(--blt-line) !important; border-radius: 22px 0 22px 0 !important; color: var(--blt-ink) !important; background: #fff !important; box-shadow: 0 14px 38px rgba(55,44,30,.06) !important; }
+
+/* Horizontal process and compact pricing. */
+.theme-bezova-lens-tale .ew-process-list { position: relative; display: grid !important; grid-template-columns: repeat(5,minmax(0,1fr)) !important; gap: 18px !important; }
+.theme-bezova-lens-tale .ew-process-list::before { content: ""; position: absolute; top: 47px; left: 8%; right: 8%; border-top: 1px dashed var(--blt-gold); }
+.theme-bezova-lens-tale .ew-process-list article { position: relative; z-index: 1; padding: 0 12px !important; text-align: center; background: transparent !important; }
+.theme-bezova-lens-tale .ew-process-list i { display: grid !important; width: 94px !important; height: 94px !important; margin: 0 auto 20px !important; border: 2px solid var(--blt-gold) !important; border-radius: 50%; background-color: #fffefa !important; }
+.theme-bezova-lens-tale .hp-cenik-grid { gap: 22px !important; }
+.theme-bezova-lens-tale .hp-cenik-card { min-height: 390px !important; padding: 36px 30px !important; border: 1px solid rgba(189,139,47,.42) !important; border-radius: 24px !important; color: var(--blt-ink) !important; background: #fff !important; box-shadow: 0 18px 45px rgba(57,44,27,.06) !important; }
+.theme-bezova-lens-tale .hp-cenik-card--featured { border: 2px solid var(--blt-gold) !important; transform: translateY(-12px); }
+.theme-bezova-lens-tale .hp-cenik-card-title { color: var(--blt-muted) !important; font-size: 18px !important; text-align: center; text-transform: uppercase; }
+
+/* Blog cards are wide stories, not empty vertical placeholders. */
+.theme-bezova-lens-tale .hp-blog-grid { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
+.theme-bezova-lens-tale .hp-blog-card { display: grid !important; grid-template-columns: .9fr 1.1fr; min-height: 310px !important; padding: 0 !important; border: 1px solid var(--blt-line) !important; border-radius: 26px 0 26px 0 !important; background: #fff !important; }
+.theme-bezova-lens-tale .hp-blog-thumb { height: 100% !important; margin: 0 !important; }
+.theme-bezova-lens-tale .hp-blog-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.theme-bezova-lens-tale .hp-blog-body { padding: 32px !important; }
+
+/* Contact is compact and light; legacy dark blocks no longer dominate the page. */
+.theme-bezova-lens-tale #kontakt .cta-2col { display: grid !important; grid-template-columns: .8fr 1.2fr !important; gap: 30px !important; align-items: stretch; }
+.theme-bezova-lens-tale #kontakt :is(.cta-l,.cta-r) { padding: 38px !important; border: 1px solid var(--blt-line); border-radius: 26px 0 26px 0; background: #fff; }
+.theme-bezova-lens-tale #kontakt h2 { color: var(--blt-ink) !important; font-size: clamp(43px,4vw,65px) !important; }
+.theme-bezova-lens-tale #kontakt p { color: var(--blt-muted) !important; }
+.theme-bezova-lens-tale .theme-footer { padding: 34px 0; background: #f6efe4; color: var(--blt-ink); border-top: 1px solid var(--blt-line); }
+.theme-bezova-lens-tale .theme-footer__meta { color: var(--blt-muted); }
+.theme-bezova-lens-tale .blt-page-content > .footer { display: none !important; }
+
+/* About chapter: one editorial statement and a compact capability rail. */
+.theme-bezova-lens-tale .blt-about-section .sec-hdr { grid-template-columns: .72fr 1.28fr; }
+.theme-bezova-lens-tale .blt-about-section .feat-grid { display: grid !important; grid-template-columns: repeat(5,minmax(0,1fr)) !important; gap: 0 !important; border-block: 1px solid var(--blt-line); }
+.theme-bezova-lens-tale .blt-about-section .feat { min-height: 150px !important; padding: 30px 22px !important; border-right: 1px solid var(--blt-line); color: var(--blt-ink) !important; background: transparent !important; text-align: center; }
+.theme-bezova-lens-tale .blt-about-section .feat:last-child { border-right: 0; }
+.theme-bezova-lens-tale .blt-about-section .feat-num { display: block; margin-bottom: 12px; color: var(--blt-gold); font: 500 25px/1 var(--blt-serif); }
+.theme-bezova-lens-tale .blt-about-section .feat h3 { margin-bottom: 8px; font-size: 21px; }
+.theme-bezova-lens-tale .blt-about-section .feat p { margin: 0; font-size: 12px; line-height: 1.55; }
+
+/* Pricing and content chapters use the target's left editorial rail. */
+.theme-bezova-lens-tale :is(.hp-pricing,.hp-blog-section,.hp-process,.hp-reviews-demo) > .container { display: grid; grid-template-columns: 300px minmax(0,1fr); column-gap: 56px; align-items: start; }
+.theme-bezova-lens-tale :is(.hp-pricing,.hp-blog-section,.hp-process,.hp-reviews-demo) > .container > :is(.section-label,.section-title,.section-intro,.hp-section-cta) { grid-column: 1; }
+.theme-bezova-lens-tale :is(.hp-pricing,.hp-blog-section,.hp-process,.hp-reviews-demo) > .container > :is(.hp-cenik-grid,.hp-blog-grid,.ew-process-list,.hp-reviews-grid) { grid-column: 2; grid-row: 1 / span 6; }
+.theme-bezova-lens-tale :is(.hp-pricing,.hp-blog-section,.hp-process,.hp-reviews-demo) .section-title { font-size: clamp(43px,4vw,66px) !important; }
+.theme-bezova-lens-tale .hp-reviews-demo .section-intro { color: var(--blt-muted) !important; }
+
+/* Contact + FAQ becomes one target-style three-column ending when FAQ data exists. */
+.theme-bezova-lens-tale #kontakt.blt-contact-with-faq .cta-2col { grid-template-columns: .72fr 1.15fr .9fr !important; }
+.theme-bezova-lens-tale .blt-contact-faq { padding: 34px 30px; border: 1px solid var(--blt-line); border-radius: 0 0 26px 0; background: #fffaf1; }
+.theme-bezova-lens-tale .blt-contact-faq::before { content: "Časté dotazy"; display: block; margin-bottom: 18px; color: var(--blt-gold); font: 600 10px/1 var(--blt-sans); letter-spacing: .16em; text-transform: uppercase; }
+.theme-bezova-lens-tale .blt-contact-faq h2 { font-size: 34px !important; }
+.theme-bezova-lens-tale .blt-contact-faq :is(.faq-q,.ew-faq-question,.hp-faq-question) { padding: 16px 0; font-size: 18px; }
+
+/* Normalize legacy controls and remove the heavy black theme residue. */
+.theme-bezova-lens-tale .blt-page-content :is(.cta-btn,.svc-btn,.hp-svc-card__btn,.hp-blog-link,.hp-section-cta a) { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 12px 24px; border: 1px solid var(--blt-gold) !important; border-radius: 999px; color: var(--blt-ink) !important; background: transparent !important; font: 600 10px/1 var(--blt-sans); letter-spacing: .1em; text-decoration: none; text-transform: uppercase; }
+.theme-bezova-lens-tale .blt-page-content :is(.cta-btn--gold,.hp-section-cta a) { color: #fff !important; background: linear-gradient(120deg,var(--blt-gold),var(--blt-gold-light)) !important; }
+.theme-bezova-lens-tale .blt-page-content :is(.section-dark,.section--dark) :is(.sec-hdr p,.section-intro,.feat p,.hp-review-card p,.hp-review-card blockquote) { color: var(--blt-muted) !important; }
+.theme-bezova-lens-tale .hp-cenik-card-desc { color: var(--blt-muted) !important; line-height: 1.65; }
+.theme-bezova-lens-tale .hp-cenik-card-price { margin: 22px 0; text-align: center; }
+.theme-bezova-lens-tale .hp-blog-title a { color: var(--blt-ink) !important; text-decoration: none; }
+.theme-bezova-lens-tale .hp-blog-excerpt { color: var(--blt-muted) !important; }
+
+@media (max-width: 980px) {
+  .theme-bezova-lens-tale { --blt-film-width: 64px; }
+  .theme-bezova-lens-tale .theme-shell { width: calc(100% - 24px); }
+  .theme-bezova-lens-tale .blt-film { left: 12px; }
+  .theme-bezova-lens-tale .blt-storyline { left: 28px; }
+  .theme-bezova-lens-tale .blt-page-content > section::before, .theme-bezova-lens-tale .blt-page-content > .section::before { left: 14px; }
+  .theme-bezova-lens-tale .blt-film__track { padding-inline: 11px; }
+  .theme-bezova-lens-tale .blt-film__track i { height: 62px; }
+  .theme-bezova-lens-tale .hero { min-height: 610px !important; }
+  .theme-bezova-lens-tale .svc-grid, .theme-bezova-lens-tale :is(.rev-grid,.hp-reviews-grid) { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
+  .theme-bezova-lens-tale .ew-process-list { grid-template-columns: repeat(3,minmax(0,1fr)) !important; }
+  .theme-bezova-lens-tale .ew-process-list::before { display: none; }
+  .theme-bezova-lens-tale :is(.hp-pricing,.hp-blog-section,.hp-process,.hp-reviews-demo) > .container { grid-template-columns: 1fr; }
+  .theme-bezova-lens-tale :is(.hp-pricing,.hp-blog-section,.hp-process,.hp-reviews-demo) > .container > :is(.hp-cenik-grid,.hp-blog-grid,.ew-process-list,.hp-reviews-grid) { grid-column: 1; grid-row: auto; }
+  .theme-bezova-lens-tale .blt-about-section .feat-grid { grid-template-columns: repeat(3,minmax(0,1fr)) !important; }
+  .theme-bezova-lens-tale #kontakt.blt-contact-with-faq .cta-2col { grid-template-columns: 1fr 1fr !important; }
+  .theme-bezova-lens-tale .blt-contact-faq { grid-column: 1 / -1; }
+}
+
+@media (max-width: 640px) {
+  .theme-bezova-lens-tale { --blt-film-width: 34px; }
+  .theme-bezova-lens-tale .theme-shell { width: 100%; }
+  .theme-bezova-lens-tale .blt-film { left: 0; }
+  .theme-bezova-lens-tale .blt-film__track { padding-inline: 6px; }
+  .theme-bezova-lens-tale .blt-film__track i { height: 36px; }
+  .theme-bezova-lens-tale .blt-storyline, .theme-bezova-lens-tale .blt-page-content > section::before, .theme-bezova-lens-tale .blt-page-content > .section::before { display: none; }
+  .theme-bezova-lens-tale .container, .theme-bezova-lens-tale .hero .hero-body { width: calc(100% - 30px); }
+  .theme-bezova-lens-tale .hero { min-height: 570px !important; }
+  .theme-bezova-lens-tale .hero h1 { font-size: clamp(53px,16vw,74px) !important; }
+  .theme-bezova-lens-tale .blt-page-content .sec-hdr, .theme-bezova-lens-tale .svc-grid, .theme-bezova-lens-tale :is(.rev-grid,.hp-reviews-grid), .theme-bezova-lens-tale .ew-process-list, .theme-bezova-lens-tale .hp-blog-grid, .theme-bezova-lens-tale #kontakt .cta-2col { grid-template-columns: 1fr !important; }
+  .theme-bezova-lens-tale #nase-prace .pt-grid { grid-template-columns: 1fr 1fr !important; grid-auto-rows: 155px; }
+  .theme-bezova-lens-tale #nase-prace .pt-tile:first-child { grid-column: span 2; }
+  .theme-bezova-lens-tale .hp-blog-card { grid-template-columns: 1fr !important; }
+  .theme-bezova-lens-tale .hp-blog-thumb { min-height: 220px; }
+  .theme-bezova-lens-tale .blt-about-section .feat-grid { grid-template-columns: 1fr !important; }
+  .theme-bezova-lens-tale .blt-about-section .feat { border-right: 0; border-bottom: 1px solid var(--blt-line); }
+  .theme-bezova-lens-tale #kontakt.blt-contact-with-faq .cta-2col { grid-template-columns: 1fr !important; }
+}
