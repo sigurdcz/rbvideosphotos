@@ -1,31 +1,40 @@
-# UKOL: Oprava neaplikovane kompozice bezova-lens-tale
+# UKOL: Lokalni screenshot iterace bezova-lens-tale
 
 Datum: 2026-07-12
-Zadani: Podle noveho aktualniho screenshotu odstranit pricinu, proc se cilova DOM kompozice a finalni CSS neprojevuji, a dorovnat vysledek k druhemu ocekavanemu screenshotu.
+Zadani: Zprovoznit stabilni lokalni server SEO Editoru, overit porizovani desktop/mobile screenshotu na realnem theme preview a provest prvni vizualni iteraci podle budouciho ciloveho screenshotu.
 
 ## Kroky
 
-- [x] Zjistit, zda theme JavaScript bezi, kolikrat se nacita a kde se zastavi
-- [x] Opravit inicializacni/cascade chybu bez dalsiho slepeho vrstveni CSS
-- [x] Overit cilove poradi sekci a nove DOM komponenty v runtime
-- [x] Dorovnat geometrii hero, O nas, portfolio, proces, cenik, reference, blog a kontakt
-- [x] Overit desktop/mobile assety, syntax a testy
-- [x] Provest Wiki Reflection a uzavrit vysledek
+- [x] Spustit lokalni PHP server na stabilnim portu a overit theme preview
+- [-] Pripojit vestaveny prohlizec a overit screenshot desktopu
+- [ ] Overit mobilni viewport a screenshot bez horizontalniho overflow
+- [ ] Zaznamenat vychozi vizualni stav a technicka kriteria skore
+- [ ] Provest prvni iteraci podle aktualne dostupneho srovnani
+- [ ] Spustit regresni testy a Wiki Reflection
 
 ## Poznamky
 
-Prvni screenshot je aktualni stav, druhy je cil. Filmovy pas a zakladni barevny vibe funguje; selhava hlavne skladani sekci: sluzby zustaly jako vysoke karty, portfolio je tmave, blog je rozbity, FAQ je samostatny tmavy blok, poradi procesu/ceniku/referenci neodpovida cili a kontakt nema tri cilove panely.
+Cilovy screenshot pro dalsi presne skore posle uzivatel po zprovozneni workflow. Do te doby se prvni iterace zameri na prokazatelne fungovani `body[data-blt-ready="true"]`, cilove poradi sekci, desktop/mobile screenshot a absenci horizontalniho overflow.
 
-To odpovida situaci, kdy se nacte cast CSS, ale theme DOM kompozitor se nespusti nebo skonci pred preusporadanim.
+Lokální URL: `http://127.0.0.1:8765/?theme_preview=bezova-lens-tale`.
 
-Root cause: `template.js_source` a theme JS se generuji do jednoho assetu, legacy skript byl pred theme kompozitorem. Runtime chyba legacy kodu proto zastavila zbytek souboru. Pro `bezova-lens-tale` je poradi symetricky v runtime i publish otoceno: nejdriv idempotentni theme kompozitor, potom legacy skript. Ostatni temata zachovavaji puvodni poradi.
+Server bezi skryte jako PHP proces PID `11748`, nasloucha na `127.0.0.1:8765`; theme preview vratil HTTP 200 a spravnou theme body class.
 
-Theme po uspesnem dokonceni nastavuje `body[data-blt-ready="true"]`, aby bylo mozne odlisit nacteny CSS asset od skutecne dokoncene DOM kompozice.
+Browser blocker: vestaveny prohlizec se zastavil pred navigaci, protoze jeho volani nedostalo povinne pole `sandboxPolicy`. Screenshot ani DOM mereni proto nebyly provedeny a nebyly nahrazeny jinym skrytym rendererem.
 
-Overeni generovaneho assetu: theme IIFE zacina na pozici 0 a `'use strict'` na pozici 14, tedy pred legacy page kodem. PHP lint, Windows JScript syntax check, HTTP preview a 18/18 testu prosly. CSS selektory odpovidaji vsem tridam, ktere kompozitor vytvari.
+### Kriteria screenshot skore
 
-Wiki Reflection: novy root cause nebyl v dossieru popsany, proto byl aktualizovan SEO Editor hub a architecture stranka a wiki zmena byla ihned commitnuta jako `297d7ee`.
+1. Desktop viewport `1440x1000`, full-page screenshot, stejna URL a stejna lokalni DB.
+2. Mobilni viewport `390x844`, full-page screenshot.
+3. `body[data-blt-ready="true"]` a prave jedna viditelna navigace.
+4. Poradi: hero -> O nas/sluzby -> portfolio -> proces -> cenik -> reference -> blog -> kontakt.
+5. Film bez poskoceni pri scrollu a funkcni lightbox po kliknuti.
+6. `scrollWidth === clientWidth` na desktopu i mobilu.
+7. Zadna neodchycena konzolova chyba pred nastavenim `data-blt-ready`.
+8. Vizualni skore po sekcich: geometrie 30 %, typografie 20 %, barvy/overlay 15 %, karty/media 20 %, responzivita 15 %.
+
+Prvni iterace bude po odblokovani browseru vychazet z baseline screenshotu a opravovat nejdrive tri nejvetsi rozdily podle vah skore, potom znovu screenshot a prepocet.
 
 ## Vysledek
 
-Opravena pricina neaplikovaneho designu: pro `bezova-lens-tale` se theme DOM kompozitor v runtime i publish generovanem assetu spousti pred legacy page JavaScriptem. Cilove tridy, poradi sekci a panely tak vzniknou i kdyz nasledny legacy kod vyhodi runtime chybu. Pridan dokoncovaci marker `data-blt-ready`.
+Probíhá zprovozneni prostredi.
