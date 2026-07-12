@@ -51,7 +51,12 @@
   var currentPath = window.location.pathname.replace(/\/$/, '') || '/';
   qsa('.theme-nav-wrap a[href]').forEach(function (link) {
     var href = new URL(link.href, window.location.origin).pathname.replace(/\/$/, '') || '/';
+    link.removeAttribute('aria-current');
     if (href === currentPath) link.setAttribute('aria-current', 'page');
+  });
+  qsa('.theme-nav-wrap .brand, .theme-nav-wrap input, .theme-nav-wrap label').forEach(function (element) {
+    element.hidden = true;
+    element.setAttribute('aria-hidden', 'true');
   });
 
   /* Reorder the legacy homepage chapters into the target story sequence. */
@@ -74,6 +79,12 @@
     if (heroContainer) heroContainer.classList.add('hero-body');
     var heroActions = qs('.hero-cta-wrap, .hero-btns', sections.hero);
     if (heroActions) heroActions.classList.add('hero-btns');
+    if (!qs('.blt-hero-admin-overlay', sections.hero)) {
+      var adminOverlay = document.createElement('span');
+      adminOverlay.className = 'blt-hero-admin-overlay';
+      adminOverlay.setAttribute('aria-hidden', 'true');
+      sections.hero.insertBefore(adminOverlay, sections.hero.firstChild);
+    }
   }
   if (sections.aboutLegacy) sections.aboutLegacy.hidden = true;
   if (sections.reviewsLegacy) sections.reviewsLegacy.hidden = true;
@@ -89,6 +100,23 @@
       }
       section.classList.add('blt-chapter');
     });
+
+  var setEditorialCopy = function (section, title, intro, ctaText) {
+    if (!section) return;
+    var titleNode = qs('.section-title', section);
+    var introNode = qs('.section-intro', section);
+    var cta = qs('.hp-section-cta a', section);
+    if (titleNode) titleNode.textContent = title;
+    if (introNode) introNode.textContent = intro;
+    if (cta && ctaText) cta.textContent = ctaText;
+  };
+  setEditorialCopy(sections.services, 'Více než fotografie a video', 'Spojujeme cit pro detail, kreativitu a zkušenosti, abychom vytvořili upřímné příběhy, které přežijí generace.', 'Více o nás');
+  setEditorialCopy(sections.portfolio, 'Vybrané příběhy', 'Každá svatba je jedinečná. Tady je pár našich oblíbených.', 'Prohlédnout portfolio');
+  setEditorialCopy(sections.process, 'Jak spolupráce probíhá', 'Od první zprávy až po hotové vzpomínky — klidně, jasně a v tempu vašeho dne.', 'Kontaktovat nás');
+  setEditorialCopy(sections.pricing, 'Balíčky na míru vašemu příběhu', 'Každý příběh je jedinečný, stejně jako naše balíčky.', 'Zjistit více');
+  setEditorialCopy(sections.reviews, 'Co o nás říkají klienti', 'Důvěra a radost klientů jsou pro nás nejlepší vizitkou.', 'Další reference');
+  setEditorialCopy(sections.blog, 'Rady pro den, který si užijete', 'Výběr dodavatelů i příprava dne bez zbytečného stresu.', 'Všechny články');
+  setEditorialCopy(sections.contact, 'Pojďme tvořit váš příběh', 'Napište nám pár slov o vás a vašem dni. Odpovíme do 24 hodin.', 'Kontakt');
 
   /* About/services: editorial copy, one DB image and a horizontal offer rail. */
   if (sections.services) {
@@ -125,9 +153,23 @@
       servicesGrid.classList.add('blt-offer-rail');
       qsa('.hp-svc-card', servicesGrid).forEach(function (card) {
         card.classList.add('blt-offer-item');
+        var cardBody = qs('.hp-svc-card__body', card);
+        if (cardBody && !qs('.blt-offer-icon', cardBody)) {
+          var icon = document.createElement('span');
+          icon.className = 'blt-offer-icon';
+          icon.setAttribute('aria-hidden', 'true');
+          cardBody.insertBefore(icon, cardBody.firstChild);
+        }
         if (card.parentElement !== servicesGrid && card.parentElement.children.length === 1) {
           servicesGrid.appendChild(card);
         }
+      });
+      ['Rande & zásnuby', 'Další projekty'].forEach(function (label) {
+        var extra = document.createElement('article');
+        extra.className = 'blt-offer-item blt-offer-item--supplement';
+        extra.innerHTML = '<span class="blt-offer-icon" aria-hidden="true"></span><h3 class="hp-svc-card__title"></h3>';
+        qs('.hp-svc-card__title', extra).textContent = label;
+        servicesGrid.appendChild(extra);
       });
     }
   }
@@ -150,6 +192,13 @@
     var processContainer = qs(':scope > .container', sections.process);
     var processList = qs('.ew-process-list', sections.process);
     if (processContainer && processList && processList.parentElement !== processContainer) processContainer.appendChild(processList);
+    if (processContainer && !qs('.blt-chapter-cta', processContainer)) {
+      var processCta = document.createElement('a');
+      processCta.className = 'blt-button blt-button--solid blt-chapter-cta';
+      processCta.href = '#kontakt';
+      processCta.textContent = 'Kontaktovat nás';
+      processContainer.appendChild(processCta);
+    }
   }
   if (sections.pricing) {
     sections.pricing.classList.add('blt-pricing');
@@ -292,11 +341,6 @@
         toggleFaq();
       }
     });
-  });
-
-  /* Continuous chapter rail numbers after the final order is known. */
-  qsa('.blt-chapter').forEach(function (section, index) {
-    section.dataset.bltChapter = String(index + 2).padStart(2, '0');
   });
 
   /* Film: stable DB-image strip and accessible lightbox gallery. */
