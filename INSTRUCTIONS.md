@@ -49,6 +49,7 @@ Tento soubor je obecny pracovni navod pro vsechny AI asistenty i lidske vyvojare
 - Media generovana seedem maji projit stejnou media pipeline jako uzivatelsky upload.
 - Admin Armagedon a lokalni reset musi pouzivat stejnou `SetupEnvironmentService`; druhou kopii DROP/migration/seed poradi nevytvarejte.
 - Referencni Demo obsah musi explicitne nastavit `bezova-lens-tale` do DB i `storage/active-theme-key.txt`.
+- Hlavni seed musi pro INSERT i UPDATE nastavit `cookie_consent_enabled=0`; analyticke a marketingove kategorie tim nevypinejte.
 - Paritu lokal/online overujte pres `DemoStateFingerprintService`; rozdil fingerprintu je viditelna chyba, ne povoleny fallback.
 
 ## Frontend a URL pravidla

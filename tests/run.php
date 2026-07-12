@@ -7,6 +7,7 @@ require dirname(__DIR__) . '/vendor/autoload.php';
 use App\Services\SecurityTxtCache;
 use App\Services\DemoContentSeeder;
 use App\Services\DemoStateFingerprintService;
+use App\Services\SeoRenderer;
 use App\Services\SecurityTxtGenerator;
 use App\Services\SecurityTxtHttpResponder;
 use App\Services\SecurityTxtValidator;
@@ -244,6 +245,35 @@ $test('demo fingerprint is stable for reordered object keys', function () use ($
         DemoStateFingerprintService::fingerprintPayload($left) !== DemoStateFingerprintService::fingerprintPayload($right),
         'Content change did not change the fingerprint.'
     );
+});
+
+$test('main seed disables cookie consent for inserts and updates', function () use ($assert): void {
+    $source = file_get_contents(dirname(__DIR__) . '/database/seeds/seed.php');
+    $assert($source !== false, 'Main seed cannot be read.');
+    $assert(
+        str_contains($source, 'UPDATE sites SET name=?, cookie_consent_enabled=0 WHERE id=?'),
+        'Existing seeded sites do not receive cookie_consent_enabled=0.'
+    );
+    $assert(
+        str_contains($source, 'active_theme_key, cookie_consent_enabled) VALUES (?, ?, ?, ?)'),
+        'New seeded sites do not declare the cookie consent default explicitly.'
+    );
+    $assert(
+        str_contains($source, '->execute([$name, $domain, null, 0])'),
+        'New seeded sites do not write cookie_consent_enabled=0.'
+    );
+});
+
+$test('disabled consent keeps analytics categories available without a banner', function () use ($assert): void {
+    $html = (new SeoRenderer())->renderConsentRuntime([
+        'cookie_consent_enabled' => 0,
+        'cookie_consent_analytics_enabled' => 1,
+        'cookie_consent_marketing_enabled' => 1,
+    ]);
+    $decoded = html_entity_decode($html, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    $assert(str_contains($decoded, '"cookieConsentEnabled":false'));
+    $assert(str_contains($decoded, '"analyticsCategoryEnabled":true'));
+    $assert(str_contains($decoded, '"marketingCategoryEnabled":true'));
 });
 
 $failures = 0;

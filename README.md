@@ -158,6 +158,8 @@ Setup obrazovka nabizi dve navazujici operace pro referencni stav RB Photos & Vi
 1. `Armagedon` smaze databazi i renderovaci filesystem stav, spusti vsechny migrace a `database/seeds/seed.php`.
 2. `Doplnit demo obsah` nahraje referencni obsah, explicitne aktivuje `bezova-lens-tale` a web publikuje.
 
+Hlavni seed nastavuje cookie consent listu jako vypnutou. Analyticka a marketingova kategorie zustavaji povolene, takze nakonfigurovane merici nastroje mohou bezet bez consent dialogu. Prepinac lze pozdeji zmenit v admin sekci Nastaveni.
+
 Po dokonceni porovnej `Demo state fingerprint` na lokalnim a online `/admin/setup`. Shodny SHA-256 znamena shodny kanonicky datovy stav; domena, nahodne fyzicke nazvy medii a casy publikace jsou z porovnani zamerne vynechane.
 
 Seed z CLI:

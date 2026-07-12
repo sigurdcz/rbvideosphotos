@@ -1,59 +1,41 @@
-# UKOL: Deterministicky reset Armageddon a Demo data
+# UKOL: Vypnout cookie consent v hlavnim seedu
 
 Datum: 2026-07-12
-Zadani: Upravit resetovaci pipeline tak, aby stejny commit a sekvence `Armageddon -> Demo data` vytvorily lokalne i online stejny vychozi datovy a renderovaci stav pro `bezova-lens-tale`.
+Zadani: Nastavit v hlavnim seedu cookie consent listu defaultne jako vypnutou, aniz by se odstranily nebo zakazaly analyticke a tracking nastroje.
 
 ## Kroky
 
-- [x] Auditovat vsechny persistentni a generovane stavy, ktere mohou prezit Armageddon
-- [x] Sjednotit a explicitne pojmenovat seed spousteny Armageddonem
-- [x] Zajistit uplne vycisteni motivu, cache a generovanych vystupu
-- [x] Zajistit explicitni aktivaci `bezova-lens-tale` v Demo data pipeline
-- [x] Pridat deterministicky environment fingerprint a porovnani vysledku
-- [x] Doplnit automaticke testy pro Armageddon a Demo data bez produkcni destrukce
-- [x] Overit lokalni sekvenci, dokumentaci a vsechny regresni testy
+- [x] Auditovat seed a runtime podminku vykresleni cookie consent listy
+- [x] Nastavit `cookie_consent_enabled = 0` v hlavnim seedu pro novy i existujici seedovany web
+- [x] Pridat regresni test seed defaultu
+- [x] Spustit lokalni Armageddon a Demo obsah a overit DB i homepage bez listy
+- [x] Aktualizovat relevantni dokumentaci
 - [x] Provest Wiki Reflection a uzavrit vysledek
 
 ## Poznamky
 
-Primarni acceptance signal: po stejnem commitu a sekvenci `Armageddon -> Demo data` musi mit lokal a produkce stejny fingerprint sablon, stranek, obsahovych bloku, aktivniho motivu a demo medii. Hodnoty zavisle na prostredi, napriklad `APP_URL`, musi byt ve fingerprintu explicitne vynechane nebo oznacene, nikoli skryte tolerovane.
+Acceptance signal: po `Armageddon -> Demo obsah` musi mit hlavni site v DB `cookie_consent_enabled = 0`, homepage nesmi obsahovat viditelnou consent listu/dialog a fingerprint musi zustat dostupny. Analyticke identifikatory, tracking konfigurace a runtime soubory zustavaji zachovane.
 
-Armageddon je destruktivni. Produkce se pri implementaci ani automatickych testech nespousti; reset se overi izolovane nebo statickymi/integracnimi testy.
+Historicke migrace se nemeni; jde o vychozi seed/bootstrap hodnotu, nikoli schema zmenu.
 
-Pridan `SetupFilesystemResetService`: jednotne cisti media, publikovany web, runtime cache, generovane frontend assety a souborovy stav aktivniho motivu. Logy zustavaji zachovane, protoze render neovlivnuji a jsou potreba pro diagnostiku.
+Audit: `seedUpsertSite()` dosud pri INSERTu spolehal na DB default `1` a pri UPDATE consent nemenil. Runtime `cookie-consent.js` pri hodnote false skryje host, modal i backdrop; `cookie-consent-runtime.js` v tomto rezimu povoli analytiku bez consent kroku.
 
-`SetupController` ted vola explicitne `runBaseSeed()` nad `database/seeds/seed.php`; zavadejici odkaz na `seed_photographer.php` byl odstranen. Diagnostika je pripravena pro zobrazeni deterministickeho demo fingerprintu.
+Hlavni seed ted v INSERT i UPDATE vetvi explicitne zapisuje `cookie_consent_enabled = 0`. Kategorie analytics/marketing se nemeni a zustavaji povolene podle stavajicich defaultu/nastaveni.
 
-`ThemeTemplateRegistry` jiz neskryva selhani pri zapisu nebo mazani aktivniho motivu. Stavovy soubor lze v testu izolovat vlastni cestou a chyba filesystemu zustane viditelna.
+Demo fingerprint nove zahrnuje hlavni consent prepinac i analytickou a marketingovou kategorii, aby rozdil tohoto runtime chovani mezi lokalem a online serverem nezustal skryty.
 
-Demo pipeline pred zmenou dat overi existenci motivu `bezova-lens-tale`; pred publikaci jej zapise do DB i do souboroveho stavu. Chybejici motiv je explicitni chyba, ne tichy fallback.
+Regresni sada hlida INSERT i UPDATE v hlavnim seedu a samostatne overuje, ze consent runtime serializuje hlavni prepinac jako false, zatimco analyticka a marketingova kategorie zustavaji true.
 
-Pridan `DemoStateFingerprintService` a CLI `php bin/demo-state-fingerprint.php --hash`. Fingerprint kanonizuje domenove URL a nahodne cesty medii na logicke nazvy, vynechava casy publikace, ale zahrnuje theme state, layout, sablony, stranky, bloky, SEO, demo obsah, vazby medii a SHA-256 originalu. Stejny hash se zobrazuje v administraci Setup.
+Kompletni lokalni reset aplikoval 21 migraci a vytvoril fingerprint `fa2daef108a8c1b13c6abd6d3d909b204324f1c9b207a42ab51351e4fc470602`. JSON fingerprint report potvrdil consent `0`, analytics kategorii `1` a marketing kategorii `1`; homepage vraci HTTP 200 a runtime meta obsahuje `cookieConsentEnabled:false` i `analyticsCategoryEnabled:true`.
 
-Regresni sada byla rozsirena o izolovany filesystem reset, zapis/mazani theme state bez ticheho fallbacku, pritomnost vychoziho demo motivu a stabilitu/citlivost kanonickeho fingerprintu. Testy nepouzivaji produkcni databazi.
+Jednorazovy inline PHP DB dotaz selhal na PowerShell quoting az po uspesnem resetu. Hodnoty byly nasledne nacteny pres standardni JSON fingerprint report; selhani nebylo povazovano za uspesny dukaz ani skryto fallbackem.
 
-Prvni pokus o skutecny lokalni reset selhal na syntaxi jednorazoveho prikazu jeste pred DROP. Nasledne CLI seedy sice data prepsaly, ale zobrazily session warnings; tento beh se nepovazuje za dukaz shodne Armageddon sekvence.
-
-Pridan sdileny `SetupEnvironmentService`, ktery je jedinou cestou pro filesystem reset, DROP, append-only migracni runner a zakladni seed. Admin Armageddon i lokalni `php bin/reset-demo-local.php --confirm-local` pouzivaji stejnou sluzbu; CLI navic tvrde odmita jiny DB host nez localhost.
-
-Prvni beh sdilene pipeline uspesne aplikoval 21 migraci, aktivoval `bezova-lens-tale` a vratil fingerprint `1b73b03986b344c275571f2ccc2fa56ad34fb5e1f4ba5131c786e1be3b4ef089`. CLI odhalilo warning o dvojim `BASE_PATH`; seed bootstrap ted respektuje jiz definovanou konstantu. Historicke migrace zustaly beze zmeny.
-
-Druhy uplny beh byl bez warningu, znovu aplikoval 21 migraci a vratil stejny fingerprint. README popisuje admin i lokalni postup, ARCHITECTURE sdilenou reset/fingerprint pipeline a INSTRUCTIONS zakazuji druhou kopii reset logiky i tichy fingerprint fallback.
-
-HTTP kontrola: `http://127.0.0.1:8765/` vraci 200 a `theme-bezova-lens-tale`. Na `localhost:8000` bezi jina/stara instance bez motivu; pro toto overeni neni autoritativni.
-
-Trackovane generovane assety a `storage/published` byly po testu vraceny bitove na HEAD; do zmen nepatri. Nahodne vytvorene publikovane adresare byly bezpecne odstraneny. `storage/active-theme-key.txt` je nove explicitne v `.gitignore`, aby se environment state nikdy neprenesl Git deployem.
-
-Produkci i dev deploy workflow ted na rsync i FTPS vrstve vylucuji `storage/media`, `storage/published`, `storage/active-theme-key.txt` a `public/assets/generated`. Git tak uz nemuze prepsat runtime data nebo stare generovane assety; potrebne prazdne adresare se v artefaktu stale vytvareji.
-
-End-to-end overeni pres skutecne lokalni admin POST formulare na routeru `127.0.0.1:8766`: Armageddon 200, Demo obsah 200, admin fingerprint se rovna CLI fingerprintu `1b73b03986b344c275571f2ccc2fa56ad34fb5e1f4ba5131c786e1be3b4ef089` a homepage obsahuje `theme-bezova-lens-tale`. Testovaci runtime assety byly po overeni odstraneny a nejsou staged.
+README popisuje consent-off seed default a zachovani analytiky, ARCHITECTURE vysvetluje runtime model a INSTRUCTIONS z nej delaji trvaly seed invariant. API se nemeni.
 
 ## Vysledek
 
-Sdilena Armageddon/Demo pipeline je implementovana a lokalne overena pres CLI i skutecne admin formulare. Dva uplne reset behy i admin diagnostika vratily stejny fingerprint `1b73b03986b344c275571f2ccc2fa56ad34fb5e1f4ba5131c786e1be3b4ef089`; homepage na spravnem routeru vraci HTTP 200 s aktivnim `bezova-lens-tale`.
+Hlavni seed nastavuje cookie consent listu na vypnuto v INSERT i UPDATE vetvi. Kompletni lokalni reset potvrdil DB hodnoty consent `0`, analytics `1`, marketing `1`; homepage vraci HTTP 200 a runtime konfiguraci `cookieConsentEnabled:false`. Novy fingerprint je `fa2daef108a8c1b13c6abd6d3d909b204324f1c9b207a42ab51351e4fc470602`.
 
-Aktualizovany relevantni dokumenty: `README.md`, `ARCHITECTURE.md` a `INSTRUCTIONS.md`. API kontrakt se nemenil, proto `API.md` aktualizaci nepotreboval. Regresni sada prosla 22/22, vsechny zmenene PHP soubory prosly lintem, `git diff --check` je cisty a historicke migrace zustaly beze zmeny.
+Aktualizovany relevantni dokumenty: `README.md`, `ARCHITECTURE.md` a `INSTRUCTIONS.md`. API kontrakt se nemenil. PHP lint prosel, regresni sada prosla 24/24, `git diff --check` je cisty a historicke migrace zustaly beze zmeny.
 
-Wiki Reflection: domena `pipelines` zustava `ok`; dossier a hub byly aktualizovany a samostatne commitnuty v `C:\Wiki` jako `cc7af3f docs(seo editor): document deterministic demo reset`.
-
-Zaverecny compatibility review odstranil zavislost fingerprintu na `array_is_list()` z PHP 8.1; vlastni list check zachovava deklarovanou kompatibilitu projektu s PHP 8.0+.
+Wiki Reflection: domena `pipelines` zustava `ok`; hub a dossier byly aktualizovany a samostatne commitnuty v `C:\Wiki` jako `094a2d4 docs(seo editor): record consent-off seed default`.

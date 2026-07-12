@@ -107,6 +107,8 @@ final class DemoStateFingerprintService
             'site' => $this->pick($site, [
                 'name', 'default_language', 'layout_html', 'layout_css', 'layout_js',
                 'layout_nav_home', 'layout_nav_sub', 'media_image_quality', 'video_overlay_opacity',
+                'cookie_consent_enabled', 'cookie_consent_analytics_enabled',
+                'cookie_consent_marketing_enabled',
             ]),
             'templates' => $this->all(
                 'SELECT name, html_source, css_source, js_source FROM templates WHERE site_id = ? ORDER BY name, id',

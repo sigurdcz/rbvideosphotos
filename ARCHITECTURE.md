@@ -164,6 +164,7 @@ Inline editor umi i procedualni klice jako `faq:ID:question`, `blog:ID:title`, `
 - `necessary` je vzdy aktivni
 - `analytics` a `marketing` se spousteji az po souhlasu
 - pri vypnutem consent modu se analyticke loadery chovaji jako povolene podle globalni konfigurace
+- hlavni seed explicitne nastavuje `cookie_consent_enabled=0`, ale ponechava analytickou a marketingovou kategorii povolenou; consent dialog je tedy opt-in funkce zapinana az v administraci
 
 ### Runtime tracking
 
