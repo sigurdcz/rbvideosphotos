@@ -18,7 +18,7 @@
 declare(strict_types=1);
 
 if (php_sapi_name() === 'cli') {
-    define('BASE_PATH', dirname(__DIR__, 2));
+    defined('BASE_PATH') || define('BASE_PATH', dirname(__DIR__, 2));
     require BASE_PATH . '/vendor/autoload.php';
     \App\Core\Env::load(BASE_PATH . '/.env');
 }

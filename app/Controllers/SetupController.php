@@ -9,6 +9,8 @@ use App\Core\Version;
 use App\Repositories\PageRepository;
 use App\Repositories\SiteRepository;
 use App\Services\DemoContentSeeder;
+use App\Services\DemoStateFingerprintService;
+use App\Services\SetupEnvironmentService;
 use PDO;
 
 class SetupController extends Controller
@@ -22,12 +24,25 @@ class SetupController extends Controller
         $site = $sites->findFirst();
         $pageCount = $site ? count($pages->allBySite($site['id'])) : 0;
 
-        $diag = ['version' => Version::APP, 'db_ok' => false, 'db_error' => '', 'pages_total' => 0, 'homepage' => null];
+        $diag = [
+            'version' => Version::APP,
+            'db_ok' => false,
+            'db_error' => '',
+            'pages_total' => 0,
+            'homepage' => null,
+            'demo_fingerprint' => '',
+            'fingerprint_error' => '',
+        ];
         try {
             $db = Database::getInstance();
             $diag['db_ok'] = true;
             $diag['pages_total'] = (int) $db->query('SELECT COUNT(*) FROM pages')->fetchColumn();
             $diag['homepage'] = $pages->findByUrlPath('');
+            try {
+                $diag['demo_fingerprint'] = (new DemoStateFingerprintService($db))->fingerprint();
+            } catch (\Throwable $e) {
+                $diag['fingerprint_error'] = $e->getMessage();
+            }
         } catch (\Throwable $e) {
             $diag['db_error'] = $e->getMessage();
         }
@@ -45,7 +60,7 @@ class SetupController extends Controller
         $this->csrfCheck();
 
         try {
-            $output = $this->runSeed();
+            $output = (new SetupEnvironmentService())->runBaseSeed();
             $message = 'Data byla úspěšně načtena.';
             if ($output !== '') {
                 $message .= ' ' . $output;
@@ -64,14 +79,10 @@ class SetupController extends Controller
         $this->csrfCheck();
 
         try {
-            $this->purgeDirectoryContents(dirname(__DIR__, 2) . '/storage/media');
-            $this->purgeDirectoryContents(dirname(__DIR__, 2) . '/storage/published');
-            $this->ensurePublishedFallbackIndex();
-            $this->resetDatabase();
-            $this->runMigrations();
-            $output = $this->runSeed();
+            $result = (new SetupEnvironmentService())->resetBaseState();
+            $output = (string)($result['seed_output'] ?? '');
 
-            $message = 'Armagedon dokončen. Média byla smazána, databáze resetována a seed znovu nahrán.';
+            $message = 'Armagedon dokončen. Runtime stav byl vyčištěn, databáze resetována a základní seed znovu nahrán.';
             if ($output !== '') {
                 $message .= ' ' . $output;
             }
@@ -101,6 +112,7 @@ class SetupController extends Controller
                 . (int)$result['blog_posts'] . ' článků, '
                 . (int)$result['portfolio_entries'] . ' prací, '
                 . (int)$result['reviews'] . ' recenzí.';
+            $message .= ' Aktivní motiv: ' . (string)($result['active_theme'] ?? 'nenastaveno') . '.';
             if (!empty($result['published'])) {
                 $message .= ' Web byl znovu publikován.';
             }
@@ -110,24 +122,6 @@ class SetupController extends Controller
         }
 
         $this->redirect('/admin/setup');
-    }
-
-    private function runSeed(): string
-    {
-        $seedFile = dirname(__DIR__, 2) . '/database/seeds/seed.php';
-        if (!file_exists($seedFile)) {
-            throw new \RuntimeException('Seed soubor nenalezen.');
-        }
-
-        $argv = ['seed_photographer.php'];
-        ob_start();
-        try {
-            include $seedFile;
-            return trim((string) ob_get_clean());
-        } catch (\Throwable $e) {
-            ob_end_clean();
-            throw $e;
-        }
     }
 
     private function resetDatabase(): void

@@ -42,6 +42,10 @@ jobs:
             --exclude='storage/database.sqlite-wal' \
             --exclude='storage/cache/' \
             --exclude='storage/logs/' \
+            --exclude='storage/media/' \
+            --exclude='storage/published/' \
+            --exclude='storage/active-theme-key.txt' \
+            --exclude='public/assets/generated/' \
             --exclude='vendor/bin/' \
             ./ _deploy/
           mkdir -p _deploy/storage/cache
@@ -72,3 +76,7 @@ jobs:
             **/.env.*
             **/storage/cache/**
             **/storage/logs/**
+            **/storage/media/**
+            **/storage/published/**
+            **/storage/active-theme-key.txt
+            **/public/assets/generated/**

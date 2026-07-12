@@ -5,9 +5,13 @@ declare(strict_types=1);
 require dirname(__DIR__) . '/vendor/autoload.php';
 
 use App\Services\SecurityTxtCache;
+use App\Services\DemoContentSeeder;
+use App\Services\DemoStateFingerprintService;
 use App\Services\SecurityTxtGenerator;
 use App\Services\SecurityTxtHttpResponder;
 use App\Services\SecurityTxtValidator;
+use App\Services\SetupFilesystemResetService;
+use App\Services\ThemeTemplateRegistry;
 
 $validator = new SecurityTxtValidator();
 $generator = new SecurityTxtGenerator();
@@ -171,6 +175,75 @@ $test('conditional request returns 304', function () use ($responder, $validPayl
     $assert($response['status'] === 304);
     $assert($response['body'] === '');
     $assert($response['headers']['Content-Type'] === 'text/plain; charset=utf-8');
+});
+
+$test('setup filesystem reset removes every render-affecting artifact', function () use ($assert): void {
+    $root = sys_get_temp_dir() . '/seo-cms-reset-test-' . bin2hex(random_bytes(5));
+    $targets = [
+        'storage/media/demo/image.webp',
+        'storage/published/index.html',
+        'storage/cache/security_txt/site-1.json',
+        'public/assets/generated/page-css-test.css',
+        'storage/active-theme-key.txt',
+    ];
+    try {
+        foreach ($targets as $relativePath) {
+            $path = $root . '/' . $relativePath;
+            @mkdir(dirname($path), 0775, true);
+            file_put_contents($path, 'stale');
+        }
+
+        (new SetupFilesystemResetService($root))->reset();
+        foreach ($targets as $relativePath) {
+            $assert(!file_exists($root . '/' . $relativePath), 'Reset left stale artifact: ' . $relativePath);
+        }
+    } finally {
+        if (is_dir($root)) {
+            $items = new RecursiveIteratorIterator(
+                new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS),
+                RecursiveIteratorIterator::CHILD_FIRST
+            );
+            foreach ($items as $item) {
+                $item->isDir() ? @rmdir($item->getPathname()) : @unlink($item->getPathname());
+            }
+            @rmdir($root);
+        }
+    }
+});
+
+$test('active theme state is explicit and removable', function () use ($assert): void {
+    $root = sys_get_temp_dir() . '/seo-cms-theme-state-test-' . bin2hex(random_bytes(5));
+    $stateFile = $root . '/storage/active-theme-key.txt';
+    $registry = new ThemeTemplateRegistry($root . '/Templates', $stateFile);
+    try {
+        $registry->persistActiveThemeKey(DemoContentSeeder::DEFAULT_THEME_KEY);
+        $assert($registry->getPersistedActiveThemeKey() === DemoContentSeeder::DEFAULT_THEME_KEY);
+        $registry->persistActiveThemeKey(null);
+        $assert(!is_file($stateFile), 'Theme state file was not removed.');
+    } finally {
+        @unlink($stateFile);
+        @rmdir(dirname($stateFile));
+        @rmdir($root);
+    }
+});
+
+$test('default demo theme is present in the repository', function () use ($assert): void {
+    $theme = (new ThemeTemplateRegistry(dirname(__DIR__) . '/Templates'))->find(DemoContentSeeder::DEFAULT_THEME_KEY);
+    $assert($theme !== null, 'Missing default demo theme: ' . DemoContentSeeder::DEFAULT_THEME_KEY);
+});
+
+$test('demo fingerprint is stable for reordered object keys', function () use ($assert): void {
+    $left = ['theme' => 'bezova-lens-tale', 'content' => ['title' => 'Demo', 'items' => [1, 2]]];
+    $right = ['content' => ['items' => [1, 2], 'title' => 'Demo'], 'theme' => 'bezova-lens-tale'];
+    $assert(
+        DemoStateFingerprintService::fingerprintPayload($left) === DemoStateFingerprintService::fingerprintPayload($right),
+        'Equivalent canonical payloads produced different fingerprints.'
+    );
+    $right['content']['title'] = 'Changed';
+    $assert(
+        DemoStateFingerprintService::fingerprintPayload($left) !== DemoStateFingerprintService::fingerprintPayload($right),
+        'Content change did not change the fingerprint.'
+    );
 });
 
 $failures = 0;

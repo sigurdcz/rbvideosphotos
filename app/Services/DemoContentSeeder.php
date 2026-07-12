@@ -17,6 +17,8 @@ use PDO;
 
 class DemoContentSeeder
 {
+    public const DEFAULT_THEME_KEY = 'bezova-lens-tale';
+
     private PDO $db;
     private MediaIngestionService $media;
     private BlogRepository $blog;
@@ -47,6 +49,11 @@ class DemoContentSeeder
         }
 
         $siteId = (int)$site['id'];
+        $themeRegistry = new ThemeTemplateRegistry();
+        if ($themeRegistry->find(self::DEFAULT_THEME_KEY) === null) {
+            throw new \RuntimeException('Vychozi demo motiv nebyl nalezen: ' . self::DEFAULT_THEME_KEY);
+        }
+
         $mediaCount = $this->seedMediaLibrary($siteId);
         $blogCount = $this->seedBlogPosts($siteId);
         $portfolioCount = $this->seedPortfolioEntries($siteId);
@@ -63,6 +70,9 @@ class DemoContentSeeder
         $servicePageCount = $this->seedServicePages($siteId, $site);
         $this->seedPageSeo($siteId, $site);
 
+        (new SiteRepository())->update($siteId, ['active_theme_key' => self::DEFAULT_THEME_KEY]);
+        $themeRegistry->persistActiveThemeKey(self::DEFAULT_THEME_KEY);
+
         $published = false;
         if ($publish && $userId) {
             $result = (new PublishService())->publishSite($siteId, $userId);
@@ -76,6 +86,7 @@ class DemoContentSeeder
             'faq_items' => $faqCount,
             'media' => $mediaCount,
             'service_pages' => $servicePageCount,
+            'active_theme' => self::DEFAULT_THEME_KEY,
             'published' => $published,
         ];
     }

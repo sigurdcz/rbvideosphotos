@@ -40,6 +40,9 @@ $d = $diag ?? [];
     a variant (thumb, medium i OG 1200×630). Existující záznamy se najdou podle slugů a aktualizují se,
     nebudou se duplikovat.
   </p>
+  <div class="alert alert-warning" style="margin-bottom:16px">
+    Referencni profil po dokonceni explicitne aktivuje motiv <code>bezova-lens-tale</code> a web znovu publikuje.
+  </div>
   <form method="POST" action="/admin/setup/demo-content" data-confirm="Doplnit demo články, práce, recenze a média?">
     <input type="hidden" name="_csrf" value="<?= $h($_csrfToken) ?>">
     <button type="submit" class="btn btn-primary">Doplnit demo obsah</button>
@@ -49,13 +52,13 @@ $d = $diag ?? [];
 <div class="card">
   <div class="card-title">Armagedon</div>
   <p style="color:var(--c-muted);margin-bottom:16px;font-size:13.5px">
-    Provede kompletní reset: smaže všechna média ve <code>storage/media</code>, shodí celou databázi,
-    znovu spustí migrace a nakonec nahraje seed od nuly.
+    Provede kompletní reset: smaže média, publikovaný web, cache, generované frontend assety i souborový stav motivu,
+    shodí celou databázi, znovu spustí migrace a nahraje výhradně základní <code>database/seeds/seed.php</code>.
   </p>
   <div class="alert alert-error" style="margin-bottom:16px">
     Tohle je nevratná akce. Všechna vlastní média i data v aktuální databázi budou ztracena.
   </div>
-  <form method="POST" action="/admin/setup/armageddon" data-confirm="ARMAGEDON smaže všechna média i celou databázi a znovu nahraje seed. Opravdu pokračovat?">
+  <form method="POST" action="/admin/setup/armageddon" data-confirm="ARMAGEDON smaže všechna runtime data i celou databázi a znovu nahraje základní seed. Opravdu pokračovat?">
     <input type="hidden" name="_csrf" value="<?= $h($_csrfToken) ?>">
     <button type="submit" class="btn btn-danger">Armagedon</button>
   </form>
@@ -91,6 +94,17 @@ $d = $diag ?? [];
           <span style="color:#d20f39">Zadna stranka s url_path='' - inline edit selze, spust seed</span>
         <?php else: ?>
           <span style="color:#e64553">DB nedostupna</span>
+        <?php endif; ?>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:6px 10px;color:var(--c-muted)">Demo state fingerprint</td>
+      <td style="padding:6px 10px">
+        <?php if (!empty($d['demo_fingerprint'])): ?>
+          <code style="overflow-wrap:anywhere"><?= $h($d['demo_fingerprint']) ?></code>
+          <div class="help-text">Po Armagedon -&gt; Demo obsah musi byt tento SHA-256 stejny lokalne i online.</div>
+        <?php else: ?>
+          <span style="color:#d20f39">NEDOSTUPNY: <?= $h($d['fingerprint_error'] ?? 'neznamy duvod') ?></span>
         <?php endif; ?>
       </td>
     </tr>

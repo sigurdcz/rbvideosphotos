@@ -9,10 +9,10 @@ class ThemeTemplateRegistry
     private string $rootPath;
     private string $stateFile;
 
-    public function __construct(?string $rootPath = null)
+    public function __construct(?string $rootPath = null, ?string $stateFile = null)
     {
         $this->rootPath = $rootPath ?: dirname(__DIR__, 2) . '/Templates';
-        $this->stateFile = dirname(__DIR__, 2) . '/storage/active-theme-key.txt';
+        $this->stateFile = $stateFile ?: dirname(__DIR__, 2) . '/storage/active-theme-key.txt';
     }
 
     public function all(): array
@@ -130,18 +130,20 @@ class ThemeTemplateRegistry
     {
         $key = trim((string)$key);
         $dir = dirname($this->stateFile);
-        if (!is_dir($dir)) {
-            @mkdir($dir, 0775, true);
+        if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
+            throw new \RuntimeException('Unable to create active theme state directory: ' . $dir);
         }
 
         if ($key === '') {
-            if (is_file($this->stateFile)) {
-                @unlink($this->stateFile);
+            if (is_file($this->stateFile) && !unlink($this->stateFile)) {
+                throw new \RuntimeException('Unable to remove active theme state file: ' . $this->stateFile);
             }
             return;
         }
 
-        file_put_contents($this->stateFile, $key, LOCK_EX);
+        if (file_put_contents($this->stateFile, $key, LOCK_EX) === false) {
+            throw new \RuntimeException('Unable to persist active theme state: ' . $this->stateFile);
+        }
     }
 
     public function getCssForPage(array $theme, string $pageKey): string

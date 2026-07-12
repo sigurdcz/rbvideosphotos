@@ -153,7 +153,12 @@ Seed z adminu:
 http://localhost:8000/admin/setup
 ```
 
-Poznamka: setup obrazovka vedle zakladniho seedu nabizi i klientsky/demo obsah pro RB Photos & Videos. Pred spustenim na existujicich datech zkontroluj, co presne chces nahrat.
+Setup obrazovka nabizi dve navazujici operace pro referencni stav RB Photos & Videos:
+
+1. `Armagedon` smaze databazi i renderovaci filesystem stav, spusti vsechny migrace a `database/seeds/seed.php`.
+2. `Doplnit demo obsah` nahraje referencni obsah, explicitne aktivuje `bezova-lens-tale` a web publikuje.
+
+Po dokonceni porovnej `Demo state fingerprint` na lokalnim a online `/admin/setup`. Shodny SHA-256 znamena shodny kanonicky datovy stav; domena, nahodne fyzicke nazvy medii a casy publikace jsou z porovnani zamerne vynechane.
 
 Seed z CLI:
 
@@ -162,6 +167,15 @@ php database/seeds/seed.php
 php database/seeds/seed_photographer.php
 php database/seeds/seed_photographer.php --fresh
 ```
+
+Kompletni lokalni `Armagedon -> Demo obsah` lze spustit stejnou sdilenou pipeline jako v administraci:
+
+```bash
+php bin/reset-demo-local.php --confirm-local
+php bin/demo-state-fingerprint.php --hash
+```
+
+Prikaz reset tvrde odmita databazi, jejiz `DB_HOST` neni `127.0.0.1`, `localhost` nebo `::1`. Nikdy jej nepouzivej jako produkcni deploy prikaz.
 
 ## Prihlaseni do administrace
 
@@ -183,6 +197,7 @@ php database/seeds/seed_photographer.php --fresh
 - Absolutni URL jsou potreba hlavne pro sitemap, canonical a Open Graph vystupy
 - `public/assets/generated/` se negituje a pri publishi se regeneruje
 - `storage/published/llms.txt` a aktivni `.well-known/security.txt` se generuji pri publishi spolu se sitemap a portfolio vystupy
+- GitHub Actions nenasazuje obsah `storage/media`, `storage/published`, `storage/active-theme-key.txt` ani `public/assets/generated`; tyto cesty vlastni cilove prostredi a obnovuje je Armagedon/Publish pipeline
 - Konverzni tracking a consent flow jsou popsane v `ARCHITECTURE.md`
 
 ## Dalsi dokumentace

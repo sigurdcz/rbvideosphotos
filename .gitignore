@@ -2,6 +2,7 @@
 /storage/media/
 /storage/cache/
 /storage/logs/
+/storage/active-theme-key.txt
 /storage/database.sqlite
 /storage/*.sqlite
 *.log

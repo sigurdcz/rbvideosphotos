@@ -44,9 +44,12 @@ Tento soubor je obecny pracovni navod pro vsechny AI asistenty i lidske vyvojare
 ## Seed a demo obsah
 
 - Vychozi seed `database/seeds/seed.php` musi zustat genericky a bez konkretniho klienta.
-- Klientsky nebo ukazkovy obsah patri do samostatne pojmenovaneho seedu, napr. `seed_photographer.php`.
+- Klientsky nebo ukazkovy obsah patri do samostatne pojmenovaneho seedu nebo seeder sluzby; aktualni referencni obsah spravuje `DemoContentSeeder`, nikoli zavadejici `$argv` alias.
 - Seed nesmi menit schema. Pokud je potreba schema upravit, musi vzniknout nova migrace.
 - Media generovana seedem maji projit stejnou media pipeline jako uzivatelsky upload.
+- Admin Armagedon a lokalni reset musi pouzivat stejnou `SetupEnvironmentService`; druhou kopii DROP/migration/seed poradi nevytvarejte.
+- Referencni Demo obsah musi explicitne nastavit `bezova-lens-tale` do DB i `storage/active-theme-key.txt`.
+- Paritu lokal/online overujte pres `DemoStateFingerprintService`; rozdil fingerprintu je viditelna chyba, ne povoleny fallback.
 
 ## Frontend a URL pravidla
 

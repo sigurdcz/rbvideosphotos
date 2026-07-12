@@ -269,6 +269,19 @@ Klicove skupiny sloupcu v `sites`:
 
 Klientske demo seed varianty patri do samostatnych souboru, napriklad `seed_photographer.php`.
 
+### Deterministicky referencni reset
+
+Admin `Armagedon` i lokalni prikaz `php bin/reset-demo-local.php --confirm-local` pouzivaji `SetupEnvironmentService`. Poradi je pevne:
+
+1. smazat `storage/media`, `storage/published`, `storage/cache`, `public/assets/generated` a `storage/active-theme-key.txt`
+2. shodit vsechny tabulky aktualni databaze
+3. aplikovat serazene append-only migrace
+4. nacist vyhradne zakladni `database/seeds/seed.php`
+5. pri Demo obsahu overit a aktivovat `bezova-lens-tale` v DB i stavovem souboru
+6. publikovat a vytvorit kanonicky fingerprint
+
+`DemoStateFingerprintService` porovnava theme state, layout, sablony, stranky, bloky, SEO, demo entity, vazby medii a hash originalnich souboru. Pred hashem normalizuje `APP_URL` a nahodne storage cesty medii a vynechava publikacni casy. Rozdil hashe je chyba datove parity a nesmi byt nahrazen vizualnim odhadem.
+
 ### Migrace
 
 - stare migrace se neupravuji ani nemazou
@@ -283,7 +296,8 @@ Klientske demo seed varianty patri do samostatnych souboru, napriklad `seed_phot
 - `dev` -> staging
 - GitHub Actions buildi Composer artifact bez dev zavislosti a nasazuje pres FTPS
 - `.env` se nedeployuje
-- `storage/media` se nasazuje jako soucast buildu
+- `storage/media`, `storage/published`, `storage/active-theme-key.txt` a `public/assets/generated` jsou runtime state ciloveho prostredi a z rsync artefaktu i FTPS synchronizace se explicitne vylucuji
+- workflow vytvori pouze prazdne potrebne runtime adresare; jejich obsah nesmi Git deploy prepsat ani smazat
 
 ## Zdroje pravdy
 
