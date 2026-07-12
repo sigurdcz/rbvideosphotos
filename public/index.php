@@ -738,7 +738,29 @@ function injectHomepageMissingSections(string $html, array $blocks, bool $isHome
 
 function injectHomepageThemeDataSources(string $html, array $blocks, bool $isHome): string
 {
-    if (!$isHome || !preg_match('~\btheme-elegant-white2?\b~', $html) || str_contains($html, 'data-ew-home-faq-source')) {
+    if (!$isHome) {
+        return $html;
+    }
+
+    if (preg_match('~\btheme-bezova-lens-tale\b~', $html) && !str_contains($html, 'data-blt-home-sources')) {
+        $faqItems = '';
+        for ($i = 1; $i <= 5; $i++) {
+            $faqItem = blockContent($blocks, 'faq_' . $i);
+            if (trim(strip_tags($faqItem)) !== '') {
+                $faqItems .= '<article class="hp-faq-item">' . $faqItem . '</article>';
+            }
+        }
+
+        $contact = blockContent($blocks, 'contact_info') ?: blockContent($blocks, 'kontakt_info');
+        $source = '<div data-blt-home-sources hidden>'
+            . '<div data-blt-contact-source>' . $contact . '</div>'
+            . '<div data-blt-faq-source>' . $faqItems . '</div>'
+            . '</div>';
+
+        return preg_replace('~(<main\b[^>]*>)~i', '$1' . $source, $html, 1) ?? $html;
+    }
+
+    if (!preg_match('~\btheme-elegant-white2?\b~', $html) || str_contains($html, 'data-ew-home-faq-source')) {
         return $html;
     }
 
