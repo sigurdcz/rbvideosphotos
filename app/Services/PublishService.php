@@ -121,7 +121,9 @@ class PublishService
             $html = $this->renderer->stripInlineStyles($html);
             $html = $this->themes->injectBodyClass($html, (string)($theme['key'] ?? ''));
             $css = ($template['css_source'] ?? '') . "\n" . $sharedCss . "\n" . $themeCss;
-            $js  = ($template['js_source']  ?? '') . "\n" . $themeJs;
+            $js  = (($theme['key'] ?? '') === 'bezova-lens-tale')
+                ? $themeJs . "\n" . ($template['js_source'] ?? '')
+                : ($template['js_source'] ?? '') . "\n" . $themeJs;
             Logger::infoTo('theme-debug', 'theme.publish.applied', 'Publish theme applied', [
                 'site_id' => $site['id'] ?? null,
                 'site_name' => $site['name'] ?? null,

@@ -149,7 +149,9 @@ function tryServeDatabasePage(string $uri, bool $authenticated = false, bool $pr
         );
         if ($themeActive) {
             $css = ($template['css_source'] ?? '') . "\n" . $themeCss;
-            $js = ($template['js_source'] ?? '') . "\n" . $themeJs;
+            $js = str_contains($html, 'theme-bezova-lens-tale')
+                ? $themeJs . "\n" . ($template['js_source'] ?? '')
+                : ($template['js_source'] ?? '') . "\n" . $themeJs;
         } elseif (!empty($site['layout_html'])) {
             $html = $renderer->applyLayout($site['layout_html'], $html, $site['name'] ?? '', $themeNav);
             $css  = ($site['layout_css'] ?? '') . "\n" . ($template['css_source'] ?? '') . "\n" . $themeCss;

@@ -300,4 +300,6 @@
   } else {
     revealTargets.forEach(function (element) { element.classList.add('is-visible'); });
   }
+
+  body.dataset.bltReady = 'true';
 }());
