@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{site_name}</title>
+  <meta name="theme-color" content="#f5eee4">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&amp;family=Manrope:wght@400;500;600&amp;display=swap" rel="stylesheet">
+</head>
+<body class="theme-bezova-lens-tale">
+  <div class="theme-shell theme-bezova-lens-tale">
+    <aside class="blt-film" aria-hidden="true">
+      <div class="blt-film__track">
+        <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+      </div>
+    </aside>
+
+    <header class="theme-header">
+      <div class="container theme-header__inner">
+        <a href="/" class="theme-brand" aria-label="{site_name} – úvod">
+          <span class="theme-brand__mark" aria-hidden="true">L</span>
+          <span>{site_name}</span>
+        </a>
+        <button class="blt-nav-toggle" type="button" aria-expanded="false" aria-controls="blt-navigation">
+          <span></span><span></span><span></span><span class="sr-only">Otevřít navigaci</span>
+        </button>
+        <div class="theme-nav-wrap" id="blt-navigation">{nav}</div>
+      </div>
+    </header>
+
+    <main class="theme-main">
+      <div class="blt-page-content">{page_content}</div>
+    </main>
+
+    <footer class="theme-footer">
+      <div class="container theme-footer__inner">
+        <div class="theme-footer__brand">{site_name}</div>
+        <div class="theme-footer__rule" aria-hidden="true"></div>
+        <div class="theme-footer__meta">Příběhy zachycené s citem.</div>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>

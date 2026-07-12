@@ -49,6 +49,7 @@ Aktualne dostupna temata:
 | Editorial Gold | `editorial-gold` |
 | Elegant White | `elegant-white` |
 | Elegant White 2 | `elegant-white2` |
+| Béžová Lens & Tale | `bezova-lens-tale` |
 
 Aktivni tema se nastavuje v `Nastaveni -> Tema`. Technicke chovani theme aplikace je v `ARCHITECTURE.md`.
 

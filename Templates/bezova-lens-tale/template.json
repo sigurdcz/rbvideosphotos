@@ -1,0 +1,26 @@
+{
+  "key": "bezova-lens-tale",
+  "name": "Béžová Lens & Tale",
+  "description": "Teplá béžová editorialní šablona s filmovým pásem, výraznou serifovou typografií, oblými fotografiemi a zlatými akcenty.",
+  "version": "1.0.0",
+  "author": "SEO CMS",
+  "sort_order": 57,
+  "layout_html": "layout.html",
+  "layout_css": "assets/theme.css",
+  "layout_js": "assets/theme.js",
+  "pages": [
+    "homepage",
+    "sluzby",
+    "portfolio",
+    "portfolio-detail",
+    "blog",
+    "blog-post",
+    "cenik",
+    "faq",
+    "kontakt"
+  ],
+  "assets": {
+    "css": [],
+    "js": []
+  }
+}
