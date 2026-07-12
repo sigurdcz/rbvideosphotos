@@ -1,40 +1,36 @@
-# UKOL: Vychozi hero fotografie v demo seedu
+# UKOL: Screenshot QA — iterace 01 homepage
 
 Datum: 2026-07-12
-Zadani: Pri hlavnim seedu a Demo obsahu nastavit vychozi hero fotografii z overene nahrane demo medialni knihovny, aby homepage nemela prazdne bile pozadi.
+Zadani: Provést první porovnávací iteraci homepage vůči dodanému cílovému návrhu. Každý testovací screenshot musí používat viewport alespoň 1280 CSS px široký.
 
 ## Kroky
 
-- [x] Auditovat zdroj hero media, DB nastaveni a runtime/publish spotrebu
-- [x] Zvolit stabilni demo soubor a nastavit jej jako `default_hero_poster_url`
-- [x] Zajistit, ze Demo obsah hodnotu znovu nastavi po nahrani medii
-- [x] Pridat regresni test reference na existujici demo medium
-- [x] Overit Armageddon -> Demo obsah, DB hodnotu a homepage screenshot/HTTP
-- [x] Aktualizovat relevantni dokumentaci
-- [x] Provest Wiki Reflection a uzavrit vysledek
+- [x] Ověřit lokální server a určit srovnávací viewport
+- [x] Definovat měřitelná vizuální kritéria
+- [x] Pořídit baseline screenshot na viewportu 1280 px
+- [x] Porovnat aktuální výsledek s cílovým návrhem a stanovit skóre
+- [x] Sepsat největší rozdíly a první následnou korekci
 
-## Poznamky
+## Kritéria a výsledek
 
-Acceptance signal: po resetu musi `default_hero_poster_url` odkazovat na existujici zaznam v media knihovne a hero homepage nesmi byt bez obrazoveho pozadi. Video zustava volitelne a tato zmena jej nevynucuje.
+Viewport baseline: 1280 × 10000 CSS px, URL `http://127.0.0.1:8766/`. Homepage vrátila HTTP 200. Artefakty screenshotů jsou lokální a mimo Git.
 
-Historicke migrace se nemeni; sloupce pro defaultni hero media uz existuji. Screenshot `homepage-current.png` je lokalni artefakt mimo Git.
+| Oblast | Váha | Skóre iterace 01 | Zjištění |
+| --- | ---: | ---: | --- |
+| Struktura a pořadí sekcí | 20 | 10 | Hlavní obsahové bloky existují, ale jejich hierarchie a pořadí neodpovídají cílové editorial kompozici. |
+| Hero kompozice | 20 | 8 | Výchozí fotografie je viditelná, ale titul, kontrast, velikost a rozložení se výrazně liší od cíle. |
+| Typografie a vertikální rytmus | 15 | 5 | Text je příliš malý a sekce jsou roztažené či stlačené jinak než v předloze. |
+| Portfolio a karty | 15 | 6 | Média fungují, ale chybí cílová koláž a světlá editorial prezentace. |
+| Ceník, reference a proces | 15 | 7 | Obsahové bloky jsou přítomné, avšak karty, orientace a proporce neodpovídají cíli. |
+| Barvy, ornamenty a filmový pás | 10 | 7 | Krémová/zlatá paleta i filmový pás jsou rozpoznatelné, ale tmavé plochy a prázdné bloky narušují shodu. |
+| Kontakt a FAQ | 5 | 3 | Cílové spojení kontaktu a FAQ do závěrečného layoutu chybí. |
 
-Audit: public runtime i PublishService uz maji stejnou prioritu hero zdroju a pouziji `default_hero_poster_url`, pokud chybi video i strankova hero fotka. Zvolena stabilni demo fotografie je `svatba-nevesta-zenich-polibek-kamenna-zed.webp`.
+Celkové skóre: **46 / 100**. Skóre hodnotí vizuální shodu, nikoli funkčnost jednotlivých modulů.
 
-Hlavni seed ji nahrava do media knihovny a po nahrani explicitne zapisuje jeji cestu do `sites.default_hero_poster_url`; chybejici soubor je viditelna chyba seedu. DemoContentSeeder stejnou fotografii po nahrani medii znovu nastavuje a chybu take nezamlci.
+## Následující korekce
 
-Demo fingerprint nove zahrnuje defaultni hero video i poster cestu, aby rozdil hero pozadi mezi lokalem a online serverem nebyl skryty.
+Nejvyšší dopad má přestavba hero a nadřazené stránky na cílovou kompozici: plnohodnotný světlý hero blok s levým titulkem, pravým obrazem, správnou výškou a následnou kapitolovou strukturou. Po každé změně se zopakuje screenshot na šířce nejméně 1280 px a aktualizuje toto skóre.
 
-Regresni testy hlidaji existenci zvoleneho souboru, jeho shodny nazev v hlavnim i Demo seedu, zapis poster URL do sites a zmenu fingerprintu pri zmene hero posteru.
+## Stav
 
-Lokalni reset aplikoval 21 migraci, nastavil poster na `/storage/media/2026/07/img_6a53db4c6cccc1.23189644.webp` a media zaznam potvrzuje puvodni soubor `svatba-nevesta-zenich-polibek-kamenna-zed.webp`. Homepage vraci HTTP 200 a novy screenshot prokazuje obrazove hero pozadi.
-
-README dokumentuje viditelny vysledek, ARCHITECTURE poradi hero zdroju a INSTRUCTIONS povinnost fail-fast reference na existujici demo medium. API se nemeni.
-
-## Vysledek
-
-Hlavni i Demo seed znovu pouzivaji existujici svatebni demo fotografii jako `default_hero_poster_url`. Lokalni reset overil zaznam v media knihovne, HTTP 200 a screenshot s viditelnym hero pozadim. Fingerprint po resetu je `e47efedce0da7a223a1187996e56ca80042f94efbf1527849a38904301e85950`.
-
-Aktualizovany relevantni dokumenty: `README.md`, `ARCHITECTURE.md` a `INSTRUCTIONS.md`. API se nemenil. Vsechny zmenene PHP soubory prosly lintem, regresni sada prosla 26/26 a historicke migrace zustaly beze zmeny.
-
-Wiki Reflection: domena `pipelines` zustava `ok`; hub a dossier byly aktualizovany a samostatne commitnuty v `C:\Wiki` jako `511077d docs(seo editor): record default hero poster`. Nespadajici rozpracovane wiki soubory zustaly beze zmeny.
+První testovací iterace je dokončena. Žádná implementační změna nebyla v této iteraci provedena; následuje prioritní vizuální korekce hero/layoutu.
