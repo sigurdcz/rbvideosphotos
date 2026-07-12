@@ -50,6 +50,7 @@ Tento soubor je obecny pracovni navod pro vsechny AI asistenty i lidske vyvojare
 - Admin Armagedon a lokalni reset musi pouzivat stejnou `SetupEnvironmentService`; druhou kopii DROP/migration/seed poradi nevytvarejte.
 - Referencni Demo obsah musi explicitne nastavit `bezova-lens-tale` do DB i `storage/active-theme-key.txt`.
 - Hlavni seed musi pro INSERT i UPDATE nastavit `cookie_consent_enabled=0`; analyticke a marketingove kategorie tim nevypinejte.
+- Hlavni i Demo seed musi nastavit `default_hero_poster_url` na konkretni existujici zaznam demo media knihovny; chybejici povinny hero soubor musi seed viditelne zastavit.
 - Paritu lokal/online overujte pres `DemoStateFingerprintService`; rozdil fingerprintu je viditelna chyba, ne povoleny fallback.
 
 ## Frontend a URL pravidla

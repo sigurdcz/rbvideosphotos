@@ -18,6 +18,7 @@ use PDO;
 class DemoContentSeeder
 {
     public const DEFAULT_THEME_KEY = 'bezova-lens-tale';
+    public const DEFAULT_HERO_POSTER_ASSET = 'svatba-nevesta-zenich-polibek-kamenna-zed.webp';
 
     private PDO $db;
     private MediaIngestionService $media;
@@ -55,6 +56,7 @@ class DemoContentSeeder
         }
 
         $mediaCount = $this->seedMediaLibrary($siteId);
+        $defaultHeroPosterUrl = $this->seedDefaultHeroPoster($siteId);
         $blogCount = $this->seedBlogPosts($siteId);
         $portfolioCount = $this->seedPortfolioEntries($siteId);
         $this->resetHomepageAutofillBlocks();
@@ -87,6 +89,7 @@ class DemoContentSeeder
             'media' => $mediaCount,
             'service_pages' => $servicePageCount,
             'active_theme' => self::DEFAULT_THEME_KEY,
+            'default_hero_poster_url' => $defaultHeroPosterUrl,
             'published' => $published,
         ];
     }
@@ -1395,6 +1398,22 @@ CSS;
         $stmt->execute([(int)$homepage['id'], ...$keys]);
 
         $this->normalizeHomepageTemplateLabels($homepage);
+    }
+
+    private function seedDefaultHeroPoster(int $siteId): string
+    {
+        $mediaId = (int)($this->demoMedia[self::DEFAULT_HERO_POSTER_ASSET] ?? 0);
+        if ($mediaId <= 0) {
+            throw new \RuntimeException('Chybi povinna demo fotografie pro vychozi hero pozadi: ' . self::DEFAULT_HERO_POSTER_ASSET);
+        }
+
+        $url = $this->mediaPathById($mediaId);
+        if ($url === '') {
+            throw new \RuntimeException('Nelze zjistit cestu povinne demo fotografie pro vychozi hero pozadi.');
+        }
+
+        (new SiteRepository())->update($siteId, ['default_hero_poster_url' => $url]);
+        return $url;
     }
 
     private function seedHomepageElegantWhiteBlocks(int $siteId): void

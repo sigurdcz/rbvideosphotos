@@ -123,7 +123,7 @@ Tabulka `sites` dale drzi:
 - `default_hero_poster_url`
 - `video_overlay_opacity`
 
-Stranka muze mit vlastni `hero_video` blok. Pokud chybi, frontend pouzije default hodnoty ze `sites`.
+Stranka muze mit vlastni `hero_video` blok. Pokud chybi, frontend pouzije default hodnoty ze `sites`. Hlavni a Demo seed nastavuji `default_hero_poster_url` na nahranou fotografii `svatba-nevesta-zenich-polibek-kamenna-zed.webp`; video zustava volitelne. Priorita je strankove video, homepage default video, strankova foto, site default poster a nakonec site default video.
 
 ## Publish pipeline
 

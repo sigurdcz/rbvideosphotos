@@ -107,6 +107,7 @@ final class DemoStateFingerprintService
             'site' => $this->pick($site, [
                 'name', 'default_language', 'layout_html', 'layout_css', 'layout_js',
                 'layout_nav_home', 'layout_nav_sub', 'media_image_quality', 'video_overlay_opacity',
+                'default_hero_video_url', 'default_hero_poster_url',
                 'cookie_consent_enabled', 'cookie_consent_analytics_enabled',
                 'cookie_consent_marketing_enabled',
             ]),

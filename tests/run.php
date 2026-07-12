@@ -276,6 +276,25 @@ $test('disabled consent keeps analytics categories available without a banner', 
     $assert(str_contains($decoded, '"marketingCategoryEnabled":true'));
 });
 
+$test('main and demo seed share an existing default hero poster asset', function () use ($assert): void {
+    $asset = DemoContentSeeder::DEFAULT_HERO_POSTER_ASSET;
+    $assert(is_file(dirname(__DIR__) . '/database/seeds/demo_assets/' . $asset), 'Default hero poster asset is missing.');
+
+    $seedSource = file_get_contents(dirname(__DIR__) . '/database/seeds/seed.php');
+    $assert($seedSource !== false, 'Main seed cannot be read.');
+    $assert(str_contains($seedSource, "'$asset'"), 'Main seed does not ingest the default hero poster asset.');
+    $assert(str_contains($seedSource, 'UPDATE sites SET default_hero_poster_url = ? WHERE id = ?'), 'Main seed does not persist the default hero poster.');
+});
+
+$test('hero poster changes the environment fingerprint', function () use ($assert): void {
+    $left = ['site' => ['default_hero_poster_url' => 'media://hero-a.webp']];
+    $right = ['site' => ['default_hero_poster_url' => 'media://hero-b.webp']];
+    $assert(
+        DemoStateFingerprintService::fingerprintPayload($left) !== DemoStateFingerprintService::fingerprintPayload($right),
+        'Changing the default hero poster did not change the environment fingerprint.'
+    );
+});
+
 $failures = 0;
 foreach ($tests as [$name, $callback]) {
     try {

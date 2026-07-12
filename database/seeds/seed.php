@@ -675,9 +675,17 @@ foreach ([
     'blog.png',
     'podminky-uziti.png',
     'weare2.png',
+    'svatba-nevesta-zenich-polibek-kamenna-zed.webp',
 ] as $seedAsset) {
     $seedMedia[$seedAsset] = seedMediaAsset($pdo, $siteId, $seedAsset);
 }
+
+$defaultHeroPosterUrl = (string)($seedMedia['svatba-nevesta-zenich-polibek-kamenna-zed.webp']['url'] ?? '');
+if ($defaultHeroPosterUrl === '') {
+    throw new RuntimeException('Chybi povinna demo fotografie pro vychozi hero pozadi.');
+}
+$pdo->prepare('UPDATE sites SET default_hero_poster_url = ? WHERE id = ?')
+    ->execute([$defaultHeroPosterUrl, $siteId]);
 echo "Demo obrazky nahrany.\n";
 
 // ─── Obsahové bloky — Homepage ────────────────────────────────────────────────
