@@ -78,13 +78,26 @@
     var heroContainer = qs(':scope > .container', sections.hero);
     if (heroContainer) heroContainer.classList.add('hero-body');
     var heroActions = qs('.hero-cta-wrap, .hero-btns', sections.hero);
-    if (heroActions) heroActions.classList.add('hero-btns');
+    if (heroActions) {
+      heroActions.classList.add('hero-btns');
+      var primaryHeroCta = qs('a', heroActions);
+      if (primaryHeroCta) primaryHeroCta.textContent = 'Zjistit vĂ­ce';
+      if (!qs('.blt-showreel', heroActions)) {
+        var showreelCta = document.createElement('a');
+        showreelCta.className = 'blt-showreel';
+        showreelCta.href = '#nase-prace';
+        showreelCta.textContent = 'PĹ™ehrĂˇt showreel';
+        heroActions.appendChild(showreelCta);
+      }
+    }
     if (!qs('.blt-hero-admin-overlay', sections.hero)) {
       var adminOverlay = document.createElement('span');
       adminOverlay.className = 'blt-hero-admin-overlay';
       adminOverlay.setAttribute('aria-hidden', 'true');
       sections.hero.insertBefore(adminOverlay, sections.hero.firstChild);
     }
+    var heroTitle = qs('h1', sections.hero);
+    if (heroTitle) heroTitle.innerHTML = 'PŘÍBĚHY,<br><span>které zůstanou</span>';
   }
   if (sections.aboutLegacy) sections.aboutLegacy.hidden = true;
   if (sections.reviewsLegacy) sections.reviewsLegacy.hidden = true;
@@ -216,8 +229,14 @@
         wrapper.remove();
       });
     }
-    qsa('.hp-blog-card', sections.blog).forEach(function (card, index) {
+    qsa(':scope > .hp-blog-card', blogGrid).forEach(function (card, index) {
       card.hidden = index > 1;
+    });
+    qsa('.hp-blog-thumb img', blogGrid).forEach(function (image) {
+      image.loading = 'eager';
+      image.removeAttribute('loading');
+      var blogSource = image.getAttribute('src');
+      if (blogSource) image.src = blogSource;
     });
   }
 
@@ -322,6 +341,17 @@
       if (sections.faq) sections.faq.hidden = true;
     }
   }
+
+  qsa('.blt-chapter').forEach(function (section, index) {
+    section.dataset.bltChapter = String(index + 2);
+    if (!qs(':scope > .blt-chapter-marker', section)) {
+      var chapterMarker = document.createElement('span');
+      chapterMarker.className = 'blt-chapter-marker';
+      chapterMarker.setAttribute('aria-hidden', 'true');
+      chapterMarker.textContent = String(index + 2);
+      section.appendChild(chapterMarker);
+    }
+  });
 
   qsa('.hp-faq-item').forEach(function (item) {
     var question = qs('.hp-faq-question', item);
@@ -428,4 +458,5 @@
   }
 
   body.dataset.bltReady = 'true';
+
 }());

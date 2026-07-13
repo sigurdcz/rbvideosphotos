@@ -765,21 +765,288 @@
 /* Last desktop cascade: these rules intentionally outrank every legacy block above. */
 @media (min-width: 981px) {
   .theme-bezova-lens-tale .theme-shell { min-height: 0; }
-  .theme-bezova-lens-tale .blt-storyline,
+  .theme-bezova-lens-tale .blt-storyline { display: block !important; position: absolute; z-index: 10; inset: 0 auto 0 170px; width: 2px; background: linear-gradient(var(--blt-gold),rgba(189,139,47,.45)); pointer-events: none; }
   .theme-bezova-lens-tale .blt-page-content > section::before,
-  .theme-bezova-lens-tale .blt-page-content > .section::before,
-  .theme-bezova-lens-tale .hero::after,
-  .theme-bezova-lens-tale .blt-chapter::before { display: none !important; }
-  .theme-bezova-lens-tale .blt-chapter > .container { padding-left: 0 !important; }
+  .theme-bezova-lens-tale .blt-page-content > .section::before { display: none !important; }
+  .theme-bezova-lens-tale .hero::after { content: '1' !important; position: absolute !important; z-index: 14 !important; left: 156px !important; top: 164px !important; display: grid !important; place-items: center; width: 28px; height: 28px; border: 2px solid var(--blt-gold); border-radius: 50%; color: var(--blt-gold); background: #fffefa; font: 600 9px/1 var(--blt-sans); }
+  .theme-bezova-lens-tale .blt-chapter::before { content: attr(data-blt-chapter) !important; position: absolute !important; z-index: 14 !important; left: 156px !important; top: 54px !important; display: grid !important; place-items: center; width: 28px; height: 28px; border: 2px solid var(--blt-gold); border-radius: 50%; color: var(--blt-gold); background: #fffefa; font: 600 9px/1 var(--blt-sans); }
+  .theme-bezova-lens-tale .blt-chapter > .container { padding-left: 68px !important; }
+  .theme-bezova-lens-tale .hero .hero-body { padding-left: 68px !important; }
   .theme-bezova-lens-tale .blt-offer-rail { grid-template-columns: repeat(5,minmax(0,1fr)) !important; }
   .theme-bezova-lens-tale :is(.blt-process,.blt-pricing,.blt-reviews,.blt-blog) > .container { display: grid !important; grid-template-columns: 285px minmax(0,1fr) !important; column-gap: 56px !important; align-items: center !important; min-height: 350px; }
   .theme-bezova-lens-tale :is(.blt-process,.blt-pricing,.blt-reviews,.blt-blog) > .container > :is(.section-label,.section-title,.section-intro,.hp-section-cta,.blt-chapter-cta) { grid-column: 1 !important; }
   .theme-bezova-lens-tale :is(.blt-process,.blt-pricing,.blt-reviews,.blt-blog) > .container > :is(.ew-process-list,.hp-pricing,.hp-reviews-grid,.hp-blog-grid) { grid-column: 2 !important; grid-row: 1 / span 6 !important; align-self: center !important; }
-  .theme-bezova-lens-tale .blt-blog .hp-blog-grid > .hp-blog-card { display: contents !important; }
-  .theme-bezova-lens-tale .blt-blog .hp-blog-grid > .hp-blog-card > .hp-blog-card { display: grid !important; grid-template-columns: .82fr 1.18fr !important; min-height: 290px !important; background: #fff !important; }
+  .theme-bezova-lens-tale .blt-blog .hp-blog-grid > .hp-blog-card { display: grid !important; grid-template-columns: .82fr 1.18fr !important; min-height: 290px !important; background: #fff !important; }
   .theme-bezova-lens-tale .hero .blt-hero-admin-overlay { background: rgba(255,255,255,calc(var(--cms-video-overlay-opacity,.62) * .72)) !important; }
   .theme-bezova-lens-tale .hero::before { z-index: 2 !important; background: linear-gradient(90deg,rgba(255,254,250,.99) 0%,rgba(255,254,250,.94) 45%,rgba(255,254,250,.58) 67%,rgba(255,254,250,.10) 100%) !important; }
   .theme-bezova-lens-tale .blt-chapter-cta { display: inline-flex !important; align-items: center; justify-content: center; min-height: 46px; width: fit-content; padding: 13px 24px; border-radius: 999px; color: #fff !important; background: linear-gradient(120deg,var(--blt-gold),var(--blt-gold-light)) !important; font: 600 10px/1 var(--blt-sans); letter-spacing: .1em; text-decoration: none; text-transform: uppercase; }
   .theme-bezova-lens-tale .theme-nav-wrap .nav-links a { border-bottom: 0 !important; box-shadow: none !important; }
   .theme-bezova-lens-tale .theme-nav-wrap .nav-links a:not([aria-current="page"])::after { transform: scaleX(0) !important; }
+
+  /* Iteration 13: lock the desktop canvas to the proportions of preview-desktop-reviews.png. */
+  .theme-bezova-lens-tale { --blt-film-width: 190px; }
+  .theme-bezova-lens-tale .theme-shell { width: min(1296px,calc(100% - 144px)); }
+  .theme-bezova-lens-tale .blt-film { left: max(72px,calc((100vw - 1296px) / 2)); width: 190px; }
+  .theme-bezova-lens-tale .blt-film__track { padding-inline: 22px; }
+  .theme-bezova-lens-tale .blt-storyline { inset: 0 auto 0 244px; }
+  .theme-bezova-lens-tale .hero::after,
+  .theme-bezova-lens-tale .blt-chapter::before { left: 230px !important; }
+  .theme-bezova-lens-tale .container,
+  .theme-bezova-lens-tale .hero .hero-body { width: min(970px,calc(100% - 80px)); }
+  .theme-bezova-lens-tale .blt-chapter > .container,
+  .theme-bezova-lens-tale .hero .hero-body { padding-left: 72px !important; }
+
+  .theme-bezova-lens-tale .theme-header__inner { min-height: 100px; }
+  .theme-bezova-lens-tale .theme-brand { font-size: 22px; }
+  .theme-bezova-lens-tale .theme-brand__mark { width: 48px; height: 58px; }
+  .theme-bezova-lens-tale .hero { min-height: 575px !important; }
+  .theme-bezova-lens-tale .hero::after { top: 150px !important; }
+  .theme-bezova-lens-tale .hero h1 { max-width: 520px !important; font-size: clamp(64px,5.2vw,82px) !important; line-height: .88 !important; }
+  .theme-bezova-lens-tale .hero :is(p,.hero-sub) { max-width: 390px; font-size: 14px; line-height: 1.65; }
+
+  .theme-bezova-lens-tale .blt-page-content :is(.section,.section-light,.section-dark,.section--dark) { padding-block: 44px !important; }
+  .theme-bezova-lens-tale .blt-page-content .sec-hdr { gap: 32px; margin-bottom: 26px; }
+  .theme-bezova-lens-tale .blt-page-content :is(.sec-hdr h2,.section-title) { margin-bottom: 12px; font-size: clamp(38px,3.6vw,56px) !important; line-height: .9 !important; }
+  .theme-bezova-lens-tale .blt-chapter::before { top: 42px !important; }
+
+  .theme-bezova-lens-tale .blt-about-section .feat { min-height: 88px !important; padding: 18px 12px !important; }
+  .theme-bezova-lens-tale .blt-about-section .feat-num { margin-bottom: 6px; font-size: 20px; }
+  .theme-bezova-lens-tale .blt-about-section .feat h3 { margin-bottom: 3px; font-size: 14px; }
+  .theme-bezova-lens-tale .blt-about-section .feat p { display: none; }
+
+  .theme-bezova-lens-tale #nase-prace .pt-grid { grid-auto-rows: 118px; gap: 9px !important; }
+  .theme-bezova-lens-tale #nase-prace .pt-tile { border-radius: 18px 0 18px 0 !important; }
+
+  .theme-bezova-lens-tale :is(.blt-process,.blt-pricing,.blt-reviews,.blt-blog) > .container { grid-template-columns: 230px minmax(0,1fr) !important; column-gap: 34px !important; align-items: center !important; min-height: 0; }
+  .theme-bezova-lens-tale .blt-process .ew-process-list { gap: 8px !important; }
+  .theme-bezova-lens-tale .blt-process .ew-process-list::before { top: 33px; }
+  .theme-bezova-lens-tale .blt-process .ew-process-list article { padding-inline: 4px !important; }
+  .theme-bezova-lens-tale .blt-process .ew-process-list i { width: 66px !important; height: 66px !important; margin-bottom: 10px !important; }
+  .theme-bezova-lens-tale .blt-process .ew-process-list h3 { font-size: 12px !important; }
+  .theme-bezova-lens-tale .blt-process .ew-process-list p { font-size: 9px !important; line-height: 1.4; }
+
+  .theme-bezova-lens-tale .blt-pricing .hp-cenik-grid { gap: 14px !important; }
+  .theme-bezova-lens-tale .blt-pricing .hp-cenik-card { min-height: 292px !important; padding: 24px 18px !important; border-radius: 18px !important; }
+  .theme-bezova-lens-tale .blt-pricing .hp-cenik-card--featured { transform: translateY(-7px); }
+  .theme-bezova-lens-tale .blt-pricing .hp-cenik-card-title { font-size: 13px !important; }
+  .theme-bezova-lens-tale .blt-pricing .hp-cenik-card-price { margin: 12px 0; }
+
+  .theme-bezova-lens-tale .blt-reviews .hp-reviews-grid { gap: 14px !important; }
+  .theme-bezova-lens-tale .blt-reviews .hp-review-card { min-height: 175px; padding: 24px 18px !important; border-radius: 18px 0 18px 0 !important; }
+
+  .theme-bezova-lens-tale .blt-blog .hp-blog-grid { gap: 14px !important; }
+  .theme-bezova-lens-tale .blt-blog .hp-blog-grid > .hp-blog-card { grid-template-columns: .44fr .56fr !important; min-height: 245px !important; overflow: hidden; }
+  .theme-bezova-lens-tale .blt-blog .hp-blog-grid > .hp-blog-card[hidden] { display: none !important; }
+  .theme-bezova-lens-tale .blt-blog .hp-blog-thumb { position: relative !important; inset: auto !important; grid-column: 1; height: 100% !important; }
+  .theme-bezova-lens-tale .blt-blog .hp-blog-body { position: relative !important; inset: auto !important; grid-column: 2; padding: 22px !important; color: var(--blt-ink) !important; background: #fff !important; }
+
+  .theme-bezova-lens-tale #kontakt { padding-block: 48px !important; }
+  .theme-bezova-lens-tale #kontakt.blt-contact-with-faq .cta-2col { grid-template-columns: .72fr 1.15fr .9fr !important; gap: 16px !important; }
+  .theme-bezova-lens-tale #kontakt :is(.cta-l,.cta-r),
+  .theme-bezova-lens-tale .blt-contact-faq { min-height: 330px; padding: 26px 22px !important; }
+  .theme-bezova-lens-tale #kontakt h2 { font-size: 39px !important; line-height: .9; }
+  .theme-bezova-lens-tale .theme-footer { padding-block: 26px; }
+
+  /* Keep each editorial chapter in one visual row. Legacy grid auto-placement
+     created a separate full-height row for every label/title/intro/CTA. */
+  .theme-bezova-lens-tale :is(.blt-process,.blt-pricing,.blt-reviews,.blt-blog) > .container {
+    display: block !important;
+    position: relative;
+  }
+  .theme-bezova-lens-tale :is(.blt-process,.blt-pricing,.blt-reviews,.blt-blog) > .container > :is(.section-label,.section-title,.section-intro,.hp-section-cta,.blt-chapter-cta) {
+    position: absolute !important;
+    left: 72px;
+    width: 210px;
+    margin: 0 !important;
+  }
+  .theme-bezova-lens-tale :is(.blt-process,.blt-pricing,.blt-reviews,.blt-blog) > .container > .section-label { top: 0; }
+  .theme-bezova-lens-tale :is(.blt-process,.blt-pricing,.blt-reviews,.blt-blog) > .container > .section-title { top: 28px; }
+  .theme-bezova-lens-tale :is(.blt-process,.blt-pricing,.blt-reviews,.blt-blog) > .container > .section-intro { top: 145px; }
+  .theme-bezova-lens-tale :is(.blt-process,.blt-pricing,.blt-reviews,.blt-blog) > .container > :is(.hp-section-cta,.blt-chapter-cta) { bottom: 0; }
+  .theme-bezova-lens-tale :is(.blt-process,.blt-pricing,.blt-reviews,.blt-blog) > .container > :is(.ew-process-list,.hp-pricing,.hp-cenik-grid,.hp-reviews-grid,.hp-blog-grid) {
+    width: auto !important;
+    margin-left: 264px !important;
+  }
+  .theme-bezova-lens-tale .blt-process > .container { min-height: 185px; }
+  .theme-bezova-lens-tale .blt-pricing > .container { min-height: 300px; }
+  .theme-bezova-lens-tale .blt-reviews > .container { min-height: 185px; }
+  .theme-bezova-lens-tale .blt-blog > .container { min-height: 245px; }
+
+  /* The reference is a fixed editorial artboard. Explicit chapter heights
+     prevent inherited CMS spacing from stretching the page to almost 2x. */
+  .theme-bezova-lens-tale .blt-chapter { box-sizing: border-box; padding-block: 36px !important; overflow: hidden; }
+  .theme-bezova-lens-tale .blt-about,
+  .theme-bezova-lens-tale .blt-about-section { height: 430px; }
+  .theme-bezova-lens-tale .blt-portfolio { height: 370px; }
+  .theme-bezova-lens-tale .blt-process { height: 245px; }
+  .theme-bezova-lens-tale .blt-pricing { height: 390px; }
+  .theme-bezova-lens-tale .blt-reviews { height: 300px; }
+  .theme-bezova-lens-tale .blt-blog { height: 360px; }
+  .theme-bezova-lens-tale .blt-contact { height: 380px; }
+  .theme-bezova-lens-tale :is(.blt-process,.blt-pricing,.blt-reviews,.blt-blog) .section-title { text-align: left !important; }
+  .theme-bezova-lens-tale :is(.blt-pricing,.blt-reviews,.blt-blog) > .container > div:has(> .hp-section-cta) {
+    position: absolute !important;
+    z-index: 3;
+    left: 72px;
+    bottom: 0;
+    width: 210px;
+    margin: 0 !important;
+  }
+  .theme-bezova-lens-tale :is(.blt-pricing,.blt-reviews,.blt-blog) > .container > div:has(> .hp-section-cta) .hp-section-cta {
+    position: static !important;
+    width: auto;
+  }
+  .theme-bezova-lens-tale .blt-pricing .hp-pricing,
+  .theme-bezova-lens-tale .blt-reviews > .container > div:empty { display: none !important; }
+  .theme-bezova-lens-tale :is(.blt-pricing,.blt-reviews,.blt-blog) > .container > :is(.hp-cenik-grid,.hp-reviews-grid,.hp-blog-grid) {
+    position: relative !important;
+    top: auto !important;
+    margin-top: 0 !important;
+  }
+  .theme-bezova-lens-tale .blt-review-controls { margin-left: 264px !important; }
+
+  /* Minifier-safe equivalents. The CMS minifier removes descendant whitespace
+     before :is(), so critical production selectors must stay explicit. */
+  .theme-bezova-lens-tale .blt-process > .container,
+  .theme-bezova-lens-tale .blt-pricing > .container,
+  .theme-bezova-lens-tale .blt-reviews > .container,
+  .theme-bezova-lens-tale .blt-blog > .container { display: block !important; position: relative; }
+
+  .theme-bezova-lens-tale .blt-process > .container > .section-label,
+  .theme-bezova-lens-tale .blt-process > .container > .section-title,
+  .theme-bezova-lens-tale .blt-process > .container > .section-intro,
+  .theme-bezova-lens-tale .blt-process > .container > .blt-chapter-cta,
+  .theme-bezova-lens-tale .blt-pricing > .container > .section-label,
+  .theme-bezova-lens-tale .blt-pricing > .container > .section-title,
+  .theme-bezova-lens-tale .blt-pricing > .container > .section-intro,
+  .theme-bezova-lens-tale .blt-reviews > .container > .section-label,
+  .theme-bezova-lens-tale .blt-reviews > .container > .section-title,
+  .theme-bezova-lens-tale .blt-reviews > .container > .section-intro,
+  .theme-bezova-lens-tale .blt-blog > .container > .section-label,
+  .theme-bezova-lens-tale .blt-blog > .container > .section-title,
+  .theme-bezova-lens-tale .blt-blog > .container > .section-intro {
+    position: absolute !important;
+    left: 72px;
+    width: 210px;
+    margin: 0 !important;
+    text-align: left !important;
+  }
+  .theme-bezova-lens-tale .blt-process > .container > .section-label,
+  .theme-bezova-lens-tale .blt-pricing > .container > .section-label,
+  .theme-bezova-lens-tale .blt-reviews > .container > .section-label,
+  .theme-bezova-lens-tale .blt-blog > .container > .section-label { top: 0; }
+  .theme-bezova-lens-tale .blt-process > .container > .section-title,
+  .theme-bezova-lens-tale .blt-pricing > .container > .section-title,
+  .theme-bezova-lens-tale .blt-reviews > .container > .section-title,
+  .theme-bezova-lens-tale .blt-blog > .container > .section-title { top: 28px; }
+  .theme-bezova-lens-tale .blt-process > .container > .section-intro,
+  .theme-bezova-lens-tale .blt-pricing > .container > .section-intro,
+  .theme-bezova-lens-tale .blt-reviews > .container > .section-intro,
+  .theme-bezova-lens-tale .blt-blog > .container > .section-intro { top: 145px; }
+  .theme-bezova-lens-tale .blt-process > .container > .blt-chapter-cta { bottom: 0; }
+
+  .theme-bezova-lens-tale .blt-process > .container > .ew-process-list,
+  .theme-bezova-lens-tale .blt-pricing > .container > .hp-cenik-grid,
+  .theme-bezova-lens-tale .blt-reviews > .container > .hp-reviews-grid,
+  .theme-bezova-lens-tale .blt-blog > .container > .hp-blog-grid {
+    width: auto !important;
+    margin: 0 0 0 264px !important;
+  }
+  .theme-bezova-lens-tale .blt-pricing > .container > div:has(> .hp-section-cta),
+  .theme-bezova-lens-tale .blt-reviews > .container > div:has(> .hp-section-cta),
+  .theme-bezova-lens-tale .blt-blog > .container > div:has(> .hp-section-cta) {
+    position: absolute !important;
+    z-index: 3;
+    left: 72px;
+    bottom: 0;
+    width: 210px;
+    margin: 0 !important;
+  }
+
+  .theme-bezova-lens-tale .hero .hero-bg { object-position: 70% 42% !important; }
+  .theme-bezova-lens-tale .hero::before { background: linear-gradient(90deg,#fffefa 0%,rgba(255,254,250,.99) 38%,rgba(255,254,250,.88) 55%,rgba(255,254,250,.40) 76%,rgba(255,254,250,.08) 100%) !important; }
+  .theme-bezova-lens-tale .hero .blt-showreel { display: inline-flex; align-items: center; justify-content: center; min-height: 46px; padding: 13px 25px; border: 1px solid var(--blt-gold); border-radius: 999px; color: var(--blt-ink); background: rgba(255,255,255,.64); font: 600 10px/1 var(--blt-sans); letter-spacing: .08em; text-decoration: none; text-transform: uppercase; }
+
+  .theme-bezova-lens-tale .blt-process > .container > .section-title,
+  .theme-bezova-lens-tale .blt-pricing > .container > .section-title,
+  .theme-bezova-lens-tale .blt-reviews > .container > .section-title,
+  .theme-bezova-lens-tale .blt-blog > .container > .section-title {
+    width: 230px;
+    font-size: 38px !important;
+    line-height: .86 !important;
+    letter-spacing: -.035em !important;
+  }
+  .theme-bezova-lens-tale .blt-process > .container > .section-intro,
+  .theme-bezova-lens-tale .blt-pricing > .container > .section-intro,
+  .theme-bezova-lens-tale .blt-reviews > .container > .section-intro,
+  .theme-bezova-lens-tale .blt-blog > .container > .section-intro { top: 132px; width: 220px; font-size: 10px; line-height: 1.55; }
+  .theme-bezova-lens-tale .blt-contact { height: 380px; }
+  .theme-bezova-lens-tale #kontakt .blt-contact__intro,
+  .theme-bezova-lens-tale #kontakt .blt-contact__form,
+  .theme-bezova-lens-tale #kontakt .blt-contact-faq { min-height: 280px; }
+
+  /* Pixel alignment from the 1440x3140 side-by-side reference. */
+  .theme-bezova-lens-tale .blt-storyline { inset: 0 auto 0 204px; }
+  .theme-bezova-lens-tale .hero::after,
+  .theme-bezova-lens-tale .blt-chapter::before { left: 190px !important; }
+  .theme-bezova-lens-tale .hero { min-height: 455px !important; }
+  .theme-bezova-lens-tale .hero .hero-body { padding-left: 32px !important; }
+  .theme-bezova-lens-tale .blt-about .sec-hdr,
+  .theme-bezova-lens-tale .blt-portfolio .sec-hdr { transform: translateX(-40px); }
+  .theme-bezova-lens-tale .blt-process > .container > .section-label,
+  .theme-bezova-lens-tale .blt-process > .container > .section-title,
+  .theme-bezova-lens-tale .blt-process > .container > .section-intro,
+  .theme-bezova-lens-tale .blt-process > .container > .blt-chapter-cta,
+  .theme-bezova-lens-tale .blt-pricing > .container > .section-label,
+  .theme-bezova-lens-tale .blt-pricing > .container > .section-title,
+  .theme-bezova-lens-tale .blt-pricing > .container > .section-intro,
+  .theme-bezova-lens-tale .blt-reviews > .container > .section-label,
+  .theme-bezova-lens-tale .blt-reviews > .container > .section-title,
+  .theme-bezova-lens-tale .blt-reviews > .container > .section-intro,
+  .theme-bezova-lens-tale .blt-blog > .container > .section-label,
+  .theme-bezova-lens-tale .blt-blog > .container > .section-title,
+  .theme-bezova-lens-tale .blt-blog > .container > .section-intro,
+  .theme-bezova-lens-tale .blt-pricing > .container > div:has(> .hp-section-cta),
+  .theme-bezova-lens-tale .blt-reviews > .container > div:has(> .hp-section-cta),
+  .theme-bezova-lens-tale .blt-blog > .container > div:has(> .hp-section-cta) { left: 32px; }
+  .theme-bezova-lens-tale .blt-reviews { height: 300px; }
+
+  .theme-bezova-lens-tale .theme-header {
+    position: absolute;
+    z-index: 30;
+    top: 0;
+    right: 0;
+    left: 190px;
+    width: auto;
+    background: linear-gradient(90deg,rgba(255,254,250,.92),rgba(255,254,250,.58),rgba(255,254,250,.90));
+    border-bottom-color: rgba(189,139,47,.12);
+    backdrop-filter: none;
+  }
+  .theme-bezova-lens-tale .theme-main { padding-top: 0; }
+
+  .theme-bezova-lens-tale .blt-storyline { inset: 0 auto 0 218px; }
+  .theme-bezova-lens-tale .hero::after,
+  .theme-bezova-lens-tale .blt-chapter::before { left: 0 !important; }
+  .theme-bezova-lens-tale .hero::before { background: linear-gradient(90deg,#fffefa 0%,rgba(255,254,250,.995) 42%,rgba(255,254,250,.94) 60%,rgba(255,254,250,.74) 76%,rgba(255,254,250,.28) 100%) !important; }
+  .theme-bezova-lens-tale .hero .blt-hero-admin-overlay { background: rgba(255,255,255,calc(var(--cms-video-overlay-opacity,.62) * .88)) !important; }
+  .theme-bezova-lens-tale .hero .hero-body { transform: translateY(-38px); }
+
+  .theme-bezova-lens-tale .blt-offer-item:nth-child(1) .blt-offer-icon::before { content: '\2661'; }
+  .theme-bezova-lens-tale .blt-offer-item:nth-child(2) .blt-offer-icon::before { content: '\263A'; }
+  .theme-bezova-lens-tale .blt-offer-item:nth-child(3) .blt-offer-icon::before { content: '\25B7'; }
+  .theme-bezova-lens-tale .blt-offer-item:nth-child(4) .blt-offer-icon::before { content: '\25A1'; }
+  .theme-bezova-lens-tale .blt-offer-item:nth-child(5) .blt-offer-icon::before { content: '\2197'; }
+  .theme-bezova-lens-tale .blt-offer-icon::before { position: absolute; inset: 0; display: grid; place-items: center; color: var(--blt-gold); font: 18px/1 Georgia,serif; }
+
+  .theme-bezova-lens-tale .blt-reviews { height: 250px; padding-block: 30px !important; }
+  .theme-bezova-lens-tale .blt-reviews > .container { min-height: 185px; }
+  .theme-bezova-lens-tale .hero .blt-hero-admin-overlay { background: rgba(255,255,255,calc(var(--cms-video-overlay-opacity,.62) * 1.2)) !important; }
+  .theme-bezova-lens-tale .blt-pricing { height: 355px; }
+  .theme-bezova-lens-tale .blt-pricing .hp-cenik-card { min-height: 260px !important; }
+  .theme-bezova-lens-tale .blt-reviews > .container > div:has(> .hp-section-cta) { bottom: 34px; }
+  .theme-bezova-lens-tale .blt-reviews .blt-review-controls { position: relative; bottom: 24px; }
+  .theme-bezova-lens-tale .blt-pricing > .container > .section-intro { top: 162px; }
+  .theme-bezova-lens-tale .blt-pricing > .container > div:has(> .hp-section-cta) { bottom: 70px; }
+  .theme-bezova-lens-tale .blt-chapter::before { display: none !important; }
+  .theme-bezova-lens-tale .blt-chapter-marker { position: absolute; z-index: 15; top: 42px; left: 0; display: grid; place-items: center; width: 28px; height: 28px; border: 2px solid var(--blt-gold); border-radius: 50%; color: var(--blt-gold); background: #fffefa; font: 600 9px/1 var(--blt-sans); }
 }
