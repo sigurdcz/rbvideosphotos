@@ -1,6 +1,14 @@
 # Bezova Lens & Tale: desktop target reference
 
-This document is the static acceptance reference for the homepage at a minimum width of 1280 CSS pixels. It records the supplied visual target when its original bitmap is not available in the checkout. It is a design contract, not page content; all business text, media and links remain DB-driven.
+This document is the static acceptance reference for the homepage at a minimum width of 1280 CSS pixels. The canonical visual implementation is the supplied `lens-tale-multipage` static site (`index.html`, `styles.css`, `script.js`, `pages.js` and its page HTML files). It is a design contract, not page content; all business text, media and links remain DB-driven.
+
+## Canonical source and precedence
+
+- Desktop geometry, typography, component proportions, icons, gradients, hover states and responsive behavior come from the supplied static implementation, not from visual guessing against a compressed overview image.
+- Its reference canvas is `864 x 2093`, with a `108px` desktop film strip, `Manrope` sans-serif copy, `Cormorant Garamond` headings and the shared gold palette `#bd8b2f`, `#e4be6a`, `#fff4cf`.
+- The CMS theme may scale that canvas to the available desktop width, but must preserve its proportions and component hierarchy. Content and media continue to come from the CMS database.
+- Explicit later user corrections override the static source. In particular, the CMS homepage omits the source chapter rail and numbered dots, while retaining the film strip.
+- The supplied subpages are authoritative component references for contact, FAQ, blog listing/detail, portfolio listing/detail, pricing and terms pages.
 
 ## Canvas
 
@@ -32,5 +40,6 @@ This document is the static acceptance reference for the homepage at a minimum w
 
 ## Verification
 
-- Capture a fresh full-page screenshot at 1280 CSS pixels wide after each visual change.
+- Capture a fresh full-page screenshot with a real `1280 x 800` or wider desktop viewport after each visual change. Progressively scroll once before capture so lazy/reveal content is rendered, then return to the top.
 - Score all eight criteria in `UKOL.md`; a claim of completion requires every hard criterion and an aggregate score of at least 90/100.
+- Verify zero horizontal overflow, no active navigation item while the hero is current, and that fixed-height cards end inside their parent section.

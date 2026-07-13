@@ -1,58 +1,36 @@
-# UKOL: Bezova Lens & Tale — iterace podle preview-desktop-reviews
+# UKOL: Bezova Lens & Tale - detailni opravy a vizualni QA skill
 
-Datum: 2026-07-12
-Zadani: Srovnat homepage s lokalnim zdrojem pravdy `preview-desktop-reviews.png`; predchozi hodnoceni 91/100 je zruseno.
+Datum: 2026-07-13
+Zadani: Nejprve ulozit do wiki a Codex skillu metodiku bodovane screenshot iterace, potom opravit vsechny oznacene vady homepage a overovat je opakovanymi screenshoty pri viewportu alespon 1280 px.
 
 ## Kroky
 
-- [x] Zmerit kompozicni rozdily vuci `preview-desktop-reviews.png`
-- [x] Obnovit presnou levou kapitlovou osu s cisly 1–8 a svetly hero
-- [x] Dorovnat textovou hierarchii, roztece a layout vsech kapitol
-- [x] Dorovnat karty ceníku, referenci, blogu a formulare na cilove proporce
-- [x] Udelat finalni screenshot pri 1440 px a nove prisne skore
+- [x] Zapsat reprodukovatelnou metodiku screenshot score loopu do wiki
+- [x] Vytvorit a validovat Codex skill pro iterativni vizualni QA
+- [x] Odstranit zdedeny Brand Page prvek a opravit anchor aktivaci navigace
+- [x] Opravit hero texty, gramatiku CTA, overlay, pozici fotografie a kapitolu 1
+- [x] Opravit sekci Co nabizime, ikony a prekryv panelu
+- [x] Opravit cenik, featured label, karty a prechody mezi sekcemi
+- [x] Opravit hover lesk, reference, kontakt a paticku
+- [x] Opakovat screenshot loop pri 1440 px do splneni vsech kriterii
+- [x] Spustit testy, diff check a uzavrit dokumentaci
 
 ## Poznamky
 
-Zdroj pravdy je lokalni `preview-desktop-reviews.png`, nikoli predchozi slovni interpretace. Cíl obsahuje levou zlatou osu s kapitolami 1–8; ma se obnovit. Iterace neskonci, dokud srovnani neprojde vsemi sekcemi.
+Vychozi skore po uzivatelskem detailnim auditu: 72/100. Zdroj pravdy tvori dodane anotovane screenshoty a posledni cilovy preview. Screenshoty zustavaji lokalni QA artefakty mimo Git.
 
-Hlavni rozdily: cil ma sirsi filmovy pas a levou osu v samostatnem gutteru, hero s titulkem „PŘÍBĚHY, které zůstanou“, vyssi serifovou typografii a vzdušnejsi, kratší kapitoly. Aktualni web mel osu odstraněnou podle starsi instrukce, proto se nyní vrací s cisly 1–8.
+Wiki nyni obsahuje samostatny pattern `patterns/visual-screenshot-score-loop.html`, kanonicky glossary tag a katalogovy zaznam. Globalni skill `visual-screenshot-score-loop` je inicializovan se samostatnou bodovaci rubrikou; pred opravou homepage jeste projde validator.
 
-Kontrola po obnoveni osy ukazala dalsi rozdil: blogovy runtime vybiral vnorené i obalove `.hp-blog-card`, proto nezakryl treti kartu a CSS je rozlozilo vertikalne. Selektor je omezen na prime obaly gridu; cíl jsou dve horizontalni karty.
+Skill prosel oficialnim `quick_validate.py` po doplneni chybejici validační zavislosti PyYAML 6.0.3. Wiki zmena je samostatne commitnuta jako `8a68334`; dva nesouvisejici rozpracovane wiki soubory zustaly nedotcene.
 
-Posledni screenshot odhalil lazy-load placeholdery v blogu. Blogove obrazky se proto pro desktopovou kompozici nactou eager a prime karty gridu se renderuji jako dve horizontalni editorialni karty.
+Homepage iterace 1 odstranuje legacy `.brand`, checkbox a label primo z DOM. Aktivni navigace uz neporovnava pouze pathname `/`, ale sleduje skutecne anchor sekce. Hero dostava spravnou cestinu, horni crop fotografie, kontrastni metadata a marker kapitoly vycentrovany na rail.
 
-Iterace 13 zacina opravou celeho desktopoveho platna: shell 1296 px, filmovy pas 190 px, osa v x=244 px uvnitr shellu a vyrazne kratsi kapitoly. Pred touto iteraci je prisne skore 63/100; nejvetsi penalizaci ma temer dvojnasobna vyska stranky a spatna horizontalni geometrie.
+Iterace 1: 79/100. Iterace 2: 87/100. Druha iterace vratila cele nabidkove panely se semantickymi SVG ikonami, odkryla featured stitek a cele cenove karty, oddelila reference a zavedla zlaty shimmer hover. Treti iterace zkracuje a zpevnuje proces, kontakt a paticku a zvysuje kontrast jejich ovladacich a textovych prvku.
 
-Prvni snimek iterace 13 dosahl 69/100. Odhalil, ze vysku procesu, ceniku, referenci a blogu nevytvarely karty, ale automaticke radky gridu pro kazdy levy textovy prvek. Levy editorialni obsah je proto ukotven v jedinem radku a vysku kapitoly nyni urcuje jeji hlavni obsah.
+Finalni iterace: 95/100. Playwright capture pouziva skutecny viewport 1440x900 a 1280x800, pred full-page screenshotem postupne aktivuje scroll-reveal a vraci se do hero. Pri 1280 px je horizontalni overflow 0, navigace v hero nema aktivni polozku a cenove karty konci 17 px pred hranou sekce. Hover ma overeny zlaty gradient a stin. `php tests/run.php`: 26 testu, 0 chyb; `git diff --check`: bez chyb, pouze upozorneni na budouci CRLF normalizaci.
 
-Screenshot 14 potvrdil, ze obecne pravidlo pro `.section` nezasahlo vsechny JS preklasifikovane kapitoly. Kapitoly proto dostaly explicitni vysky podle souradnic ciloveho artboardu; tim se odstranuje hlavni systemova odchylka pred dalsim ladenim detailu.
-
-Iterace 15 dosahla 78/100 a poprve ma celkovou vysku blizkou cili. Orez ceniku a referenci zpusobovaly prazdne legacy obaly a obal CTA, ktere zustaly v normalnim toku pred JS presunutymi gridy. Tyto obaly jsou nyni vyjmuty z toku a ovladani referenci je zarovnano s kartami.
-
-Mereni iterace 16 odhalilo systemovou pricinu: CMS minifikator odstranil mezeru pred `:is(...)`, takze kriticke descendant selektory zmenil na compound selektory a pravidla se nepouzila. Kriticka desktopova geometrie je proto prepsana explicitnimi, minifier-safe selektory bez `:is`.
-
-Iterace 17 dosahla 84/100. Vsechny hlavni gridy jsou nyni viditelne a ve spravnem sloupci. Dalsi korekce zmensuje pretekajici leve titulky, zesiluje cilovy bily hero gradient, posouva motiv fotografie doprava, doplnuje druhe showreel CTA a dava kontaktu dostatecnou vysku.
-
-Iterace 18 dosahla 89/100. Side-by-side ve shodnem meritku odhalil, ze runtime trida about kapitoly je `.blt-about`, zatimco vyska byla omylem nastavena jen pro `.blt-about-section`. Oprava sjednocuje vysku kapitoly s cilem, zkracuje kontakt na cilovou proporci a vynucuje skutecne nacteni obou blogovych obrazku.
-
-Iterace 19 dosahla 92/100. Pri presnem 1440x3140 porovnani jsou prave gridy proporcne blizko cili; zbyva posunout osu a leve editorialni bloky o 40 px doleva a zkratit vertikalni soucet hero + reference, aby kontakt zacinal na cilove souradnici.
-
-Iterace 20 zustala na 92/100. Zkraceni referenci na 250 px pouze orezalo CTA, proto je tato dilci zmena vracena; dalsi korekce musi vychazet z presneho prekryvu sekcnich hran, ne z dalsiho plosneho zkracovani.
-
-Pixelovy overlay iterace 20 ukazal temer konstantni posun vsech hran od konce hero. Cilova hlavicka je overlay nad hero, zatimco aktualni hlavicka zabirala vlastni radek. Desktopova hlavicka je proto absolutne polozena nad hero; obsah kapitol zustava beze zmeny.
-
-Iterace 21 dosahla 94/100. Overlay hlavicky srovnal sekcni hranice; zbyvajici systemove rozdily jsou chybejici kruhove znacky kapitol 2-8 a prilis citelna fotografie pod levou casti hero. Znacky jsou ukotveny negativnim offsetem k ose gutteru a hero dostava silnejsi dvojity bily zavoj.
-
-Iterace 22 dosahla 94.5/100. Negativni offset znacek byl orezan `overflow` kapitol; osa se proto posouva o polomer znacky a kruhy zustavaji cele uvnitr sekce bez povoleni pretekani obsahu.
-
-Iterace 23 ma 95/100 pro strukturu a geometrii, ale prisne celkove hodnoceni zustava 94.5/100: reference jsou proti cili asi o 50 px vyssi a posouvaji blog i kontakt. Zkracuje se pouze tato kapitola, s mensim vnitrnim paddingem, a zesiluje se globalni admin overlay hero fotografie.
-
-Iterace 24 zustava prisne na 94.5/100 kvuli orezu CTA/ovladani referenci a asi o 35 px vyssimu ceniku. Ovladače se posouvaji dovnitr referencni kapitoly a cenik i karty se zkracuji o namereny rozdil; uvolnena vyska patri kontaktu.
-
-Iterace 26 dosahla 95/100 pro celkovou kompozici. Pred finalnim uzavrenim se CTA ceniku posouva dovnitr kapitoly a nespolehlive pseudo-elementy kapitol 2-8 se nahrazuji skutecnymi DOM markery, aby cisla vzdy prezila produkcni minifikaci a overflow pravidla.
-
-Iterace 27 potvrzuje 95/100. DOM obsahuje markery 2-8 a posledni zbyvajici orez cenikoveho CTA se odstranuje zvysenim jeho spodniho odsazeni.
+Kanonicky designovy zdroj je nyni explicitne zaznamenan v `Templates/bezova-lens-tale/REFERENCE_TARGET.md`: staticky `lens-tale-multipage` s canvasem 864x2093, filmem 108 px, originalni typografii, ikonami a komponentami. Pozdejsi uzivatelske korekce maji prednost, zejmena odstraneni chapter railu a cisel.
 
 ## Vysledek
 
-Hotovo. Finalni kontrola pouziva viewport 1440x3140, stejny jako cilovy soubor. Dosazene prisne skore: 95/100.
+Hotovo. Dosazene a overene skore: 95/100.

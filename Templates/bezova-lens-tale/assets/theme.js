@@ -48,15 +48,21 @@
     });
   }
 
-  var currentPath = window.location.pathname.replace(/\/$/, '') || '/';
+  var anchorLinks = qsa('.theme-nav-wrap .nav-links a[href*="#"]');
+  var activateAnchor = function (id) {
+    anchorLinks.forEach(function (link) {
+      var active = new URL(link.href, window.location.origin).hash === '#' + id;
+      link.classList.toggle('is-active', active);
+      if (active) link.setAttribute('aria-current', 'location');
+      else link.removeAttribute('aria-current');
+    });
+  };
   qsa('.theme-nav-wrap a[href]').forEach(function (link) {
-    var href = new URL(link.href, window.location.origin).pathname.replace(/\/$/, '') || '/';
+    link.classList.remove('is-active');
     link.removeAttribute('aria-current');
-    if (href === currentPath) link.setAttribute('aria-current', 'page');
   });
   qsa('.theme-nav-wrap .brand, .theme-nav-wrap input, .theme-nav-wrap label').forEach(function (element) {
-    element.hidden = true;
-    element.setAttribute('aria-hidden', 'true');
+    element.remove();
   });
 
   /* Reorder the legacy homepage chapters into the target story sequence. */
@@ -81,12 +87,12 @@
     if (heroActions) {
       heroActions.classList.add('hero-btns');
       var primaryHeroCta = qs('a', heroActions);
-      if (primaryHeroCta) primaryHeroCta.textContent = 'Zjistit vĂ­ce';
+      if (primaryHeroCta) primaryHeroCta.textContent = 'Zjistit více';
       if (!qs('.blt-showreel', heroActions)) {
         var showreelCta = document.createElement('a');
         showreelCta.className = 'blt-showreel';
         showreelCta.href = '#nase-prace';
-        showreelCta.textContent = 'PĹ™ehrĂˇt showreel';
+        showreelCta.textContent = 'Přehrát showreel';
         heroActions.appendChild(showreelCta);
       }
     }
@@ -183,6 +189,16 @@
         extra.innerHTML = '<span class="blt-offer-icon" aria-hidden="true"></span><h3 class="hp-svc-card__title"></h3>';
         qs('.hp-svc-card__title', extra).textContent = label;
         servicesGrid.appendChild(extra);
+      });
+      var offerIcons = [
+        '<svg viewBox="0 0 32 32"><circle cx="12" cy="17" r="7"/><circle cx="20" cy="17" r="7"/><path d="M9 8l3-4 3 4M17 8l3-4 3 4"/></svg>',
+        '<svg viewBox="0 0 32 32"><circle cx="16" cy="9" r="4"/><circle cx="8" cy="12" r="3"/><circle cx="24" cy="12" r="3"/><path d="M9 27v-5c0-5 3-8 7-8s7 3 7 8v5M3 27v-5c0-4 2-6 5-6M29 27v-5c0-4-2-6-5-6"/></svg>',
+        '<svg viewBox="0 0 32 32"><rect x="4" y="8" width="18" height="16" rx="3"/><path d="M22 13l6-4v14l-6-4z"/></svg>',
+        '<svg viewBox="0 0 32 32"><path d="M6 10h5l2-3h7l2 3h4a3 3 0 013 3v11a3 3 0 01-3 3H6a3 3 0 01-3-3V13a3 3 0 013-3z"/><circle cx="16" cy="18" r="5"/></svg>',
+        '<svg viewBox="0 0 32 32"><path d="M3 14L29 3 19 29l-5-10zM14 19L29 3"/></svg>'
+      ];
+      qsa('.blt-offer-icon', servicesGrid).forEach(function (icon, index) {
+        icon.innerHTML = offerIcons[index] || offerIcons[offerIcons.length - 1];
       });
     }
   }
@@ -352,6 +368,34 @@
       section.appendChild(chapterMarker);
     }
   });
+
+  if (anchorLinks.length) {
+    var anchorSections = anchorLinks.map(function (link) {
+      var hash = new URL(link.href, window.location.origin).hash;
+      return hash ? qs(hash) : null;
+    }).filter(Boolean);
+    var navFrame = 0;
+    var syncAnchorNavigation = function () {
+      navFrame = 0;
+      var marker = Math.max(90, window.innerHeight * .24);
+      var current = anchorSections.find(function (section) {
+        var rect = section.getBoundingClientRect();
+        return rect.top <= marker && rect.bottom > marker;
+      });
+      if (current) activateAnchor(current.id);
+      else anchorLinks.forEach(function (link) {
+        link.classList.remove('is-active');
+        link.removeAttribute('aria-current');
+      });
+    };
+    var requestNavSync = function () {
+      if (!navFrame) navFrame = window.requestAnimationFrame(syncAnchorNavigation);
+    };
+    window.addEventListener('scroll', requestNavSync, { passive: true });
+    window.addEventListener('resize', requestNavSync);
+    if (window.location.hash) activateAnchor(window.location.hash.slice(1));
+    else syncAnchorNavigation();
+  }
 
   qsa('.hp-faq-item').forEach(function (item) {
     var question = qs('.hp-faq-question', item);
