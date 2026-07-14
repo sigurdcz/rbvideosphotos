@@ -1436,9 +1436,6 @@
 
 /* Canonical 864x2093 artboard scaled to the locked 1280px QA viewport. */
 @media (min-width: 981px) {
-  .theme-bezova-lens-tale .blt-storyline,
-  .theme-bezova-lens-tale .blt-chapter-marker,
-  .theme-bezova-lens-tale .hero::after { display: none !important; }
   body.theme-bezova-lens-tale { margin: 0; }
   .theme-bezova-lens-tale .theme-shell {
     width: min(1226px, calc(100% - 54px));
