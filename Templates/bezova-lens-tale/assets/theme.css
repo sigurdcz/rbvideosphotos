@@ -687,7 +687,7 @@
 .theme-bezova-lens-tale .blt-chapter.is-visible { opacity: 1; transform: none; }
 .theme-bezova-lens-tale .blt-chapter::before { display: none !important; }
 .theme-bezova-lens-tale .blt-chapter > .container { padding-left: 0; }
-.theme-bezova-lens-tale .section-label { margin: 0 0 13px !important; color: var(--blt-gold) !important; font-size: 9px !important; letter-spacing: .16em !important; }
+.theme-bezova-lens-tale .section-label { margin: 0 0 13px !important; color: var(--blt-gold) !important; font-size: 9px !important; font-weight: 600 !important; letter-spacing: .16em !important; text-transform: uppercase !important; }
 .theme-bezova-lens-tale .section-title,
 .theme-bezova-lens-tale .sec-hdr h2 {
   color: var(--blt-ink) !important;
