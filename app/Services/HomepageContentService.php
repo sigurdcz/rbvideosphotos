@@ -568,10 +568,13 @@ HTML;
         $form = '<form class="hp-contact-form" method="POST" action="/kontakt/odeslat">'
             . '<input type="hidden" name="_csrf" value="' . $csrf . '">'
             . '<input type="hidden" name="website" value="" autocomplete="off">'
-            . '<label>Jméno</label><input type="text" name="name" required placeholder="Vaše jméno">'
-            . '<label>E-mail / telefon</label><input type="text" name="contact_value" required placeholder="email nebo telefon">'
-            . '<label>Zpráva</label><textarea name="message" required placeholder="Napište nám..."></textarea>'
-            . '<button type="submit">Odeslat zprávu</button>'
+            . '<label>Jméno a příjmení</label><input type="text" name="name" required placeholder="Vaše jméno">'
+            . '<label>E-mail</label><input type="text" name="contact_value" required placeholder="email nebo telefon">'
+            . '<label>Datum svatby</label><input type="text" name="event_date" placeholder="DD. MM. RRRR">'
+            . '<label>Typ služby</label><select name="shooting_type" required><option value="">Vyberte typ služby</option><option value="svatebni">Svatební foto a video</option><option value="rodinne">Rodinné focení</option><option value="reklamni">Reklamní foto a video</option><option value="jine">Jiné</option></select>'
+            . '<label class="hp-contact-form__full">Zpráva</label><textarea class="hp-contact-form__full" name="message" required placeholder="Napište nám..."></textarea>'
+            . '<label class="hp-contact-form__full hp-contact-form__consent"><input type="checkbox" name="privacy_consent" required> Souhlasím se zpracováním osobních údajů.</label>'
+            . '<button class="hp-contact-form__full" type="submit">Odeslat zprávu</button>'
             . '</form>';
         if ($recipient === '') {
             $form = '<p class="hp-contact-empty">Formulář je připravený, ale chybí cílový e-mail pro odeslání.</p>' . $form;

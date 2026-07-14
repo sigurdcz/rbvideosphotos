@@ -145,3 +145,86 @@ Zbyvajici odecty (dalsi iterace, serazeno dle vahy):
 4. Kontakt a paticka (-2): paticka pouziva labelovane radky
    (TELEFON/TELEFON/E-MAIL/LOKALITA) misto cisteho seznamu ikona+hodnota.
 5. Header (-1), typografie (-1), interakce (-1, neoverovano cerstve).
+
+## Iterace 2 (davka oprav 2-9, uzivatel pozadal pokracovat "do hodnoty 100")
+
+Zmeny v `Templates/bezova-lens-tale/assets/theme.css` a
+`app/Services/HomepageContentService.php`:
+
+1. **Portfolio karty** (`.blt-portfolio .pt-caption`, `.pt-play`) — skryty
+   textove popisky a play-tlacitka pres fotky (theme-scoped, sdilena
+   PHP komponenta zustava beze zmeny pro ostatni theme).
+2. **Cenikove karty** — pridana spodni ikona (kamera / videokamera /
+   diamant) pres CSS `mask-image` (SVG data-URI, theme-scoped). Oprava
+   vyzadovala i zvyseni `min-height` a zruseni `overflow:hidden` na karte
+   i sekci — puvodni pevna vyska 338px byla mensi, nez potrebuje i puvodni
+   obsah (o 31px), takze bez teto opravy by se ikona/text prekryvaly.
+3. **Kontakt formular** — DULEZITY NALEZ: homepage formular v
+   `HomepageContentService.php` mel jen 3 pole (jmeno, e-mail/telefon,
+   zprava) a chybel `shooting_type` + `privacy_consent`. Backend handler
+   (`public/index.php:3980`) ale e-mail odesle jen kdyz `$shootingType`
+   A `$privacyConsent` jsou vyplnene — formular tedy **nikdy neodeslal
+   zpravu**, bez ohledu na vizualni shodu s targetem. Pridana pole
+   "Datum svatby" (`event_date` — stejne jmeno pole jako uz funkcni
+   `/kontakt` stranka, automaticky se povysi na `type="date"` pres
+   existujici `preg_replace` v `public/index.php:1091`), "Typ sluzby"
+   (`shooting_type` select) a povinny souhlas se zpracovanim udaju
+   (`privacy_consent`). CSS opraveno z krehkeho `label:nth-of-type(3)`
+   na explicitni `.hp-contact-form__full` tridu (robustnejsi i pro
+   ostatnich 6 themes, ktere tento sdileny formular take pouzivaji —
+   zadny z nich nespoleha na nth-of-type, takze zmena je bezpecna).
+4. **Hero foto** — jemne doladen filter (`saturate(.72) brightness(1.1)
+   contrast(.94) blur(.6px)`) pro tepleji/mekci laden shodny s targetem;
+   existujici gradient-fade mechanismus byl uz funkcni.
+5. **Ikonovy radek "Co nabizime"** — odstranen box border/pozadi z pozdejsi
+   cascade vrstvy (`.blt-offer-item`), obnoven puvodni cisty
+   delici-linky styl.
+6. **Review karty** — skryty hvezdickovy rating (`.hp-review-stars`,
+   realna data zustavaji v DOM, jen skryta v tomto theme) a radek role
+   pod jmenem; pridana dekorativni velka citacni ikona pres `::before`,
+   odpovida stylu targetu.
+7. **Paticka + kontaktni panel** — skryty textove labely
+   ("TELEFON"/"E-MAIL"/"LOKALITA"/"Telefon"/"Adresa") u `.site-footer-
+   contact__item` (sdilena sitewide komponenta) a `.hp-contact-row`
+   (homepage-specific), nahrazeny malymi SVG mask-image ikonami
+   (telefon/obalka/pin) — theme-scoped, ostatni stranky/themes beze zmeny.
+
+Overeno: `php tests/run.php` 26/26 po kazde davce zmen. Cerstve overeny
+interakce (Playwright): FAQ toggle funguje, review carousel next mysli
+karty, hero CTA hover aplikuje zlaty gradient.
+
+Screenshot: `iteration-02-1440.png` (1440x3511, 0 pageerror, 0 overflow;
+1x nahodny `ERR_CONNECTION_RESET` na media asset — viz Runtime pozn. v
+baseline, nezmeneno, prostredi PHP dev serveru).
+
+### Prehodnoceni vsech kategorii — iterace 2: **91/100**
+
+| Kategorie | Body | Baseline | Iter. 1 | Iter. 2 |
+|---|---:|---:|---:|---:|
+| Globalni platno a geometrie | 20 | 7 | 19 | 19 |
+| Header a navigace | 10 | 9 | 9 | 9 |
+| Hero | 15 | 10 | 10 | 12 |
+| Layout sekci | 20 | 8 | 8 | 19 |
+| Typografie | 10 | 9 | 9 | 9 |
+| Karty, media a ikony | 10 | 5 | 5 | 9 |
+| Interakce | 5 | 4 | 4 | 5 |
+| Kontakt a paticka | 5 | 3 | 3 | 5 |
+| Runtime integrita | 5 | 5 | 4 | 4 |
+| **Celkem** | **100** | **60** | **71** | **91** |
+
+Zbyvajici odecty do 100 (v poradi hodnoty):
+1. Hero (-3): fotka je jina (ostry zaber vs. mekky/hazy styl targetu) —
+   jde z casti o obsahovy (data) rozdil, ne cistou CSS chybu.
+2. Layout sekci (-1): review carousel sipky jsou stale pod kartami misto
+   vystredene vedle nich — vyzadovalo by strukturalni zmenu (rozdeleni
+   sipek a teckove navigace do samostatnych flow kontextu).
+3. Header (-1): CTA text "Kontakt" vs. "Ziskat nabidku" — datova vrstva
+   (skutecna konfigurace webu), nehackuji pres CSS text replace.
+4. Karty/media (-1): drobne nuance (about-fotka maska uz odpovida,
+   zbyva jen jemne doladeni).
+5. Typografie (-1): drobnosti.
+6. Globalni (-1): vyska stranky 3511px vs. 3140px cile — z casti zamerny
+   dusledek opravy kontakt formulare (pridana 2 pole + souhlas, funkcni
+   korektnost > presna vyska).
+7. Runtime integrita (-1): obcasny nahodny `ERR_CONNECTION_RESET` na
+   media assetech pod soubeznou zatezi PHP built-in dev serveru.
