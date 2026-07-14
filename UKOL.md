@@ -328,3 +328,46 @@ Necommitnute artefakty (`baseline-1440.png`, `iteration-01-1440.png`,
 z disku behem prace mimo moji kontrolu (nebyly soucasti zadne me akce);
 soubory jsou pouze QA dukazy, ne zdroj pravdy, takze nebyly obnovovany.
 Financni dukaz je `iteration-03-1440.png`.
+
+## Iterace 4 (uzivatelsky feedback po screenshotu)
+
+Uzivatel dodal 3 anotovane screenshoty s konkretnimi vadami a potvrdil,
+ze fotky/text z DB se NEMAJI bodovat jako vady (jsou datova vrstva).
+Zaroven vyslovne pozadal odstranit celou cislovanou storyline linku
+(feature z iterace 1) — design rozhodnuti uzivatele ma prednost pred
+puvodnim targetem.
+
+Zmeny v `Templates/bezova-lens-tale/assets/theme.css` (vse v poslednim
+`@media(min-width:1100px)` bloku, aby spolehlive vyhraly kaskadu):
+
+1. **Storyline linka + cislovane markery ODSTRANENY** (`.blt-storyline`,
+   `.blt-chapter-marker` -> `display:none`) — uzivatelske rozhodnuti,
+   prevazuje puvodni cil shody s targetem.
+2. **Divna bila cara pod "Co nabizime"**: `.blt-about` melo obecne
+   `border-bottom` (sdilene vsemi sekcemi), ktere kvuli fixni vysce
+   sekce a `translateY` posunu offer-rail vypadalo jako odtrzena cara
+   v prazdnem prostoru. `border-bottom:0` pro tuto sekci.
+3. **Cenikovy "NEJOBLIBENEJSI" label**: byl `top:-15px` (poloviny mimo
+   kartu, pusobil odtrzene). Zmeneno na `top:-9px` + zaobleny horni roh
+   (`border-radius:10px 10px 4px 4px`), aby vypadal, ze "vyjizdi" z
+   karty misto plavani nad ni.
+4. **Sipky review karuselu**: opraveny doopravdy (drive znamy zbyvajici
+   gap, uzivatel nyni vyzadal fix bez ohledu na riziko). Recenze pouzivaji
+   normalni block flow (ne CSS grid), takze absolutni pozicovani vuci
+   gridu nebylo mozne primo — misto toho `transform:translate()` na
+   samotna tlacitka (`:first-child`/`:last-child`), zmereno empiricky
+   (grid stred vs. tlacitko stred) a spocitano na `translate(-48px,-114px)`
+   / `translate(48px,-114px)`. Tecky pagination zustavaji na puvodnim
+   miste (uz spravne pod kartami). `.blt-reviews overflow` zmeneno z
+   `hidden` na `visible`, aby posunuta tlacitka nebyla oriznuta.
+5. **Druhy hero overlay**: `.hero::after` (drive cislo "1") prepouzit
+   jako druha gradient vrstva — bila zleva, cira (transparentni) zprava
+   (`linear-gradient(90deg,#fffefa 0%,...,rgba(255,254,250,0) 85%)`),
+   navrstvena nad existujici `.hero::before` fade.
+
+Overeno: `php tests/run.php` 26/26. Screenshot: `iteration-04-1440.png`
+(1440x3497, 0 pageerror, 0 overflow; 1x nahodny connection reset na
+media asset, znamy limit dev serveru).
+
+Poznamka pro dalsi prace s timto skillem: fotky a presny text z DB se
+od ted NEBODUJI jako vizualni odchylka (explicitni pokyn uzivatele).

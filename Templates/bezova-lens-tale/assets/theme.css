@@ -1785,12 +1785,14 @@
   .theme-bezova-lens-tale .blt-pricing > .container > .section-intro { top:193px!important;width:172px!important;max-width:172px!important; }
   .theme-bezova-lens-tale .blt-pricing > .container > .hp-cenik-grid { width:700px!important;height:338px!important;margin-left:231px!important;transform:translateY(-18px)!important; }
   .theme-bezova-lens-tale .blt-pricing .hp-cenik-card { height:auto!important;min-height:410px!important;padding:29px 20px 56px!important;overflow:visible!important; }
-  .theme-bezova-lens-tale .blt-pricing .hp-cenik-card--featured::before { z-index:4!important;top:-15px!important;height:30px!important;color:#fff!important;font-size:8px!important;line-height:1!important; }
-  .theme-bezova-lens-tale .blt-reviews { height:285px!important;padding-block:32px!important;overflow:hidden!important; }
+  .theme-bezova-lens-tale .blt-pricing .hp-cenik-card--featured::before { z-index:4!important;top:-9px!important;height:30px!important;border-radius:10px 10px 4px 4px!important;color:#fff!important;font-size:8px!important;line-height:1!important; }
+  .theme-bezova-lens-tale .blt-reviews { height:285px!important;padding-block:32px!important;overflow:visible!important; }
   .theme-bezova-lens-tale .blt-reviews > .container > .section-title { width:176px!important;font-size:27px!important; }
   .theme-bezova-lens-tale .blt-reviews > .container > .section-intro { top:124px!important;width:176px!important;max-width:176px!important; }
   .theme-bezova-lens-tale .blt-reviews > .container > .hp-reviews-grid { width:704px!important;margin-left:227px!important; }
   .theme-bezova-lens-tale .blt-reviews .blt-review-controls { left:0!important;width:704px!important;max-width:704px!important;margin-left:227px!important; }
+  .theme-bezova-lens-tale .blt-reviews .blt-review-controls > button:first-child { transform:translate(-48px,-114px)!important; }
+  .theme-bezova-lens-tale .blt-reviews .blt-review-controls > button:last-child { transform:translate(48px,-114px)!important; }
   .theme-bezova-lens-tale .blt-contact { height:500px!important;min-height:500px!important;padding-block:44px!important;overflow:hidden!important; }
   .theme-bezova-lens-tale #kontakt.blt-contact-with-faq .cta-2col { grid-template-columns:260px 390px 260px!important;gap:16px!important;width:958px!important;height:390px!important;transform:none!important; }
   .theme-bezova-lens-tale #kontakt .blt-contact__intro,
@@ -1810,4 +1812,29 @@
   .theme-bezova-lens-tale #kontakt .blt-contact-faq .hp-faq-question { padding:0!important;border:0!important;background:transparent!important; }
   .theme-bezova-lens-tale #kontakt .blt-contact-faq .blt-text-link { min-width:138px!important;min-height:38px!important;margin-top:15px!important;padding:9px 16px!important; }
   .theme-bezova-lens-tale .theme-footer .site-footer-brand { margin-left:28px!important; }
+
+  /* User audit: drop the numbered storyline rail entirely. */
+  .theme-bezova-lens-tale .blt-storyline,
+  .theme-bezova-lens-tale .blt-chapter-marker { display:none!important; }
+
+  /* User audit: remove the stray divider under "Co nabizime". */
+  .theme-bezova-lens-tale .blt-about { border-bottom:0!important; }
+
+  /* User audit: hero::after used to be the "1" chapter badge; repurposed
+     as a second overlay, white on the left fading to clear on the right. */
+  .theme-bezova-lens-tale .hero::after {
+    content:''!important;
+    display:block!important;
+    position:absolute!important;
+    z-index:2!important;
+    inset:0!important;
+    left:0!important;
+    top:0!important;
+    width:auto!important;
+    height:auto!important;
+    border:0!important;
+    border-radius:0!important;
+    background:linear-gradient(90deg,#fffefa 0%,rgba(255,254,250,.85) 30%,rgba(255,254,250,.2) 60%,rgba(255,254,250,0) 85%)!important;
+    pointer-events:none;
+  }
 }
