@@ -487,7 +487,7 @@ class PageController extends Controller
             return;
         }
 
-        $content = (new HomepageContentService())->buildServicesHtml($siteId, 3);
+        $content = (new HomepageContentService())->buildServicesHtml($siteId, 5);
         (new BlockRepository())->upsert((int)$page['id'], 'sluzby_items', [
             'block_type' => 'html',
             'label' => 'Služby — karty',

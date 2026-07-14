@@ -817,11 +817,12 @@ $weareImageUrl = (string)($seedMedia['weare2.png']['url'] ?? '');
 $serviceStmt->execute([$siteId, 'Svatební foto & video', 'Zachytíme každý dotek, každý pohled i každou slzu štěstí. Přirozené reportážní fotografie a filmové video, které vám budou váš den připomínat celý život.', $weareImageUrl, '', 'Více informací', '/kontakt', 1]);
 $serviceStmt->execute([$siteId, 'Rodinné & portrétní focení', 'Rodinné vzpomínky, těhotenské focení, křtiny i portréty. Přirozené, nenucené a krásné snímky, ke kterým se budete rádi vracet.', '', '', 'Více informací', '/kontakt', 2]);
 $serviceStmt->execute([$siteId, 'Reklamní foto & video', 'Profesionální vizuální obsah pro firmy, produkty, kapely i značky. Obsah, který buduje důvěru, odlišuje a prodává.', '', '', 'Více informací', '/kontakt', 3]);
-$serviceStmt->execute([$siteId, 'Akce & události', 'Konference, kulturní akce, plesy, koncerty i firemní večery. Každá událost si zaslouží profesionální dokumentaci bez kompromisů.', '', '', 'Více informací', '/kontakt', 4]);
+$serviceStmt->execute([$siteId, 'Rande & zásnuby', 'Přirozené párové focení, žádost o ruku i malé příběhy ve dvou. Jemné vedení a dost prostoru pro skutečné emoce.', '', '', 'Více informací', '/kontakt', 4]);
+$serviceStmt->execute([$siteId, 'Další projekty', 'Individuální foto a video projekty, které se nevejdou do běžných kategorií. Rozsah i výstupy připravíme na míru.', '', '', 'Více informací', '/kontakt', 5]);
 echo "Služby vytvořeny.\n";
 
 $serviceContent = new \App\Services\HomepageContentService();
-$homeServicesHtml = $serviceContent->buildServicesHtml($siteId, 3);
+$homeServicesHtml = $serviceContent->buildServicesHtml($siteId, 5);
 $allServicesHtml = $serviceContent->buildServicesHtml($siteId, 0);
 
 seedBlock($pdo, $pidHome, 'sluzby_items', 'html', 'Služby — karty', $homeServicesHtml, 12);

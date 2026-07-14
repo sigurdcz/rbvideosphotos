@@ -115,7 +115,7 @@ class HomepageContentService
 
     private function fillHomepageFallbacks(array &$blocks, int $siteId): void
     {
-        $this->applyBlockFallback($blocks, 'sluzby_items', fn() => $this->buildServicesGridHtml($siteId, 3));
+        $this->applyBlockFallback($blocks, 'sluzby_items', fn() => $this->buildServicesGridHtml($siteId, 5));
         $this->applyBlockFallback($blocks, 'sluzby_cta', fn() => $this->buildPageCtaHtml($siteId, 'sluzby'));
         $this->applyBlockFallback($blocks, 'portfolio-tiles', fn() => $this->buildPortfolioHtml($siteId));
         $this->applyBlockFallback($blocks, 'portfolio_cta', fn() => $this->buildPageCtaHtml($siteId, 'nase-prace'));
@@ -150,11 +150,11 @@ class HomepageContentService
         $this->applyBlockFallback(
             $blocks,
             'sluzby_grid',
-            fn() => $this->buildServicesGridHtml($siteId, $isHomepage ? 3 : 0)
+            fn() => $this->buildServicesGridHtml($siteId, $isHomepage ? 5 : 0)
         );
 
-        $items = array_slice($this->services->allActive($siteId), 0, 4);
-        for ($i = 1; $i <= 4; $i++) {
+        $items = array_slice($this->services->allActive($siteId), 0, 5);
+        for ($i = 1; $i <= 5; $i++) {
             $this->applyBlockFallback($blocks, 'service_' . $i, fn() => $this->buildServiceCardHtml($items[$i - 1] ?? null, $i, '', $siteId));
         }
     }

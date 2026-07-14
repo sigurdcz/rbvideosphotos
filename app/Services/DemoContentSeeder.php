@@ -234,6 +234,15 @@ class DemoContentSeeder
                 'is_active' => 1,
             ];
         }
+        $items[] = [
+            'title' => 'Další projekty',
+            'description' => 'Individuální foto a video projekty, které se nevejdou do běžných kategorií. Rozsah i výstupy připravíme na míru.',
+            'image_url' => '',
+            'button_text' => 'Více informací',
+            'button_url' => '/nase-prace',
+            'sort_order' => 5,
+            'is_active' => 1,
+        ];
 
         (new ServiceRepository())->upsertMany($siteId, $items);
     }
@@ -245,7 +254,7 @@ class DemoContentSeeder
      */
     private function resetServiceBlocks(int $siteId): void
     {
-        $keys = ['sluzby_items', 'sluzby_grid', 'service_1', 'service_2', 'service_3', 'service_4'];
+        $keys = ['sluzby_items', 'sluzby_grid', 'service_1', 'service_2', 'service_3', 'service_4', 'service_5'];
         $placeholders = implode(',', array_fill(0, count($keys), '?'));
 
         foreach (['', 'sluzby'] as $urlPath) {
@@ -261,7 +270,7 @@ class DemoContentSeeder
     }
 
     /**
-     * Kanonický seznam 4 služeb. Sdílený mezi service_items (homepage grid + /sluzby)
+     * Kanonický seznam detailních služeb. Homepage navíc obsahuje DB položku Další projekty.
      * a detailními stránkami služeb (seedServicePages), aby titulky, popisy, obrázky
      * a slugy zůstaly konzistentní na jednom místě.
      */
@@ -311,24 +320,24 @@ class DemoContentSeeder
                 'seo_kw' => 'reklamní foto video, firemní focení, produktové foto, video pro firmy Olomouc',
             ],
             [
-                'slug' => 'akce-a-udalosti',
-                'title' => 'Akce & události',
+                'slug' => 'rande-a-zasnuby',
+                'title' => 'Rande & zásnuby',
                 'image' => 'koncert-zpevak-mikrofon-cernobila-fotografie.webp',
-                'lead' => 'Konference, kulturní akce, plesy, koncerty i firemní večery. Každá událost si zaslouží profesionální dokumentaci bez kompromisů.',
+                'lead' => 'Přirozené párové focení, žádost o ruku i malé příběhy ve dvou. Jemné vedení a dost prostoru pro skutečné emoce.',
                 'sections' => [
                     ['Dokumentace bez kompromisů', 'Konference, kulturní akce, plesy, koncerty i firemní večery zachytím tak, aby byla vidět atmosféra i důležité momenty. Pohybuji se nenápadně a soustředím se na to podstatné.'],
                     ['Rychlé a použitelné výstupy', 'Z akce dostanete fotografie i případný videosestřih ve formě, kterou rovnou využijete na web i sociální sítě. Termín, rozsah i způsob předání domluvíme podle konkrétní události.'],
                     ['Co nafotím', '<ul><li>konference, semináře a firemní akce</li><li>plesy, koncerty a kulturní události</li><li>reportážní foto i krátké video</li></ul>'],
                 ],
-                'seo_title' => 'Akce a události | RB Videos Photos',
-                'seo_desc' => 'Profesionální dokumentace akcí, konferencí, plesů, koncertů i firemních večerů. Foto i video bez kompromisů.',
-                'seo_kw' => 'focení akcí Olomouc, fotograf konference, foto plesy koncerty, dokumentace události',
+                'seo_title' => 'Rande a zásnuby | RB Videos Photos',
+                'seo_desc' => 'Přirozené párové focení a fotografování zásnub v Olomouci a okolí.',
+                'seo_kw' => 'párové focení Olomouc, fotograf zásnub, rande focení',
             ],
         ];
     }
 
     /**
-     * Vytvoří (nebo aktualizuje) 4 detailní stránky služeb — jednu pro každou službu
+     * Vytvoří (nebo aktualizuje) detailní stránky služeb — jednu pro každou službu
      * z servicePages(). Každá stránka = pages řádek (published) se sdílenou šablonou
      * "Služba detail" + content_blocks + SEO. Publish (na konci run()) je pak vyrenderuje
      * do storage/published/<slug>/index.html. Idempotentní podle url_path.
@@ -1355,6 +1364,7 @@ CSS;
             'service_2',
             'service_3',
             'service_4',
+            'service_5',
             'portfolio-tiles',
             'portfolio_btns',
             'blog_title',

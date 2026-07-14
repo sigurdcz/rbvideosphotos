@@ -137,6 +137,13 @@
   setEditorialCopy(sections.blog, 'Rady pro den, který si užijete', 'Výběr dodavatelů i příprava dne bez zbytečného stresu.', 'Všechny články');
   setEditorialCopy(sections.contact, 'Pojďme tvořit váš příběh', 'Napište nám pár slov o vás a vašem dni. Odpovíme do 24 hodin.', 'Kontakt');
 
+  var reviewTitle = sections.reviews ? qs('.section-title', sections.reviews) : null;
+  var blogTitle = sections.blog ? qs('.section-title', sections.blog) : null;
+  if (reviewTitle) reviewTitle.innerHTML = 'CO O N\u00c1S<br>\u0158\u00cdKAJ\u00cd<br>NA\u0160I KLIENTI';
+  if (blogTitle) blogTitle.innerHTML = 'RADY PRO<br>DEN,<br>KTER\u00dd SI<br>U\u017dIJETE';
+  var blogIntro = sections.blog ? qs('.section-intro', sections.blog) : null;
+  if (blogIntro) blogIntro.textContent = 'Dv\u011b praktick\u00e9 inspirace, kter\u00e9 v\u00e1m pomohou s v\u00fdb\u011brem dodavatel\u016f i s p\u0159\u00edpravou klidn\u00e9ho svatebn\u00edho dne.';
+
   /* About/services: editorial copy, one DB image and a horizontal offer rail. */
   if (sections.services) {
     sections.services.classList.add('blt-about');
@@ -166,6 +173,7 @@
       if (firstServiceLink) {
         var aboutCta = firstServiceLink.cloneNode(true);
         aboutCta.className = 'blt-button blt-button--solid';
+        aboutCta.textContent = 'V\u00edce o n\u00e1s';
         aboutHeader.appendChild(aboutCta);
       }
       aboutContainer.insertBefore(visual, servicesGrid);
@@ -182,13 +190,6 @@
         if (card.parentElement !== servicesGrid && card.parentElement.children.length === 1) {
           servicesGrid.appendChild(card);
         }
-      });
-      ['Rande & zásnuby', 'Další projekty'].forEach(function (label) {
-        var extra = document.createElement('article');
-        extra.className = 'blt-offer-item blt-offer-item--supplement';
-        extra.innerHTML = '<span class="blt-offer-icon" aria-hidden="true"></span><h3 class="hp-svc-card__title"></h3>';
-        qs('.hp-svc-card__title', extra).textContent = label;
-        servicesGrid.appendChild(extra);
       });
       var offerIcons = [
         '<svg viewBox="0 0 32 32"><circle cx="12" cy="17" r="7"/><circle cx="20" cy="17" r="7"/><path d="M9 8l3-4 3 4M17 8l3-4 3 4"/></svg>',
@@ -215,6 +216,12 @@
       });
       portfolioContainer.insertBefore(portfolioHeader, portfolioContainer.firstChild);
     }
+    var portfolioCta = qs('.hp-section-cta', sections.portfolio);
+    var activePortfolioHeader = qs('.sec-hdr', sections.portfolio);
+    if (portfolioCta && activePortfolioHeader) {
+      portfolioCta.classList.add('blt-portfolio-cta');
+      activePortfolioHeader.appendChild(portfolioCta);
+    }
   }
   if (sections.process) {
     sections.process.classList.add('blt-process');
@@ -234,6 +241,22 @@
     var pricingContainer = qs(':scope > .container', sections.pricing);
     var pricingGrid = qs('.hp-cenik-grid', sections.pricing);
     if (pricingContainer && pricingGrid && pricingGrid.parentElement !== pricingContainer) pricingContainer.appendChild(pricingGrid);
+    qsa('.hp-cenik-card-desc', sections.pricing).forEach(function (description) {
+      var points = description.textContent.split(/\.\s+/).map(function (point) {
+        return point.trim().replace(/\.$/, '');
+      }).filter(Boolean);
+      if (points.length) {
+        var list = document.createElement('ul');
+        list.className = 'blt-pricing-points';
+        points.forEach(function (point) {
+          var item = document.createElement('li');
+          item.textContent = point;
+          list.appendChild(item);
+        });
+        description.textContent = '';
+        description.appendChild(list);
+      }
+    });
   }
   if (sections.blog) {
     sections.blog.classList.add('blt-blog');

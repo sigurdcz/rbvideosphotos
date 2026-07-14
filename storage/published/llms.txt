@@ -1,6 +1,6 @@
-# RB Photos & Videos
+# RB Videos & Photos
 
-Web prezentace RB Photos & Videos.
+Web prezentace RB Videos & Photos.
 
 ## Hlavni ucel webu
 
@@ -8,12 +8,12 @@ Web slouzi k predstaveni nabidky, ukazek prace, cenovych informaci a kontaktniho
 
 ## Dulezite stranky
 
-- Hlavni stranka: https://rbvideosphotos.kvalitne.cz/
-- Cenik: https://rbvideosphotos.kvalitne.cz/cenik
-- Portfolio: https://rbvideosphotos.kvalitne.cz/nase-prace
-- Blog: https://rbvideosphotos.kvalitne.cz/blog
-- FAQ: https://rbvideosphotos.kvalitne.cz/faq
-- Kontakt: https://rbvideosphotos.kvalitne.cz/kontakt
+- Hlavni stranka: http://localhost:8000/
+- Cenik: http://localhost:8000/cenik
+- Portfolio: http://localhost:8000/nase-prace
+- Blog: http://localhost:8000/blog
+- FAQ: http://localhost:8000/faq
+- Kontakt: http://localhost:8000/kontakt
 
 ## Nabizene sluzby
 
@@ -25,36 +25,42 @@ Web slouzi k predstaveni nabidky, ukazek prace, cenovych informaci a kontaktniho
 
 ## Ceny
 
-- Ceny a balicky jsou na strance Cenik: https://rbvideosphotos.kvalitne.cz/cenik
+- Ceny a balicky jsou na strance Cenik: http://localhost:8000/cenik
 
 ## Kontakt
 
-- Kontaktni formular a kontaktni informace: https://rbvideosphotos.kvalitne.cz/kontakt
+- Kontaktni formular a kontaktni informace: http://localhost:8000/kontakt
 
 ## Pro AI agenty
 
 - Hlavni nabidka a vysvetleni sluzeb jsou na homepage a na obsahovych podstrankach.
 - Ceny a balicky hledejte na strance Cenik.
 - Poptavka se odesila pres formular na strance Kontakt.
-- Blog obsahuje poradenske a informacni clanky: https://rbvideosphotos.kvalitne.cz/blog
-- Portfolio a ukazky prace jsou na strance Portfolio: https://rbvideosphotos.kvalitne.cz/nase-prace
-- Casto kladene dotazy jsou na strance FAQ: https://rbvideosphotos.kvalitne.cz/faq
+- Blog obsahuje poradenske a informacni clanky: http://localhost:8000/blog
+- Portfolio a ukazky prace jsou na strance Portfolio: http://localhost:8000/nase-prace
+- Casto kladene dotazy jsou na strance FAQ: http://localhost:8000/faq
 
 ## Dalsi indexovatelne stranky
 
-- [Fotograf & Videograf Olomouc | RB Photos & Videos](https://rbvideosphotos.kvalitne.cz/)
-- [Blog | RB Photos & Videos](https://rbvideosphotos.kvalitne.cz/blog)
-- [Ceník fotografa Olomouc | RB Photos & Videos](https://rbvideosphotos.kvalitne.cz/cenik)
-- [Časté otázky | Fotograf Olomouc — RB Photos & Videos](https://rbvideosphotos.kvalitne.cz/faq)
-- [Podmínky užití](https://rbvideosphotos.kvalitne.cz/podminky-uziti)
-- [10 tipů jak se připravit na dokonalé svatební focení | RB Photos & Videos](https://rbvideosphotos.kvalitne.cz/priprava-na-svatebni-foceni)
-- [Rodinné focení s dětmi — tipy pro přirozené snímky | RB Photos & Videos](https://rbvideosphotos.kvalitne.cz/rodinne-foceni-s-detmi)
+- [Domů](http://localhost:8000/)
+- [Blog](http://localhost:8000/blog)
+- [Ceník](http://localhost:8000/cenik)
+- [FAQ](http://localhost:8000/faq)
+- [Hodnoceni](http://localhost:8000/hodnoceni)
+- [Kontakt](http://localhost:8000/kontakt)
+- [Naše práce](http://localhost:8000/nase-prace)
+- [Podmínky užití](http://localhost:8000/podminky-uziti)
+- [Rande & zásnuby | RB Photos & Videos](http://localhost:8000/rande-a-zasnuby)
+- [Reklamní foto & video | RB Photos & Videos](http://localhost:8000/reklamni-foto-video)
+- [Rodinné & portrétní focení | RB Photos & Videos](http://localhost:8000/rodinne-a-portretni-foceni)
+- [Služby](http://localhost:8000/sluzby)
+- [Svatební foto & video | RB Photos & Videos](http://localhost:8000/svatebni-foto-video)
 
 ## Posledni aktualizace
 
-- 2026-07-04
+- 2026-07-13
 
 ## Technicke discovery soubory
 
-- [Sitemap](https://rbvideosphotos.kvalitne.cz/sitemap.xml): XML sitemap vsech indexovatelnych URL.
-- [Robots](https://rbvideosphotos.kvalitne.cz/robots.txt): pravidla pro crawlery.
+- [Sitemap](http://localhost:8000/sitemap.xml): XML sitemap vsech indexovatelnych URL.
+- [Robots](http://localhost:8000/robots.txt): pravidla pro crawlery.
