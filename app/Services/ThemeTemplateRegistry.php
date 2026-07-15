@@ -6,6 +6,9 @@ use App\Core\Logger;
 
 class ThemeTemplateRegistry
 {
+    public const DEFAULT_THEME_KEY = 'elegant-white';
+    public const DEFAULT_THEME_VERSION = '1.0.0';
+
     private string $rootPath;
     private string $stateFile;
 
@@ -78,6 +81,10 @@ class ThemeTemplateRegistry
             $activeKey = $this->getPersistedActiveThemeKey();
             $activeKeySource = 'state_file';
         }
+        if ($activeKey === '') {
+            $activeKey = self::DEFAULT_THEME_KEY;
+            $activeKeySource = 'default';
+        }
 
         Logger::infoTo('theme-debug', 'theme.resolve.request', 'Theme resolution requested', [
             'site_id' => $site['id'] ?? null,
@@ -89,16 +96,23 @@ class ThemeTemplateRegistry
             'preview_key' => null,
         ]);
 
-        if ($activeKey === '') {
-            Logger::infoTo('theme-debug', 'theme.resolve.default', 'Theme resolution fell back to default', [
-                'site_id' => $site['id'] ?? null,
-                'site_name' => $site['name'] ?? null,
-                'reason' => 'no active key found',
-            ]);
-            return null;
+        $theme = $this->find($activeKey);
+        if ($activeKey === self::DEFAULT_THEME_KEY) {
+            $resolvedVersion = trim((string)($theme['version'] ?? ''));
+            if ($theme === null || $resolvedVersion !== self::DEFAULT_THEME_VERSION) {
+                Logger::errorTo('theme-debug', 'theme.resolve.default_invalid', 'Default theme is missing or has an unexpected version', [
+                    'expected_key' => self::DEFAULT_THEME_KEY,
+                    'expected_version' => self::DEFAULT_THEME_VERSION,
+                    'resolved_version' => $resolvedVersion !== '' ? $resolvedVersion : null,
+                ]);
+                throw new \RuntimeException(sprintf(
+                    'Default theme %s version %s was not found.',
+                    self::DEFAULT_THEME_KEY,
+                    self::DEFAULT_THEME_VERSION
+                ));
+            }
         }
 
-        $theme = $this->find($activeKey);
         Logger::infoTo('theme-debug', 'theme.resolve.result', 'Theme resolution completed', [
             'site_id' => $site['id'] ?? null,
             'site_name' => $site['name'] ?? null,

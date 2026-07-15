@@ -48,7 +48,7 @@ Tento soubor je obecny pracovni navod pro vsechny AI asistenty i lidske vyvojare
 - Seed nesmi menit schema. Pokud je potreba schema upravit, musi vzniknout nova migrace.
 - Media generovana seedem maji projit stejnou media pipeline jako uzivatelsky upload.
 - Admin Armagedon a lokalni reset musi pouzivat stejnou `SetupEnvironmentService`; druhou kopii DROP/migration/seed poradi nevytvarejte.
-- Referencni Demo obsah musi explicitne nastavit `bezova-lens-tale` do DB i `storage/active-theme-key.txt`.
+- Referencni Demo obsah musi explicitne nastavit vychozi `Elegant White` (`elegant-white`, verze `1.0.0`) do DB i `storage/active-theme-key.txt`.
 - Hlavni seed musi pro INSERT i UPDATE nastavit `cookie_consent_enabled=0`; analyticke a marketingove kategorie tim nevypinejte.
 - Hlavni i Demo seed musi nastavit `default_hero_poster_url` na konkretni existujici zaznam demo media knihovny; chybejici povinny hero soubor musi seed viditelne zastavit.
 - Paritu lokal/online overujte pres `DemoStateFingerprintService`; rozdil fingerprintu je viditelna chyba, ne povoleny fallback.

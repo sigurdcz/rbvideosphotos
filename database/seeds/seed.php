@@ -27,6 +27,7 @@ defined('BASE_PATH') || define('BASE_PATH', dirname(__DIR__, 2));
 use App\Core\Database;
 use App\Services\MediaIngestionService;
 use App\Services\PublishService;
+use App\Services\ThemeTemplateRegistry;
 
 $pdo = Database::getInstance();
 
@@ -57,13 +58,13 @@ if (!function_exists('seedUpsertSite')) {
         $stmt->execute([$domain]);
         $row = $stmt->fetch();
         if ($row) {
-            $pdo->prepare('UPDATE sites SET name=?, cookie_consent_enabled=0 WHERE id=?')
-                ->execute([$name, $row['id']]);
+            $pdo->prepare('UPDATE sites SET name=?, active_theme_key=?, cookie_consent_enabled=0 WHERE id=?')
+                ->execute([$name, ThemeTemplateRegistry::DEFAULT_THEME_KEY, $row['id']]);
             return (int) $row['id'];
         }
         $pdo->prepare(
             'INSERT INTO sites (name, domain, active_theme_key, cookie_consent_enabled) VALUES (?, ?, ?, ?)'
-        )->execute([$name, $domain, null, 0]);
+        )->execute([$name, $domain, ThemeTemplateRegistry::DEFAULT_THEME_KEY, 0]);
         return (int) $pdo->lastInsertId();
     }
 }

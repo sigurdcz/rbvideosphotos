@@ -278,7 +278,7 @@ Admin `Armagedon` i lokalni prikaz `php bin/reset-demo-local.php --confirm-local
 2. shodit vsechny tabulky aktualni databaze
 3. aplikovat serazene append-only migrace
 4. nacist vyhradne zakladni `database/seeds/seed.php`
-5. pri Demo obsahu overit a aktivovat `bezova-lens-tale` v DB i stavovem souboru
+5. pri Demo obsahu overit a aktivovat vychozi `Elegant White` (`elegant-white`, verze `1.0.0`) v DB i stavovem souboru
 6. publikovat a vytvorit kanonicky fingerprint
 
 `DemoStateFingerprintService` porovnava theme state, layout, sablony, stranky, bloky, SEO, demo entity, vazby medii a hash originalnich souboru. Pred hashem normalizuje `APP_URL` a nahodne storage cesty medii a vynechava publikacni casy. Rozdil hashe je chyba datove parity a nesmi byt nahrazen vizualnim odhadem.

@@ -17,7 +17,7 @@ use PDO;
 
 class DemoContentSeeder
 {
-    public const DEFAULT_THEME_KEY = 'bezova-lens-tale';
+    public const DEFAULT_THEME_KEY = ThemeTemplateRegistry::DEFAULT_THEME_KEY;
     public const DEFAULT_HERO_POSTER_ASSET = 'svatba-nevesta-zenich-polibek-kamenna-zed.webp';
 
     private PDO $db;

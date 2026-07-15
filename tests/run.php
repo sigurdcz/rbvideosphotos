@@ -231,6 +231,17 @@ $test('active theme state is explicit and removable', function () use ($assert):
 $test('default demo theme is present in the repository', function () use ($assert): void {
     $theme = (new ThemeTemplateRegistry(dirname(__DIR__) . '/Templates'))->find(DemoContentSeeder::DEFAULT_THEME_KEY);
     $assert($theme !== null, 'Missing default demo theme: ' . DemoContentSeeder::DEFAULT_THEME_KEY);
+    $assert(DemoContentSeeder::DEFAULT_THEME_KEY === 'elegant-white', 'Unexpected default demo theme key.');
+    $assert(($theme['version'] ?? null) === ThemeTemplateRegistry::DEFAULT_THEME_VERSION, 'Unexpected default theme version.');
+});
+
+$test('theme registry resolves Elegant White when no explicit theme is active', function () use ($assert): void {
+    $stateFile = sys_get_temp_dir() . '/seo-cms-missing-theme-state-' . bin2hex(random_bytes(5)) . '.txt';
+    $registry = new ThemeTemplateRegistry(dirname(__DIR__) . '/Templates', $stateFile);
+    $theme = $registry->resolveForSite(['id' => 1, 'active_theme_key' => null]);
+
+    $assert(($theme['key'] ?? null) === ThemeTemplateRegistry::DEFAULT_THEME_KEY, 'Registry did not resolve the default theme.');
+    $assert(($theme['version'] ?? null) === ThemeTemplateRegistry::DEFAULT_THEME_VERSION, 'Registry resolved an unexpected default theme version.');
 });
 
 $test('demo fingerprint is stable for reordered object keys', function () use ($assert): void {
@@ -251,7 +262,7 @@ $test('main seed disables cookie consent for inserts and updates', function () u
     $source = file_get_contents(dirname(__DIR__) . '/database/seeds/seed.php');
     $assert($source !== false, 'Main seed cannot be read.');
     $assert(
-        str_contains($source, 'UPDATE sites SET name=?, cookie_consent_enabled=0 WHERE id=?'),
+        str_contains($source, 'UPDATE sites SET name=?, active_theme_key=?, cookie_consent_enabled=0 WHERE id=?'),
         'Existing seeded sites do not receive cookie_consent_enabled=0.'
     );
     $assert(
@@ -259,8 +270,8 @@ $test('main seed disables cookie consent for inserts and updates', function () u
         'New seeded sites do not declare the cookie consent default explicitly.'
     );
     $assert(
-        str_contains($source, '->execute([$name, $domain, null, 0])'),
-        'New seeded sites do not write cookie_consent_enabled=0.'
+        str_contains($source, '->execute([$name, $domain, ThemeTemplateRegistry::DEFAULT_THEME_KEY, 0])'),
+        'New seeded sites do not write the explicit theme and cookie consent defaults.'
     );
 });
 

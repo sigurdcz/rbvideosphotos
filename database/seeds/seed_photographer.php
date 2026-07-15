@@ -6,6 +6,7 @@ require_once BASE_PATH . '/vendor/autoload.php';
 
 use App\Core\Database;
 use App\Services\PublishService;
+use App\Services\ThemeTemplateRegistry;
 
 $pdo = Database::getInstance();
 
@@ -36,12 +37,12 @@ function upsertSite(PDO $pdo, string $name, string $domain, string $ga, string $
     $s->execute([$domain]);
     $id = $s->fetchColumn();
     if ($id) {
-        $pdo->prepare('UPDATE sites SET name=?,google_analytics_id=?,google_tag_manager_id=?,body_scripts=?,layout_html=?,layout_css=?,layout_js=?,layout_nav_home=?,layout_nav_sub=?,updated_at=NOW() WHERE id=?')
-            ->execute([$name,$ga,$gtm,$bodyScript,$layoutHtml,$layoutCss,$layoutJs,$layoutNavHome,$layoutNavSub,$id]);
+        $pdo->prepare('UPDATE sites SET name=?,google_analytics_id=?,google_tag_manager_id=?,body_scripts=?,layout_html=?,layout_css=?,layout_js=?,layout_nav_home=?,layout_nav_sub=?,active_theme_key=?,updated_at=NOW() WHERE id=?')
+            ->execute([$name,$ga,$gtm,$bodyScript,$layoutHtml,$layoutCss,$layoutJs,$layoutNavHome,$layoutNavSub,ThemeTemplateRegistry::DEFAULT_THEME_KEY,$id]);
         return (int)$id;
     }
     $pdo->prepare('INSERT INTO sites (name,domain,google_analytics_id,google_tag_manager_id,body_scripts,layout_html,layout_css,layout_js,layout_nav_home,layout_nav_sub,active_theme_key) VALUES (?,?,?,?,?,?,?,?,?,?,?)')
-        ->execute([$name,$domain,$ga,$gtm,$bodyScript,$layoutHtml,$layoutCss,$layoutJs,$layoutNavHome,$layoutNavSub,null]);
+        ->execute([$name,$domain,$ga,$gtm,$bodyScript,$layoutHtml,$layoutCss,$layoutJs,$layoutNavHome,$layoutNavSub,ThemeTemplateRegistry::DEFAULT_THEME_KEY]);
     return (int)$pdo->lastInsertId();
 }
 
