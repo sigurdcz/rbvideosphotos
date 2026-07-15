@@ -381,16 +381,6 @@
     }
   }
 
-  qsa('.blt-chapter').forEach(function (section, index) {
-    section.dataset.bltChapter = String(index + 2);
-    if (!qs(':scope > .blt-chapter-marker', section)) {
-      var chapterMarker = document.createElement('span');
-      chapterMarker.className = 'blt-chapter-marker';
-      chapterMarker.setAttribute('aria-hidden', 'true');
-      chapterMarker.textContent = String(index + 2);
-      section.appendChild(chapterMarker);
-    }
-  });
 
   if (anchorLinks.length) {
     var anchorSections = anchorLinks.map(function (link) {
