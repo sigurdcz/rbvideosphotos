@@ -16,3 +16,7 @@ _deploy/
 .idea/
 .vscode/
 .claude
+
+# Local visual QA captures; keep canonical preview targets tracked separately.
+/qa-mobile-baseline-*.jpg
+/visual-progress-mobile-*.png
