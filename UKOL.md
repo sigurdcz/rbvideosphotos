@@ -8,8 +8,8 @@ Zadani: Projit cely dirty working tree, rozhodnout podle zdrojove hodnoty ktere 
 - [x] Inventarizovat diffy, puvod, velikost a roli vsech zmenenych a untracked souboru.
 - [x] Overit a commitnout hodnotne zdrojove zmeny po logickych celcich.
 - [x] Odstranit nebo obnovit reprodukovatelne generovane a docasne artefakty.
-- [ ] Aktualizovat ledger a commitnout rozhodnuti o uklidu.
-- [ ] Pushnout `master` a overit cisty strom i shodu s `origin/master`.
+- [x] Aktualizovat ledger a commitnout rozhodnuti o uklidu.
+- [x] Pushnout `master` a overit cisty strom i shodu s `origin/master`.
 
 ## Poznamky
 
@@ -23,4 +23,14 @@ Zadani: Projit cely dirty working tree, rozhodnout podle zdrojove hodnoty ktere 
 
 ## Vysledek
 
-Rozpracovano.
+Hotovo. Commit `b25d023` zachoval bezpecnou theme cleanup zmenu a commit
+`83bf342` ulozil screenshot workflow, capture skript, obe autoritativni
+predlohy a ignore pravidla. Nebezpecny CSS experiment, generovany publish
+output a 10 docasnych/duplicitnich QA obrazu byly odstraneny nebo obnoveny.
+
+Relevantni dokumentace byla doplnena v `SCREENSHOT-WORKFLOW.md`; ostatni
+projektove Markdowny nebyly timto repository cleanupem materialne zmeneny.
+Overeni: 27/27 PHP testu, HTTP 200 bez storyline markupu, PowerShell parse OK,
+host patch SHA-256 souhlasi a `git diff --check` prosel. Samostatny JS parser
+nebyl dostupny, protoze v prostredi chybi Node, Bun i Deno. Oba zdrojove
+commity byly pushnuty na `origin/master` a po pushi byla divergence `0/0`.
