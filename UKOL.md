@@ -1,37 +1,37 @@
-# UKOL: Elegant White 3 visual fix-up a poradi homepage
+# UKOL: EW3 QA loop na pevných viewპორტech
 
 Datum: 2026-07-17
-Zadani: Spustit lokalni server, aktivovat Elegant White 3, opravit poradi DB-renderovanych homepage sekci a opravit desktopove vizualni kolize na homepage.
+Zadání: Porovnávat aktivní runtime Elegant White 3 s `VZOR EW3.png`, opravovat odchylky a hodnotit pouze na pevných QA viewპორტech až do poctivých 100/100.
 
 ## Kroky
 
-- [x] Spustit lokalni server na standardni URL projektu.
-- [x] Aktivovat `elegant-white3` v lokalni DB i stavovem souboru a znovu publikovat web.
-- [x] Overit homepage bez preview parametru a pripravit prostredi pro dalsi fix-up.
-- [x] Seradit homepage na Hero -> Co nabizime / Sluzby (O nas) -> Portfolio -> Recenze -> Cenik -> Jak to probiha -> Blog -> Kontakt + FAQ.
-- [x] Overit skutecne poradi ve fresh runtime HTML a vygenerovanem assetu.
-- [x] Zapsat predanou analytiku a pevny QA postup pro telefon a PC.
-- [x] Doplnit oba QA dokumenty do dokumentacni mapy README.
-- [x] Opravit desktopovou sekci Sluzby, duplicitni review aside, geometrii Procesu a velikost checkboxu souhlasu v Elegant White 3.
-- [x] Overit opravu ve fresh runtime assetech a automatickych kontrolach.
+- [x] Potvrdit aktivní téma `elegant-white3` a autoritativní URL lokálního runtime.
+- [x] Zapsat opravený QA kontrakt: zoom 100 % a neměnné viewporty 390 x 844 a 1920 x 1080 CSS px.
+- [-] Dokončit mobilní kontrolu na 390 x 844 CSS px: screenshot a overflow jsou ověřené, zbývají interakce.
+- [-] Dokončit desktopovou kontrolu na 1920 x 1080 CSS px: screenshot a overflow jsou ověřené, zbývají interakce.
+- [x] Stanovit nový oficiální baseline pouze z obou pevných viewportů.
+- [ ] Opravit největší odchylku v `Templates/elegant-white3` a po každé změně znovu otestovat oba viewporty.
+- [ ] Opakovat opravy a měření do 100/100 bez vizuálních nebo funkčních regresí.
+- [ ] Spustit testy, `git diff --check`, projít povinné routy a zaznamenat výsledek.
 
-## Poznamky
+## Poznámky
 
-- Predchozi ETHERNA ukol je dokoncen a commitnuty; pracovni strom byl pred zahajenim cisty.
-- Aktivace musi odpovidat `ThemeController::activate()`: zapsat `sites.active_theme_key`, ulozit `storage/active-theme-key.txt` a provest publish, aby runtime i publikovany vystup souhlasily.
-- Server bezi na `http://127.0.0.1:8766/` (PID 47060). `sites.active_theme_key` i `storage/active-theme-key.txt` uz obsahuji `elegant-white3`; homepage bez `theme_preview` vraci `theme-elegant-white3`.
-- Prvni publish byl viditelne odmitnut cizim klicem `publish_history.user_id`, protoze pomocny CLI prikaz pouzil ID 0. Lokalni admin existuje jako ID 1; publish se zopakuje s timto platnym ID.
-- Publish s lokalnim adminem ID 1 probehl uspesne. Homepage bez preview parametru vratila HTTP 200 a `theme-elegant-white3`; stejna trida je v `storage/published/index.html`.
-- `#sluzby` je aktualni DB-renderovany blok `Co nabizime` a zaroven zamyslena sekce `O nas`; samostatne `#o-nas` se nevytvari ani nevyzaduje.
-- `homepage-v3.js` serazuje existujici sekce podle pozadovane konverzni cesty bez odvozeneho trust stripu; Recenze zustavaji jedinym zdrojem tohoto obsahu.
-- Predane GA4 screenshoty urcuji pevne QA viewporty: telefon 390 x 844 a PC 1920 x 1080. Vznikaji `analytics.md` a `qa-testing.md` jako zdroj dat a opakovatelny postup.
-- README dokumentacni mapa odkazuje na `analytics.md` a `qa-testing.md` vcetne jejich role a pevných viewportu.
+- Rozsah úprav zůstává výhradně v `Templates/elegant-white3`; CMS core ani DB data se nemění.
+- Referenční obraz `VZOR EW3.png` je designový cíl a nesmí se přidávat do commitu.
+- Autoritativní testovací URL: `http://127.0.0.1:8766/`; aktivní téma je `elegant-white3`.
+- Uživatel 2026-07-17 výslovně schválil lokální Google Chrome jako QA cestu. Každý screenshot vzniká s čistým profilem, cache vypnutou a `--force-device-scale-factor=1` (100 %).
+- Platné a neměnné QA viewporty jsou pouze 390 x 844 CSS px (telefon / iPhone 12 Pro) a 1920 x 1080 CSS px (PC), přesně podle `qa-testing.md`.
+- Starší snímky při šířce 724 px jsou archivní průzkumné podklady pro srovnání s rozměrem referenčního obrazu. Nesmí se použít pro oficiální skóre ani pro potvrzení overflow.
+- Dříve uvedené skóre 96/100 pocházelo z průzkumného 724 px capture, proto je zneplatněno. Nový baseline se stanoví až po obou povinných QA captures.
+- Kontrola Chrome DevTools 2026-07-17 odhalila, že samotný headless přepínač `--window-size=390,844` vynutil minimální vnitřní viewport 500 x 749 CSS px. Všechny takto zachycené mobilní obrazy jsou proto pouze pracovní náhledy, nikoli QA důkaz. Další snímky se pořídí až přes `Emulation.setDeviceMetricsOverride` na přesných 390 x 844 CSS px; stejně se explicitně nastaví desktop 1920 x 1080.
+- Předchozí úpravy již řeší viditelnost druhé hero CTA, dvousloupcový kontakt, tmavou patičku a kompaktní přechodový breakpoint. Nyní se ověří jejich chování na skutečných QA viewპორტech.
+- Mobilní baseline odhalil pevný klon CTA pod herem, který neodpovídá vzoru a zbytečně překrýval viewport. `homepage-v3.js` jej již nevytváří. Současně mobilní override omezuje hero obsah na šířku viewportu, vynucuje zalomení pomocné řádky a vrací viditelný ovladač mobilního menu i značku.
+- Po validním snímku 390 x 844 zůstala pomocná SEO řádka i popis u pravé hrany příliš těsné. Na telefonu proto zůstává pouze čitelný titul a dvě hlavní CTA; desktopová hero hierarchie a její popis se nemění.
+- Oficiální baseline, iterace QA-01: mobilní snímek `visual-ew3-qa-mobile-390x844-exact-20260717.png`, desktopový snímek `visual-ew3-qa-desktop-1920x1080-exact-20260717.png`. DevTools emulace potvrzuje přesné viewporty 390 x 844 a 1920 x 1080 CSS px; `scrollWidth === clientWidth` platí na obou (375/375 a 1905/1905, rozdíl způsobuje svislý scrollbar). Aktuální vizuální skóre je 88/100. Desktop je blízko vzoru, mobil je nyní čistý bez horizontálního overflow; největší rezerva je v dalším srovnání hustoty a navazujících sekcí na mobilu.
+- Ověřeno po QA-01: `php tests/run.php` = 27 tests, 0 failures; `git diff --check` bez chyb (pouze standardní CRLF upozornění).
+- QA capture byl rozšířen o `qa_chrome_fullpage_capture.ps1`. Nově zachovává pevnou QA šířku, nejprve měří dokument na základním viewportu a následně nastaví pouze capture výšku na celý stabilizovaný dokument. Validace 2026-07-17: 390 x 844 -> capture 390 x 9689, 1920 x 1080 -> capture 1920 x 7840; overflow je `true` na obou. Aktuální full-page screenshoty jsou uložené v kořeni projektu.
+- Iterace QA-02: full-page mobilní snímek ukázal, že starší `nth-child(n + 3)` pravidlo skrylo část portfolia a blog fungoval jako horizontální rail. Mobilní override nyní ukazuje všechny portfolio karty a skládá blog do jednoho svislého sloupce; desktopová pravidla zůstávají beze změny.
 
-- Reportovane chyby se tykaji pouze aktivniho override `elegant-white3`: prekryti obsahu fotografii ve Sluzbach, duplicitni odvozeny review aside, deformovane kroky Procesu a globalni minimalni vyska aplikovana na checkbox souhlasu.
-- Sluzby maji na desktopu mensi levou fotografii (420 px vyska) a mensi mezeru; proces ma pevne kruhy 60 px nad textem a osu ve vysce jejich stredu. Finalni desktopovy override neutralizuje starsi absolutni pozicovani cisel. Consent checkbox explicitne prepisuje obecnou minimalni vysku na 20 px i po normalizaci kontaktniho formulare.
-- Funkce a styly pro `.ew3-trust-strip` byly odebrany, takze pod kartami Recenzi nezustava zadny zduplikovany odvozeny review blok. Publish s lokalnim adminem ID 1 probehl po oprave uspesne.
-- `php tests/run.php` proslo 27/27; `git diff --check` proslo. Fresh runtime (HTTP 200) vydal nove hashovane assety `/assets/generated/page-css-8f6268db0c99064a.css` a `/assets/generated/page-js-39d4b8692c060672.js`, ktere obsahuji opravne CSS a uz nevolaji ani neresadi trust strip. Fresh Chrome screenshoty pro desktop vizualne potvrdily oddeleny obraz a text Sluzeb, absenci review aside, osu prochazejici stredem cisel procesu a maly checkbox vedle souhlasu.
+## Výsledek
 
-## Vysledek
-
-Hotovo. Lokalni server bezi na `http://127.0.0.1:8766/`; Elegant White 3 je aktivni v DB, stavovem souboru i publikovanem vystupu. Homepage ma poradi Hero -> Co nabizime / Sluzby (O nas) -> Portfolio -> Recenze -> Cenik -> Proces -> Blog -> Kontakt -> FAQ. `analytics.md` uklada predany GA4 snapshot a `qa-testing.md` zavadi pevne viewporty 390 x 844 a 1920 x 1080 pro dalsi fix-up.
+Nevyplněno — probíhá nový baseline na 390 x 844 a 1920 x 1080 CSS px.

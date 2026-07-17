@@ -65,9 +65,13 @@
 
     var ctaWrap = qs('.hero-cta-wrap', hero);
     var portfolioCta = qs('#nase-prace .hp-section-cta a');
-    if (ctaWrap && portfolioCta && !qs('.ew3-secondary-cta', ctaWrap)) {
-      var secondary = portfolioCta.cloneNode(true);
+    if (ctaWrap && !qs('.ew3-secondary-cta', ctaWrap)) {
+      var secondary = portfolioCta ? portfolioCta.cloneNode(true) : document.createElement('a');
       secondary.className = 'btn-secondary ew3-secondary-cta';
+      if (!portfolioCta) {
+        secondary.href = '#nase-prace';
+        secondary.textContent = 'Naše práce';
+      }
       ctaWrap.appendChild(secondary);
     }
 
@@ -78,6 +82,13 @@
       heroImage.decoding = 'async';
       if (!heroImage.alt && heading) heroImage.alt = cleanText(heading);
     }
+  }
+
+  function enhanceHeaderCta() {
+    var contactLink = qs('.site-nav .nav-cta[href="#kontakt"], .theme-nav-wrap a[href="#kontakt"]');
+    if (!contactLink) return;
+    contactLink.textContent = 'Ověřit volný termín';
+    contactLink.setAttribute('aria-label', 'Ověřit volný termín');
   }
 
   function enhancePricing() {
@@ -109,7 +120,9 @@
   function optimizeImages() {
     qsa('main img').forEach(function (image) {
       if (image.classList.contains('hero-bg')) return;
-      image.loading = 'lazy';
+      var priorityImage = image.closest('#sluzby, #nase-prace, #blog, #kontakt');
+      image.loading = priorityImage ? 'eager' : 'lazy';
+      if (priorityImage) image.fetchPriority = 'high';
       image.decoding = 'async';
       if (!image.alt) {
         var section = image.closest('section');
@@ -146,17 +159,7 @@
     });
   }
 
-  function addMobileCta() {
-    var primary = qs('#uvod .hero-cta-wrap .btn-primary, #uvod .hero-cta-wrap a');
-    if (!primary || qs('.ew3-mobile-cta')) return;
-    var bar = document.createElement('div');
-    bar.className = 'ew3-mobile-cta';
-    var link = primary.cloneNode(true);
-    link.className = 'ew3-mobile-cta__link';
-    bar.appendChild(link);
-    body.appendChild(bar);
-  }
-
+  enhanceHeaderCta();
   enhanceHero();
   ['#sluzby', '#nase-prace', '#hodnoceni', '#cenik', '#proces', '#blog', '#kontakt', '#faq'].forEach(function (selector) {
     ensureSectionHeading(qs(selector));
@@ -165,5 +168,6 @@
   optimizeImages();
   revealContent();
   reorderSections();
-  addMobileCta();
+  // Portfolio CTA is guaranteed to exist only after the homepage order is normalized.
+  enhanceHero();
 })();

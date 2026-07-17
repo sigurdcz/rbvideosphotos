@@ -6,7 +6,7 @@ Tento postup overuje skutecny lokalni runtime SEO Editoru. Zdroj volby viewportu
 
 | Scenar | Viewport | Pouziti |
 | --- | --- | --- |
-| Telefon | **390 x 844 CSS px** | Povinna mobilni kontrola kazde zmeny verejneho renderingu nebo aktivni sablony. |
+| Telefon (iphone 12 Pro) | **390 x 844 CSS px** | Povinna mobilni kontrola kazde zmeny verejneho renderingu nebo aktivni sablony. |
 | PC | **1920 x 1080 CSS px** | Povinna desktopova kontrola kazde zmeny verejneho renderingu nebo aktivni sablony. |
 
 Nemenit tyto rozmery mezi iteracemi, jinak nelze porovnavat screenshoty ani overflow. Browser zoom musi byt 100 %.
