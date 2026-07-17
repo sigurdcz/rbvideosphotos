@@ -1,0 +1,24 @@
+{
+  "key": "etherna",
+  "name": "ETHERNA",
+  "description": "Eterna — Luxury Wedding Photography & Film Template. DB-first multipage motiv podle dodaneho UI/UX prototypu.",
+  "version": "1.0.0",
+  "author": "SEO CMS",
+  "sort_order": 58,
+  "layout_html": "layout.html",
+  "layout_css": "assets/theme.css",
+  "layout_js": "assets/theme.js",
+  "pages": ["homepage", "sluzby", "portfolio", "portfolio-detail", "blog", "blog-post", "cenik", "faq", "kontakt"],
+  "assets": { "css": [], "js": [] },
+  "overrides": {
+    "homepage": { "assets": { "css": ["assets/homepage.css"], "js": ["assets/homepage.js"] } },
+    "sluzby": { "assets": { "css": ["assets/inner-pages.css"] } },
+    "portfolio": { "assets": { "css": ["assets/inner-pages.css"] } },
+    "portfolio-detail": { "assets": { "css": ["assets/inner-pages.css"] } },
+    "blog": { "assets": { "css": ["assets/inner-pages.css"] } },
+    "blog-post": { "assets": { "css": ["assets/inner-pages.css"] } },
+    "cenik": { "assets": { "css": ["assets/inner-pages.css"] } },
+    "faq": { "assets": { "css": ["assets/inner-pages.css"] } },
+    "contact": { "assets": { "css": ["assets/inner-pages.css"] } }
+  }
+}

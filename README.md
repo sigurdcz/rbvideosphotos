@@ -50,6 +50,7 @@ Aktualne dostupna temata:
 | Elegant White | `elegant-white` |
 | Elegant White 2 | `elegant-white2` |
 | Elegant White 3 | `elegant-white3` |
+| ETHERNA | `etherna` |
 | Béžová Lens & Tale | `bezova-lens-tale` |
 
 Aktivni tema se nastavuje v `Nastaveni -> Tema`. Technicke chovani theme aplikace je v `ARCHITECTURE.md`.
