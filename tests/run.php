@@ -336,6 +336,12 @@ $test('hero poster changes the environment fingerprint', function () use ($asser
     );
 });
 
+// PHTML view engine core tests (Phase 1). Registers into the same $tests suite
+// so they run and count with `php tests/run.php`. The engine is not yet wired
+// into any render path, so these exercise App\View\* in isolation.
+require __DIR__ . '/ViewEngineTest.php';
+register_view_engine_tests($test, $assert);
+
 $failures = 0;
 foreach ($tests as [$name, $callback]) {
     try {

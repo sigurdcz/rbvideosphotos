@@ -16,12 +16,13 @@ Hotovo když: Všech 7 fází (viz `TEMPLATE_REFACTOR_PLAN.md`) implementováno 
 - [x] Ověřit `php tests/run.php` (27 testů + 26 golden checků, exit 0)
 - [x] Commit `test(templates): add golden-master runner...` (88acda8)
 
-### Fáze 1 — View engine core (žádná změna chování)
-- [ ] Delegovat na subagenta (model dle model-check)
-- [ ] `App\View\ViewEngine`, `ViewResolver`, `ViewContext`, `LegacyLayoutView`
-- [ ] Unit testy: escaping, kaskáda resoluce, realpath containment, slot/partial
-- [ ] Ověřit: nic zatím nevolá nový engine, golden testy beze změny
-- [ ] Commit `refactor(templates): add PHTML view engine core`
+### Fáze 1 — View engine core (žádná změna chování) [HOTOVO]
+- [x] Delegovat na subagenta (model dle model-check) — běží na Opus 4.8 jako dedikovaný agent
+- [x] `App\View\ViewEngine`, `ViewResolver`, `ViewContext`, `LegacyLayoutView`
+- [x] Fixture views v `tests/fixtures/views/` (app/Views zůstává prázdný)
+- [x] Unit testy: escaping, kaskáda resoluce, realpath containment, slot/partial, inlineAttr, LegacyLayoutView parita
+- [x] Ověřit: nic zatím nevolá nový engine, golden testy beze změny (`php tests/run.php` → 36 testů + 26 golden, exit 0)
+- [x] Commit `refactor(templates): add PHTML view engine core`
 
 ### Fáze 2 — Sjednocení pipeline (PageComposer)
 - [ ] Delegovat na subagenta (vyšší náročnost — duplicitní extrakce)
@@ -72,6 +73,18 @@ Hotovo když: Všech 7 fází (viz `TEMPLATE_REFACTOR_PLAN.md`) implementováno 
 - Golden soubory se negenerují automaticky do gitu — pouze přes `--update-goldens`, commit až po ručním schválení uživatelem.
 - Nalezený a opravený bug: ve výchozím režimu (`php tests/run.php` bez flagů) staré testy vypisují PASS/FAIL řádky přímo (bez output bufferingu) ještě před tím, než golden runner poprvé `require`ne `public/index.php` — a to způsobovalo "headers already sent" varování při `session_start()`/`header()` uvnitř bootstrapu. Opraveno jedním `ob_start()` na začátku `tests/run.php`, které obalí celý běh (PHP automaticky flushne buffer při ukončení skriptu).
 - Každé spuštění golden testů (default i `--test-goldens`) reálně znovu publikuje všechny stránky (`PublishService::publishPage`), takže dočasně "zašpiní" `storage/published/*.html` (nový timestamp + nový CSRF token ve fallback kontakt bloku na homepage/kontaktu). To je funkční požadavek úkolu (golden musí ověřovat aktuální kód, ne jen soubory na disku), ne chyba — po každém běhu testů je proto potřeba `git checkout -- storage/published/`, pokud nemá jít o skutečnou publikaci.
+
+### Fáze 1 — poznámky pro Fázi 2
+
+- Načítání tříd: `vendor/autoload.php` je ručně psaný PSR-4 shim (`App\ → app/`), ne skutečný Composer classmap — nové soubory se načtou automaticky, bez regenerace. `App\View\ViewEngine` → `app/View/ViewEngine.php` (pozor: `app/View/` = PHP třídy, budoucí `app/Views/` = .phtml šablony; na Windows nekolidují, liší se koncovým `s`).
+- Vzniklé soubory (namespace `App\View`, `declare(strict_types=1)`):
+  - `app/View/ViewResolver.php` — kaskádová resoluce přes seřazené rooty (téma → core). API: `resolve(name): ?string` (null když nenalezeno), `resolveOrFail()`, `assertValidName()`, `roots()`. Bezpečnost: regex `~^[a-z0-9][a-z0-9/_-]*$~D` (modifikátor `D` blokuje trailing newline), explicitní guardy na `\0` a `..`, `realpath()` + case-aware prefix containment na Windows. Neplatné/malicious jméno → `InvalidArgumentException` (ne resoluce mimo root).
+  - `app/View/ViewContext.php` — `$this` v šabloně: `e()`, `raw()`, `partial()`, `block()`, `inlineAttr()`, `slot()/endSlot()/renderSlot()`, `layout()`, `asset()`, `mediaUrl()`. Žádné DB dotazy. `contentBlocks`, `editMode`, `assetBaseUrl` přicházejí jako sdílené options enginu.
+  - `app/View/ViewEngine.php` — `render(view, data): string`. `$this` binding: template se `include`uje uvnitř closure definované v `ViewContext::includeTemplate()` a volané přes `->call($this)`, takže `$this` ve `.phtml` == ViewContext; `ob_start` + `extract($data, EXTR_SKIP)` (interní `$__file/$__data` nelze přepsat daty). Layout se renderuje ve STEJNÉM kontextu (aby `renderSlot()` i extrahované slot-proměnné fungovaly); výstup stránky se stává implicitním slotem `content`.
+  - `app/View/LegacyLayoutView.php` — bytová kopie `PageRenderer::applyLayout()` (`{page_content}` → `{nav}` → `{site_name}` escaped `ENT_QUOTES,UTF-8`, v tomto pořadí). POZOR pro Fázi 2/3: prázdný `$nav` `{nav}` ODSTRANÍ (str_replace bezpodmínečně), doc-komentář „pass '' to leave unreplaced" je nepřesný — parita s reálným chováním ověřena testem.
+- Testy: `tests/ViewEngineTest.php` (9 testů) — registrují se do `tests/run.php` přes `register_view_engine_tests($test,$assert)`; soubor je i samostatně spustitelný (`php tests/ViewEngineTest.php`). Fixtures v `tests/fixtures/views/{core,theme}/…` (každá končí `?>` aby případný trailing newline pohltil PHP). `app/Views/` zůstal ve Fázi 1 nezaložený (přijde ve fázích 3–5).
+- `mediaUrl()` volá globální `publicMediaUrl()` když je načtená (live/publish), jinak bytově shodná privátní kopie — Fáze 2 sjednotí zdroj (extrakce do sdílené služby).
+- Ověřeno: `php tests/run.php` → 36 testů (27 původních + 9 nových) + 26 golden checků, 0 failures, exit 0. Golden výstup beze změny (nový engine nikdo nevolá).
 
 ## Výsledek
 
