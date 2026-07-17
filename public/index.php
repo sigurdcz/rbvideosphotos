@@ -3855,6 +3855,15 @@ HTML;
     return true;
 }
 
+// The golden-master test harness (tests/GoldenMasterRunner.php) requires this file
+// once to obtain the tryServe*() function definitions and the app bootstrap
+// (Env/Config/Runtime/Auth) without triggering the routing dispatch below — it calls
+// the tryServe*() functions directly per simulated route instead. This constant is
+// never defined outside that harness, so real requests are unaffected.
+if (defined('SEO_CMS_GOLDEN_BOOTSTRAP')) {
+    return;
+}
+
 try {
     $publishedDir = dirname(__DIR__) . '/storage/published';
     $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);

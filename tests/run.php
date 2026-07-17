@@ -14,6 +14,36 @@ use App\Services\SecurityTxtValidator;
 use App\Services\SetupFilesystemResetService;
 use App\Services\ThemeTemplateRegistry;
 
+require __DIR__ . '/GoldenMasterRunner.php';
+
+// Buffer all output for the whole run. GoldenMasterRunner::bootstrap() require()s
+// public/index.php, which calls session_start()/header() — those fail with
+// "headers already sent" if any earlier test in this same process (e.g. the
+// PASS/FAIL lines below) already flushed real output to stdout first. Keeping
+// everything inside one outer buffer means nothing is actually sent to the SAPI
+// until the script ends, so that never happens regardless of run order.
+ob_start();
+
+$cliArgs = array_slice((array) ($_SERVER['argv'] ?? []), 1);
+
+if (in_array('--update-goldens', $cliArgs, true)) {
+    $result = GoldenMasterRunner::update();
+    foreach ($result['lines'] as $line) {
+        echo $line . "\n";
+    }
+    echo sprintf("\n%d golden target(s), %d error(s)\n", count($result['lines']), $result['failures']);
+    exit($result['failures'] === 0 ? 0 : 1);
+}
+
+if (in_array('--test-goldens', $cliArgs, true)) {
+    $result = GoldenMasterRunner::test();
+    foreach ($result['lines'] as $line) {
+        echo $line . "\n";
+    }
+    echo sprintf("\n%d golden check(s), %d failure(s)\n", count($result['lines']), $result['failures']);
+    exit($result['failures'] === 0 ? 0 : 1);
+}
+
 $validator = new SecurityTxtValidator();
 $generator = new SecurityTxtGenerator();
 $responder = new SecurityTxtHttpResponder();
@@ -318,4 +348,23 @@ foreach ($tests as [$name, $callback]) {
 }
 
 echo sprintf("\n%d tests, %d failures\n", count($tests), $failures);
+
+// Golden-master checks run only if baselines already exist (tests/goldens/ is
+// populated via `php tests/run.php --update-goldens`); their absence must not
+// fail the base suite (e.g. on a fresh checkout before the first update run).
+if (is_dir(__DIR__ . '/goldens/live') || is_dir(__DIR__ . '/goldens/publish')) {
+    echo "\n--- Golden-master checks ---\n";
+    try {
+        $goldenResult = GoldenMasterRunner::test();
+        foreach ($goldenResult['lines'] as $line) {
+            echo $line . "\n";
+        }
+        $failures += $goldenResult['failures'];
+        echo sprintf("%d golden check(s), %d failure(s)\n", count($goldenResult['lines']), $goldenResult['failures']);
+    } catch (Throwable $e) {
+        $failures++;
+        echo "FAIL golden-master checks: {$e->getMessage()}\n";
+    }
+}
+
 exit($failures === 0 ? 0 : 1);
