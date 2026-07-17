@@ -1,37 +1,35 @@
-# UKOL: EW3 QA loop na pevných viewპორტech
+# UKOL: Refactoring šablonování na PHTML systém — analýza a návrh
 
 Datum: 2026-07-17
-Zadání: Porovnávat aktivní runtime Elegant White 3 s `VZOR EW3.png`, opravovat odchylky a hodnotit pouze na pevných QA viewპორტech až do poctivých 100/100.
+Zadání: Analyzovat současné šablonování (hardcoded HTML v PHP) a navrhnout čistý PHTML templating systém s per-page/per-archetype overridy, včetně plánu implementace.
+Hotovo když: Existuje kompletní dokument s analýzou současného stavu, návrhem architektury PHTML systému (flow diagram), fázovaným plánem refactoringu a implementačními kontrakty/konvencemi.
 
 ## Kroky
 
-- [x] Potvrdit aktivní téma `elegant-white3` a autoritativní URL lokálního runtime.
-- [x] Zapsat opravený QA kontrakt: zoom 100 % a neměnné viewporty 390 x 844 a 1920 x 1080 CSS px.
-- [-] Dokončit mobilní kontrolu na 390 x 844 CSS px: screenshot a overflow jsou ověřené, zbývají interakce.
-- [-] Dokončit desktopovou kontrolu na 1920 x 1080 CSS px: screenshot a overflow jsou ověřené, zbývají interakce.
-- [x] Stanovit nový oficiální baseline pouze z obou pevných viewportů.
-- [ ] Opravit největší odchylku v `Templates/elegant-white3` a po každé změně znovu otestovat oba viewporty.
-- [ ] Opakovat opravy a měření do 100/100 bez vizuálních nebo funkčních regresí.
-- [ ] Spustit testy, `git diff --check`, projít povinné routy a zaznamenat výsledek.
+- [x] Analýza současného templatingu: layout flow (`sites.layout_html`, `applyThemeTemplate`), theme registry, publish pipeline
+- [x] Analýza speciálních rendererů (sluzby, faq, kontakt, blog, portfolio, cenik) a míst s hardcoded HTML v PHP
+- [x] Analýza admin integrace (inline editor, content_blocks, `data-block`) a frontend request flow
+- [x] Návrh architektury PHTML systému: View/TemplateEngine třída, struktura souborů, override resoluce, escaping, data kontrakty
+- [x] Identifikace integračních bodů a dopadů (admin, frontend, publish, témata, média)
+- [x] Sestavení fázovaného plánu implementace s prioritami
+- [x] Sepsání implementačních kontraktů a konvencí (podklad pro implementaci)
+- [x] Finalizace dokumentu návrhu a commit
 
 ## Poznámky
 
-- Rozsah úprav zůstává výhradně v `Templates/elegant-white3`; CMS core ani DB data se nemění.
-- Referenční obraz `VZOR EW3.png` je designový cíl a nesmí se přidávat do commitu.
-- Autoritativní testovací URL: `http://127.0.0.1:8766/`; aktivní téma je `elegant-white3`.
-- Uživatel 2026-07-17 výslovně schválil lokální Google Chrome jako QA cestu. Každý screenshot vzniká s čistým profilem, cache vypnutou a `--force-device-scale-factor=1` (100 %).
-- Platné a neměnné QA viewporty jsou pouze 390 x 844 CSS px (telefon / iPhone 12 Pro) a 1920 x 1080 CSS px (PC), přesně podle `qa-testing.md`.
-- Starší snímky při šířce 724 px jsou archivní průzkumné podklady pro srovnání s rozměrem referenčního obrazu. Nesmí se použít pro oficiální skóre ani pro potvrzení overflow.
-- Dříve uvedené skóre 96/100 pocházelo z průzkumného 724 px capture, proto je zneplatněno. Nový baseline se stanoví až po obou povinných QA captures.
-- Kontrola Chrome DevTools 2026-07-17 odhalila, že samotný headless přepínač `--window-size=390,844` vynutil minimální vnitřní viewport 500 x 749 CSS px. Všechny takto zachycené mobilní obrazy jsou proto pouze pracovní náhledy, nikoli QA důkaz. Další snímky se pořídí až přes `Emulation.setDeviceMetricsOverride` na přesných 390 x 844 CSS px; stejně se explicitně nastaví desktop 1920 x 1080.
-- Předchozí úpravy již řeší viditelnost druhé hero CTA, dvousloupcový kontakt, tmavou patičku a kompaktní přechodový breakpoint. Nyní se ověří jejich chování na skutečných QA viewპორტech.
-- Mobilní baseline odhalil pevný klon CTA pod herem, který neodpovídá vzoru a zbytečně překrýval viewport. `homepage-v3.js` jej již nevytváří. Současně mobilní override omezuje hero obsah na šířku viewportu, vynucuje zalomení pomocné řádky a vrací viditelný ovladač mobilního menu i značku.
-- Po validním snímku 390 x 844 zůstala pomocná SEO řádka i popis u pravé hrany příliš těsné. Na telefonu proto zůstává pouze čitelný titul a dvě hlavní CTA; desktopová hero hierarchie a její popis se nemění.
-- Oficiální baseline, iterace QA-01: mobilní snímek `visual-ew3-qa-mobile-390x844-exact-20260717.png`, desktopový snímek `visual-ew3-qa-desktop-1920x1080-exact-20260717.png`. DevTools emulace potvrzuje přesné viewporty 390 x 844 a 1920 x 1080 CSS px; `scrollWidth === clientWidth` platí na obou (375/375 a 1905/1905, rozdíl způsobuje svislý scrollbar). Aktuální vizuální skóre je 88/100. Desktop je blízko vzoru, mobil je nyní čistý bez horizontálního overflow; největší rezerva je v dalším srovnání hustoty a navazujících sekcí na mobilu.
-- Ověřeno po QA-01: `php tests/run.php` = 27 tests, 0 failures; `git diff --check` bez chyb (pouze standardní CRLF upozornění).
-- QA capture byl rozšířen o `qa_chrome_fullpage_capture.ps1`. Nově zachovává pevnou QA šířku, nejprve měří dokument na základním viewportu a následně nastaví pouze capture výšku na celý stabilizovaný dokument. Validace 2026-07-17: 390 x 844 -> capture 390 x 9689, 1920 x 1080 -> capture 1920 x 7840; overflow je `true` na obou. Aktuální full-page screenshoty jsou uložené v kořeni projektu.
-- Iterace QA-02: full-page mobilní snímek ukázal, že starší `nth-child(n + 3)` pravidlo skrylo část portfolia a blog fungoval jako horizontální rail. Mobilní override nyní ukazuje všechny portfolio karty a skládá blog do jednoho svislého sloupce; desktopová pravidla zůstávají beze změny.
+- Bez frameworků (Laravel/Symfony/ORM/npm build) — čistý PHP 8+, PDO, Composer autoload `App\`.
+- Bezpečnost: prepared statements, CSRF, `realpath()` path validace, escaping v šablonách.
+- Témata nesmí být zdrojem obsahových dat — obsah vždy z DB (`content_blocks`, `service_items`, `faq_items`, `contact_info`, `blog_posts`, `portfolio_entries`).
+- Tento úkol je analýza + návrh; implementace následuje po schválení návrhu.
+- Předchozí úkol (EW3 QA loop) je zachován v git historii — poslední commit d9cc38f.
 
 ## Výsledek
 
-Nevyplněno — probíhá nový baseline na 390 x 844 a 1920 x 1080 CSS px.
+Vytvořen `TEMPLATE_REFACTOR_PLAN.md` — kompletní podklad pro refactoring šablonování:
+
+1. **Analýza**: duplikovaný render pipeline live (`public/index.php`, 3 673 ř.) vs. publish (`PublishService`, `PortfolioPublishService`) s ~50 funkcemi ve 2–3 kopiích; speciální stránky (faq/kontakt/sluzby/blog/portfolio) celé v heredocích; ~20 regex `inject*` post-průchodů; theme hacky a ~800 ř. CSS v PHP core.
+2. **Architektura**: `App\View\{ViewEngine, ViewResolver, ViewContext, PageComposer}` + `App\ViewModels\*` (čistá data, žádné HTML); PHTML views v `app/Views/{layouts,archetypes,partials}` s override kaskádou theme-page → theme-archetype → core-page → core-archetype; theme manifest v2 (`views_dir`, `overrides.<pageKey>.view`); legacy `layout.html` přes adaptér.
+3. **Plán**: Fáze 0 golden-master testy → 1 view engine → 2 sjednocení pipeline → 3 layout/chrome do PHTML → 4 speciální archetypy (faq→…→kontakt) → 5 homepage+generické stránky → 6 theme overridy a úklid. Jeden archetyp = jeden commit `refactor(templates): ...`.
+4. **Kontrakty**: společný view-data obal + archetypové klíče, bezpečnostní pravidla view vrstvy (realpath containment, escaping default, CSRF z kontraktu), zachování inline editoru přes `inlineAttr()`.
+
+Implementace zatím neproběhla — čeká se na schválení návrhu.
