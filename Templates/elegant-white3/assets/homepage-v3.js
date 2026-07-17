@@ -80,31 +80,6 @@
     }
   }
 
-  function addTrustProof() {
-    var hero = qs('#uvod');
-    var review = qs('#hodnoceni .hp-review-card');
-    if (!hero || !review || qs('.ew3-trust-strip')) return;
-
-    var strip = document.createElement('aside');
-    strip.className = 'ew3-trust-strip';
-    strip.setAttribute('aria-label', 'Hodnocení klientů');
-
-    var stars = qs('.hp-review-stars', review);
-    var quote = qs('p', review);
-    var name = qs('.jb-review-person strong, strong', review);
-    var context = qs('.jb-review-person span, span', review);
-
-    if (stars) strip.appendChild(stars.cloneNode(true));
-    if (quote) strip.appendChild(quote.cloneNode(true));
-    var source = document.createElement('div');
-    source.className = 'ew3-trust-source';
-    if (name) source.appendChild(name.cloneNode(true));
-    if (context) source.appendChild(context.cloneNode(true));
-    if (source.childNodes.length) strip.appendChild(source);
-
-    hero.insertAdjacentElement('afterend', strip);
-  }
-
   function enhancePricing() {
     var section = qs('#cenik');
     if (!section) return;
@@ -153,19 +128,20 @@
 
   function reorderSections() {
     var hero = qs('#uvod');
-    var trust = qs('.ew3-trust-strip');
-    var portfolio = qs('#nase-prace');
     var services = qs('#sluzby');
+    var portfolio = qs('#nase-prace');
+    var reviews = qs('#hodnoceni');
     var pricing = qs('#cenik');
     var process = qs('#proces');
-    var reviews = qs('#hodnoceni');
-    var faq = qs('#faq');
     var blog = qs('#blog');
     var contact = qs('#kontakt');
+    var faq = qs('#faq');
     var main = hero ? hero.parentNode : qs('.theme-main');
     if (!main) return;
 
-    [hero, trust, portfolio, services, pricing, process, reviews, faq, blog, contact].forEach(function (section) {
+    // The existing #sluzby section is the site's "Co nabízíme / O nás" block.
+    // Content remains DB-driven; the theme only changes its visual order.
+    [hero, services, portfolio, reviews, pricing, process, blog, contact, faq].forEach(function (section) {
       if (section && section.parentNode === main) main.appendChild(section);
     });
   }
@@ -182,10 +158,9 @@
   }
 
   enhanceHero();
-  ['#sluzby', '#nase-prace', '#cenik', '#hodnoceni', '#faq', '#proces', '#blog', '#kontakt'].forEach(function (selector) {
+  ['#sluzby', '#nase-prace', '#hodnoceni', '#cenik', '#proces', '#blog', '#kontakt', '#faq'].forEach(function (selector) {
     ensureSectionHeading(qs(selector));
   });
-  addTrustProof();
   enhancePricing();
   optimizeImages();
   revealContent();
