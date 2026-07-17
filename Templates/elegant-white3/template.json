@@ -1,0 +1,38 @@
+{
+  "key": "elegant-white3",
+  "name": "Elegant White 3",
+  "description": "Konverznejsi premium svatebni sablona s durazem na mobilni UX, portfolio, pristupnost a lokalni SEO.",
+  "version": "1.0.0",
+  "author": "SEO CMS",
+  "sort_order": 57,
+  "layout_html": "layout.html",
+  "layout_css": "assets/theme.css",
+  "layout_js": "assets/theme.js",
+  "pages": [
+    "homepage",
+    "sluzby",
+    "portfolio",
+    "portfolio-detail",
+    "blog",
+    "blog-post",
+    "cenik",
+    "faq",
+    "kontakt"
+  ],
+  "assets": {
+    "css": [],
+    "js": []
+  },
+  "overrides": {
+    "homepage": {
+      "assets": {
+        "css": [
+          "assets/homepage-v3.css"
+        ],
+        "js": [
+          "assets/homepage-v3.js"
+        ]
+      }
+    }
+  }
+}

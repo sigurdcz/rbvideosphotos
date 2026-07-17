@@ -1,0 +1,194 @@
+(function () {
+  'use strict';
+
+  var body = document.body;
+  if (!body || !body.classList.contains('theme-elegant-white3')) return;
+  if (body.getAttribute('data-cms-page-key') !== 'homepage') return;
+  if (body.classList.contains('ew3-enhanced')) return;
+  body.classList.add('ew3-enhanced');
+
+  function qs(selector, scope) {
+    return (scope || document).querySelector(selector);
+  }
+
+  function qsa(selector, scope) {
+    return Array.prototype.slice.call((scope || document).querySelectorAll(selector));
+  }
+
+  function cleanText(node) {
+    return node ? (node.textContent || '').replace(/\s+/g, ' ').trim() : '';
+  }
+
+  function ensureSectionHeading(section) {
+    if (!section) return;
+    var title = qs('.section-title, h2', section);
+    var label = qs('.section-label', section);
+    var labelText = cleanText(label);
+
+    if (!title && labelText) {
+      title = document.createElement('h2');
+      title.className = 'section-title ew3-derived-title';
+      title.textContent = labelText;
+      label.insertAdjacentElement('afterend', title);
+    } else if (title && !cleanText(title) && labelText) {
+      title.textContent = labelText;
+      title.classList.add('ew3-derived-title');
+    }
+
+    if (title && label && cleanText(title).toLocaleLowerCase() === labelText.toLocaleLowerCase()) {
+      label.classList.add('ew3-label-echo');
+    }
+  }
+
+  function enhanceHero() {
+    var hero = qs('#uvod.hp-hero');
+    if (!hero) return;
+
+    var label = qs('.section-label', hero);
+    var heading = qs('h1', hero);
+    if (heading && label && !qs('.ew3-seo-line', heading)) {
+      var seoLine = document.createElement('span');
+      seoLine.className = 'ew3-seo-line';
+      var seoText = cleanText(label).replace(/\s+-\s+/, ' · ');
+      var heroSub = cleanText(qs('.hero-sub', hero));
+      var weddingWord = heroSub.match(/svatební/i);
+      if (weddingWord && !/svatební/i.test(seoText)) seoText = weddingWord[0] + ' ' + seoText.toLocaleLowerCase();
+      seoLine.textContent = seoText;
+
+      var storyLine = document.createElement('span');
+      storyLine.className = 'ew3-story-line';
+      while (heading.firstChild) storyLine.appendChild(heading.firstChild);
+      heading.appendChild(seoLine);
+      heading.appendChild(storyLine);
+      label.classList.add('ew3-original-hero-label');
+    }
+
+    var ctaWrap = qs('.hero-cta-wrap', hero);
+    var portfolioCta = qs('#nase-prace .hp-section-cta a');
+    if (ctaWrap && portfolioCta && !qs('.ew3-secondary-cta', ctaWrap)) {
+      var secondary = portfolioCta.cloneNode(true);
+      secondary.className = 'btn-secondary ew3-secondary-cta';
+      ctaWrap.appendChild(secondary);
+    }
+
+    var heroImage = qs('.hero-bg', hero);
+    if (heroImage) {
+      heroImage.loading = 'eager';
+      heroImage.fetchPriority = 'high';
+      heroImage.decoding = 'async';
+      if (!heroImage.alt && heading) heroImage.alt = cleanText(heading);
+    }
+  }
+
+  function addTrustProof() {
+    var hero = qs('#uvod');
+    var review = qs('#hodnoceni .hp-review-card');
+    if (!hero || !review || qs('.ew3-trust-strip')) return;
+
+    var strip = document.createElement('aside');
+    strip.className = 'ew3-trust-strip';
+    strip.setAttribute('aria-label', 'Hodnocení klientů');
+
+    var stars = qs('.hp-review-stars', review);
+    var quote = qs('p', review);
+    var name = qs('.jb-review-person strong, strong', review);
+    var context = qs('.jb-review-person span, span', review);
+
+    if (stars) strip.appendChild(stars.cloneNode(true));
+    if (quote) strip.appendChild(quote.cloneNode(true));
+    var source = document.createElement('div');
+    source.className = 'ew3-trust-source';
+    if (name) source.appendChild(name.cloneNode(true));
+    if (context) source.appendChild(context.cloneNode(true));
+    if (source.childNodes.length) strip.appendChild(source);
+
+    hero.insertAdjacentElement('afterend', strip);
+  }
+
+  function enhancePricing() {
+    var section = qs('#cenik');
+    if (!section) return;
+    var sourceCta = qs('.hp-section-cta a', section);
+
+    qsa('.hp-cenik-card', section).forEach(function (card) {
+      if (sourceCta && !qs('.ew3-price-cta', card)) {
+        var cta = sourceCta.cloneNode(true);
+        cta.className = 'ew3-price-cta';
+        card.appendChild(cta);
+      }
+    });
+
+    var featured = qs('.hp-cenik-card--featured', section);
+    var description = featured ? qs('.hp-cenik-card-desc, .hp-cenik-card__desc', featured) : null;
+    if (featured && description && !qs('.ew3-price-badge', featured)) {
+      var firstWord = cleanText(description).split(/\s+/)[0].replace(/[.,;:!?]+$/, '');
+      if (firstWord) {
+        var badge = document.createElement('span');
+        badge.className = 'ew3-price-badge';
+        badge.textContent = firstWord;
+        featured.insertBefore(badge, featured.firstChild);
+      }
+    }
+  }
+
+  function optimizeImages() {
+    qsa('main img').forEach(function (image) {
+      if (image.classList.contains('hero-bg')) return;
+      image.loading = 'lazy';
+      image.decoding = 'async';
+      if (!image.alt) {
+        var section = image.closest('section');
+        var heading = section ? qs('h2, h3', section) : null;
+        if (heading) image.alt = cleanText(heading);
+      }
+    });
+  }
+
+  function revealContent() {
+    qsa('.ew-reveal, .jb-reveal').forEach(function (element) {
+      element.classList.add('is-visible');
+      element.style.transitionDelay = '0ms';
+    });
+  }
+
+  function reorderSections() {
+    var hero = qs('#uvod');
+    var trust = qs('.ew3-trust-strip');
+    var portfolio = qs('#nase-prace');
+    var services = qs('#sluzby');
+    var pricing = qs('#cenik');
+    var process = qs('#proces');
+    var reviews = qs('#hodnoceni');
+    var faq = qs('#faq');
+    var blog = qs('#blog');
+    var contact = qs('#kontakt');
+    var main = hero ? hero.parentNode : qs('.theme-main');
+    if (!main) return;
+
+    [hero, trust, portfolio, services, pricing, process, reviews, faq, blog, contact].forEach(function (section) {
+      if (section && section.parentNode === main) main.appendChild(section);
+    });
+  }
+
+  function addMobileCta() {
+    var primary = qs('#uvod .hero-cta-wrap .btn-primary, #uvod .hero-cta-wrap a');
+    if (!primary || qs('.ew3-mobile-cta')) return;
+    var bar = document.createElement('div');
+    bar.className = 'ew3-mobile-cta';
+    var link = primary.cloneNode(true);
+    link.className = 'ew3-mobile-cta__link';
+    bar.appendChild(link);
+    body.appendChild(bar);
+  }
+
+  enhanceHero();
+  ['#sluzby', '#nase-prace', '#cenik', '#hodnoceni', '#faq', '#proces', '#blog', '#kontakt'].forEach(function (selector) {
+    ensureSectionHeading(qs(selector));
+  });
+  addTrustProof();
+  enhancePricing();
+  optimizeImages();
+  revealContent();
+  reorderSections();
+  addMobileCta();
+})();

@@ -20,3 +20,4 @@ _deploy/
 # Local visual QA captures; keep canonical preview targets tracked separately.
 /qa-mobile-baseline-*.jpg
 /visual-progress-mobile-*.png
+/visual-progress-ew3-*.png
