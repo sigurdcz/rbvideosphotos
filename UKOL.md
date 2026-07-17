@@ -1,24 +1,67 @@
-# UKOL: Fáze 0 — Golden-master testy (záchranná síť)
+# UKOL: Refactoring šablonování na PHTML systém (7 fází)
 
 Datum: 2026-07-17
-Zadání: Vytvořit golden-master testovací systém (`GoldenMasterRunner` v `tests/`), který zachytí normalizované HTML všech veřejných rout a publish výstupu jako baseline pro ověřování byte-ekvivalence během fází 1–6 refactoringu šablonování.
-Hotovo když: `php tests/run.php` projde (existující testy + goldeny, pokud existují), `php tests/run.php --update-goldens` vygeneruje kompletní baseline pro live routy i publish výstup, `php tests/run.php --test-goldens` je porovná a reportuje OK/CHANGED/MISSING, goldeny nejsou automaticky commitnuté (čeká se na schválení uživatele přes `git diff tests/goldens/`).
+Zadání: Přestat šablonovat přes HTML layouty s hardcodeovaným generováním HTML v PHP; implementovat čistý PHTML view systém (jako Blade v Laravelu) s per-stránka/archetyp overridey a jedním sjednoceným render pipeline pro live i publish. Orchestrace přes subagenty s modelem podle náročnosti operace.
+Hotovo když: Všech 7 fází (viz `TEMPLATE_REFACTOR_PLAN.md`) implementováno a commitnuto, golden testy (`php tests/run.php --test-goldens`) projdou nebo mají výslovně schválené rozdíly, visual-screenshot-score-loop QA ✓ na 390×844 a 1920×1080 po každé fázi, bez regresí v admin/frontend/publish/tématech/médiích.
 
 ## Kroky
 
-- [x] Prozkoumat `public/index.php` (routing dispatch, `tryServe*` funkce, závislosti) a `app/Services/PublishService.php`
-- [x] Zjistit skutečná demo data v DB (slugy stránek, blog postů, portfolio položek) pro výběr golden rout
-- [x] Identifikovat všechny nedeterministické prvky ve výstupu (publish timestamp komentář, CSRF token na `/kontakt`, `date('Y')` copyright, sha1 asset hashe, `data-inline-*` v edit módu)
-- [x] Navrhnout minimální bezpečnou úpravu `public/index.php` (guard kolem finálního dispatch bloku přes `return;` když je definovaná testovací konstanta) — bez dopadu na produkční chování
-- [x] Implementovat `tests/GoldenMasterRunner.php`: bootstrap `public/index.php` jednou, `renderLiveRoute()`, `renderPublishRoute()`, `normalizeHtmlForGolden()`, update/test/report logika s řádkovým diffem
-- [x] Upravit `public/index.php` — přidat guard `if (defined('SEO_CMS_GOLDEN_BOOTSTRAP')) { return; }` před finální try/catch dispatch
-- [x] Rozšířit `tests/run.php` o parsování `--update-goldens` / `--test-goldens`, výchozí režim spouští staré testy + golden test (pokud goldeny existují)
-- [x] Vytvořit `tests/goldens/live/` a `tests/goldens/publish/` strukturu
-- [x] Spustit `php tests/run.php` (ověřit, že staré testy stále procházejí) a `php tests/run.php --update-goldens` (vygenerovat baseline)
-- [x] Spustit `php tests/run.php --test-goldens` (ověřit, že čerstvě vygenerované goldeny projdou beze změny)
-- [x] Zkontrolovat normalizované goldeny ručně (žádné zbytkové timestampy/tokeny/hashe)
-- [x] Nechat uživatele schválit baseline (`git diff tests/goldens/`) — necommitovat automaticky
-- [ ] Po schválení uživatelem: commit `test(templates): add golden-master runner for live routes and publish output`
+### Fáze 0 — Golden-master testy (záchranná síť) [HOTOVO]
+- [x] Prozkoumat `public/index.php` (routing, `tryServe*`) a `PublishService.php`
+- [x] Identifikovat nedeterministické prvky výstupu (timestamp, CSRF, asset hashe, copyright rok)
+- [x] Implementovat `tests/GoldenMasterRunner.php` (update/test/report, LCS diff)
+- [x] Guard v `public/index.php` pro test bootstrap bez dopadu na produkci
+- [x] Rozšířit `tests/run.php` o `--update-goldens` / `--test-goldens`
+- [x] Vygenerovat baseline: 12 live rout + 14 publish cílů
+- [x] Ověřit `php tests/run.php` (27 testů + 26 golden checků, exit 0)
+- [x] Commit `test(templates): add golden-master runner...` (88acda8)
+
+### Fáze 1 — View engine core (žádná změna chování)
+- [ ] Delegovat na subagenta (model dle model-check)
+- [ ] `App\View\ViewEngine`, `ViewResolver`, `ViewContext`, `LegacyLayoutView`
+- [ ] Unit testy: escaping, kaskáda resoluce, realpath containment, slot/partial
+- [ ] Ověřit: nic zatím nevolá nový engine, golden testy beze změny
+- [ ] Commit `refactor(templates): add PHTML view engine core`
+
+### Fáze 2 — Sjednocení pipeline (PageComposer)
+- [ ] Delegovat na subagenta (vyšší náročnost — duplicitní extrakce)
+- [ ] Extrakce sdílených funkcí z `public/index.php` + `PublishService` do `App\Services\Render\*`
+- [ ] `PageComposer` s módy live/publish
+- [ ] Golden diff prázdný nebo schválený
+- [ ] Commit `refactor(templates): unify live and publish render pipeline`
+
+### Fáze 3 — Layout a chrome do PHTML
+- [ ] Delegovat na subagenta
+- [ ] `layouts/default.phtml` + partials (nav, footer, hero, breadcrumb, cookie-consent)
+- [ ] Přesun `getSharedComponentCss()` do assets
+- [ ] `elegant-white3` dostane `views/layout.phtml`
+- [ ] Golden + visual QA (390×844, 1920×1080)
+- [ ] Commit `refactor(templates): move layout chrome to PHTML partials`
+
+### Fáze 4 — Speciální archetypy (9 samostatných commitů)
+- [ ] faq: ViewModel + `archetypes/faq.phtml`, smazat heredoc, golden + visual QA
+- [ ] sluzby: totéž
+- [ ] cenik: totéž
+- [ ] reviews/hodnoceni: totéž
+- [ ] blog-listing: totéž
+- [ ] blog-detail: totéž
+- [ ] portfolio-listing: totéž
+- [ ] portfolio-detail: totéž
+- [ ] kontakt (poslední — CSRF, honeypot, throttling): totéž
+
+### Fáze 5 — Homepage a generické stránky
+- [ ] Delegovat na subagenta
+- [ ] `HomepageData` + `archetypes/homepage.phtml` (sekce jako data, ne HTML)
+- [ ] `archetypes/page.phtml` pro generické CMS stránky (legacy fragment)
+- [ ] Golden + visual QA
+
+### Fáze 6 — Theme overridy a úklid
+- [ ] Delegovat na subagenta
+- [ ] Manifest v2 (`views_dir`, `overrides.<pageKey>.view`)
+- [ ] Migrace theme hacků z core do témat
+- [ ] Smazat mrtvé `inject*`/`build*` funkce a duplicitní kopie
+- [ ] Aktualizace `ARCHITECTURE.md`
+- [ ] Finální golden + visual QA všech stránek
 
 ## Poznámky
 
