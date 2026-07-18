@@ -539,6 +539,36 @@ HTML;
             return [$html, $css];
         }
 
+        if ($pageKey === 'nase-prace') {
+            $siteId = (int)($page['site_id'] ?? 0);
+            $portfolioData = \App\ViewModels\PortfolioListingData::forSite($siteId);
+            [$titleKey, $title, $titleType] = \App\Services\Render\HomepageSectionRenderer::firstBlockValue(
+                $blocks,
+                ['hero_h1', 'hero_heading'],
+                'Naše práce'
+            );
+            [$subKey, $sub, $subType] = \App\Services\Render\HomepageSectionRenderer::firstBlockValue(
+                $blocks,
+                ['hero_sub', 'hero_intro'],
+                'Ukázka videí a galerií z naší práce.'
+            );
+
+            $html = \App\View\ViewFactory::forTheme(null)->render('archetypes/portfolio-listing', [
+                'hero' => [
+                    'title' => $title,
+                    'sub' => $sub,
+                    'titleKey' => $titleKey,
+                    'titleType' => $titleType,
+                    'subKey' => $subKey,
+                    'subType' => $subType,
+                ],
+                'entries' => $portfolioData['entries'],
+            ]);
+            $css = rtrim((string)file_get_contents(\App\View\ViewFactory::base() . '/app/Views/assets/portfolio-listing.css'), "\n");
+
+            return [$html, $css];
+        }
+
         return [null, ''];
     }
 

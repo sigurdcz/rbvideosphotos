@@ -1632,97 +1632,25 @@ function tryServePortfolioPage(string $uri, bool $detailOnly = false): bool
         $pageBlocks = pageBlockMap($page);
         [$heroTitleKey, $heroTitle, $heroTitleType] = firstBlockValue($pageBlocks, ['hero_h1', 'hero_heading'], 'Naše práce');
         [$heroSubKey, $heroSub, $heroSubType] = firstBlockValue($pageBlocks, ['hero_sub', 'hero_intro'], 'Ukázka videí a galerií z naší práce.');
-        $heroTitleAttrs = inlineAttrs($page, $heroTitleKey, $heroTitleType);
-        $heroSubAttrs = inlineAttrs($page, $heroSubKey, $heroSubType);
-        $entries = $repo->allPublished((int)$site['id']);
-        $tiles = '';
-
-        foreach ($entries as $entry) {
-            $photos   = $repo->getMedia((int)$entry['id']);
-            $hasVideo = !empty($entry['video_url']);
-            $thumb    = $hasVideo ? PortfolioRepository::youtubeThumbnail((string)$entry['video_url']) : '';
-            if ($thumb === '' && !empty($photos)) {
-                $thumbFile = $photos[0]['thumb_path'] ?? $photos[0]['medium_path'] ?? $photos[0]['storage_path'] ?? '';
-                $thumb = publicMediaUrl((string)$thumbFile);
-            }
-
-            $thumbHtml = $thumb !== ''
-                ? '<div class="bl-thumb"><img src="' . $h($thumb) . '" alt="' . $h($entry['title']) . '" loading="lazy">' . (!empty($entry['video_url']) ? '<span class="bl-play">&#9654;</span>' : '') . '</div>'
-                : '<div class="bl-thumb bl-thumb--empty"></div>';
-            $titleAttrs = inlineAttrs($page, 'portfolio:' . (int)$entry['id'] . ':title', 'text');
-
-            // Kratky uryvek z textace prace (pod nadpisem v prehledu).
-            $excerptSrc = trim((string)($entry['meta_description'] ?? ''));
-            if ($excerptSrc === '' || str_starts_with($excerptSrc, 'Ukázková práce fotografa')) {
-                $excerptSrc = trim(preg_replace('/\s+/', ' ', strip_tags((string)($entry['description'] ?? ''))));
-            }
-            $excerptHtml = '';
-            if ($excerptSrc !== '') {
-                if (mb_strlen($excerptSrc) > 150) {
-                    $cut = mb_substr($excerptSrc, 0, 150);
-                    $sp  = mb_strrpos($cut, ' ');
-                    $excerptSrc = rtrim($sp !== false ? mb_substr($cut, 0, $sp) : $cut, " ,.;:") . '…';
-                }
-                $excerptHtml = '<p class="bl-excerpt">' . $h($excerptSrc) . '</p>';
-            }
-            $typeLabel = !empty($entry['video_url']) ? 'Video & galerie' : 'Fotogalerie';
-
-            $tiles .= <<<HTML
-<a class="bl-card pt-card" href="/{$h($entry['slug'])}">
-  {$thumbHtml}
-  <div class="bl-body pt-card-body">
-    <div class="bl-date">{$h($typeLabel)}</div>
-    <h2 class="bl-title pt-title"{$titleAttrs}>{$h($entry['title'])}</h2>
-    {$excerptHtml}
-    <span class="bl-more">Zobrazit praci &rarr;</span>
-  </div>
-</a>
-HTML;
-        }
-
-        $tiles = $tiles !== '' ? $tiles : '<p class="pt-empty">Zat&#237;m &#382;&#225;dn&#233; publikovan&#233; pr&#225;ce.</p>';
+        $editMode = Auth::check() && !isset($_GET['cms_preview']) && $page !== null;
         $siteNameEsc = $h($siteName);
 
         // CSS specific to portfolio pages — nav/footer/base reset comes from layout_css when layout is active
-        $portfolioListingCss = <<<'CSS'
-body{background:#111;color:#fff}
-.pf-hero{background:#1a1a1a;color:#fff;padding:72px 0 46px;text-align:center}
-.pf-hero h1{font-size:clamp(2.4rem,5vw,4rem);color:#fff;margin-bottom:10px}
-.pf-hero p{color:rgba(255,255,255,.7);font-size:1.1rem;max-width:720px;margin:0 auto}
-.grid-wrap{padding:48px 0 80px}
-.pt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:28px}
-.bl-card.pt-card{display:flex;flex-direction:column;background:#1b1b1f;border-radius:14px;overflow:hidden;text-decoration:none;color:inherit;box-shadow:0 14px 30px rgba(0,0,0,.25);transition:transform .2s,box-shadow .2s}
-.bl-card.pt-card:hover{transform:translateY(-3px);box-shadow:0 20px 40px rgba(0,0,0,.4)}
-.bl-thumb{position:relative;height:210px;overflow:hidden;background:#0e0e11}
-.bl-thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s}
-.bl-card.pt-card:hover .bl-thumb img{transform:scale(1.04)}
-.bl-thumb--empty{height:210px;background:#16161a;display:flex;align-items:center;justify-content:center}
-.bl-thumb--empty::before{content:"\25B6";font-size:3rem;color:rgba(255,255,255,.25)}
-.bl-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:68px;height:68px;border-radius:999px;background:rgba(196,150,60,.92);display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:#fff;box-shadow:0 12px 28px rgba(0,0,0,.32)}
-.bl-body.pt-card-body{padding:22px 22px 26px;display:flex;flex-direction:column;flex:1}
-.bl-date{font-size:.8rem;color:rgba(255,255,255,.4);margin-bottom:8px}
-.pt-title,.bl-title{font-size:1.15rem;font-weight:800;color:#fff;margin:0 0 10px;line-height:1.35}
-.bl-excerpt{font-size:.9rem;color:rgba(255,255,255,.6);line-height:1.55;flex:1;margin-bottom:16px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-.bl-more{display:inline-block;color:#c4963c;font-weight:700;font-size:.9rem;margin-top:auto}
-.pt-empty{color:rgba(255,255,255,.72);padding:32px 0;text-align:center}
-@media(max-width:720px){.pf-hero{padding:42px 0 28px}.pf-hero h1{font-size:2.25rem}.pf-hero p{font-size:.92rem}.grid-wrap{padding:18px 0 42px}.pt-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.bl-card.pt-card{border-radius:10px}.bl-thumb,.bl-thumb--empty{height:clamp(116px,37vw,156px)}.bl-body.pt-card-body{padding:10px 11px 12px}.bl-date,.bl-excerpt,.bl-more{display:none}.pt-title,.bl-title{font-size:.84rem;line-height:1.22;margin:0}.bl-play{width:40px;height:40px;font-size:1rem}}
-CSS;
+        $portfolioListingCss = rtrim((string)file_get_contents(ViewFactory::base() . '/app/Views/assets/portfolio-listing.css'), "\n");
 
         $renderer   = new PageRenderer();
         $nav = resolveThemeNav($site, false);
-$pageContent = <<<HTML
-<section class="pf-hero">
-  <div class="container">
-    <h1{$heroTitleAttrs}>{$h($heroTitle)}</h1>
-    <p{$heroSubAttrs}>{$h($heroSub)}</p>
-  </div>
-</section>
-<section class="grid-wrap">
-  <div class="container">
-    <div class="pt-grid">{$tiles}</div>
-  </div>
-</section>
-HTML;
+        $pageContent = ViewFactory::forTheme(null, ['editMode' => $editMode])->render('archetypes/portfolio-listing', [
+            'hero' => [
+                'title' => $heroTitle,
+                'sub' => $heroSub,
+                'titleKey' => $heroTitleKey,
+                'titleType' => $heroTitleType,
+                'subKey' => $heroSubKey,
+                'subType' => $heroSubType,
+            ],
+            'entries' => PortfolioListingData::forSite((int)$site['id'])['entries'],
+        ]);
         [$pageContent, $themeCss, $themeJs, $themeActive] = applyThemeTemplate(
             $renderer,
             $site,
@@ -1771,17 +1699,7 @@ HTML;
 </head>
 <body>
 {$nav}
-<section class="pf-hero">
-  <div class="container">
-    <h1>Nase prace</h1>
-    <p>Ukazka videi a galerii, ktere jste vybrali v administraci.</p>
-  </div>
-</section>
-<section class="grid-wrap">
-  <div class="container">
-    <div class="pt-grid">{$tiles}</div>
-  </div>
-</section>
+{$pageContent}
 <footer>{$siteNameEsc}</footer>
 </body>
 </html>
