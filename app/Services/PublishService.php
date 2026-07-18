@@ -16,10 +16,12 @@ use App\Repositories\SeoRepository;
 use App\Repositories\SiteRepository;
 use App\Repositories\TemplateRepository;
 use App\Services\LlmsTxtGenerator;
+use App\Services\Render\PageComposer;
+use App\Services\Render\PublishPageChrome;
 use App\Services\ThemeTemplateRegistry;
 use App\Support\FrontendAssetManager;
 
-class PublishService
+class PublishService implements PublishPageChrome
 {
     private const DEFAULT_FORM_EMAIL = ContactRepository::DEFAULT_FORM_EMAIL;
     private PageRenderer $renderer;
@@ -155,26 +157,23 @@ class PublishService
                 'page_key' => $pageKey,
             ]);
         }
-        $html = $this->injectHomepageMissingSections($html, $blocks, $isHome);
-        $html = $this->injectHomepageThemeDataSources($html, $blocks, $isHome);
-        $html = $this->injectHomepageAboutVisualSource($html, (int)$page['id']);
-        $html = $this->renderer->injectAssets($html, $css, $js);
-
         $seoHead     = $this->seoRenderer->renderHead($seo, $site, $pageUrl, $ogImageUrl, $twImageUrl);
         $bodyScripts = $this->seoRenderer->renderBodyScripts($site);
-        $html        = $this->renderer->injectSeo($html, $seoHead, $bodyScripts);
-        $html        = $this->injectRichFooter($html, $site);
-        $html        = $this->injectSiteLogo($html, $site);
-        $html        = $this->injectPageHeroImage($html, (int)$page['id'], $site);
-        $html = $this->injectPageHeroVideo($html, $site, (int)$page['id']);
-        $html = $this->injectBodyPageKey($html, $pageKey);
-        $html = $this->normalizeLegacyFrontendMarkup($html);
-        $html = $this->injectSharedFrontendAssets($html);
-        $html = $this->externalizeBodyCssVariables($html);
-        $html = $this->injectGlobalVideoOverlayStyles($html, $site);
-        $html = $this->injectEditorialGoldOverrides($html);
-        $html = $this->extractInlineStyleBlocks($html);
-        $html = $this->extractInlineBodyScripts($html);
+        $html = PageComposer::compose([
+            'mode'        => PageComposer::MODE_PUBLISH,
+            'chrome'      => $this,
+            'renderer'    => $this->renderer,
+            'html'        => $html,
+            'css'         => $css,
+            'js'          => $js,
+            'seoHead'     => $seoHead,
+            'bodyScripts' => $bodyScripts,
+            'blocks'      => $blocks,
+            'site'        => $site,
+            'page'        => $page,
+            'isHome'      => $isHome,
+            'pageKey'     => $pageKey,
+        ]);
 
         // Write HTML file
         $filePath = $this->resolveFilePath($page['url_path']);
@@ -454,7 +453,7 @@ HTML;
         return rtrim($site['domain'], '/') . '/' . ltrim($path, '/');
     }
 
-    private function injectPageHeroImage(string $html, int $pageId, array $site = []): string
+    public function injectPageHeroImage(string $html, int $pageId, array $site = []): string
     {
         $block = $this->blocks->findByKey($pageId, 'hero_bg');
         $url = $block ? $this->normalizePublicAssetUrl((string)($block['content'] ?? '')) : '';
@@ -471,181 +470,29 @@ HTML;
     private function injectHomepageAboutVisualSource(string $html, int $pageId): string
     {
         $page = $this->pages->findById($pageId);
-        if (!$page || trim((string)($page['url_path'] ?? ''), '/') !== '') {
+        if (!$page) {
             return $html;
         }
-
-        $block = $this->blocks->findByKey($pageId, 'jb-about-visual__media');
-        $url = $block ? $this->homepageContent->resolveOptimizedMediaUrl((int)$page['site_id'], (string)($block['content'] ?? ''), 102400) : '';
-        if ($url === '') {
-            $url = $this->resolveDemoMediaUrlByFilename((int)$page['site_id'], 'weare2.png');
-        }
-        $sourcePattern = '~<(?:img|span)\b[^>]*\bclass=(["\'])[^"\']*\bjb-about-visual__source\b[^"\']*\1[^>]*(?:>.*?</span>|>)~is';
-
-        if ($url === '') {
-            return preg_replace($sourcePattern, '', $html) ?? $html;
-        }
-
-        $source = '<span class="jb-about-visual__source" data-src="' . htmlspecialchars($url, ENT_QUOTES) . '" hidden></span>';
-        $updated = preg_replace($sourcePattern, $source, $html, 1, $count);
-        if ($count > 0 && is_string($updated)) {
-            return $updated;
-        }
-
-        $count = 0;
-        $html = preg_replace('/(<main\b[^>]*>)/i', '$1' . $source, $html, 1, $count);
-        if ($count > 0 && is_string($html)) {
-            return $html;
-        }
-
-        return preg_replace('/(<body\b[^>]*>)/i', '$1' . $source, $html, 1) ?? $html;
+        $isHome = trim((string)($page['url_path'] ?? ''), '/') === '';
+        return \App\Services\Render\HomepageSectionRenderer::injectHomepageAboutVisualSource($html, $pageId, (int)($page['site_id'] ?? 0), $isHome);
     }
 
     private function blockContent(array $blocks, string $key): string
     {
-        foreach ($blocks as $block) {
-            if (($block['block_key'] ?? '') === $key) {
-                return trim((string)($block['content'] ?? ''));
-            }
-        }
-
-        return '';
+        return \App\Services\Render\HomepageSectionRenderer::blockContent($blocks, $key);
     }
 
     private function injectHomepageMissingSections(string $html, array $blocks, bool $isHome): string
     {
-        if (!$isHome) {
-            return $html;
-        }
-
-        $sections = '';
-        if (!preg_match('~<section\b[^>]*\bid=(["\'])cenik\1~i', $html)) {
-            $pricingBody = $this->blockContent($blocks, 'pricing_body') ?: $this->blockContent($blocks, 'cenik_body');
-            if ($pricingBody !== '') {
-                $pricingTitle = $this->blockContent($blocks, 'pricing_title') ?: $this->blockContent($blocks, 'cenik_title') ?: 'Cenik';
-                $pricingIntro = $this->blockContent($blocks, 'pricing_intro') ?: $this->blockContent($blocks, 'cenik_intro');
-                $pricingCta = $this->blockContent($blocks, 'pricing_cta') ?: $this->blockContent($blocks, 'cenik_cta');
-                $sections .= '<section class="section ew-pricing hp-pricing" id="cenik"><div class="container">'
-                    . '<p class="section-label">Cenik</p>'
-                    . '<h2 class="section-title">' . $pricingTitle . '</h2>'
-                    . ($pricingIntro !== '' ? '<p class="section-intro">' . $pricingIntro . '</p>' : '')
-                    . $pricingBody
-                    . $pricingCta
-                    . '</div></section>';
-            }
-        }
-
-        if (!preg_match('~<section\b[^>]*\bid=(["\'])blog\1~i', $html)) {
-            $blogCards = $this->blockContent($blocks, 'blog_1') . $this->blockContent($blocks, 'blog_2') . $this->blockContent($blocks, 'blog_3');
-            if (trim($blogCards) !== '') {
-                $blogTitle = $this->blockContent($blocks, 'blog_title') ?: 'Blog a clanky';
-                $blogIntro = $this->blockContent($blocks, 'blog_intro');
-                $blogCta = $this->blockContent($blocks, 'blog_cta');
-                $sections .= '<section class="section ew-blog hp-blog-section" id="blog"><div class="container">'
-                    . '<p class="section-label">Blog</p>'
-                    . '<h2 class="section-title">' . $blogTitle . '</h2>'
-                    . ($blogIntro !== '' ? '<p class="section-intro">' . $blogIntro . '</p>' : '')
-                    . '<div class="hp-blog-grid">' . $blogCards . '</div>'
-                    . $blogCta
-                    . '</div></section>';
-            }
-        }
-
-        if (preg_match('~\btheme-elegant-white2?\b~', $html) && !preg_match('~<section\b[^>]*\bid=(["\'])faq\1~i', $html)) {
-            $faqItems = '';
-            for ($i = 1; $i <= 4; $i++) {
-                $faqItem = $this->blockContent($blocks, 'faq_' . $i);
-                if (trim(strip_tags($faqItem)) !== '') {
-                    $faqItems .= '<article class="hp-faq-item">' . $faqItem . '</article>';
-                }
-            }
-            if ($faqItems !== '') {
-                $faqTitle = $this->blockContent($blocks, 'faq_title') ?: 'Časté dotazy';
-                $faqCta = $this->blockContent($blocks, 'faq_cta');
-                $sections .= '<section class="section" id="faq"><div class="container">'
-                    . '<p class="section-label">Otázky</p>'
-                    . '<h2 class="section-title">' . $faqTitle . '</h2>'
-                    . '<div class="hp-faq">' . $faqItems . '</div>'
-                    . $faqCta
-                    . '</div></section>';
-            }
-        }
-
-        if (!preg_match('~<section\b[^>]*\bid=(["\'])proces\1~i', $html)) {
-            $processBody = $this->blockContent($blocks, 'process_body');
-            if ($processBody === '') {
-                $processBody = '<div class="ew-process-list">'
-                    . '<article><span>01</span><i class="ew-process-icon ew-process-icon--form"></i><h3>Nezavazna poptavka</h3><p>Ozvete se nam a probereme vase predstavy a pozadavky.</p></article>'
-                    . '<article><span>02</span><i class="ew-process-icon ew-process-icon--plan"></i><h3>Konzultace s planem</h3><p>Spolecne naplanujeme prubeh a detaily.</p></article>'
-                    . '<article><span>03</span><i class="ew-process-icon ew-process-icon--camera"></i><h3>Foceni &amp; nataceni</h3><p>Zachytime prirozene momenty bez zbytecnych zasahu.</p></article>'
-                    . '<article><span>04</span><i class="ew-process-icon ew-process-icon--edit"></i><h3>Upravy &amp; vyber</h3><p>Peclive upravime a pripravime ty nejlepsi zabery.</p></article>'
-                    . '<article><span>05</span><i class="ew-process-icon ew-process-icon--send"></i><h3>Dodani &amp; sdileni</h3><p>Predame hotove fotografie a video v nejvyssi kvalite.</p></article>'
-                    . '</div>';
-            }
-            $processLabel = $this->blockContent($blocks, 'process_label') ?: 'Jak to probiha';
-            $processTitle = $this->blockContent($blocks, 'process_title') ?: 'Jednoduchy proces, skvely vysledek';
-            $processIntro = $this->blockContent($blocks, 'process_intro');
-            $sections .= '<section class="section hp-process" id="proces"><div class="container">'
-                . '<p class="section-label">' . $processLabel . '</p>'
-                . '<h2 class="section-title">' . $processTitle . '</h2>'
-                . ($processIntro !== '' ? '<p class="section-intro">' . $processIntro . '</p>' : '')
-                . $processBody
-                . '</div></section>';
-        }
-
-        if ($sections === '') {
-            return $html;
-        }
-
-        $inserted = preg_replace('~(<section\b[^>]*\bid=(["\'])kontakt\2[^>]*>)~i', $sections . '$1', $html, 1, $count);
-        if ($count > 0 && is_string($inserted)) {
-            return $inserted;
-        }
-
-        return preg_replace('~(</main>)~i', $sections . '$1', $html, 1) ?? $html;
+        return \App\Services\Render\HomepageSectionRenderer::injectHomepageMissingSections($html, $blocks, $isHome);
     }
 
     private function injectHomepageThemeDataSources(string $html, array $blocks, bool $isHome): string
     {
-        if (!$isHome) {
-            return $html;
-        }
-
-        if (preg_match('~\btheme-bezova-lens-tale\b~', $html) && !str_contains($html, 'data-blt-home-sources')) {
-            $faqItems = '';
-            for ($i = 1; $i <= 5; $i++) {
-                $faqItem = $this->blockContent($blocks, 'faq_' . $i);
-                if (trim(strip_tags($faqItem)) !== '') {
-                    $faqItems .= '<article class="hp-faq-item">' . $faqItem . '</article>';
-                }
-            }
-
-            $contact = $this->blockContent($blocks, 'contact_info') ?: $this->blockContent($blocks, 'kontakt_info');
-            $source = '<div data-blt-home-sources hidden>'
-                . '<div data-blt-contact-source>' . $contact . '</div>'
-                . '<div data-blt-faq-source>' . $faqItems . '</div>'
-                . '</div>';
-
-            return preg_replace('~(<main\b[^>]*>)~i', '$1' . $source, $html, 1) ?? $html;
-        }
-
-        if (!preg_match('~\btheme-elegant-white2?\b~', $html) || str_contains($html, 'data-ew-home-faq-source')) {
-            return $html;
-        }
-
-        $faqItem = $this->blockContent($blocks, 'faq_4');
-        if (trim(strip_tags($faqItem)) === '') {
-            return $html;
-        }
-
-        $source = '<div data-ew-home-faq-source hidden><article class="hp-faq-item">'
-            . $faqItem
-            . '</article></div>';
-
-        return preg_replace('~(<main\b[^>]*>)~i', '$1' . $source, $html, 1) ?? $html;
+        return \App\Services\Render\HomepageSectionRenderer::injectHomepageThemeDataSources($html, $blocks, $isHome);
     }
 
-    private function injectPageHeroVideo(string $html, array $site, int $pageId): string
+    public function injectPageHeroVideo(string $html, array $site, int $pageId): string
     {
         if ($this->hasHeroVideoElement($html)) {
             return $this->ensureHeroVideoStyle($html);
@@ -707,71 +554,25 @@ HTML;
 
     private function ensureHeroVideoStyle(string $html): string
     {
-        if (str_contains($html, 'data-cms-hero-video')) {
-            return $html;
-        }
-
-        $style = <<<'HTML'
-<style data-cms-hero-video>
-.hp-hero,.hero,.page-hero,.pf-hero,.bl-hero,.kt-hero,.fq-hero,.bp-hero,.pf-detail-hero,.bp-detail-hero{position:relative;overflow:hidden}
-.hp-hero::before,.hero::before,.page-hero::before,.pf-hero::before,.bl-hero::before,.kt-hero::before,.fq-hero::before,.bp-hero::before,.pf-detail-hero::before,.bp-detail-hero::before{z-index:0!important}
-.theme-hero-video{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;pointer-events:none;background:#050505;background-size:cover;background-position:center}
-.theme-hero-video--embed{overflow:hidden;background-size:cover;background-position:center}
-.theme-hero-video--embed iframe{position:absolute;top:50%;left:50%;width:120vw;height:67.5vw;min-width:213.33vh;min-height:120vh;transform:translate(-50%,-50%);border:0;pointer-events:none}
-.theme-hero-video::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.62),rgba(0,0,0,.22),rgba(0,0,0,.58))}
-.hp-hero>.container,.hero>.container,.page-hero>.container,.pf-hero>.container,.bl-hero>.container,.kt-hero>.container,.fq-hero>.container,.bp-hero>.container,.pf-detail-hero>.container,.bp-detail-hero>.container,.hero-content{position:relative;z-index:3}
-</style>
-HTML;
-
-        if (str_contains($html, '</head>')) {
-            return str_replace('</head>', "\n" . $style . "\n</head>", $html);
-        }
-
-        return $style . $html;
+        return \App\Services\Render\HeroMediaRenderer::ensureHeroVideoStyle($html);
     }
 
     private function buildHeroVideoHtml(string $videoUrl, string $posterUrl = ''): string
     {
-        $embedUrl = $this->buildVideoEmbedUrl($videoUrl);
-        $posterStyle = $posterUrl !== '' ? ' style="background-image:url(\'' . htmlspecialchars($posterUrl, ENT_QUOTES) . '\')"' : '';
-        if ($embedUrl !== '') {
-            return '<div class="theme-hero-video theme-hero-video--embed" aria-hidden="true"' . $posterStyle . '><iframe src="' . htmlspecialchars($embedUrl, ENT_QUOTES) . '" title="Hero video" allow="autoplay; fullscreen; picture-in-picture" loading="eager"></iframe></div>';
-        }
-
-        return '';
+        return \App\Services\Render\HeroMediaRenderer::buildHeroVideoHtml($videoUrl, $posterUrl);
     }
 
     private function buildHeroImageHtml(string $imageUrl): string
     {
-        if ($imageUrl === '') {
-            return '';
-        }
-
-        return '<div class="theme-hero-video theme-hero-video--image" aria-hidden="true" style="background-image:url(\'' . htmlspecialchars($imageUrl, ENT_QUOTES) . '\')"></div>';
+        return \App\Services\Render\HeroMediaRenderer::buildHeroImageHtml($imageUrl);
     }
 
     private function buildVideoEmbedUrl(string $videoUrl): string
     {
-        $url = trim($videoUrl);
-        if (preg_match('~vimeo\.com/(?:video/)?([0-9]+)~i', $url, $m)) {
-            return 'https://player.vimeo.com/video/' . $m[1] . '?background=1&autoplay=1&loop=1&muted=1&playsinline=1';
-        }
-
-        $youtubeId = '';
-        if (preg_match('~youtu\.be/([A-Za-z0-9_-]{6,})~i', $url, $m)) {
-            $youtubeId = $m[1];
-        } elseif (preg_match('~youtube\.com/(?:embed|shorts)/([A-Za-z0-9_-]{6,})~i', $url, $m)) {
-            $youtubeId = $m[1];
-        } elseif (preg_match('~[?&]v=([A-Za-z0-9_-]{6,})~i', $url, $m)) {
-            $youtubeId = $m[1];
-        }
-
-        return $youtubeId !== ''
-            ? 'https://www.youtube.com/embed/' . $youtubeId . '?autoplay=1&mute=1&controls=0&loop=1&playlist=' . $youtubeId . '&playsinline=1&modestbranding=1&rel=0'
-            : '';
+        return \App\Services\Render\HeroMediaRenderer::buildVideoEmbedUrl($videoUrl);
     }
 
-    private function injectSiteLogo(string $html, array $site): string
+    public function injectSiteLogo(string $html, array $site): string
     {
         $url = $this->normalizePublicAssetUrl((string)($site['logo_url'] ?? ''));
         if ($url === '') {
@@ -796,19 +597,10 @@ HTML;
 
     private function injectRichFooter(string $html, array $site): string
     {
-        $footer = $this->buildRichFooterHtml($site);
-        if (preg_match('~<footer\b([^>]*)>.*?</footer>~is', $html)) {
-            return preg_replace('~<footer\b([^>]*)>.*?</footer>~is', '<footer$1>' . $footer . '</footer>', $html, 1) ?? $html;
-        }
-
-        if (str_contains($html, '</body>')) {
-            return str_replace('</body>', '<footer>' . $footer . '</footer></body>', $html);
-        }
-
-        return $html . '<footer>' . $footer . '</footer>';
+        return \App\Services\Render\FooterRenderer::injectFooterSocials($html, (int)($site['id'] ?? 0));
     }
 
-    private function injectEditorialGoldOverrides(string $html): string
+    public function injectEditorialGoldOverrides(string $html): string
     {
         if (!str_contains($html, 'theme-editorial-gold') || str_contains($html, 'data-cms-editorial-gold-fixes')) {
             return $html;
@@ -846,7 +638,7 @@ HTML;
         return $style . $html;
     }
 
-    private function injectGlobalVideoOverlayStyles(string $html, array $site): string
+    public function injectGlobalVideoOverlayStyles(string $html, array $site): string
     {
         $overlay = max(0.0, min(1.0, (float)($site['video_overlay_opacity'] ?? 0.62)));
         $soft = round($overlay * 0.35, 3);
@@ -870,561 +662,107 @@ CSS;
 
     private function injectSharedFrontendAssets(string $html): string
     {
-        $html = FrontendAssetManager::injectStylesheet($html, '/assets/frontend-runtime.css', 'data-cms-frontend-runtime-css');
-        $html = FrontendAssetManager::injectStylesheet($html, '/assets/cookie-consent.css', 'data-cookie-consent-css');
-        $html = FrontendAssetManager::injectScript($html, '/assets/frontend-runtime.js', 'data-cms-frontend-runtime-js');
-        return FrontendAssetManager::injectScript($html, '/assets/cookie-consent.js', 'data-cookie-consent-js');
+        return \App\Services\Render\MarkupNormalizer::injectSharedFrontendAssets($html);
     }
 
     private function normalizeLegacyFrontendMarkup(string $html): string
     {
-        $html = preg_replace(
-            '~<div>\s*(<a\b(?=[^>]*\bclass=(["\'])[^"\']*\bbtn-secondary\b[^"\']*\2)[^>]*>.*?</a>)\s*</div>~is',
-            '<div class="hp-section-cta">$1</div>',
-            $html
-        ) ?? $html;
-        $html = str_replace(' style="color:inherit;text-decoration:none"', ' class="blog-title-link"', $html);
-        $html = str_replace('<strong style="display:block;color:#fff;margin-bottom:8px">', '<strong class="hp-faq-question">', $html);
-        $html = str_replace('<p style="color:rgba(255,255,255,.72);line-height:1.6;margin:0">', '<p class="hp-faq-answer">', $html);
-        $html = str_replace('<p style="color:rgba(255,255,255,.45)">', '<p class="frontend-note">', $html);
-        $html = str_replace('<p style="color:rgba(255,255,255,.45);text-align:center;padding:32px 0">', '<p class="frontend-note frontend-note--center">', $html);
-        $html = str_replace(' style="display:none" tabindex="-1" autocomplete="off"', ' class="hp-honeypot" tabindex="-1" autocomplete="off"', $html);
-        return str_replace(
-            '<div style="height:100%;background:#222;display:flex;align-items:center;justify-content:center;font-size:2rem;color:rgba(255,255,255,.3)">&#9654;</div>',
-            '<div class="pt-thumb__placeholder">&#9654;</div>',
-            $html
-        );
+        return \App\Services\Render\MarkupNormalizer::normalizeLegacyFrontendMarkup($html);
     }
 
     private function normalizeLegacyTemplateSource(string $html): string
     {
-        return preg_replace(
-            '~<header\s+class=(["\'])hero\1>\s*(<div\s+class=(["\'])container\3>\s*<h1\s+data-block=(["\'])hero_heading\4></h1>\s*<p\s+data-block=(["\'])hero_intro\5)(?:\s+class=(["\'])hero-sub\6)?(></p>\s*</div>)\s*</header>~i',
-            '<section class="page-hero">$2 class="hero-sub"$7</section>',
-            $html
-        ) ?? $html;
+        return \App\Services\Render\MarkupNormalizer::normalizeLegacyTemplateSource($html);
     }
 
     private function externalizeBodyCssVariables(string $html): string
     {
-        if (!preg_match('/<body([^>]*)>/i', $html, $m, PREG_OFFSET_CAPTURE)) {
-            return $html;
-        }
-
-        $bodyTag = $m[0][0];
-        $bodyAttrs = $m[1][0];
-        if (!preg_match_all('/\sdata-cms-css-var-([a-z0-9-]+)=(["\'])(.*?)\2/i', $bodyAttrs, $matches, PREG_SET_ORDER)) {
-            return $html;
-        }
-
-        $vars = [];
-        foreach ($matches as $match) {
-            $vars['--' . strtolower($match[1])] = html_entity_decode($match[3], ENT_QUOTES, 'UTF-8');
-        }
-
-        $cleanAttrs = preg_replace('/\sdata-cms-css-var-[a-z0-9-]+=(["\']).*?\1/i', '', $bodyAttrs) ?? $bodyAttrs;
-        $cleanTag = '<body' . $cleanAttrs . '>';
-        $html = substr_replace($html, $cleanTag, $m[0][1], strlen($bodyTag));
-
-        $cssParts = [];
-        foreach ($vars as $name => $value) {
-            $cssParts[] = $name . ':' . $value;
-        }
-
-        if ($cssParts === []) {
-            return $html;
-        }
-
-        return FrontendAssetManager::injectGeneratedCss($html, 'body{' . implode(';', $cssParts) . ';}', 'body-vars', 'data-cms-body-vars');
+        return \App\Services\Render\MarkupNormalizer::externalizeBodyCssVariables($html);
     }
 
     private function extractInlineStyleBlocks(string $html): string
     {
-        if (!preg_match_all('~<style\b[^>]*>(.*?)</style>~is', $html, $matches, PREG_SET_ORDER)) {
-            return $html;
-        }
-
-        $styles = [];
-        foreach ($matches as $match) {
-            $css = trim($match[1]);
-            if ($css === '') {
-                continue;
-            }
-            if (
-                str_contains($css, '.site-logo-img') ||
-                str_contains($css, '.site-footer-rich') ||
-                str_contains($css, '.theme-hero-video') ||
-                str_contains($css, '.theme-editorial-gold [data-block="reviews_cta"]') ||
-                str_contains($css, '.cookie-consent')
-            ) {
-                continue;
-            }
-            $styles[] = $css;
-        }
-
-        $html = preg_replace('~<style\b[^>]*>.*?</style>~is', '', $html) ?? $html;
-        $styles = array_values(array_filter($styles, static fn(string $css): bool => $css !== ''));
-        if ($styles === []) {
-            return $html;
-        }
-
-        return FrontendAssetManager::injectGeneratedCss($html, implode("\n", $styles), 'inline-style-blocks', 'data-cms-inline-styles');
+        return \App\Services\Render\MarkupNormalizer::extractInlineStyleBlocks($html);
     }
 
     private function extractInlineBodyScripts(string $html): string
     {
-        $headClosePos = stripos($html, '</head>');
-        if ($headClosePos === false) {
-            return $html;
-        }
-
-        $headPart = substr($html, 0, $headClosePos + 7);
-        $bodyPart = substr($html, $headClosePos + 7);
-        if ($bodyPart === false || !preg_match_all('~<script\b(?![^>]*\bsrc=)(?![^>]*\btype=(["\'])application/ld\+json\1)[^>]*>(.*?)</script>~is', $bodyPart, $matches, PREG_SET_ORDER)) {
-            return $html;
-        }
-
-        $scripts = [];
-        foreach ($matches as $match) {
-            if (
-                str_contains($match[2], 'window.cmsCookieConsentSettings') ||
-                str_contains($match[2], 'function syncAdminBarOffset') ||
-                str_contains($match[2], 'function enhanceHero()') ||
-                str_contains($match[2], 'IntersectionObserver') ||
-                str_contains($match[2], "document.querySelector('[data-cenik-modal]')")
-            ) {
-                continue;
-            }
-            $scripts[] = trim($match[2]);
-        }
-
-        $bodyPart = preg_replace_callback(
-        '~<script\b(?![^>]*\bsrc=)(?![^>]*\btype=(["\'])application/ld\+json\1)[^>]*>(.*?)</script>~is',
-        static function (array $match): string {
-            $script = $match[2];
-            return str_contains($script, 'window.cmsCookieConsentSettings') ? $match[0] : '';
-        },
-        $bodyPart
-    ) ?? $bodyPart;
-
-        $scripts = array_values(array_filter($scripts, static fn(string $js): bool => $js !== ''));
-        if ($scripts === []) {
-            return $headPart . $bodyPart;
-        }
-
-        return FrontendAssetManager::injectGeneratedJs($headPart . $bodyPart, implode("\n", $scripts), 'inline-body-scripts', 'data-cms-inline-body-scripts');
+        return \App\Services\Render\MarkupNormalizer::extractInlineBodyScripts($html);
     }
 
     private function normalizeSocialType(string $type, string $url = ''): string
     {
-        $value = strtolower(trim($type));
-        $value = preg_replace('~[^a-z0-9]+~', '', $value) ?? '';
-        $host = strtolower((string)(parse_url(trim($url), PHP_URL_HOST) ?: trim($url)));
-
-        $map = [
-            'ig' => 'instagram',
-            'in' => 'instagram',
-            'insta' => 'instagram',
-            'instagram' => 'instagram',
-            'fb' => 'facebook',
-            'fa' => 'facebook',
-            'facebook' => 'facebook',
-            'yt' => 'youtube',
-            'yo' => 'youtube',
-            'youtube' => 'youtube',
-            'tt' => 'tiktok',
-            'ti' => 'tiktok',
-            'tiktok' => 'tiktok',
-            'li' => 'linkedin',
-            'linkedin' => 'linkedin',
-            'x' => 'twitter',
-            'tw' => 'twitter',
-            'twitter' => 'twitter',
-            'pinterest' => 'pinterest',
-            'wa' => 'whatsapp',
-            'whatsapp' => 'whatsapp',
-            'telegram' => 'telegram',
-        ];
-
-        if (isset($map[$value])) {
-            return $map[$value];
-        }
-
-        foreach ($map as $needle => $canonical) {
-            if ($needle !== '' && str_contains($host, $needle)) {
-                return $canonical;
-            }
-        }
-
-        if (str_contains($host, 'youtu')) {
-            return 'youtube';
-        }
-
-        return $value !== '' ? $value : 'link';
+        return \App\Services\Render\SocialLinkRenderer::normalizeSocialType($type, $url);
     }
 
     private function socialLabel(string $type): string
     {
-        return [
-            'instagram' => 'Instagram',
-            'facebook' => 'Facebook',
-            'youtube' => 'YouTube',
-            'tiktok' => 'TikTok',
-            'linkedin' => 'LinkedIn',
-            'twitter' => 'X',
-            'pinterest' => 'Pinterest',
-            'whatsapp' => 'WhatsApp',
-            'telegram' => 'Telegram',
-        ][$type] ?? 'Odkaz';
+        return \App\Services\Render\SocialLinkRenderer::socialLabel($type);
     }
 
     private function socialIconSvg(string $type): string
     {
-        $icons = [
-            'instagram' => '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="12" cy="12" r="3.6"/><circle cx="17" cy="7" r=".8"/></svg>',
-            'facebook' => '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M13.5 19v-5h1.9l.4-2.3h-2.3v-1.5c0-.9.3-1.6 1.5-1.6h1V6.6c-.2 0-.9-.1-1.8-.1-2.7 0-4.2 1.4-4.2 4v1.2h-1.7V14H10V19"/></svg>',
-            'youtube' => '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="6.5" width="17" height="11" rx="3.2"/><path d="M10 9.4 15.3 12 10 14.6z"/></svg>',
-            'tiktok' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4c.6 1.7 1.8 2.8 3.6 3.1v2.5c-1.2 0-2.4-.4-3.5-1.1v5.1a4.4 4.4 0 1 1-4.4-4.4c.3 0 .7 0 1 .1v2.5c-.2-.1-.5-.1-.7-.1a1.9 1.9 0 1 0 1.8 1.9V4z"/></svg>',
-            'linkedin' => '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="9" width="3" height="10"/><circle cx="5.5" cy="5.8" r="1.4"/><path d="M10 9v10"/><path d="M10 13.2c0-2.2 1.4-4.2 4-4.2 2.4 0 3.5 1.6 3.5 4.3V19"/><path d="M17.5 19v-5.1"/></svg>',
-            'twitter' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5 19.5 19"/><path d="M19.5 5 4 19"/></svg>',
-            'pinterest' => '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M10.7 18.5c.3-1.2.7-2.6 1-3.9"/><path d="M9.8 10.2c0-2.2 1.7-3.8 4-3.8 2 0 3.5 1.3 3.5 3.2 0 2.4-1 5.4-3.2 5.4-.9 0-1.6-.8-1.4-1.7.3-1 1-2.2 1-3.4 0-2-2.5-1.7-2.5.8 0 .6.1 1.1.3 1.5-.2 1-.6 2.4-1 3.6"/></svg>',
-            'whatsapp' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.7 18.1A8.9 8.9 0 1 0 6 19.6L3.5 20.5l1-2.4"/><path d="M9.2 8.8c-.2-.4-.4-.4-.7-.4h-.6c-.2 0-.5.1-.7.4-.3.3-.9.9-.9 2.1s1 2.4 1.1 2.6c.1.1 1.9 3 4.8 4.1 2.4.9 2.9.7 3.4.6.5-.1 1.6-.7 1.8-1.3.2-.6.2-1.1.2-1.2s-.2-.2-.5-.3l-1.7-.8c-.3-.1-.5-.1-.7.1l-.8 1c-.1.2-.3.2-.6.1-.3-.1-1.2-.4-2.2-1.3-.8-.7-1.4-1.6-1.6-1.9-.2-.3 0-.4.1-.6l.4-.5.3-.4c.1-.2.1-.4 0-.6z"/></svg>',
-            'telegram' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 4 3.8 10.7l5.4 1.8 1.9 5.6 2.6-2.5 4.9 3.6z"/><path d="M9.2 12.5 20.2 5.2"/><path d="M11.1 18.1 12 14.2"/></svg>',
-            'link' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14 8.2 15.8a3.2 3.2 0 1 1-4.5-4.5L5.6 9.5"/><path d="M14 10 15.8 8.2a3.2 3.2 0 1 1 4.5 4.5L18.4 14.5"/><path d="M8.8 15.2 15.2 8.8"/></svg>',
-        ];
-
-        return $icons[$type] ?? $icons['link'];
+        return \App\Services\Render\SocialLinkRenderer::socialIconSvg($type);
     }
 
     private function normalizePhoneForHref(string $phone): string
     {
-        $normalized = preg_replace('/[^\d+]/', '', $phone) ?? '';
-        if (str_starts_with($normalized, '00')) {
-            $normalized = '+' . substr($normalized, 2);
-        }
-        if (str_starts_with($normalized, '420') && strlen($normalized) === 12) {
-            $normalized = '+' . $normalized;
-        }
-        return $normalized;
+        return \App\Services\Render\ContactNormalizer::normalizePhoneForHref($phone);
     }
 
     private function formatPhoneForDisplay(string $phone): string
     {
-        $normalized = $this->normalizePhoneForHref($phone);
-        $digits = ltrim($normalized, '+');
-        if (strlen($digits) === 12 && str_starts_with($digits, '420')) {
-            return '+420 ' . substr($digits, 3, 3) . ' ' . substr($digits, 6, 3) . ' ' . substr($digits, 9, 3);
-        }
-        if (strlen($digits) === 9) {
-            return substr($digits, 0, 3) . ' ' . substr($digits, 3, 3) . ' ' . substr($digits, 6, 3);
-        }
-        return trim($phone);
+        return \App\Services\Render\ContactNormalizer::formatPhoneForDisplay($phone);
     }
 
     private function phoneDedupKey(string $phone): string
     {
-        $digits = preg_replace('/\D+/', '', $this->normalizePhoneForHref($phone)) ?? '';
-        return strlen($digits) > 9 ? substr($digits, -9) : $digits;
+        return \App\Services\Render\ContactNormalizer::phoneDedupKey($phone);
     }
 
     private function extractPhoneNumbersFromText(string $plain): array
     {
-        $phones = [];
-        if (preg_match_all('/(?:\+?\d[\d\s().\-]{7,}\d)/u', $plain, $matches)) {
-            foreach ($matches[0] as $candidate) {
-                $normalized = $this->normalizePhoneForHref((string)$candidate);
-                $digits = ltrim($normalized, '+');
-                if (strlen($digits) === 18) {
-                    foreach (str_split($digits, 9) as $chunk) {
-                        if (strlen($chunk) === 9 && !in_array($chunk, $phones, true)) {
-                            $phones[] = $chunk;
-                        }
-                    }
-                    continue;
-                }
-                if (strlen($digits) === 24 && str_starts_with($digits, '420')) {
-                    foreach (str_split($digits, 12) as $chunk) {
-                        if (strlen($chunk) === 12 && !in_array('+' . $chunk, $phones, true)) {
-                            $phones[] = '+' . $chunk;
-                        }
-                    }
-                    continue;
-                }
-                if (strlen($digits) >= 9 && !in_array($normalized, $phones, true)) {
-                    $phones[] = $normalized;
-                }
-            }
-        }
-
-        return $phones;
+        return \App\Services\Render\ContactNormalizer::extractPhoneNumbersFromText($plain);
     }
 
     private function ensureRbDemoContactAddress(array $contact): array
     {
-        return $contact;
+        return \App\Services\Render\ContactNormalizer::ensureRbDemoContactAddress($contact);
     }
 
     private function enrichContactWithLegacyBlocks(int $siteId, array $contact): array
     {
-        $htmlChunks = [];
-        foreach (['kontakt', ''] as $path) {
-            $page = $this->pages->findByUrlPath($path);
-            if (!$page || (int)($page['site_id'] ?? 0) !== $siteId) {
-                continue;
-            }
-            foreach (['kontakt_info', 'contact_info', 'contact_card'] as $blockKey) {
-                $block = $this->blocks->findByKey((int)$page['id'], $blockKey);
-                $content = trim((string)($block['content'] ?? ''));
-                if ($content !== '') {
-                    $htmlChunks[] = html_entity_decode($content, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-                }
-            }
-        }
-
-        if ($htmlChunks === []) {
-            return $contact;
-        }
-
-        $html = implode("\n", $htmlChunks);
-        $textHtml = preg_replace('~<\s*br\s*/?\s*>|</\s*(?:p|div|li|article|section|h[1-6])\s*>~i', "\n", $html) ?? $html;
-        $plain = preg_replace('/\x{00A0}/u', ' ', strip_tags($textHtml)) ?? '';
-
-        if (trim((string)($contact['email'] ?? '')) === '' && preg_match('/[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}/i', $plain, $m)) {
-            $contact['email'] = $m[0];
-        }
-
-        $phones = $this->extractPhoneNumbersFromText($plain);
-
-        $existingPhoneKeys = [];
-        foreach (['phone_1', 'phone_2', 'phone_3'] as $key) {
-            $phoneKey = $this->phoneDedupKey((string)($contact[$key] ?? ''));
-            if ($phoneKey !== '') {
-                $existingPhoneKeys[$phoneKey] = true;
-            }
-        }
-        foreach (['phone_1', 'phone_2', 'phone_3'] as $key) {
-            if (trim((string)($contact[$key] ?? '')) !== '') {
-                continue;
-            }
-            foreach ($phones as $phone) {
-                $phoneKey = $this->phoneDedupKey((string)$phone);
-                if ($phoneKey === '' || isset($existingPhoneKeys[$phoneKey])) {
-                    continue;
-                }
-                $contact[$key] = $phone;
-                $existingPhoneKeys[$phoneKey] = true;
-                break;
-            }
-        }
-
-        if (trim((string)($contact['address_1'] ?? '')) === '' || trim((string)($contact['address_2'] ?? '')) === '') {
-            $lines = array_values(array_filter(array_map(
-                static fn($line) => trim(preg_replace('/\s+/u', ' ', (string)$line) ?? ''),
-                preg_split('/\R+/', $plain) ?: []
-            )));
-            foreach ($lines as $index => $line) {
-                if (trim((string)($contact['address_2'] ?? '')) === '' && preg_match('/\b\d{3}\s?\d{2}\b.*\bOlomouc\b/iu', $line)) {
-                    $contact['address_2'] = $line;
-                    for ($i = $index - 1; $i >= 0; $i--) {
-                        $candidate = $lines[$i] ?? '';
-                        if ($candidate === '' || preg_match('/@|telefon|facebook|instagram|youtube|\+?\d[\d\s().-]{7,}\d/iu', $candidate)) {
-                            continue;
-                        }
-                        if (trim((string)($contact['address_1'] ?? '')) === '') {
-                            $contact['address_1'] = $candidate;
-                        }
-                        break;
-                    }
-                }
-            }
-        }
-
-        if (preg_match_all('/href=["\']([^"\']+)["\']/i', $html, $linkMatches)) {
-            $socialSlot = 1;
-            foreach ($linkMatches[1] as $href) {
-                $type = $this->normalizeSocialType('', $href);
-                if ($type === 'link' || !preg_match('~^(?:https?:)?//~i', $href)) {
-                    continue;
-                }
-
-                $alreadyPresent = false;
-                for ($i = 1; $i <= 5; $i++) {
-                    if (trim((string)($contact['social_' . $i . '_url'] ?? '')) === trim((string)$href)) {
-                        $alreadyPresent = true;
-                        break;
-                    }
-                }
-                if ($alreadyPresent) {
-                    continue;
-                }
-
-                while ($socialSlot <= 5 && trim((string)($contact['social_' . $socialSlot . '_url'] ?? '')) !== '') {
-                    $socialSlot++;
-                }
-                if ($socialSlot > 5) {
-                    break;
-                }
-
-                $contact['social_' . $socialSlot . '_type'] = $type;
-                $contact['social_' . $socialSlot . '_url'] = $href;
-                $socialSlot++;
-            }
-        }
-
-        if (trim((string)($contact['form_email'] ?? '')) === '') {
-            $contact['form_email'] = trim((string)($contact['email'] ?? '')) !== ''
-                ? trim((string)($contact['email'] ?? ''))
-                : self::DEFAULT_FORM_EMAIL;
-        }
-
-        return $this->ensureRbDemoContactAddress($contact);
+        return \App\Services\Render\ContactNormalizer::enrichContactWithLegacyBlocks($siteId, $contact);
     }
 
     private function buildRichFooterHtml(array $site): string
     {
-        $siteId = (int)($site['id'] ?? 0);
-        $contact = $siteId > 0 ? $this->enrichContactWithLegacyBlocks($siteId, (new ContactRepository())->findBySiteSafe($siteId)) : [];
-        $siteName = (string)($site['name'] ?? 'RB Videos & Photos');
-        $logoUrl = $this->normalizePublicAssetUrl((string)($site['logo_url'] ?? ''));
-        $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
-
-        $contactItems = [];
-        foreach (['phone_1', 'phone_2', 'phone_3'] as $phoneKey) {
-            $phone = trim((string)($contact[$phoneKey] ?? ''));
-            if ($phone === '') {
-                continue;
-            }
-            $tel = $this->normalizePhoneForHref($phone);
-            $contactItems[] = '<a class="site-footer-contact__item" href="tel:' . $h($tel) . '"><span>Telefon</span><strong>' . $h($this->formatPhoneForDisplay($phone)) . '</strong></a>';
-        }
-
-        $email = trim((string)($contact['email'] ?? ''));
-        if ($email !== '') {
-            $contactItems[] = '<a class="site-footer-contact__item" href="mailto:' . $h($email) . '"><span>E-mail</span><strong>' . $h($email) . '</strong></a>';
-        }
-
-        $addressLines = array_values(array_filter([
-            trim((string)($contact['address_1'] ?? '')),
-            trim((string)($contact['address_2'] ?? '')),
-        ]));
-        if ($addressLines !== []) {
-            $contactItems[] = '<div class="site-footer-contact__item"><span>Lokalita</span><strong>' . implode('<br>', array_map($h, $addressLines)) . '</strong></div>';
-        }
-
-        $socialItems = [];
-        for ($i = 1; $i <= 5; $i++) {
-            $type = trim((string)($contact['social_' . $i . '_type'] ?? ''));
-            $url = trim((string)($contact['social_' . $i . '_url'] ?? ''));
-            if ($type === '' || $url === '') {
-                continue;
-            }
-            $canonicalType = $this->normalizeSocialType($type, $url);
-            $label = $h($this->socialLabel($canonicalType));
-            $socialItems[] = '<a class="site-footer-social site-footer-social--' . $h($canonicalType) . '" href="' . $h($url) . '" target="_blank" rel="noopener" aria-label="' . $label . '" title="' . $label . '"><span class="site-footer-social__icon">' . $this->socialIconSvg($canonicalType) . '</span></a>';
-        }
-
-        $brand = $logoUrl !== ''
-            ? '<img class="site-footer-brand__logo" src="' . $h($logoUrl) . '" alt="' . $h($siteName) . '">'
-            : '<span class="site-footer-brand__mark">' . $h(mb_substr($siteName, 0, 2)) . '</span>';
-
-        return '<style data-cms-rich-footer>'
-            . 'html,body{min-height:100%}body{min-height:100vh;display:flex;flex-direction:column}.theme-shell{width:100%;flex:1 0 auto;display:flex;flex-direction:column}.theme-shell,.theme-shell__frame{min-height:100vh}.theme-shell__frame{display:flex;flex-direction:column;flex:1 0 auto}.theme-main,main,#page-content{flex:1 0 auto}footer,.theme-footer,.site-footer{margin-top:auto}'
-            . 'footer .site-footer-rich,.theme-footer .site-footer-rich,.site-footer .site-footer-rich{width:100%;max-width:1180px;margin:0 auto;padding:0;display:grid;grid-template-columns:minmax(220px,.85fr) minmax(260px,1fr) minmax(220px,.75fr);gap:34px;align-items:start;text-align:left}'
-            . '.site-footer-brand{display:flex;flex-direction:column;gap:12px;align-items:flex-start}.site-footer-brand__logo{max-height:52px;max-width:260px;width:auto;height:auto;object-fit:contain}.site-footer-brand__mark{display:inline-grid;place-items:center;width:54px;height:54px;border:1px solid rgba(198,148,61,.45);color:#c6943d;font-family:Georgia,serif;font-weight:800;font-size:20px;letter-spacing:.08em;text-transform:uppercase}.site-footer-brand__name{color:#f3efe7;font-family:Georgia,serif;font-size:22px;line-height:1.1}.site-footer-brand__note{color:rgba(255,255,255,.52);font-size:13px;line-height:1.65}'
-            . '.site-footer-contact{display:grid;gap:12px}.site-footer-title{margin:0 0 12px;color:#c6943d;font-size:11px;font-weight:900;letter-spacing:.18em;text-transform:uppercase}.site-footer-contact__item{display:grid;gap:4px;color:#f3efe7;text-decoration:none}.site-footer-contact__item span{color:rgba(255,255,255,.44);font-size:11px;text-transform:uppercase;letter-spacing:.12em}.site-footer-contact__item strong,.site-footer-contact__item a{color:#f3efe7;font-size:14px;line-height:1.5;font-weight:700}'
-            . '.site-footer-socials{display:flex;flex-direction:column;gap:14px;align-items:flex-start}.site-footer-socials__list{display:flex;flex-wrap:wrap;gap:10px}.site-footer-social{--social:#d4b06f;display:inline-flex;align-items:center;justify-content:center;width:50px;height:40px;padding:0;border:1px solid rgba(212,176,111,.24);border-radius:0;background:transparent;color:#d8d1c6;text-decoration:none;transition:transform .2s,border-color .2s,color .2s,background-color .2s}.site-footer-social:hover{transform:translateY(-1px);border-color:rgba(212,176,111,.62);background:rgba(212,176,111,.06);color:#f2e7d5}.site-footer-social__icon{display:grid;place-items:center;line-height:1;transition:color .2s,transform .2s}.site-footer-social:hover .site-footer-social__icon{transform:scale(1.06)}.site-footer-social__icon svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}.site-footer-bottom{grid-column:1/-1;margin-top:4px;padding-top:20px;border-top:1px solid rgba(255,255,255,.09);color:rgba(255,255,255,.36);font-size:12px;text-align:left}'
-            . '@media(max-width:820px){footer .site-footer-rich,.theme-footer .site-footer-rich,.site-footer .site-footer-rich{grid-template-columns:1fr;gap:24px}.site-footer-bottom{text-align:left}}'
-            . '</style>'
-            . '<div class="site-footer-rich">'
-            . '<div class="site-footer-brand">' . $brand . '<div class="site-footer-brand__name">' . $h($siteName) . '</div></div>'
-            . '<div class="site-footer-contact"><div class="site-footer-title">Kontakt</div>' . ($contactItems !== [] ? implode('', $contactItems) : '<div class="site-footer-contact__item"><span>Kontakt</span><strong>Doplnte kontaktni udaje v administraci.</strong></div>') . '</div>'
-            . '<div class="site-footer-socials"><div class="site-footer-title">Socialni site</div><div class="site-footer-socials__list">' . ($socialItems !== [] ? implode('', $socialItems) : '<span class="site-footer-brand__note">Doplnte socialni site v kontaktu.</span>') . '</div></div>'
-            . '<div class="site-footer-bottom">&copy; ' . date('Y') . ' ' . $h($siteName) . ' · <a href="/podminky-uziti">Podmínky užití</a></div>'
-            . '</div>';
+        return \App\Services\Render\FooterRenderer::buildRichFooterHtml((int)($site['id'] ?? 0));
     }
 
     private function injectBodyCssVariableToken(string $html, string $name, string $value): string
     {
-        if (!preg_match('/<body([^>]*)>/i', $html, $m)) {
-            return $html;
-        }
-
-        $attrs = $m[1];
-        $attrName = 'data-cms-css-var-' . strtolower($name);
-        $attrValue = htmlspecialchars($value, ENT_QUOTES);
-        if (preg_match('/\s' . preg_quote($attrName, '/') . '=(["\']).*?\1/i', $attrs)) {
-            $attrs = preg_replace('/\s' . preg_quote($attrName, '/') . '=(["\']).*?\1/i', ' ' . $attrName . '="' . $attrValue . '"', $attrs, 1) ?? $attrs;
-        } else {
-            $attrs .= ' ' . $attrName . '="' . $attrValue . '"';
-        }
-
-        return preg_replace('/<body([^>]*)>/i', '<body' . $attrs . '>', $html, 1) ?? $html;
+        return \App\Services\Render\MarkupNormalizer::injectBodyCssVariableToken($html, $name, $value);
     }
 
     private function injectBodyPageKey(string $html, string $pageKey): string
     {
-        if ($pageKey === '' || !preg_match('/<body([^>]*)>/i', $html, $m)) {
-            return $html;
-        }
-
-        $attrs = $m[1];
-        $attrValue = htmlspecialchars($pageKey, ENT_QUOTES);
-        if (preg_match('/\sdata-cms-page-key=(["\']).*?\1/i', $attrs)) {
-            $attrs = preg_replace('/\sdata-cms-page-key=(["\']).*?\1/i', ' data-cms-page-key="' . $attrValue . '"', $attrs, 1) ?? $attrs;
-        } else {
-            $attrs .= ' data-cms-page-key="' . $attrValue . '"';
-        }
-
-        return preg_replace('/<body([^>]*)>/i', '<body' . $attrs . '>', $html, 1) ?? $html;
+        return \App\Services\Render\MarkupNormalizer::injectBodyPageKey($html, $pageKey);
     }
 
     private function normalizePublicAssetUrl(string $value): string
     {
-        $normalized = str_replace('\\', '/', trim($value));
-        if ($normalized === '') {
-            return '';
-        }
-        if (preg_match('~^https?://~i', $normalized) || str_starts_with($normalized, '/')) {
-            return $normalized;
-        }
-        return '/' . ltrim($normalized, '/');
+        return \App\Services\Render\MediaUrlResolver::normalizePublicAssetUrl($value);
     }
 
     private function resolveDemoMediaUrlByFilename(int $siteId, string $filename): string
     {
-        try {
-            foreach ($this->media->allBySiteWithVariants($siteId) as $media) {
-                if ((string)($media['original_filename'] ?? '') !== $filename) {
-                    continue;
-                }
-
-                $path = '';
-                foreach (($media['variants'] ?? []) as $variant) {
-                    if (($variant['format'] ?? '') === 'medium' && trim((string)($variant['path'] ?? '')) !== '') {
-                        $path = (string)$variant['path'];
-                        break;
-                    }
-                }
-                if ($path === '') {
-                    $path = (string)($media['storage_path'] ?? '');
-                }
-
-                return $this->normalizePublicAssetUrl($path);
-            }
-        } catch (\Throwable $e) {
-            Logger::infoTo('theme-debug', 'theme.demo.media.error', 'Failed to resolve demo media', [
-                'site_id' => $siteId,
-                'filename' => $filename,
-                'error' => $e->getMessage(),
-            ]);
-        }
-
-        return '';
+        return \App\Services\Render\MediaUrlResolver::resolveDemoMediaUrlByFilename($siteId, $filename);
     }
 
     private function hasHeroVideoElement(string $html): bool
     {
-        return (bool) preg_match('/<[^>]+\bclass=(["\'])[^"\']*\btheme-hero-video\b[^"\']*\1/i', $html);
+        return \App\Services\Render\HeroMediaRenderer::hasHeroVideoElement($html);
     }
 
     private function ensureDir(string $dir): void

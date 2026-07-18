@@ -264,17 +264,7 @@ TILE;
 
     private function publicMediaUrl(string $storagePath): string
     {
-        $normalized = str_replace('\\', '/', trim($storagePath));
-        if ($normalized === '') return '';
-
-        if (preg_match('~https?://[^/]+(/storage/media/.*)$~i', $normalized, $m)) {
-            return '/media/' . ltrim(substr($m[1], strlen('/storage/media/')), '/');
-        }
-        if (str_starts_with($normalized, '/media/')) return $normalized;
-        if (str_starts_with($normalized, '/storage/media/')) return '/media/' . ltrim(substr($normalized, strlen('/storage/media/')), '/');
-        if (str_starts_with($normalized, 'storage/media/')) return '/media/' . ltrim(substr($normalized, strlen('storage/media/')), '/');
-
-        return '/' . ltrim($normalized, '/');
+        return \App\Services\Render\MediaUrlResolver::publicMediaUrl($storagePath);
     }
 
     private function sanitizeHtml(string $html): string
