@@ -31,8 +31,14 @@ class ReviewContentService
 
     public function buildListingHtml(int $siteId): string
     {
-        $items = $this->reviews->allActive($siteId);
-        return $this->buildGridMarkup($items, 'reviews-page-grid', 'reviews-page-card', 'reviews-page-stars');
+        // Phase 4 of the templating refactor: the /hodnoceni listing grid now
+        // renders through the reviews archetype (App\ViewModels\ReviewsPageData
+        // + app/Views/archetypes/reviews.phtml) instead of string concatenation
+        // here. The homepage teaser (buildHomepageHtml() below) is unchanged —
+        // it belongs to the homepage archetype, phase 5.
+        $data = \App\ViewModels\ReviewsPageData::forSite($siteId);
+
+        return \App\View\ViewFactory::forTheme(null)->render('archetypes/reviews', $data);
     }
 
     public function ensureHomepageSection(int $siteId): void

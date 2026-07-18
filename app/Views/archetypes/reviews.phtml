@@ -1,0 +1,8 @@
+<?php
+/**
+ * Reviews archetype — phase 4 of the templating refactor.
+ * Renders the /hodnoceni review grid (App\Services\ReviewContentService::buildListingHtml()).
+ * @var array $items [['id','rating','review_text','author_name','context_label'], ...] from ReviewsPageData::forSite()
+ */
+?>
+<?php if ($items === []): ?><p style="color:rgba(255,255,255,.45);text-align:center;padding:32px 0">Zatim zadne recenze.</p><?php else: ?><div class="reviews-page-grid"><?php foreach ($items as $item): ?><article class="reviews-page-card"><div class="reviews-page-stars"><?= $this->e(str_repeat('★', $item['rating']) . str_repeat('☆', 5 - $item['rating'])) ?></div><p><?= nl2br($this->e($item['review_text'])) ?></p><strong><?= $this->e($item['author_name']) ?></strong><?= $item['context_label'] !== '' ? '<span>' . $this->e($item['context_label']) . '</span>' : '' ?></article><?php endforeach; ?></div><?php endif; ?><?php ?>
