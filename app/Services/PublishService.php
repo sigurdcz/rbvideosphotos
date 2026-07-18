@@ -509,6 +509,36 @@ HTML;
             return [$html, $css];
         }
 
+        if ($pageKey === 'blog') {
+            $siteId = (int)($page['site_id'] ?? 0);
+            $blogData = \App\ViewModels\BlogListingData::forSite($siteId);
+            [$titleKey, $title, $titleType] = \App\Services\Render\HomepageSectionRenderer::firstBlockValue(
+                $blocks,
+                ['hero_h1', 'hero_heading'],
+                'Blog & Inspirace'
+            );
+            [$subKey, $sub, $subType] = \App\Services\Render\HomepageSectionRenderer::firstBlockValue(
+                $blocks,
+                ['hero_sub', 'hero_intro'],
+                'Tipy a rady od profesionálního fotografa z Olomouce.'
+            );
+
+            $html = \App\View\ViewFactory::forTheme(null)->render('archetypes/blog-listing', [
+                'hero' => [
+                    'title' => $title,
+                    'sub' => $sub,
+                    'titleKey' => $titleKey,
+                    'titleType' => $titleType,
+                    'subKey' => $subKey,
+                    'subType' => $subType,
+                ],
+                'posts' => $blogData['posts'],
+            ]);
+            $css = rtrim((string)file_get_contents(\App\View\ViewFactory::base() . '/app/Views/assets/blog-listing.css'), "\n");
+
+            return [$html, $css];
+        }
+
         return [null, ''];
     }
 

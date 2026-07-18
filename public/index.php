@@ -35,7 +35,11 @@ use App\Services\ThemeTemplateRegistry;
 use App\Security\RequestThrottle;
 use App\Support\FrontendAssetManager;
 use App\View\ViewFactory;
+use App\ViewModels\BlogListingData;
+use App\ViewModels\BlogPostData;
 use App\ViewModels\FaqPageData;
+use App\ViewModels\PortfolioDetailData;
+use App\ViewModels\PortfolioListingData;
 use App\ViewModels\SluzbyPageData;
 
 Env::load(dirname(__DIR__) . '/.env');
@@ -2480,91 +2484,29 @@ function tryServeBlogListingPage(): bool
     }
 
     $posts     = (new BlogRepository())->allPublished((int)$site['id']);
-    $mediaRepo = new MediaRepository();
     $h         = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
     $siteName  = (string)($site['name'] ?? 'RB Videos & Photos');
     $page = publicPageForPath('blog');
     $pageBlocks = pageBlockMap($page);
     [$heroTitleKey, $heroTitle, $heroTitleType] = firstBlockValue($pageBlocks, ['hero_h1', 'hero_heading'], 'Blog & Inspirace');
     [$heroSubKey, $heroSub, $heroSubType] = firstBlockValue($pageBlocks, ['hero_sub', 'hero_intro'], 'Tipy a rady od profesionálního fotografa z Olomouce.');
-    $heroTitleAttrs = inlineAttrs($page, $heroTitleKey, $heroTitleType);
-    $heroSubAttrs = inlineAttrs($page, $heroSubKey, $heroSubType);
+    $editMode = Auth::check() && !isset($_GET['cms_preview']) && $page !== null;
 
-    $cardsHtml = '';
-    foreach ($posts as $post) {
-        $imgHtml = '';
-        if (!empty($post['featured_image_id'])) {
-            $media = $mediaRepo->findByIdWithThumb((int)$post['featured_image_id']);
-            if ($media) {
-                $src = publicMediaUrl((string)($media['thumb_path'] ?? $media['medium_path'] ?? $media['storage_path']));
-                $imgHtml = '<div class="bl-thumb"><img src="' . $h($src) . '" alt="' . $h($post['title']) . '" loading="lazy"></div>';
-            }
-        }
-        if ($imgHtml === '') {
-            $imgHtml = '<div class="bl-thumb bl-thumb--empty"></div>';
-        }
-
-        $date = !empty($post['published_at']) ? date('j. n. Y', strtotime($post['published_at'])) : '';
-        $slug    = $h($post['slug']);
-        $title   = $h($post['title']);
-        $excerpt = $h($post['excerpt'] ?? '');
-        $titleAttrs = inlineAttrs($page, 'blog:' . (int)$post['id'] . ':title', 'text');
-        $excerptAttrs = inlineAttrs($page, 'blog:' . (int)$post['id'] . ':excerpt', 'text');
-
-        $cardsHtml .= <<<HTML
-<a class="bl-card" href="/{$slug}">
-  {$imgHtml}
-  <div class="bl-body">
-    <div class="bl-date">{$date}</div>
-    <h2 class="bl-title"{$titleAttrs}>{$title}</h2>
-    <p class="bl-excerpt"{$excerptAttrs}>{$excerpt}</p>
-    <span class="bl-more">&#268;&#237;st d&#225;l &rarr;</span>
-  </div>
-</a>
-HTML;
-    }
-
-    if ($cardsHtml === '') {
-        $cardsHtml = '<p class="bl-empty">Zat&#237;m &#382;&#225;dn&#233; &#269;l&#225;nky.</p>';
-    }
-
-    $blogCss = <<<'CSS'
-body{background:#111;color:#fff}
-.bl-hero{background:#1a1a1a;padding:72px 0 46px;text-align:center}
-.bl-hero h1{font-size:clamp(2.4rem,5vw,4rem);color:#fff;margin-bottom:10px}
-.bl-hero p{color:rgba(255,255,255,.7);font-size:1.1rem;max-width:720px;margin:0 auto}
-.bl-grid-wrap{padding:48px 0 80px}
-.bl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:28px}
-.bl-card{display:flex;flex-direction:column;background:#1b1b1f;border-radius:14px;overflow:hidden;text-decoration:none;color:inherit;box-shadow:0 14px 30px rgba(0,0,0,.25);transition:transform .2s,box-shadow .2s}
-.bl-card:hover{transform:translateY(-3px);box-shadow:0 20px 40px rgba(0,0,0,.4)}
-.bl-thumb{height:210px;overflow:hidden;background:#0e0e11}
-.bl-thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s}
-.bl-card:hover .bl-thumb img{transform:scale(1.04)}
-.bl-thumb--empty{height:210px;background:#16161a}
-.bl-body{padding:22px 22px 26px;display:flex;flex-direction:column;flex:1}
-.bl-date{font-size:.8rem;color:rgba(255,255,255,.4);margin-bottom:8px}
-.bl-title{font-size:1.15rem;font-weight:800;color:#fff;margin:0 0 10px;line-height:1.35}
-.bl-excerpt{font-size:.9rem;color:rgba(255,255,255,.6);line-height:1.55;flex:1;margin-bottom:16px}
-.bl-more{display:inline-block;color:#c4963c;font-weight:700;font-size:.9rem;margin-top:auto}
-.bl-empty{color:rgba(255,255,255,.5);padding:40px 0;text-align:center}
-@media(max-width:720px){.bl-hero{padding:42px 0 28px}.bl-hero h1{font-size:2.25rem}.bl-hero p{font-size:.92rem}.bl-grid-wrap{padding:18px 0 42px}.bl-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.bl-card{border-radius:10px}.bl-thumb,.bl-thumb--empty{height:clamp(116px,37vw,156px)}.bl-body{padding:10px 11px 12px}.bl-date,.bl-excerpt,.bl-more{display:none}.bl-title{font-size:.84rem;line-height:1.22;margin:0}}
-CSS;
+    $blogCss = rtrim((string)file_get_contents(ViewFactory::base() . '/app/Views/assets/blog-listing.css'), "\n");
 
     $renderer = new PageRenderer();
     $nav = resolveThemeNav($site, false);
-    $pageContent = <<<HTML
-<section class="bl-hero">
-  <div class="container">
-    <h1{$heroTitleAttrs}>{$h($heroTitle)}</h1>
-    <p{$heroSubAttrs}>{$h($heroSub)}</p>
-  </div>
-</section>
-<section class="bl-grid-wrap">
-  <div class="container">
-    <div class="bl-grid">{$cardsHtml}</div>
-  </div>
-</section>
-HTML;
+    $pageContent = ViewFactory::forTheme(null, ['editMode' => $editMode])->render('archetypes/blog-listing', [
+        'hero' => [
+            'title' => $heroTitle,
+            'sub' => $heroSub,
+            'titleKey' => $heroTitleKey,
+            'titleType' => $heroTitleType,
+            'subKey' => $heroSubKey,
+            'subType' => $heroSubType,
+        ],
+        'posts' => BlogListingData::forSite((int)$site['id'])['posts'],
+    ]);
     [$pageContent, $themeCss, $themeJs, $themeActive] = applyThemeTemplate(
         $renderer,
         $site,

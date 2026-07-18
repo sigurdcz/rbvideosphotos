@@ -1,0 +1,27 @@
+<?php
+/**
+ * Blog listing archetype — phase 4b of the templating refactor.
+ * @var array $hero  ['title','sub','titleKey','titleType','subKey','subType']
+ * @var array $posts [['id','slug','title','excerpt','image_url','date'], ...] from BlogListingData::forSite()
+ */
+?>
+<section class="bl-hero">
+  <div class="container">
+    <h1<?= $this->inlineAttr($hero['titleKey'], $hero['titleType']) ?>><?= $this->e($hero['title']) ?></h1>
+    <p<?= $this->inlineAttr($hero['subKey'], $hero['subType']) ?>><?= $this->e($hero['sub']) ?></p>
+  </div>
+</section>
+<section class="bl-grid-wrap">
+  <div class="container">
+    <div class="bl-grid"><?php if ($posts === []): ?><p class="bl-empty">Zat&#237;m &#382;&#225;dn&#233; &#269;l&#225;nky.</p><?php else: foreach ($posts as $post): ?><a class="bl-card" href="/<?= $this->e($post['slug']) ?>">
+  <?= $post['image_url'] !== '' ? '<div class="bl-thumb"><img src="' . $this->e($post['image_url']) . '" alt="' . $this->e($post['title']) . '" loading="lazy"></div>' : '<div class="bl-thumb bl-thumb--empty"></div>' ?>
+
+  <div class="bl-body">
+    <div class="bl-date"><?= $this->e($post['date']) ?></div>
+    <h2 class="bl-title"<?= $this->inlineAttr('blog:' . $post['id'] . ':title') ?>><?= $this->e($post['title']) ?></h2>
+    <p class="bl-excerpt"<?= $this->inlineAttr('blog:' . $post['id'] . ':excerpt') ?>><?= $this->e($post['excerpt']) ?></p>
+    <span class="bl-more">&#268;&#237;st d&#225;l &rarr;</span>
+  </div>
+</a><?php endforeach; endif; ?></div>
+  </div>
+</section><?php ?>
