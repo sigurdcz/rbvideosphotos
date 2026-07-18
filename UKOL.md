@@ -108,6 +108,28 @@ Rozlišení NENÍ v `PageComposer`, ale UPSTREAM od něj — na kroku aplikace l
 
 **Ověřeno:** `php tests/run.php` → 45 testů + 26 golden checků, 0 failures. Po testech `git checkout -- storage/published/` (republish šum).
 
+### Fáze 3 — post-commit review (91b3b44)
+
+- [x] Projít plný diff commitu (partials, layout.phtml, ViewFactory, ThemeLayoutRenderer, index.php, PublishService)
+- [x] Ověřit delegaci builderů na partials (jediný zdroj pravdy, ne duplikace)
+- [x] Bod 2 rizika: speciální stránky (faq/kontakt/…) — PHTML layout + staré injecty → žádný dvojitý/chybějící footer
+- [x] Bezpečnost: escaping v partials, ViewResolver containment přes ViewFactory, žádné nové SQL, CSRF netknuto
+- [x] `php tests/run.php` → 45 testů + 26 golden, 0 failures (+ `git checkout -- storage/published/`)
+- [x] Manuální ověření /faq a dalších 5 speciálních rout + homepage přes lokální server (footer/nav 1×, ne 2×)
+- [x] CRLF/LF poznámka — ověřena neškodnost
+- [x] Verdikt + aktualizace UKOL.md (bez opravného commitu — žádná chyba nenalezena)
+
+**Verdikt review: SCHVÁLENO** (žádná oprava potřeba). Ověření:
+
+- **Dvojitý footer vyloučen konstrukčně i empiricky.** `FooterRenderer::injectFooterSocials` NAHRAZUJE obsah prvního `<footer>` (preg_replace, ne append); `layout.phtml` renderuje jen placeholder footer byte-shodný s `layout.html`; rich partial `partials/footer` se renderuje výhradně přes `buildRichFooterHtml` (grep: žádný jiný caller, layouty ho nevolají). Curl na živém serveru (/faq, /kontakt, /sluzby, /blog, /hodnoceni, /nase-prace, /): všude přesně 1× `<footer>`, 1× `site-footer-rich`, 1× nav, 1× breadcrumbs, 1× cookie-consent, 0× zbylý `{site_name}`.
+- **Delegace ověřena:** jediné kopie markup fragmentů jsou v `.phtml`; zbylé výskyty class names v PHP jsou jen CSS selektory/DOM matchery. `buildFooterSocialsHtml` (index.php:1432) je mrtvý kód bez callerů (smazání Fáze 6).
+- **Bezpečnost:** `raw()` jen pro (a) `$content` (sanitizace dál v pipeline, jako legacy str_replace), (b) nav markup z DB (stejná důvěra jako legacy `applyLayout`), (c) hardcoded icon SVG. Vše ostatní `e()`. ViewFactory validuje theme key regexem PŘED sestavením rootu; ViewResolver containment neobejit. Žádné nové SQL (FooterViewData jde přes existující repozitáře). CSRF /kontakt: `_csrf` input + honeypot na místě.
+- **EOL:** nové soubory jsou v repu LF, `file` nepotvrdil žádné CRLF; golden runner EOL normalizuje; případný CRLF po fresh checkoutu (autocrlf=true, žádný .gitattributes) je pro CSS/HTML neškodný.
+- **Drobné poznámky (ne chyby) pro Fázi 4/6:**
+  1. Legacy `applyLayout` nahrazoval `{site_name}`/`{nav}` globálně (i uvnitř page contentu); PHTML cesta jen v nav partialu a fixních slotech. Divergence nastane jen pokud by DB obsah obsahoval placeholder — dnes nenastává (goldeny byte-shodné).
+  2. `applyThemeTemplate`/`publishPage` teď aplikují PHTML layout nezávisle na `getLayoutHtmlForPage()` — pro elegant-white3 shodné chování (manifest má vždy layout.html), ale kdyby se layout.html smazal, PHTML cesta se stane jediným zdrojem (zamýšlené).
+  3. **Deploy:** FTP deploy na `/www/` MUSÍ nově zahrnovat `app/Views/**` (partials + assets) a `Templates/elegant-white3/views/**`. Chybějící partial = výjimka `View not found` (500 na webu); chybějící `shared-components.css` = tichá ztráta shared CSS (`getSharedComponentCss` vrací '').
+
 ### Fáze 4 — Speciální archetypy (9 samostatných commitů)
 - [ ] faq: ViewModel + `archetypes/faq.phtml`, smazat heredoc, golden + visual QA
 - [ ] sluzby: totéž
