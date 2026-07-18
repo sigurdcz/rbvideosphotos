@@ -1,0 +1,21 @@
+<?php
+/**
+ * Sluzby archetype — phase 4 of the templating refactor.
+ * @var array $hero  ['title','sub','titleKey','titleType','subKey','subType']
+ * @var array $items [['id','title','description','image_url','button_text','button_url'], ...] from SluzbyPageData::forSite()
+ * @var string $heroImage  first item's resolved image URL, or ''
+ */
+?>
+<section class="services-hero">
+  <?= $heroImage !== '' ? '<img class="hero-bg" src="' . $this->e($heroImage) . '" alt="" aria-hidden="true">' : '' ?>
+
+  <div class="container">
+    <h1<?= $this->inlineAttr($hero['titleKey'], $hero['titleType']) ?>><?= $this->e($hero['title']) ?></h1>
+    <p<?= $this->inlineAttr($hero['subKey'], $hero['subType']) ?>><?= $this->e($hero['sub']) ?></p>
+  </div>
+</section>
+<section class="services-wrap">
+  <div class="container">
+    <div class="services-grid"><?php if ($items === []): ?><p class="services-empty">Zatím nejsou publikované žádné služby.</p><?php else: foreach ($items as $index => $item): ?><article class="service-card"><?= $item['image_url'] !== '' ? '<div class="service-card__media"><img src="' . $this->e($item['image_url']) . '" alt="' . $this->e($item['title']) . '" loading="lazy"></div>' : '<div class="service-card__media service-card__media--empty"></div>' ?><div class="service-card__body"><span class="service-card__num"><?= $this->e(str_pad((string)($index + 1), 2, '0', STR_PAD_LEFT)) ?></span><h2><?= $this->e($item['title']) ?></h2><p><?= nl2br($this->e($item['description'])) ?></p><a href="<?= $this->e($item['button_url']) ?>"><?= $this->e($item['button_text']) ?></a></div></article><?php endforeach; endif; ?></div>
+  </div>
+</section><?php ?>

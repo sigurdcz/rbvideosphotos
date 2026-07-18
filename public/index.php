@@ -36,6 +36,7 @@ use App\Security\RequestThrottle;
 use App\Support\FrontendAssetManager;
 use App\View\ViewFactory;
 use App\ViewModels\FaqPageData;
+use App\ViewModels\SluzbyPageData;
 
 Env::load(dirname(__DIR__) . '/.env');
 
@@ -1618,8 +1619,6 @@ function tryServeServicesPage(string $uri): bool
         return false;
     }
 
-    $repo = new ServiceRepository();
-    $items = $repo->allActive((int)$site['id']);
     $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
     $siteName = (string)($site['name'] ?? 'RB Videos & Photos');
     $page = publicPageForPath('sluzby');
@@ -1630,90 +1629,25 @@ function tryServeServicesPage(string $uri): bool
         ['hero_sub', 'hero_intro'],
         'Od svateb přes portréty až po firemní vizuál. Každou zakázku stavíme na emocích, detailu a profesionálním výsledku.'
     );
-    $heroTitleAttrs = inlineAttrs($page, $heroTitleKey, $heroTitleType);
-    $heroSubAttrs = inlineAttrs($page, $heroSubKey, $heroSubType);
+    $editMode = Auth::check() && !isset($_GET['cms_preview']) && $page !== null;
 
-    $cards = '';
-    $heroImage = '';
-    foreach ($items as $index => $item) {
-        $title = trim((string)($item['title'] ?? ''));
-        $description = trim((string)($item['description'] ?? ''));
-        $image = normalizePublicAssetUrl((string)($item['image_url'] ?? ''));
-        if ($image === '') {
-            $image = publicMediaUrl((string)($item['image_url'] ?? ''));
-        }
-        if ($heroImage === '' && $image !== '') {
-            $heroImage = $image;
-        }
-        $buttonText = trim((string)($item['button_text'] ?? '')) ?: 'Více informací';
-        $buttonUrl = trim((string)($item['button_url'] ?? '')) ?: '/kontakt';
-        $number = str_pad((string)($index + 1), 2, '0', STR_PAD_LEFT);
-        $media = $image !== ''
-            ? '<div class="service-card__media"><img src="' . $h($image) . '" alt="' . $h($title) . '" loading="lazy"></div>'
-            : '<div class="service-card__media service-card__media--empty"></div>';
-
-        $cards .= '<article class="service-card">'
-            . $media
-            . '<div class="service-card__body">'
-            . '<span class="service-card__num">' . $h($number) . '</span>'
-            . '<h2>' . $h($title) . '</h2>'
-            . '<p>' . nl2br($h($description)) . '</p>'
-            . '<a href="' . $h($buttonUrl) . '">' . $h($buttonText) . '</a>'
-            . '</div></article>';
-    }
-
-    if ($cards === '') {
-        $cards = '<p class="services-empty">Zatím nejsou publikované žádné služby.</p>';
-    }
-
-    $heroBg = $heroImage !== ''
-        ? '<img class="hero-bg" src="' . $h($heroImage) . '" alt="" aria-hidden="true">'
-        : '';
-    $css = <<<'CSS'
-body{margin:0;background:#fbf7f1;color:#241914;font-family:Georgia,"Times New Roman",serif}
-.nav{position:relative;z-index:5;background:#fffaf4;border-bottom:1px solid rgba(36,25,20,.08)}
-.nav-inner{width:min(calc(100% - 48px),1180px);margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:24px;min-height:76px}
-.brand{font-size:1.2rem;letter-spacing:.14em;text-transform:uppercase;color:#45372e;text-decoration:none;font-weight:800}
-.nav-links{display:flex;gap:24px;align-items:center}
-.nav-links a{color:#5d5148;text-decoration:none;font-size:.78rem;font-weight:900;letter-spacing:.13em;text-transform:uppercase}
-.nav-links a:hover,.nav-links .nav-active{color:#c4963c}
-.nav-cta{padding:10px 16px;border:1px solid rgba(196,150,60,.35);border-radius:999px}
-.services-hero{min-height:clamp(420px,56vh,620px);display:flex;align-items:center;background:linear-gradient(135deg,#37271c,#13100e);padding:72px 0;color:#fff}
-.services-hero .container,.services-wrap .container{width:min(calc(100% - 48px),1120px);margin:0 auto}
-.services-hero h1{max-width:760px;margin:0;font-size:clamp(3.2rem,7vw,6rem);line-height:.95;color:#fff}
-.services-hero p{max-width:680px;margin:18px 0 0;color:rgba(255,255,255,.84);font-family:Arial,Helvetica,sans-serif;line-height:1.75}
-.services-wrap{padding:84px 0 96px;background:linear-gradient(180deg,#fbf7f1 0%,#f5ecde 48%,#fbf7f1 100%)}
-.services-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px}
-.service-card{display:grid;grid-template-columns:minmax(220px,.82fr) minmax(0,1.18fr);overflow:hidden;min-height:300px;background:#fff;border:1px solid rgba(196,150,60,.16);border-radius:26px;box-shadow:0 22px 54px rgba(61,43,26,.10)}
-.service-card__media{min-height:100%;background:#e9ded0;overflow:hidden}
-.service-card__media img{width:100%;height:100%;display:block;object-fit:cover;object-position:center}
-.service-card__media--empty{background:linear-gradient(135deg,#e8dccb,#fff8ec)}
-.service-card__body{display:flex;flex-direction:column;padding:30px 30px 28px}
-.service-card__num{color:#c4963c;font-size:.74rem;font-weight:900;letter-spacing:.16em}
-.service-card h2{margin:18px 0 12px;color:#2a1f19;font-size:clamp(1.7rem,3vw,2.35rem);line-height:1}
-.service-card p{margin:0 0 26px;color:#6b5948;font-family:Arial,Helvetica,sans-serif;line-height:1.72}
-.service-card a{margin-top:auto;color:#c4963c;text-decoration:none;font-size:.8rem;font-weight:900;letter-spacing:.15em;text-transform:uppercase}
-.services-empty{padding:40px;background:#fff;border-radius:18px;color:#6b5948}
-footer{background:#17120f;color:#f7f1e8;padding:58px 24px}
-@media(max-width:900px){.nav-inner{width:calc(100% - 32px);flex-direction:column;align-items:flex-start;padding:16px 0}.nav-links{flex-wrap:wrap;gap:14px}.services-hero .container,.services-wrap .container{width:calc(100% - 32px)}.services-grid{grid-template-columns:1fr}.service-card{grid-template-columns:1fr}.service-card__media{height:220px}}
-CSS;
+    $sluzbyData = SluzbyPageData::forSite((int)$site['id']);
+    $css = rtrim((string)file_get_contents(ViewFactory::base() . '/app/Views/assets/sluzby.css'), "\n");
 
     $renderer = new PageRenderer();
     $nav = resolveThemeNav($site, false);
-    $pageContent = <<<HTML
-<section class="services-hero">
-  {$heroBg}
-  <div class="container">
-    <h1{$heroTitleAttrs}>{$h($heroTitle)}</h1>
-    <p{$heroSubAttrs}>{$h($heroSub)}</p>
-  </div>
-</section>
-<section class="services-wrap">
-  <div class="container">
-    <div class="services-grid">{$cards}</div>
-  </div>
-</section>
-HTML;
+    $pageContent = ViewFactory::forTheme(null, ['editMode' => $editMode])->render('archetypes/sluzby', [
+        'hero' => [
+            'title' => $heroTitle,
+            'sub' => $heroSub,
+            'titleKey' => $heroTitleKey,
+            'titleType' => $heroTitleType,
+            'subKey' => $heroSubKey,
+            'subType' => $heroSubType,
+        ],
+        'items' => $sluzbyData['items'],
+        'heroImage' => $sluzbyData['heroImage'],
+    ]);
     [$pageContent, $themeCss, $themeJs, $themeActive] = applyThemeTemplate(
         $renderer,
         $site,

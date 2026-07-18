@@ -478,6 +478,37 @@ HTML;
             return [$html, $css];
         }
 
+        if ($pageKey === 'sluzby') {
+            $siteId = (int)($page['site_id'] ?? 0);
+            $sluzbyData = \App\ViewModels\SluzbyPageData::forSite($siteId);
+            [$titleKey, $title, $titleType] = \App\Services\Render\HomepageSectionRenderer::firstBlockValue(
+                $blocks,
+                ['hero_h1', 'hero_heading'],
+                'Naše služby'
+            );
+            [$subKey, $sub, $subType] = \App\Services\Render\HomepageSectionRenderer::firstBlockValue(
+                $blocks,
+                ['hero_sub', 'hero_intro'],
+                'Od svateb přes portréty až po firemní vizuál. Každou zakázku stavíme na emocích, detailu a profesionálním výsledku.'
+            );
+
+            $html = \App\View\ViewFactory::forTheme(null)->render('archetypes/sluzby', [
+                'hero' => [
+                    'title' => $title,
+                    'sub' => $sub,
+                    'titleKey' => $titleKey,
+                    'titleType' => $titleType,
+                    'subKey' => $subKey,
+                    'subType' => $subType,
+                ],
+                'items' => $sluzbyData['items'],
+                'heroImage' => $sluzbyData['heroImage'],
+            ]);
+            $css = rtrim((string)file_get_contents(\App\View\ViewFactory::base() . '/app/Views/assets/sluzby.css'), "\n");
+
+            return [$html, $css];
+        }
+
         return [null, ''];
     }
 
