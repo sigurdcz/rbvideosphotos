@@ -24,12 +24,39 @@ Hotovo když: Všech 7 fází (viz `TEMPLATE_REFACTOR_PLAN.md`) implementováno 
 - [x] Ověřit: nic zatím nevolá nový engine, golden testy beze změny (`php tests/run.php` → 36 testů + 26 golden, exit 0)
 - [x] Commit `refactor(templates): add PHTML view engine core`
 
-### Fáze 2 — Sjednocení pipeline (PageComposer)
-- [ ] Delegovat na subagenta (vyšší náročnost — duplicitní extrakce)
-- [ ] Extrakce sdílených funkcí z `public/index.php` + `PublishService` do `App\Services\Render\*`
-- [ ] `PageComposer` s módy live/publish
-- [ ] Golden diff prázdný nebo schválený
-- [ ] Commit `refactor(templates): unify live and publish render pipeline`
+### Fáze 2 — Sjednocení pipeline (PageComposer) [HOTOVO]
+- [x] Delegovat na subagenta (vyšší náročnost — duplicitní extrakce)
+- [x] Extrakce sdílených funkcí z `public/index.php` + `PublishService` do `App\Services\Render\*`
+- [x] `PageComposer` s módy live/publish
+- [x] Golden diff prázdný nebo schválený (26/26 OK bez regenerace baseline)
+- [x] Commit `refactor(templates): unify live and publish render pipeline` (0cc77c9)
+
+#### Fáze 2 — review před commitem [HOTOVO]
+
+- [x] Projít celý diff (`public/index.php`, `PublishService.php`, `PortfolioPublishService.php`) + přečíst všech 9 souborů `app/Services/Render/*`
+- [x] Bezpečnostní kontrakt: žádné SQL v Render/* (jen repozitáře), CSRF /kontakt netknuto (generování index.php:1062/2652, validace :3212), `requireAuth()` v PublishController na místě (v PublishService nikdy nebyl), realpath kontroly netknuty, escaping přesunut spolu s funkcemi, MediaUrlResolver root-relative bez hardcoded domény, žádný shell exec/eval
+- [x] Korektnost: funkce přesunuty (grep ověřil jediné kanonické kopie; staré funkce jsou tenké delegující wrappery — smazání ve Fázi 6), pořadí volání v PageComposer 1:1 s originály, sjednocení injectFooterSocials/injectRichFooter ověřeno (viz poznámky níže)
+- [x] `php tests/run.php` → 36 testů + 26 golden checků, 0 failures; poté `git checkout -- storage/published/`
+- [x] Rozsah: nic mimo Fázi 2 (žádné PHTML views/ViewModely, testy/šablony netknuty)
+- [x] Verdikt SCHVÁLENO + commit (jen soubory Fáze 2) + aktualizace UKOL.md
+
+Pozn.: wip-commit krok ze skillu /zadani přeskočen záměrně — necommitnuté změny byly předmětem review, commit až po verdiktu.
+
+### Fáze 2 — poznámky pro Fázi 3
+
+Vytvořené služby v `app/Services/Render/` (namespace `App\Services\Render`, `declare(strict_types=1)`, statické metody):
+
+- `PageComposer` — jediný orchestrátor render kaskády; `compose(array $ctx)` s módy `MODE_LIVE`/`MODE_PUBLISH`. Live-only kroky (cenik layout, homepage hero, breadcrumb, sanitizeFrontendHtml, editor chrome) volá jako globální funkce z `public/index.php`; publish-divergentní kroky přes injektované `PublishPageChrome`. Pořadí kroků obou módů je byte-ekvivalentní s původními inline sekvencemi.
+- `PublishPageChrome` (interface) — kontrakt pro publish-only chrome, které zůstává záměrně divergentní: `injectSiteLogo`, `injectPageHeroImage`, `injectPageHeroVideo`, `injectGlobalVideoOverlayStyles`, `injectEditorialGoldOverrides`. Implementuje `PublishService` (metody změněny private→public). Sjednocení s live variantami (webp `<picture>`, optimalizovaná média) je plán Fáze 3/6.
+- `HomepageSectionRenderer` — `blockContent()`, `injectHomepageMissingSections()` (autofill cenik/blog/faq/proces sekcí), `injectHomepageThemeDataSources()` (bezova-lens-tale + elegant-white data sources), `injectHomepageAboutVisualSource()`. Publish varianta about-visual získala try/catch+log z live (graceful superset, dřív by výjimka shodila publish).
+- `MarkupNormalizer` — legacy markup normalizace + externalizace inline stylů/skriptů: `normalizeLegacyFrontendMarkup($html, $withContactAccessibility=false)`, `normalizeContactFormAccessibility()`, `normalizeLegacyTemplateSource()`, `externalizeBodyCssVariables()`, `extractInlineStyleBlocks()`, `extractInlineBodyScripts()`, `injectBodyCssVariableToken()`, `injectBodyPageKey()`, `injectSharedFrontendAssets()`. Divergence: live volá contact-accessibility pass (flag true), publish ne — sjednocení až v kontakt archetypu (Fáze 4). Publish nově získal i pravidlo `rgba(255,255,255,.4)` → `frontend-note` (dřív jen live) — golden ověřeno beze změny výstupu.
+- `FooterRenderer` — `buildRichFooterHtml(int $siteId)` + `injectFooterSocials()`. **Řešení divergence injectFooterSocials/injectRichFooter:** kanonickou variantou se stala live verze (bohatší: `__logoBox` wrapper loga, grid `minmax(300px,1fr)`, kontaktní položky `grid-template-columns:86px ...`). Bezpečné, protože (a) publish stejně footer `<style data-cms-rich-footer>` odstraňuje v `extractInlineStyleBlocks` (skip-list blok se z HTML vyřadí a nereinjektuje — pre-existující chování), (b) markup obou variant je shodný pro web bez `logo_url` (demo). Zanikl publish fallback obalující footer do `<footer>` při jeho absenci v HTML (edge case, golden beze změny). `PublishService::injectRichFooter` nyní deleguje na `FooterRenderer::injectFooterSocials`.
+- `ContactNormalizer` — `normalizePhoneForHref()`, `formatPhoneForDisplay()`, `phoneDedupKey()`, `extractPhoneNumbersFromText()`, `enrichContactWithLegacyBlocks()` (e-mail/telefony/adresa/sociální sítě z legacy bloků), `ensureRbDemoContactAddress()` (no-op, zachováno). Sjednocen default form e-mail na `ContactRepository::DEFAULT_FORM_EMAIL` — ověřeno identické s live `defaultContactFormEmail()`.
+- `SocialLinkRenderer` — `normalizeSocialType()`, `socialLabel()`, `socialIconSvg()` (inline SVG ikony).
+- `HeroMediaRenderer` — `buildHeroImageHtml()`, `buildHeroVideoHtml()`, `buildVideoEmbedUrl()` (YouTube/Vimeo embed), `ensureHeroVideoStyle()`, `hasHeroVideoElement()`.
+- `MediaUrlResolver` — `normalizePublicAssetUrl()`, `publicMediaUrl()` (root-relative `/media/` mapování, žádná hardcoded doména), `resolveDemoMediaUrlByFilename()`. Deleguje sem i `PortfolioPublishService::publicMediaUrl`.
+
+Pro Fázi 3: staré funkce v `public/index.php`/`PublishService` zůstaly jako tenké delegující wrappery (kvůli ostatním callsites, např. `sanitizeFrontendHtml` je volá) — jejich smazání je naplánováno ve Fázi 6. `sanitizeFrontendHtml` (index.php:322) zůstává live-only a volá se z `PageComposer::composeLive` jako globální funkce.
 
 ### Fáze 3 — Layout a chrome do PHTML
 - [ ] Delegovat na subagenta
