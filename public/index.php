@@ -2575,35 +2575,8 @@ function tryServeBlogPostPage(string $uri): bool
     $h        = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
     $siteName = (string)($site['name'] ?? 'RB Videos & Photos');
 
-    $imgHtml = '';
-    if (!empty($post['featured_image_id'])) {
-        $media = (new MediaRepository())->findByIdWithThumb((int)$post['featured_image_id']);
-        if ($media) {
-            $src     = publicMediaUrl((string)($media['medium_path'] ?? $media['storage_path']));
-            $imgHtml = '<div class="bp-featured"><img src="' . $h($src) . '" alt="' . $h($post['title']) . '"></div>';
-        }
-    }
+    $blogPostData = BlogPostData::forPost($post);
 
-    try {
-        $galleryItems = (new BlogRepository())->getGallery((int)$post['id']);
-    } catch (\Throwable $e) {
-        $galleryItems = [];
-    }
-    $galleryHtml  = '';
-    foreach ($galleryItems as $idx => $gItem) {
-        $tSrc = publicMediaUrl((string)($gItem['thumb_path'] ?? $gItem['medium_path'] ?? $gItem['storage_path'] ?? ''));
-        $fSrc = publicMediaUrl((string)($gItem['storage_path'] ?? ''));
-        $alt  = $h($gItem['alt_text'] ?? '');
-        $galleryLabel = trim((string)($gItem['alt_text'] ?? '')) !== '' ? trim((string)$gItem['alt_text']) : ('Fotka ' . ($idx + 1));
-        $galleryHtml .= '<button type="button" class="bg-item" data-full="' . $h($fSrc) . '" data-idx="' . $idx . '" aria-label="' . $h('Otevrit galerii: ' . $galleryLabel) . '">'
-            . '<img src="' . $h($tSrc) . '" alt="' . $alt . '" loading="lazy">'
-            . '</button>';
-    }
-
-    $date      = !empty($post['published_at']) ? date('j. n. Y', strtotime($post['published_at'])) : '';
-    $title     = $h($post['title']);
-    $excerpt   = $h($post['excerpt'] ?? '');
-    $content   = (string)($post['content'] ?? '');
     $rawMetaTitle = trim((string)($post['meta_title'] ?? ''));
     $fullTitle = $rawMetaTitle !== '' ? $rawMetaTitle : (string)$post['title'];
     if ($siteName !== '' && !preg_match('~\|\s*' . preg_quote($siteName, '~') . '\s*$~u', $fullTitle)) {
@@ -2612,93 +2585,18 @@ function tryServeBlogPostPage(string $uri): bool
     $metaTitle = $h($fullTitle);
     $metaDesc  = $h($post['meta_description'] ?: $post['excerpt'] ?: '');
     $canonical = absolutePublicUrl($site, '/' . $slug);
-    $featuredImageUrl = null;
-    if (preg_match('~src="([^"]+)"~', $imgHtml, $imgMatch)) {
-        $featuredImageUrl = absolutePublicUrl($site, $imgMatch[1]);
-    }
+    $featuredImageUrl = $blogPostData['post']['image_url'] !== ''
+        ? absolutePublicUrl($site, $blogPostData['post']['image_url'])
+        : null;
 
-    $blogPostCss = <<<'CSS'
-body{background:#111;color:#fff}
-.bp-hero{background:#1a1a1a;padding:64px 0 40px}
-.bp-hero .bp-date{color:rgba(255,255,255,.45);font-size:.9rem;margin-bottom:14px}
-.bp-hero h1{font-size:clamp(2rem,4vw,3.2rem);color:#fff;margin-bottom:14px;line-height:1.2}
-.bp-hero .bp-excerpt{color:rgba(255,255,255,.72);font-size:1.1rem;max-width:760px;line-height:1.6}
-.bp-featured{width:100%;max-height:480px;overflow:hidden;background:#0e0e11}
-.bp-featured img{width:100%;max-height:480px;object-fit:cover;display:block}
-.bp-content-wrap{padding:48px 0 80px}
-.bp-content{max-width:760px}
-.bp-content h2{font-size:1.5rem;color:#fff;margin:32px 0 12px}
-.bp-content h3{font-size:1.2rem;color:#e0e0e0;margin:24px 0 10px}
-.bp-content p{color:rgba(255,255,255,.78);line-height:1.7;margin-bottom:16px}
-.bp-content ul,.bp-content ol{color:rgba(255,255,255,.78);padding-left:1.5em;margin-bottom:16px;line-height:1.7}
-.bp-content img{max-width:100%;border-radius:10px;margin:16px 0}
-.bp-back{margin-top:36px}
-.bp-back a{color:#c4963c;text-decoration:none;font-weight:700}
-.bp-back a:hover{text-decoration:underline}
-.bg-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin:40px 0}
-.bg-item{padding:0;border:0;cursor:pointer;border-radius:10px;overflow:hidden;background:#1b1b1f}
-.bg-item img{width:100%;height:160px;object-fit:cover;display:block;transition:transform .2s}
-.bg-item:hover img{transform:scale(1.04)}
-.bp-lightbox{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.92);align-items:center;justify-content:center}
-.bp-lightbox.active{display:flex}
-.bp-lb-img{max-width:92vw;max-height:88vh;object-fit:contain;border-radius:8px}
-.bp-lb-close{position:absolute;top:20px;right:24px;font-size:2rem;color:#fff;cursor:pointer;line-height:1;opacity:.7;background:transparent;border:0}
-.bp-lb-close:hover,.bp-lb-close:focus-visible{opacity:1}
-.bp-lb-prev,.bp-lb-next{position:absolute;top:50%;transform:translateY(-50%);font-size:2.5rem;color:#fff;cursor:pointer;padding:12px;opacity:.6;user-select:none;background:transparent;border:0}
-.bp-lb-prev:hover,.bp-lb-next:hover,.bp-lb-prev:focus-visible,.bp-lb-next:focus-visible{opacity:1}
-.bp-lb-prev{left:16px}
-.bp-lb-next{right:16px}
-CSS;
-
-    $gallerySection = '';
-    if ($galleryHtml !== '') {
-        $gallerySection = '<div class="bg-gallery">' . $galleryHtml . '</div>';
-    }
-
-    $lightboxHtml = $galleryHtml !== '' ? <<<'HTML'
-<div class="bp-lightbox" id="bp-lightbox" role="dialog" aria-modal="true" aria-label="Galerie clanku">
-  <button type="button" class="bp-lb-close" id="bp-lb-close" aria-label="Zavrit galerii">&times;</button>
-  <button type="button" class="bp-lb-prev" id="bp-lb-prev" aria-label="Predchozi fotka">&#8249;</button>
-  <img class="bp-lb-img" id="bp-lb-img" src="" alt="">
-  <button type="button" class="bp-lb-next" id="bp-lb-next" aria-label="Dalsi fotka">&#8250;</button>
-</div>
-<script>
-(function(){
-  var lb=document.getElementById('bp-lightbox'),img=document.getElementById('bp-lb-img'),items=Array.from(document.querySelectorAll('.bg-item')),idx=0;
-  if(!lb||!items.length)return;
-  function open(i){idx=i;img.src=items[i].dataset.full||'';lb.classList.add('active');}
-  function close(){lb.classList.remove('active');img.src='';}
-  function prev(){open((idx-1+items.length)%items.length);}
-  function next(){open((idx+1)%items.length);}
-  items.forEach(function(el,i){el.addEventListener('click',function(){open(i);});});
-  document.getElementById('bp-lb-close').addEventListener('click',close);
-  document.getElementById('bp-lb-prev').addEventListener('click',prev);
-  document.getElementById('bp-lb-next').addEventListener('click',next);
-  lb.addEventListener('click',function(e){if(e.target===lb)close();});
-  document.addEventListener('keydown',function(e){if(!lb.classList.contains('active'))return;if(e.key==='Escape')close();if(e.key==='ArrowLeft')prev();if(e.key==='ArrowRight')next();});
-})();
-</script>
-HTML : '';
+    $blogPostCss = rtrim((string)file_get_contents(ViewFactory::base() . '/app/Views/assets/blog-detail.css'), "\n");
 
     $renderer = new PageRenderer();
     $nav = resolveThemeNav($site, false);
-    $pageContent = <<<HTML
-<section class="bp-hero">
-  <div class="container">
-    <div class="bp-date">{$date}</div>
-    <h1>{$title}</h1>
-    <p class="bp-excerpt">{$excerpt}</p>
-  </div>
-</section>{$imgHtml}
-<section class="bp-content-wrap">
-  <div class="container">
-    <div class="bp-content">{$content}</div>
-    {$gallerySection}
-    <div class="bp-back"><a href="/blog">&larr; Zp&#283;t na v&#353;echny &#269;l&#225;nky</a></div>
-  </div>
-</section>
-{$lightboxHtml}
-HTML;
+    $pageContent = ViewFactory::forTheme(null)->render('archetypes/blog-detail', [
+        'post' => $blogPostData['post'],
+        'gallery' => $blogPostData['gallery'],
+    ]);
     [$pageContent, $themeCss, $themeJs, $themeActive] = applyThemeTemplate(
         $renderer,
         $site,
@@ -2726,10 +2624,7 @@ HTML;
   <meta name="description" content="{$metaDesc}">
   <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:system-ui,-apple-system,sans-serif;line-height:1.6}.container{max-width:1180px;margin:0 auto;padding:0 24px}{$blogPostCss}footer{padding:28px 24px;border-top:1px solid rgba(255,255,255,.08);text-align:center;color:rgba(255,255,255,.46)}</style>
 </head><body>
-<section class="bp-hero"><div class="container"><div class="bp-date">{$date}</div><h1>{$title}</h1><p class="bp-excerpt">{$excerpt}</p></div></section>
-{$imgHtml}
-<section class="bp-content-wrap"><div class="container"><div class="bp-content">{$content}</div>{$gallerySection}<div class="bp-back"><a href="/blog">&larr; Zp&#283;t na v&#353;echny &#269;l&#225;nky</a></div></div></section>
-{$lightboxHtml}
+{$pageContent}
 <footer>{$siteNameEsc}</footer></body></html>
 HTML;
     }

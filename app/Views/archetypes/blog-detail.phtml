@@ -1,0 +1,45 @@
+<?php
+/**
+ * Blog detail archetype — phase 4b of the templating refactor.
+ * @var array $post    ['date','title','excerpt','content','image_url'] from BlogPostData::forPost()
+ * @var array $gallery [['thumb','full','alt','label'], ...]
+ */
+?>
+<section class="bp-hero">
+  <div class="container">
+    <div class="bp-date"><?= $this->e($post['date']) ?></div>
+    <h1><?= $this->e($post['title']) ?></h1>
+    <p class="bp-excerpt"><?= $this->e($post['excerpt']) ?></p>
+  </div>
+</section><?= $post['image_url'] !== '' ? '<div class="bp-featured"><img src="' . $this->e($post['image_url']) . '" alt="' . $this->e($post['title']) . '"></div>' : '' ?>
+
+<section class="bp-content-wrap">
+  <div class="container">
+    <div class="bp-content"><?= $this->raw($post['content']) ?></div>
+    <?php if ($gallery !== []): ?><div class="bg-gallery"><?php foreach ($gallery as $idx => $g): ?><button type="button" class="bg-item" data-full="<?= $this->e($g['full']) ?>" data-idx="<?= $idx ?>" aria-label="<?= $this->e('Otevrit galerii: ' . $g['label']) ?>"><img src="<?= $this->e($g['thumb']) ?>" alt="<?= $this->e($g['alt']) ?>" loading="lazy"></button><?php endforeach; ?></div><?php endif; ?>
+
+    <div class="bp-back"><a href="/blog">&larr; Zp&#283;t na v&#353;echny &#269;l&#225;nky</a></div>
+  </div>
+</section>
+<?php if ($gallery !== []): ?><div class="bp-lightbox" id="bp-lightbox" role="dialog" aria-modal="true" aria-label="Galerie clanku">
+  <button type="button" class="bp-lb-close" id="bp-lb-close" aria-label="Zavrit galerii">&times;</button>
+  <button type="button" class="bp-lb-prev" id="bp-lb-prev" aria-label="Predchozi fotka">&#8249;</button>
+  <img class="bp-lb-img" id="bp-lb-img" src="" alt="">
+  <button type="button" class="bp-lb-next" id="bp-lb-next" aria-label="Dalsi fotka">&#8250;</button>
+</div>
+<script>
+(function(){
+  var lb=document.getElementById('bp-lightbox'),img=document.getElementById('bp-lb-img'),items=Array.from(document.querySelectorAll('.bg-item')),idx=0;
+  if(!lb||!items.length)return;
+  function open(i){idx=i;img.src=items[i].dataset.full||'';lb.classList.add('active');}
+  function close(){lb.classList.remove('active');img.src='';}
+  function prev(){open((idx-1+items.length)%items.length);}
+  function next(){open((idx+1)%items.length);}
+  items.forEach(function(el,i){el.addEventListener('click',function(){open(i);});});
+  document.getElementById('bp-lb-close').addEventListener('click',close);
+  document.getElementById('bp-lb-prev').addEventListener('click',prev);
+  document.getElementById('bp-lb-next').addEventListener('click',next);
+  lb.addEventListener('click',function(e){if(e.target===lb)close();});
+  document.addEventListener('keydown',function(e){if(!lb.classList.contains('active'))return;if(e.key==='Escape')close();if(e.key==='ArrowLeft')prev();if(e.key==='ArrowRight')next();});
+})();
+</script><?php endif; ?>
