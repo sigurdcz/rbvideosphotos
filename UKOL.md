@@ -194,6 +194,30 @@ Rozlišení NENÍ v `PageComposer`, ale UPSTREAM od něj — na kroku aplikace l
 - **Publish výstup se reálně změnil** pro faq/sluzby/cenik (viz Golden poznámky výše) — to znamená, že PŘI DALŠÍM SKUTEČNÉM `publishSite()` (ne testu) se `storage/published/{faq,sluzby,cenik}/index.html` přepíší na bohatší obsah. To je zamýšlené (opravuje reálný produkční content bug), ale je to VIDITELNÁ změna live produkčního webu při příští publikaci — stojí za zmínku uživateli/reviewerovi před tím, než se skutečně spustí publish v administraci (ne jen v testech).
 - `injectCenikPageLayout`/`buildCenikPackageCardsHtml` byly smazány z `public/index.php` (ne jen ponechány jako thin wrapper, na rozdíl od Fáze 2 precedentu "staré funkce zůstávají do Fáze 6") — zdůvodnění: nešlo o funkce s jinými callery mimo `PageComposer`, takže bezpečné smazat hned; ověřeno grepem před smazáním. Pokud review preferuje thin-wrapper konzervativnější přístup konzistentní s Fází 2/3, lze to vrátit.
 
+### Fáze 4a — post-commit review (nezávislý reviewer, Opus 4.8)
+
+**Verdikt: SCHVÁLENO** (žádná oprava, žádný blocker). Přezkoumány commity `8c013ed` (faq), `1404044` (sluzby), `9929c90` (cenik), `55dfd82` (reviews).
+
+**Ověření tvrzení o publish-content bugu (nezávisle, přes `git show` + diff goldenů — POTVRZENO, směr správný, nic se neztratilo):**
+- **faq** publish golden: staré = 5/12 položek vč. doslovného placeholderu „Doplňte první otázku a odpověď." + HTML-entity text (`&#268;ast&eacute;…`) + ŽÁDNÝ accordion JS; nové = všech 12 položek + accordion markup (`faq-q`/`aria-expanded`/`faq-a hidden`) + UTF-8 + inline-body-scripts. Bohatší/správné.
+- **sluzby** publish golden: staré = `hp-svc-card`/`svc-grid` markup + phantom „Kontaktujte nás" CTA + entity text + chybějící `<img class="hero-bg">`; nové = `service-card`/`services-grid` + UTF-8 + hero-bg + bez cizí CTA. Správné.
+- **cenik** publish golden: staré = neakcentovaný zastaralý snapshot („Zakladni svatba"/„Nejoblibenejsi", kratší popisy); nové = akcentovaný `cenik_card_*` obsah („Základní"/„Standardní"/„Prémiový", delší popisy, badge). Správné.
+- Směr potvrzen: STARÉ publish bylo chudší/chybné, NOVÉ je bohatší/správné — nic se neztratilo, jde o opravu, ne regresi.
+- **Live/publish parita ověřena nad rámec tvrzení:** faq content region byte-identická (md5), cenik packages+CTA sekce byte-identická (md5), marker counts shodné (12 faq-item / 5 service-card / 4 ckp-card / 33 reviews-card na obou stranách). Sluzby content region se liší JEN v prefixu media URL (live `/media/`, publish `/storage/media/`) — to je PRE-EXISTUJÍCÍ systémový rewrite (`public/index.php:227-228` přepisuje `/storage/media/`→`/media/` jen na live cestě), NE zavedený touto fází; committnutý nasazený `storage/published/sluzby/index.html` i 13/14 publish goldenů už `/storage/media/` používají → je to správná publish konvence, nová sluzby se jí nově drží.
+
+**Bezpečnost + korektnost (vše OK):**
+- ViewModels (`Faq/Sluzby/Cenik/Reviews PageData`): čistí data provideři, žádné HTML, žádné SQL; všechny repozitáře (`allActive`/`allByPage`/`findByUrlPath`) používají prepared statements (`?`). Media URL root-relative přes `MediaUrlResolver` (bez hardcoded domény).
+- phtml: `$this->e()` všude pro text; `raw()` jen pro cenik `$ctaWrap` — ověřeno, že legacy `injectCenikPageLayout` cta_wrap taky injektoval neescapovaně (`$ctaWrap !== '' ? $ctaWrap : …`), stejná důvěra (admin block HTML), ne nová XSS plocha.
+- Inline editor klíče zachovány 1:1: přímý render faq s `editMode=true` → `hero_h1`, `hero_sub`, `faq:7:question`, `faq:7:answer` — shodné s legacy `inlineAttrs`. Escaping + nl2br ověřeny.
+- `CenikPageRenderer::inject()` volán z composeLive I composePublish na STEJNÉ pozici (po `injectHomepageThemeDataSources`, před `injectHomepageAboutVisualSource`) — správné pořadí.
+- `PublishService`: žádná změna auth (auth je v `PublishController`, v `PublishService` nikdy nebyl), žádné nové SQL; `renderArchetypeContent` korektně padá zpět na generický render pro ne-archetyp stránky.
+- Smazání `injectCenikPageLayout`/`buildCenikPackageCardsHtml`: grep potvrdil NULA zbylých callerů (jen docblock/komentáře) — bezpečné smazání akceptováno.
+- Testy: `php tests/run.php` → 45 testů + 26 golden checků, 0 failures. Poté `git checkout -- storage/published/`.
+
+**Visual QA (headless Chrome, provedeno — na rozdíl od implementačního sezení):** screenshoty 390×844 (mobil) + 1920×1080 (desktop) všech 4 stránek (`/faq`, `/sluzby`, `/cenik`, `/hodnoceni`). Všechny HTTP 200, ŽÁDNÉ PHP warningy/notices v response. Vzhled profesionální, bez rozbitého layoutu / přetékání / chybějících stylů:
+- faq = accordion se „+" toggly; sluzby = theme-gold ikonové service karty (theme override `body.theme-elegant-white .service-card` skrývá foto media a nahrazuje ikonami — ověřeno, že `sluzby.css` je byte-identický přesun heredocu, tj. vzhled se fází NEZMĚNIL); cenik = 3 cenové karty s featured badge „Nejoblíbenější"; hodnoceni = 4sloupcový grid recenzí se zlatými hvězdami.
+- Drobná kosmetická poznámka (PRE-EXISTUJÍCÍ, ne regrese): badge „Nejoblíbenější" na featured cenik kartě mírně přesahuje/ořezává horní okraj karty — theme styling, touto fází nezměněný (packages sekce byte-identická live↔publish).
+
 ### Fáze 5 — Homepage a generické stránky
 - [ ] Delegovat na subagenta
 - [ ] `HomepageData` + `archetypes/homepage.phtml` (sekce jako data, ne HTML)
