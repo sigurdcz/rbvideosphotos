@@ -1,6 +1,34 @@
-# Screenshotovani webu ve VS Code Integrated Browseru
+# Screenshotovani webu v Google Chrome
 
-## Co bylo rozbite
+## Primarni pravidlo
+
+**Google Chrome je primarni a pozadovana cesta pro vsechny nove screenshoty
+webu.** Screenshot se porizuje z Chrome DevTools nad skutecne otevrenou URL;
+neni dovoleno jej bez viditelneho hlaseni nahradit VS Code Integrated Browserem,
+OS snimkem plochy ani starym obrazovym souborem. VS Code Integrated Browser je
+nize ponechan pouze jako historicka diagnostika drivejsiho problemu.
+
+## Primarni postup pro vizualni iterace
+
+1. Spustit projekt na `http://127.0.0.1:8766/` a otevrit stejnou URL v
+   **Google Chrome**.
+2. Otevrit Chrome DevTools (`F12`), zapnout Device Toolbar (`Ctrl+Shift+M`) a
+   nastavit presnou sirku, vysku a DPR ciloveho testu. Pro mobilni target je to
+   `941 x 1672`, DPR `1`.
+3. Po reloadu pockat na dokonceni vykresleni. V DevTools otevrit Command Menu
+   (`Ctrl+Shift+P`) a spustit `Capture screenshot` pro viewport nebo
+   `Capture full size screenshot` pro cely dokument.
+4. Ulozit novy PNG artefakt do rootu projektu jako
+   `visual-progress-mobile-00-YYYYMMDD-HHMMSS.png`,
+   `visual-progress-mobile-01-YYYYMMDD-HHMMSS.png`, atd. Cilovy
+   `preview-mobile-reviews.png` se nikdy neprepisuje.
+5. Do `UKOL.md` zapsat viewport, DPR, nazev screenshotu, skore, odecty a dalsi
+   planovanou zmenu.
+
+Pokud Chrome nebo jeho DevTools nejdou otevrit, screenshot se oznaci jako
+neprovedeny. Nesmí se potichu vydavat snimek z jineho povrchu za Chrome QA.
+
+## Historie: co bylo rozbite ve VS Code Integrated Browseru
 
 VS Code Integrated Browser dokazal otevrit `http://127.0.0.1:8766/`, ale pri
 predani obrazu agentovi padal nativni Electron `capturePage()` na
@@ -29,7 +57,10 @@ page-only JPEG se uklada do:
 Oprava byla overena novym obrazem pouze stranky a logem
 `Saved Integrated Browser screenshot for Codex`.
 
-## Postup pro vizualni iterace v tomto projektu
+## Historicky postup ve VS Code Integrated Browseru
+
+Tento postup uz neni primarni. Pouziva se jen pri cilenem overeni opravy
+VS Code hostitele nebo kdyz zadani vyslovne vyzaduje tento konkretni povrch.
 
 1. Spustit projekt na `http://127.0.0.1:8766/` a overit, ze je otevreny ve
    VS Code Integrated Browseru.
@@ -74,16 +105,19 @@ nastaveni `workbench.browser.experimentalUserTools.enabled`; pokud se po cistem
 otevreni DevTools nezobrazi, capture musi viditelne selhat a vyzadat reload hostitele,
 nikoli ulozit nahradni obraz.
 
-## Kontroly platnosti
+## Kontroly platnosti Chrome screenshotu
 
 - Cas souboru musi byt novejsi nez reload nebo posledni uprava CSS.
 - Rozmery a DPR musi odpovidat zamknutemu testu.
-- Obraz musi obsahovat jen web, ne chrome VS Code ani celou plochu.
+- Obraz musi obsahovat jen web; browserovy chrome, DevTools ani cela plocha
+  nejsou soucasti vizualniho dukazu.
 - Screenshot pri auto-scale `377x669`, `377x752` nebo podobne maly snimek se
   nesmi vydavat za nativni baseline 941x1672.
-- Screenshot z jineho prohlizece nesmi potichu nahradit Integrated Browser.
+- Standardni dukaz pochazi z Google Chrome. Screenshot z jineho prohlizece
+  nesmi byt bez viditelneho oznaceni vydavan za Chrome capture.
 - Pokud `agent.browsers.list()` vraci prazdny seznam, jde o nezavisly problem
-  registrace `iab`; nema se zamaskovat tvrzenim, ze HTTP test je screenshot.
+  registrace `iab`; tyka se pouze historicke VS Code cesty a nema blokovat
+  primarni Chrome capture.
 
 ## Aktualni stav mobilniho QA
 
