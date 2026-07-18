@@ -128,7 +128,7 @@ Rozlišení NENÍ v `PageComposer`, ale UPSTREAM od něj — na kroku aplikace l
 - **Drobné poznámky (ne chyby) pro Fázi 4/6:**
   1. Legacy `applyLayout` nahrazoval `{site_name}`/`{nav}` globálně (i uvnitř page contentu); PHTML cesta jen v nav partialu a fixních slotech. Divergence nastane jen pokud by DB obsah obsahoval placeholder — dnes nenastává (goldeny byte-shodné).
   2. `applyThemeTemplate`/`publishPage` teď aplikují PHTML layout nezávisle na `getLayoutHtmlForPage()` — pro elegant-white3 shodné chování (manifest má vždy layout.html), ale kdyby se layout.html smazal, PHTML cesta se stane jediným zdrojem (zamýšlené).
-  3. **Deploy:** FTP deploy na `/www/` MUSÍ nově zahrnovat `app/Views/**` (partials + assets) a `Templates/elegant-white3/views/**`. Chybějící partial = výjimka `View not found` (500 na webu); chybějící `shared-components.css` = tichá ztráta shared CSS (`getSharedComponentCss` vrací '').
+  3. **Deploy:** FTP deploy MUSÍ nově zahrnovat `app/Views/**` (partials + assets) a `Templates/elegant-white3/views/**`. Chybějící partial = výjimka `View not found` (500 na webu); chybějící `shared-components.css` = tichá ztráta shared CSS (`getSharedComponentCss` vrací ''). **Ověřeno (2026-07-18):** `.github/workflows/deploy.yml` kopíruje `rsync ./ _deploy/` s explicitním exclude listem, který nezmiňuje `app/Views/` ani `Templates/*/views/` — nové soubory se nasadí automaticky, žádná změna CI potřeba.
 
 ### Fáze 4 — Speciální archetypy (9 samostatných commitů)
 - [ ] faq: ViewModel + `archetypes/faq.phtml`, smazat heredoc, golden + visual QA
