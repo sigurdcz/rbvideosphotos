@@ -1,0 +1,3 @@
+<?php /** @var string $embedUrl  computed embed URL (empty => nothing rendered); @var string $posterUrl */ ?>
+<?php $posterUrl = (string)($posterUrl ?? ''); ?>
+<?php if (($embedUrl ?? '') !== ''): ?><div class="theme-hero-video theme-hero-video--embed" aria-hidden="true"<?php if ($posterUrl !== ''): ?> style="background-image:url('<?= $this->e($posterUrl) ?>')"<?php endif; ?>><iframe src="<?= $this->e($embedUrl) ?>" title="Hero video" allow="autoplay; fullscreen; picture-in-picture" loading="eager"></iframe></div><?php endif; ?>

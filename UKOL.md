@@ -58,13 +58,55 @@ Vytvořené služby v `app/Services/Render/` (namespace `App\Services\Render`, `
 
 Pro Fázi 3: staré funkce v `public/index.php`/`PublishService` zůstaly jako tenké delegující wrappery (kvůli ostatním callsites, např. `sanitizeFrontendHtml` je volá) — jejich smazání je naplánováno ve Fázi 6. `sanitizeFrontendHtml` (index.php:322) zůstává live-only a volá se z `PageComposer::composeLive` jako globální funkce.
 
-### Fáze 3 — Layout a chrome do PHTML
-- [ ] Delegovat na subagenta
-- [ ] `layouts/default.phtml` + partials (nav, footer, hero, breadcrumb, cookie-consent)
-- [ ] Přesun `getSharedComponentCss()` do assets
-- [ ] `elegant-white3` dostane `views/layout.phtml`
-- [ ] Golden + visual QA (390×844, 1920×1080)
-- [ ] Commit `refactor(templates): move layout chrome to PHTML partials`
+### Fáze 3 — Layout a chrome do PHTML [HOTOVO]
+- [x] Delegovat na subagenta (běží na Opus 4.8 jako dedikovaný agent)
+- [x] `layouts/default.phtml` + partials (nav, logo, footer, footer-socials, hero, hero-video, breadcrumb, cookie-consent)
+- [x] Přesun `getSharedComponentCss()` do `app/Views/assets/shared-components.css` (byte-identické, md5 ověřeno)
+- [x] `elegant-white3` dostane `views/layout.phtml` (přes `ViewFactory`/`ThemeLayoutRenderer`)
+- [x] Golden (26/26 OK) + visual QA (390×844, 1920×1080 — homepage + /cenik, bez regrese)
+- [x] Commit `refactor(templates): move layout chrome to PHTML partials`
+
+### Fáze 3 — poznámky pro Fázi 4
+
+**Jak funguje rozlišení legacy-vs-PHTML téma (KLÍČOVÉ pro Fázi 4):**
+Rozlišení NENÍ v `PageComposer`, ale UPSTREAM od něj — na kroku aplikace layoutu:
+- Live: `applyThemeTemplate()` (public/index.php), publish: `PublishService::publishPage()`.
+- Oba místa nově volají `App\Services\Render\ThemeLayoutRenderer::hasPhtmlLayout($themeKey)`. Pokud téma má `Templates/<key>/views/layout.phtml` → `ThemeLayoutRenderer::render()` (přes `ViewEngine`); jinak legacy `PageRenderer::applyLayout(layout.html, …)`. Per-téma opt-in, žádný big-bang. `stripInlineStyles()` + `injectBodyClass()` běží po obou cestách stejně (PHTML výstup je byte-ekvivalentní s applyLayout).
+- Detekce: `ViewFactory::themeLayoutPath($key)` = `is_file(Templates/<key>/views/layout.phtml)`. Klíč tématu validován regexem před sestavením cesty.
+- `PageComposer` inject kaskáda je ZÁMĚRNĚ nezměněná pro obě cesty (docblock to vysvětluje). Důvod viz níže.
+
+**Vytvořené komponenty:**
+- `app/View/ViewFactory.php` — první produkční vstup do ViewEngine. `forTheme($key, $opts)` → `ViewEngine` s rooty `[Templates/<key>/views, app/Views]` (téma vyhrává). `roots()`, `themeLayoutPath()`. Bezpečnost: theme-key regex `^[a-z0-9][a-z0-9_-]*$`, neplatný klíč = jen core root (ViewResolver navíc dělá realpath containment).
+- `app/Services/Render/ThemeLayoutRenderer.php` — `hasPhtmlLayout()`, `render($key, $content, $siteName, $nav)` (view name `layout`).
+- `app/Services/Render/FooterViewData.php` — `forSite(int $siteId): array` — provider dat pro footer partial (brand, phones, email, addressLines, socials{type,url,label,iconSvg}, year). Žádné HTML kromě trusted icon SVG (raw v partialu).
+
+**Vytvořené partials + kontrakt (data, která očekávají):**
+- `Templates/elegant-white3/views/layout.phtml` — referenční layout aktivního tématu. Byte-reprodukuje `layout.html`. Data: `siteName`(string), `nav`(string), `content`(string raw). Pozn.: `<?= ?>` u content potřebuje kompenzační newline (PHP polyká 1 newline za `?>`) — v souboru je prázdný řádek za content echem.
+- `app/Views/layouts/default.phtml` — core fallback layout (v Fázi 3 nikdo přímo nepoužívá; elegant-white3 má vlastní). Stejný kontrakt (siteName/nav/content).
+- `partials/nav.phtml` — data `nav`(string), `siteName`(string). Raw passthrough + nahrazuje legacy `{site_name}` placeholder v nav HTML escapovaným jménem (applyLayout to dělal globálním str_replace — nav ho reálně obsahuje).
+- `partials/logo.phtml` — data `siteName`(string). Escapovaný brand text. Logo OBRÁZEK (když `logo_url` != '') zatím dál řeší `injectSiteLogo` v post-render (aktivní web má prázdný logo_url → no-op). Sjednocení do partialu = Fáze 6.
+- `partials/footer.phtml` — data `footer`(array z FooterViewData). Rich footer vč. inline `<style data-cms-rich-footer>` (extractInlineStyleBlocks ho pak skip-listuje). Socials sekci renderuje přes sub-partial.
+- `partials/footer-socials.phtml` — data `socials`(array). Položky nebo fallback `Doplnte socialni site`. (Nahrazuje koncept z mrtvé `buildFooterSocialsHtml`, kterou jsem NErušil — dead code, smazání Fáze 6.)
+- `partials/cookie-consent.phtml` — bez dat (statické). Přesná kopie heredocu z `injectCookieConsent`. injectCookieConsent nyní renderuje tento partial.
+- `partials/hero.phtml` — data `imageUrl`(string, prázdný → prázdný výstup). Zdroj pravdy pro `HeroMediaRenderer::buildHeroImageHtml`.
+- `partials/hero-video.phtml` — data `embedUrl`(string, prázdný → nic), `posterUrl`(string). `buildVideoEmbedUrl` (logika) zůstává v `HeroMediaRenderer::buildHeroVideoHtml`, který partial renderuje.
+- `partials/breadcrumb.phtml` — data `items`([['label','url'], …] s už normalizovanými url). `renderBreadcrumbNav` (index.php) normalizuje url a renderuje partial.
+
+**Co zůstalo BEZE ZMĚNY a PROČ (otevřené riziko/rozhodnutí pro reviewera):**
+- `PageComposer::composeLive/composePublish` inject kaskáda je NEZMĚNĚNÁ — inject* volání (injectFooterSocials, hero, breadcrumb, cookie via sanitize) se NEODSTRANILA ani pro aktivní téma, ačkoliv zadání bod 6 to zmiňuje. Důvod (záměrné, zdokumentované rozhodnutí, ne workaround):
+  1. **Ordering/externalizace:** rich footer `<style data-cms-rich-footer>` MUSÍ vzniknout AŽ PO `stripInlineStyles()` (jinak by ho stripInlineStyles smazal místo pozdějšího skip-listu v extractInlineStyleBlocks). Layout.phtml běží PŘED stripInlineStyles, takže footer do něj vložit nelze bez reorderingu → riziko rozbití CSS externalizace.
+  2. **Live speciální stránky (faq/kontakt/sluzby/blog/portfolio/hodnoceni) NEJDOU přes PageComposer** — mají vlastní inject sekvenci a taky volají `applyThemeTemplate` (tj. i ony teď jedou přes PHTML layout). Kdyby layout renderoval rich footer a PageComposer injectFooterSocials vynechal, publish (jde přes PageComposer) a live speciálky by se rozešly / dvojitý footer. Bezpečné odstranění injectů = až Fáze 4, kdy se tyto routy migrují na archetypy.
+  3. Aktivní web má **prázdný `logo_url`** → `injectSiteLogo` je no-op; odstranění by nic neušetřilo a rozbilo by ostatní témata/stránky.
+  Takže Fáze 3 přesouvá do PHTML **layout shell** (první produkční ViewEngine caller) a **HTML fragmenty chrome** (jako zdroj pravdy přes partials), ale ZACHOVÁVÁ inject pořadí. Odstranění injectů pro aktivní téma je připravené (rozlišení existuje) a je bezpečné až po Fázi 4.
+- Legacy témata (bez `views/layout.phtml`): beze změny, dál přes `applyLayout(layout.html)`.
+
+**EOL pozn.:** `public/index.php` je CRLF, nové .phtml partials jsou LF; golden runner normalizuje EOL (`str_replace(["\r\n","\r"], "\n")`), takže výstup je byte-ekvivalentní PO normalizaci (což je kontrakt tohoto projektu). Repo má `core.autocrlf=true` (git warning je očekávaný). cookie-consent partial má vnitřní newliny → po fresh checkoutu CRLF → golden normalizuje → OK.
+
+**Nové testy:** `tests/Phase3PartialsTest.php` (`register_phase3_partials_tests`) — 9 DB-free testů (partials hero/hero-video/breadcrumb/nav/logo/footer-socials, ThemeLayoutRenderer detekce + byte-parita s applyLayout, ViewFactory root ordering). Registrováno v `tests/run.php`.
+
+**Visual QA výsledek:** headless Chrome (ne VS Code integrated browser skript — ten je session-specific/brittle), 390×844 + 1920×1080, homepage + /cenik. Vše renderuje korektně (brand/logo, nav desktop bar i mobil hamburger s vyřešeným {site_name}, hero, obsah, pricing karty). Bez layout/spacing/color regrese. Vizuální identita je navíc dokázána konstrukčně: served HTML byte-identické (26/26 golden) + shared-components.css byte-identické (md5).
+
+**Ověřeno:** `php tests/run.php` → 45 testů + 26 golden checků, 0 failures. Po testech `git checkout -- storage/published/` (republish šum).
 
 ### Fáze 4 — Speciální archetypy (9 samostatných commitů)
 - [ ] faq: ViewModel + `archetypes/faq.phtml`, smazat heredoc, golden + visual QA

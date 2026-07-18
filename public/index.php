@@ -209,108 +209,8 @@ function injectCookieConsent(string $html): string
         }
     }
 
-    $consent = <<<'HTML'
-<style data-cookie-consent-style>
-.cookie-consent-backdrop[hidden],.cookie-consent[hidden],.cookie-consent-host[hidden]{display:none!important}
-.cookie-consent-host{
-  position:fixed;
-  inset:0;
-  z-index:99998;
-  pointer-events:none;
-}
-.cookie-consent-host:not([hidden]){display:block!important}
-.cookie-consent-host > .cookie-consent-backdrop,
-.cookie-consent-host > .cookie-consent{
-  pointer-events:auto;
-}
-.cookie-consent-host > .cookie-consent-backdrop{position:absolute;inset:0;z-index:0;background:rgba(0,0,0,.56);backdrop-filter:blur(8px)}
-.cookie-consent,.cookie-consent *{box-sizing:border-box}
-.cookie-consent-host > .cookie-consent,
-body > .cookie-consent{
-  position:fixed;
-  left:50%;
-  top:50%;
-  z-index:99999;
-  width:min(760px,calc(100vw - 32px));
-  max-width:min(760px,calc(100vw - 32px));
-  max-height:calc(100vh - 32px);
-  overflow:auto;
-  margin:0;
-  padding:16px;
-  border:1px solid rgba(198,148,61,.45);
-  background:rgba(5,5,5,.98);
-  color:#f7f1e8;
-  box-shadow:0 24px 80px rgba(0,0,0,.38);
-  backdrop-filter:blur(12px);
-  transform:translate(-50%,-50%);
-  font-family:Arial,Helvetica,sans-serif;
-  line-height:1.45;
-  isolation:isolate;
-}
-.cookie-consent__grid{display:grid;gap:14px}
-.cookie-consent__label{color:#e0b866;font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase}
-.cookie-consent__hero{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
-.cookie-consent__title{margin:0;color:#fff;font-family:Georgia,"Times New Roman",serif;font-size:22px;line-height:1.1}
-.cookie-consent__smile{flex:0 0 auto;color:#e0b866;font-size:48px;line-height:1}
-.cookie-consent__text{margin:8px 0 0;color:rgba(255,255,255,.72);font-size:14px;line-height:1.55}
-.cookie-consent__legal{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px;color:rgba(255,255,255,.68);font-size:12px;line-height:1.5}
-.cookie-consent__legal a{color:#e0b866;text-decoration:underline}
-.cookie-consent__actions{display:flex;flex-wrap:wrap;gap:8px}
-.cookie-consent__btn{min-height:40px;padding:10px 16px;border:1px solid rgba(224,184,102,.62);background:transparent;color:#f7f1e8;font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
-.cookie-consent__btn--accept{background:#c6943d;border-color:#c6943d;color:#050505}
-.cookie-consent__btn:hover{transform:translateY(-1px)}
-.cookie-consent__settings{display:none;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.12)}
-.cookie-consent[data-mode="settings"] .cookie-consent__settings{display:grid;gap:10px}
-.cookie-consent__option{display:grid;gap:5px;padding:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03)}
-.cookie-consent__option label{display:flex;align-items:center;justify-content:space-between;gap:12px;color:#fff;font-size:13px;font-weight:800}
-.cookie-consent__option p{margin:0;color:rgba(255,255,255,.62);font-size:12px;line-height:1.45}
-.cookie-consent__option input{width:auto}
-.cookie-consent-link{display:inline-flex;margin-top:12px;border:0;background:transparent;color:inherit;text-decoration:underline;cursor:pointer;font:inherit}
-.site-footer-bottom .cookie-consent-link{margin-top:0;vertical-align:baseline;opacity:inherit}
-@media(min-width:720px){.cookie-consent-host > .cookie-consent,body > .cookie-consent{width:min(620px,calc(100vw - 48px));max-width:min(620px,calc(100vw - 48px))}.cookie-consent__grid{grid-template-columns:1fr auto;align-items:end}.cookie-consent__settings{grid-column:1/-1}.cookie-consent__actions{justify-content:flex-end}}
-</style>
-<div class="cookie-consent-host" data-cookie-consent-host hidden>
-  <div class="cookie-consent-backdrop" data-cookie-consent-backdrop hidden></div>
-  <div class="cookie-consent" data-cookie-consent-modal role="dialog" aria-live="polite" aria-label="Nastaveni cookies" data-mode="summary" hidden>
-  <div class="cookie-consent__grid">
-    <div>
-      <div class="cookie-consent__label">Soukromi</div>
-      <div class="cookie-consent__hero">
-        <h2 class="cookie-consent__title">Pouzivame cookies</h2>
-        <div class="cookie-consent__smile" aria-hidden="true">&#9786;</div>
-      </div>
-      <p class="cookie-consent__text">Pouzivame cookies k zajisteni spravneho fungovani webu a se souhlasem take k mereni navstevnosti pomocí Google Analytics. Diky tomu vime, co navstevniky zajima, a muzeme web zlepsovat.</p>
-      <div class="cookie-consent__legal">
-        <a href="/podminky-uziti">Podmínky užití</a>
-      </div>
-    </div>
-    <div class="cookie-consent__actions">
-      <button class="cookie-consent__btn cookie-consent__btn--accept" type="button" data-cookie-accept-all>Prijmout vse</button>
-      <button class="cookie-consent__btn" type="button" data-cookie-reject-all>Odmitnout vse</button>
-      <button class="cookie-consent__btn" type="button" data-cookie-settings aria-expanded="false">Nastaveni</button>
-    </div>
-    <div class="cookie-consent__settings" data-cookie-settings-panel>
-      <div class="cookie-consent__option">
-        <label>Nezbytne cookies <input type="checkbox" checked disabled></label>
-        <p>Vzdy aktivni. Jsou potreba pro zakladni fungovani webu.</p>
-      </div>
-      <div class="cookie-consent__option" data-cookie-option="analytics">
-        <label>Analyticke cookies <input type="checkbox" data-cookie-category="analytics"></label>
-        <p>Google Analytics a merici nastroje, pouze se souhlasem.</p>
-      </div>
-      <div class="cookie-consent__option" data-cookie-option="marketing">
-        <label>Marketingove cookies <input type="checkbox" data-cookie-category="marketing"></label>
-        <p>Reklamni a remarketingove nastroje, pouze pokud je pouzivame a povolite je.</p>
-      </div>
-      <div class="cookie-consent__actions">
-        <button class="cookie-consent__btn cookie-consent__btn--accept" type="button" data-cookie-save>Ulozit nastaveni</button>
-      </div>
-    </div>
-  </div>
-  </div>
-</div>
-
-HTML;
+    // Cookie-consent markup lives in the PHTML partial (app/Views/partials/cookie-consent.phtml).
+    $consent = \App\View\ViewFactory::forTheme(null)->render('partials/cookie-consent');
 
     if (str_contains($html, '</body>')) {
         return str_replace('</body>', $runtime . $consent . "\n</body>", $html);
@@ -479,21 +379,16 @@ function injectBreadcrumbTrail(string $html, array $site, array $items): string
 
 function renderBreadcrumbNav(array $items): string
 {
-    $h = static fn($value): string => htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
-    $lastIndex = count($items) - 1;
-    $html = '<nav class="breadcrumbs" aria-label="Drobeckova navigace" data-cms-breadcrumbs><ol class="breadcrumbs__inner">';
-    foreach ($items as $index => $item) {
-        $label = $h($item['label'] ?? '');
-        $url = normalizeBreadcrumbUrl((string)($item['url'] ?? ''));
-        $html .= '<li class="breadcrumbs__item">';
-        if ($index === $lastIndex) {
-            $html .= '<span aria-current="page">' . $label . '</span>';
-        } else {
-            $html .= '<a href="' . $h($url) . '">' . $label . '</a>';
-        }
-        $html .= '</li>';
+    // Normalize URLs here (logic); markup lives in app/Views/partials/breadcrumb.phtml.
+    $normalized = [];
+    foreach ($items as $item) {
+        $normalized[] = [
+            'label' => (string)($item['label'] ?? ''),
+            'url' => normalizeBreadcrumbUrl((string)($item['url'] ?? '')),
+        ];
     }
-    return $html . '</ol></nav>';
+
+    return \App\View\ViewFactory::forTheme(null)->render('partials/breadcrumb', ['items' => $normalized]);
 }
 
 function renderBreadcrumbJsonLd(array $items, string $domain): string
@@ -1623,11 +1518,16 @@ function applyThemeTemplate(PageRenderer $renderer, array $site, string $pageKey
     $themeLayout = $registry->getLayoutHtmlForPage($theme, $pageKey);
     $sharedCss = $registry->getSharedComponentCss();
 
-    if ($themeLayout !== '') {
+    $themeKeyForLayout = (string)($theme['key'] ?? '');
+    if (\App\Services\Render\ThemeLayoutRenderer::hasPhtmlLayout($themeKeyForLayout)) {
+        // Phase 3: the active theme renders its layout chrome through a PHTML view
+        // (Templates/<key>/views/layout.phtml). Byte-equivalent to applyLayout().
+        $html = \App\Services\Render\ThemeLayoutRenderer::render($themeKeyForLayout, $html, $siteName, $nav);
+    } elseif ($themeLayout !== '') {
         $html = $renderer->applyLayout($themeLayout, $html, $siteName, $nav);
     }
     $html = $renderer->stripInlineStyles($html);
-    $html = $registry->injectBodyClass($html, (string)($theme['key'] ?? ''));
+    $html = $registry->injectBodyClass($html, $themeKeyForLayout);
 
     if ($themeCss !== '') {
         $css = trim($css . "\n" . $sharedCss . "\n" . $themeCss);

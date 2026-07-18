@@ -24,6 +24,21 @@ use App\Services\PageRenderer;
  * global functions defined in public/index.php (available in the live request
  * context); the publish leaves come from the injected PublishPageChrome.
  *
+ * Phase 3 — legacy vs. PHTML layout: the choice between the legacy layout.html
+ * str_replace path and the new PHTML layout is made UPSTREAM of this class, by
+ * App\Services\Render\ThemeLayoutRenderer at the layout step in
+ * tryServeDatabasePage()/publishPage(). By the time compose() runs, $ctx['html']
+ * already carries the assembled shell from whichever path applied. The post-
+ * render inject cascade below is therefore deliberately shared by BOTH layout
+ * paths: every step operates on page content or on the finished <head>/<body>
+ * markup, independent of how the shell was produced. The chrome fragments it
+ * injects (footer, hero, breadcrumb, cookie consent) are now sourced from PHTML
+ * partials (single source of truth) but their injection ORDER is preserved so
+ * the inline-style externalization contract (extractInlineStyleBlocks) and the
+ * live-only special-page routes — which share these same injects until phase 4 —
+ * keep producing byte-identical output. Dropping injects for the active theme is
+ * therefore intentionally deferred to phase 4, when those routes migrate.
+ *
  * Required $ctx keys (both modes):
  *   mode(string live|publish), renderer(PageRenderer), html(string),
  *   css(string), js(string), seoHead(string), bodyScripts(string),

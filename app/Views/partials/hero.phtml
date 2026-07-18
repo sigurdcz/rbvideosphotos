@@ -1,0 +1,2 @@
+<?php /** @var string $imageUrl  resolved, root-relative hero image URL (may be empty) */ ?>
+<?php if (($imageUrl ?? '') !== ''): ?><div class="theme-hero-video theme-hero-video--image" aria-hidden="true" style="background-image:url('<?= $this->e($imageUrl) ?>')"></div><?php endif; ?>

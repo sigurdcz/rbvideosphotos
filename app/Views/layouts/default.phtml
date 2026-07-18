@@ -1,0 +1,31 @@
+<?php /** @var string $siteName; @var string $nav; @var string $content
+ * Core default PHTML layout — the fallback shell for a theme that opts into the
+ * PHTML view pipeline but ships no Templates/<key>/views/layout.phtml of its own.
+ * In phase 3 no active theme uses this directly (elegant-white3 has its own
+ * layout.phtml); it documents the intended slot structure and is unit-tested.
+ * The <footer> is a placeholder that the post-render footer step replaces with
+ * the rich footer, mirroring the legacy layout.html behaviour.
+ */ ?>
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><?= $this->e($siteName) ?></title>
+</head>
+<body>
+  <div class="theme-shell">
+    <header class="theme-header">
+      <div class="container theme-header__inner">
+        <a href="/" class="theme-brand"><?= $this->partial('partials/logo', ['siteName' => $siteName]) ?></a>
+        <div class="theme-nav-wrap"><?= $this->partial('partials/nav', ['nav' => $nav, 'siteName' => $siteName]) ?></div>
+      </div>
+    </header>
+    <main class="theme-main">
+      <?= $this->raw($content) ?>
+
+    </main>
+    <footer class="theme-footer"></footer>
+  </div>
+</body>
+</html>

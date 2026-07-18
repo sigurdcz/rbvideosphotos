@@ -14,25 +14,22 @@ namespace App\Services\Render;
 final class HeroMediaRenderer
 {
     public static function buildHeroImageHtml(string $imageUrl): string
-{
-    if ($imageUrl === '') {
-        return '';
+    {
+        // Rendered by app/Views/partials/hero.phtml (empty imageUrl => empty output).
+        return \App\View\ViewFactory::forTheme(null)->render('partials/hero', [
+            'imageUrl' => $imageUrl,
+        ]);
     }
-    $safe = htmlspecialchars($imageUrl, ENT_QUOTES);
-    return '<div class="theme-hero-video theme-hero-video--image" aria-hidden="true" style="background-image:url(\'' . $safe . '\')"></div>';
-}
 
     public static function buildHeroVideoHtml(string $videoUrl, string $posterUrl = ''): string
-{
-    $embedUrl = \App\Services\Render\HeroMediaRenderer::buildVideoEmbedUrl($videoUrl);
-    $posterStyle = $posterUrl !== '' ? ' style="background-image:url(\'' . htmlspecialchars($posterUrl, ENT_QUOTES) . '\')"' : '';
-    if ($embedUrl !== '') {
-        $safeEmbed = htmlspecialchars($embedUrl, ENT_QUOTES);
-        return '<div class="theme-hero-video theme-hero-video--embed" aria-hidden="true"' . $posterStyle . '><iframe src="' . $safeEmbed . '" title="Hero video" allow="autoplay; fullscreen; picture-in-picture" loading="eager"></iframe></div>';
+    {
+        // Embed URL resolution stays here (logic); markup is app/Views/partials/hero-video.phtml.
+        $embedUrl = self::buildVideoEmbedUrl($videoUrl);
+        return \App\View\ViewFactory::forTheme(null)->render('partials/hero-video', [
+            'embedUrl' => $embedUrl,
+            'posterUrl' => $posterUrl,
+        ]);
     }
-
-    return '';
-}
 
     public static function buildVideoEmbedUrl(string $videoUrl): string
 {

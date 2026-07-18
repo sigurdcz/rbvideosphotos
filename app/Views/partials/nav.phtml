@@ -1,0 +1,4 @@
+<?php /** @var string $nav  pre-built navigation HTML (site layout_nav_home / layout_nav_sub); trusted markup.
+ * @var string $siteName  the stored nav template embeds a {site_name} placeholder that the legacy
+ * applyLayout() filled by a global str_replace with the escaped site name; reproduce that here so the
+ * PHTML layout stays byte-equivalent. */ ?><?= $this->raw(str_replace('{site_name}', $this->e($siteName ?? ''), (string)($nav ?? ''))) ?>

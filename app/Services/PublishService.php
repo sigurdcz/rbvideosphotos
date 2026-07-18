@@ -117,11 +117,16 @@ class PublishService implements PublishPageChrome
             $themeJs = $this->themes->getJsForPage($theme, $pageKey);
             $sharedCss = $this->themes->getSharedComponentCss();
             $themeLayout = $this->themes->getLayoutHtmlForPage($theme, $pageKey);
-            if ($themeLayout !== '') {
+            $themeKeyForLayout = (string)($theme['key'] ?? '');
+            if (\App\Services\Render\ThemeLayoutRenderer::hasPhtmlLayout($themeKeyForLayout)) {
+                // Phase 3: active theme renders its layout chrome through a PHTML
+                // view; byte-equivalent to applyLayout() of the legacy layout.html.
+                $html = \App\Services\Render\ThemeLayoutRenderer::render($themeKeyForLayout, $html, $site['name'] ?? '', $themeNav);
+            } elseif ($themeLayout !== '') {
                 $html = $this->renderer->applyLayout($themeLayout, $html, $site['name'] ?? '', $themeNav);
             }
             $html = $this->renderer->stripInlineStyles($html);
-            $html = $this->themes->injectBodyClass($html, (string)($theme['key'] ?? ''));
+            $html = $this->themes->injectBodyClass($html, $themeKeyForLayout);
             $css = ($template['css_source'] ?? '') . "\n" . $sharedCss . "\n" . $themeCss;
             $js  = (($theme['key'] ?? '') === 'bezova-lens-tale')
                 ? $themeJs . "\n" . ($template['js_source'] ?? '')

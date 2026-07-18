@@ -1,0 +1,30 @@
+<?php /** @var string $siteName; @var string $nav; @var string $content  reference PHTML layout for the active theme; byte-reproduces layout.html via ViewEngine. */ ?>
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><?= $this->e($siteName) ?></title>
+  <meta name="theme-color" content="#fffaf3">
+</head>
+<body class="theme-elegant-white theme-elegant-white3">
+  <div class="theme-shell theme-elegant-white theme-elegant-white3">
+    <header class="theme-header">
+      <div class="container theme-header__inner">
+        <a href="/" class="theme-brand"><?= $this->partial('partials/logo', ['siteName' => $siteName]) ?></a>
+        <div class="theme-nav-wrap"><?= $this->partial('partials/nav', ['nav' => $nav, 'siteName' => $siteName]) ?></div>
+      </div>
+    </header>
+    <main class="theme-main">
+      <?= $this->raw($content) ?>
+
+    </main>
+    <footer class="theme-footer">
+      <div class="container theme-footer__inner">
+        <div class="theme-footer__brand"><?= $this->e($siteName) ?></div>
+        <div class="theme-footer__meta"><?= $this->e($siteName) ?></div>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>

@@ -342,6 +342,11 @@ $test('hero poster changes the environment fingerprint', function () use ($asser
 require __DIR__ . '/ViewEngineTest.php';
 register_view_engine_tests($test, $assert);
 
+// Phase 3: layout chrome moved to PHTML partials. DB-free — renders partials
+// from explicit data and checks the PHTML layout against applyLayout().
+require __DIR__ . '/Phase3PartialsTest.php';
+register_phase3_partials_tests($test, $assert);
+
 $failures = 0;
 foreach ($tests as [$name, $callback]) {
     try {
