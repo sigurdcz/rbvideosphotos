@@ -1722,96 +1722,21 @@ HTML;
             return false;
         }
 
-        $mediaItems = $repo->getMedia((int)$entry['id']);
-        $embedUrl = !empty($entry['video_url']) ? PortfolioRepository::embedUrl((string)$entry['video_url']) : null;
-        $galleryHtml = '';
-        foreach ($mediaItems as $idx => $media) {
-            $thumbSrc = publicMediaUrl((string)($media['thumb_path'] ?? $media['medium_path'] ?? $media['storage_path'] ?? ''));
-            $fullSrc = publicMediaUrl((string)($media['storage_path'] ?? ''));
-            $alt = $h($media['alt_text'] ?? $entry['title']);
-            $galleryHtml .= '<button type="button" class="pf-photo" data-pf-full="' . $h($fullSrc) . '" data-pf-idx="' . $idx . '" aria-label="Otevřít fotografii">'
-                . '<img src="' . $h($thumbSrc) . '" alt="' . $alt . '" loading="lazy"></button>';
-        }
-
-        $videoHtml = '';
-        if ($embedUrl) {
-            $videoHtml = '<div class="pf-video-wrap"><iframe src="' . $h($embedUrl) . '" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen loading="lazy" title="' . $h($entry['title']) . '"></iframe></div>';
-        }
+        $detailData = PortfolioDetailData::forEntry($entry);
 
         $title = $h($entry['title']);
         $siteNameEsc = $h($siteName);
-        $description = (string)($entry['description'] ?? '');
-        $metaDescription = $h($entry['meta_description'] ?? strip_tags(substr($description, 0, 160)));
+        $metaDescription = $h($detailData['entry']['meta_description']);
 
         // CSS specific to portfolio detail — nav/footer/base reset comes from layout_css when layout is active
-        $portfolioDetailCss = <<<'CSS'
-body{background:#111;color:#fff}
-.pf-detail-hero{background:#111;color:#fff;padding:72px 0 46px}
-.pf-detail-hero h1{font-size:clamp(2rem,4.2vw,3.4rem);color:#fff;margin-bottom:12px}
-.pf-detail-hero p{color:rgba(255,255,255,.72)}
-.pf-main{padding:42px 0 72px}
-.pf-video-wrap{position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:14px;margin-bottom:34px;background:#000}
-.pf-video-wrap iframe{position:absolute;top:0;left:0;width:100%;height:100%}
-.pf-description{max-width:760px;color:#aaa;margin-bottom:34px}
-.pf-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
-.pf-photo{padding:0;border:0;background:transparent;cursor:pointer}
-.pf-photo img{width:100%;height:240px;object-fit:cover;border-radius:10px;display:block}
-.pf-lightbox{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.92);align-items:center;justify-content:center}
-.pf-lightbox.active{display:flex}
-.pf-lb-img{max-width:92vw;max-height:88vh;object-fit:contain;border-radius:8px}
-.pf-lb-close{position:absolute;top:20px;right:24px;font-size:2rem;color:#fff;cursor:pointer;line-height:1;opacity:.7}
-.pf-lb-close:hover{opacity:1}
-.pf-lb-prev,.pf-lb-next{position:absolute;top:50%;transform:translateY(-50%);font-size:2.5rem;color:#fff;cursor:pointer;padding:12px;opacity:.6;user-select:none}
-.pf-lb-prev:hover,.pf-lb-next:hover{opacity:1}
-.pf-lb-prev{left:16px}
-.pf-lb-next{right:16px}
-.pf-back{margin-top:28px}
-.pf-back a{display:inline-flex;background:#c4963c;color:#fff;text-decoration:none;padding:12px 18px;border-radius:6px;font-weight:700}
-CSS;
-
-        $lightboxHtml = $galleryHtml !== '' ? <<<'HTML'
-<div class="pf-lightbox" id="pf-lightbox">
-  <span class="pf-lb-close" id="pf-lb-close">&times;</span>
-  <span class="pf-lb-prev" id="pf-lb-prev">&#8249;</span>
-  <img class="pf-lb-img" id="pf-lb-img" src="" alt="">
-  <span class="pf-lb-next" id="pf-lb-next">&#8250;</span>
-</div>
-<script>
-(function(){
-  var lb=document.getElementById('pf-lightbox'),img=document.getElementById('pf-lb-img'),items=Array.from(document.querySelectorAll('.pf-photo')),idx=0;
-  if(!lb||!items.length)return;
-  function open(i){idx=i;img.src=items[i].dataset.pfFull||'';lb.classList.add('active');}
-  function close(){lb.classList.remove('active');img.src='';}
-  function prev(){open((idx-1+items.length)%items.length);}
-  function next(){open((idx+1)%items.length);}
-  items.forEach(function(el,i){el.addEventListener('click',function(){open(i);});});
-  document.getElementById('pf-lb-close').addEventListener('click',close);
-  document.getElementById('pf-lb-prev').addEventListener('click',prev);
-  document.getElementById('pf-lb-next').addEventListener('click',next);
-  lb.addEventListener('click',function(e){if(e.target===lb)close();});
-  document.addEventListener('keydown',function(e){if(!lb.classList.contains('active'))return;if(e.key==='Escape')close();if(e.key==='ArrowLeft')prev();if(e.key==='ArrowRight')next();});
-})();
-</script>
-HTML : '';
+        $portfolioDetailCss = rtrim((string)file_get_contents(ViewFactory::base() . '/app/Views/assets/portfolio-detail.css'), "\n");
 
         $renderer = new PageRenderer();
         $nav = resolveThemeNav($site, false);
-$pageContent = <<<HTML
-<section class="pf-detail-hero">
-  <div class="container">
-    <h1>{$title}</h1>
-  </div>
-</section>
-<main class="pf-main">
-  <div class="container">
-    {$videoHtml}
-    <div class="pf-description">{$description}</div>
-    <div class="pf-gallery">{$galleryHtml}</div>
-    <div class="pf-back"><a href="/nase-prace">&larr; Zp&#283;t na v&#353;echny pr&#225;ce</a></div>
-  </div>
-</main>
-{$lightboxHtml}
-HTML;
+        $pageContent = ViewFactory::forTheme(null)->render('archetypes/portfolio-detail', [
+            'entry' => $detailData['entry'],
+            'gallery' => $detailData['gallery'],
+        ]);
         [$pageContent, $themeCss, $themeJs, $themeActive] = applyThemeTemplate(
             $renderer,
             $site,
@@ -1862,21 +1787,7 @@ HTML;
 </head>
 <body>
 {$nav}
-<section class="pf-detail-hero">
-  <div class="container">
-    <h1>{$title}</h1>
-    <p>Detail vybrane prace a galerie z administrace.</p>
-  </div>
-</section>
-<main class="pf-main">
-  <div class="container">
-    {$videoHtml}
-    <div class="pf-description">{$description}</div>
-    <div class="pf-gallery">{$galleryHtml}</div>
-    <div class="pf-back"><a href="/nase-prace">&larr; Zpet na vsechny prace</a></div>
-  </div>
-</main>
-{$lightboxHtml}
+{$pageContent}
 <footer>{$siteNameEsc}</footer>
 </body>
 </html>

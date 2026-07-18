@@ -1,0 +1,43 @@
+<?php
+/**
+ * Portfolio detail archetype — phase 4b of the templating refactor.
+ * @var array $entry   ['title','description','video_embed_url','meta_description'] from PortfolioDetailData::forEntry()
+ * @var array $gallery [['thumb','full','alt'], ...]
+ */
+?>
+<section class="pf-detail-hero">
+  <div class="container">
+    <h1><?= $this->e($entry['title']) ?></h1>
+  </div>
+</section>
+<main class="pf-main">
+  <div class="container">
+    <?= $entry['video_embed_url'] !== '' ? '<div class="pf-video-wrap"><iframe src="' . $this->e($entry['video_embed_url']) . '" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen loading="lazy" title="' . $this->e($entry['title']) . '"></iframe></div>' : '' ?>
+
+    <div class="pf-description"><?= $this->raw($entry['description']) ?></div>
+    <div class="pf-gallery"><?php foreach ($gallery as $idx => $g): ?><button type="button" class="pf-photo" data-pf-full="<?= $this->e($g['full']) ?>" data-pf-idx="<?= $idx ?>" aria-label="Otevřít fotografii"><img src="<?= $this->e($g['thumb']) ?>" alt="<?= $this->e($g['alt']) ?>" loading="lazy"></button><?php endforeach; ?></div>
+    <div class="pf-back"><a href="/nase-prace">&larr; Zp&#283;t na v&#353;echny pr&#225;ce</a></div>
+  </div>
+</main>
+<?php if ($gallery !== []): ?><div class="pf-lightbox" id="pf-lightbox">
+  <span class="pf-lb-close" id="pf-lb-close">&times;</span>
+  <span class="pf-lb-prev" id="pf-lb-prev">&#8249;</span>
+  <img class="pf-lb-img" id="pf-lb-img" src="" alt="">
+  <span class="pf-lb-next" id="pf-lb-next">&#8250;</span>
+</div>
+<script>
+(function(){
+  var lb=document.getElementById('pf-lightbox'),img=document.getElementById('pf-lb-img'),items=Array.from(document.querySelectorAll('.pf-photo')),idx=0;
+  if(!lb||!items.length)return;
+  function open(i){idx=i;img.src=items[i].dataset.pfFull||'';lb.classList.add('active');}
+  function close(){lb.classList.remove('active');img.src='';}
+  function prev(){open((idx-1+items.length)%items.length);}
+  function next(){open((idx+1)%items.length);}
+  items.forEach(function(el,i){el.addEventListener('click',function(){open(i);});});
+  document.getElementById('pf-lb-close').addEventListener('click',close);
+  document.getElementById('pf-lb-prev').addEventListener('click',prev);
+  document.getElementById('pf-lb-next').addEventListener('click',next);
+  lb.addEventListener('click',function(e){if(e.target===lb)close();});
+  document.addEventListener('keydown',function(e){if(!lb.classList.contains('active'))return;if(e.key==='Escape')close();if(e.key==='ArrowLeft')prev();if(e.key==='ArrowRight')next();});
+})();
+</script><?php endif; ?>
