@@ -1,0 +1,20 @@
+<?php
+/**
+ * Cenik packages + CTA archetype — phase 4 of the templating refactor.
+ * Represents only the dynamically generated part of /cenik (package cards +
+ * CTA); the surrounding page shell (hero, breadcrumb, footer) still comes
+ * from templates.html_source via the generic page pipeline. See
+ * App\Services\Render\CenikPageRenderer for how this gets spliced into the
+ * rendered page (byte-equivalent splice point to the legacy
+ * injectCenikPageLayout()).
+ * @var array $packages [['title','price','summary','features'=>[string,...],'featured'=>bool], ...] from CenikPageData
+ * @var string $headingPackages
+ * @var string $introPackages
+ * @var string $otherHeading
+ * @var string $otherText
+ * @var string $ctaHeading
+ * @var string $ctaText
+ * @var string $ctaWrap  raw HTML from the DB cta_wrap block, or '' for the default CTA link
+ */
+?>
+<section class="section cenik-packages"><div class="container"><h2><?= $this->e($headingPackages) ?></h2><?= $introPackages !== '' ? '<p class="cenik-intro">' . $this->e($introPackages) . '</p>' : '' ?><div class="ckp-grid hp-cenik-grid"><?php foreach ($packages as $package): ?><article class="ckp-card hp-cenik-card<?= $package['featured'] ? ' ckp-card--featured hp-cenik-card--featured' : '' ?>"><?= $package['featured'] ? '<div class="ckp-badge">Nejoblibenejsi</div>' : '' ?><h3 class="ckp-title hp-cenik-card-title"><?= $this->e($package['title']) ?></h3><?= $package['price'] !== '' ? '<div class="ckp-price hp-cenik-card-price">' . $this->e($package['price']) . '</div>' : '' ?><?= $package['summary'] !== '' ? '<p class="ckp-desc hp-cenik-card-desc">' . $this->e($package['summary']) . '</p>' : '' ?><?php if ($package['features'] !== []): ?><ul class="ckp-feats"><?php foreach ($package['features'] as $feature): ?><li><?= $this->e($feature) ?></li><?php endforeach; ?></ul><?php endif; ?></article><?php endforeach; ?></div><?= ($otherHeading !== '' || $otherText !== '') ? '<div class="cenik-other">' . ($otherHeading !== '' ? '<h2>' . $this->e($otherHeading) . '</h2>' : '') . ($otherText !== '' ? '<p>' . $this->e($otherText) . '</p>' : '') . '</div>' : '' ?></div></section><section class="section cenik-cta"><div class="container"><h2><?= $this->e($ctaHeading) ?></h2><?= $ctaText !== '' ? '<p>' . $this->e($ctaText) . '</p>' : '' ?><?= $ctaWrap !== '' ? $this->raw($ctaWrap) : '<a href="/kontakt" class="btn btn-primary">Nezavazna poptavka</a>' ?></div></section><?php ?>

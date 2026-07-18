@@ -18,11 +18,18 @@ use App\Services\PageRenderer;
  *
  * The two modes still diverge in ordering and in a handful of leaf injections
  * (site logo, page hero image/video, video overlay, editorial-gold, plus the
- * live-only cenik layout / homepage hero / breadcrumb / sanitize / editor
- * chrome). Those divergences are intentional and preserved byte-for-byte here;
- * they are scheduled for unification in phases 3-6. The live leaves are the
- * global functions defined in public/index.php (available in the live request
+ * live-only homepage hero / breadcrumb / sanitize / editor chrome). Those
+ * divergences are intentional and preserved byte-for-byte here; they are
+ * scheduled for unification in phases 5-6. The live leaves are the global
+ * functions defined in public/index.php (available in the live request
  * context); the publish leaves come from the injected PublishPageChrome.
+ *
+ * Phase 4 — cenik: the package-cards + CTA splice (CenikPageRenderer::inject)
+ * used to be live-only (the old injectCenikPageLayout() global function in
+ * public/index.php, unreachable from PublishService's entry point). It is now
+ * a shared App\Services\Render\* + ViewModel/PHTML call, so both composeLive
+ * and composePublish run it — /cenik's package cards are no longer
+ * live/publish-divergent.
  *
  * Phase 3 — legacy vs. PHTML layout: the choice between the legacy layout.html
  * str_replace path and the new PHTML layout is made UPSTREAM of this class, by
@@ -79,7 +86,7 @@ final class PageComposer
 
         $html = HomepageSectionRenderer::injectHomepageMissingSections($html, $blocks, $isHome);
         $html = HomepageSectionRenderer::injectHomepageThemeDataSources($html, $blocks, $isHome);
-        $html = \injectCenikPageLayout($html, $blocks, $pageKey);
+        $html = CenikPageRenderer::inject($html, $blocks, $pageKey);
         $html = HomepageSectionRenderer::injectHomepageAboutVisualSource($html, (int)$page['id'], (int)$page['site_id'], $isHome);
         $html = $renderer->injectAssets($html, (string)$ctx['css'], (string)$ctx['js']);
         $html = $renderer->injectSeo($html, (string)$ctx['seoHead'], (string)$ctx['bodyScripts']);
@@ -129,6 +136,7 @@ final class PageComposer
 
         $html = HomepageSectionRenderer::injectHomepageMissingSections($html, $blocks, $isHome);
         $html = HomepageSectionRenderer::injectHomepageThemeDataSources($html, $blocks, $isHome);
+        $html = CenikPageRenderer::inject($html, $blocks, $pageKey);
         $html = HomepageSectionRenderer::injectHomepageAboutVisualSource($html, (int)$page['id'], (int)($page['site_id'] ?? 0), $isHome);
         $html = $renderer->injectAssets($html, (string)$ctx['css'], (string)$ctx['js']);
         $html = $renderer->injectSeo($html, (string)$ctx['seoHead'], (string)$ctx['bodyScripts']);
