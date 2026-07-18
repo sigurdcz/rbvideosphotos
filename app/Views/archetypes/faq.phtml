@@ -1,0 +1,30 @@
+<?php
+/**
+ * FAQ archetype — phase 4 of the templating refactor.
+ * @var array $hero  ['title','sub','titleKey','titleType','subKey','subType']
+ * @var array $items [['id','question','answer'], ...] from FaqPageData::forSite()
+ */
+?>
+<section class="fq-hero">
+  <div class="container">
+    <h1<?= $this->inlineAttr($hero['titleKey'], $hero['titleType']) ?>><?= $this->e($hero['title']) ?></h1>
+    <p<?= $this->inlineAttr($hero['subKey'], $hero['subType']) ?>><?= $this->e($hero['sub']) ?></p>
+  </div>
+</section>
+<section class="fq-wrap">
+  <div class="container">
+    <div class="faq-list"><?php if ($items === []): ?><p class="faq-empty">Zatím žádné otázky. Napište nám a rádi odpovíme.</p><?php else: foreach ($items as $item): ?><article class="faq-item"><h3 class="faq-q-wrap"><button type="button" class="faq-q" aria-expanded="false"<?= $this->inlineAttr('faq:' . $item['id'] . ':question') ?>><span><?= $this->e($item['question']) ?></span></button></h3><div class="faq-a" hidden<?= $this->inlineAttr('faq:' . $item['id'] . ':answer') ?>><?= nl2br($this->e($item['answer'])) ?></div></article><?php endforeach; endif; ?></div>
+  </div>
+</section>
+<script>
+document.querySelectorAll('.faq-q').forEach(function(button){
+  button.addEventListener('click',function(){
+    var item = button.closest('.faq-item');
+    var answer = item ? item.querySelector('.faq-a') : null;
+    if(!item || !answer) return;
+    var open = item.classList.toggle('open');
+    button.setAttribute('aria-expanded', open ? 'true' : 'false');
+    answer.hidden = !open;
+  });
+});
+</script><?php ?>

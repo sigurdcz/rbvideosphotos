@@ -28,6 +28,39 @@ final class HomepageSectionRenderer
     return '';
 }
 
+    /**
+     * Return [key, content, block_type] for the first key in $keys whose block
+     * has non-empty content, or [$keys[0], $fallback, 'text'] when none match.
+     *
+     * Extracted in phase 4 of the templating refactor from the global
+     * firstBlockValue() in public/index.php (a live-only helper used by the
+     * faq/sluzby page-hero resolution) so App\Services\PublishService — which
+     * cannot call functions defined in public/index.php — can resolve the same
+     * hero title/subtitle for the equivalent archetypes at publish time. The
+     * global function now delegates here; behaviour is unchanged.
+     *
+     * @param array $blocks list of block rows (each with block_key/content/block_type)
+     * @param string[] $keys candidate block keys, in priority order
+     */
+    public static function firstBlockValue(array $blocks, array $keys, string $fallback): array
+{
+    $map = [];
+    foreach ($blocks as $block) {
+        $key = (string)($block['block_key'] ?? '');
+        if ($key !== '') {
+            $map[$key] = $block;
+        }
+    }
+
+    foreach ($keys as $key) {
+        if (isset($map[$key]) && trim((string)($map[$key]['content'] ?? '')) !== '') {
+            return [$key, (string)$map[$key]['content'], (string)($map[$key]['block_type'] ?? 'text')];
+        }
+    }
+
+    return [$keys[0] ?? '', $fallback, 'text'];
+}
+
     public static function injectHomepageMissingSections(string $html, array $blocks, bool $isHome): string
 {
     if (!$isHome) {

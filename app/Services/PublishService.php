@@ -95,7 +95,9 @@ class PublishService implements PublishPageChrome
         $twImageUrl = $this->resolveImageUrl($seo['twitter_image_id'] ?? null, $site);
 
         // Render
-        $html = $this->renderer->render($this->normalizeLegacyTemplateSource((string)($template['html_source'] ?? '')), $blocks, $mediaMap);
+        $archetypeCss = '';
+        [$archetypeHtml, $archetypeCss] = $this->renderArchetypeContent($pageKey, $page, $blocks);
+        $html = $archetypeHtml ?? $this->renderer->render($this->normalizeLegacyTemplateSource((string)($template['html_source'] ?? '')), $blocks, $mediaMap);
         $theme = $this->themes->resolveForSite($site);
         Logger::infoTo('theme-debug', 'theme.publish.request', 'Publish theme resolution requested', [
             'site_id' => $site['id'] ?? null,
@@ -161,6 +163,13 @@ class PublishService implements PublishPageChrome
                 'page_id' => $page['id'] ?? null,
                 'page_key' => $pageKey,
             ]);
+        }
+        if ($archetypeCss !== '') {
+            // Archetype pages (faq, …) carry their own page-specific CSS that used
+            // to live in a public/index.php heredoc; it never was part of
+            // $template['css_source'], so it is layered on top here rather than
+            // folded into the branch-specific $css formulas above.
+            $css = $archetypeCss . "\n" . $css;
         }
         $seoHead     = $this->seoRenderer->renderHead($seo, $site, $pageUrl, $ogImageUrl, $twImageUrl);
         $bodyScripts = $this->seoRenderer->renderBodyScripts($site);
@@ -423,6 +432,53 @@ HTML;
             return $this->publishedDir . '/index.html';
         }
         return $this->publishedDir . '/' . $path . '/index.html';
+    }
+
+    /**
+     * Phase 4 of the templating refactor: pages that have their own PHTML
+     * archetype (app/Views/archetypes/<key>.phtml) render their page content
+     * through the same ViewModel + ViewFactory call the live route uses,
+     * instead of the generic $this->renderer->render(html_source, blocks, …)
+     * DOM-block-injection path. This is what makes live and publish share one
+     * source of truth for these pages (previously the archetype's content
+     * logic lived only in public/index.php, unreachable from PublishService).
+     *
+     * @return array{0: ?string, 1: string} [html fragment or null when $pageKey
+     *         is not an archetype page, page-specific CSS to layer on top]
+     */
+    private function renderArchetypeContent(string $pageKey, array $page, array $blocks): array
+    {
+        if ($pageKey === 'faq') {
+            $siteId = (int)($page['site_id'] ?? 0);
+            $faqData = \App\ViewModels\FaqPageData::forSite($siteId);
+            [$titleKey, $title, $titleType] = \App\Services\Render\HomepageSectionRenderer::firstBlockValue(
+                $blocks,
+                ['hero_h1', 'hero_heading'],
+                'Časté dotazy'
+            );
+            [$subKey, $sub, $subType] = \App\Services\Render\HomepageSectionRenderer::firstBlockValue(
+                $blocks,
+                ['hero_sub', 'hero_intro'],
+                'Odpovědi na nejčastější dotazy.'
+            );
+
+            $html = \App\View\ViewFactory::forTheme(null)->render('archetypes/faq', [
+                'hero' => [
+                    'title' => $title,
+                    'sub' => $sub,
+                    'titleKey' => $titleKey,
+                    'titleType' => $titleType,
+                    'subKey' => $subKey,
+                    'subType' => $subType,
+                ],
+                'items' => $faqData['items'],
+            ]);
+            $css = rtrim((string)file_get_contents(\App\View\ViewFactory::base() . '/app/Views/assets/faq.css'), "\n");
+
+            return [$html, $css];
+        }
+
+        return [null, ''];
     }
 
     private function buildMediaMap(array $blocks, array $site): array

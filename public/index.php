@@ -34,6 +34,8 @@ use App\Services\SecurityTxtService;
 use App\Services\ThemeTemplateRegistry;
 use App\Security\RequestThrottle;
 use App\Support\FrontendAssetManager;
+use App\View\ViewFactory;
+use App\ViewModels\FaqPageData;
 
 Env::load(dirname(__DIR__) . '/.env');
 
@@ -1028,13 +1030,11 @@ function pageBlockMap(?array $page): array
 
 function firstBlockValue(array $blocks, array $keys, string $fallback): array
 {
-    foreach ($keys as $key) {
-        if (isset($blocks[$key]) && trim((string)($blocks[$key]['content'] ?? '')) !== '') {
-            return [$key, (string)$blocks[$key]['content'], (string)($blocks[$key]['block_type'] ?? 'text')];
-        }
-    }
-
-    return [$keys[0] ?? '', $fallback, 'text'];
+    // $blocks here is a block_key => row map (built by pageBlockMap()); the
+    // shared implementation takes a plain row list so it also works with
+    // PublishService's native format. array_values() is safe because every
+    // row carries its own 'block_key' field, which the shared helper re-keys.
+    return \App\Services\Render\HomepageSectionRenderer::firstBlockValue(array_values($blocks), $keys, $fallback);
 }
 
 function defaultContactFormEmail(): string
@@ -2141,10 +2141,11 @@ function tryServeFaqPage(): bool
     if (!$site) return false;
 
     try {
-        $items = (new FaqRepository())->allActive((int)$site['id']);
+        $faqData = FaqPageData::forSite((int)$site['id']);
     } catch (\Throwable $e) {
         return false;
     }
+    $items = $faqData['items'];
 
     $h        = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
     $siteName = (string)($site['name'] ?? 'RB Videos & Photos');
@@ -2163,64 +2164,23 @@ function tryServeFaqPage(): bool
     $pageBlocks = pageBlockMap($page);
     [$heroTitleKey, $heroTitle, $heroTitleType] = firstBlockValue($pageBlocks, ['hero_h1', 'hero_heading'], $heroTitle);
     [$heroSubKey, $heroSub, $heroSubType] = firstBlockValue($pageBlocks, ['hero_sub', 'hero_intro'], $heroSub);
-    $heroTitleAttrs = inlineAttrs($page, $heroTitleKey, $heroTitleType);
-    $heroSubAttrs = inlineAttrs($page, $heroSubKey, $heroSubType);
+    $editMode = Auth::check() && !isset($_GET['cms_preview']) && $page !== null;
 
-    $faqHtml = '';
-    foreach ($items as $item) {
-        $questionAttrs = inlineAttrs($page, 'faq:' . (int)$item['id'] . ':question', 'text');
-        $answerAttrs = inlineAttrs($page, 'faq:' . (int)$item['id'] . ':answer', 'text');
-        $faqHtml .= '<article class="faq-item">'
-            . '<h3 class="faq-q-wrap"><button type="button" class="faq-q" aria-expanded="false"' . $questionAttrs . '><span>' . $h($item['question']) . '</span></button></h3>'
-            . '<div class="faq-a" hidden' . $answerAttrs . '>' . nl2br($h($item['answer'])) . '</div>'
-            . '</article>';
-    }
-    if ($faqHtml === '') {
-        $faqHtml = '<p class="faq-empty">Zatím žádné otázky. Napište nám a rádi odpovíme.</p>';
-    }
-
-    $faqCss = <<<'CSS'
-.fq-wrap{padding:56px 0 80px}
-.fq-wrap .faq-list{display:flex;flex-direction:column;gap:14px;max-width:840px;margin:0 auto}
-.fq-wrap .faq-item{padding:2px 28px;background:rgba(255,255,255,.6);border:1px solid rgba(122,95,65,.16);border-radius:12px;transition:border-color .2s,box-shadow .2s,background .2s}
-.fq-wrap .faq-item:hover{border-color:rgba(212,176,111,.5)}
-.fq-wrap .faq-item.open{border-color:rgba(212,176,111,.62);background:rgba(255,255,255,.85);box-shadow:0 10px 30px rgba(48,38,30,.08)}
-.fq-wrap .faq-q-wrap{margin:0}
-.fq-wrap .faq-q{width:100%;border:0;background:transparent;font-family:"Manrope",system-ui,sans-serif!important;font-size:1.06rem!important;min-height:0!important;letter-spacing:0!important;text-transform:none!important;color:#1a1610!important;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:18px;line-height:1.45;margin:0;padding:22px 0;text-align:left;cursor:pointer}
-.fq-wrap .faq-q::after{content:"＋";flex-shrink:0;font-size:1.4rem;font-weight:400;color:#c4963c;transition:transform .25s}
-.fq-wrap .faq-item.open .faq-q::after{transform:rotate(45deg)}
-.fq-wrap .faq-a{color:#5f5143!important;font-size:.97rem!important;line-height:1.72;margin:0!important;padding:0 0 22px;max-width:none;display:none}
-.fq-wrap .faq-item.open .faq-a{display:block}
-.fq-wrap .faq-empty{text-align:center;color:#7a6a58;max-width:680px;margin:0 auto}
-CSS;
+    $faqCss = rtrim((string)file_get_contents(ViewFactory::base() . '/app/Views/assets/faq.css'), "\n");
 
     $renderer   = new PageRenderer();
     $nav        = resolveThemeNav($site, false);
-$pageContent = <<<HTML
-<section class="fq-hero">
-  <div class="container">
-    <h1{$heroTitleAttrs}>{$h($heroTitle)}</h1>
-    <p{$heroSubAttrs}>{$h($heroSub)}</p>
-  </div>
-</section>
-<section class="fq-wrap">
-  <div class="container">
-    <div class="faq-list">{$faqHtml}</div>
-  </div>
-</section>
-<script>
-document.querySelectorAll('.faq-q').forEach(function(button){
-  button.addEventListener('click',function(){
-    var item = button.closest('.faq-item');
-    var answer = item ? item.querySelector('.faq-a') : null;
-    if(!item || !answer) return;
-    var open = item.classList.toggle('open');
-    button.setAttribute('aria-expanded', open ? 'true' : 'false');
-    answer.hidden = !open;
-  });
-});
-</script>
-HTML;
+    $pageContent = ViewFactory::forTheme(null, ['editMode' => $editMode])->render('archetypes/faq', [
+        'hero' => [
+            'title' => $heroTitle,
+            'sub' => $heroSub,
+            'titleKey' => $heroTitleKey,
+            'titleType' => $heroTitleType,
+            'subKey' => $heroSubKey,
+            'subType' => $heroSubType,
+        ],
+        'items' => $items,
+    ]);
     [$pageContent, $themeCss, $themeJs, $themeActive] = applyThemeTemplate(
         $renderer,
         $site,
@@ -2244,9 +2204,7 @@ HTML;
         $html = '<!DOCTYPE html><html lang="cs"><head><meta charset="UTF-8"><title>FAQ | ' . $h($siteName) . '</title>'
             . '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:system-ui,sans-serif;line-height:1.6}.container{max-width:960px;margin:0 auto;padding:0 24px}'
             . $faqCss . '</style></head><body>'
-            . '<section class="fq-hero"><div class="container"><h1>' . $h($heroTitle) . '</h1><p>' . $h($heroSub) . '</p></div></section>'
-            . '<section class="fq-wrap"><div class="container"><div class="faq-list">' . $faqHtml . '</div></div></section>'
-            . '<script>document.querySelectorAll(".faq-item").forEach(function(el){el.addEventListener("click",function(){el.classList.toggle("open");});});</script>'
+            . $pageContent
             . '</body></html>';
     }
 

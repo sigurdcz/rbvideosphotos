@@ -1,0 +1,12 @@
+.fq-wrap{padding:56px 0 80px}
+.fq-wrap .faq-list{display:flex;flex-direction:column;gap:14px;max-width:840px;margin:0 auto}
+.fq-wrap .faq-item{padding:2px 28px;background:rgba(255,255,255,.6);border:1px solid rgba(122,95,65,.16);border-radius:12px;transition:border-color .2s,box-shadow .2s,background .2s}
+.fq-wrap .faq-item:hover{border-color:rgba(212,176,111,.5)}
+.fq-wrap .faq-item.open{border-color:rgba(212,176,111,.62);background:rgba(255,255,255,.85);box-shadow:0 10px 30px rgba(48,38,30,.08)}
+.fq-wrap .faq-q-wrap{margin:0}
+.fq-wrap .faq-q{width:100%;border:0;background:transparent;font-family:"Manrope",system-ui,sans-serif!important;font-size:1.06rem!important;min-height:0!important;letter-spacing:0!important;text-transform:none!important;color:#1a1610!important;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:18px;line-height:1.45;margin:0;padding:22px 0;text-align:left;cursor:pointer}
+.fq-wrap .faq-q::after{content:"＋";flex-shrink:0;font-size:1.4rem;font-weight:400;color:#c4963c;transition:transform .25s}
+.fq-wrap .faq-item.open .faq-q::after{transform:rotate(45deg)}
+.fq-wrap .faq-a{color:#5f5143!important;font-size:.97rem!important;line-height:1.72;margin:0!important;padding:0 0 22px;max-width:none;display:none}
+.fq-wrap .faq-item.open .faq-a{display:block}
+.fq-wrap .faq-empty{text-align:center;color:#7a6a58;max-width:680px;margin:0 auto}
