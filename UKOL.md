@@ -332,3 +332,36 @@ Datum: 2026-07-19. Nezávislá kontrola commitu `1d881f1` (8 souborů, síťová
 - **Nový test (bod 9):** OK. `ArchetypeThemeOverrideTest.php` (3 testy, throwaway fixture pod reálným `Templates/`, cleanup ve `finally`): (1) override soubor vyhrává, (2) téma bez override padá na core, (3) `forTheme(null)` core-only. Netriviální, testuje reálnou kaskádu.
 
 **Známé omezení (low-severity, NEobservable, NEregrese, mimo scope):** Homepage sekční autofill partials (`HomepageContentService::applyFallbacks`, index.php:114) resolvují jen AKTIVNÍ téma (`resolveForSite($site)` bez preview klíče), zatímco jejich layout/CSS (`applyThemeTemplate`, index.php:169) preview klíč ctí. Pod `?theme_preview=` na homepage by tedy sekční partials braly aktivní téma, layout preview téma — asymetrie analogická už zdokumentovanému admin-only omezení. Dnes NULOVÝ dopad: žádné téma nemá `views/partials/home-*.phtml` override, takže všechny sekce vždy renderují core. Není regrese (před commitem byly partials taky core-only). Dedikované archetypy (kontakt/sluzby/faq/blog/portfolio) preview klíč ctí správně (živě ověřeno). Případné budoucí dořešení: protáhnout preview klíč do `applyFallbacks()`.
+
+---
+
+## Nový motiv Premium Photo
+
+Datum: 2026-07-19
+Zadání: Vytvořit samostatnou CMS šablonu podle dodané HTML referenční sady `ukazka sablony premim photo` a porovnat její vizuální výstup s referencí ve stejném Chrome viewportu.
+
+## Kroky
+
+- [x] Uložit výchozí změny a dodané designové podklady do commitu `c37ee70`.
+- [x] Ověřit designové podklady: homepage + blog, detail, FAQ, kontakt, portfolio a recenze; CSS/JS jsou součástí sady.
+- [x] Vytvořit izolované téma `premium-photo` bez hardcodovaných obsahových dat.
+- [x] Otestovat náhled přes `?theme_preview=premium-photo` a integritu CMS rout.
+- [ ] Vytvořit referenční a CMS Chrome snímky, porovnat je podle vážené rubriky a zapsat skóre.
+- [ ] Spustit testy, diff kontrolu, aktualizovat relevantní dokumentaci a dokončit závěrečný commit.
+
+## Poznámky
+
+- Referenční design není PNG, ale dodaná statická HTML sada; její vlastní Chrome capture je proto autoritativní target pro porovnání.
+- Obsah zůstává v DB a přes stávající archetypy/partialy; nové téma mění jen layout, CSS, JS a případně PHTML prezentaci nad existujícími datovými kontrakty.
+- `http://localhost:8000/?theme_preview=premium-photo` vrací HTTP 200 a generovaný stylesheet; PHP lint je bez chyb.
+- Visual QA zatím nelze bodovat: Chrome `--headless --screenshot` i s novým `--user-data-dir` zůstal běžet, ale nevytvořil požadovaný PNG. Nejde o platný snímek ani o důkaz shody; statická reference na `http://127.0.0.1:8777/index.html` vrací HTTP 200 a čeká na capture přes DevTools/CDP.
+
+## Výsledek
+
+Průběžné — motiv je implementován, finální vizuální porovnání a skóre zůstávají otevřené.
+ 
+### Premium Photo visualni kontrola
+
+- Chrome capture 1280x800, DPR 1: `reference-premium-photo-1280.png` a `cms-premium-photo-1280.png`.
+- Skore: **28/100** (barvy/header 11/25, hero kompozice 5/30, typografie 8/15, mrizka/CTA 4/20, responsivita nehodnocena). Vysledek **NESOUHLASI**: CMS dedi hero foto vrstvu, ktera koliduje s referencni pravou mozaikou.
+- `php tests/run.php`: 51 testu proslo, ale 25/27 golden kontrol je CHANGED. Pred dokoncenim se musi vysvetlit; neni to validni zeleny vysledek.
