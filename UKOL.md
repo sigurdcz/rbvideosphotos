@@ -179,7 +179,44 @@ Datum: 2026-07-19. Nezávislý review commitů `48c1c7e` (homepage) a `d64f93b` 
   - Testy: `php tests/run.php` → 45 testů + 27 golden (vč. nového), 0 failures.
 - [ ] ~~BLOCKER (z review Fáze 4b) — dvojí zapisovač `storage/published/nase-prace/index.html`:~~ (VYŘEŠENO výše) `PortfolioPublishService::regenerateListingPage()` (`app/Services/PortfolioPublishService.php:146-206`, volaná z `publishEntry()` na `:120`) zapisuje TENTÝŽ soubor `storage/published/nase-prace/index.html` jako `PublishService::publishPage()` (`resolveFilePath('nase-prace')` → `storage/published/nase-prace/index.html`, zápis na `PublishService.php:193-196`), ale STARÝM bare `pl-tile`/`pl-grid` markupem bez theme chrome. `publishEntry()` (→ `regenerateListingPage()`) se spouští při admin CRUD na portfolio položkách se statusem `published`: `ApiController::createPortfolioEntry` (`:343`), `ApiController::updatePortfolioEntry` (`:407`), `PortfolioController` (`:78`, `:144`). **Dopad:** po Fázi 4b je `/nase-prace` sjednocené (elegant-white3 archetyp z `PublishService`), ale první reálná portfolio publish akce v adminu PŘEPÍŠE produkční `/nase-prace` zpět na starý bare vzhled („časovaná bomba“). Goldeny to nezachytí — golden runner publikuje `nase-prace` jen přes `PublishService`, `PortfolioPublishService` se v testech nespouští. Pozn.: divergence je pre-existing (oba zapisovače existovaly i před 4b; 4b jen zbohatil stranu `PublishService`), Fáze 4b `PortfolioPublishService` záměrně neměnila. **Řešení (vyžaduje architektonické rozhodnutí):** buď smazat `regenerateListingPage()` a delegovat regeneraci listingu na `PublishService::publishPage()` (potřebuje `pageId`+`userId` v CRUD kontextu), nebo přepsat `regenerateListingPage()` na `renderArchetypeContent`/PageComposer výstup. Stejně zvážit `buildTilesHtml()`/`syncHomepageTiles()` (homepage `portfolio-tiles` blok — jiný soubor, ale rovněž starý markup).
 - [x] **Aktualizace `ARCHITECTURE.md` — HOTOVO.** Nová sekce „Render vrstva (PHTML view system)" (komponenty `App\View\*`/`App\ViewModels\*`/`App\Services\Render\*`, ViewResolver kaskáda + bezpečnost, PageComposer live/publish, archetypy, bezpečnostní kontrakt view vrstvy). Rozšířena sekce „Temata" o manifest v2 (`views_dir`, `overrides.<pageKey>.view`, PHTML layout). Moduly tabulka doplněna o `app/Services/Render`, `app/View`, `app/ViewModels`, `app/Views`. Přepsány zastaralé inject-based popisy (CMS stránky → archetypy+PageComposer; publish pipeline → sjednocený PageComposer + `PortfolioPublishService::regenerateListing` bez dvojího zapisovače; shared CSS → `app/Views/assets/shared-components.css`).
-- [ ] Finální golden + visual QA všech stránek
+- [x] **Finální golden + visual QA všech stránek — HOTOVO.**
+  - Golden: `php tests/run.php` → 48 testů + 27 golden checků (vč. nového `nase-prace portfolio-crud regen`), 0 failures.
+  - Route smoke test (živý `php -S`): `/`, `/faq`, `/sluzby`, `/cenik`, `/kontakt`, `/blog`, `/nase-prace`, `/hodnoceni`, `/podminky-uziti`, blog detail, portfolio detail → HTTP 200; neexistující → 404; NULA PHP warningů/notice/fatal ve všech výstupech.
+  - Visual QA (headless Chrome, 1920×1080 desktop + 390×844 mobil): homepage (desktop+mobil), `/nase-prace`, `/kontakt`, `/cenik` vizuálně ověřeny — plné elegant-white3 stylování (nav, hero+bg, gold CTA, services/portfolio grid, pricing karty s NEJOBLÍBENĚJŠÍ badge, kontaktní formulář + proces sekce), mobil responzivní (hamburger, stacked CTA), 0 layout regrese. `/nase-prace` (BLOCKER-fixed) renderuje kompletní themed archetyp. Zbytek (faq/sluzby/blog/generic) je pro aktivní téma byte-identický golden → vizuální regrese vyloučena.
+  - Pozn.: mobilní hero CTA tlačítka mírně přesahují k pravému okraji — PRE-EXISTING theme CSS (live golden byte-identický, žádná CSS změna z fáze 6), ne regrese refactoringu.
+
+## Fáze 0-6 — REFACTORING DOKONČEN
+
+Sedmifázový refactoring šablonovacího systému z hardcoded HTML v PHP na čistý PHTML view systém je **kompletní, commitnutý a ověřený**. `php tests/run.php` → 48 testů + 27 golden checků, 0 failures.
+
+### Přehled fází
+
+| Fáze | Obsah | Stav |
+| --- | --- | --- |
+| 0 | Golden-master záchranná síť (12 live rout + 14 publish cílů, normalizace, LCS diff) | HOTOVO |
+| 1 | View engine core (`ViewEngine`, `ViewResolver`, `ViewContext`, `LegacyLayoutView`) | HOTOVO |
+| 2 | Sjednocení pipeline — `PageComposer` (live/publish), extrakce do `App\Services\Render\*` | HOTOVO |
+| 3 | Layout + chrome do PHTML (`layouts/default.phtml`, partials, shared-components.css, `ThemeLayoutRenderer`) | HOTOVO |
+| 4 | 9 speciálních archetypů (faq, sluzby, cenik, reviews, blog×2, portfolio×2, kontakt) + ViewModely | HOTOVO |
+| 5 | Homepage autofill (HTML→data + `home-*` partials) + generický `archetypes/page` | HOTOVO |
+| 6 | BLOCKER fix, manifest v2, migrace theme CSS hacků, dead-code úklid, ARCHITECTURE.md | HOTOVO |
+
+### Hlavní architektonické změny
+
+1. **Jeden render pipeline** pro live i publish (`PageComposer` MODE_LIVE/MODE_PUBLISH) místo dvou–tří duplikovaných kopií ~50 funkcí.
+2. **PHTML view systém**: `App\View\*` (engine/resolver/context/factory), `App\ViewModels\*` (čistá data), `app/Views/*.phtml` (layouts/archetypes/partials/assets), `App\Services\Render\*` (sdílené renderery).
+3. **Override kaskáda**: theme views → core views (ViewResolver, realpath containment); manifest v2 `views_dir` + `overrides.<pageKey>.view` pro per-stránka content override.
+4. **Odstraněn dvojí zapisovač** `/nase-prace` (produkční časovaná bomba) — `PortfolioPublishService` deleguje na jediný themed publish pipeline.
+5. **Theme hacky ven z core** (CSS), **~350+ řádků mrtvého kódu smazáno** (23 dead wrapperů v PublishService, dead build/inject funkce, osiřelé konstanty).
+
+### Co zbylo jako budoucí vylepšení (nezamlčeno)
+
+- **editorial-gold cascade caveat**: CSS přesunuto z late-inline do bundle; vysoce-specifické `!important` selektory → riziko nízké, ale téma není aktivní a nemá golden → doporučen vizuální QA před produkčním použitím. Live/publish parita nově korektní.
+- **STRUKTURÁLNÍ `theme-*` podmínky v `HomepageSectionRenderer`** (`theme-elegant-white2?`, `theme-bezova-lens-tale`) záměrně ponechány v core — strukturální section-injekce vyžadují per-theme override infrastrukturu, cílí na neaktivní/negolden témata (odstranění by je rozbilo).
+- **Per-entry portfolio DETAIL** (`storage/published/nase-prace/<slug>/index.html`) stále bare `pf-*` markup — mimo scope BLOCKERu (jen listing), portfolio detail je jinak live-only bez publish goldenu. Vhodné jako navazující unifikace (portfolio-detail publish archetyp).
+- **`PortfolioPublishService::regenerateListing` side-effecty**: každý portfolio CRUD spustí plný `publishPage` (sitemap/robots/llms regen + `publish_history` řádek). Sémanticky korektní, ale historie-šum při bulk editaci — případná optimalizace bez znovuzavedení duplicitní pipeline.
+- **`ReviewContentService::homepageCss()`** inline `<style>` + `DemoContentSeeder` HTML — volitelné dovětky (byte/golden citlivé), neprovedeno.
+- **Legacy struktury**: `PageRenderer::render()` (DOM bloky) žije dál jako fragment renderer uvnitř `archetypes/page`; `layout.html` legacy layout přes adaptér — dlouhodobě deprecated, ne blocker.
 
 ## Poznámky
 
@@ -194,4 +231,4 @@ Datum: 2026-07-19. Nezávislý review commitů `48c1c7e` (homepage) a `d64f93b` 
 
 ## Výsledek
 
-Fáze 0–5 PHTML refaktoru jsou dokončeny, commitnuty a ověřeny golden testy i cílenou vizuální QA. Fáze 5 čeká na nezávislý post-commit review (probíhá). K dokončení refaktoru zbývá jen fáze 6 uvedená výše.
+Všech 7 fází PHTML refaktoru (0–6) je dokončeno, commitnuto a ověřeno golden testy i vizuální QA. Fáze 6 commity: `7ea4678` (BLOCKER), `ac85ca6` (manifest v2), `8ef9c36` (theme CSS migrace), `dc7e73e` (dead code), `acd6d1f` (ARCHITECTURE.md). Refaktoring čeká na finální nezávislý review celého 7fázového celku (viz „Fáze 0-6 — REFACTORING DOKONČEN" výše, sekce otevřených rizik).
