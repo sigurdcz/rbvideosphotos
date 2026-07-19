@@ -133,12 +133,16 @@ function tryServeDatabasePage(string $uri, bool $authenticated = false, bool $pr
         $ogImageUrl = resolveSocialImageUrl($mediaRepo, $seo['og_image_id'] ?? null, $site);
         $twImageUrl = resolveSocialImageUrl($mediaRepo, $seo['twitter_image_id'] ?? null, $site);
 
-        $html = $renderer->render(
+        $fragment = $renderer->render(
             normalizeLegacyTemplateSource((string)($template['html_source'] ?? '')),
             $blocks,
             $mediaMap,
             $authenticated && !$previewMode
         );
+        // Phase 5: generic CMS pages (and the homepage) flow their legacy
+        // PageRenderer fragment through the generic `page` archetype. Byte-for-byte
+        // passthrough — data-block/inline-editor mechanics are unchanged.
+        $html = \App\View\ViewFactory::forTheme(null)->render('archetypes/page', ['fragment' => $fragment]);
         $themeKey = getThemeTemplateRegistry()->normalizePageKey((string)($page['url_path'] ?? ''));
         $isHome = ltrim((string)($page['url_path'] ?? ''), '/') === '';
         $themeNav = resolveThemeNav($site, $isHome);

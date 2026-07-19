@@ -1,0 +1,17 @@
+<?php /**
+ * Generic CMS page archetype — phase 5 of the templating refactor.
+ *
+ * Generic database pages (and the homepage, itself a database page) still render
+ * their content through the LEGACY App\Services\PageRenderer::render() DOM
+ * fragment: templates.html_source with the content_blocks injected into their
+ * data-block markers (and, in edit mode, the inline-editor attributes). That
+ * mechanism — and admin block/data-block editing — is unchanged. This archetype
+ * only wraps the already-rendered fragment so generic pages flow through the same
+ * ViewResolver cascade as the phase-4 archetypes, giving themes a future
+ * per-page/per-archetype override point (manifest v2, phase 6). It is a
+ * deliberate byte-for-byte passthrough: the fragment is emitted raw (it is
+ * trusted DB HTML that the pipeline sanitizes downstream via sanitizeFrontendHtml).
+ *
+ * @var string $fragment raw HTML from PageRenderer::render()
+ */ ?>
+<?= $this->raw($fragment) ?><?php ?>

@@ -97,7 +97,14 @@ class PublishService implements PublishPageChrome
         // Render
         $archetypeCss = '';
         [$archetypeHtml, $archetypeCss] = $this->renderArchetypeContent($pageKey, $page, $blocks);
-        $html = $archetypeHtml ?? $this->renderer->render($this->normalizeLegacyTemplateSource((string)($template['html_source'] ?? '')), $blocks, $mediaMap);
+        // Phase 5: generic CMS pages (and the homepage) flow their legacy
+        // PageRenderer fragment through the generic `page` archetype — the same
+        // byte-for-byte passthrough wrapper the live path uses in
+        // tryServeDatabasePage(). Dedicated archetypes (faq, sluzby, …) above take
+        // precedence via $archetypeHtml.
+        $html = $archetypeHtml ?? \App\View\ViewFactory::forTheme(null)->render('archetypes/page', [
+            'fragment' => $this->renderer->render($this->normalizeLegacyTemplateSource((string)($template['html_source'] ?? '')), $blocks, $mediaMap),
+        ]);
         $theme = $this->themes->resolveForSite($site);
         Logger::infoTo('theme-debug', 'theme.publish.request', 'Publish theme resolution requested', [
             'site_id' => $site['id'] ?? null,
