@@ -11,6 +11,7 @@ Jednoduche SEO CMS pro male staticke weby v cistem PHP 8. Aplikace ma admin rozh
 - `INSTRUCTIONS.md` - contribution pravidla pro vyvoj a AI asistenty
 - `analytics.md` - staticky snapshot predane GA4 analytiky; urcuje prioritni testovaci viewporty podle realne navstevnosti
 - `qa-testing.md` - povinny QA postup pro verejny runtime na telefonu `390 x 844` CSS px a PC `1920 x 1080` CSS px
+- `SCREENSHOT-WORKFLOW.md` - primarni Chrome screenshot workflow; VS Code Integrated Browser je jen diagnosticka historie
 
 Pri rozporu mezi dokumentaci a kodem je zdrojem pravdy aktualni implementace.
 

@@ -2,6 +2,14 @@
 
 Tento postup overuje skutecny lokalni runtime SEO Editoru. Zdroj volby viewportu je `analytics.md`; nejde o obecne designove breakpointy.
 
+## Primarni browser pro screenshoty
+
+Vsechny nove vizualni screenshoty se porizuji v **Google Chrome**. Rucni
+capture pouzije Chrome DevTools (`Capture screenshot` nebo `Capture full size
+screenshot`); automatizovany capture pouzije `qa_visual_capture.py`, ktery
+spousti explicitne instalovany Chrome. VS Code Integrated Browser je pouze
+historicky diagnosticky povrch a nesmi potichu nahradit Chrome QA.
+
 ## Pevne viewporty
 
 | Scenar | Viewport | Pouziti |
@@ -40,7 +48,8 @@ Pri zmene homepage poradi, theme CSS nebo theme JavaScriptu overit:
 
 1. Nastavit presne dany viewport a obnovit stranku bez cache.
 2. Zkontrolovat, ze odpoved obsahuje spravnou tridu tematu a ze se nacetly aktualni generovane CSS a JS assety.
-3. Zachytit novy screenshot cele stranky; nepouzivat stary obraz ani snimek plochy jako dukaz runtime stavu.
+3. Zachytit novy screenshot cele stranky v Google Chrome; nepouzivat stary
+   obraz, snimek plochy ani VS Code Integrated Browser jako dukaz runtime stavu.
 4. Overit horizontalni overflow:
 
    ```js

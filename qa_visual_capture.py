@@ -1,3 +1,9 @@
+"""Primary automated visual QA: Playwright drives the installed Google Chrome.
+
+The browser executable is explicit so a missing Chrome is a visible failure,
+not a fallback to another Chromium build.
+"""
+
 from playwright.sync_api import sync_playwright
 
 

@@ -1,3 +1,6 @@
+# Legacy diagnostic tool only: primary visual QA uses Google Chrome and
+# SCREENSHOT-WORKFLOW.md. Run this script only when a task explicitly requires
+# verifying the VS Code Integrated Browser host path.
 param(
     [string]$Name = '',
     [int]$Width = 941,
