@@ -26,6 +26,7 @@ declare(strict_types=1);
 use App\Core\Database;
 use App\Repositories\PageRepository;
 use App\Repositories\SiteRepository;
+use App\Services\PortfolioPublishService;
 use App\Services\PublishService;
 
 /**
@@ -157,7 +158,47 @@ final class GoldenMasterRunner
             $failures += $failed ? 1 : 0;
         }
 
+        [$line, $failed] = self::portfolioListingRegenerationCheck();
+        $lines[] = $line;
+        $failures += $failed ? 1 : 0;
+
         return ['lines' => $lines, 'failures' => $failures];
+    }
+
+    /**
+     * Phase-6 BLOCKER regression guard. The admin portfolio CRUD path
+     * (ApiController/PortfolioController → PortfolioPublishService::regenerateListing)
+     * must regenerate storage/published/nase-prace/index.html with the SAME themed
+     * output PublishService::publishPage produces (the nase-prace publish golden),
+     * NOT the old bare pl-grid/pl-tile markup of the deleted dual writer
+     * (regenerateListingPage). The rest of the golden runner never exercises
+     * PortfolioPublishService, so this scenario would otherwise be untested — see
+     * UKOL.md "Fáze 6".
+     *
+     * @return array{0: string, 1: bool}
+     */
+    private static function portfolioListingRegenerationCheck(): array
+    {
+        return self::compareOne(
+            'nase-prace portfolio-crud regen',
+            self::PUBLISH_DIR . '/nase-prace.normalized.html',
+            static function (): string {
+                $site = (new SiteRepository())->findFirst();
+                if (!$site) {
+                    throw new RuntimeException('No site configured.');
+                }
+
+                (new PortfolioPublishService())->regenerateListing($site, self::firstAdminUserId());
+
+                $file = dirname(__DIR__) . '/storage/published/nase-prace/index.html';
+                $html = file_get_contents($file);
+                if ($html === false) {
+                    throw new RuntimeException('Could not read regenerated listing: ' . $file);
+                }
+
+                return normalizeHtmlForGolden($html);
+            }
+        );
     }
 
     /**

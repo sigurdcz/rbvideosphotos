@@ -342,7 +342,7 @@ class ApiController
         if ($status === 'published') {
             $svc->publishEntry($repo->findById($id), $repo, $site);
         }
-        $svc->syncHomepageTiles($repo, $site['id']);
+        $svc->regenerateListing($site);
 
         http_response_code(201);
         echo json_encode($this->formatEntry($repo->findById($id), $repo, $site), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
@@ -407,7 +407,7 @@ class ApiController
             $svc->publishEntry($repo->findById($entry['id']), $repo, $site);
         }
         if ($site) {
-            $svc->syncHomepageTiles($repo, $site['id']);
+            $svc->regenerateListing($site);
         }
 
         $site = $site ?? [];
@@ -431,7 +431,7 @@ class ApiController
 
         $site = (new SiteRepository())->findFirst();
         if ($site) {
-            $svc->syncHomepageTiles($repo, $site['id']);
+            $svc->regenerateListing($site);
         }
 
         echo json_encode(['success' => true, 'deleted_slug' => $slug]);

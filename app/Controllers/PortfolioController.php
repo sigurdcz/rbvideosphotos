@@ -77,7 +77,7 @@ class PortfolioController extends Controller
         if ($status === 'published') {
             $svc->publishEntry($repo->findById($id), $repo, $site);
         }
-        $svc->syncHomepageTiles($repo, $site['id']);
+        $svc->regenerateListing($site, $this->currentUserId());
 
         $this->flash('success', 'Práce byla uložena.');
         $this->redirect('/admin/portfolio/edit?id=' . $id);
@@ -144,7 +144,7 @@ class PortfolioController extends Controller
             $svc->publishEntry($repo->findById($id), $repo, $site);
         }
         if ($site) {
-            $svc->syncHomepageTiles($repo, $site['id']);
+            $svc->regenerateListing($site, $this->currentUserId());
         }
 
         $this->flash('success', 'Práce byla uložena.');
@@ -168,7 +168,7 @@ class PortfolioController extends Controller
 
         $site = (new SiteRepository())->findFirst();
         if ($site) {
-            $svc->syncHomepageTiles($repo, $site['id']);
+            $svc->regenerateListing($site, $this->currentUserId());
         }
 
         $this->flash('success', 'Práce smazána.');
@@ -176,6 +176,11 @@ class PortfolioController extends Controller
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private function currentUserId(): int
+    {
+        return (int)(\App\Core\Auth::user()['id'] ?? 0);
+    }
 
     private function allMedia(): array
     {

@@ -2,12 +2,19 @@
 
 namespace App\Services;
 
-use App\Repositories\BlockRepository;
 use App\Repositories\PageRepository;
 use App\Repositories\PortfolioRepository;
+use App\Repositories\UserRepository;
 
 class PortfolioPublishService
 {
+    /**
+     * Write the standalone static export for a single portfolio entry
+     * (storage/published/nase-prace/{slug}/index.html). The /nase-prace LISTING
+     * page is NOT written here anymore — see regenerateListing(), which delegates
+     * to PublishService::publishPage() so live and publish share one themed
+     * source of truth for the listing (TEMPLATE_REFACTOR_PLAN.md phase 6).
+     */
     public function publishEntry(array $entry, PortfolioRepository $repo, array $site): void
     {
         $mediaItems = $repo->getMedia($entry['id']);
@@ -116,24 +123,31 @@ HTML;
         $dir = dirname(__DIR__, 2) . '/storage/published/nase-prace/' . $entry['slug'];
         if (!is_dir($dir)) mkdir($dir, 0755, true);
         file_put_contents($dir . '/index.html', $this->sanitizeHtml($html));
-
-        $this->regenerateListingPage($repo, $site);
     }
 
-    public function syncHomepageTiles(PortfolioRepository $repo, int $siteId): void
+    /**
+     * Regenerate the static /nase-prace LISTING page after a portfolio CRUD
+     * action, by delegating to the ONE themed publish pipeline
+     * (PublishService::publishPage → renderArchetypeContent('nase-prace')).
+     *
+     * Phase 6 of the templating refactor: this replaces the former
+     * regenerateListingPage() which wrote the same storage/published/nase-prace/
+     * index.html with bare, unthemed pl-grid/pl-tile markup — a dual writer that
+     * overwrote the themed listing on the first portfolio publish in the admin.
+     * See UKOL.md "Fáze 6" BLOCKER.
+     *
+     * A guard on findPublishedByUrlPath() keeps this a no-op unless the
+     * nase-prace page actually exists AND is published for this site, so a draft
+     * listing page is never force-published as a side effect of portfolio edits.
+     */
+    public function regenerateListing(array $site, int $userId = 0): void
     {
-        $page = (new PageRepository())->findByUrlPath('');
-        if (!$page) return;
+        $page = (new PageRepository())->findPublishedByUrlPath('nase-prace');
+        if (!$page || (int)($page['site_id'] ?? 0) !== (int)($site['id'] ?? 0)) {
+            return;
+        }
 
-        $entries   = $repo->allPublished($siteId);
-        $tilesHtml = $this->buildTilesHtml($entries, $repo);
-
-        (new BlockRepository())->upsert($page['id'], 'portfolio-tiles', [
-            'block_type' => 'html',
-            'label'      => 'Naše práce — dlaždice',
-            'content'    => $tilesHtml,
-            'sort_order' => 38,
-        ]);
+        (new PublishService())->publishPage((int)$page['id'], $this->resolvePublisherId($userId));
     }
 
     public function removePublishedFiles(string $slug): void
@@ -143,123 +157,19 @@ HTML;
         @rmdir(dirname($file));
     }
 
-    private function regenerateListingPage(PortfolioRepository $repo, array $site): void
+    /**
+     * A valid user id for the publish_history row publishPage() writes. Prefers
+     * the caller-supplied id (the logged-in admin in the session/PortfolioController
+     * context); falls back to the lowest existing user id for the API-key context,
+     * which has no session user. Mirrors the golden runner's firstAdminUserId().
+     */
+    private function resolvePublisherId(int $userId): int
     {
-        $entries = $repo->allPublished($site['id']);
-        $h  = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
-        $sn = $h($site['name'] ?? '');
-
-        $tilesHtml = '';
-        foreach ($entries as $e) {
-            $media = $repo->getFirstMedia($e['id']);
-            $thumb = $e['video_url'] ? PortfolioRepository::youtubeThumbnail($e['video_url']) : '';
-            if (!$thumb && $media) {
-                $thumb = $this->publicMediaUrl((string)($media['storage_path'] ?? ''));
-            }
-            $imgHtml    = $thumb ? "<img src=\"{$h($thumb)}\" alt=\"{$h($e['title'])}\" loading=\"lazy\">" : "<div class=\"pl-no-thumb\">▶</div>";
-            $tilesHtml .= "<a class=\"pl-tile\" href=\"/{$h($e['slug'])}\"><div class=\"pl-thumb\">{$imgHtml}</div><div class=\"pl-caption\">{$h($e['title'])}</div></a>";
+        if ($userId > 0) {
+            return $userId;
         }
 
-        $html = <<<HTML
-<!DOCTYPE html>
-<html lang="cs">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Naše práce — {$sn}</title>
-  <style>
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:system-ui,-apple-system,sans-serif;color:#1a1a1a;background:#f8f6f2}
-    .pl-nav{background:#111;padding:14px 24px;display:flex;align-items:center;gap:16px}
-    .pl-nav a{color:#fff;text-decoration:none;font-size:14px;opacity:.8}.pl-nav a:hover{opacity:1}
-    .pl-nav-logo{font-weight:700;font-size:16px;opacity:1!important}
-    .pl-hero{background:#111;color:#fff;padding:56px 24px 48px;text-align:center}
-    .pl-hero h1{font-size:clamp(1.6rem,4vw,2.6rem);font-weight:700}
-    .pl-container{max-width:1100px;margin:0 auto;padding:48px 24px}
-    .pl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:24px}
-    .pl-tile{display:block;text-decoration:none;color:inherit;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08);transition:transform .2s,box-shadow .2s}
-    .pl-tile:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(0,0,0,.15)}
-    .pl-thumb{height:210px;overflow:hidden;background:#111}
-    .pl-thumb img{width:100%;height:100%;object-fit:cover;display:block}
-    .pl-no-thumb{height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;color:rgba(255,255,255,.3)}
-    .pl-caption{padding:14px 16px;font-weight:600;font-size:.95rem}
-    footer{background:#111;color:rgba(255,255,255,.4);text-align:center;padding:20px;font-size:13px;margin-top:48px}
-  </style>
-</head>
-<body>
-<nav class="pl-nav">
-  <a class="pl-nav-logo" href="/">{$sn}</a>
-  <a href="/">← Domů</a>
-</nav>
-<div class="pl-hero"><h1>Naše práce</h1></div>
-<div class="pl-container">
-  <div class="pl-grid">{$tilesHtml}</div>
-</div>
-<footer>{$sn}</footer>
-</body>
-</html>
-HTML;
-
-        $dir = dirname(__DIR__, 2) . '/storage/published/nase-prace';
-        if (!is_dir($dir)) mkdir($dir, 0755, true);
-        file_put_contents($dir . '/index.html', $this->sanitizeHtml($html));
-    }
-
-    private function buildTilesHtml(array $entries, PortfolioRepository $repo): string
-    {
-        if (empty($entries)) {
-            return '<p style="color:rgba(255,255,255,.45);text-align:center;padding:40px 0">Zatím žádné publikované práce.</p>';
-        }
-
-        $h     = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
-        $tiles = '';
-
-        foreach ($entries as $e) {
-            $photos   = $repo->getMedia($e['id']);
-            $thumb    = $e['video_url'] ? PortfolioRepository::youtubeThumbnail($e['video_url']) : '';
-            $hasVideo = (bool)$e['video_url'];
-            if (!$thumb && !empty($photos)) {
-                $thumbFile = $photos[0]['thumb_path'] ?? $photos[0]['medium_path'] ?? $photos[0]['storage_path'] ?? '';
-                $thumb = $this->publicMediaUrl((string)$thumbFile);
-            }
-
-            $thumbHtml = $thumb
-                ? "<img src=\"{$h($thumb)}\" alt=\"{$h($e['title'])}\" loading=\"lazy\">"
-                : '<div style="height:100%;background:#222;display:flex;align-items:center;justify-content:center;font-size:2rem;color:rgba(255,255,255,.3)">&#9654;</div>';
-            $playIcon = $hasVideo ? '<span class="pt-play">&#9654;</span>' : '';
-
-            $extraHtml   = '';
-            $stripPhotos = $hasVideo ? array_slice($photos, 0, 3) : array_slice($photos, 1, 3);
-            foreach ($stripPhotos as $p) {
-                $pfile      = $p['thumb_path'] ?? $p['storage_path'] ?? '';
-                $psrc       = $h($this->publicMediaUrl((string)$pfile));
-                $palt       = $h($p['alt_text'] ?? '');
-                $extraHtml .= "<img src=\"{$psrc}\" alt=\"{$palt}\" loading=\"lazy\">";
-            }
-
-            $tiles .= <<<TILE
-<a class="pt-tile" href="/nase-prace">
-  <div class="pt-thumb">{$thumbHtml}{$playIcon}</div>
-  <div class="pt-photos">{$extraHtml}</div>
-  <div class="pt-caption">{$h($e['title'])}</div>
-</a>
-TILE;
-        }
-
-        $css = '<style>'
-            . '.pt-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px}'
-            . '.pt-tile{display:block;text-decoration:none;color:inherit;background:#1b1b1f;border-radius:14px;overflow:hidden;box-shadow:0 14px 30px rgba(0,0,0,.25);transition:transform .2s,box-shadow .2s}'
-            . '.pt-tile:hover{transform:translateY(-3px);box-shadow:0 20px 40px rgba(0,0,0,.4)}'
-            . '.pt-thumb{position:relative;height:200px;background:#0e0e11;overflow:hidden}'
-            . '.pt-thumb img{width:100%;height:100%;object-fit:cover;display:block}'
-            . '.pt-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:56px;height:56px;border-radius:50%;background:rgba(196,150,60,.92);display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:#fff}'
-            . '.pt-photos{display:flex;gap:3px;height:72px;background:#17171a;padding:3px}'
-            . '.pt-photos img{flex:1;min-width:0;height:100%;object-fit:cover;display:block}'
-            . '.pt-caption{padding:14px 16px 16px;font-weight:700;font-size:.95rem;color:#fff;background:#17171a}'
-            . '@media(max-width:600px){.pt-grid{grid-template-columns:1fr}}'
-            . '</style>';
-
-        return $css . '<div class="pt-grid">' . $tiles . '</div>';
+        return (new UserRepository())->firstId() ?? 0;
     }
 
     private function publicMediaUrl(string $storagePath): string
