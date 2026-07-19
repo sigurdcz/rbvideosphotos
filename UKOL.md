@@ -359,7 +359,7 @@ Zadání: Vytvořit samostatnou CMS šablonu podle dodané HTML referenční sad
 ## Výsledek
 
 Průběžné — motiv je implementován, finální vizuální porovnání a skóre zůstávají otevřené.
- 
+
 ### Premium Photo visualni kontrola
 
 - Chrome capture 1280x800, DPR 1: `reference-premium-photo-1280.png` a `cms-premium-photo-1280.png`.
