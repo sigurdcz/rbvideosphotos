@@ -13,6 +13,7 @@ Hotovo když: Kompletní plán pokrývající všechny 4 požadavky je sepsán v
 - [x] Zápis plánu do `EMAIL_MANAGER_PLAN.md`
 - [x] Sepsání plánu do chatu (deliverable)
 - [x] Commit UKOL.md + EMAIL_MANAGER_PLAN.md
+- [x] Revize v2 dle zpětné vazby (zjednodušení): vypuštěn tracking pixel/„otevřeno", IMAP→POP3, SMTP klient→`mail()`, 5 tabulek→2, bez API cron endpointu; přepsán `EMAIL_MANAGER_PLAN.md`, sepsáno do chatu, commit
 
 ## Poznámky
 
@@ -21,4 +22,4 @@ Hotovo když: Kompletní plán pokrývající všechny 4 požadavky je sepsán v
 
 ## Výsledek
 
-Plán featury Email manager je hotový: 7 fází, 24 úkolů + 2 povinné Fable 5 review kroky, každý úkol s přiřazeným modelem (Haiku 7×, Sonnet 9×, Opus 8×). Autoritativní verze v `EMAIL_MANAGER_PLAN.md`, kompletní znění sepsáno i do chatu. Obsahuje závazná architektonická rozhodnutí (socket SMTP/IMAP klienti bez composer závislostí, EML záloha ve storage, DB kontrakt pro migraci 022, pixel endpoint před Auth::start(), duální sync trigger bez cronu) a STOP podmínku ve Fázi 0 (blokované TLS porty na hostingu).
+Plán featury Email manager ve verzi v2 (zjednodušené dle zpětné vazby uživatele): 7 fází (0–6), 16 úkolů (Haiku 5×, Sonnet 7×, Opus 4×) + 2 povinné Fable 5 review kroky. Scope: záloha mailů a zpráv z formuláře v DB (raw_source MEDIUMBLOB), POP3 sync schránky (bez DELE), odesílání přes `mail()`, stav „zodpovězeno" odesláním odpovědi z adminu. Vypuštěno: tracking pixel, IMAP/složky, vlastní SMTP klient, events/attachments tabulky, cron endpoint. Autoritativní verze v `EMAIL_MANAGER_PLAN.md`, kompletní znění sepsáno do chatu.
