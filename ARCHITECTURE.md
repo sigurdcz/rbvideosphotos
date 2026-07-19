@@ -27,6 +27,10 @@ SEO Editor je univerzalni CMS pro male prezencni weby s durazem na:
 | `app/Controllers` | Admin controllery, API dispatch, settings a GTM flow |
 | `app/Repositories` | DB pristup a mapovani tabulek |
 | `app/Services` | Render, publish, media, themes, tracking, GTM orchestrace |
+| `app/Services/Render` | Sdilena render vrstva (PageComposer, section/hero/footer renderery, normalizery) pro live i publish |
+| `app/View` | PHTML view engine: `ViewEngine`, `ViewResolver`, `ViewContext`, `ViewFactory` |
+| `app/ViewModels` | Ciste datove providery pro archetypy (vraci skalary/pole, nikdy HTML) |
+| `app/Views` | PHTML sablony: `layouts/`, `archetypes/`, `partials/`, `assets/` |
 | `admin/` | Admin router, PHP view sablony a assety |
 | `public/` | Verejny front controller, assety a tracking runtime |
 | `Templates/` | Predpripravena vizualni temata |
@@ -72,9 +76,9 @@ Security endpointy jsou zamerne pred `Auth::start()`: verejny strojovy soubor ne
 
 - `pages` drzi bezne CMS stranky navazane na `templates`
 - `content_blocks` drzi editovatelne bloky podle `data-block="key"`
-- specialni layouty `faq`, `kontakt`, `cenik`, `sluzby`, `blog` a `nase-prace` maji cast logiky mimo generic bloky
-- specialni verejne stranky musi porad cist obsah z DB tabulek (`service_items`, `faq_items`, `contact_info`, `blog_posts`, `portfolio_entries`) a nesmi doplnovat obsahova data ze sablon
-- specialni renderery predavaji hotovy DB-driven `pageContent` pres `applyThemeTemplate()`; plati to i pro `/sluzby`, aby aktivni tema vzdy dostalo stejny layout, navigaci, footer a theme assety jako ostatni verejne stranky
+- specialni stranky `faq`, `kontakt`, `cenik`, `sluzby`, `blog`, `nase-prace` a `hodnoceni` se renderuji pres dedikovany archetyp (ViewModel + `archetypes/<key>.phtml`), viz "Render vrstva"
+- specialni verejne stranky musi porad cist obsah z DB tabulek (`service_items`, `faq_items`, `contact_info`, `blog_posts`, `portfolio_entries`, `reviews`) a nesmi doplnovat obsahova data ze sablon
+- vysledny archetype/fragment obsah dal prochazi `PageComposer` (mody live/publish) a aktivni tema vzdy dostane stejny layout, navigaci, footer a theme assety jako ostatni verejne stranky
 
 ### Blog a portfolio
 
@@ -99,14 +103,79 @@ Prime slugy bez `/blog/` a `/nase-prace/` prefixu jsou zamerne. `tryRedirectLega
 
 Temata ziji v `Templates/<key>/` a pouzivaji:
 
-- `layout.html`
+- `layout.html` (legacy) nebo `views/layout.phtml` (PHTML layout)
 - `assets/theme.css`
 - volitelne `assets/theme.js`
-- `template.json`
+- `template.json` (manifest v1 nebo v2)
 
 `ThemeTemplateRegistry` nacte metadata tematu, aplikuje layout/soubory do DB a nastavuje `sites.active_theme_key`. Aplikace tematu prepisuje layout v databazi, neni to jen kosmeticky prepinac.
 
+### Theme manifest a override kaskada
+
+`template.json` je zpetne kompatibilni. Manifest v1 klice (`layout_html`, `assets.css/js`, `overrides.<pageKey>.layout_html`, `overrides.<pageKey>.assets`) fungujou dal. Manifest v2 pridava opt-in PHTML view kaskadu:
+
+```json
+{
+  "layout_html": "layout.html",
+  "views_dir": "views",
+  "overrides": {
+    "cenik": {
+      "view": "views/pages/cenik.phtml",
+      "assets": { "css": ["assets/cenik.css"] }
+    }
+  }
+}
+```
+
+- `views_dir` aktivuje theme PHTML kaskadu (prazdne/chybejici = legacy chovani beze zmeny). `ThemeTemplateRegistry::getViewsDir()` / `hasViewsCascade()`.
+- `overrides.<pageKey>.view` prepise CONTENT view genericke stranky (ne jen layout). `ThemeTemplateRegistry::pageContentView()` ho resi (bud explicitni `view`, nebo implicitne `<views_dir>/pages/<pageKey>.phtml`) a oba genericke render seamy (live `tryServeDatabasePage`, publish `publishPage`) ho preferuji pred core `archetypes/page`.
+- PHTML layout: kdyz tema veze `views/layout.phtml`, layout shell se renderuje pres `ThemeLayoutRenderer` misto `layout.html` str_replace. Aktivni tema `elegant-white3` je referencni implementace.
+
+Temata nesmi byt zdrojem obsahovych dat -- viz nize.
+
 Temata nesmi byt zdrojem obsahovych dat. Layouty maji obsahovat jen strukturni placeholdery jako `{site_name}`, `{nav}` a `{page_content}` a tema CSS/JS ma resit pouze prezentaci. Texty, media, CTA obsah, kontakt, cenik, sluzby, blog, portfolio a SEO metadata maji pochazet z DB nebo z DB-driven renderovacich sluzeb.
+
+## Render vrstva (PHTML view system)
+
+Render byl prevden z hardcodovaneho HTML generovaneho v PHP (heredocy, string concat, ~20 post-inject prubehu nad hotovym stringem) na cisty PHTML view system s jednim sjednocenym pipeline pro live frontend i publish. Sedmi-fazovy refactoring je zdokumentovany v `TEMPLATE_REFACTOR_PLAN.md` a `UKOL.md`.
+
+### Komponenty
+
+| Vrstva | Trida / adresar | Odpovednost |
+| --- | --- | --- |
+| View engine | `App\View\ViewEngine` | `render(view, data)`: `ob_start` + `extract` + `include` PHTML souboru; escaping je default |
+| Resolver | `App\View\ViewResolver` | Kaskadova resoluce view souboru s `realpath()` containmentem a regexem jmena view (`^[a-z0-9][a-z0-9/_-]*$`) |
+| Kontext | `App\View\ViewContext` | `$this` uvnitr sablony: `e()`, `raw()`, `partial()`, `block()`, `inlineAttr()`, `slot()/endSlot()`, `layout()`, `asset()`, `mediaUrl()` |
+| Factory | `App\View\ViewFactory` | Sestavi `ViewEngine` s poradim rootu tema -> core; `roots(themeKey, viewsDir)`, `forTheme()`, `themeViewPath()`, `themeLayoutPath()` |
+| ViewModely | `App\ViewModels\*` | Ciste datove providery (`FaqPageData`, `SluzbyPageData`, `CenikPageData`, `BlogListingData`, `BlogPostData`, `PortfolioListingData`, `PortfolioDetailData`, `ReviewsPageData`, `KontaktPageData`, `HomepageData`, ...). Vraci jen skalary/pole, nikdy HTML; media URL uz prelozene na `/media/...`; zadne SQL |
+| Sablony | `app/Views/*.phtml` | `layouts/default.phtml`, `archetypes/<key>.phtml`, `partials/<name>.phtml`, `assets/*.css` (vc. `shared-components.css`) |
+| Sdilena render vrstva | `App\Services\Render\*` | `PageComposer` (orchestrator), `HomepageSectionRenderer`, `CenikPageRenderer`, `FooterRenderer`, `HeroMediaRenderer`, `MarkupNormalizer`, `ContactNormalizer`, `SocialLinkRenderer`, `MediaUrlResolver`, `ThemeLayoutRenderer`, kontrakt `PublishPageChrome` |
+
+### ViewResolver kaskada
+
+Pro dane logicke jmeno view (napr. `archetypes/cenik`, `partials/hero`) se hleda v tomto poradi (prvni nalezeny vyhrava):
+
+```text
+1. Templates/<aktivni tema>/<views_dir>/<view>.phtml   (theme override)
+2. app/Views/<view>.phtml                              (core default, musi existovat)
+```
+
+`ViewFactory::roots()` sklada tyto rooty; theme root se pridava jen kdyz je klic tematu validni proti strikni masce. `ViewResolver` navic dela `realpath()` prefix kontrolu, takze uzivatelsky vstup nikdy neresolvuje cestu mimo povolene rooty. Jmeno view nikdy nepochazi z user inputu -- `pageKey` se odvozuje z DB `url_path`.
+
+### PageComposer
+
+`App\Services\Render\PageComposer::compose($ctx)` je jediny orchestracni domov post-render kaskady, sdileny live frontendem (`public/index.php::tryServeDatabasePage`) i publishem (`PublishService::publishPage`). Mody `MODE_LIVE` / `MODE_PUBLISH` sdileji stejnou sekvenci (homepage sekce, cenik splice, assety, SEO head, footer, hero media, breadcrumb, sanitize) pres `App\Services\Render\*` sluzby; divergentni leafy (site logo, hero image/video, video overlay, live-only editor chrome) jsou zamerne oddelene. Live leafy jsou globalni funkce z `public/index.php`; publish leafy prichazeji z injektovaneho `PublishPageChrome` (implementuje `PublishService`).
+
+### Archetypy
+
+- **Dedikovane archetypy** (`faq`, `sluzby`, `cenik`, `reviews`/`hodnoceni`, `blog-listing`, `blog-detail`, `portfolio-listing`, `portfolio-detail`, `kontakt`): stranka se renderuje pres ViewModel provider + `archetypes/<key>.phtml`. Live i publish sdileji relevantni render cesty (napr. publish je resi pres `PublishService::renderArchetypeContent()`).
+- **Genericke CMS stranky a homepage**: tecou pres `archetypes/page.phtml`, ktery obaluje legacy `PageRenderer::render()` fragment (`templates.html_source` + `content_blocks`) byte-for-byte. Data-block a inline-editor mechanika je nezmenena. Homepage sekce (services, portfolio, pricing, blog, faq, reviews, contact) se doplnuji autofillem (`HomepageContentService::applyFallbacks`) pres `partials/home-*.phtml` -- data, ne konkatenovane HTML.
+
+### Bezpecnostni kontrakt view vrstvy
+
+- Escaping default (`e()` = `htmlspecialchars ENT_QUOTES|ENT_SUBSTITUTE, UTF-8`); `raw()` jen pro duveryhodne DB HTML bloky, ktere dal prochazi `sanitizeFrontendHtml`.
+- Zadne SQL ve views ani ViewModelech neprochazi mimo Repositories (prepared statements).
+- Formularove CSRF tokeny prichazeji do view jako data (generovany presne jednou v controlleru/service, nikdy ve view/ViewModelu); honeypot a throttling zustavaji v POST handleru.
 
 ## Layout, branding a hero media
 
@@ -129,14 +198,16 @@ Stranka muze mit vlastni `hero_video` blok. Pokud chybi, frontend pouzije defaul
 
 Publish vrstva dela vic nez jen ulozeni textu:
 
+- `PublishService::publishPage()` renderuje stranku pres stejny `PageComposer` (mod publish) a stejne archetypy/ViewModely jako live, takze live a publish sdileji jeden zdroj pravdy (byte-ekvivalentni vystup hlida golden runner)
 - regeneruje hashovane CSS/JS do `public/assets/generated/`
 - cisti stare generovane assety
-- publikuje portfolio listing/detail do `storage/published/nase-prace`
 - generuje `sitemap.xml`, `robots.txt`, `llms.txt` a aktivni `.well-known/security.txt`
+
+`PortfolioPublishService` orchestruje staticky export portfolia: `publishEntry()` zapise per-entry detail do `storage/published/nase-prace/<slug>/`, `regenerateListing()` regeneruje `/nase-prace` listing delegaci na `PublishService::publishPage()` (tedy stejny themed vystup jako pri publishi stranky -- zadny druhy zapisovac). Homepage `portfolio-tiles` blok se regeneruje autofillem pri kazdem renderu.
 
 `FrontendAssetManager` minifikuje layout CSS/JS pres `AssetMinifier` a zapisuje hashovane soubory. `public/assets/generated/` neni verzovany v gitu.
 
-Shared theme komponenty z `ThemeTemplateRegistry::getSharedComponentCss()` drzi spolecne styly pro automaticky renderovane DB bloky. Generator obsahu nema vkladat velke inline `<style>` bloky do HTML obsahu, protoze by se tim michala data a prezentace.
+Shared theme komponenty z `ThemeTemplateRegistry::getSharedComponentCss()` (`app/Views/assets/shared-components.css`) drzi spolecne styly pro automaticky renderovane DB bloky. Generator obsahu nema vkladat velke inline `<style>` bloky do HTML obsahu, protoze by se tim michala data a prezentace.
 
 ## Security.txt
 
