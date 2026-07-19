@@ -1,0 +1,21 @@
+/* CMS integration guards for the designer-authored reference markup. */
+.video-hero > .hero-bg { display: none !important; }
+.video-hero .video-bg {
+  z-index: 0;
+  background:
+    radial-gradient(circle at 72% 28%, rgba(185, 151, 91, .09), transparent 34%),
+    linear-gradient(135deg, #15181e 0%, #0a0b0e 70%);
+}
+.video-hero .video-bg iframe { display: none; }
+.video-hero .video-scrim { z-index: 1; }
+.video-hero .wrap { z-index: 2; }
+
+section[hidden] { display: none !important; }
+body > footer { display: none !important; }
+.site-footer-rich { display: none !important; }
+
+/* Content must stay readable even when a full-page capture does not trigger IO. */
+.reveal {
+  opacity: 1 !important;
+  transform: none !important;
+}

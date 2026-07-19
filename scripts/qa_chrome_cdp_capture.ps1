@@ -1,0 +1,190 @@
+param(
+    [string]$Url = 'http://localhost:8000/?theme_preview=premium-photo',
+    [string]$Output = 'premium-photo-cdp.png',
+    [int]$Width = 1280,
+    [int]$Height = 800,
+    [int]$Port = 9333,
+    [string]$ChromePath = 'C:\Program Files\Google\Chrome\Application\chrome.exe'
+)
+
+$ErrorActionPreference = 'Stop'
+
+function Send-CdpCommand {
+    param(
+        [System.Net.WebSockets.ClientWebSocket]$Socket,
+        [int]$Id,
+        [string]$Method,
+        [hashtable]$Params = @{}
+    )
+
+    $payload = @{ id = $Id; method = $Method; params = $Params } | ConvertTo-Json -Depth 12 -Compress
+    $bytes = [Text.Encoding]::UTF8.GetBytes($payload)
+    $Socket.SendAsync(
+        [ArraySegment[byte]]::new($bytes),
+        [Net.WebSockets.WebSocketMessageType]::Text,
+        $true,
+        [Threading.CancellationToken]::None
+    ).GetAwaiter().GetResult()
+
+    while ($true) {
+        $stream = [IO.MemoryStream]::new()
+        do {
+            $buffer = [byte[]]::new(65536)
+            $result = $Socket.ReceiveAsync(
+                [ArraySegment[byte]]::new($buffer),
+                [Threading.CancellationToken]::None
+            ).GetAwaiter().GetResult()
+            $stream.Write($buffer, 0, $result.Count)
+        } while (-not $result.EndOfMessage)
+
+        $message = [Text.Encoding]::UTF8.GetString($stream.ToArray()) | ConvertFrom-Json
+        if ($message.id -eq $Id) {
+            if ($message.error) {
+                throw "CDP $Method selhalo: $($message.error | ConvertTo-Json -Compress)"
+            }
+            return $message.result
+        }
+    }
+}
+
+$debugEndpoint = "http://127.0.0.1:$Port/json/list"
+$chromeProcess = $null
+try {
+    $null = Invoke-RestMethod -Uri $debugEndpoint -TimeoutSec 1
+} catch {
+    if (-not (Test-Path -LiteralPath $ChromePath)) {
+        throw "Chrome nebyl nalezen: $ChromePath"
+    }
+    $profilePath = Join-Path ([IO.Path]::GetTempPath()) "seo-editor-premium-photo-$([Guid]::NewGuid().ToString('N'))"
+    New-Item -ItemType Directory -Path $profilePath | Out-Null
+    $chromeProcess = Start-Process -FilePath $ChromePath -WindowStyle Hidden -PassThru -ArgumentList @(
+        '--headless=new',
+        "--remote-debugging-port=$Port",
+        "--user-data-dir=$profilePath",
+        "--window-size=$Width,$Height",
+        '--disable-gpu',
+        '--hide-scrollbars',
+        $Url
+    )
+    $ready = $false
+    for ($attempt = 0; $attempt -lt 30; $attempt++) {
+        try {
+            $null = Invoke-RestMethod -Uri $debugEndpoint -TimeoutSec 1
+            $ready = $true
+            break
+        } catch {
+            Start-Sleep -Milliseconds 250
+        }
+    }
+    if (-not $ready) {
+        throw "Chrome DevTools se na portu $Port nespustil."
+    }
+}
+
+$targets = Invoke-RestMethod -Uri $debugEndpoint
+$target = $targets.Where({ $_.type -eq 'page' }) | Select-Object -First 1
+if (-not $target) {
+    throw "Na portu $Port neni dostupna zadna Chrome stranka."
+}
+
+$socket = [Net.WebSockets.ClientWebSocket]::new()
+$socket.ConnectAsync(
+    [Uri]$target.webSocketDebuggerUrl,
+    [Threading.CancellationToken]::None
+).GetAwaiter().GetResult() | Out-Null
+$id = 0
+
+Send-CdpCommand $socket (++$id) 'Page.enable' | Out-Null
+Send-CdpCommand $socket (++$id) 'Runtime.enable' | Out-Null
+Send-CdpCommand $socket (++$id) 'Emulation.setDeviceMetricsOverride' @{
+    width = $Width
+    height = $Height
+    deviceScaleFactor = 1
+    mobile = $false
+} | Out-Null
+Send-CdpCommand $socket (++$id) 'Page.navigate' @{ url = $Url } | Out-Null
+Start-Sleep -Seconds 4
+
+$interaction = Send-CdpCommand $socket (++$id) 'Runtime.evaluate' @{
+    expression = @'
+(async () => {
+  const timeline = document.querySelector('.timeline');
+  const playhead = document.querySelector('.tl-playhead');
+  const parallax = document.querySelector('[data-parallax]');
+  const before = {
+    scrollY: window.scrollY,
+    timelineTop: timeline ? timeline.getBoundingClientRect().top + window.scrollY : null,
+    timelineHeight: timeline?.getBoundingClientRect().height || null,
+    playheadTop: playhead?.style.top || '',
+    parallaxTransform: parallax?.style.transform || ''
+  };
+  document.documentElement.style.scrollBehavior = 'auto';
+  window.scrollTo(0, 400);
+  await new Promise(resolve => setTimeout(resolve, 140));
+  const parallaxAt400 = parallax?.style.transform || '';
+  if (timeline) {
+    window.scrollTo(0, before.timelineTop + timeline.offsetHeight * .35);
+    await new Promise(resolve => setTimeout(resolve, 180));
+  }
+  const after = {
+    scrollY: window.scrollY,
+    playheadTop: playhead?.style.top || '',
+    parallaxTransform: parallax?.style.transform || '',
+    activeItems: document.querySelectorAll('.tl-item.on').length
+  };
+  window.scrollTo(0, 0);
+  await new Promise(resolve => setTimeout(resolve, 100));
+  return { before, parallaxAt400, after };
+})()
+'@
+    returnByValue = $true
+    awaitPromise = $true
+}
+
+$metrics = Send-CdpCommand $socket (++$id) 'Page.getLayoutMetrics'
+$pageHeight = [Math]::Ceiling($metrics.cssContentSize.height)
+$capture = Send-CdpCommand $socket (++$id) 'Page.captureScreenshot' @{
+    format = 'png'
+    fromSurface = $true
+    captureBeyondViewport = $true
+    clip = @{ x = 0; y = 0; width = $Width; height = $pageHeight; scale = 1 }
+}
+
+$outputPath = [IO.Path]::GetFullPath((Join-Path (Get-Location) $Output))
+[IO.File]::WriteAllBytes($outputPath, [Convert]::FromBase64String($capture.data))
+
+# captureBeyondViewport can temporarily expand the visual viewport. Restore the
+# requested viewport before measuring scroll-linked behavior.
+Send-CdpCommand $socket (++$id) 'Emulation.setDeviceMetricsOverride' @{
+    width = $Width
+    height = $Height
+    deviceScaleFactor = 1
+    mobile = $false
+} | Out-Null
+
+$inspection = Send-CdpCommand $socket (++$id) 'Runtime.evaluate' @{
+    expression = @'
+(() => ({
+  title: document.title,
+  height: document.documentElement.scrollHeight,
+  innerHeight: window.innerHeight,
+  hero: Boolean(document.querySelector('.video-hero')),
+  timeline: Boolean(document.querySelector('.timeline')),
+  playhead: Boolean(document.querySelector('.tl-playhead')),
+  bodyClass: document.body.className
+}))()
+'@
+    returnByValue = $true
+}
+
+$socket.Dispose()
+if ($chromeProcess -and -not $chromeProcess.HasExited) {
+    $chromeProcess.Kill()
+}
+[pscustomobject]@{
+    Screenshot = $outputPath
+    Width = $Width
+    Height = $pageHeight
+    Runtime = $inspection.result.value
+    Interactions = $interaction.result.value
+} | ConvertTo-Json -Depth 8
