@@ -232,3 +232,38 @@ Sedmifázový refactoring šablonovacího systému z hardcoded HTML v PHP na či
 ## Výsledek
 
 Všech 7 fází PHTML refaktoru (0–6) je dokončeno, commitnuto a ověřeno golden testy i vizuální QA. Fáze 6 commity: `7ea4678` (BLOCKER), `ac85ca6` (manifest v2), `8ef9c36` (theme CSS migrace), `dc7e73e` (dead code), `acd6d1f` (ARCHITECTURE.md). Refaktoring čeká na finální nezávislý review celého 7fázového celku (viz „Fáze 0-6 — REFACTORING DOKONČEN" výše, sekce otevřených rizik).
+
+## Fáze 6 — finální nezávislý review [SCHVÁLENO]
+
+Datum: 2026-07-19. Nezávislý review 6 commitů fáze 6 (`7ea4678`, `ac85ca6`, `8ef9c36`, `dc7e73e`, `acd6d1f`, `f8c6490`) — nejvyšší riziko celého 7fázového refaktoru. **Verdikt: SCHVÁLENO. Žádný BLOCKER, žádná oprava nebyla nutná.**
+
+### Priorita 1 — `PortfolioPublishService` BLOCKER fix (ověřeno DŮKLADNĚ)
+
+- **Dvojí zapisovač odstraněn**: `regenerateListingPage()` (bare `pl-grid`/`pl-tile` markup) smazán; nahrazen `regenerateListing(array $site, int $userId = 0)` delegující na `PublishService::publishPage()` → `renderArchetypeContent('nase-prace')`. Ověřeno v `git show 7ea4678` a v aktuálním kódu (`app/Services/PortfolioPublishService.php:143`).
+- **First-user fallback = pouze atribuce, ŽÁDNÁ bezpečnostní díra.** `resolvePublisherId()` → `UserRepository::firstId()` se předává do `publishPage($pageId, $userId)`, kde se `$userId` používá VÝHRADNĚ na `publish_history.user_id` (`PublishService.php:229`, `'user_id' => $userId`). Neovlivňuje autorizaci ani oprávnění. API-key autentizace je nedotčená: `ApiController::dispatch()` volá `checkAuth()` (jediný globální `API_KEY`, `hash_equals`, `ApiController.php:582-596`) na řádku 32 PŘED jakýmkoli routingem, tedy i před `regenerateListing()`. API nemá per-user oprávnění → fallback nemůže eskalovat práva.
+- **Guard proti draft publikaci potvrzen**: `PageRepository::findPublishedByUrlPath('nase-prace')` filtruje `status = 'published'` (`PageRepository.php:62-73`) + kontrola `site_id` → no-op, dokud stránka neexistuje / není published. Draft se nikdy force-nepublishne.
+- **Nový golden test ověřen strukturálně**: `GoldenMasterRunner::portfolioListingRegenerationCheck()` (`tests/GoldenMasterRunner.php:181`) volá REÁLNÝ `PortfolioPublishService::regenerateListing($site, firstAdminUserId())`, čte skutečný `storage/published/nase-prace/index.html` a porovnává s `nase-prace.normalized.html` publish goldenem. Žádný mock. Běží a prochází (`nase-prace portfolio-crud regen: OK`).
+- **Všech 6 callerů přepojeno** (grep-ověřeno): `ApiController` 3× (`:345,:410,:434`), `PortfolioController` 3× (`:80,:147,:171`) → `regenerateListing`. NULA zbylých odkazů na `regenerateListingPage`/`syncHomepageTiles`/`buildTilesHtml` (jen komentáře/docs).
+
+### Priorita 2 — smazání 23 dead wrapperů v `PublishService.php`
+
+- **0 zbylých callerů** — grep `$this->(všech 23 metod)\(` přes celý codebase: jediný match je `PageRenderer::buildVideoEmbedUrl` (JINÁ třída s vlastní privátní definicí na `:201`, ne zlomený odkaz). Všech 23 byly PRIVATE → externě nevolatelné, žádná admin/cron/webhook cesta je nedosáhne.
+- `buildFooterSocialsHtml()`, `buildGridMarkup()`, `buildServiceDetailHtml()`: 0 callerů (jen doc/UKOL).
+- **Žádný dynamic dispatch** v PublishService (`call_user_func`/`$this->$method`/`method_exists`: 0 výskytů → wrappery nešly zavolat nepřímo).
+- Všech 9 dotčených PHP souborů `php -l` čisté.
+- **Testy nezávisle spuštěny**: `php tests/run.php` → **48 testů + 27 golden checků (vč. `nase-prace portfolio-crud regen`), 0 failures** — přesně dle tvrzení agenta.
+
+### Priorita 3 — Theme manifest v2 bezpečnost
+
+- `ViewFactory::themeViewPath()` (`app/View/ViewFactory.php:86`): theme key regex `~^[a-z0-9][a-z0-9_-]*$~D`, view regex `~^[a-z0-9][a-z0-9/_-]*$~D` (BEZ tečky → `..` traversal nemožný už na úrovni regexu), `viewsDir` normalizován (strip `\`/NUL) + validován, navíc `realpath()` prefix containment. Přísnost odpovídá ViewResolveru z fáze 1. (Minor: `strncmp` bez trailing separátoru je teoreticky volný prefix-match, ale no-dots regex garantuje containment konstrukčně — ne blocker.)
+- **Zpětná kompatibilita potvrzena**: aktivní téma `elegant-white3` NEMÁ `views_dir` → `getViewsDir === ''`, `hasViewsCascade === false`, `pageContentView === null` (core archetyp) → výstup byte-identický, goldeny beze změny.
+- `tests/ManifestV2Test.php` pokrývá containment: `themeViewPath(key, '../../evil')` → null, `themeViewPath('../evil', ...)` → null, invalid `views_dir '../evil'` → fallback na default. Path traversal pokus skutečně selže.
+
+### Priorita 4 — Standardní kontroly
+
+- **Kontakt formulář (CSRF/honeypot/throttling) MIMO SCOPE — potvrzeno**: grep celého code-diffu fáze 6 (`git diff 3aa5eb2 f8c6490 -- public/index.php app/`) na `csrf|honeypot|throttle|handleContact|contact_submissions` → 0 matchů. Žádný soubor/řádek kontakt formuláře se nedotčen.
+- **Theme CSS přesun**: `jemna-bezova` + `editorial-gold` (obě NEAKTIVNÍ, aktivní = elegant-white3). Přesunuté CSS soubory byte-věrné odstraněným heredocům (ověřeno čtením `Templates/jemna-bezova/assets/homepage-overrides.css` a `Templates/editorial-gold/assets/overrides.css`). PHP odstranění koordinovaná (interface `PublishPageChrome`, `PageComposer` cascade, `MarkupNormalizer` extraction exclusion) — žádná HTML/PHP logika omylem smazána.
+- **ARCHITECTURE.md věcně správný**: ViewResolver containment (`:163`), PageComposer jeden pipeline (`:167`), `regenerateListing` bez druhého zapisovače (`:206`), CSRF/honeypot design (`:178`) — vše odpovídá reálnému kódu.
+- **Finální visual QA (headless Chrome, threaded server)**: homepage, `/nase-prace` (BLOCKER target), `/kontakt` na 1920×1080 i 390×844. Všechny renderují plný themed elegant-white3 layout (nav+active state, hero, gold CTA, card grid, contact card) BEZ layout regrese. `/nase-prace` = kompletní themed archetyp (vizuální důkaz fixu — žádný bare markup). Jeden capture-artefakt (homepage mobil CSS race) potvrzen jako transientní opravným záběrem; `/kontakt` černý box vpravo = nenačtený externí map-iframe (offline capture), ne regrese.
+
+**Závěr:** Refactoring všech 7 fází je bezpečný a kompletní. BLOCKER fix je korektní a plně otestovaný, dead-code úklid bez zbylých callerů, manifest v2 s pevným path-containmentem, aktivní téma byte-identické. Otevřené položky (editorial-gold visual QA, portfolio-detail publish archetyp, regenerateListing side-effecty) jsou nezamlčené budoucí vylepšení, ne blockery.
