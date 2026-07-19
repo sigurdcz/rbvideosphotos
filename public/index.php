@@ -142,11 +142,20 @@ function tryServeDatabasePage(string $uri, bool $authenticated = false, bool $pr
         // Phase 5: generic CMS pages (and the homepage) flow their legacy
         // PageRenderer fragment through the generic `page` archetype. Byte-for-byte
         // passthrough — data-block/inline-editor mechanics are unchanged.
-        $html = \App\View\ViewFactory::forTheme(null)->render('archetypes/page', ['fragment' => $fragment]);
+        // Phase 6 / manifest v2: a theme that opts into the PHTML views cascade
+        // (declares views_dir) may override a generic page's content view via
+        // overrides.<pageKey>.view or <views_dir>/pages/<pageKey>.phtml. Themes
+        // without manifest v2 (incl. the active theme) resolve to null → the core
+        // wrapper, unchanged.
         $themeKey = getThemeTemplateRegistry()->normalizePageKey((string)($page['url_path'] ?? ''));
+        $themePreviewKey = isset($_GET['theme_preview']) ? trim((string)$_GET['theme_preview']) : null;
+        $contentView = getThemeTemplateRegistry()->pageContentViewForSite($site, $themeKey, $themePreviewKey);
+        $html = $contentView !== null
+            ? \App\View\ViewFactory::forTheme($contentView['themeKey'], ['editMode' => $authenticated && !$previewMode], $contentView['viewsDir'])
+                ->render($contentView['view'], ['fragment' => $fragment, 'pageKey' => $themeKey])
+            : \App\View\ViewFactory::forTheme(null)->render('archetypes/page', ['fragment' => $fragment]);
         $isHome = ltrim((string)($page['url_path'] ?? ''), '/') === '';
         $themeNav = resolveThemeNav($site, $isHome);
-        $themePreviewKey = isset($_GET['theme_preview']) ? trim((string)$_GET['theme_preview']) : null;
         [$html, $themeCss, $themeJs, $themeActive] = applyThemeTemplate(
             $renderer,
             $site,

@@ -94,6 +94,8 @@ class PublishService implements PublishPageChrome
         $ogImageUrl = $this->resolveImageUrl($seo['og_image_id'] ?? null, $site);
         $twImageUrl = $this->resolveImageUrl($seo['twitter_image_id'] ?? null, $site);
 
+        $theme = $this->themes->resolveForSite($site);
+
         // Render
         $archetypeCss = '';
         [$archetypeHtml, $archetypeCss] = $this->renderArchetypeContent($pageKey, $page, $blocks);
@@ -102,10 +104,21 @@ class PublishService implements PublishPageChrome
         // byte-for-byte passthrough wrapper the live path uses in
         // tryServeDatabasePage(). Dedicated archetypes (faq, sluzby, …) above take
         // precedence via $archetypeHtml.
-        $html = $archetypeHtml ?? \App\View\ViewFactory::forTheme(null)->render('archetypes/page', [
-            'fragment' => $this->renderer->render($this->normalizeLegacyTemplateSource((string)($template['html_source'] ?? '')), $blocks, $mediaMap),
-        ]);
-        $theme = $this->themes->resolveForSite($site);
+        // Phase 6 / manifest v2: a theme that opts into the PHTML views cascade
+        // (declares views_dir) may override a generic page's content view via
+        // overrides.<pageKey>.view or <views_dir>/pages/<pageKey>.phtml. Themes
+        // without manifest v2 (incl. the active theme) resolve to null → the core
+        // wrapper below, unchanged.
+        if ($archetypeHtml !== null) {
+            $html = $archetypeHtml;
+        } else {
+            $fragment = $this->renderer->render($this->normalizeLegacyTemplateSource((string)($template['html_source'] ?? '')), $blocks, $mediaMap);
+            $contentView = $this->themes->pageContentView($theme, $pageKey);
+            $html = $contentView !== null
+                ? \App\View\ViewFactory::forTheme($contentView['themeKey'], [], $contentView['viewsDir'])
+                    ->render($contentView['view'], ['fragment' => $fragment, 'pageKey' => $pageKey])
+                : \App\View\ViewFactory::forTheme(null)->render('archetypes/page', ['fragment' => $fragment]);
+        }
         Logger::infoTo('theme-debug', 'theme.publish.request', 'Publish theme resolution requested', [
             'site_id' => $site['id'] ?? null,
             'site_name' => $site['name'] ?? null,

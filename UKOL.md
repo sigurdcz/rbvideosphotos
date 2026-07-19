@@ -147,7 +147,14 @@ Datum: 2026-07-19. Nezávislý review commitů `48c1c7e` (homepage) a `d64f93b` 
 
 ### Fáze 6 — Theme overridy a úklid
 - [ ] Delegovat na subagenta
-- [ ] Manifest v2 (`views_dir`, `overrides.<pageKey>.view`)
+- [x] **Manifest v2 (`views_dir`, `overrides.<pageKey>.view`) — HOTOVO.**
+  - **Parsing** (`ThemeTemplateRegistry::loadTheme`): nové volitelné klíče `views_dir` (string) a per-override `view` (string). Zpětně kompatibilní — chybějící klíče → `''`, staré chování beze změny.
+  - **Accessory:** `getViewsDir()`, `hasViewsCascade()` (opt-in aktivace kaskády = `views_dir !== ''`, mirror precedentu `ThemeLayoutRenderer::hasPhtmlLayout()` z fáze 3, ale řízený manifestem), `getPageViewOverride()`.
+  - **Resolver:** `pageContentView(?array $theme, string $pageKey): ?array` vrací `['themeKey','view','viewsDir']` když téma deklaruje `views_dir` A poskytuje content view pro pageKey (explicitní `overrides.<pageKey>.view` NEBO `<views_dir>/pages/<pageKey>.phtml`); jinak `null`. `pageContentViewForSite()` = varianta pro live seam (resolvuje aktivní téma ze `$site`). `normalizeViewLogicalName()` akceptuje logický název (`pages/cenik`) i manifest path-form (`views/pages/cenik.phtml`).
+  - **ViewFactory:** `roots()`/`forTheme()` mají nový volitelný param `?string $viewsDir` (default `views` → beze změny pro stávající callery). Nová `themeViewPath($themeKey, $view, $viewsDir)` = zobecnění `themeLayoutPath` na libovolnou view s realpath containmentem; `themeLayoutPath` na ni deleguje.
+  - **Consumption (aktivace):** oba generic-page seamy — live `public/index.php::tryServeDatabasePage` (:145) i publish `PublishService::publishPage` (:112) — teď preferují theme content-view override, jinak fallback na core `archetypes/page`. Kontrakt override view: `['fragment','pageKey']` (drop-in wrapper). **KRITICKÉ pro zpětnou kompatibilitu:** aktivní téma elegant-white3 (bez `views_dir`) → `pageContentView` = `null` → core wrapper → BYTOVĚ IDENTICKÉ. Ověřeno: 26 goldenů beze změny (oba seamy jsou golden-kryté: home/generic-page/všechny publish targety).
+  - **Testy:** `tests/ManifestV2Test.php` (3 nové testy) — fixture téma pod reálným `Templates/` (jediné místo, odkud ViewFactory resolvuje theme views), robustní cleanup ve `finally`. Ověřuje: parsing, explicit i path-form override, implicit `pages/<key>` fallback, `null` pro chybějící, skutečný render přes kaskádu, containment (`../../evil` → null), custom views_dir root, backward-compat (elegant-white3 → prázdné/null).
+  - Aktivní téma NEBYLO měněno (žádný `views_dir` přidán do elegant-white3 — funguje dál přes file-existence layout detekci z fáze 3).
 - [ ] Migrace theme hacků z core do témat
 - [ ] Smazat mrtvé `inject*`/`build*` funkce a duplicitní kopie
 - [x] **BLOCKER VYŘEŠEN — dvojí zapisovač `storage/published/nase-prace/index.html` odstraněn.**

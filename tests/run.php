@@ -347,6 +347,11 @@ register_view_engine_tests($test, $assert);
 require __DIR__ . '/Phase3PartialsTest.php';
 register_phase3_partials_tests($test, $assert);
 
+// Phase 6: theme manifest v2 (views_dir activation + per-page content overrides).
+// DB-free — writes a throwaway fixture theme under Templates/ and removes it.
+require __DIR__ . '/ManifestV2Test.php';
+register_manifest_v2_tests($test, $assert);
+
 $failures = 0;
 foreach ($tests as [$name, $callback]) {
     try {

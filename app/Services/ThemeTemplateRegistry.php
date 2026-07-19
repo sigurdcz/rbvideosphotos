@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Core\Logger;
+use App\View\ViewFactory;
 
 class ThemeTemplateRegistry
 {
@@ -210,6 +211,104 @@ class ThemeTemplateRegistry
         return '';
     }
 
+    /**
+     * Manifest v2 views_dir (opt-in PHTML views cascade directory). Empty string
+     * when the theme has not adopted manifest v2.
+     */
+    public function getViewsDir(array $theme): string
+    {
+        return trim((string)($theme['views_dir'] ?? ''));
+    }
+
+    /**
+     * Whether a theme has opted into the manifest v2 PHTML views cascade. Mirrors
+     * the phase-3 ThemeLayoutRenderer::hasPhtmlLayout() opt-in precedent, but is
+     * driven by an explicit manifest key rather than only file existence, so a
+     * theme's per-page content overrides never activate by accident.
+     */
+    public function hasViewsCascade(array $theme): bool
+    {
+        return $this->getViewsDir($theme) !== '';
+    }
+
+    /**
+     * Manifest v2 per-page content view override (overrides.<pageKey>.view), or
+     * '' when none. The value may be a logical view name ("pages/cenik") or the
+     * manifest-style path form from the plan ("views/pages/cenik.phtml").
+     */
+    public function getPageViewOverride(array $theme, string $pageKey): string
+    {
+        $pageKey = $this->normalizePageKey($pageKey);
+        return trim((string)($theme['overrides'][$pageKey]['view'] ?? ''));
+    }
+
+    /**
+     * Resolve the theme content view a generic DB page should render through,
+     * honoring manifest v2. Returns ['themeKey','view','viewsDir'] only when the
+     * theme has opted into the views cascade (declares views_dir) AND ships a
+     * content view for $pageKey — either an explicit overrides.<pageKey>.view or a
+     * <views_dir>/pages/<pageKey>.phtml file. Returns null otherwise, so callers
+     * fall back to the core archetypes/page wrapper. Every theme that has not
+     * adopted manifest v2 (including the active theme) resolves to null → no
+     * behaviour change.
+     *
+     * @return array{themeKey: string, view: string, viewsDir: string}|null
+     */
+    public function pageContentView(?array $theme, string $pageKey): ?array
+    {
+        if ($theme === null) {
+            return null;
+        }
+
+        $viewsDir = $this->getViewsDir($theme);
+        if ($viewsDir === '') {
+            return null;
+        }
+
+        $themeKey = (string)($theme['key'] ?? '');
+        $pageKey = $this->normalizePageKey($pageKey);
+
+        $candidates = [];
+        $override = $this->getPageViewOverride($theme, $pageKey);
+        if ($override !== '') {
+            $candidates[] = $this->normalizeViewLogicalName($override, $viewsDir);
+        }
+        $candidates[] = 'pages/' . $pageKey;
+
+        foreach ($candidates as $view) {
+            if ($view !== '' && ViewFactory::themeViewPath($themeKey, $view, $viewsDir) !== null) {
+                return ['themeKey' => $themeKey, 'view' => $view, 'viewsDir' => $viewsDir];
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Resolve the content view for a page directly from a site row (resolves the
+     * active theme first). Convenience for the live render seam, which does not
+     * carry a pre-resolved theme array.
+     *
+     * @return array{themeKey: string, view: string, viewsDir: string}|null
+     */
+    public function pageContentViewForSite(?array $site, string $pageKey, ?string $previewKey = null): ?array
+    {
+        return $this->pageContentView($this->resolveForSite($site, $previewKey), $pageKey);
+    }
+
+    private function normalizeViewLogicalName(string $value, string $viewsDir): string
+    {
+        $value = trim(str_replace('\\', '/', $value));
+        if (str_ends_with($value, '.phtml')) {
+            $value = substr($value, 0, -6);
+        }
+        $prefix = trim($viewsDir, '/') . '/';
+        if (str_starts_with($value, $prefix)) {
+            $value = substr($value, strlen($prefix));
+        }
+        return trim($value, '/');
+    }
+
     public function getThemeSummary(array $theme): array
     {
         return [
@@ -286,6 +385,10 @@ class ThemeTemplateRegistry
             'layout_html' => trim((string)($json['layout_html'] ?? '')),
             'layout_css' => trim((string)($json['layout_css'] ?? '')),
             'layout_js' => trim((string)($json['layout_js'] ?? '')),
+            // Manifest v2 (TEMPLATE_REFACTOR_PLAN.md 2.6): opt-in PHTML views
+            // cascade directory. Empty string = theme has not adopted v2, legacy
+            // behaviour unchanged.
+            'views_dir' => trim((string)($json['views_dir'] ?? '')),
             'overrides' => [],
             'path' => $dir,
         ];
@@ -298,6 +401,8 @@ class ThemeTemplateRegistry
 
             $theme['overrides'][$pageKey] = [
                 'layout_html' => trim((string)($override['layout_html'] ?? '')),
+                // Manifest v2: per-page CONTENT view override (not just layout).
+                'view' => trim((string)($override['view'] ?? '')),
                 'css' => $this->normalizeAssetList($override['assets']['css'] ?? $override['css'] ?? []),
                 'js' => $this->normalizeAssetList($override['assets']['js'] ?? $override['js'] ?? []),
             ];
