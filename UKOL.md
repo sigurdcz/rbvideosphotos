@@ -14,6 +14,7 @@ Hotovo když: Kompletní plán pokrývající všechny 4 požadavky je sepsán v
 - [x] Sepsání plánu do chatu (deliverable)
 - [x] Commit UKOL.md + EMAIL_MANAGER_PLAN.md
 - [x] Revize v2 dle zpětné vazby (zjednodušení): vypuštěn tracking pixel/„otevřeno", IMAP→POP3, SMTP klient→`mail()`, 5 tabulek→2, bez API cron endpointu; přepsán `EMAIL_MANAGER_PLAN.md`, sepsáno do chatu, commit
+- [x] Revize v3 — ověření proti Gmailu na internetu (zadání uživatele): basic auth mrtvý → app password (2SV), POP3 „download once" → návrat k IMAP subsetu (read-only, jen INBOX), `mail()` s gmail From → DMARC quarantine → návrat SmtpClienta, Gmail API/OAuth zamítnuto (7denní refresh tokeny v Testing, CASA audit); přepsán `EMAIL_MANAGER_PLAN.md` na v3 se zdroji, commit
 
 ## Poznámky
 
@@ -22,4 +23,4 @@ Hotovo když: Kompletní plán pokrývající všechny 4 požadavky je sepsán v
 
 ## Výsledek
 
-Plán featury Email manager ve verzi v2 (zjednodušené dle zpětné vazby uživatele): 7 fází (0–6), 16 úkolů (Haiku 5×, Sonnet 7×, Opus 4×) + 2 povinné Fable 5 review kroky. Scope: záloha mailů a zpráv z formuláře v DB (raw_source MEDIUMBLOB), POP3 sync schránky (bez DELE), odesílání přes `mail()`, stav „zodpovězeno" odesláním odpovědi z adminu. Vypuštěno: tracking pixel, IMAP/složky, vlastní SMTP klient, events/attachments tabulky, cron endpoint. Autoritativní verze v `EMAIL_MANAGER_PLAN.md`, kompletní znění sepsáno do chatu.
+Plán featury Email manager ve verzi v3 (zjednodušený scope z v2, protokoly ověřené proti Gmailu): 7 fází (0–6), 19 úkolů (Haiku 5×, Sonnet 9×, Opus 5×) + 2 povinné Fable 5 review kroky. Scope: záloha mailů a zpráv z formuláře v DB (raw_source MEDIUMBLOB), IMAP sync INBOXu (read-only, app password), odesílání přes SMTP submission účtu schránky (mail() jen fallback pro notifikace), stav „zodpovězeno" odesláním odpovědi z adminu. Klíčová ověřená fakta: Gmail basic auth mrtvý (jen app password s 2SV), POP3 „download once" nevhodný pro zálohu, From gmail.com přes cizí server = DMARC quarantine, Gmail API/OAuth nereálné pro osobní projekt (7denní tokeny v Testing / CASA audit). Autoritativní verze se zdroji v `EMAIL_MANAGER_PLAN.md`.
