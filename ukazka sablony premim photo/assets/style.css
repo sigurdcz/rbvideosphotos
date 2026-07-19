@@ -82,6 +82,42 @@ section{padding-block:72px}
 
 .on-dark{background:var(--night);color:var(--porcelain)}
 
+/* ---------- video v hlavičce (YouTube cover background) ---------- */
+
+.video-hero{
+  position:relative;overflow:hidden;background:var(--night);color:var(--porcelain);
+  min-height:82vh;display:flex;align-items:flex-end;
+  padding-block:0 56px;
+}
+.video-band{
+  position:relative;overflow:hidden;background:var(--night);color:var(--porcelain);
+  height:min(46vh,420px);display:flex;align-items:flex-end;
+}
+.video-bg{position:absolute;inset:-16% 0;pointer-events:none}
+.video-bg iframe{
+  position:absolute;top:50%;left:50%;border:0;
+  width:max(100vw,178vh);height:max(56.25vw,100vh);
+  transform:translate(-50%,-50%);
+}
+.video-band .video-bg iframe{width:max(100vw,calc(46vh*1.78));height:max(56.25vw,46vh)}
+.video-scrim{position:absolute;inset:0;z-index:1;
+  background:linear-gradient(180deg,rgba(18,20,25,.30),rgba(18,20,25,.55) 55%,rgba(18,20,25,.88));}
+.video-hero .wrap,.video-band .wrap{position:relative;z-index:2}
+.video-band .band-cap{
+  padding-bottom:16px;display:flex;justify-content:space-between;align-items:center;gap:14px;
+  font-family:var(--font-mono);font-size:.62rem;letter-spacing:.24em;text-transform:uppercase;color:rgba(246,244,239,.8);
+}
+.video-band .band-cap b{color:var(--champagne);font-weight:500}
+
+/* ---------- paralax ---------- */
+
+[data-parallax]{will-change:transform}
+.float-ornament{
+  position:absolute;z-index:1;pointer-events:none;
+  font-family:var(--font-display);font-style:italic;color:var(--champagne);
+  opacity:.16;font-size:clamp(6rem,18vw,13rem);line-height:1;user-select:none;
+}
+
 /* ---------- header ---------- */
 
 .site-header{

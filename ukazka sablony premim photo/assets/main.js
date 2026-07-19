@@ -12,8 +12,32 @@ if (toggle) {
   );
 }
 
-// ---------- scroll reveal ----------
+// ---------- paralax ----------
 const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const pxEls = [...document.querySelectorAll("[data-parallax]")];
+if (!reduced && pxEls.length) {
+  let ticking = false;
+  const updatePx = () => {
+    const mid = window.innerHeight / 2;
+    pxEls.forEach(el => {
+      const host = el.closest(".video-hero, .video-band, section") || el;
+      const r = host.getBoundingClientRect();
+      if (r.bottom < -200 || r.top > window.innerHeight + 200) return;
+      const speed = parseFloat(el.dataset.parallax) || 0.15;
+      const offset = (r.top + r.height / 2 - mid) * -speed;
+      el.style.transform = "translate3d(0," + offset.toFixed(1) + "px,0)";
+    });
+    ticking = false;
+  };
+  const onScroll = () => {
+    if (!ticking) { ticking = true; requestAnimationFrame(updatePx); }
+  };
+  updatePx();
+  window.addEventListener("scroll", onScroll, { passive: true });
+  window.addEventListener("resize", updatePx);
+}
+
+// ---------- scroll reveal ----------
 const revealEls = document.querySelectorAll(".reveal");
 if (reduced) {
   revealEls.forEach(el => el.classList.add("in"));
