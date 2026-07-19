@@ -22,5 +22,14 @@
   "assets": {
     "css": [],
     "js": []
+  },
+  "overrides": {
+    "homepage": {
+      "assets": {
+        "css": [
+          "assets/homepage-overrides.css"
+        ]
+      }
+    }
   }
 }

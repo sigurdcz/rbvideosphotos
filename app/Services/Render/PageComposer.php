@@ -17,7 +17,7 @@ use App\Services\PageRenderer;
  * views (phases 3-5) — it orchestrates the existing HTML generation.
  *
  * The two modes still diverge in ordering and in a handful of leaf injections
- * (site logo, page hero image/video, video overlay, editorial-gold, plus the
+ * (site logo, page hero image/video, video overlay, plus the
  * live-only homepage hero / breadcrumb / sanitize / editor chrome). Those
  * divergences are intentional and preserved byte-for-byte here; they are
  * scheduled for unification in phases 5-6. The live leaves are the global
@@ -149,7 +149,6 @@ final class PageComposer
         $html = MarkupNormalizer::injectSharedFrontendAssets($html);
         $html = MarkupNormalizer::externalizeBodyCssVariables($html);
         $html = $chrome->injectGlobalVideoOverlayStyles($html, $site);
-        $html = $chrome->injectEditorialGoldOverrides($html);
         $html = MarkupNormalizer::extractInlineStyleBlocks($html);
         $html = MarkupNormalizer::extractInlineBodyScripts($html);
 

@@ -73,7 +73,6 @@ final class MarkupNormalizer
             str_contains($css, '.site-logo-img') ||
             str_contains($css, '.site-footer-rich') ||
             str_contains($css, '.theme-hero-video') ||
-            str_contains($css, '.theme-editorial-gold [data-block="reviews_cta"]') ||
             str_contains($css, '.cookie-consent')
         ) {
             continue;

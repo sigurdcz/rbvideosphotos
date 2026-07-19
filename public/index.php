@@ -252,7 +252,6 @@ function sanitizeFrontendHtml(string $html, ?array $site = null): string
     $html = normalizeGtmNoscriptInlineStyle($html);
     $html = externalizeBodyCssVariables($html);
     $html = injectGlobalVideoOverlayStyles($html, $site);
-    $html = injectEditorialGoldOverrides($html);
     $html = injectCookieConsent($html);
     $html = injectSharedFrontendAssets($html);
     $html = injectFaviconLinks($html, $site);
@@ -855,11 +854,6 @@ function injectGlobalVideoOverlayStyles(string $html, ?array $site = null): stri
 CSS;
 
     return FrontendAssetManager::injectGeneratedCss($html, $css, 'video-overlay', 'data-cms-video-overlay');
-}
-
-function injectEditorialGoldOverrides(string $html): string
-{
-    return $html;
 }
 
 function extractInlineStyleBlocks(string $html): string

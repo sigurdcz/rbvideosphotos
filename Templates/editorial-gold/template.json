@@ -20,7 +20,9 @@
     "contact"
   ],
   "assets": {
-    "css": [],
+    "css": [
+      "assets/overrides.css"
+    ],
     "js": []
   }
 }
