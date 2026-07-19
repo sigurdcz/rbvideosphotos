@@ -1345,45 +1345,6 @@ function enrichContactWithLegacyBlocks(int $siteId, array $contact): array
     return \App\Services\Render\ContactNormalizer::enrichContactWithLegacyBlocks($siteId, $contact);
 }
 
-function buildFooterSocialsHtml(int $siteId): string
-{
-    $contact = enrichContactWithLegacyBlocks($siteId, (new ContactRepository())->findBySiteSafe($siteId));
-
-    $items = [];
-    for ($i = 1; $i <= 5; $i++) {
-        $type = trim((string)($contact['social_' . $i . '_type'] ?? ''));
-        $url = trim((string)($contact['social_' . $i . '_url'] ?? ''));
-        if ($type === '' || $url === '') {
-            continue;
-        }
-
-        $canonicalType = normalizeSocialType($type, $url);
-        $icon = socialIconSvg($canonicalType);
-        $label = htmlspecialchars(socialLabel($canonicalType), ENT_QUOTES);
-        $items[] = '<a class="site-footer-social site-footer-social--' . htmlspecialchars($canonicalType, ENT_QUOTES) . '" href="' . htmlspecialchars($url, ENT_QUOTES) . '" target="_blank" rel="noopener" aria-label="' . $label . '" title="' . $label . '">'
-            . '<span class="site-footer-social__icon">' . $icon . '</span>'
-            . '</a>';
-    }
-
-    if ($items === []) {
-        return '';
-    }
-
-    return '<style>'
-        . '.site-footer-socials{margin-top:24px;padding-top:24px;border-top:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;gap:14px;align-items:center}'
-        . '.site-footer-socials__label{font-size:.76rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.45)}'
-        . '.site-footer-socials__list{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}'
-        . '.site-footer-social{--social:#c6943d;display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;padding:0;border:1px solid rgba(255,255,255,.14);border-radius:999px;background:#1c1c22;color:#f3efe7;text-decoration:none;transition:transform .2s,border-color .2s,color .2s}'
-        . '.site-footer-social:hover{transform:translateY(-1px);border-color:rgba(255,255,255,.3);color:var(--social)}'
-        . '.site-footer-social__icon{display:grid;place-items:center;line-height:1;transition:color .2s,transform .2s}.site-footer-social:hover .site-footer-social__icon{transform:scale(1.06)}.site-footer-social__icon svg{width:18px;height:18px;fill:currentColor;stroke:currentColor;stroke-width:1.6}'
-        . '.site-footer-social--instagram{--social:#e4405f}.site-footer-social--facebook{--social:#1877f2}.site-footer-social--youtube{--social:#ff0033}.site-footer-social--tiktok{--social:#00f2ea}.site-footer-social--linkedin{--social:#0a66c2}.site-footer-social--twitter{--social:#fff}.site-footer-social--pinterest{--social:#bd081c}.site-footer-social--whatsapp{--social:#25d366}.site-footer-social--telegram{--social:#229ed9}'
-        . '</style>'
-        . '<div class="site-footer-socials">'
-        . '<div class="site-footer-socials__label">Sociální sítě</div>'
-        . '<div class="site-footer-socials__list">' . implode('', $items) . '</div>'
-        . '</div>';
-}
-
 function buildRichFooterHtml(int $siteId): string
 {
     return \App\Services\Render\FooterRenderer::buildRichFooterHtml($siteId);

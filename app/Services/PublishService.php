@@ -7,7 +7,6 @@ use App\Core\Logger;
 use App\Core\Version;
 use App\Repositories\BlogRepository;
 use App\Repositories\BlockRepository;
-use App\Repositories\ContactRepository;
 use App\Repositories\MediaRepository;
 use App\Repositories\PageRepository;
 use App\Repositories\PublishHistoryRepository;
@@ -23,7 +22,6 @@ use App\Support\FrontendAssetManager;
 
 class PublishService implements PublishPageChrome
 {
-    private const DEFAULT_FORM_EMAIL = ContactRepository::DEFAULT_FORM_EMAIL;
     private PageRenderer $renderer;
     private HomepageContentService $homepageContent;
     private SeoRenderer $seoRenderer;
@@ -639,31 +637,6 @@ HTML;
         return $this->injectBodyCssVariableToken($html, 'theme-page-hero-image', "url('" . str_replace("'", '%27', $url) . "')");
     }
 
-    private function injectHomepageAboutVisualSource(string $html, int $pageId): string
-    {
-        $page = $this->pages->findById($pageId);
-        if (!$page) {
-            return $html;
-        }
-        $isHome = trim((string)($page['url_path'] ?? ''), '/') === '';
-        return \App\Services\Render\HomepageSectionRenderer::injectHomepageAboutVisualSource($html, $pageId, (int)($page['site_id'] ?? 0), $isHome);
-    }
-
-    private function blockContent(array $blocks, string $key): string
-    {
-        return \App\Services\Render\HomepageSectionRenderer::blockContent($blocks, $key);
-    }
-
-    private function injectHomepageMissingSections(string $html, array $blocks, bool $isHome): string
-    {
-        return \App\Services\Render\HomepageSectionRenderer::injectHomepageMissingSections($html, $blocks, $isHome);
-    }
-
-    private function injectHomepageThemeDataSources(string $html, array $blocks, bool $isHome): string
-    {
-        return \App\Services\Render\HomepageSectionRenderer::injectHomepageThemeDataSources($html, $blocks, $isHome);
-    }
-
     public function injectPageHeroVideo(string $html, array $site, int $pageId): string
     {
         if ($this->hasHeroVideoElement($html)) {
@@ -739,11 +712,6 @@ HTML;
         return \App\Services\Render\HeroMediaRenderer::buildHeroImageHtml($imageUrl);
     }
 
-    private function buildVideoEmbedUrl(string $videoUrl): string
-    {
-        return \App\Services\Render\HeroMediaRenderer::buildVideoEmbedUrl($videoUrl);
-    }
-
     public function injectSiteLogo(string $html, array $site): string
     {
         $url = $this->normalizePublicAssetUrl((string)($site['logo_url'] ?? ''));
@@ -765,11 +733,6 @@ HTML;
         }
 
         return $html;
-    }
-
-    private function injectRichFooter(string $html, array $site): string
-    {
-        return \App\Services\Render\FooterRenderer::injectFooterSocials($html, (int)($site['id'] ?? 0));
     }
 
     public function injectGlobalVideoOverlayStyles(string $html, array $site): string
@@ -794,84 +757,9 @@ CSS;
         return FrontendAssetManager::injectGeneratedCss($html, $css, 'video-overlay', 'data-cms-video-overlay');
     }
 
-    private function injectSharedFrontendAssets(string $html): string
-    {
-        return \App\Services\Render\MarkupNormalizer::injectSharedFrontendAssets($html);
-    }
-
-    private function normalizeLegacyFrontendMarkup(string $html): string
-    {
-        return \App\Services\Render\MarkupNormalizer::normalizeLegacyFrontendMarkup($html);
-    }
-
     private function normalizeLegacyTemplateSource(string $html): string
     {
         return \App\Services\Render\MarkupNormalizer::normalizeLegacyTemplateSource($html);
-    }
-
-    private function externalizeBodyCssVariables(string $html): string
-    {
-        return \App\Services\Render\MarkupNormalizer::externalizeBodyCssVariables($html);
-    }
-
-    private function extractInlineStyleBlocks(string $html): string
-    {
-        return \App\Services\Render\MarkupNormalizer::extractInlineStyleBlocks($html);
-    }
-
-    private function extractInlineBodyScripts(string $html): string
-    {
-        return \App\Services\Render\MarkupNormalizer::extractInlineBodyScripts($html);
-    }
-
-    private function normalizeSocialType(string $type, string $url = ''): string
-    {
-        return \App\Services\Render\SocialLinkRenderer::normalizeSocialType($type, $url);
-    }
-
-    private function socialLabel(string $type): string
-    {
-        return \App\Services\Render\SocialLinkRenderer::socialLabel($type);
-    }
-
-    private function socialIconSvg(string $type): string
-    {
-        return \App\Services\Render\SocialLinkRenderer::socialIconSvg($type);
-    }
-
-    private function normalizePhoneForHref(string $phone): string
-    {
-        return \App\Services\Render\ContactNormalizer::normalizePhoneForHref($phone);
-    }
-
-    private function formatPhoneForDisplay(string $phone): string
-    {
-        return \App\Services\Render\ContactNormalizer::formatPhoneForDisplay($phone);
-    }
-
-    private function phoneDedupKey(string $phone): string
-    {
-        return \App\Services\Render\ContactNormalizer::phoneDedupKey($phone);
-    }
-
-    private function extractPhoneNumbersFromText(string $plain): array
-    {
-        return \App\Services\Render\ContactNormalizer::extractPhoneNumbersFromText($plain);
-    }
-
-    private function ensureRbDemoContactAddress(array $contact): array
-    {
-        return \App\Services\Render\ContactNormalizer::ensureRbDemoContactAddress($contact);
-    }
-
-    private function enrichContactWithLegacyBlocks(int $siteId, array $contact): array
-    {
-        return \App\Services\Render\ContactNormalizer::enrichContactWithLegacyBlocks($siteId, $contact);
-    }
-
-    private function buildRichFooterHtml(array $site): string
-    {
-        return \App\Services\Render\FooterRenderer::buildRichFooterHtml((int)($site['id'] ?? 0));
     }
 
     private function injectBodyCssVariableToken(string $html, string $name, string $value): string
@@ -879,19 +767,9 @@ CSS;
         return \App\Services\Render\MarkupNormalizer::injectBodyCssVariableToken($html, $name, $value);
     }
 
-    private function injectBodyPageKey(string $html, string $pageKey): string
-    {
-        return \App\Services\Render\MarkupNormalizer::injectBodyPageKey($html, $pageKey);
-    }
-
     private function normalizePublicAssetUrl(string $value): string
     {
         return \App\Services\Render\MediaUrlResolver::normalizePublicAssetUrl($value);
-    }
-
-    private function resolveDemoMediaUrlByFilename(int $siteId, string $filename): string
-    {
-        return \App\Services\Render\MediaUrlResolver::resolveDemoMediaUrlByFilename($siteId, $filename);
     }
 
     private function hasHeroVideoElement(string $html): bool

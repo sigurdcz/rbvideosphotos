@@ -92,32 +92,6 @@ HTML;
         ]);
     }
 
-    private function buildGridMarkup(array $items, string $gridClass, string $cardClass, string $starsClass): string
-    {
-        if ($items === []) {
-            return '<p style="color:rgba(255,255,255,.45);text-align:center;padding:32px 0">Zatim zadne recenze.</p>';
-        }
-
-        $h = fn($value) => htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
-        $html = '<div class="' . $h($gridClass) . '">';
-
-        foreach ($items as $item) {
-            $rating = max(1, min(5, (int)($item['rating'] ?? 5)));
-            $stars = str_repeat('★', $rating) . str_repeat('☆', 5 - $rating);
-            $context = trim((string)($item['context_label'] ?? ''));
-
-            $html .= '<article class="' . $h($cardClass) . '">'
-                . '<div class="' . $h($starsClass) . '">' . $h($stars) . '</div>'
-                . '<p>' . nl2br($h((string)($item['review_text'] ?? ''))) . '</p>'
-                . '<strong>' . $h((string)($item['author_name'] ?? '')) . '</strong>'
-                . ($context !== '' ? '<span>' . $h($context) . '</span>' : '')
-                . '</article>';
-        }
-
-        $html .= '</div>';
-        return $html;
-    }
-
     private function homepageCss(): string
     {
         return '<style>'

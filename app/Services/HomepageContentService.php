@@ -15,7 +15,6 @@ use App\ViewModels\HomepageData;
 
 class HomepageContentService
 {
-    private const DEFAULT_FORM_EMAIL = ContactRepository::DEFAULT_FORM_EMAIL;
     private const AUTOFILL_BLOCKS = [
         'sluzby_items' => ['label' => 'Služby', 'hint' => 'Automaticky doplnit z dat služby.'],
         'sluzby_grid' => ['label' => 'Služby grid', 'hint' => 'Automaticky doplnit z dat služby.'],
@@ -305,29 +304,6 @@ class HomepageContentService
         return $this->renderHomePartial('home-service-card', [
             'card' => HomepageData::serviceCard($service, $index, $imageUrl, $iconUrl, $buttonText, $buttonUrl),
         ]);
-    }
-
-    private function buildServiceDetailHtml(array $service, string $detailId, int $index, int $siteId = 0): string
-    {
-        $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
-        $title = trim((string)($service['title'] ?? ''));
-        $description = trim((string)($service['description'] ?? ''));
-        $imageUrl = $this->resolveServiceImageUrl($siteId, (string)($service['image_url'] ?? ''));
-        $contactLabel = $title !== '' ? 'Poptat: ' . $title : 'Nezavazne poptat';
-        $eyebrow = $index > 0 ? str_pad((string)$index, 2, '0', STR_PAD_LEFT) . ' / Detail sluzby' : 'Detail sluzby';
-
-        $media = $imageUrl !== ''
-            ? '<div class="hp-service-detail__media"><img src="' . $h($imageUrl) . '" alt="' . $h($title) . '" loading="lazy"></div>'
-            : '<div class="hp-service-detail__media"></div>';
-
-        return '<article class="hp-service-detail" id="' . $h($detailId) . '">'
-            . $media
-            . '<div class="hp-service-detail__body">'
-            . '<div class="hp-service-detail__eyebrow">' . $h($eyebrow) . '</div>'
-            . '<h3 class="hp-service-detail__title">' . $h($title) . '</h3>'
-            . '<p class="hp-service-detail__desc">' . nl2br($h($description)) . '</p>'
-            . '<a class="hp-service-detail__cta" href="/kontakt">' . $h($contactLabel) . '</a>'
-            . '</div></article>';
     }
 
     private function isSameServicesUrl(string $url): bool

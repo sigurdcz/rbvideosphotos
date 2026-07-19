@@ -140,11 +140,11 @@ final class HomepageData
     }
 
     /**
-     * The homepage reviews teaser cards (`.hp-reviews-grid` / `.hp-review-card`).
-     * Mirrors App\Services\ReviewContentService::buildGridMarkup() for the
-     * homepage classes: the star string is built from the clamped 1–5 rating.
-     * The teaser's own inline <style> stays in ReviewContentService (byte-identical
-     * to before; its relocation to a shared asset is a phase-6 cleanup).
+     * The homepage reviews teaser cards (`.hp-reviews-grid` / `.hp-review-card`),
+     * rendered by app/Views/partials/home-reviews.phtml: the star string is built
+     * from the clamped 1–5 rating. The teaser's own inline <style> stays in
+     * ReviewContentService::homepageCss() (byte-identical to before; its
+     * relocation to a shared asset is a possible future cleanup).
      *
      * @return list<array{stars:string,review_text:string,author_name:string,context_label:string}>
      */

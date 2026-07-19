@@ -10,11 +10,11 @@ use App\Repositories\ReviewRepository;
  * Pure data provider for the `reviews` archetype (app/Views/archetypes/reviews.phtml),
  * i.e. the /hodnoceni listing page.
  *
- * Phase 4 of the templating refactor: replaces the string-concatenation HTML
- * built by App\Services\ReviewContentService::buildGridMarkup() for the
- * standalone listing (buildListingHtml()). The homepage reviews teaser
- * (buildHomepageHtml(), different CSS classes + its own inline <style>) is
- * out of scope here — it belongs to the homepage archetype (phase 5).
+ * Phase 4 of the templating refactor: replaces the former string-concatenation
+ * HTML for the standalone /hodnoceni listing (ReviewContentService::buildListingHtml())
+ * with the reviews archetype. The homepage reviews teaser (buildHomepageHtml(),
+ * different CSS classes + its own inline <style>) is out of scope here — it
+ * belongs to the homepage section partials (phase 5).
  *
  * Unlike faq/sluzby/cenik, /hodnoceni already shared this data source between
  * live and publish before phase 4 (HomepageContentService::applyFallbacks()
