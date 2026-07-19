@@ -10,6 +10,8 @@ use App\Repositories\MediaRepository;
 use App\Repositories\PageRepository;
 use App\Repositories\PortfolioRepository;
 use App\Repositories\ServiceRepository;
+use App\View\ViewFactory;
+use App\ViewModels\HomepageData;
 
 class HomepageContentService
 {
@@ -292,9 +294,6 @@ class HomepageContentService
             return '';
         }
 
-        $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
-        $title = (string)($service['title'] ?? '');
-        $description = (string)($service['description'] ?? '');
         $imageUrl = $this->resolveServiceImageUrl($siteId, (string)($service['image_url'] ?? ''));
         $iconUrl = $this->publicMediaUrl((string)($service['icon_url'] ?? ''));
         $buttonText = trim((string)($service['button_text'] ?? '')) ?: 'Poptat službu';
@@ -302,24 +301,10 @@ class HomepageContentService
         if ($detailId !== '' && $this->isSameServicesUrl($buttonUrl)) {
             $buttonUrl = '#' . $detailId;
         }
-        $num = $index > 0 ? str_pad((string)$index, 2, '0', STR_PAD_LEFT) : '';
-        $icon = $iconUrl !== ''
-            ? '<div class="hp-svc-card__icon"><img src="' . $h($iconUrl) . '" alt="" loading="lazy"></div>'
-            : '';
 
-        $media = $imageUrl !== ''
-            ? '<div class="hp-svc-card__media"><img src="' . $h($imageUrl) . '" alt="' . $h($title) . '" loading="lazy"></div>'
-            : '<div class="hp-svc-card__media"></div>';
-
-        return '<article class="hp-svc-card' . ($icon !== '' ? ' has-icon' : '') . '">'
-            . $media
-            . '<div class="hp-svc-card__body">'
-            . $icon
-            . ($num !== '' ? '<div class="hp-svc-card__num">' . $h($num) . '</div>' : '')
-            . '<h3 class="hp-svc-card__title">' . $h($title) . '</h3>'
-            . '<div class="hp-svc-card__desc">' . nl2br($h($description)) . '</div>'
-            . '<a href="' . $h($buttonUrl) . '" class="hp-svc-card__btn">' . $h($buttonText) . '</a>'
-            . '</div></article>';
+        return $this->renderHomePartial('home-service-card', [
+            'card' => HomepageData::serviceCard($service, $index, $imageUrl, $iconUrl, $buttonText, $buttonUrl),
+        ]);
     }
 
     private function buildServiceDetailHtml(array $service, string $detailId, int $index, int $siteId = 0): string
@@ -361,43 +346,31 @@ class HomepageContentService
             return '';
         }
 
-        $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
-        $tiles = '';
-
+        $tiles = [];
         foreach ($entries as $entry) {
             $photos = $this->portfolio->getMedia((int)$entry['id']);
-            $thumb = !empty($entry['video_url']) ? PortfolioRepository::youtubeThumbnail((string)$entry['video_url']) : '';
             $hasVideo = !empty($entry['video_url']);
+            $thumb = $hasVideo ? PortfolioRepository::youtubeThumbnail((string)$entry['video_url']) : '';
 
             if ($thumb === '' && !empty($photos)) {
                 $thumbFile = $photos[0]['medium_path'] ?? $photos[0]['thumb_path'] ?? $photos[0]['storage_path'] ?? '';
                 $thumb = $this->publicMediaUrl((string)$thumbFile);
             }
 
-            $thumbHtml = $thumb !== ''
-                ? '<img src="' . $h($thumb) . '" alt="' . $h($entry['title']) . '" loading="lazy">'
-                : '<div class="pt-thumb-placeholder">&#9654;</div>';
-            $playIcon = $hasVideo ? '<span class="pt-play">&#9654;</span>' : '';
-
-            $extraHtml = '';
+            $photoData = [];
             $stripPhotos = $hasVideo ? array_slice($photos, 0, 3) : array_slice($photos, 1, 3);
             foreach ($stripPhotos as $photo) {
                 $pfile = $photo['medium_path'] ?? $photo['thumb_path'] ?? $photo['storage_path'] ?? '';
-                $extraHtml .= '<img src="' . $h($this->publicMediaUrl((string)$pfile)) . '" alt="' . $h($photo['alt_text'] ?? '') . '" loading="lazy">';
+                $photoData[] = [
+                    'url' => $this->publicMediaUrl((string)$pfile),
+                    'alt' => (string)($photo['alt_text'] ?? ''),
+                ];
             }
 
-            $entrySlug = $h($entry['slug'] ?? '');
-            $entryHref = $entrySlug !== '' ? '/' . $entrySlug : '/nase-prace';
-            $tiles .= <<<HTML
-<a class="pt-tile" href="{$entryHref}">
-  <div class="pt-caption">{$h($entry['title'])}</div>
-  <div class="pt-thumb">{$thumbHtml}{$playIcon}</div>
-  <div class="pt-photos">{$extraHtml}</div>
-</a>
-HTML;
+            $tiles[] = HomepageData::portfolioTile($entry, $thumb, $hasVideo, $photoData);
         }
 
-        return '<div class="pt-grid">' . $tiles . '</div>';
+        return $this->renderHomePartial('home-portfolio', ['tiles' => $tiles]);
     }
 
     private function buildBlogCardHtml(int $siteId, int $index): string
@@ -408,9 +381,6 @@ HTML;
         }
 
         $post = $posts[$index];
-        $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
-        $excerpt = mb_strimwidth(strip_tags((string)($post['excerpt'] ?? '')), 0, 120, '…');
-        $imageHtml = '';
         $media = null;
         if (!empty($post['featured_image_id'])) {
             $media = $this->media->findByIdWithThumb((int)$post['featured_image_id']);
@@ -421,21 +391,11 @@ HTML;
                 $media = $gallery[0];
             }
         }
-        if ($media) {
-            $src = $this->publicMediaUrl((string)($media['thumb_path'] ?? $media['medium_path'] ?? $media['storage_path'] ?? ''));
-            if ($src !== '') {
-                $imageHtml = '<div class="hp-blog-thumb"><img src="' . $h($src) . '" alt="' . $h($post['title']) . '" loading="lazy"></div>';
-            }
-        }
+        $imageUrl = $media
+            ? $this->publicMediaUrl((string)($media['thumb_path'] ?? $media['medium_path'] ?? $media['storage_path'] ?? ''))
+            : '';
 
-        return '<article class="hp-blog-card">'
-            . $imageHtml
-            . '<div class="hp-blog-body">'
-            . '<h3 class="hp-blog-title"><a href="/' . $h($post['slug']) . '" class="blog-title-link">'
-            . $h($post['title']) . '</a></h3>'
-            . '<p class="hp-blog-excerpt">' . $h($excerpt) . '</p>'
-            . '<a class="hp-blog-link" href="/' . $h($post['slug']) . '">&#268;&#237;st d&#225;l &rarr;</a>'
-            . '</div></article>';
+        return $this->renderHomePartial('home-blog-card', ['card' => HomepageData::blogCard($post, $imageUrl)]);
     }
 
     private function buildPricingHtml(): string
@@ -451,26 +411,7 @@ HTML;
             $map[$block['block_key']] = (string)($block['content'] ?? '');
         }
 
-        $cards = '';
-        $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
-        for ($i = 1; $i <= 3; $i++) {
-            $featured = $i === 2 ? ' hp-cenik-card--featured' : '';
-            $fullDesc = trim((string)($map['cenik_card_' . $i . '_desc'] ?? ''));
-            $price = trim((string)($map['cenik_card_' . $i . '_price'] ?? ''));
-            // Homepage prehled = prvni odstavec (do prazdneho radku). Detailni
-            // "Obsahuje" seznam za prazdnym radkem se na homepage nezobrazi —
-            // ten patri jen na /cenik. Jednoradkove popisy zustanou beze zmeny.
-            $summary = trim(preg_split('/\n\s*\n/', $fullDesc)[0] ?? '');
-            $cards .= '<div class="hp-cenik-card' . $featured . '">'
-                . '<div class="hp-cenik-card-body">'
-                . '<h3 class="hp-cenik-card-title">' . $h($map['cenik_card_' . $i . '_title'] ?? '') . '</h3>'
-                . ($price !== '' ? '<div class="hp-cenik-card-price">' . $h($price) . '</div>' : '')
-                . ($summary !== '' ? '<div class="hp-cenik-card-desc">' . $h($summary) . '</div>' : '')
-                . '</div>'
-                . '</div>';
-        }
-
-        return '<div class="hp-cenik-grid">' . $cards . '</div>';
+        return $this->renderHomePartial('home-pricing', ['cards' => HomepageData::pricingCards($map)]);
     }
 
     private function buildPageCtaHtml(int $siteId, string $urlPath): string
@@ -490,8 +431,7 @@ HTML;
             return '';
         }
 
-        $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
-        return '<div class="hp-section-cta"><a href="' . $h($url) . '" class="btn-secondary">' . $h($label) . '</a></div>';
+        return $this->renderHomePartial('home-section-cta', HomepageData::sectionCta($url, $label));
     }
 
     private function buildFaqItemHtml(int $siteId, int $index): string
@@ -501,91 +441,35 @@ HTML;
             return '';
         }
 
-        $item = $items[$index];
-        $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
+        return $this->renderHomePartial('home-faq-item', ['item' => HomepageData::faqItem($items[$index])]);
+    }
 
-        return '<strong class="hp-faq-question">'
-            . $h($item['question']) . '</strong>'
-            . '<p class="hp-faq-answer">'
-            . nl2br($h($item['answer'])) . '</p>';
+    /**
+     * Render a homepage section fragment through the core PHTML partials
+     * (app/Views/partials/home-*.phtml). Phase 5 of the templating refactor:
+     * the autofill builders below prepare view DATA (via App\ViewModels\HomepageData)
+     * and delegate markup to these partials instead of concatenating HTML here.
+     * Core-only resolution (no theme override) matches the previous behaviour —
+     * the fragment used to be produced by this service, not by a theme.
+     */
+    private function renderHomePartial(string $name, array $data): string
+    {
+        return ViewFactory::forTheme(null)->render('partials/' . $name, $data);
     }
 
     public function buildContactHtml(int $siteId): string
     {
-        $contact = $this->contact->findBySiteSafe($siteId);
-        $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
-        $lines = [];
-
-        foreach (['phone_1', 'phone_2', 'phone_3'] as $phoneKey) {
-            if (!empty($contact[$phoneKey])) {
-                $phone = (string)$contact[$phoneKey];
-                $tel = preg_replace('/\s+/', '', $phone);
-                $lines[] = '<div class="hp-contact-row"><span class="hp-contact-label">Telefon</span><a href="tel:' . $h((string)$tel) . '">' . $h($phone) . '</a></div>';
-            }
-        }
-
-        if (!empty($contact['email'])) {
-            $lines[] = '<div class="hp-contact-row"><span class="hp-contact-label">E-mail</span><a href="mailto:' . $h($contact['email']) . '">' . $h($contact['email']) . '</a></div>';
-        }
-
-        foreach (['address_1', 'address_2'] as $addressKey) {
-            if (!empty($contact[$addressKey])) {
-                $lines[] = '<div class="hp-contact-row"><span class="hp-contact-label">Adresa</span><span>' . nl2br($h($contact[$addressKey])) . '</span></div>';
-            }
-        }
-
-        for ($i = 1; $i <= 5; $i++) {
-            $type = trim((string)($contact['social_' . $i . '_type'] ?? ''));
-            $url = trim((string)($contact['social_' . $i . '_url'] ?? ''));
-            if ($type !== '' && $url !== '') {
-                $lines[] = '<div class="hp-contact-row"><span class="hp-contact-label">Sítě</span><a href="' . $h($url) . '" target="_blank" rel="noopener">' . ucfirst($h($type)) . '</a></div>';
-            }
-        }
-
-        if ($lines === []) {
-            $lines[] = '<p class="hp-contact-empty">Doplňte kontaktní informace v administraci.</p>';
-        }
-
-        $map = '';
-        if (!empty($contact['maps_url'])) {
-            $mapsUrl = trim((string)$contact['maps_url']);
-            if (preg_match('~^https?://~i', $mapsUrl)) {
-                $map = '<iframe class="hp-contact-map-embed" src="' . $h($mapsUrl) . '" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>';
-            } else {
-                $map = '<a href="' . $h($mapsUrl) . '" target="_blank" rel="noopener" class="hp-contact-map">Otevřít mapu</a>';
-            }
-        }
-
-        $recipient = trim((string)($contact['form_email'] ?? ''));
-        if ($recipient === '') {
-            $recipient = trim((string)($contact['email'] ?? ''));
-        }
-        if ($recipient === '') {
-            $recipient = self::DEFAULT_FORM_EMAIL;
-        }
-
-        $csrf = htmlspecialchars(\App\Core\Auth::csrfToken(), ENT_QUOTES);
-        $form = '<form class="hp-contact-form" method="POST" action="/kontakt/odeslat">'
-            . '<input type="hidden" name="_csrf" value="' . $csrf . '">'
-            . '<input type="hidden" name="website" value="" autocomplete="off">'
-            . '<label>Jméno a příjmení</label><input type="text" name="name" required placeholder="Vaše jméno">'
-            . '<label>E-mail</label><input type="text" name="contact_value" required placeholder="email nebo telefon">'
-            . '<label>Datum svatby</label><input type="text" name="event_date" placeholder="DD. MM. RRRR">'
-            . '<label>Typ služby</label><select name="shooting_type" required><option value="">Vyberte typ služby</option><option value="svatebni">Svatební foto a video</option><option value="rodinne">Rodinné focení</option><option value="reklamni">Reklamní foto a video</option><option value="jine">Jiné</option></select>'
-            . '<label class="hp-contact-form__full">Zpráva</label><textarea class="hp-contact-form__full" name="message" required placeholder="Napište nám..."></textarea>'
-            . '<label class="hp-contact-form__full hp-contact-form__consent"><input type="checkbox" name="privacy_consent" required> Souhlasím se zpracováním osobních údajů.</label>'
-            . '<button class="hp-contact-form__full" type="submit">Odeslat zprávu</button>'
-            . '</form>';
-        if ($recipient === '') {
-            $form = '<p class="hp-contact-empty">Formulář je připravený, ale chybí cílový e-mail pro odeslání.</p>' . $form;
-        }
-
+        // CSRF token is generated exactly once here (never inside the ViewModel or
+        // the view) and handed to the partial as data — the /kontakt/odeslat POST
+        // handler still validates it via Auth::csrfVerify() unchanged.
+        $contact = $this->contact->findBySiteSafe($siteId) ?: [];
+        $csrfToken = \App\Core\Auth::csrfToken();
         $contactCta = $this->buildPageCtaHtml($siteId, 'kontakt');
 
-        return '<div class="hp-contact-grid">'
-            . '<div class="hp-contact-box"><div class="hp-contact-lines">' . implode('', $lines) . '</div>' . $map . '<div class="hp-contact-cta">' . $contactCta . '</div></div>'
-            . '<div class="hp-contact-box">' . $form . '</div>'
-            . '</div>';
+        return $this->renderHomePartial(
+            'home-contact',
+            HomepageData::contact($contact, $csrfToken, $contactCta)
+        );
     }
 
     private function publicMediaUrl(string $storagePath): string

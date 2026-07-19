@@ -26,7 +26,15 @@ class ReviewContentService
             $items = array_slice($items, 0, $limit);
         }
 
-        return $this->homepageCss() . $this->buildGridMarkup($items, 'hp-reviews-grid', 'hp-review-card', 'hp-review-stars');
+        // Phase 5: the teaser grid markup now comes from a PHTML partial fed by
+        // HomepageData::reviewCards() (data, not concatenated HTML). The inline
+        // <style> stays here byte-identically — moving it to a shared asset is a
+        // phase-6 cleanup.
+        return $this->homepageCss()
+            . \App\View\ViewFactory::forTheme(null)->render(
+                'partials/home-reviews',
+                ['items' => \App\ViewModels\HomepageData::reviewCards($items)]
+            );
     }
 
     public function buildListingHtml(int $siteId): string
