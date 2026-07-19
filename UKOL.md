@@ -267,3 +267,53 @@ Datum: 2026-07-19. Nezávislý review 6 commitů fáze 6 (`7ea4678`, `ac85ca6`, 
 - **Finální visual QA (headless Chrome, threaded server)**: homepage, `/nase-prace` (BLOCKER target), `/kontakt` na 1920×1080 i 390×844. Všechny renderují plný themed elegant-white3 layout (nav+active state, hero, gold CTA, card grid, contact card) BEZ layout regrese. `/nase-prace` = kompletní themed archetyp (vizuální důkaz fixu — žádný bare markup). Jeden capture-artefakt (homepage mobil CSS race) potvrzen jako transientní opravným záběrem; `/kontakt` černý box vpravo = nenačtený externí map-iframe (offline capture), ne regrese.
 
 **Závěr:** Refactoring všech 7 fází je bezpečný a kompletní. BLOCKER fix je korektní a plně otestovaný, dead-code úklid bez zbylých callerů, manifest v2 s pevným path-containmentem, aktivní téma byte-identické. Otevřené položky (editorial-gold visual QA, portfolio-detail publish archetyp, regenerateListing side-effecty) jsou nezamlčené budoucí vylepšení, ne blockery.
+
+---
+
+## Post-refactor: aktivace theme override kaskády pro archetypy
+
+Datum: 2026-07-19. Refactoring (fáze 0-6 výše) je uzavřený a schválený; toto je NOVÁ práce nad jeho rámec, na žádost uživatele. Dokončeno přímo v hlavní session (Sonnet 5) po selhání subagenta kvůli měsíčnímu spending limitu (agent selhal hned v úvodním průzkumu, žádný soubor nedotčen).
+
+### Problém
+
+Kaskáda `Templates/<téma>/views/archetypes/<jméno>.phtml` → `app/Views/archetypes/<jméno>.phtml` v `App\View\ViewResolver` existovala a byla otestovaná už od Fáze 1, ale **nikdy se skutečně nespouštěla pro obsahové archetypy** (faq, sluzby, cenik, kontakt, blog, portfolio, homepage sekce) — všechna volání `ViewFactory::forTheme(...)` v `public/index.php`/`PublishService.php`/`HomepageContentService.php`/`ReviewContentService.php` natvrdo předávala `null` jako theme klíč, což vynutilo jen core resoluci. Žádné téma tedy nemohlo přepsat obsah konkrétní stránky, jen layout (`views/layout.phtml`, Fáze 3) nebo generické CMS stránky (`overrides.<pageKey>.view`, Fáze 6 manifest v2).
+
+### Co se změnilo
+
+- **Nová funkce `resolveActiveThemeKeyForSite(array $site, ?string $previewKey = null): ?string`** (`public/index.php`, hned před `applyThemeTemplate()`) — zavolá `ThemeTemplateRegistry::resolveForSite()` STEJNÝM způsobem jako `applyThemeTemplate()` dělá interně, ale DŘÍVE (před renderem obsahu, ne po něm). `applyThemeTemplate()` samotná zůstala beze změny (volá `resolveForSite()` podruhé pro CSS/layout — drobná duplicitní práce, akceptováno kvůli minimalizaci rizika v citlivé sdílené funkci).
+- **7 live handlerů v `public/index.php`** (`tryServeServicesPage`/sluzby, `tryServePortfolioPage` listing+detail, `tryServeFaqPage`, `tryServeKontaktPage`, `tryServeBlogListingPage`, `tryServeBlogPostPage`/detail) — každý teď spočítá `$previewKeyParam`/`$activeThemeKey` PŘED voláním `ViewFactory::forTheme($activeThemeKey, ...)` a stejný `$previewKeyParam` znovu použije v následném `applyThemeTemplate(...)` volání (žádná duplicitní logika pro preview klíč).
+- **`PublishService::renderArchetypeContent()`** — nový parametr `?string $themeKey`; volající (`publishPage()`) ho předává jako `$theme['key'] ?? null` (theme se tam už dřív resolvoval na řádku 95, jen se nepředával dál). Všechny 4 archetypové větve (faq/sluzby/blog-listing/portfolio-listing) uvnitř teď používají `$themeKey` místo `null`.
+- **`HomepageContentService`** — nová `private ?string $currentThemeKey`, nastavená JEDNOU na začátku `applyFallbacks()` (jediný vstupní bod volaný z live i publish), přes novou `resolveThemeKeyForSite(int $siteId): ?string` (vlastní `SiteRepository`+`ThemeTemplateRegistry` lookup, protože třída dosud neměla přístup k `$site`). `renderHomePartial()` teď používá `$this->currentThemeKey` místo `null` — týká se všech `home-*` partials (services, portfolio, pricing, blog, faq, cta, contact).
+- **`ReviewContentService::buildHomepageHtml()`/`buildListingHtml()`** — nový nepovinný parametr `?string $themeKey = null`, předávaný z `HomepageContentService`.
+- **Generický `page` archetyp a chrome partials (`cookie-consent`, `breadcrumb`) záměrně NEZMĚNĚNY** — `page` už theme resoluci měl (Fáze 6 manifest v2); cookie-consent/breadcrumb zůstávají core-only (univerzální chrome, ne obsah stránky — mimo scope tohoto requestu).
+- **Známé omezení**: pár izolovaných admin-only volání (`PageController::buildContactHtml()`/`buildServicesHtml()` mimo `applyFallbacks()`) nemá přístup k `$this->currentThemeKey` (nová instance `HomepageContentService` bez proběhlého `applyFallbacks()`) → tato konkrétní admin akce zatím renderuje jen core obsah. Bezpečné (žádná regrese, jen chybí vylepšení), zdokumentováno pro případné budoucí dořešení.
+
+### Bezpečnost
+
+- Theme klíč nikdy nepochází přímo z uživatelského vstupu bez validace — `?theme_preview=` prochází `ThemeTemplateRegistry::find()`, který vrátí `null` pro cokoliv, co není mezi už NAČTENÝMI/zaregistrovanými tématy z `Templates/` (žádná nová vstupní cesta, stejný mechanismus jako předtím pro CSS/layout preview).
+- `ViewResolver`/`ViewFactory::themeViewPath()` containment (regex bez teček + `realpath()` prefix) nedotčen, žádný nový vstupní bod.
+- CSRF/honeypot/throttling na `/kontakt` nedotčeny — změna se týká jen VÝBĚRU šablony pro obsah, ne POST handleru ani generování/validace tokenu.
+
+### Testy
+
+- `php tests/run.php` → **51 testů + 27 golden checků, 0 failures** (prázdný diff — očekáváno, protože aktivní téma `elegant-white3` nemá žádný `views/archetypes/*.phtml` override, takže kaskáda vždy padá na core přesně jako předtím).
+- **Nový `tests/ArchetypeThemeOverrideTest.php`** (3 testy, DB-free, throwaway fixture téma): (1) theme-level override soubor vyhrává nad core, (2) téma bez override souboru padá na core beze zbytku, (3) `forTheme(null)` chování zachováno.
+- **Živý end-to-end test** (`?theme_preview=elegant-white2` na `/kontakt`): potvrzeno curl testem — normální `/kontakt` beze změny, `/kontakt?theme_preview=elegant-white2` vrací custom obsah, CSRF token přítomen a neprázdný, honeypot pole přítomné (transformováno stejným `normalizeContactFormAccessibility()` post-processingem jako u core — konzistentní).
+
+### Demonstrační override (živý příklad pro uživatele)
+
+`Templates/elegant-white2/views/archetypes/kontakt.phtml` — kompletní funkční override kontakt stránky pro téma `elegant-white2` (jednodušší vlastní styl, jiné CSS třídy, ale STEJNÝ datový kontrakt jako core). Vyzkoušet:
+- `http://localhost:8080/kontakt?theme_preview=elegant-white2` (dočasný náhled, nemění aktivní téma)
+- NEBO nastavit `elegant-white2` jako aktivní téma webu v adminu
+
+### Návod: jak si vytvořit vlastní override
+
+1. Najdi core archetyp, který chceš přepsat, v `app/Views/archetypes/` (`faq.phtml`, `sluzby.phtml`, `cenik.phtml`, `kontakt.phtml`, `blog-listing.phtml`, `blog-detail.phtml`, `portfolio-listing.phtml`, `portfolio-detail.phtml`, `reviews.phtml`) nebo homepage partial v `app/Views/partials/home-*.phtml`.
+2. Zkopíruj ho do `Templates/<tvoje-téma>/views/archetypes/<stejné-jméno>.phtml` (nebo `Templates/<tvoje-téma>/views/partials/<stejné-jméno>.phtml` pro homepage sekce) — **žádná úprava `template.json` není potřeba**, `ViewFactory::forTheme()` automaticky zkontroluje `Templates/<téma>/views/` jako první kořen.
+3. Uprav HTML/CSS jak chceš, ale **zachovej stejné proměnné** (`$hero`, `$items`, `$contactCards` atd. — přesně podle `@var` komentáře v hlavičce core souboru) a **stejné bezpečnostní vzorce**: `$this->e()` pro veškerý text, `$this->inlineAttr()` pro inline editor klíče, u kontaktu nikdy negeneruj/nevaliduj CSRF token nebo honeypot sám — jen echuj `$form['csrfToken']`/`$form['honeypotField']`, jak to dělá core.
+4. Otestuj přes `?theme_preview=<tvoje-téma>` bez nutnosti měnit aktivní téma webu.
+5. Pokud chceš přepsat i CELOU stránku (ne jen archetyp), použij `Templates/<téma>/views/pages/<page-key>.phtml` — vyhrává nad archetypem (kaskáda: pages > archetypes > core).
+
+### Commit
+
+`feature(templates): activate theme override cascade for content archetypes` — `public/index.php`, `app/Services/PublishService.php`, `app/Services/HomepageContentService.php`, `app/Services/ReviewContentService.php`, `tests/run.php`, `tests/ArchetypeThemeOverrideTest.php` (nový), `Templates/elegant-white2/views/archetypes/kontakt.phtml` (nový, demo override), `UKOL.md`.

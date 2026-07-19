@@ -1,0 +1,93 @@
+<?php
+/**
+ * DEMO theme override — proves the per-theme archetype cascade works end to end.
+ *
+ * This file exists purely as a live example: any theme can override any
+ * archetype's page content by dropping a file at
+ * Templates/<theme-key>/views/archetypes/<archetype-name>.phtml — no manifest
+ * change needed (ViewFactory::forTheme() always checks Templates/<key>/views/
+ * first). Try it: open /kontakt with ?theme_preview=elegant-white2, or make
+ * elegant-white2 the active theme in the admin.
+ *
+ * The data contract ($hero, $contactCards, $mapsUrl, $heroActions, $faqItems,
+ * $form) is identical to app/Views/archetypes/kontakt.phtml (the core
+ * default) — copy that file as your starting point for a real override and
+ * keep the same variable names. Security-sensitive fields (CSRF token,
+ * honeypot field name) are handed to this view as already-generated data —
+ * never generate or validate them here; see the security note on $form below.
+ *
+ * @var array $hero  ['title','sub','titleKey','titleType','subKey','subType']
+ * @var array $contactCards, $mapsUrl, $heroActions, $faqItems, $form  from KontaktPageData::forSite()
+ * Security: $form['csrfToken'] is generated once by the caller (Auth::csrfToken())
+ * and only echoed here — this view never generates or validates CSRF/honeypot.
+ */
+?>
+<section class="ew2-demo-kontakt-hero">
+  <div class="container">
+    <p class="ew2-demo-badge">Theme override demo &mdash; Templates/elegant-white2/views/archetypes/kontakt.phtml</p>
+    <h1<?= $this->inlineAttr($hero['titleKey'], $hero['titleType']) ?>><?= $this->e($hero['title']) ?></h1>
+    <p<?= $this->inlineAttr($hero['subKey'], $hero['subType']) ?>><?= $this->e($hero['sub']) ?></p>
+    <div class="ew2-demo-actions">
+      <?php if ($heroActions['tel'] !== ''): ?><a class="ew2-demo-btn" href="tel:<?= $this->e($heroActions['tel']) ?>">Zavolat</a><?php endif; ?>
+      <?php if ($heroActions['email'] !== ''): ?><a class="ew2-demo-btn" href="mailto:<?= $this->e($heroActions['email']) ?>">Napsat e-mail</a><?php endif; ?>
+    </div>
+  </div>
+</section>
+<section class="ew2-demo-grid">
+  <div class="container ew2-demo-grid__inner">
+    <div class="ew2-demo-info">
+      <h2>Kontaktní informace</h2>
+      <?php foreach ($contactCards as $card): ?>
+        <?php if ($card['type'] === 'phone'): ?>
+          <p class="ew2-demo-row"><strong>Telefon:</strong>
+            <?php foreach ($card['phones'] as $p): ?><a href="<?= $this->e($p['href']) ?>"<?= $this->inlineAttr($p['inlineKey']) ?>><?= $this->e($p['display']) ?></a> <?php endforeach; ?>
+          </p>
+        <?php elseif ($card['type'] === 'email'): ?>
+          <p class="ew2-demo-row"><strong>E-mail:</strong> <a href="mailto:<?= $this->e($card['email']) ?>"<?= $this->inlineAttr($card['emailInlineKey']) ?>><?= $this->e($card['email']) ?></a></p>
+        <?php elseif ($card['type'] === 'location'): ?>
+          <p class="ew2-demo-row"><strong>Adresa:</strong>
+            <?php foreach ($card['addresses'] as $a): ?><span<?= $this->inlineAttr($a['inlineKey']) ?>><?= nl2br($this->e($a['text'])) ?></span> <?php endforeach; ?>
+          </p>
+        <?php endif; ?>
+      <?php endforeach; ?>
+      <?php if ($mapsUrl !== ''): ?><p><a href="<?= $this->e($mapsUrl) ?>" target="_blank" rel="noopener">Otevřít mapu</a></p><?php endif; ?>
+    </div>
+    <div class="ew2-demo-form">
+      <h2>Napište nám</h2>
+      <?php if ($form['sentState'] === '1'): ?><p class="ew2-demo-success">Zpráva odeslána. Ozveme se co nejdříve.</p><?php endif; ?>
+      <form method="POST" action="/kontakt/odeslat">
+        <input type="hidden" name="_csrf" value="<?= $this->e($form['csrfToken']) ?>">
+        <input type="text" name="<?= $this->e($form['honeypotField']) ?>" style="display:none" tabindex="-1" autocomplete="off">
+        <label>Jméno a příjmení<input type="text" name="name" required></label>
+        <label>E-mail nebo telefon<input type="text" name="contact_value" required></label>
+        <label>Zpráva<textarea name="message" required></textarea></label>
+        <label><input type="checkbox" required> Souhlasím se zpracováním osobních údajů.</label>
+        <button type="submit">Odeslat</button>
+      </form>
+    </div>
+  </div>
+</section>
+<section class="ew2-demo-faq">
+  <div class="container">
+    <h2>Časté otázky</h2>
+    <?php if ($faqItems === []): ?><p>Nemáte vyplněné FAQ otázky.</p><?php else: foreach ($faqItems as $item): ?>
+      <details class="ew2-demo-faq-item"><summary><?= $this->e($item['question']) ?></summary><p><?= nl2br($this->e($item['answer'])) ?></p></details>
+    <?php endforeach; endif; ?>
+  </div>
+</section>
+<style>
+.ew2-demo-badge{display:inline-block;margin-bottom:12px;padding:4px 10px;background:#111;color:#fff;font-size:11px;letter-spacing:.06em;text-transform:uppercase;border-radius:4px}
+.ew2-demo-kontakt-hero{padding:48px 0;text-align:center;background:#f4f1ea}
+.ew2-demo-actions{display:flex;gap:10px;justify-content:center;margin-top:16px}
+.ew2-demo-btn{padding:10px 18px;background:#222;color:#fff;text-decoration:none;border-radius:6px}
+.ew2-demo-grid{padding:40px 0}
+.ew2-demo-grid__inner{display:grid;grid-template-columns:1fr;gap:32px;max-width:900px;margin:0 auto}
+.ew2-demo-row{margin:0 0 8px}
+.ew2-demo-form form{display:flex;flex-direction:column;gap:10px}
+.ew2-demo-form input,.ew2-demo-form textarea{padding:8px;border:1px solid #ccc;border-radius:4px;font:inherit}
+.ew2-demo-form button{padding:10px;background:#222;color:#fff;border:0;border-radius:6px;cursor:pointer}
+.ew2-demo-success{color:#2a7a2a;font-weight:700}
+.ew2-demo-faq{padding:40px 0;background:#f4f1ea}
+.ew2-demo-faq-item{max-width:900px;margin:0 auto 8px}
+@media(min-width:800px){.ew2-demo-grid__inner{grid-template-columns:1fr 1fr}}
+</style>

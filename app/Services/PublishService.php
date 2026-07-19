@@ -96,7 +96,7 @@ class PublishService implements PublishPageChrome
 
         // Render
         $archetypeCss = '';
-        [$archetypeHtml, $archetypeCss] = $this->renderArchetypeContent($pageKey, $page, $blocks);
+        [$archetypeHtml, $archetypeCss] = $this->renderArchetypeContent($pageKey, $page, $blocks, $theme['key'] ?? null);
         // Phase 5: generic CMS pages (and the homepage) flow their legacy
         // PageRenderer fragment through the generic `page` archetype — the same
         // byte-for-byte passthrough wrapper the live path uses in
@@ -464,7 +464,7 @@ HTML;
      * @return array{0: ?string, 1: string} [html fragment or null when $pageKey
      *         is not an archetype page, page-specific CSS to layer on top]
      */
-    private function renderArchetypeContent(string $pageKey, array $page, array $blocks): array
+    private function renderArchetypeContent(string $pageKey, array $page, array $blocks, ?string $themeKey = null): array
     {
         if ($pageKey === 'faq') {
             $siteId = (int)($page['site_id'] ?? 0);
@@ -480,7 +480,7 @@ HTML;
                 'Odpovědi na nejčastější dotazy.'
             );
 
-            $html = \App\View\ViewFactory::forTheme(null)->render('archetypes/faq', [
+            $html = \App\View\ViewFactory::forTheme($themeKey)->render('archetypes/faq', [
                 'hero' => [
                     'title' => $title,
                     'sub' => $sub,
@@ -510,7 +510,7 @@ HTML;
                 'Od svateb přes portréty až po firemní vizuál. Každou zakázku stavíme na emocích, detailu a profesionálním výsledku.'
             );
 
-            $html = \App\View\ViewFactory::forTheme(null)->render('archetypes/sluzby', [
+            $html = \App\View\ViewFactory::forTheme($themeKey)->render('archetypes/sluzby', [
                 'hero' => [
                     'title' => $title,
                     'sub' => $sub,
@@ -541,7 +541,7 @@ HTML;
                 'Tipy a rady od profesionálního fotografa z Olomouce.'
             );
 
-            $html = \App\View\ViewFactory::forTheme(null)->render('archetypes/blog-listing', [
+            $html = \App\View\ViewFactory::forTheme($themeKey)->render('archetypes/blog-listing', [
                 'hero' => [
                     'title' => $title,
                     'sub' => $sub,
@@ -571,7 +571,7 @@ HTML;
                 'Ukázka videí a galerií z naší práce.'
             );
 
-            $html = \App\View\ViewFactory::forTheme(null)->render('archetypes/portfolio-listing', [
+            $html = \App\View\ViewFactory::forTheme($themeKey)->render('archetypes/portfolio-listing', [
                 'hero' => [
                     'title' => $title,
                     'sub' => $sub,

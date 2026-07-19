@@ -10,6 +10,7 @@ use App\Repositories\MediaRepository;
 use App\Repositories\PageRepository;
 use App\Repositories\PortfolioRepository;
 use App\Repositories\ServiceRepository;
+use App\Repositories\SiteRepository;
 use App\View\ViewFactory;
 use App\ViewModels\HomepageData;
 
@@ -54,6 +55,16 @@ class HomepageContentService
     private MediaRepository $media;
     private ReviewContentService $reviewContent;
 
+    /**
+     * Theme key for the site currently being rendered, resolved once per
+     * applyFallbacks() call and reused by renderHomePartial() below so every
+     * homepage section partial can be overridden per-theme via
+     * Templates/<key>/views/partials/home-*.phtml (same ViewResolver cascade
+     * the dedicated archetypes use). Null when no theme resolves — the cascade
+     * then falls back to the core partial, unchanged from before.
+     */
+    private ?string $currentThemeKey = null;
+
     public function __construct()
     {
         $this->pages = new PageRepository();
@@ -65,6 +76,19 @@ class HomepageContentService
         $this->contact = new ContactRepository();
         $this->media = new MediaRepository();
         $this->reviewContent = new ReviewContentService();
+    }
+
+    private function resolveThemeKeyForSite(int $siteId): ?string
+    {
+        $site = (new SiteRepository())->findById($siteId);
+        if (!$site) {
+            return null;
+        }
+
+        $theme = (new ThemeTemplateRegistry())->resolveForSite($site);
+        $key = trim((string)($theme['key'] ?? ''));
+
+        return $key !== '' ? $key : null;
     }
 
     public function getAutofillDefinitions(): array
@@ -81,6 +105,7 @@ class HomepageContentService
     {
         $path = trim((string)($page['url_path'] ?? ''), '/');
         $siteId = (int)($page['site_id'] ?? 0);
+        $this->currentThemeKey = $this->resolveThemeKeyForSite($siteId);
 
         if ($path === '') {
             $this->fillHomepageFallbacks($blocks, $siteId);
@@ -125,7 +150,7 @@ class HomepageContentService
         $this->applyBlockFallback($blocks, 'pricing_body', fn() => $this->buildPricingHtml());
         $this->applyBlockFallback($blocks, 'cenik_cta', fn() => $this->buildPageCtaHtml($siteId, 'cenik'));
         $this->applyBlockFallback($blocks, 'pricing_cta', fn() => $this->buildPageCtaHtml($siteId, 'cenik'));
-        $this->applyBlockFallback($blocks, 'reviews_demo', fn() => $this->reviewContent->buildHomepageHtml($siteId, 10));
+        $this->applyBlockFallback($blocks, 'reviews_demo', fn() => $this->reviewContent->buildHomepageHtml($siteId, 10, $this->currentThemeKey));
         $this->applyBlockFallback($blocks, 'reviews_cta', fn() => $this->buildPageCtaHtml($siteId, 'hodnoceni'));
         $this->applyBlockFallback($blocks, 'kontakt_info', fn() => $this->buildContactHtml($siteId));
         $this->applyBlockFallback($blocks, 'contact_info', fn() => $this->buildContactHtml($siteId));
@@ -176,11 +201,11 @@ class HomepageContentService
     private function fillReviewFallbacks(array &$blocks, int $siteId, bool $isHomepage): void
     {
         if ($isHomepage) {
-            $this->applyBlockFallback($blocks, 'reviews_demo', fn() => $this->reviewContent->buildHomepageHtml($siteId, 6));
+            $this->applyBlockFallback($blocks, 'reviews_demo', fn() => $this->reviewContent->buildHomepageHtml($siteId, 6, $this->currentThemeKey));
             return;
         }
 
-        $this->applyBlockFallback($blocks, 'reviews_body', fn() => $this->reviewContent->buildListingHtml($siteId));
+        $this->applyBlockFallback($blocks, 'reviews_body', fn() => $this->reviewContent->buildListingHtml($siteId, $this->currentThemeKey));
     }
 
     private function fillContactFallbacks(array &$blocks, int $siteId): void
@@ -430,7 +455,7 @@ class HomepageContentService
      */
     private function renderHomePartial(string $name, array $data): string
     {
-        return ViewFactory::forTheme(null)->render('partials/' . $name, $data);
+        return ViewFactory::forTheme($this->currentThemeKey)->render('partials/' . $name, $data);
     }
 
     public function buildContactHtml(int $siteId): string

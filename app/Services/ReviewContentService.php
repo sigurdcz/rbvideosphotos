@@ -19,7 +19,7 @@ class ReviewContentService
         $this->templates = new TemplateRepository();
     }
 
-    public function buildHomepageHtml(int $siteId, int $limit = 6): string
+    public function buildHomepageHtml(int $siteId, int $limit = 6, ?string $themeKey = null): string
     {
         $items = $this->reviews->allActive($siteId);
         if ($limit > 0) {
@@ -29,15 +29,17 @@ class ReviewContentService
         // Phase 5: the teaser grid markup now comes from a PHTML partial fed by
         // HomepageData::reviewCards() (data, not concatenated HTML). The inline
         // <style> stays here byte-identically — moving it to a shared asset is a
-        // phase-6 cleanup.
+        // phase-6 cleanup. $themeKey (post-refactor) lets a theme override
+        // partials/home-reviews via the same ViewResolver cascade every other
+        // archetype/partial now uses.
         return $this->homepageCss()
-            . \App\View\ViewFactory::forTheme(null)->render(
+            . \App\View\ViewFactory::forTheme($themeKey)->render(
                 'partials/home-reviews',
                 ['items' => \App\ViewModels\HomepageData::reviewCards($items)]
             );
     }
 
-    public function buildListingHtml(int $siteId): string
+    public function buildListingHtml(int $siteId, ?string $themeKey = null): string
     {
         // Phase 4 of the templating refactor: the /hodnoceni listing grid now
         // renders through the reviews archetype (App\ViewModels\ReviewsPageData
@@ -46,7 +48,7 @@ class ReviewContentService
         // it belongs to the homepage archetype, phase 5.
         $data = \App\ViewModels\ReviewsPageData::forSite($siteId);
 
-        return \App\View\ViewFactory::forTheme(null)->render('archetypes/reviews', $data);
+        return \App\View\ViewFactory::forTheme($themeKey)->render('archetypes/reviews', $data);
     }
 
     public function ensureHomepageSection(int $siteId): void

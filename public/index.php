@@ -1365,6 +1365,23 @@ function getThemeTemplateRegistry(): ThemeTemplateRegistry
     return $registry;
 }
 
+/**
+ * Resolve the theme key that will actually render this request (active theme,
+ * or the ?theme_preview= override), using the exact same resolution the
+ * later applyThemeTemplate() call performs for CSS/layout. Callers use this
+ * key with ViewFactory::forTheme() so content archetypes can be overridden
+ * per-theme via Templates/<key>/views/archetypes/<name>.phtml, the same
+ * cascade ViewResolver has supported since Phase 1. Returns null when no
+ * theme resolves (ViewFactory::forTheme(null, ...) then falls back to core).
+ */
+function resolveActiveThemeKeyForSite(array $site, ?string $previewKey = null): ?string
+{
+    $theme = getThemeTemplateRegistry()->resolveForSite($site, $previewKey);
+    $key = trim((string)($theme['key'] ?? ''));
+
+    return $key !== '' ? $key : null;
+}
+
 function applyThemeTemplate(PageRenderer $renderer, array $site, string $pageKey, string $siteName, string $html, string $css, string $js, string $unused = '', string $nav = '', ?string $previewKey = null): array
 {
     $registry = getThemeTemplateRegistry();
@@ -1512,7 +1529,9 @@ function tryServeServicesPage(string $uri): bool
 
     $renderer = new PageRenderer();
     $nav = resolveThemeNav($site, false);
-    $pageContent = ViewFactory::forTheme(null, ['editMode' => $editMode])->render('archetypes/sluzby', [
+    $previewKeyParam = isset($_GET['theme_preview']) ? trim((string)$_GET['theme_preview']) : null;
+    $activeThemeKey = resolveActiveThemeKeyForSite($site, $previewKeyParam);
+    $pageContent = ViewFactory::forTheme($activeThemeKey, ['editMode' => $editMode])->render('archetypes/sluzby', [
         'hero' => [
             'title' => $heroTitle,
             'sub' => $heroSub,
@@ -1534,7 +1553,7 @@ function tryServeServicesPage(string $uri): bool
         '',
         '',
         $nav,
-        isset($_GET['theme_preview']) ? trim((string)$_GET['theme_preview']) : null
+        $previewKeyParam
     );
 
     if ($themeActive) {
@@ -1609,7 +1628,9 @@ function tryServePortfolioPage(string $uri, bool $detailOnly = false): bool
 
         $renderer   = new PageRenderer();
         $nav = resolveThemeNav($site, false);
-        $pageContent = ViewFactory::forTheme(null, ['editMode' => $editMode])->render('archetypes/portfolio-listing', [
+        $previewKeyParam = isset($_GET['theme_preview']) ? trim((string)$_GET['theme_preview']) : null;
+        $activeThemeKey = resolveActiveThemeKeyForSite($site, $previewKeyParam);
+        $pageContent = ViewFactory::forTheme($activeThemeKey, ['editMode' => $editMode])->render('archetypes/portfolio-listing', [
             'hero' => [
                 'title' => $heroTitle,
                 'sub' => $heroSub,
@@ -1630,7 +1651,7 @@ function tryServePortfolioPage(string $uri, bool $detailOnly = false): bool
             '',
             '',
             $nav,
-            isset($_GET['theme_preview']) ? trim((string)$_GET['theme_preview']) : null
+            $previewKeyParam
         );
         $titleTag = '<title>' . $h("Na\u{161}e pr\u{E1}ce | {$siteName}") . '</title>';
         if ($themeActive) {
@@ -1702,7 +1723,9 @@ HTML;
 
         $renderer = new PageRenderer();
         $nav = resolveThemeNav($site, false);
-        $pageContent = ViewFactory::forTheme(null)->render('archetypes/portfolio-detail', [
+        $previewKeyParam = isset($_GET['theme_preview']) ? trim((string)$_GET['theme_preview']) : null;
+        $activeThemeKey = resolveActiveThemeKeyForSite($site, $previewKeyParam);
+        $pageContent = ViewFactory::forTheme($activeThemeKey)->render('archetypes/portfolio-detail', [
             'entry' => $detailData['entry'],
             'gallery' => $detailData['gallery'],
         ]);
@@ -1716,7 +1739,7 @@ HTML;
             '',
             '',
             $nav,
-            isset($_GET['theme_preview']) ? trim((string)$_GET['theme_preview']) : null
+            $previewKeyParam
         );
         $titleTag = '<title>' . $h("{$entry['title']} | {$siteName}") . '</title>';
         $metaDesc = '<meta name="description" content="' . $metaDescription . '">';
@@ -1809,7 +1832,9 @@ function tryServeFaqPage(): bool
 
     $renderer   = new PageRenderer();
     $nav        = resolveThemeNav($site, false);
-    $pageContent = ViewFactory::forTheme(null, ['editMode' => $editMode])->render('archetypes/faq', [
+    $previewKeyParam = isset($_GET['theme_preview']) ? trim((string)$_GET['theme_preview']) : null;
+    $activeThemeKey = resolveActiveThemeKeyForSite($site, $previewKeyParam);
+    $pageContent = ViewFactory::forTheme($activeThemeKey, ['editMode' => $editMode])->render('archetypes/faq', [
         'hero' => [
             'title' => $heroTitle,
             'sub' => $heroSub,
@@ -1830,7 +1855,7 @@ function tryServeFaqPage(): bool
         '',
         '',
         $nav,
-        isset($_GET['theme_preview']) ? trim((string)$_GET['theme_preview']) : null
+        $previewKeyParam
     );
     $faqDescription = trim((string)$heroSub) !== '' ? trim((string)$heroSub) : 'Odpovedi na caste dotazy k rezervaci, terminum, foceni a vystupum.';
     if ($themeActive) {
@@ -1913,7 +1938,9 @@ function tryServeKontaktPage(): bool
 
     $renderer   = new PageRenderer();
     $nav        = resolveThemeNav($site, false);
-    $pageContent = ViewFactory::forTheme(null, ['editMode' => $editMode])->render('archetypes/kontakt', [
+    $previewKeyParam = isset($_GET['theme_preview']) ? trim((string)$_GET['theme_preview']) : null;
+    $activeThemeKey = resolveActiveThemeKeyForSite($site, $previewKeyParam);
+    $pageContent = ViewFactory::forTheme($activeThemeKey, ['editMode' => $editMode])->render('archetypes/kontakt', [
         'hero' => [
             'title' => $heroTitle,
             'sub' => $heroSub,
@@ -1938,7 +1965,7 @@ function tryServeKontaktPage(): bool
         '',
         '',
         $nav,
-        isset($_GET['theme_preview']) ? trim((string)$_GET['theme_preview']) : null
+        $previewKeyParam
     );
     $contactDescription = trim((string)$heroSub) !== '' ? trim((string)$heroSub) : 'Kontaktni formular a informace pro poptavku foceni nebo videa.';
     if ($themeActive) {
@@ -1990,7 +2017,9 @@ function tryServeBlogListingPage(): bool
 
     $renderer = new PageRenderer();
     $nav = resolveThemeNav($site, false);
-    $pageContent = ViewFactory::forTheme(null, ['editMode' => $editMode])->render('archetypes/blog-listing', [
+    $previewKeyParam = isset($_GET['theme_preview']) ? trim((string)$_GET['theme_preview']) : null;
+    $activeThemeKey = resolveActiveThemeKeyForSite($site, $previewKeyParam);
+    $pageContent = ViewFactory::forTheme($activeThemeKey, ['editMode' => $editMode])->render('archetypes/blog-listing', [
         'hero' => [
             'title' => $heroTitle,
             'sub' => $heroSub,
@@ -2011,7 +2040,7 @@ function tryServeBlogListingPage(): bool
         '',
         '',
         $nav,
-        isset($_GET['theme_preview']) ? trim((string)$_GET['theme_preview']) : null
+        $previewKeyParam
     );
     $blogDescription = trim((string)$heroSub) !== '' ? trim((string)$heroSub) : 'Tipy, odpovedi a inspirace z oblasti foceni a videa.';
     if ($themeActive) {
@@ -2086,7 +2115,9 @@ function tryServeBlogPostPage(string $uri): bool
 
     $renderer = new PageRenderer();
     $nav = resolveThemeNav($site, false);
-    $pageContent = ViewFactory::forTheme(null)->render('archetypes/blog-detail', [
+    $previewKeyParam = isset($_GET['theme_preview']) ? trim((string)$_GET['theme_preview']) : null;
+    $activeThemeKey = resolveActiveThemeKeyForSite($site, $previewKeyParam);
+    $pageContent = ViewFactory::forTheme($activeThemeKey)->render('archetypes/blog-detail', [
         'post' => $blogPostData['post'],
         'gallery' => $blogPostData['gallery'],
     ]);
@@ -2100,7 +2131,7 @@ function tryServeBlogPostPage(string $uri): bool
         '',
         '',
         $nav,
-        isset($_GET['theme_preview']) ? trim((string)$_GET['theme_preview']) : null
+        $previewKeyParam
     );
     if ($themeActive) {
         $html = $pageContent;

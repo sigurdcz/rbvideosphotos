@@ -352,6 +352,13 @@ register_phase3_partials_tests($test, $assert);
 require __DIR__ . '/ManifestV2Test.php';
 register_manifest_v2_tests($test, $assert);
 
+// Post-refactor: content archetypes (faq, sluzby, kontakt, blog, portfolio,
+// homepage partials, reviews) now resolve through the active theme instead of
+// a hardcoded forTheme(null, ...) — Templates/<theme>/views/archetypes/*.phtml
+// can override any archetype's content. DB-free.
+require __DIR__ . '/ArchetypeThemeOverrideTest.php';
+register_archetype_theme_override_tests($test, $assert);
+
 $failures = 0;
 foreach ($tests as [$name, $callback]) {
     try {
