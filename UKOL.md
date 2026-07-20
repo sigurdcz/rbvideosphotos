@@ -1,3 +1,35 @@
+# UKOL: Premium Photo zacatek timeline progressu
+
+Datum: 2026-07-20
+Zadani: Nechat sedou osu pres sekci, ale zlaty scroll progress zacit az pod nadpisem a skryt bod, dokud je timeline na nulovem hornim progressu.
+
+Hotovo kdyz: Nad nadpisem neni zlata vypln, bod pri nulovem progressu neni videt, po scrollu se bod i zlata vypln objevi pod nadpisem a desktop/mobil to potvrdi cerstvymi Chrome screenshoty.
+
+## Kroky
+
+- [x] Zmerit geometrii nadpisu, seznamu a aktualniho progressu a zachytit baseline.
+- [x] Presunout zacatek zlate vyplne pod nadpis a ridit viditelnost bodu podle progressu.
+- [x] Regenerovat assety a overit horni i posunuty stav na desktopu a mobilu.
+- [x] Spustit regresni testy, aktualizovat dokumentaci a commitnout bez push.
+
+## Poznamky
+
+- Rubrika 100 bodu: zlata cara pouze pod nadpisem 35, bod skryty na nule 30, spravny pohyb po aktivaci 20, desktop/mobil/runtime 15.
+- Vychozi screenshot od uzivatele ukazuje dve vady: zlata vypln vede od horni hrany sekce pres nadpis a bod je viditelny na prvnim vrcholu jeste pred aktivnim postupem.
+- Chrome diagnostika je rozsirena o computed geometrii `.section-title` a `.tl-list`, aby zacatek aktivni osy vychazel ze skutecneho DOM rozlozeni a nebyl odhadnut pevnym pixelem.
+- Baseline 1920x900: sekce zacina na `4380.40625 px`, seznam na `4671.34375 px`, tedy aktivni osa musi zacit `290.9375 px` pod hranou sekce. Skore 45/100: sedy rail 15/15, runtime 10/15, ale zlata hranice 0/35 a skryti bodu 0/30.
+- JS nyni pocita `trackStart` a `trackHeight` z aktualniho `getBoundingClientRect()` seznamu. CSS zlata vypln zacina na `--timeline-track-start`; bod dostane tridu `is-visible` pouze pro progress vetsi nez nula.
+- Chrome helper ma novy `-TimelineStartOutput`: nastavi viewport 24 px pred aktivni zacatek seznamu a ulozi samostatny dukaz nuloveho stavu pred beznym scrolled capturem.
+- Iterace 1 po oprave: 95/100. Screenshot `fixed-zero-1920.png` ukazuje pouze sedou osu pres nadpis; computed bod ma `opacity: 0` a `visibility: hidden`. Scrolled stav ma `trackStart: 290.94px`, zlatou vysku `496.66px` a viditelny bod. Poslednich 5 bodu ceka na zamerene zachyceni kratke aktivni zlate cary primo pod nadpisem.
+- Iterace 2: 100/100. `final-active-start-1920.png` primo ukazuje prvnich 96 px zlateho progressu az od horni hrany seznamu pod titulkem; nad titulkem zustava jen seda osa. `final-zero-1920.png` nema zlato ani bod. Mobilni dvojice `final-zero-390.png` a `final-active-start-390.png` potvrzuje stejne chovani s dynamickym zacatkem `242.53 px`.
+- Regrese: PHP lint bez chyby, `php tests/run.php` 56/56, golden checks 27/27 a `git diff --check` bez chyb. `README.md`, `ARCHITECTURE.md` a `INSTRUCTIONS.md` byly posouzeny bez nutnosti zmeny; technicky kontrakt a acceptance byly aktualizovany v projektove wiki.
+
+## Vysledek
+
+Hotovo. Seda osa zustava pres sekci, zlata vypln zacina az pod nadpisem na skutecne hrane seznamu a bod je pri nulovem progressu skryty na desktopu i mobilu.
+
+---
+
 # UKOL: Premium Photo viditelny scroll playhead
 
 Datum: 2026-07-20

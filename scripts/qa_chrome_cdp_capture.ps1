@@ -4,6 +4,8 @@ param(
     [int]$Width = 1280,
     [int]$Height = 800,
     [int]$Port = 9333,
+    [string]$TimelineStartOutput = '',
+    [string]$TimelineActiveStartOutput = '',
     [string]$InteractionOutput = '',
     [string]$ChromePath = 'C:\Program Files\Google\Chrome\Application\chrome.exe'
 )
@@ -106,12 +108,57 @@ Send-CdpCommand $socket (++$id) 'Emulation.setDeviceMetricsOverride' @{
 Send-CdpCommand $socket (++$id) 'Page.navigate' @{ url = $Url } | Out-Null
 Start-Sleep -Seconds 4
 
+$timelineStartOutputPath = $null
+$timelineActiveStartOutputPath = $null
+if ($TimelineStartOutput -ne '') {
+    Send-CdpCommand $socket (++$id) 'Runtime.evaluate' @{
+        expression = @'
+(async () => {
+  const timeline = document.querySelector('.timeline');
+  const list = timeline?.querySelector('.tl-list');
+  if (!timeline || !list) return false;
+  document.documentElement.style.scrollBehavior = 'auto';
+  const listTop = list.getBoundingClientRect().top + window.scrollY;
+  window.scrollTo(0, Math.max(0, listTop - window.innerHeight * .45 - 24));
+  await new Promise(resolve => setTimeout(resolve, 180));
+  return true;
+})()
+'@
+        returnByValue = $true
+        awaitPromise = $true
+    } | Out-Null
+    $timelineStartCapture = Send-CdpCommand $socket (++$id) 'Page.captureScreenshot' @{
+        format = 'png'
+        fromSurface = $true
+    }
+    $timelineStartOutputPath = [IO.Path]::GetFullPath((Join-Path (Get-Location) $TimelineStartOutput))
+    [IO.File]::WriteAllBytes($timelineStartOutputPath, [Convert]::FromBase64String($timelineStartCapture.data))
+    if ($TimelineActiveStartOutput -ne '') {
+        Send-CdpCommand $socket (++$id) 'Runtime.evaluate' @{
+            expression = '(async () => { window.scrollBy(0, 120); await new Promise(resolve => setTimeout(resolve, 180)); })()'
+            awaitPromise = $true
+        } | Out-Null
+        $timelineActiveStartCapture = Send-CdpCommand $socket (++$id) 'Page.captureScreenshot' @{
+            format = 'png'
+            fromSurface = $true
+        }
+        $timelineActiveStartOutputPath = [IO.Path]::GetFullPath((Join-Path (Get-Location) $TimelineActiveStartOutput))
+        [IO.File]::WriteAllBytes($timelineActiveStartOutputPath, [Convert]::FromBase64String($timelineActiveStartCapture.data))
+    }
+    Send-CdpCommand $socket (++$id) 'Runtime.evaluate' @{
+        expression = '(async () => { window.scrollTo(0, 0); await new Promise(resolve => setTimeout(resolve, 100)); })()'
+        awaitPromise = $true
+    } | Out-Null
+}
+
 $interaction = Send-CdpCommand $socket (++$id) 'Runtime.evaluate' @{
     expression = @'
 (async () => {
   const timeline = document.querySelector('.timeline');
   const playhead = document.querySelector('.tl-playhead');
   const rail = document.querySelector('.tl-rail');
+  const timelineList = timeline?.querySelector('.tl-list');
+  const timelineHeading = timeline?.querySelector('.section-title');
   const parallax = document.querySelector('[data-parallax]');
   const visualState = (element) => {
     if (!element) return null;
@@ -136,6 +183,8 @@ $interaction = Send-CdpCommand $socket (++$id) 'Runtime.evaluate' @{
     timelineHeight: timeline?.getBoundingClientRect().height || null,
     playheadTop: playhead?.style.top || '',
     parallaxTransform: parallax?.style.transform || '',
+    heading: visualState(timelineHeading),
+    list: visualState(timelineList),
     rail: visualState(rail),
     playhead: visualState(playhead)
   };
@@ -152,7 +201,11 @@ $interaction = Send-CdpCommand $socket (++$id) 'Runtime.evaluate' @{
     playheadTop: playhead?.style.top || '',
     parallaxTransform: parallax?.style.transform || '',
     activeItems: document.querySelectorAll('.tl-item.on').length,
-    timelineProgress: timeline ? getComputedStyle(timeline).getPropertyValue('--timeline-progress').trim() : '',
+    timelineTrackStart: timeline ? getComputedStyle(timeline).getPropertyValue('--timeline-track-start').trim() : '',
+    timelineProgressHeight: timeline ? getComputedStyle(timeline).getPropertyValue('--timeline-progress-height').trim() : '',
+    playheadVisible: playhead?.classList.contains('is-visible') || false,
+    heading: visualState(timelineHeading),
+    list: visualState(timelineList),
     rail: visualState(rail),
     playhead: visualState(playhead)
   };
@@ -220,6 +273,8 @@ if ($chromeProcess -and -not $chromeProcess.HasExited) {
 }
 [pscustomobject]@{
     Screenshot = $outputPath
+    TimelineStartScreenshot = $timelineStartOutputPath
+    TimelineActiveStartScreenshot = $timelineActiveStartOutputPath
     InteractionScreenshot = $interactionOutputPath
     Width = $Width
     Height = $pageHeight

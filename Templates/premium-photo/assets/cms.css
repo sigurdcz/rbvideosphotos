@@ -351,10 +351,10 @@ body.theme-premium-photo .premium-photo-home #proces.timeline .tl-rail {
 body.theme-premium-photo .premium-photo-home #proces.timeline .tl-rail::after {
   content: "";
   position: absolute;
-  top: 0;
+  top: var(--timeline-track-start, 0px);
   left: 0;
   width: 100%;
-  height: var(--timeline-progress, 0%);
+  height: var(--timeline-progress-height, 0px);
   background: var(--champagne);
   box-shadow: 0 0 14px rgba(194,161,100,.55);
   transition: height .12s linear;
@@ -370,11 +370,15 @@ body.theme-premium-photo .premium-photo-home #proces.timeline .tl-playhead {
   border: 3px solid var(--night);
   background: var(--champagne);
   box-shadow: 0 0 0 6px rgba(194,161,100,.25), 0 0 26px rgba(194,161,100,.72);
-  opacity: 1 !important;
-  visibility: visible !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
   pointer-events: none;
   transform: translateY(-50%);
   will-change: top;
+}
+body.theme-premium-photo .premium-photo-home #proces.timeline .tl-playhead.is-visible {
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 body.theme-premium-photo .premium-photo-home #proces.timeline .tl-playhead::after {
   content: "";

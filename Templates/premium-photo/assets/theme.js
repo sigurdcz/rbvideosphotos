@@ -161,14 +161,22 @@ if (reduced) {
 const tl = document.querySelector(".timeline");
 if (tl) {
   const playhead = tl.querySelector(".tl-playhead");
+  const list = tl.querySelector(".tl-list");
   const items = [...tl.querySelectorAll(".tl-item")];
   const update = () => {
     const rect = tl.getBoundingClientRect();
+    const listRect = list?.getBoundingClientRect();
     const mid = window.innerHeight * 0.45;
-    const progress = Math.min(1, Math.max(0, (mid - rect.top) / rect.height));
-    const progressPercent = (progress * 100).toFixed(4) + "%";
-    tl.style.setProperty("--timeline-progress", progressPercent);
-    if (playhead) playhead.style.top = progressPercent;
+    const trackStart = listRect ? listRect.top - rect.top : 0;
+    const trackHeight = listRect?.height || rect.height;
+    const progress = Math.min(1, Math.max(0, (mid - (rect.top + trackStart)) / trackHeight));
+    const progressHeight = trackHeight * progress;
+    tl.style.setProperty("--timeline-track-start", trackStart.toFixed(2) + "px");
+    tl.style.setProperty("--timeline-progress-height", progressHeight.toFixed(2) + "px");
+    if (playhead) {
+      playhead.style.top = (trackStart + progressHeight).toFixed(2) + "px";
+      playhead.classList.toggle("is-visible", progress > 0);
+    }
     items.forEach(it => {
       const r = it.getBoundingClientRect();
       it.classList.toggle("on", r.top < mid + 40);
