@@ -220,28 +220,53 @@ class DemoContentSeeder
      */
     private function seedServiceItems(int $siteId): void
     {
-        $items = [];
-        foreach ($this->servicePages() as $i => $svc) {
-            $imageUrl = !empty($this->demoMedia[$svc['image']]) ? $this->mediaPathById((int) $this->demoMedia[$svc['image']]) : '';
-            $items[] = [
-                'title' => $svc['title'],
-                'description' => $svc['lead'],
-                'image_url' => $imageUrl,
-                'button_text' => 'Více informací',
-                // "Více informací" teď vede na detailní stránku služby (viz seedServicePages).
-                'button_url' => '/' . $svc['slug'],
-                'sort_order' => $i + 1,
-                'is_active' => 1,
-            ];
-        }
-        $items[] = [
-            'title' => 'Další projekty',
-            'description' => 'Individuální foto a video projekty, které se nevejdou do běžných kategorií. Rozsah i výstupy připravíme na míru.',
-            'image_url' => '',
-            'button_text' => 'Více informací',
-            'button_url' => '/nase-prace',
-            'sort_order' => 5,
-            'is_active' => 1,
+        $servicePages = $this->servicePages();
+        $image = function (int $index) use ($servicePages): string {
+            $filename = (string)($servicePages[$index]['image'] ?? '');
+            return !empty($this->demoMedia[$filename])
+                ? $this->mediaPathById((int)$this->demoMedia[$filename])
+                : '';
+        };
+
+        // Copy supplied with the Premium Photo design. It now lives in the
+        // canonical demo dataset instead of being embedded in theme markup.
+        $items = [
+            [
+                'title' => 'Svatební den — foto + video',
+                'description' => 'Celodenní reportáž od příprav po večerní zábavu. Fotografie i svatební film v jednom balíčku, jeden sehraný tým.',
+                'image_url' => $image(0), 'button_text' => 'Více informací',
+                'button_url' => '/svatebni-foto-video', 'sort_order' => 1, 'is_active' => 1,
+            ],
+            [
+                'title' => 'Svatební klipy',
+                'description' => 'Tří až pětiminutový filmový sestřih s vaší hudbou. Emoce dne v jednom klipu, který si pustíte i za dvacet let.',
+                'image_url' => $image(0), 'button_text' => 'Ukázky',
+                'button_url' => '/nase-prace', 'sort_order' => 2, 'is_active' => 1,
+            ],
+            [
+                'title' => 'Zásnuby & páry',
+                'description' => 'Focení před svatbou — poznáme se, vy si zvyknete na objektiv a v den D už jsme staří známí.',
+                'image_url' => $image(3), 'button_text' => 'Více informací',
+                'button_url' => '/rande-a-zasnuby', 'sort_order' => 3, 'is_active' => 1,
+            ],
+            [
+                'title' => 'Oslavy & akce',
+                'description' => 'Narozeniny, křtiny, výročí a plesy. Reportážní fotografie i krátká videa z rodinných a společenských událostí.',
+                'image_url' => $image(1), 'button_text' => 'Ukázky',
+                'button_url' => '/nase-prace', 'sort_order' => 4, 'is_active' => 1,
+            ],
+            [
+                'title' => 'Firemní natáčení',
+                'description' => 'Promo videa, konference a firemní večírky. Stejná filmová kvalita, jen v kravatě.',
+                'image_url' => $image(2), 'button_text' => 'Více informací',
+                'button_url' => '/reklamni-foto-video', 'sort_order' => 5, 'is_active' => 1,
+            ],
+            [
+                'title' => 'Dron & same-day edit',
+                'description' => 'Letecké záběry areálu a krátký klip sestříhaný během svatebního večera k promítnutí přímo na hostině.',
+                'image_url' => $image(0), 'button_text' => 'Chci vědět víc',
+                'button_url' => '/kontakt', 'sort_order' => 6, 'is_active' => 1,
+            ],
         ];
 
         (new ServiceRepository())->upsertMany($siteId, $items);
@@ -254,7 +279,7 @@ class DemoContentSeeder
      */
     private function resetServiceBlocks(int $siteId): void
     {
-        $keys = ['sluzby_items', 'sluzby_grid', 'service_1', 'service_2', 'service_3', 'service_4', 'service_5'];
+        $keys = ['sluzby_items', 'sluzby_grid', 'service_1', 'service_2', 'service_3', 'service_4', 'service_5', 'service_6'];
         $placeholders = implode(',', array_fill(0, count($keys), '?'));
 
         foreach (['', 'sluzby'] as $urlPath) {

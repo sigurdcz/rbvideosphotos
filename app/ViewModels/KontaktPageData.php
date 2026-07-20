@@ -71,7 +71,7 @@ final class KontaktPageData
 
         $faqItems = [];
         try {
-            foreach (array_slice((new FaqRepository())->allActive($siteId), 0, 4) as $faqItem) {
+            foreach (array_slice((new FaqRepository())->allActive($siteId), 0, 3) as $faqItem) {
                 $question = trim((string)($faqItem['question'] ?? ''));
                 if ($question === '') {
                     continue;

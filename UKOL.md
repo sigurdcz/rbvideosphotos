@@ -1,3 +1,42 @@
+# UKOL: Premium Photo napojit zpet na databazi
+
+Datum: 2026-07-20
+Zadani: Zachovat dodany Premium Photo design, ale odstranit staticky obsah motivu a nacitat hero media, sluzby, portfolio, blog, recenze, FAQ, kontakty a socialni site z existujicich systemovych dat; lepsi texty sluzeb zapsat do demo seedu.
+
+Hotovo kdyz: Homepage i vsechny podstranky zobrazuji designeruv vzhled nad realnymi DB daty, hero media respektuji nastaveni systemu, timeline zustane zachovana, prvni tri FAQ a vsechny kontaktni/socialni udaje pochazeji z DB a live i publish testy prokazi stejne zdroje bez statickych nahrad.
+
+## Kroky
+
+- [x] Zmapovat aktualni DB view modely, route renderery a staticke Premium Photo overridey.
+- [x] Nahradit staticke hero video/obrazky DB-backed hero kontraktem na homepage i podstrankach.
+- [x] Prevest homepage O nas/Sluzby vcetne fotografie na DB data a aktualizovat demo seed lepsimi texty.
+- [x] Prevest homepage galerii na realne portfolio Nase prace a blog na realne blogove zaznamy.
+- [x] Prevest recenze, prvni tri FAQ, kontakty a socialni site na realna systemova data vcetne sdilenych mezisekci.
+- [x] Odstranit staticke obsahove route layouty; zachovat pouze prezentacni markup a animovanou timeline.
+- [x] Overit live i publish, DB puvod dat, interakce a relevantni dokumentaci; screenshot zachyt blokuje nedostupna browser instance.
+- [x] Dokoncit wiki reflexi a samostatny commit bez push.
+
+## Poznamky
+
+- Predchozi Premium Photo implementace dosahla vizualni shody kopii celeho referencniho HTML. To je ted vedome povazovano za architektonickou chybu: tema smi vlastnit design, ne obchodni obsah.
+- Vychozi generovane publish vystupy byly pred zmenou ulozeny samostatnym commitem `d9020f7`.
+- Historicke migrace se menit nebudou; obsah sluzeb ma jit pres idempotentni `DemoContentSeeder`.
+- Theme manifest nyni pouziva jeden sdileny layout. Staticke route layouty a page views byly odpojeny; homepage renderuje DB fragment a footer i navigaci znovu plni systemova pipeline.
+- `DemoContentSeeder::seedServiceItems()` obsahuje sest designerem dodanych sluzeb vcetne DB media URL a systemovych odkazu; zadny z techto textu uz nemusi zit v sablone.
+- Homepage umi vykreslit vsech sest DB sluzeb a kontaktni mezisekce omezuje FAQ na pozadovane prvni tri aktivni polozky.
+- Premium Photo CSS mapuje DB komponenty na designerovy grid, karty, tmave sekce a formulare. JS meni existujici DB proces na timeline s playheadem; nepridava zadny obsah.
+- Mrtve staticke route kopie byly odstraneny. Novy kontraktovy test hlida DB fragment, dynamickou navigaci/footer a zakazuje navrat statickeho hero videa ci kontaktu.
+- Live i publish: 6 sluzeb, 5 portfolio polozek, 3 blogy, 10 recenzi, 3 FAQ a realny kontakt/socialni site. Vsechny hlavni URL i `/admin/login` vraceji HTTP 200. `php tests/run.php`: 54 testu + 27 golden kontrol, vse bez chyby.
+- Browser plugin nema v teto relaci zadnou dostupnou instanci, proto nebyl predstiran novy vizualni screenshot; HTML/HTTP/publish kontrakty jsou overene.
+- `sync_premium_photo_reference.ps1` uz negeneruje staticke stranky. Kontroluje zdroje a DB-first kontrakt a pri pokusu o navrat route kopii viditelne selze.
+- Wiki pipeline byla aktualizovana a samostatne commitnuta jako `0993f9e`.
+
+## Vysledek
+
+Premium Photo je znovu DB-first: tema vlastni design, zatimco hero media, sluzby, portfolio, blog, recenze, FAQ, kontakt a socialni site dodava system. Technicke testy a live/publish data prosly; novy vizualni screenshot zustava otevreny pouze kvuli nedostupne browser instanci v teto relaci.
+
+---
+
 # UKOL: Refactoring šablonování na PHTML systém (7 fází)
 
 Datum: 2026-07-17

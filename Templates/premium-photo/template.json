@@ -5,24 +5,11 @@
   "version": "1.0.0",
   "author": "SEO CMS",
   "sort_order": 58,
-  "layout_html": "",
+  "layout_html": "layout.html",
   "layout_css": "assets/theme.css",
   "layout_js": "assets/theme.js",
   "views_dir": "views",
   "pages": ["homepage", "sluzby", "portfolio", "portfolio-detail", "blog", "blog-post", "cenik", "faq", "kontakt", "reviews"],
-  "overrides": {
-    "homepage": {"layout_html": "layout.html"},
-    "sluzby": {"layout_html": "layout.html"},
-    "portfolio": {"layout_html": "overrides/portfolio.html"},
-    "portfolio-detail": {"layout_html": "layout.html"},
-    "blog": {"layout_html": "overrides/blog.html"},
-    "blog-post": {"layout_html": "overrides/blog-post.html"},
-    "cenik": {"layout_html": "layout.html"},
-    "faq": {"layout_html": "overrides/faq.html"},
-    "contact": {"layout_html": "overrides/contact.html"},
-    "kontakt": {"layout_html": "layout.html"},
-    "reviews": {"layout_html": "layout.html"},
-    "hodnoceni": {"layout_html": "overrides/reviews.html"}
-  },
+  "overrides": {},
   "assets": {"css": ["assets/cms.css"], "js": []}
 }

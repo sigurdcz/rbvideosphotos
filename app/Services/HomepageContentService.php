@@ -23,6 +23,8 @@ class HomepageContentService
         'service_2' => ['label' => 'Služba 2', 'hint' => 'Automaticky doplnit druhou službu.'],
         'service_3' => ['label' => 'Služba 3', 'hint' => 'Automaticky doplnit třetí službu.'],
         'service_4' => ['label' => 'Služba 4', 'hint' => 'Automaticky doplnit čtvrtou službu.'],
+        'service_5' => ['label' => 'Služba 5', 'hint' => 'Automaticky doplnit pátou službu.'],
+        'service_6' => ['label' => 'Služba 6', 'hint' => 'Automaticky doplnit šestou službu.'],
         'portfolio-tiles' => ['label' => 'Naše práce', 'hint' => 'Automaticky doplnit z publikovaných prací.'],
         'blog_1' => ['label' => 'Blog 1', 'hint' => 'Automaticky doplnit nejnovější článek.'],
         'blog_2' => ['label' => 'Blog 2', 'hint' => 'Automaticky doplnit druhý nejnovější článek.'],
@@ -141,7 +143,7 @@ class HomepageContentService
 
     private function fillHomepageFallbacks(array &$blocks, int $siteId): void
     {
-        $this->applyBlockFallback($blocks, 'sluzby_items', fn() => $this->buildServicesGridHtml($siteId, 5));
+        $this->applyBlockFallback($blocks, 'sluzby_items', fn() => $this->buildServicesGridHtml($siteId, 6));
         $this->applyBlockFallback($blocks, 'sluzby_cta', fn() => $this->buildPageCtaHtml($siteId, 'sluzby'));
         $this->applyBlockFallback($blocks, 'portfolio-tiles', fn() => $this->buildPortfolioHtml($siteId));
         $this->applyBlockFallback($blocks, 'portfolio_cta', fn() => $this->buildPageCtaHtml($siteId, 'nase-prace'));
@@ -176,11 +178,11 @@ class HomepageContentService
         $this->applyBlockFallback(
             $blocks,
             'sluzby_grid',
-            fn() => $this->buildServicesGridHtml($siteId, $isHomepage ? 5 : 0)
+            fn() => $this->buildServicesGridHtml($siteId, $isHomepage ? 6 : 0)
         );
 
-        $items = array_slice($this->services->allActive($siteId), 0, 5);
-        for ($i = 1; $i <= 5; $i++) {
+        $items = array_slice($this->services->allActive($siteId), 0, 6);
+        for ($i = 1; $i <= 6; $i++) {
             $this->applyBlockFallback($blocks, 'service_' . $i, fn() => $this->buildServiceCardHtml($items[$i - 1] ?? null, $i, '', $siteId));
         }
     }

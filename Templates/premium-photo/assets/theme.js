@@ -1,5 +1,25 @@
 /* RB Videos & Photos — sdílené chování */
 
+// CMS markup stays data-driven; these classes only adapt its presentation to
+// the designer's Premium Photo components.
+const cmsHero = document.querySelector(".hp-hero");
+if (cmsHero) {
+  cmsHero.classList.add("video-hero");
+  const heroMedia = cmsHero.querySelector(".hero-bg, .hero-video, .theme-hero-video");
+  if (heroMedia) heroMedia.setAttribute("data-parallax", "-0.12");
+}
+
+const cmsTimeline = document.querySelector("#proces .ew-process-list");
+if (cmsTimeline) {
+  const section = cmsTimeline.closest("#proces");
+  section.classList.add("timeline", "on-dark");
+  cmsTimeline.classList.add("tl-list");
+  cmsTimeline.querySelectorAll(":scope > article").forEach(item => item.classList.add("tl-item"));
+  if (!section.querySelector(".tl-rail")) {
+    section.insertAdjacentHTML("afterbegin", '<div class="tl-rail" aria-hidden="true"></div><div class="tl-playhead" aria-hidden="true"></div>');
+  }
+}
+
 // ---------- mobilní menu ----------
 const toggle = document.querySelector(".nav-toggle");
 if (toggle) {
