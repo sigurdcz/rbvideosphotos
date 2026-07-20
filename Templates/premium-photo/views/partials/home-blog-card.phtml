@@ -1,0 +1,8 @@
+<?php /** @var array $card */ ?>
+<a class="tile premium-blog-card" href="/<?= $this->e($card['slug']) ?>">
+  <?php if ($card['imageUrl'] !== ''): ?><div class="ph premium-media" style="min-height:170px;margin:-22px -22px 8px;background-image:url('<?= $this->e($card['imageUrl']) ?>')"><img src="<?= $this->e($card['imageUrl']) ?>" alt="<?= $this->e($card['title']) ?>" loading="lazy"><span class="ph-cap"><b>tip</b></span></div><?php endif; ?>
+  <span class="t-num">Rady z praxe</span>
+  <h3><?= $this->e($card['title']) ?></h3>
+  <p><?= $this->e($card['excerpt']) ?></p>
+  <span class="t-more">Číst článek &rarr;</span>
+</a><?php ?>

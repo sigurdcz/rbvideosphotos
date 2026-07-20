@@ -1,0 +1,16 @@
+<?php /** @var array $hero @var list<array> $entries */ ?>
+<section class="video-band pf-hero"><div class="video-scrim"></div><div class="wrap"><div class="band-cap"><span class="rec">rec</span><span>portfolio · databáze Naše práce</span><span><b>RB</b> showreel</span></div></div></section>
+<section class="page-head wrap">
+  <span class="eyebrow">Portfolio</span>
+  <h1<?= $this->inlineAttr($hero['titleKey'], $hero['titleType']) ?>><?= $this->e($hero['title']) ?></h1>
+  <p class="lead"<?= $this->inlineAttr($hero['subKey'], $hero['subType']) ?>><?= $this->e($hero['sub']) ?></p>
+</section>
+<section class="premium-list-section"><div class="wrap"><div class="tiles tiles-4 premium-list-grid"><?php foreach ($entries as $index => $entry): ?>
+  <a class="tile<?= $index === 0 || $index % 7 === 0 ? ' tile-w2' : '' ?>" href="/<?= $this->e($entry['slug']) ?>" style="padding:0">
+    <div class="ph premium-media" style="min-height:250px;<?= $entry['thumb'] !== '' ? "background-image:url('" . $this->e($entry['thumb']) . "')" : '' ?>">
+      <?php if ($entry['thumb'] !== ''): ?><img src="<?= $this->e($entry['thumb']) ?>" alt="<?= $this->e($entry['title']) ?>" loading="lazy"><?php endif; ?>
+      <span class="ph-cap"><b><?= $this->e($entry['type_label']) ?></b> · <?= $this->e($entry['title']) ?></span>
+    </div>
+  </a>
+<?php endforeach; ?></div></div></section>
+<section class="on-dark premium-page-cta"><div class="wrap"><span class="eyebrow">Líbí se vám náš rukopis?</span><h2>Pojďme zachytit <em class="acc">ten váš</em></h2><a class="btn btn-solid" href="/kontakt">Ověřit volný termín</a></div></section><?php ?>

@@ -1,3 +1,7 @@
+(() => {
+if (document.body.dataset.premiumPhotoReady === "1") return;
+document.body.dataset.premiumPhotoReady = "1";
+
 /* RB Videos & Photos — sdílené chování */
 
 // CMS markup stays data-driven; these classes only adapt its presentation to
@@ -18,6 +22,89 @@ if (cmsTimeline) {
   if (!section.querySelector(".tl-rail")) {
     section.insertAdjacentHTML("afterbegin", '<div class="tl-rail" aria-hidden="true"></div><div class="tl-playhead" aria-hidden="true"></div>');
   }
+}
+
+const premiumHome = document.querySelector(".premium-photo-home");
+if (premiumHome) {
+  const aboutVisualSource = document.querySelector(".jb-about-visual__source[data-src]");
+  const services = premiumHome.querySelector("#sluzby");
+  const portfolio = premiumHome.querySelector("#nase-prace");
+  const blog = premiumHome.querySelector("#blog");
+  const pricing = premiumHome.querySelector("#cenik");
+  const faq = premiumHome.querySelector("#faq");
+  const reviews = premiumHome.querySelector("#hodnoceni");
+  const process = premiumHome.querySelector("#proces");
+  const contact = premiumHome.querySelector("#kontakt");
+
+  services?.querySelector(".container")?.classList.add("wrap");
+  services?.querySelector(".hp-services-grid")?.classList.add("tiles", "tiles-4");
+  portfolio?.classList.add("on-dark", "premium-portfolio-section");
+  portfolio?.querySelector(".container")?.classList.add("wrap");
+  blog?.querySelector(".container")?.classList.add("wrap");
+  blog?.querySelector(".hp-blog-grid")?.classList.add("tiles", "tiles-3");
+  reviews?.querySelector(".container")?.classList.add("wrap");
+  contact?.classList.add("on-dark", "premium-contact-section");
+  contact?.querySelector(".container")?.classList.add("wrap");
+  process?.querySelector(".container")?.classList.add("wrap");
+
+  // HomepageSectionRenderer resolves this URL from the CMS block
+  // jb-about-visual__media. The theme owns only the three-panel composition.
+  if (aboutVisualSource && services && !premiumHome.querySelector(".premium-about-visual")) {
+    const src = aboutVisualSource.dataset.src || "";
+    if (src) {
+      const visual = document.createElement("section");
+      visual.className = "premium-about-visual wrap";
+      visual.setAttribute("aria-label", "O nas");
+      visual.innerHTML = [
+        '<div class="premium-about-visual__panel premium-about-visual__panel--main"></div>',
+        '<div class="premium-about-visual__panel premium-about-visual__panel--detail-a"></div>',
+        '<div class="premium-about-visual__panel premium-about-visual__panel--detail-b"></div>'
+      ].join("");
+      visual.querySelectorAll(".premium-about-visual__panel").forEach(panel => {
+        panel.style.backgroundImage = `url("${src.replace(/["\\]/g, "\\$&")}")`;
+      });
+      services.before(visual);
+    }
+  }
+
+  if (pricing) pricing.hidden = true;
+
+  const contactGrid = contact?.querySelector(".premium-contact-grid");
+  const faqItems = faq ? [...faq.querySelectorAll("details.faq-item")].slice(0, 3) : [];
+  if (contactGrid && faqItems.length) {
+    const faqGroup = document.createElement("div");
+    faqGroup.className = "premium-contact-faq";
+    faqGroup.dataset.faqGroup = "";
+    faqItems.forEach(item => faqGroup.appendChild(item));
+    const allFaq = document.createElement("a");
+    allFaq.className = "btn btn-ghost";
+    allFaq.href = "/faq";
+    allFaq.textContent = "Všechny otázky a odpovědi";
+    faqGroup.appendChild(allFaq);
+    contactGrid.appendChild(faqGroup);
+    faq.hidden = true;
+  }
+
+  // The DB template owns sections; Premium Photo owns their visual order.
+  if (portfolio && process) portfolio.after(process);
+  if (process && blog) process.after(blog);
+  if (blog && reviews) blog.after(reviews);
+  if (reviews && contact) reviews.after(contact);
+}
+
+const reviewsRoute = document.querySelector(".premium-reviews-route");
+if (reviewsRoute) {
+  const hero = reviewsRoute.querySelector(".page-hero");
+  const heroCopy = hero?.querySelector(":scope > .container");
+  if (hero) hero.classList.add("video-band", "rv-hero");
+  if (hero && heroCopy) {
+    const pageHead = document.createElement("section");
+    pageHead.className = "page-head wrap";
+    pageHead.appendChild(heroCopy);
+    hero.after(pageHead);
+  }
+  const listSection = reviewsRoute.querySelector(".premium-review-page")?.closest("section.section");
+  listSection?.classList.add("premium-list-section");
 }
 
 // ---------- mobilní menu ----------
@@ -138,3 +225,4 @@ if (form) {
     form.querySelectorAll("input,textarea,select,button").forEach(el => el.disabled = true);
   });
 }
+})();

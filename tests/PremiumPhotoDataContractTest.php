@@ -16,9 +16,14 @@ function register_premium_photo_data_contract_tests(callable $test, callable $as
         $assert(($manifest['overrides'] ?? null) === [], 'Static per-route layouts must stay disabled.');
         $assert(!is_dir($themeDir . '/overrides') || glob($themeDir . '/overrides/*') === [], 'Dead static route copies remain in the theme.');
 
-        foreach (['blog', 'faq', 'hodnoceni', 'kontakt', 'nase-prace'] as $page) {
+        foreach (['blog', 'faq', 'kontakt', 'nase-prace'] as $page) {
             $assert(!is_file($themeDir . '/views/pages/' . $page . '.phtml'), 'Static page view remains: ' . $page);
         }
+
+        $reviewsPage = (string)file_get_contents($themeDir . '/views/pages/hodnoceni.phtml');
+        $assert(str_contains($reviewsPage, '$fragment'), 'Reviews wrapper must preserve the database fragment.');
+        $assert(str_contains($reviewsPage, 'premium-reviews-route'), 'Reviews wrapper must expose the theme route hook.');
+        $assert(!str_contains($reviewsPage, 'Jan Jungling'), 'Reviews wrapper contains static review content.');
     });
 
     $test('premium photo homepage renders the supplied database fragment unchanged', function () use ($assert): void {
@@ -42,5 +47,45 @@ function register_premium_photo_data_contract_tests(callable $test, callable $as
         $assert(str_contains($layout, '<footer class="site-footer"'), 'Footer injection target is missing.');
         $assert(!str_contains($layout, 'info@rbvideos.cz'), 'Static contact details remain in the layout.');
         $assert(!str_contains($layout, 'href="#" aria-label="Instagram"'), 'Static social links remain in the layout.');
+    });
+
+    $test('premium photo owns database snippet markup through theme partials and archetypes', function () use ($assert, $themeDir): void {
+        $requiredViews = [
+            'partials/home-service-card.phtml' => 'premium-service-card',
+            'partials/home-portfolio.phtml' => 'premium-portfolio-grid',
+            'partials/home-blog-card.phtml' => 'premium-blog-card',
+            'partials/home-reviews.phtml' => 'premium-review-grid',
+            'partials/home-faq-item.phtml' => 'faq-item',
+            'partials/home-contact.phtml' => 'premium-contact-grid',
+            'archetypes/portfolio-listing.phtml' => 'premium-list-grid',
+            'archetypes/blog-listing.phtml' => 'premium-blog-list',
+            'archetypes/blog-detail.phtml' => 'premium-article',
+            'archetypes/faq.phtml' => 'premium-faq-list',
+            'archetypes/kontakt.phtml' => 'premium-contact-page',
+            'archetypes/reviews.phtml' => 'premium-review-page',
+        ];
+
+        foreach ($requiredViews as $relativePath => $hook) {
+            $path = $themeDir . '/views/' . $relativePath;
+            $assert(is_file($path), 'Missing Premium Photo DB renderer: ' . $relativePath);
+            $assert(str_contains((string)file_get_contents($path), $hook), 'Missing designer hook ' . $hook . ' in ' . $relativePath);
+        }
+
+        $reviewsView = (string)file_get_contents($themeDir . '/views/archetypes/reviews.phtml');
+        $assert(str_contains($reviewsView, 'array_slice($items, 0, 6)'), 'Standalone reviews must keep the designer six-card composition.');
+
+        $service = ViewFactory::forTheme('premium-photo', [], 'views')->render('partials/home-service-card', [
+            'card' => [
+                'num' => '01',
+                'title' => 'DB SERVICE SENTINEL',
+                'description' => 'DB DESCRIPTION SENTINEL',
+                'imageUrl' => '/media/db-sentinel.webp',
+                'buttonText' => 'DB CTA',
+                'buttonUrl' => '/db-service',
+            ],
+        ]);
+        $assert(str_contains($service, 'premium-service-card'), 'Theme service DOM was not rendered.');
+        $assert(str_contains($service, 'DB SERVICE SENTINEL'), 'Theme service renderer lost database data.');
+        $assert(str_contains($service, '/media/db-sentinel.webp'), 'Theme service renderer lost database media.');
     });
 }

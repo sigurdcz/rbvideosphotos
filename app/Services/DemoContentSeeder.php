@@ -1461,17 +1461,40 @@ CSS;
         $this->ensureElegantWhiteHomepageSources($homepage);
         $pageId = (int) $homepage['id'];
 
+        $premiumHomepageCopy = [
+            'sluzby_title' => ['Služby - nadpis', 'Jedna kamera, jeden objektiv, celý váš příběh', 10],
+            'sluzby_intro' => ['Služby - úvod', 'Nejsme agentura. Jsme dva lidé, kteří u vás budou od ranních příprav po poslední tanec.', 11],
+            'portfolio_title' => ['Portfolio - nadpis', 'Vybráno z posledních sezón', 30],
+            'portfolio_intro' => ['Portfolio - úvod', 'Skutečné zakázky z naší databáze Naše práce.', 31],
+            'blog_title' => ['Blog - nadpis', 'Rady před svatbou', 50],
+            'blog_intro' => ['Blog - úvod', 'Praktické rady z focení a natáčení skutečných svateb.', 51],
+            'faq_title' => ['FAQ - nadpis', 'Časté dotazy', 60],
+            'reviews_title' => ['Recenze - nadpis', 'Slova novomanželů', 70],
+            'reviews_intro' => ['Recenze - úvod', 'Zkušenosti klientů po předání fotografií a filmů.', 71],
+            'kontakt_title' => ['Kontakt - nadpis', 'Napište nám, termíny mizí rychle', 90],
+            'kontakt_sub' => ['Kontakt - úvod', 'Ozvěte se s termínem a místem. Odpovíme co nejdříve.', 91],
+        ];
+        foreach ($premiumHomepageCopy as $key => [$label, $content, $sortOrder]) {
+            $this->blocks->upsert($pageId, $key, [
+                'block_type' => 'text',
+                'label' => $label,
+                'content' => $content,
+                'sort_order' => $sortOrder,
+                'autofill_disabled' => 1,
+            ]);
+        }
+
         $this->blocks->upsert($pageId, 'process_label', [
             'block_type' => 'text',
             'label' => 'Proces - stitek',
-            'content' => 'Jak to probiha',
+            'content' => 'Jak vypadá den s námi',
             'sort_order' => 82,
             'autofill_disabled' => 1,
         ]);
         $this->blocks->upsert($pageId, 'process_title', [
             'block_type' => 'text',
             'label' => 'Proces - nadpis',
-            'content' => 'Jednoduchy proces, skvely vysledek',
+            'content' => 'Svatební den snímek po snímku',
             'sort_order' => 83,
             'autofill_disabled' => 1,
         ]);

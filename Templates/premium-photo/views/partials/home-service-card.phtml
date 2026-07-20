@@ -1,0 +1,10 @@
+<?php /** @var array $card */ ?>
+<a class="tile premium-service-card<?= $card['num'] === '01' || $card['num'] === '06' ? ' tile-w2' : '' ?>" href="<?= $this->e($card['buttonUrl']) ?>">
+  <?php if ($card['imageUrl'] !== ''): ?><div class="ph premium-media" style="background-image:url('<?= $this->e($card['imageUrl']) ?>')"><img src="<?= $this->e($card['imageUrl']) ?>" alt="<?= $this->e($card['title']) ?>" loading="lazy"></div><?php endif; ?>
+  <div class="premium-card-copy">
+    <span class="t-num"><?= $this->e($card['num']) ?></span>
+    <h3><?= $this->e($card['title']) ?></h3>
+    <p><?= nl2br($this->e($card['description'])) ?></p>
+    <span class="t-more"><?= $this->e($card['buttonText']) ?> &rarr;</span>
+  </div>
+</a><?php ?>

@@ -1,0 +1,8 @@
+<?php /** @var list<array> $items */ ?>
+<?php if ($items === []): ?><p>Žádné publikované recenze.</p><?php else: ?><div class="tiles tiles-3 premium-review-grid"><?php foreach (array_slice($items, 0, 3) as $item): ?>
+  <article class="tile review">
+    <span class="quote-mark">„</span>
+    <p><?= nl2br($this->e($item['review_text'])) ?></p>
+    <div class="who"><span class="stars"><?= $this->e($item['stars']) ?></span><b><?= $this->e($item['author_name']) ?></b><?php if ($item['context_label'] !== ''): ?><span><?= $this->e($item['context_label']) ?></span><?php endif; ?></div>
+  </article>
+<?php endforeach; ?></div><?php endif; ?><?php ?>

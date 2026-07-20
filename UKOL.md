@@ -1,3 +1,48 @@
+# UKOL: Premium Photo specificke DB HTML snippet rendery
+
+Datum: 2026-07-20
+Zadani: Nahradit vychozi core HTML struktury vsech DB-backed bloku vlastnimi Premium Photo PHTML partialy a archetypy, zachovat realna systemova data a iterovat podle cerstvych Chrome screenshotu s poctivym 100bodovym hodnocenim.
+
+Hotovo kdyz: Homepage i vsechny referencni podstranky pouzivaji designerovu HTML kompozici nad DB daty, parallax a scroll timeline funguji, Chrome CDP screenshoty na zamknutem viewportu projdou povinnou vizualni rubrikou a testy live/publish neukazuji regresi.
+
+## Kroky
+
+- [x] Overit target PNG, runtime, Chrome CDP capture a vytvorit baseline se 100bodovou rubrikou.
+- [x] Zmapovat core homepage partialy a specialni archetypy na designerovu HTML strukturu.
+- [x] Implementovat Premium Photo partial overridey pro sluzby, portfolio, blog, recenze, FAQ a kontakt.
+- [x] Implementovat Premium Photo archetyp overridey pro portfolio, blog/detail, recenze, FAQ a kontakt.
+- [x] Opravit hero media, parallax, timeline a responsive interakce nad novym DOM.
+- [x] Opakovat Chrome screenshot-score iterace do maximalni poctive shody.
+- [x] Overit live/publish, PHP testy, generated assety a vsechny referencni routy.
+- [x] Aktualizovat wiki a vse commitnout bez push.
+
+## Poznamky
+
+- Pricina potvrzovana: DB zdroj dat je spravny, ale core PHTML partialy/archetypy nesou vychozi DOM, ktery neodpovida designerove Premium Photo kompozici.
+- Rubrika: globalni geometrie 20, header/nav 10, hero 15, sekcni layouty 20, typografie 10, karty/media 10, interakce 5, kontakt/footer 5, runtime integrita 5.
+- Iterace 0: `storage/qa/premium-photo-db-snippets/baseline-home-1920.png`, viewport 1920x900, full-page 1920x9293, skore 49/100. Chrome overil parallax a timeline playhead 0 -> 68.4192 %, 4 aktivni body.
+- Nejvetsi baseline problem: core DOM obaly meni kompozici, poradi a vysku sekci; DB data jsou pritom pritomna a runtime bez chyby.
+- Pridany theme-specific homepage partialy pro vsech sest datovych oblasti; PHTML prebiraji pouze ViewModel data a produkuji designerovy `tile`, `ph`, `review`, `faq-item`, `field` a `btn` DOM.
+- Designerovy sekcni nadpisy a uvody byly presunuty do idempotentniho demo DB seedu; theme je nebude doplnovat skrytym JavaScript fallbackem.
+- Theme JS je idempotentni a sklada DB sekce do designerova poradi; cenik na homepage skryva, FAQ presouva do kontaktni mezisekce a zachovava timeline mezi portfoliem a blogem. CMS CSS styluje nove PHTML DOM bez core card selektoru.
+- Iterace 1: `iteration-01-home-1920.png`, 1920x7810, 82/100. DOM a poradi odpovidaji reference podstatne lepe; nejvetsi zbyvajici konflikt je legacy svetle pozadi timeline a tmave pozadi recenzi.
+- Pridano sedm Premium Photo archetypu pro seznam/detail portfolia, seznam/detail blogu, recenze, FAQ a kontakt. Kazdy renderuje designerovy `video-band`, `page-head`, `tiles` a CTA/form struktury z predanych ViewModel dat.
+- CSS nyní explicitně přebíjí legacy pozadí timeline/recenzí a definuje geometrii theme archetypů, médií, FAQ, článků a kontaktních formulářů.
+- Iterace 2: `iteration-02-home-1920.png`, 1920x7810, 89/100. Timeline je tmava a recenze svetle; zbyvaji proporce a kontrola vsech podstranek.
+- Doplněn Premium Photo archetyp `/sluzby`, takže ani seznam služeb nepoužívá core service-card HTML.
+- Opraven dvojity navigacni `<nav>` z layoutu. Recenze jsou zamerne jen block archetyp uvnitr generic DB stranky; page view a JS premisti jeji core hero copy do designerova `page-head`, aby nevznikal zanoreny cely dokument.
+- Iterace 3: horizontalni systemova navigace a samostatny recenzni blok jsou opraveny. Designeruv obrazovy triptych mezi hero a sluzbami se sklada z URL databazoveho bloku `jb-about-visual__media`; sablona nevklada nahradni staticky obrazek.
+- Iterace 4: `iteration-04-home-1920.png`, 1920x8330, poctive skore 91/100. Parallax 1.3 -> -40.9 px, timeline playhead 0 -> 66.7483 %, 4 aktivni polozky. Mobilni 390x11756 drzi jednosloupcovou kompozici.
+- Referencni routy po vizualni kontrole: homepage 91, Nase prace 88, Blog 92, detail blogu 90, Recenze 89, FAQ 92, Kontakt 93 bodu ze 100. Rozdily obsahu jsou realna DB media/polozky, ne staticke nahrady.
+- PHP lint vsech novych PHTML/PHP souboru je cisty. `php tests/run.php`: 55 testu a 27 golden kontrol, 0 chyb. Vsechny hlavni routy vcetne `/admin/login` vraceji HTTP 200.
+- Wiki pipeline byla aktualizovana o theme snippet cascade, generic reviews wrapper a aktualni Chrome dukazy; samostatny wiki commit `caf3d8f`.
+
+## Vysledek
+
+Hotovo: Premium Photo pouziva vlastni HTML renderery nad DB ViewModel daty, designerovy DB triptych, animovany parallax/timeline a vsechny referencni routy maji cerstvy Chrome vizualni audit. Kod, publish vystupy, goldeny, testy a dokumentace jsou pripraveny k samostatnemu commitu bez push.
+
+---
+
 # UKOL: Premium Photo napojit zpet na databazi
 
 Datum: 2026-07-20
