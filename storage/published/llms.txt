@@ -58,7 +58,7 @@ Web slouzi k predstaveni nabidky, ukazek prace, cenovych informaci a kontaktniho
 
 ## Posledni aktualizace
 
-- 2026-07-19
+- 2026-07-20
 
 ## Technicke discovery soubory
 
