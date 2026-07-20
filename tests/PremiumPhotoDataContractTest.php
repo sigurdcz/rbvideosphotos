@@ -49,6 +49,18 @@ function register_premium_photo_data_contract_tests(callable $test, callable $as
         $assert(!str_contains($layout, 'href="#" aria-label="Instagram"'), 'Static social links remain in the layout.');
     });
 
+    $test('premium photo homepage suppresses legacy fades and preserves the scroll timeline axis', function () use ($assert, $themeDir): void {
+        $css = (string)file_get_contents($themeDir . '/assets/cms.css');
+        $js = (string)file_get_contents($themeDir . '/assets/theme.js');
+
+        $assert(str_contains($css, '.premium-photo-home .section::before'), 'Homepage fade reset selector is missing.');
+        $assert(str_contains($css, 'content: none !important'), 'Legacy homepage fade is not disabled.');
+        $assert(str_contains($css, '.premium-photo-home #nase-prace'), 'Portfolio dark-background override is missing.');
+        $assert(str_contains($css, '#proces.timeline .tl-rail'), 'Timeline rail styling is missing.');
+        $assert(str_contains($css, '#proces.timeline .tl-playhead'), 'Timeline playhead styling is missing.');
+        $assert(str_contains($js, 'playhead.style.top = (progress * 100) + "%"'), 'Timeline playhead is not connected to scroll progress.');
+    });
+
     $test('premium photo owns database snippet markup through theme partials and archetypes', function () use ($assert, $themeDir): void {
         $requiredViews = [
             'partials/home-service-card.phtml' => 'premium-service-card',

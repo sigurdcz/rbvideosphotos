@@ -1,3 +1,35 @@
+# UKOL: Premium Photo prechody a timeline
+
+Datum: 2026-07-20
+Zadani: Na homepage odstranit bile fade pasy a nepatricnou hnedou mezi portfoliem a procesem a obnovit viditelnou stredovou caru timeline s teckou pohybovanou podle scrollu.
+
+Hotovo kdyz: Portfolio a timeline navazuji cistym tmavym pozadim bez bilych fade efektu a hnede, stredem timeline vede viditelna cara, tecka meni polohu pri scrollu a cerstvy Chrome screenshot i interakcni metriky opravu potvrdi.
+
+## Kroky
+
+- [x] Zachytit baseline a zmerit CSS konflikt prechodu, barev a timeline vrstev.
+- [x] Opravit Premium Photo CSS bez zasahu do DB obsahu.
+- [x] Overit desktop, mobil, scroll tecku a vizualni skore.
+- [x] Spustit testy a aktualizovat relevantni dokumentaci.
+
+## Poznamky
+
+- Rubrika 100 bodu: ciste hranice sekci 40, spravne tmave barvy 20, stredova cara a tecka 25, scrollova interakce 15.
+- Podezreni ze zdroje: globalni `frontend-runtime.css` pridava homepage sekcim svetly pseudo-element `::before` a hnedou `section--dark`; Premium Photo musi tyto legacy efekty explicitne zrusit ve vlastnim scope.
+- Baseline: `storage/qa/premium-photo-timeline-fade/baseline-home-1920.png`, Chrome 1920x900, full-page 8330 px, skore 20/100. Timeline DOM i JS existuji a playhead meni `top` 0 -> 66.7483 %, ale legacy fade, hnede pozadi a slabe/prebite vrstvy caru a tecku vizualne skryvaji.
+- `cms.css` nyni v Premium Photo homepage scope rusi legacy sekcni `::before`, sjednocuje portfolio a proces na `var(--night)` a explicitne definuje desktop/mobile osu, karty, spojky a viditelnou scroll tecku.
+- Iterace 1: `iteration-01-home-1920.png`, Chrome 1920x900, full-page 8159 px, skore 93/100. Fade i hneda jsou odstraneny, sekce navazuji jednim tmavym platnem a timeline geometrie je obnovena; osa byla pro finalni iteraci zesilena kvuli kontrastu v plnem screenshotu.
+- Iterace 2: `iteration-02-home-1920.png`, Chrome 1920x900, full-page 8161 px, skore 100/100 pro zadane prechody/barvu/timeline. Tecka se posunula 0 -> 71.6135 % a aktivovala 4 polozky. Mobil `iteration-02-home-mobile-390.png` ma 390x11848 px a tecka se posunula 0 -> 65.3677 %.
+- Do `PremiumPhotoDataContractTest.php` byla pridana regresni brana pro zruseni legacy fade, tmave portfolio, osu/tecku a JS vazbu tecky na scroll progress.
+- `php tests/run.php`: 56 testu a 27 golden kontrol, 0 chyb; zmenene live/publish goldeny byly vygenerovany stejnou render pipeline. README ani ARCHITECTURE se nemeni, protoze jde o theme-specific kaskadovy fix; rekonstrukcni postup je doplnen v projektove wiki.
+- Wiki `projects/seo-editor/pipelines.html` obsahuje pricinu, minimalni CSS/JS jadro a desktop/mobile acceptance; samostatny wiki commit `5c33595`.
+
+## Vysledek
+
+Hotovo: homepage nema legacy bile fade ani hnedou sekci, portfolio a proces sdileji designerovo tmave pozadi a timeline ma na desktopu i mobilu viditelnou stredovou osu, spojky a scrollovanou tecku. Finalni zamerene vizualni skore je 100/100.
+
+---
+
 # UKOL: Premium Photo specificke DB HTML snippet rendery
 
 Datum: 2026-07-20
