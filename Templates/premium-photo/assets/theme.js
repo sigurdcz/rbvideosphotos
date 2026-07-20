@@ -48,22 +48,51 @@ if (premiumHome) {
   process?.querySelector(".container")?.classList.add("wrap");
 
   // HomepageSectionRenderer resolves this URL from the CMS block
-  // jb-about-visual__media. The theme owns only the three-panel composition.
-  if (aboutVisualSource && services && !premiumHome.querySelector(".premium-about-visual")) {
+  // jb-about-visual__media. The point list reuses the existing DB-backed
+  // service cards (title + description) rather than inventing new copy.
+  if (aboutVisualSource && services && !premiumHome.querySelector(".premium-about-split")) {
     const src = aboutVisualSource.dataset.src || "";
-    if (src) {
-      const visual = document.createElement("section");
-      visual.className = "premium-about-visual wrap";
-      visual.setAttribute("aria-label", "O nas");
-      visual.innerHTML = [
-        '<div class="premium-about-visual__panel premium-about-visual__panel--main"></div>',
-        '<div class="premium-about-visual__panel premium-about-visual__panel--detail-a"></div>',
-        '<div class="premium-about-visual__panel premium-about-visual__panel--detail-b"></div>'
-      ].join("");
-      visual.querySelectorAll(".premium-about-visual__panel").forEach(panel => {
-        panel.style.backgroundImage = `url("${src.replace(/["\\]/g, "\\$&")}")`;
+    const serviceCards = [...services.querySelectorAll(".premium-service-card")].slice(0, 4);
+    if (src && serviceCards.length) {
+      const about = document.createElement("section");
+      about.className = "premium-about-split wrap";
+      about.setAttribute("aria-label", "O nas");
+
+      const frame = document.createElement("div");
+      frame.className = "premium-about-split__media";
+      const photo = document.createElement("div");
+      photo.className = "premium-about-split__frame";
+      photo.style.backgroundImage = `url("${src.replace(/["\\]/g, "\\$&")}")`;
+      frame.appendChild(photo);
+
+      const body = document.createElement("div");
+      body.className = "premium-about-split__body";
+      const label = document.createElement("p");
+      label.className = "section-label";
+      label.textContent = "O nás";
+
+      const list = document.createElement("div");
+      list.className = "premium-about-split__list";
+      serviceCards.forEach(card => {
+        const num = card.querySelector(".t-num")?.textContent || "";
+        const title = card.querySelector("h3")?.textContent || "";
+        const desc = card.querySelector("p")?.textContent || "";
+        const item = document.createElement("div");
+        item.className = "premium-about-split__item";
+        const itemNum = document.createElement("span");
+        itemNum.className = "t-num";
+        itemNum.textContent = num;
+        const itemTitle = document.createElement("h3");
+        itemTitle.textContent = title;
+        const itemDesc = document.createElement("p");
+        itemDesc.textContent = desc;
+        item.append(itemNum, itemTitle, itemDesc);
+        list.appendChild(item);
       });
-      services.before(visual);
+
+      body.append(label, list);
+      about.append(frame, body);
+      services.before(about);
     }
   }
 

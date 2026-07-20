@@ -560,3 +560,37 @@ Rubrika: geometrie 20, header 10, hero+parallax 15, sekce 20, typografie 10, med
 - Finalni Chrome CDP dukazy: `premium-photo-iteration-04-1920.png`, `premium-photo-portfolio-iteration-02-1920.png`, `premium-photo-blog-iteration-02-1920.png`, `premium-photo-blog-post-iteration-02-1920.png`, `premium-photo-reviews-iteration-03-1920.png`, `premium-photo-faq-iteration-02-1920.png`, `premium-photo-contact-iteration-02-1920.png`.
 - Scroll test: parallax `translateY` se pri 400 px zmenil z `-24.9px` na `-80.9px`; timeline pri scrollY 3499 px posunula playhead z `0%` na `60.84%` a aktivovala 4 polozky.
 - `php tests/run.php`: 51/51 testu proslo. Golden kontrola zustava 25/27 CHANGED pouze kvuli generovanemu publish casu a CSRF tokenu; tyto testove artefakty byly po kontrole vraceny a snapshoty nebyly prepsany.
+
+---
+
+# UKOL: Premium Photo - FAQ pozadi a O nas layout
+
+Datum: 2026-07-21
+Zadani: Opravit hnede pozadi sekce Otazky (ma byt bile) a predelat sekci O nas na dvousloupcove zobrazeni (foto vlevo mensi, seznam bodu vpravo s existujicim obsahem ze sluzeb).
+Hotovo kdyz: FAQ sekce ma bile pozadi a citelny tmavy text jako sekce Hodnoceni, sekce O nas zobrazuje zmensenou fotku vlevo a cislovany seznam bodu (ze services obsahu) vpravo, cerstvy Chrome screenshot to potvrdi na desktopu i mobilu.
+
+## Kroky
+
+- [x] Diagnostikovat pricinu hnedeho pozadi FAQ (Chrome CDP na lokalnim serveru).
+- [x] Opravit FAQ pozadi/text v cms.css (override analogicky k #hodnoceni).
+- [x] Predelat O nas triptych na dvousloupcovy layout (foto vlevo + seznam bodu vpravo z services obsahu) v theme.js/cms.css.
+- [x] Regenerovat/publikovat assety, overit Chrome screenshotem desktop i mobil.
+- [x] Spustit PHP testy, commitnout bez push.
+
+## Poznamky
+
+- Pricina FAQ bugu: `<section id="faq">` ma v DB/page obsahu tridu `section--dark`, ktera spousti globalni legacy hnedy gradient z `public/assets/frontend-runtime.css` (`.section-dark,.section--dark{background:radial-gradient(...)!important}`). Premium-photo ma explicitni override pro `#hodnoceni` (vraci bile pozadi), ale pro `#faq` zadny neexistuje.
+- Druha vrstva bugu: `.hp-faq-item` (obal kolem FAQ tile karty) dostava tmave navy pozadi `#18181c` z genericke/DB-seedovane vychozi CSS (`database/seeds/seed.php`), kterou premium-photo take nepremazava.
+- Chrome CDP diagnostika na `http://localhost:8000/`: `faqHidden:true` (JS merge do kontakt sekce funguje lokalne), ale computed `faqBg` je presto hnedy gradient a `itemBg` je `rgb(24,24,28)` - potvrzuje oba zdroje bugu i pro pripad, ze by FAQ merge selhal (produkce mohla bezet starsi/jina assety, proto oprava CSS at je defensivni bez ohledu na JS stav).
+- Uzivatel potvrdil: pro sekci O nas se maji pouzit existujici texty ze sekce sluzby (nazev + popis prvnich cca 4 polozek), nevymyslet novy obsah.
+- O nas layout: aktualne triptych `premium-about-visual` (3x oriznuta stejna fotka z DB bloku `jb-about-visual__media`) pred `#sluzby`. Novy layout: vlevo jedna mensi fotka, vpravo cislovany seznam bodu prevzaty z existujicich service karet (title+desc), bez vymysleni noveho nadpisu/marketingoveho textu.
+- Na lokalnim serveru `faqHidden:true` uz pred i po oprave (JS merge FAQ do kontakt sekce funguje spravne) - produkcni screenshot uzivatele tedy nejspis bezel na starsim/jinak nasazenem publish vystupu; CSS oprava `#faq` je presto zadouci jako defenzivni fallback, kdyby se merge nekdy nespustil (zakazany JS, chyba selectoru apod.).
+- Chrome CDP po oprave: `faqBg` (computed backgroundImage) je nyni `"none"` (zadny hnedy gradient), `itemBg` je `rgb(253,252,250)` (= var(--paper)), `titleColor`/`faqColor` je `rgb(25,28,34)` (= var(--ink)) - presne odpovida cilovemu stavu.
+- Nova komponenta `premium-about-split` (JS v `theme.js`, CSS v `cms.css`) nahrazuje `premium-about-visual` triptych; stare `.premium-about-visual*` pravidla (vcetne osirelych media-query override) byla odstranena z `cms.css`.
+- Seznam bodu v O nas se klonuje z `#sluzby .premium-service-card` (cislo, h3, p) pres `textContent`, ne `innerHTML`, aby nevznikl XSS vektor.
+- Chrome CDP dukazy: `storage/qa/premium-photo-faq-onas/after-fix-1920.png` (1920x8219) a `after-fix-390.png` (390x12400) - O nas sekce ma vlevo jednu mensi fotku, vpravo cislovany 2x2 seznam s deliaci carou; kontakt+FAQ+footer navazuji cistě bez prazdneho/hnedeho pruhu.
+- `php tests/run.php`: 56 testu + 27 golden kontrol, 0 chyb (asset hashe v golden HTML jsou normalizovany, takze zmena CSS/JS obsahu je bez dopadu na golden diff).
+
+## Vysledek
+
+Hotovo. FAQ sekce (`#faq`) ma nyni explicitni override v `cms.css` (analogicky k `#hodnoceni`), ktery premazava legacy hnedy `.section--dark` gradient a tmave `.hp-faq-item` pozadi bilou/paper barvou s tmavym textem - overeno Chrome CDP computed styly i screenshotem. Sekce O nas byla predelana z triptychu na dvousloupcovy layout (`premium-about-split`): vlevo jedna zmensena portretni fotka, vpravo cislovany seznam 4 bodu prevzaty z existujiciho obsahu sluzeb (bez vymysleneho textu), responzivne overeno na desktopu i mobilu. `php tests/run.php` 56/56 + 27/27 golden bez chyb. Zmeny pripraveny ke commitu bez push.

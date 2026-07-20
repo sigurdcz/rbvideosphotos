@@ -74,23 +74,24 @@ body > footer { display: block; }
 }
 .premium-photo-home .btn-primary { background: var(--vermillion); border-color: var(--vermillion); color: #fff; }
 
-.premium-about-visual {
+.premium-about-split {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(220px, 1fr);
-  grid-template-rows: repeat(2, minmax(150px, 1fr));
-  gap: var(--gap);
-  min-height: 520px;
+  grid-template-columns: minmax(0, 340px) minmax(0, 1fr);
+  gap: 56px;
+  align-items: start;
   padding-block: 28px 78px;
 }
-.premium-about-visual__panel {
+.premium-about-split__frame {
   position: relative;
   overflow: hidden;
+  aspect-ratio: 4 / 5;
   border-radius: var(--radius);
   background-color: #17191d;
   background-repeat: no-repeat;
   background-size: cover;
+  background-position: center 30%;
 }
-.premium-about-visual__panel::after {
+.premium-about-split__frame::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -98,9 +99,19 @@ body > footer { display: block; }
   border-radius: inherit;
   background: linear-gradient(135deg, rgba(10,11,14,.05), rgba(10,11,14,.42));
 }
-.premium-about-visual__panel--main { grid-row: 1 / -1; background-position: center 35%; }
-.premium-about-visual__panel--detail-a { background-position: 75% 24%; }
-.premium-about-visual__panel--detail-b { background-position: 25% 72%; }
+.premium-about-split__body { display: grid; gap: 28px; align-content: start; padding-top: 6px; }
+.premium-about-split__list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 26px 32px; }
+.premium-about-split__item { display: grid; gap: 6px; padding-top: 16px; border-top: 1px solid var(--line); }
+.premium-about-split__item .t-num { color: var(--champagne-deep); font: .65rem/1 var(--font-mono); letter-spacing: .18em; }
+.premium-about-split__item h3 { font-size: 1.05rem; }
+.premium-about-split__item p { margin: 0; font-size: .88rem; color: var(--ink-soft); }
+@media (max-width: 850px) {
+  .premium-about-split { grid-template-columns: 1fr; gap: 32px; }
+  .premium-about-split__frame { max-width: 320px; margin-inline: auto; }
+}
+@media (max-width: 620px) {
+  .premium-about-split__list { grid-template-columns: 1fr; }
+}
 
 .hp-services-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--gap); margin-top: 40px; }
 .hp-svc-card {
@@ -197,13 +208,10 @@ body > footer { display: block; }
 .site-header > .wrap > .site-nav .nav-links a { padding: 0; }
 
 @media (max-width: 850px) {
-  .premium-about-visual { min-height: 420px; grid-template-columns: 1.4fr 1fr; }
   .hp-services-grid, .pt-grid, .hp-blog-grid, .hp-reviews-grid, .bl-grid, .reviews-page-grid { grid-template-columns: 1fr 1fr; }
   .hp-contact-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 620px) {
-  .premium-about-visual { grid-template-columns: 1fr 1fr; grid-template-rows: 280px 150px; padding-inline: 14px; }
-  .premium-about-visual__panel--main { grid-column: 1 / -1; grid-row: auto; }
   .premium-photo-home .container, .pf-hero .container, .bl-hero .container, .fq-hero .container,
   .kt-hero .container, .kt-wrap .container, .kt-process .container, .kt-faq .container,
   .bp-hero .container, .bp-content-wrap .container, .grid-wrap .container, .bl-grid-wrap .container { width: min(100% - 28px, 1180px); }
@@ -396,6 +404,18 @@ body.theme-premium-photo .premium-photo-home #hodnoceni {
   background: var(--paper) !important;
 }
 body.theme-premium-photo .premium-photo-home #hodnoceni .section-title { color: var(--ink); }
+body.theme-premium-photo .premium-photo-home #faq {
+  color: var(--ink) !important;
+  background: var(--paper) !important;
+}
+body.theme-premium-photo .premium-photo-home #faq .section-title { color: var(--ink); }
+body.theme-premium-photo .premium-photo-home #faq .hp-faq-item {
+  background: var(--paper) !important;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+body.theme-premium-photo .premium-photo-home #faq .faq-item summary { color: var(--ink); }
+body.theme-premium-photo .premium-photo-home #faq .faq-a { color: var(--ink-soft); }
 
 @media (max-width: 959px) {
   body.theme-premium-photo .premium-photo-home #proces.timeline .tl-list {
