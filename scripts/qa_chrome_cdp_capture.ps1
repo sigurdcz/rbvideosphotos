@@ -4,6 +4,7 @@ param(
     [int]$Width = 1280,
     [int]$Height = 800,
     [int]$Port = 9333,
+    [string]$InteractionOutput = '',
     [string]$ChromePath = 'C:\Program Files\Google\Chrome\Application\chrome.exe'
 )
 
@@ -110,13 +111,33 @@ $interaction = Send-CdpCommand $socket (++$id) 'Runtime.evaluate' @{
 (async () => {
   const timeline = document.querySelector('.timeline');
   const playhead = document.querySelector('.tl-playhead');
+  const rail = document.querySelector('.tl-rail');
   const parallax = document.querySelector('[data-parallax]');
+  const visualState = (element) => {
+    if (!element) return null;
+    const rect = element.getBoundingClientRect();
+    const style = getComputedStyle(element);
+    return {
+      x: rect.x,
+      y: rect.y,
+      width: rect.width,
+      height: rect.height,
+      display: style.display,
+      position: style.position,
+      zIndex: style.zIndex,
+      opacity: style.opacity,
+      visibility: style.visibility,
+      backgroundColor: style.backgroundColor
+    };
+  };
   const before = {
     scrollY: window.scrollY,
     timelineTop: timeline ? timeline.getBoundingClientRect().top + window.scrollY : null,
     timelineHeight: timeline?.getBoundingClientRect().height || null,
     playheadTop: playhead?.style.top || '',
-    parallaxTransform: parallax?.style.transform || ''
+    parallaxTransform: parallax?.style.transform || '',
+    rail: visualState(rail),
+    playhead: visualState(playhead)
   };
   document.documentElement.style.scrollBehavior = 'auto';
   window.scrollTo(0, 400);
@@ -130,16 +151,32 @@ $interaction = Send-CdpCommand $socket (++$id) 'Runtime.evaluate' @{
     scrollY: window.scrollY,
     playheadTop: playhead?.style.top || '',
     parallaxTransform: parallax?.style.transform || '',
-    activeItems: document.querySelectorAll('.tl-item.on').length
+    activeItems: document.querySelectorAll('.tl-item.on').length,
+    timelineProgress: timeline ? getComputedStyle(timeline).getPropertyValue('--timeline-progress').trim() : '',
+    rail: visualState(rail),
+    playhead: visualState(playhead)
   };
-  window.scrollTo(0, 0);
-  await new Promise(resolve => setTimeout(resolve, 100));
   return { before, parallaxAt400, after };
 })()
 '@
     returnByValue = $true
     awaitPromise = $true
 }
+
+$interactionOutputPath = $null
+if ($InteractionOutput -ne '') {
+    $interactionCapture = Send-CdpCommand $socket (++$id) 'Page.captureScreenshot' @{
+        format = 'png'
+        fromSurface = $true
+    }
+    $interactionOutputPath = [IO.Path]::GetFullPath((Join-Path (Get-Location) $InteractionOutput))
+    [IO.File]::WriteAllBytes($interactionOutputPath, [Convert]::FromBase64String($interactionCapture.data))
+}
+
+Send-CdpCommand $socket (++$id) 'Runtime.evaluate' @{
+    expression = '(async () => { window.scrollTo(0, 0); await new Promise(resolve => setTimeout(resolve, 100)); })()'
+    awaitPromise = $true
+} | Out-Null
 
 $metrics = Send-CdpCommand $socket (++$id) 'Page.getLayoutMetrics'
 $pageHeight = [Math]::Ceiling($metrics.cssContentSize.height)
@@ -183,6 +220,7 @@ if ($chromeProcess -and -not $chromeProcess.HasExited) {
 }
 [pscustomobject]@{
     Screenshot = $outputPath
+    InteractionScreenshot = $interactionOutputPath
     Width = $Width
     Height = $pageHeight
     Runtime = $inspection.result.value

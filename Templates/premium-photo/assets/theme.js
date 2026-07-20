@@ -166,7 +166,9 @@ if (tl) {
     const rect = tl.getBoundingClientRect();
     const mid = window.innerHeight * 0.45;
     const progress = Math.min(1, Math.max(0, (mid - rect.top) / rect.height));
-    if (playhead) playhead.style.top = (progress * 100) + "%";
+    const progressPercent = (progress * 100).toFixed(4) + "%";
+    tl.style.setProperty("--timeline-progress", progressPercent);
+    if (playhead) playhead.style.top = progressPercent;
     items.forEach(it => {
       const r = it.getBoundingClientRect();
       it.classList.toggle("on", r.top < mid + 40);

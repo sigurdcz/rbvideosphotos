@@ -1,3 +1,35 @@
+# UKOL: Premium Photo viditelny scroll playhead
+
+Datum: 2026-07-20
+Zadani: Udelat pohyb timeline pri scrollovani jednoznacne viditelny vyraznym bodem a postupne vyplnovanou stredovou osou a dokazat zmenu screenshotem primo v timeline.
+
+Hotovo kdyz: Bod je na desktopu i mobilu jasne viditelny, meni polohu podle scroll progress, vypln osy konci pod bodem a Chrome dukaz zachyti rozdilne stavy timeline.
+
+## Kroky
+
+- [x] Zmerit aktualni playhead a pripravit zamerene Chrome zachyceni timeline.
+- [x] Doplnit vyrazny bod a scroll progress vypln osy.
+- [x] Overit pred/po scrollu, mobil, testy a publikovany vystup.
+- [x] Aktualizovat dokumentaci a commitnout opravu bez push.
+
+## Poznamky
+
+- Predchozi full-page capture prokazal zmenu inline `top`, ale bod byl v celkovem zmenseni prakticky necitelny. Nova acceptance vyzaduje nejen metriku, ale zamerene viditelny stav.
+- Rubrika 100 bodu: viditelnost bodu 35, viditelny pohyb 30, progress vypln osy 20, desktop/mobile a runtime 15.
+- Theme JS nyni zapisuje stejny `progressPercent` do `--timeline-progress` i `playhead.style.top`. CSS zobrazuje 20px zlaty bod s bilym stredem a vyplnuje osu od zacatku po aktualni polohu, takze scroll stav je citelny i bez sledovani samotneho bodu.
+- Chrome CDP helper dostal volitelny `-InteractionOutput`: po testovacim scrollu ulozi samostatny viewport screenshot jeste pred navratem na zacatek a vedle nej zachova plny page capture. Tim lze vizualne dokazat bod primo v jeho posunute poloze.
+- Prvni zamereny screenshot spravne odhalil, ze live HTML stale nacital predchozi generovany hash CSS/JS; zdrojove zmeny proto nebyly vizualnim dukazem. Pred dalsim skore je povinna regenerace publish/golden assetu a novy Chrome capture nad novym hashem.
+- Druhy diagnosticky capture odhalil skutecnou pricinu: computed `position: relative` na ose i bodu a vysku osy `0 px`. Inline posun na `71.4071%` proto bod nechal u nadpisu. Finalni theme vrstva nastavuje explicitni `position: absolute`, desktop/mobile `left`, a osu rozpina pres `top: 0; bottom: 0`.
+- Desktop dukaz `storage/qa/premium-photo-timeline-fade/fixed-playhead-scrolled-1920.png`: osa `3 x 1092.765625 px`, bod `20 x 20 px`, posun `0% -> 72.0734%`, konec bodu ve viewportu `y=394.984375`.
+- Mobilni dukaz `storage/qa/premium-photo-timeline-fade/fixed-playhead-scrolled-390.png`: osa `3 x 1236.71875 px`, leva kotva `x=24`, posun `0% -> 65.7033%`, bod ve viewportu `y=369.796875`.
+- Vysledna iterace: viditelnost 35/35, prokazany pohyb 30/30, progress vypln 20/20, desktop/mobile/runtime 15/15 = 100/100. `php tests/run.php`: 56/56 a golden checks 27/27; PHP lint a `git diff --check` bez chyb.
+
+## Vysledek
+
+Hotovo. Bod je ukotveny k cele timeline, pri scrollovani se pohybuje spolu se zlatou vyplni osy a focused Chrome screenshoty potvrzuji desktop i mobil.
+
+---
+
 # UKOL: Premium Photo prechody a timeline
 
 Datum: 2026-07-20
