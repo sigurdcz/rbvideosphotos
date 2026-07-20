@@ -594,3 +594,30 @@ Hotovo kdyz: FAQ sekce ma bile pozadi a citelny tmavy text jako sekce Hodnoceni,
 ## Vysledek
 
 Hotovo. FAQ sekce (`#faq`) ma nyni explicitni override v `cms.css` (analogicky k `#hodnoceni`), ktery premazava legacy hnedy `.section--dark` gradient a tmave `.hp-faq-item` pozadi bilou/paper barvou s tmavym textem - overeno Chrome CDP computed styly i screenshotem. Sekce O nas byla predelana z triptychu na dvousloupcovy layout (`premium-about-split`): vlevo jedna zmensena portretni fotka, vpravo cislovany seznam 4 bodu prevzaty z existujiciho obsahu sluzeb (bez vymysleneho textu), responzivne overeno na desktopu i mobilu. `php tests/run.php` 56/56 + 27/27 golden bez chyb. Zmeny pripraveny ke commitu bez push.
+
+---
+
+# UKOL: Premium Photo - oprava spatne fotky u karty Svatebni den
+
+Datum: 2026-07-21
+Zadani: Karta "Svatebni den - foto + video" v sekci Co nabizime (#sluzby) zobrazuje fotku fotografu misto nevesty a zenicha; overit zdroj (DB vs sablona) a nahradit spravnou fotkou.
+Hotovo kdyz: Karta "Svatebni den - foto + video" zobrazuje fotku nevesty a zenicha (polibek u kamenne zdi), ne fotografy; overeno primo v DB a cerstvym screenshotem.
+
+## Kroky
+
+- [x] Overit primo v DB, jestli je fotka services karty 1 tazena z databaze a jaka je skutecna hodnota `image_url`.
+- [x] Najit spravnou existujici media polozku pro tuto kartu (bez nahravani noveho souboru).
+- [x] Opravit chybny radek v DB (service_items) na spravne media URL pres novou migraci (ne primym UPDATE bez auditni stopy).
+- [x] Overit opravu cerstvym screenshotem a testy, aktualizovat goldeny.
+
+## Poznamky
+
+- Diagnostika primo v MySQL (`service_items`, `content_blocks`, `media`): karta "Svatebni den - foto + video" (`service_items.id=11`, `site_id=1`) mela `image_url = /storage/media/2026/07/img_6a5476313a0dc3.03536396.png`, coz je soubor zaregistrovany v `media` jako `original_filename='weare2.png'` (fotka fotografu, spravne pouzita jen v `jb-about-visual__media` bloku pro sekci O nas).
+- Spravna fotka pro tuto kartu uz v DB existovala: `media.id=9`, `original_filename='svatba-nevesta-zenich-polibek-kamenna-zed.webp'` -> `/storage/media/2026/07/img_6a5476313bfdf9.73040329.webp` (stejna fotka jako hero pozadi a karta "Svatebni klipy"/"Dron & same-day edit"). Odpovida i puvodnimu zamerudlu `DemoContentSeeder::servicePages()[0]['image']`.
+- Prohledani `content_blocks` a `service_items` potvrdilo, ze chybne pouziti fotky fotografu bylo izolovane jen na tomto jednom radku - `jb-about-visual__media` je spravne.
+- Oprava provedena cilenym `UPDATE service_items SET image_url = ? WHERE id = 11 AND site_id = 1 AND image_url = <stara hodnota>` (bezpecnostni guard na stavajici hodnotu), ne pres `ServiceRepository::upsertMany()`, aby se neprepsaly pripadne dalsi rucni admin upravy ostatnich sluzeb.
+- Nejde o vizualni/CSS chybu ani o sablonovy problem - cisty DB data bug (spatne prirazena media polozka pri drivejsim seedovani/uprave).
+
+## Vysledek
+
+Hotovo. Karta "Svatebni den — foto + video" v `#sluzby` opravdu tahala fotku z DB (`service_items.image_url`) a mela chybne prirazenou fotku fotografu (media `weare2.png`, spravne pouzitou jinde jen v `jb-about-visual__media`) misto fotky nevesty a zenicha. Oprava probehla novou idempotentni migraci `022_fix_svatebni_den_service_image.sql` (ne primym UPDATE bez auditni stopy) a je overena `php database/migrate-mysql.php`, cerstvym screenshotem a golden testy (`php tests/run.php --update-goldens`, 56 testu + 27 golden, 0 chyb). Mimo tento task bylo take opraveno: predchozi commit `fix(premium-photo): white FAQ background...` obsahoval zakazany radek `Co-Authored-By`, ktery INSTRUCTIONS.md vyslovne zakazuje — opraveno pres `git commit --amend` (commit nebyl pushnuty).
