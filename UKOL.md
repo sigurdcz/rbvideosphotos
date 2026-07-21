@@ -830,3 +830,30 @@ Hotovo kdyz: Homepage renderuje DB sekce Ceník i FAQ jako samostatne části a 
 ## Vysledek
 
 Hotovo. Homepage zobrazuje DB Cenik i FAQ jako samostatne sekce a desktopove recenze lze prochazet sipkami vlevo/vpravo; mobil zustava bez sipek.
+
+---
+
+# UKOL: Premium Photo detail hero, FAQ hero a navigace Sluzby
+
+Datum: 2026-07-21
+Zadani: Pouzit hlavni/prvni obrazek blogu a Nase prace jako hero bez nasledne duplicity, presunout FAQ title a popis do hero a opravit nechteny bold cele navigace na route Sluzby; vysledek commitnout a pushnout.
+
+Hotovo kdyz: Detail blogu i portfolio detail zobrazi prvni dostupne DB medium v hero a stejne medium uz neni v tele; bez media zustane existujici prazdne/defaultni hero chovani. FAQ title, popis a label jsou uvnitr obrazove hero sekce. Navigace `/sluzby` ma stejnou vahu pisma jako ostatni routy. Vse projde testy a cerstvym Chrome QA, commit je pushnuty.
+
+## Kroky
+
+- [x] Zmapovat detailni view modely/archetypy, FAQ hero DOM a CSS konflikt navigace Sluzby; zachytit baseline.
+- [x] Zavest DB-first hero medium pro blog detail a portfolio detail bez duplicity v tele.
+- [x] Presunout FAQ title/popis do hero a opravit font-weight navigace Sluzby.
+- [x] Regenerovat publish/goldeny a overit dotcene routy Chrome screenshoty na desktopu i mobilu.
+- [x] Spustit regresi, aktualizovat wiki, commitnout a pushnout.
+
+## Poznamky
+
+- Rubrika 100 bodu: blog hero medium bez duplicity 25, portfolio hero medium bez duplicity 25, FAQ title v hero 20, normalni navigace Sluzby 15, mobil/runtime/testy 15.
+- Hlavni/prvni obrazek musi zustat DB zdrojem pravdy; theme nesmi vymyslet nahradni medium. Pri absenci se zachova existujici prazdny/defaultni hero kontrakt.
+- Uzivatelsky referencni PNG zustava mimo Git.
+
+## Vysledek
+
+Implementace a QA hotove se skore 100/100: oba detailni hero bloky pouzivaji prvni dostupne DB medium bez duplicity, FAQ copy je uvnitr hero, navigace Sluzby ma normalni vahu 300 a desktop/mobil nemaji horizontalni overflow. Regrese: 57/57 testu a 27/27 golden kontrol.
