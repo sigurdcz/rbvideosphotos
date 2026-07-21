@@ -654,3 +654,27 @@ Hotovo kdyz: Obě tlačítka mají stejnou mezeru nad sebou jako tlačítko Blog
 ## Vysledek
 
 Hotovo. Tlačítka "Naše práce" a "Hodnocení" mají nyní stejný 36px odstup od obsahu nad sebou jako tlačítko Blog (CSS oprava `margin-bottom` na příslušných grid kontejnerech v `cms.css`). Tlačítko Hodnocení zobrazuje skutečný počet zbývajících recenzí "Dalších 30 hodnocení" místo statického "Hodnocení" (nová `ReviewContentService::countActive()` + `HomepageContentService::buildReviewsCtaHtml()`). Patička byla generická napříč celým webem kvůli natvrdo nastavenému `forTheme(null)` v `FooterRenderer` — opraveno na skutečné rozlišení aktivního tématu, a přidán premium-photo footer partial odpovídající referenčnímu designu, plně DB-driven (žádný vymyšlený text). Ověřeno Chrome CDP měřením, screenshoty desktop/mobil a `php tests/run.php` (56 testů + 27 golden, 0 chyb).
+
+---
+
+# UKOL: Premium Photo - CTA tlačítko Kontakt v sekci O nás
+
+Datum: 2026-07-21
+Zadani: Přidat do sekce O nás CTA tlačítko vedoucí na Kontakt.
+Hotovo kdyz: Sekce O nás má pod seznamem bodů tlačítko "Kontakt" odkazující na `/kontakt`, správně velké (ne roztažené na celou šířku), ověřeno na desktopu i mobilu.
+
+## Kroky
+
+- [x] Přidat CTA `<a href="/kontakt">Kontakt</a>` do `premium-about-split__body` v theme.js (za seznam bodů).
+- [x] Zajistit správnou velikost/zarovnání tlačítka v CSS grid kontejneru (`justify-self: start`).
+- [x] Ověřit screenshotem desktop/mobil a testy.
+
+## Poznamky
+
+- `.premium-about-split__body{display:grid}` by bez `justify-self:start` roztáhl `<a class="btn btn-ghost">` (inline-flex) na celou šířku grid buňky — přidáno `.premium-about-split__body > .btn { justify-self: start; }` do cms.css.
+- Odkaz `/kontakt` a label "Kontakt" jsou hardcoded stejně jako ostatní strukturální nav odkazy v theme.js (např. `/faq` u FAQ merge tlačítka) — jde o pevnou routu webu, ne o vymyšlený obsah.
+- `php tests/run.php`: 56 testů + 27 golden, 0 chyb (goldeny beze změny — tlačítko je JS-generované, ne v statickém HTML).
+
+## Vysledek
+
+Hotovo. Sekce O nás má nové CTA tlačítko "Kontakt" pod seznamem bodů, odkazuje na `/kontakt`, správně velikostně omezené (ne roztažené), ověřeno na desktopu i mobilu screenshotem a čistým průchodem testů.

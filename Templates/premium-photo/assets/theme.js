@@ -90,7 +90,12 @@ if (premiumHome) {
         list.appendChild(item);
       });
 
-      body.append(label, list);
+      const cta = document.createElement("a");
+      cta.href = "/kontakt";
+      cta.className = "btn btn-ghost";
+      cta.textContent = "Kontakt";
+
+      body.append(label, list, cta);
       about.append(frame, body);
       services.before(about);
     }
