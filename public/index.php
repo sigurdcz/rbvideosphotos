@@ -149,6 +149,7 @@ function tryServeDatabasePage(string $uri, bool $authenticated = false, bool $pr
         // wrapper, unchanged.
         $themeKey = getThemeTemplateRegistry()->normalizePageKey((string)($page['url_path'] ?? ''));
         $themePreviewKey = isset($_GET['theme_preview']) ? trim((string)$_GET['theme_preview']) : null;
+        $activeThemeKey = resolveActiveThemeKeyForSite($site, $themePreviewKey);
         $contentView = getThemeTemplateRegistry()->pageContentViewForSite($site, $themeKey, $themePreviewKey);
         $html = $contentView !== null
             ? \App\View\ViewFactory::forTheme($contentView['themeKey'], ['editMode' => $authenticated && !$previewMode], $contentView['viewsDir'])
@@ -194,6 +195,7 @@ function tryServeDatabasePage(string $uri, bool $authenticated = false, bool $pr
             'page'        => $page,
             'isHome'      => $isHome,
             'pageKey'     => $themeKey,
+            'themeKey'    => $activeThemeKey,
             'editMode'    => $authenticated,
             'previewMode' => $previewMode,
             'uri'         => $uri,

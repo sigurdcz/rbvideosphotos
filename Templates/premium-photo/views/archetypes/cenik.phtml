@@ -1,0 +1,33 @@
+<?php
+/** Premium Photo presentation; all values come from CenikPageData. */
+$introSentences = preg_split('/(?<=\.)\s+/u', trim($introPackages), 2) ?: [];
+$packageTitle = trim((string)($introSentences[0] ?? ''));
+$packageIntro = trim((string)($introSentences[1] ?? ''));
+?>
+<section class="section cenik-packages premium-cenik-packages">
+  <div class="container">
+    <header class="premium-cenik-head">
+      <?php if ($headingPackages !== ''): ?><span class="premium-cenik-eyebrow"><?= $this->e($headingPackages) ?></span><?php endif; ?>
+      <?php if ($packageTitle !== ''): ?><h2><?= $this->e($packageTitle) ?></h2><?php endif; ?>
+      <?php if ($packageIntro !== ''): ?><p class="cenik-intro"><?= $this->e($packageIntro) ?></p><?php endif; ?>
+    </header>
+    <div class="ckp-grid hp-cenik-grid">
+      <?php foreach ($packages as $package): ?>
+        <article class="ckp-card hp-cenik-card<?= $package['featured'] ? ' ckp-card--featured hp-cenik-card--featured' : '' ?>">
+          <?= $package['featured'] ? '<div class="ckp-badge">Nejobl&iacute;ben&#283;j&#353;&iacute;</div>' : '' ?>
+          <h3 class="ckp-title hp-cenik-card-title"><?= $this->e($package['title']) ?></h3>
+          <?= $package['price'] !== '' ? '<div class="ckp-price hp-cenik-card-price">' . $this->e($package['price']) . '</div>' : '' ?>
+          <?= $package['summary'] !== '' ? '<p class="ckp-desc hp-cenik-card-desc">' . $this->e($package['summary']) . '</p>' : '' ?>
+          <?php if ($package['features'] !== []): ?><ul class="ckp-feats"><?php foreach ($package['features'] as $feature): ?><li><?= $this->e($feature) ?></li><?php endforeach; ?></ul><?php endif; ?>
+        </article>
+      <?php endforeach; ?>
+    </div>
+    <?php if ($otherHeading !== '' || $otherText !== ''): ?>
+      <div class="cenik-other">
+        <?php if ($otherHeading !== ''): ?><h2><?= $this->e($otherHeading) ?></h2><?php endif; ?>
+        <?php if ($otherText !== ''): ?><p><?= $this->e($otherText) ?></p><?php endif; ?>
+      </div>
+    <?php endif; ?>
+  </div>
+</section>
+<section class="section cenik-cta"><div class="container"><h2><?= $this->e($ctaHeading) ?></h2><?= $ctaText !== '' ? '<p>' . $this->e($ctaText) . '</p>' : '' ?><?= $ctaWrap !== '' ? $this->raw($ctaWrap) : '<a href="/kontakt" class="btn btn-primary">Nez&aacute;vazn&aacute; popt&aacute;vka</a>' ?></div></section>

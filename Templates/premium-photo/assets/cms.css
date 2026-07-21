@@ -114,6 +114,46 @@ body > footer { display: block; }
   .premium-about-split__list { grid-template-columns: 1fr; }
 }
 
+/* Premium Photo /cenik reference composition. Kept at the end so it wins
+   over the legacy route skin while retaining the same DB-owned markup. */
+body.theme-premium-photo[data-cms-page-key="cenik"] .page-hero { position:relative; min-height:370px; display:grid; align-items:center; overflow:hidden; padding:48px 0 42px; color:var(--porcelain); background:var(--night); }
+body.theme-premium-photo[data-cms-page-key="cenik"] .page-hero::after { content:""; position:absolute; inset:0; background:linear-gradient(90deg,rgba(7,8,10,.86),rgba(7,8,10,.58) 35%,rgba(7,8,10,.2) 72%,rgba(7,8,10,.4)); }
+body.theme-premium-photo[data-cms-page-key="cenik"] .page-hero > .hero-bg { opacity:1; object-position:center 52%; }
+body.theme-premium-photo[data-cms-page-key="cenik"] .page-hero .container { width:min(100% - 48px,1240px); margin-inline:auto; position:relative; z-index:2; justify-items:start; text-align:left !important; }
+body.theme-premium-photo[data-cms-page-key="cenik"] .page-hero h1 { width:max-content; margin:0 0 26px; color:var(--porcelain); font-family:var(--font-display); font-size:clamp(4rem,5vw,5.2rem); line-height:.9; text-align:left !important; }
+body.theme-premium-photo[data-cms-page-key="cenik"] .page-hero h1::after { content:""; display:block; width:48px; height:2px; margin-top:24px; background:var(--champagne-deep); }
+body.theme-premium-photo[data-cms-page-key="cenik"] .page-hero .hero-sub { max-width:390px; margin:0; color:rgba(246,244,239,.84); font-size:.92rem; line-height:1.65; text-align:left !important; }
+body.theme-premium-photo[data-cms-page-key="cenik"] .premium-cenik-packages { padding:38px 0 46px; }
+body.theme-premium-photo[data-cms-page-key="cenik"] .premium-cenik-head { max-width:850px; margin:0 auto 30px; text-align:center; }
+body.theme-premium-photo[data-cms-page-key="cenik"] .premium-cenik-eyebrow { display:block; margin-bottom:10px; color:var(--champagne-deep); font:600 .66rem var(--font-mono); letter-spacing:.28em; text-transform:uppercase; }
+body.theme-premium-photo[data-cms-page-key="cenik"] .cenik-packages .premium-cenik-head h2 { margin:0; font-family:var(--font-display); font-size:clamp(2.15rem,3vw,3.2rem); line-height:1.05; }
+body.theme-premium-photo[data-cms-page-key="cenik"] .premium-cenik-head .cenik-intro { max-width:720px; margin:8px auto 0; color:var(--ink-soft); font-size:.82rem; }
+body.theme-premium-photo[data-cms-page-key="cenik"] .ckp-grid { display:grid; grid-template-columns:repeat(3,1fr); align-items:stretch; gap:18px; margin-top:0; }
+body.theme-premium-photo[data-cms-page-key="cenik"] .ckp-card { position:relative; min-width:0; padding:30px 30px 24px; color:var(--ink); border:1px solid var(--line); border-radius:9px; background:rgba(255,255,255,.42); box-shadow:0 12px 30px rgba(20,18,14,.035); }
+body.theme-premium-photo[data-cms-page-key="cenik"] .ckp-card--featured { color:var(--ink) !important; border-color:var(--line) !important; background:rgba(255,255,255,.42) !important; transform:none; }
+body.theme-premium-photo[data-cms-page-key="cenik"] .ckp-card--featured .ckp-title,
+body.theme-premium-photo[data-cms-page-key="cenik"] .ckp-card--featured .ckp-desc,
+body.theme-premium-photo[data-cms-page-key="cenik"] .ckp-card--featured .ckp-feats { color:var(--ink) !important; }
+body.theme-premium-photo[data-cms-page-key="cenik"] .ckp-title { margin:0; font-family:var(--font-display); font-size:1.75rem; }
+body.theme-premium-photo[data-cms-page-key="cenik"] .ckp-price { margin:7px 0 18px; padding-bottom:17px; border-bottom:1px solid rgba(194,161,100,.55); color:var(--champagne-deep); font-family:var(--font-display); font-size:1.03rem; letter-spacing:.02em; }
+body.theme-premium-photo[data-cms-page-key="cenik"] .ckp-desc { min-height:105px; margin:0 0 14px; color:var(--ink); font-size:.78rem; line-height:1.55; }
+body.theme-premium-photo[data-cms-page-key="cenik"] .ckp-feats { padding:0; list-style:none; }
+body.theme-premium-photo[data-cms-page-key="cenik"] .ckp-feats li { position:relative; padding:9px 0 9px 25px; border-top:1px solid rgba(127,123,116,.16); font-size:.75rem; line-height:1.35; }
+body.theme-premium-photo[data-cms-page-key="cenik"] .ckp-feats li::before { content:"✓"; position:absolute; left:0; color:var(--champagne-deep); font-weight:700; }
+body.theme-premium-photo[data-cms-page-key="cenik"] .ckp-badge { position:absolute; top:-13px; left:22px; padding:4px 12px; color:var(--porcelain); border-radius:2px; background:var(--night); font:600 .58rem var(--font-mono); text-transform:uppercase; letter-spacing:.13em; }
+body.theme-premium-photo[data-cms-page-key="cenik"] .cenik-other { margin-top:34px; text-align:center; }
+body.theme-premium-photo[data-cms-page-key="cenik"] .cenik-other h2 { font-size:clamp(1.7rem,2.4vw,2.5rem); }
+body.theme-premium-photo[data-cms-page-key="cenik"] .cenik-other p { color:var(--ink-soft); font-size:.8rem; }
+@media (max-width:620px) {
+  body.theme-premium-photo[data-cms-page-key="cenik"] .page-hero { min-height:360px; padding:42px 0 36px; }
+  body.theme-premium-photo[data-cms-page-key="cenik"] .page-hero .container { justify-items:center; text-align:center !important; }
+  body.theme-premium-photo[data-cms-page-key="cenik"] .page-hero .hero-sub { text-align:center !important; }
+  body.theme-premium-photo[data-cms-page-key="cenik"] .page-hero h1 { font-size:3.8rem; }
+  body.theme-premium-photo[data-cms-page-key="cenik"] .premium-cenik-packages { padding:34px 0 46px; }
+  body.theme-premium-photo[data-cms-page-key="cenik"] .ckp-grid { grid-template-columns:1fr; gap:24px; }
+  body.theme-premium-photo[data-cms-page-key="cenik"] .ckp-desc { min-height:0; }
+}
+
 .hp-services-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--gap); margin-top: 40px; }
 .hp-svc-card {
   min-height: 270px; display: flex; flex-direction: column; position: relative; overflow: hidden;
@@ -590,4 +630,20 @@ body.theme-premium-photo[data-cms-page-key="cenik"] .cenik-cta { color:var(--por
   body.nav-open .site-header > .wrap > .site-nav .nav-links { display:grid; }
   body.theme-premium-photo[data-cms-page-key="cenik"] .ckp-grid { grid-template-columns:1fr; }
   body.theme-premium-photo[data-cms-page-key="cenik"] .ckp-card--featured { transform:none; }
+}
+
+/* Final /cenik overrides: later than the legacy route block above. */
+body.theme-premium-photo[data-cms-page-key="cenik"] .page-hero { min-height:370px; padding:48px 0 42px; align-items:center; }
+body.theme-premium-photo[data-cms-page-key="cenik"] .page-hero .container { display:flex; flex-direction:column; align-items:flex-start; width:min(100% - 48px,1240px); margin-inline:auto; text-align:left !important; }
+body.theme-premium-photo[data-cms-page-key="cenik"] .page-hero h1 { width:max-content; margin:0 0 26px; font-size:clamp(4rem,5vw,5.2rem); text-align:left !important; }
+body.theme-premium-photo[data-cms-page-key="cenik"] .page-hero .hero-sub { max-width:390px; margin:0; text-align:left !important; }
+body.theme-premium-photo[data-cms-page-key="cenik"] .ckp-card--featured { color:var(--ink) !important; border-color:var(--line) !important; background:rgba(255,255,255,.42) !important; transform:none; }
+body.theme-premium-photo[data-cms-page-key="cenik"] .ckp-card--featured .ckp-title,
+body.theme-premium-photo[data-cms-page-key="cenik"] .ckp-card--featured .ckp-desc,
+body.theme-premium-photo[data-cms-page-key="cenik"] .ckp-card--featured .ckp-feats { color:var(--ink) !important; }
+body.theme-premium-photo[data-cms-page-key="cenik"] .ckp-badge { left:50%; color:var(--porcelain) !important; background:#111318 !important; transform:translateX(-50%); }
+
+@media (max-width:620px) {
+  body.theme-premium-photo[data-cms-page-key="cenik"] .page-hero .container { align-items:center; text-align:center !important; }
+  body.theme-premium-photo[data-cms-page-key="cenik"] .page-hero .hero-sub { text-align:center !important; }
 }

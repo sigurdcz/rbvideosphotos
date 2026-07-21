@@ -205,6 +205,7 @@ class PublishService implements PublishPageChrome
             'page'        => $page,
             'isHome'      => $isHome,
             'pageKey'     => $pageKey,
+            'themeKey'    => $theme['key'] ?? null,
         ]);
 
         // Write HTML file

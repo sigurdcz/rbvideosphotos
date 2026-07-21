@@ -86,7 +86,7 @@ final class PageComposer
 
         $html = HomepageSectionRenderer::injectHomepageMissingSections($html, $blocks, $isHome);
         $html = HomepageSectionRenderer::injectHomepageThemeDataSources($html, $blocks, $isHome);
-        $html = CenikPageRenderer::inject($html, $blocks, $pageKey);
+        $html = CenikPageRenderer::inject($html, $blocks, $pageKey, self::themeKey($ctx));
         $html = HomepageSectionRenderer::injectHomepageAboutVisualSource($html, (int)$page['id'], (int)$page['site_id'], $isHome);
         $html = $renderer->injectAssets($html, (string)$ctx['css'], (string)$ctx['js']);
         $html = $renderer->injectSeo($html, (string)$ctx['seoHead'], (string)$ctx['bodyScripts']);
@@ -136,7 +136,7 @@ final class PageComposer
 
         $html = HomepageSectionRenderer::injectHomepageMissingSections($html, $blocks, $isHome);
         $html = HomepageSectionRenderer::injectHomepageThemeDataSources($html, $blocks, $isHome);
-        $html = CenikPageRenderer::inject($html, $blocks, $pageKey);
+        $html = CenikPageRenderer::inject($html, $blocks, $pageKey, self::themeKey($ctx));
         $html = HomepageSectionRenderer::injectHomepageAboutVisualSource($html, (int)$page['id'], (int)($page['site_id'] ?? 0), $isHome);
         $html = $renderer->injectAssets($html, (string)$ctx['css'], (string)$ctx['js']);
         $html = $renderer->injectSeo($html, (string)$ctx['seoHead'], (string)$ctx['bodyScripts']);
@@ -153,5 +153,12 @@ final class PageComposer
         $html = MarkupNormalizer::extractInlineBodyScripts($html);
 
         return $html;
+    }
+
+    private static function themeKey(array $ctx): ?string
+    {
+        $themeKey = trim((string)($ctx['themeKey'] ?? ''));
+
+        return $themeKey !== '' ? $themeKey : null;
     }
 }

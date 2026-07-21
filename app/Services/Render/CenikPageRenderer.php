@@ -29,7 +29,7 @@ use App\ViewModels\CenikPageData;
  */
 final class CenikPageRenderer
 {
-    public static function inject(string $html, array $blocks, string $pageKey): string
+    public static function inject(string $html, array $blocks, string $pageKey, ?string $themeKey = null): string
     {
         if ($pageKey !== 'cenik') {
             return $html;
@@ -40,7 +40,7 @@ final class CenikPageRenderer
             return $html;
         }
 
-        $content = ViewFactory::forTheme(null)->render('archetypes/cenik', $data);
+        $content = ViewFactory::forTheme($themeKey)->render('archetypes/cenik', $data);
 
         $updated = preg_replace(
             '~(<section\b[^>]*\bclass=(["\'])[^"\']*\bpage-hero\b[^"\']*\2[^>]*>.*?</section>)\s*.*?(<footer\b)~is',

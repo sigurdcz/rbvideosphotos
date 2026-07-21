@@ -922,3 +922,34 @@ Hotovo kdyz: Zadny verejny kontaktni formular nerenderuje ani neposila `event_da
 ## Vysledek
 
 Hotovo. Datum bylo odstraneno z Premium Photo formularu, ze vsech live/publish vystupu pres centralni guard a z backendoveho mail kontraktu; FAQ ukazka sdili s homepage formularem responzivni dvousloupcovy/jednosloupcovy layout.
+
+---
+
+# UKOL: Premium Photo Cenik podle reference
+
+Datum: 2026-07-22
+Zadani: Upravit samostatnou stranku `/cenik` podle dodane desktopove reference se sirokym fotografickym hero, titulkem vlevo a tremi cenovymi kartami pod centrovanym uvodem.
+
+Hotovo kdyz: Pri desktopovem viewportu 1440 CSS px odpovida hero, sekcni hierarchie, tri karty, featured stitek, typografie a rozestupy reference; ceny a texty zustavaji DB-driven, mobil je citelny bez overflow a testy projdou.
+
+## Kroky
+
+- [x] Zmapovat cenikovy archetyp, DB data, hero zdroj a zachytit baseline.
+- [x] Upravit Premium Photo cenikovy DOM/CSS podle reference bez statickych cen.
+- [x] Iterovat desktopovy screenshot a overit mobilni responzivitu.
+- [x] Regenerovat vystupy, spustit regresi a provest wiki reflexi.
+
+## Poznamky
+
+- Rubrika 100 bodu: hero crop/overlay/title 25, sekcni geometrie a intro 15, tri cenove karty 30, featured stav a typografie 15, mobil/runtime/data vlastnictvi 15.
+- Referencni obraz ma 1536x1227 px; QA se zamkne na 1440 CSS px s DPR 1 a porovna proporce, ne fyzicky DPR export.
+- Uzivatelsky screenshot v rootu zustava mimo Git.
+- Baseline 1440x900 mela skore 58/100: hero bylo centrovane a 520 px vysoke, cenikovy uvod vlevo, featured karta tmava/vysunuta a stranka vyrazne delsi nez referencni horni kompozice.
+- Novy theme archetyp pouze preusporadava `CenikPageData`: DB heading je eyebrow, prvni veta DB intra je hlavni nadpis a zbytek zustava popisem. Ceny, souhrny i vsechny vlastnosti zustavaji DB-driven.
+- Prvni iterace dosahla 88/100: karty a mobil byly spravne, ale legacy grid centroval hero obsah. Druha iterace s explicitnim flex alignmentem a svetlym featured stavem dosahla 94/100.
+- Chrome/CDP QA: desktop 1440x900 i mobil 390x844 nemaji horizontalni overflow; mobil radi tri balicky pod sebe. In-app browser backend byl prazdny, proto byl otevrene pouzit projektovy Chrome/CDP capture skript.
+- Regrese: 59/59 PHP testu, 27/27 golden kontrol a `git diff --check` bez chyby. Wiki pipeline byla aktualizovana a commitnuta jako `fa48372`; README, ARCHITECTURE a INSTRUCTIONS nevyzadovaly zmenu.
+
+## Vysledek
+
+Hotovo. Cenik pouziva DB-driven Premium Photo archetyp, fotograficky hero s obsahem vlevo, tri svetle balickove karty s cernym featured stitkem a jednosloupcovy mobilni layout.

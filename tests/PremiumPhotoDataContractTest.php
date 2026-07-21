@@ -66,6 +66,18 @@ function register_premium_photo_data_contract_tests(callable $test, callable $as
         $assert(str_contains($normalizer, 'name="event_date"'), 'Legacy frontend date-field guard is missing.');
     });
 
+    $test('premium photo pricing route uses themed DB archetype and reference composition', function () use ($assert, $themeDir): void {
+        $view = (string)file_get_contents($themeDir . '/views/archetypes/cenik.phtml');
+        $css = (string)file_get_contents($themeDir . '/assets/cms.css');
+        $renderer = (string)file_get_contents(dirname($themeDir, 2) . '/app/Services/Render/CenikPageRenderer.php');
+
+        $assert(str_contains($renderer, 'ViewFactory::forTheme($themeKey)'), 'Pricing renderer bypasses the active theme view cascade.');
+        $assert(str_contains($view, 'premium-cenik-head') && str_contains($view, '$packages as $package'), 'Pricing theme archetype does not preserve DB-driven package rendering.');
+        $assert(!str_contains($view, '14 900') && !str_contains($view, '24 900') && !str_contains($view, '34 900'), 'Static package prices leaked into the theme archetype.');
+        $assert(str_contains($css, 'justify-items:start') && str_contains($css, '.ckp-card--featured { color:var(--ink)'), 'Reference hero alignment or light featured card styling is missing.');
+        $assert(str_contains($css, 'grid-template-columns:1fr'), 'Pricing cards do not collapse to one column on mobile.');
+    });
+
     $test('premium photo homepage suppresses legacy fades and preserves the scroll timeline axis', function () use ($assert, $themeDir): void {
         $css = (string)file_get_contents($themeDir . '/assets/cms.css');
         $js = (string)file_get_contents($themeDir . '/assets/theme.js');
