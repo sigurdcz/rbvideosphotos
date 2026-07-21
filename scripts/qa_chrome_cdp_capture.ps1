@@ -9,6 +9,8 @@ param(
     [string]$InteractionOutput = '',
     [switch]$OpenNavigation,
     [string]$NavigationOutput = '',
+    [string]$ScrollSelector = '',
+    [string]$ScrolledOutput = '',
     [string]$ChromePath = 'C:\Program Files\Google\Chrome\Application\chrome.exe'
 )
 
@@ -127,6 +129,45 @@ if ($OpenNavigation) {
         returnByValue = $true
         awaitPromise = $true
     } | Out-Null
+}
+
+$scrolledOutputPath = $null
+$scrolledState = $null
+if ($ScrollSelector -ne '') {
+    $selectorJson = $ScrollSelector | ConvertTo-Json -Compress
+    $scrollResult = Send-CdpCommand $socket (++$id) 'Runtime.evaluate' @{
+        expression = @"
+(async () => {
+  const section = document.querySelector($selectorJson);
+  if (!section) return { found:false };
+  document.documentElement.style.scrollBehavior = 'auto';
+  const top = section.getBoundingClientRect().top + window.scrollY;
+  window.scrollTo(0, Math.max(0, top - window.innerHeight * .25));
+  await new Promise(resolve => setTimeout(resolve, 220));
+  return {
+    found:true,
+    scrollY:window.scrollY,
+    active:Array.from(document.querySelectorAll('.site-nav a[aria-current]')).map(link => ({
+      text:link.textContent.trim(),
+      href:link.getAttribute('href'),
+      current:link.getAttribute('aria-current'),
+      underline:getComputedStyle(link, '::before').content
+    }))
+  };
+})()
+"@
+        returnByValue = $true
+        awaitPromise = $true
+    }
+    $scrolledState = $scrollResult.result.value
+    if ($ScrolledOutput -ne '') {
+        $scrolledCapture = Send-CdpCommand $socket (++$id) 'Page.captureScreenshot' @{
+            format = 'png'
+            fromSurface = $true
+        }
+        $scrolledOutputPath = [IO.Path]::GetFullPath((Join-Path (Get-Location) $ScrolledOutput))
+        [IO.File]::WriteAllBytes($scrolledOutputPath, [Convert]::FromBase64String($scrolledCapture.data))
+    }
 }
 
 $navigationOutputPath = $null
@@ -314,6 +355,8 @@ if ($chromeProcess -and -not $chromeProcess.HasExited) {
     TimelineActiveStartScreenshot = $timelineActiveStartOutputPath
     InteractionScreenshot = $interactionOutputPath
     NavigationScreenshot = $navigationOutputPath
+    ScrolledScreenshot = $scrolledOutputPath
+    ScrolledState = $scrolledState
     Width = $Width
     Height = $pageHeight
     Runtime = $inspection.result.value

@@ -5,4 +5,4 @@
     <?php if ($item['image_url'] !== ''): ?><div class="ph premium-media" style="min-height:180px;margin:-22px -22px 8px;background-image:url('<?= $this->e($item['image_url']) ?>')"><img src="<?= $this->e($item['image_url']) ?>" alt="<?= $this->e($item['title']) ?>" loading="lazy"></div><?php endif; ?>
     <span class="t-num"><?= $this->e(str_pad((string)($index + 1), 2, '0', STR_PAD_LEFT)) ?></span><h2><?= $this->e($item['title']) ?></h2><p><?= nl2br($this->e($item['description'])) ?></p><span class="t-more"><?= $this->e($item['button_text']) ?> &rarr;</span>
   </a>
-<?php endforeach; ?></div></div></section><section class="on-dark premium-page-cta premium-contact-cta"><div class="wrap"><p>Pokud máte nějaké dotazy, neváhejte nás kontaktovat.</p><h2>Vše si vysvětlíme a domluvíme se.</h2><a class="btn btn-solid" href="/kontakt">Kontaktovat nás</a></div></section><?php ?>
+<?php endforeach; ?></div></div></section><section class="on-dark premium-page-cta premium-contact-cta"><div class="wrap"><p>Pokud máte nějaké dotazy, neváhejte nás kontaktovat.</p><a class="btn btn-solid" href="/kontakt">Kontaktovat nás</a></div></section><?php ?>

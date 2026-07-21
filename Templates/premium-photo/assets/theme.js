@@ -159,19 +159,50 @@ if (toggle) {
   );
 }
 
-// Aktivni navigace je odvozena z routy. Detailni routy se mapuji na svou
-// rodicovskou sekci, aby uzivatel neztratil kontext.
+// Na homepage navigace smeruje do sekci, proto aktivni stav sleduje polohu
+// viewportu. Na ostatnich strankach se stav odvozuje z routy a detailni routy
+// se mapuji na svou rodicovskou sekci.
 const path = window.location.pathname.replace(/\/+$/, "") || "/";
 const pageKey = document.body.dataset.cmsPageKey || "";
-let activeRoot = path;
-if (pageKey === "blog-post" || document.querySelector(".bp-hero")) activeRoot = "/blog";
-if (pageKey === "portfolio-detail" || document.querySelector(".pf-detail-hero")) activeRoot = "/nase-prace";
-if (/^(svatebni|rodinne|reklamni|rande)/.test(pageKey) || document.querySelector(".svc-hero")) activeRoot = "/sluzby";
-document.querySelectorAll(".site-nav .nav-links a").forEach(link => {
-  const href = new URL(link.href, window.location.origin).pathname.replace(/\/+$/, "") || "/";
-  if (href === activeRoot) link.setAttribute("aria-current", "page");
-  else link.removeAttribute("aria-current");
-});
+const navLinks = [...document.querySelectorAll(".site-nav .nav-links a")];
+if (pageKey === "homepage" && path === "/") {
+  const sectionLinks = navLinks.map(link => {
+    const url = new URL(link.href, window.location.href);
+    return url.hash ? { link, section: document.querySelector(url.hash) } : null;
+  }).filter(item => item?.section);
+  let navTicking = false;
+  const updateHomepageNavigation = () => {
+    const marker = window.innerHeight * 0.35;
+    const active = sectionLinks.find(item => {
+      const bounds = item.section.getBoundingClientRect();
+      return bounds.top <= marker && bounds.bottom > marker;
+    }) || null;
+    sectionLinks.forEach(item => {
+      if (item === active) item.link.setAttribute("aria-current", "location");
+      else item.link.removeAttribute("aria-current");
+    });
+    navTicking = false;
+  };
+  const requestHomepageNavigationUpdate = () => {
+    if (!navTicking) {
+      navTicking = true;
+      requestAnimationFrame(updateHomepageNavigation);
+    }
+  };
+  updateHomepageNavigation();
+  window.addEventListener("scroll", requestHomepageNavigationUpdate, { passive: true });
+  window.addEventListener("resize", requestHomepageNavigationUpdate);
+} else {
+  let activeRoot = path;
+  if (pageKey === "blog-post" || document.querySelector(".bp-hero")) activeRoot = "/blog";
+  if (pageKey === "portfolio-detail" || document.querySelector(".pf-detail-hero")) activeRoot = "/nase-prace";
+  if (/^(svatebni|rodinne|reklamni|rande)/.test(pageKey) || document.querySelector(".svc-hero")) activeRoot = "/sluzby";
+  navLinks.forEach(link => {
+    const href = new URL(link.href, window.location.origin).pathname.replace(/\/+$/, "") || "/";
+    if (href === activeRoot) link.setAttribute("aria-current", "page");
+    else link.removeAttribute("aria-current");
+  });
+}
 
 // ---------- paralax ----------
 const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -245,7 +276,7 @@ if (tl) {
 // Genericke detailni stranky sluzeb nemaji vlastni Premium Photo archetyp.
 // Tema proto doplni pouze prezentacni CTA; nadpis a data zustavaji v DB hero.
 if (document.querySelector(".svc-hero") && !document.querySelector(".premium-contact-cta")) {
-  document.querySelector("main")?.insertAdjacentHTML("beforeend", '<section class="on-dark premium-page-cta premium-contact-cta"><div class="wrap"><p>Pokud máte nějaké dotazy, neváhejte nás kontaktovat.</p><h2>Vše si vysvětlíme a domluvíme se.</h2><a class="btn btn-solid" href="/kontakt">Kontaktovat nás</a></div></section>');
+  document.querySelector("main")?.insertAdjacentHTML("beforeend", '<section class="on-dark premium-page-cta premium-contact-cta"><div class="wrap"><p>Pokud máte nějaké dotazy, neváhejte nás kontaktovat.</p><a class="btn btn-solid" href="/kontakt">Kontaktovat nás</a></div></section>');
 }
 
 // ---------- FAQ: vždy jen jedna otevřená (v rámci skupiny) ----------

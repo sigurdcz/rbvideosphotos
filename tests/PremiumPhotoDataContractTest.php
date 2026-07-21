@@ -73,7 +73,10 @@ function register_premium_photo_data_contract_tests(callable $test, callable $as
         $js = (string)file_get_contents($themeDir . '/assets/theme.js');
         $css = (string)file_get_contents($themeDir . '/assets/theme.css');
         $assert(str_contains($js, 'link.setAttribute("aria-current", "page")'), 'Active route is not reflected in the primary navigation.');
-        $assert(str_contains($css, '.site-nav a[aria-current="page"]::before'), 'Active navigation state has no visible marker.');
+        $assert(str_contains($js, 'item.link.setAttribute("aria-current", "location")'), 'Homepage anchor navigation has no viewport-driven active state.');
+        $assert(str_contains($js, 'window.addEventListener("scroll", requestHomepageNavigationUpdate'), 'Homepage active navigation is not connected to scrolling.');
+        $assert(str_contains($css, '.site-nav a[aria-current]:not(.nav-cta)::before'), 'Active navigation state has no visible marker or fails to exclude Contact.');
+        $assert(str_contains($css, '.site-nav .nav-cta::before{content:none !important;display:none !important}'), 'Contact navigation CTA can still receive an underline.');
         $assert(str_contains($css, 'grid-template-columns:1fr'), 'Mobile navigation is not a vertical single-column list.');
 
         foreach (['kontakt.phtml', 'blog-listing.phtml', 'portfolio-listing.phtml', 'blog-detail.phtml', 'portfolio-detail.phtml', 'sluzby.phtml'] as $view) {
@@ -84,7 +87,9 @@ function register_premium_photo_data_contract_tests(callable $test, callable $as
         foreach (['faq.phtml', 'blog-listing.phtml', 'blog-detail.phtml', 'portfolio-detail.phtml', 'sluzby.phtml'] as $view) {
             $markup = (string)file_get_contents($themeDir . '/views/archetypes/' . $view);
             $assert(str_contains($markup, 'premium-contact-cta'), 'Contact CTA is missing in ' . $view);
+            $assert(!str_contains($markup, 'Vše si vysvětlíme a domluvíme se.'), 'Redundant CTA heading remains in ' . $view);
         }
+        $assert(!str_contains($js, 'Vše si vysvětlíme a domluvíme se.'), 'Redundant CTA heading remains in the generated service-detail CTA.');
     });
 
     $test('premium photo owns database snippet markup through theme partials and archetypes', function () use ($assert, $themeDir): void {

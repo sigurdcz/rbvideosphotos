@@ -763,3 +763,33 @@ Hotovo kdyz: Vsechny nize uvedene routy a interakcni stavy odpovidaji zadani na 
 ## Vysledek
 
 Hotovo. Timeline zacina seda i zlata az u realneho tracku, navigace ma prostornejsi Kontakt, svisle mobilni menu a aktivni route, title jsou v hero napric vypisy a detaily, Cenik odpovida Premium Photo a vsechny pozadovane routy maji jednotne kontaktni CTA.
+
+---
+
+# UKOL: Premium Photo scroll-spy a zjednoduseni CTA
+
+Datum: 2026-07-21
+Zadani: Odstranit nadbytecnou vetu z kontaktnich CTA, na homepage zvyraznovat anchor navigaci podle aktualni sekce ve viewportu a zajistit, ze tlacitko Kontakt nebude nikdy podtrzene.
+
+Hotovo kdyz: CTA obsahuje jen statickou vyzvu a tlacitko, homepage meni aktivni polozku pri scrollovani podle sekce a `.nav-cta` nema podtrzeni v zadnem aktivnim stavu.
+
+## Kroky
+
+- [x] Upravit CTA markup, homepage scroll-spy a CSS aktivniho stavu.
+- [x] Rozsirit kontraktni testy a regenerovat publikovane goldeny.
+- [x] Overit homepage scroll-spy a navigaci cerstvym Chrome/CDP behom na desktopu i mobilu.
+- [x] Spustit celou regresi, posoudit dokumentaci a provest wiki reflexi.
+
+## Poznamky
+
+- Rubrika 100 bodu: homepage scroll-spy 40, odstraneni textace ze vsech CTA 25, Kontakt bez podtrzeni 20, desktop/mobil runtime a regrese 15.
+- Dodany referencni PNG zustava mimo Git.
+- Chrome iterace 1 odhalila spatny vyber posledni DOM sekce nad markerem: Blog i Nase prace se oznacovaly jako FAQ. Scroll-spy nyni vybira sekci, jejiz realny bounding box obsahuje 35 % vysky viewportu.
+- Chrome iterace 2: Blog a Nase prace maji pri cilenem scrollu spravne `aria-current=location`; mobilni Kontakt je aktivni, ale computed `::before` je `none`. Vsechny tri behy jsou bez horizontalniho overflow.
+- Finalni regrese: `php tests/run.php` 57/57, golden checks 27/27, lint vsech Premium Photo archetypu bez chyby a `git diff --check` bez chyby.
+- QA helper podporuje `-ScrollSelector` a `-ScrolledOutput`; vraci `ScrolledState` s aktivnim odkazem a computed obsahem `::before`.
+- README, ARCHITECTURE a INSTRUCTIONS byly posouzeny bez nutnosti zmeny. Projektova wiki popisuje novy kontrakt v commitu `0a7c388`.
+
+## Vysledek
+
+Hotovo. Nadbytecna CTA veta je odstranena, homepage navigace sleduje realnou sekci ve viewportu a Kontakt se nikdy nepodtrhuje.
