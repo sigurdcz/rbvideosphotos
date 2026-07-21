@@ -72,12 +72,22 @@ function register_premium_photo_data_contract_tests(callable $test, callable $as
     $test('premium photo keeps route context and hero copy inside themed bands', function () use ($assert, $themeDir): void {
         $js = (string)file_get_contents($themeDir . '/assets/theme.js');
         $css = (string)file_get_contents($themeDir . '/assets/theme.css');
+        $cmsCss = (string)file_get_contents($themeDir . '/assets/cms.css');
         $assert(str_contains($js, 'link.setAttribute("aria-current", "page")'), 'Active route is not reflected in the primary navigation.');
         $assert(str_contains($js, 'item.link.setAttribute("aria-current", "location")'), 'Homepage anchor navigation has no viewport-driven active state.');
         $assert(str_contains($js, 'window.addEventListener("scroll", requestHomepageNavigationUpdate'), 'Homepage active navigation is not connected to scrolling.');
         $assert(str_contains($css, '.site-nav a[aria-current]:not(.nav-cta)::before'), 'Active navigation state has no visible marker or fails to exclude Contact.');
         $assert(str_contains($css, '.site-nav .nav-cta::before{content:none !important;display:none !important}'), 'Contact navigation CTA can still receive an underline.');
         $assert(str_contains($css, 'grid-template-columns:1fr'), 'Mobile navigation is not a vertical single-column list.');
+        $assert(!str_contains($js, 'pricing.hidden = true'), 'Homepage pricing is still hidden by the theme.');
+        $assert(!str_contains($js, 'faq.hidden = true'), 'Homepage FAQ is still hidden by the theme.');
+        $assert(str_contains($js, 'premium-review-controls'), 'Desktop review carousel controls are missing.');
+        $assert(str_contains($js, 'aria-label", "Předchozí recenze'), 'Review carousel previous control is not accessible.');
+        $assert(str_contains($js, 'aria-label", "Další recenze'), 'Review carousel next control is not accessible.');
+        $assert(str_contains($cmsCss, '@media (max-width: 959px)') && str_contains($cmsCss, '.premium-review-controls { display: none; }'), 'Review controls are not hidden on mobile.');
+
+        $reviewPartial = (string)file_get_contents($themeDir . '/views/partials/home-reviews.phtml');
+        $assert(!str_contains($reviewPartial, 'array_slice($items, 0, 3)'), 'Premium Photo still discards reviews required by the desktop carousel.');
 
         foreach (['kontakt.phtml', 'blog-listing.phtml', 'portfolio-listing.phtml', 'blog-detail.phtml', 'portfolio-detail.phtml', 'sluzby.phtml'] as $view) {
             $markup = (string)file_get_contents($themeDir . '/views/archetypes/' . $view);

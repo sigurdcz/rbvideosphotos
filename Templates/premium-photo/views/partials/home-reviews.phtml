@@ -1,5 +1,5 @@
 <?php /** @var list<array> $items */ ?>
-<?php if ($items === []): ?><p>Žádné publikované recenze.</p><?php else: ?><div class="tiles tiles-3 premium-review-grid"><?php foreach (array_slice($items, 0, 3) as $item): ?>
+<?php if ($items === []): ?><p>Žádné publikované recenze.</p><?php else: ?><div class="tiles tiles-3 premium-review-grid"><?php foreach ($items as $item): ?>
   <article class="tile review">
     <span class="quote-mark">„</span>
     <p><?= nl2br($this->e($item['review_text'])) ?></p>

@@ -260,14 +260,36 @@ body > footer { display: block; }
 .premium-blog-card .premium-media { position: relative; overflow: hidden; background-size: cover; background-position: center; }
 .premium-blog-card .premium-media img { display: block; min-height: 170px; }
 
+.premium-photo-home #cenik { color: var(--ink); background: var(--porcelain); }
+.premium-photo-home #cenik .section-title:empty,
+.premium-photo-home #cenik .section-intro:empty { display: none; }
+.premium-photo-home #cenik .hp-cenik-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--gap); margin: 34px 0 38px; }
+.premium-photo-home #cenik .hp-cenik-card { min-height: 300px; padding: 30px 28px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); }
+.premium-photo-home #cenik .hp-cenik-card--featured { color: var(--porcelain); border-color: var(--night); background: var(--night); }
+.premium-photo-home #cenik .hp-cenik-card-title { margin: 0 0 12px; font: 2rem/1 var(--font-display); }
+.premium-photo-home #cenik .hp-cenik-card-price { margin-bottom: 22px; color: var(--champagne-deep); font: .72rem var(--font-mono); letter-spacing: .08em; text-transform: uppercase; }
+.premium-photo-home #cenik .hp-cenik-card-desc { color: var(--ink-soft); line-height: 1.75; }
+.premium-photo-home #cenik .hp-cenik-card--featured .hp-cenik-card-desc { color: rgba(246,244,239,.7); }
+
 .premium-photo-home #hodnoceni { padding-top: 0; color: var(--ink); background: var(--paper); }
 .premium-photo-home #hodnoceni .section-intro { color: var(--ink-soft); }
 .premium-photo-home #hodnoceni .premium-review-grid { margin-top: 32px; margin-bottom: 36px; }
 .premium-photo-home #hodnoceni .review { color: var(--ink); border-color: var(--line); background: #fff; }
 .premium-photo-home #hodnoceni .review p { color: var(--ink-soft); }
+.premium-review-viewport { overflow: hidden; }
+.premium-review-controls { display: flex; justify-content: flex-end; gap: 10px; margin: -14px 0 36px; }
+.premium-review-arrow { display: inline-grid; width: 48px; height: 48px; place-items: center; border: 1px solid var(--line); border-radius: 50%; background: transparent; color: var(--ink); font: 1.1rem var(--font-mono); cursor: pointer; }
+.premium-review-arrow:hover:not(:disabled), .premium-review-arrow:focus-visible { color: var(--porcelain); border-color: var(--night); background: var(--night); }
+.premium-review-arrow:disabled { opacity: .3; cursor: default; }
+
+@media (min-width: 960px) {
+  .premium-photo-home #hodnoceni .premium-review-track { display: flex; gap: var(--gap); transition: transform .42s ease; will-change: transform; }
+  .premium-photo-home #hodnoceni .premium-review-track > .review { flex: 0 0 calc((100% - (var(--gap) * 2)) / 3); }
+}
 
 .premium-contact-section { padding-block: 90px !important; }
-.premium-contact-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(300px, .85fr); gap: var(--gap); align-items: start; }
+.premium-contact-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--gap); align-items: start; }
+.premium-contact-form-wrap { width: min(100%, 820px); }
 .premium-contact-form { display: grid; gap: 12px; padding: 24px; border: 1px solid var(--line-inv); border-radius: var(--radius); background: rgba(255,255,255,.025); }
 .premium-contact-form .field { display: grid; gap: 6px; }
 .premium-contact-form label { color: rgba(246,244,239,.68); font: .66rem var(--font-mono); letter-spacing: .1em; text-transform: uppercase; }
@@ -297,6 +319,13 @@ body > footer { display: block; }
   .premium-photo-home #sluzby .hp-services-grid.tiles,
   .premium-photo-home #blog .hp-blog-grid.tiles { grid-template-columns: 1fr; }
   .premium-contact-form .premium-form-pair { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 959px) {
+  .premium-review-controls { display: none; }
+  .premium-photo-home #hodnoceni .premium-review-track { transform: none !important; }
+  .premium-photo-home #hodnoceni .premium-review-track > .review:nth-child(n+4) { display: none; }
+  .premium-photo-home #cenik .hp-cenik-grid { grid-template-columns: 1fr; }
 }
 
 /* Win over legacy section backgrounds after the theme-specific DOM exists. */

@@ -11,6 +11,8 @@ param(
     [string]$NavigationOutput = '',
     [string]$ScrollSelector = '',
     [string]$ScrolledOutput = '',
+    [string]$ClickSelector = '',
+    [string]$ClickedOutput = '',
     [string]$ChromePath = 'C:\Program Files\Google\Chrome\Application\chrome.exe'
 )
 
@@ -167,6 +169,46 @@ if ($ScrollSelector -ne '') {
         }
         $scrolledOutputPath = [IO.Path]::GetFullPath((Join-Path (Get-Location) $ScrolledOutput))
         [IO.File]::WriteAllBytes($scrolledOutputPath, [Convert]::FromBase64String($scrolledCapture.data))
+    }
+}
+
+$clickedOutputPath = $null
+$clickedState = $null
+if ($ClickSelector -ne '') {
+    $clickSelectorJson = $ClickSelector | ConvertTo-Json -Compress
+    $clickResult = Send-CdpCommand $socket (++$id) 'Runtime.evaluate' @{
+        expression = @"
+(async () => {
+  const control = document.querySelector($clickSelectorJson);
+  if (!control) return { found:false };
+  const before = document.querySelector('.premium-review-track')?.style.transform || '';
+  control.click();
+  await new Promise(resolve => setTimeout(resolve, 520));
+  const track = document.querySelector('.premium-review-track');
+  return {
+    found:true,
+    before,
+    after:track?.style.transform || '',
+    reviewCount:track?.querySelectorAll(':scope > .review').length || 0,
+    controlsDisplay:getComputedStyle(control.parentElement).display,
+    previousDisabled:Boolean(document.querySelector('.premium-review-arrow--previous')?.disabled),
+    nextDisabled:Boolean(document.querySelector('.premium-review-arrow--next')?.disabled),
+    pricingHidden:Boolean(document.querySelector('#cenik')?.hidden),
+    faqHidden:Boolean(document.querySelector('#faq')?.hidden)
+  };
+})()
+"@
+        returnByValue = $true
+        awaitPromise = $true
+    }
+    $clickedState = $clickResult.result.value
+    if ($ClickedOutput -ne '') {
+        $clickedCapture = Send-CdpCommand $socket (++$id) 'Page.captureScreenshot' @{
+            format = 'png'
+            fromSurface = $true
+        }
+        $clickedOutputPath = [IO.Path]::GetFullPath((Join-Path (Get-Location) $ClickedOutput))
+        [IO.File]::WriteAllBytes($clickedOutputPath, [Convert]::FromBase64String($clickedCapture.data))
     }
 }
 
@@ -357,6 +399,8 @@ if ($chromeProcess -and -not $chromeProcess.HasExited) {
     NavigationScreenshot = $navigationOutputPath
     ScrolledScreenshot = $scrolledOutputPath
     ScrolledState = $scrolledState
+    ClickedScreenshot = $clickedOutputPath
+    ClickedState = $clickedState
     Width = $Width
     Height = $pageHeight
     Runtime = $inspection.result.value

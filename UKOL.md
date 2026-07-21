@@ -793,3 +793,40 @@ Hotovo kdyz: CTA obsahuje jen statickou vyzvu a tlacitko, homepage meni aktivni 
 ## Vysledek
 
 Hotovo. Nadbytecna CTA veta je odstranena, homepage navigace sleduje realnou sekci ve viewportu a Kontakt se nikdy nepodtrhuje.
+
+---
+
+# UKOL: Premium Photo homepage Cenik, FAQ a recenze
+
+Datum: 2026-07-21
+Zadani: Zajistit samostatne viditelne sekce Cenik a FAQ na homepage a pridat desktopove ovladani recenzi doleva/doprava bez zobrazeni ovladacich sipek na mobilu.
+
+Hotovo kdyz: Homepage renderuje DB sekce Ceník i FAQ jako samostatne části a desktopová sekce recenzí umožňuje procházení oběma směry, zatímco mobilní verze zůstane bez šipek a bez horizontálního overflow.
+
+## Kroky
+
+- [x] Zmapovat homepage DB markup, theme partialy a aktualni runtime sekci Cenik, FAQ a recenze; zachytit baseline.
+- [x] Opravit nebo doplnit homepage sekce Cenik a FAQ bez duplikace DB obsahu.
+- [x] Pridat pristupne desktopove ovladani recenzi vlevo/vpravo a skryt ho na mobilu.
+- [x] Regenerovat publish/goldeny a overit desktop/mobile Chrome screenshoty i interakce.
+- [x] Spustit regresni testy, posoudit dokumentaci a provest wiki reflexi.
+
+## Poznamky
+
+- Bod 3 v zadani byl prazdny; aktualni scope tvori body 1 a 2.
+- Rubrika 100 bodu: samostatny Cenik 25, samostatne FAQ 25, funkcni desktopove listovani recenzi 30, mobil bez sipek 10, runtime/testy/bez overflow 10.
+- Uzivatelsky referencni PNG zustava mimo Git.
+- Baseline 1440x900: Premium Photo JS skryval DB sekce `#cenik` a `#faq`; review partial zahazoval vsechny recenze za treti kartou. Skore 20/100, protoze oba povinne oddily i carousel ovladani nebyly viditelne.
+- `theme.js` uz obsah ceniku ani FAQ neskryva a zachovava poradi Blog -> Cenik -> FAQ -> Recenze -> Kontakt. `cms.css` dava DB cenikovym kartam Premium Photo vzhled; prazdny DB nadpis ani intro nenahrazuje skrytym fallbackem.
+- Premium review partial renderuje nacteny DB set. Theme JS jej na desktopu obali viewportem a doplni pristupna tlacitka Predchozi/Dalsi; CSS na mobilu ovladani skryje a zachova prvni tri karty bez horizontalniho posuvu.
+- Po navratu FAQ do samostatne sekce pouziva kontaktni formular plnou jednosloupcovou sirku misto prazdneho druheho sloupce.
+- Chrome/CDP helper ma nove volitelne `-ClickSelector` a `-ClickedOutput`; pro carousel vraci transform pred/po kliknuti, pocet DB karet, stav tlacitek a viditelnost Ceniku/FAQ.
+- Chrome desktop 1440x900: `#cenik` i `#faq` maji `hidden=false`, oba dostavaji spravny anchor aktivni stav a stranka ma 1440/1440 px bez overflow. Carousel nacetl 10 DB recenzi; klik vpravo zmenil transform z 0 na -1131.98 px a zpristupnil levou sipku.
+- Chrome mobil 390x844: ovladaci kontejner ma computed `display:none`, transformace zustala prazdna, prvni tri karty jsou ve svislem toku a `scrollWidth === clientWidth`.
+- Finalni vizualni skore 100/100: Cenik 25, FAQ 25, desktopove obousmerne ovladani 30, mobil bez sipek 10, runtime bez overflow 10.
+- Finalni regrese: `php tests/run.php` 57/57 a golden checks 27/27; lint theme partialu i HomepageContentService bez chyby; `git diff --check` bez chyby.
+- README, ARCHITECTURE a INSTRUCTIONS byly posouzeny bez nutnosti zmeny. Projektova pipeline wiki byla aktualizovana a commitnuta jako `12f81cd`.
+
+## Vysledek
+
+Hotovo. Homepage zobrazuje DB Cenik i FAQ jako samostatne sekce a desktopove recenze lze prochazet sipkami vlevo/vpravo; mobil zustava bez sipek.

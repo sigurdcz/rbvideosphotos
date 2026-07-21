@@ -42,6 +42,10 @@ if (premiumHome) {
   portfolio?.querySelector(".container")?.classList.add("wrap");
   blog?.querySelector(".container")?.classList.add("wrap");
   blog?.querySelector(".hp-blog-grid")?.classList.add("tiles", "tiles-3");
+  pricing?.querySelector(".container")?.classList.add("wrap");
+  pricing?.classList.add("premium-pricing-section");
+  faq?.querySelector(".container")?.classList.add("wrap");
+  faq?.classList.add("premium-faq-section");
   reviews?.querySelector(".container")?.classList.add("wrap");
   contact?.classList.add("on-dark", "premium-contact-section");
   contact?.querySelector(".container")?.classList.add("wrap");
@@ -101,28 +105,56 @@ if (premiumHome) {
     }
   }
 
-  if (pricing) pricing.hidden = true;
+  const reviewGrid = reviews?.querySelector(".premium-review-grid");
+  const reviewCards = reviewGrid ? [...reviewGrid.querySelectorAll(":scope > .review")] : [];
+  if (reviewGrid && reviewCards.length > 3 && !reviews.querySelector(".premium-review-controls")) {
+    reviews.classList.add("premium-review-carousel");
+    reviewGrid.classList.add("premium-review-track");
+    const viewport = document.createElement("div");
+    viewport.className = "premium-review-viewport";
+    reviewGrid.before(viewport);
+    viewport.appendChild(reviewGrid);
 
-  const contactGrid = contact?.querySelector(".premium-contact-grid");
-  const faqItems = faq ? [...faq.querySelectorAll("details.faq-item")].slice(0, 3) : [];
-  if (contactGrid && faqItems.length) {
-    const faqGroup = document.createElement("div");
-    faqGroup.className = "premium-contact-faq";
-    faqGroup.dataset.faqGroup = "";
-    faqItems.forEach(item => faqGroup.appendChild(item));
-    const allFaq = document.createElement("a");
-    allFaq.className = "btn btn-ghost";
-    allFaq.href = "/faq";
-    allFaq.textContent = "Všechny otázky a odpovědi";
-    faqGroup.appendChild(allFaq);
-    contactGrid.appendChild(faqGroup);
-    faq.hidden = true;
+    const controls = document.createElement("div");
+    controls.className = "premium-review-controls";
+    const previous = document.createElement("button");
+    previous.type = "button";
+    previous.className = "premium-review-arrow premium-review-arrow--previous";
+    previous.setAttribute("aria-label", "Předchozí recenze");
+    previous.textContent = "←";
+    const next = document.createElement("button");
+    next.type = "button";
+    next.className = "premium-review-arrow premium-review-arrow--next";
+    next.setAttribute("aria-label", "Další recenze");
+    next.textContent = "→";
+    controls.append(previous, next);
+    viewport.after(controls);
+
+    let reviewPage = 0;
+    const pageCount = Math.ceil(reviewCards.length / 3);
+    const updateReviews = () => {
+      if (!window.matchMedia("(min-width: 960px)").matches) {
+        reviewGrid.style.transform = "";
+        return;
+      }
+      const gap = parseFloat(getComputedStyle(reviewGrid).gap) || 0;
+      const cardWidth = reviewCards[0].getBoundingClientRect().width;
+      reviewGrid.style.transform = `translate3d(${-reviewPage * (cardWidth + gap) * 3}px,0,0)`;
+      previous.disabled = reviewPage === 0;
+      next.disabled = reviewPage === pageCount - 1;
+    };
+    previous.addEventListener("click", () => { reviewPage = Math.max(0, reviewPage - 1); updateReviews(); });
+    next.addEventListener("click", () => { reviewPage = Math.min(pageCount - 1, reviewPage + 1); updateReviews(); });
+    window.addEventListener("resize", updateReviews);
+    updateReviews();
   }
 
   // The DB template owns sections; Premium Photo owns their visual order.
   if (portfolio && process) portfolio.after(process);
   if (process && blog) process.after(blog);
-  if (blog && reviews) blog.after(reviews);
+  if (blog && pricing) blog.after(pricing);
+  if (pricing && faq) pricing.after(faq);
+  if (faq && reviews) faq.after(reviews);
   if (reviews && contact) reviews.after(contact);
 }
 

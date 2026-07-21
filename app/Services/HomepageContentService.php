@@ -153,7 +153,8 @@ class HomepageContentService
         $this->applyBlockFallback($blocks, 'cenik_cta', fn() => $this->buildPageCtaHtml($siteId, 'cenik'));
         $this->applyBlockFallback($blocks, 'pricing_cta', fn() => $this->buildPageCtaHtml($siteId, 'cenik'));
         $this->applyBlockFallback($blocks, 'reviews_demo', fn() => $this->reviewContent->buildHomepageHtml($siteId, 10, $this->currentThemeKey));
-        // partials/home-reviews.phtml always slices the homepage teaser to 3 items.
+        // Premium Photo keeps the loaded review set for its desktop carousel;
+        // other themes still control their own teaser presentation in partials.
         $this->applyBlockFallback($blocks, 'reviews_cta', fn() => $this->buildReviewsCtaHtml($siteId, 3));
         $this->applyBlockFallback($blocks, 'kontakt_info', fn() => $this->buildContactHtml($siteId));
         $this->applyBlockFallback($blocks, 'contact_info', fn() => $this->buildContactHtml($siteId));
