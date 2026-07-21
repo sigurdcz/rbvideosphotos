@@ -1013,6 +1013,34 @@ Hotovo kdyz: Nadpis i popis doplnkovych cen jsou skutecne centrovane, badge je g
 - Finalni Chrome/CDP 1440x900 dosahl 99/100: badge i doplnkova textace jsou centrovane a bocni karty maji srovnatelnou vysku. Mobil 390x844 nema horizontalni overflow.
 - Regrese: 59/59 PHP testu, 27/27 golden kontrol, PHP lint a `git diff --check` bez chyby; historicka migrace `014` nema diff. README, ARCHITECTURE a INSTRUCTIONS byly posouzeny bez potreby zmeny. Wiki byla aktualizovana a commitnuta jako `42763eb`.
 
+---
+
+# UKOL: Opravit centrovani cenik-other pres cely grid
+
+Datum: 2026-07-22
+Zadani: Opravit stale opticky posunutou textaci v sekci `cenik-other`.
+
+Hotovo kdyz: `cenik-other` zabira vsechny sloupce cenikoveho gridu a nadpis i popis jsou centrovane vuci cele sekci; zmenu kryje test a cerstvy desktopovy screenshot.
+
+## Kroky
+
+- [x] Najit skutecnou pricinu mimo samotne `text-align`.
+- [x] Roztahnout `cenik-other` pres vsechny sloupce gridu a pridat regresni kontrolu.
+- [x] Overit testy a cerstvym screenshotem.
+- [x] Provest wiki reflexi a commitnout hotovou opravu.
+
+## Overeni
+
+- Root cause: `text-align:center` centroval obsah pouze uvnitr jednoho sloupce rodicovskeho gridu.
+- CSS kontrakt: `grid-column:1 / -1`, `justify-self:stretch`, plna sirka bez `max-width` omezeni.
+- Chrome/CDP 1440x1100: textace je geometricky uprostred sekce, bez horizontalniho overflow; screenshot `storage/qa/premium-photo-cenik-other-grid-centered.png`.
+- Regrese: 59/59 PHP testu a 27/27 golden kontrol.
+- Wiki reflexe: pipeline dokumentace aktualizovana a commitnuta jako `b691012`.
+
+## Vysledek
+
+Hotovo. `cenik-other` zabira celou sirku cenikoveho gridu a jeho nadpis i popis jsou skutecne centrovane vuci cele sekci.
+
 ## Vysledek
 
 Hotovo. Doplnkova cenikova textace i featured badge jsou centrovane; Premium ma sedm vyvazenych bodu se souhrnem Standardniho a bocni karty jsou vyskové srovnatelne v live, publish i seed/migracni ceste.

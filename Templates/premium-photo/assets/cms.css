@@ -653,9 +653,9 @@ body.theme-premium-photo[data-cms-page-key="cenik"] .ckp-feats li { position:rel
 body.theme-premium-photo[data-cms-page-key="cenik"] .ckp-feats li::before { content:"✓"; position:absolute; top:9px; left:2px; width:14px; margin:0; color:var(--champagne-deep); font-weight:700; line-height:1.35; text-align:center; }
 body.theme-premium-photo[data-cms-page-key="cenik"] .ckp-badge { top:-11px; line-height:1; }
 body.theme-premium-photo[data-cms-page-key="cenik"] .ckp-badge { right:0 !important; left:0 !important; width:max-content; margin-inline:auto !important; transform:none !important; }
-body.theme-premium-photo[data-cms-page-key="cenik"] .cenik-other { display:flex; flex-direction:column; align-items:center; width:100%; margin-inline:auto; text-align:center !important; }
+body.theme-premium-photo[data-cms-page-key="cenik"] .cenik-other { grid-column:1 / -1; justify-self:stretch; display:flex; flex-direction:column; align-items:center; box-sizing:border-box; width:100%; max-width:none; margin-inline:auto; text-align:center !important; }
 body.theme-premium-photo[data-cms-page-key="cenik"] .cenik-other h2,
-body.theme-premium-photo[data-cms-page-key="cenik"] .cenik-other p { width:100%; margin-inline:auto; text-align:center !important; }
+body.theme-premium-photo[data-cms-page-key="cenik"] .cenik-other p { width:100%; max-width:none; margin-inline:auto; text-align:center !important; }
 
 @media (min-width:641px) {
   body.theme-premium-photo .site-footer { padding:40px 0 18px; }
