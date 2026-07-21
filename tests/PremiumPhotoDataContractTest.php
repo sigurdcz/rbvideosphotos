@@ -72,12 +72,18 @@ function register_premium_photo_data_contract_tests(callable $test, callable $as
         $view = (string)file_get_contents($themeDir . '/views/archetypes/cenik.phtml');
         $css = (string)file_get_contents($themeDir . '/assets/cms.css');
         $renderer = (string)file_get_contents(dirname($themeDir, 2) . '/app/Services/Render/CenikPageRenderer.php');
+        $seeder = (string)file_get_contents(dirname($themeDir, 2) . '/app/Services/DemoContentSeeder.php');
+        $migration = (string)file_get_contents(dirname($themeDir, 2) . '/database/migrations/023_balance_cenik_premium_features.sql');
 
         $assert(str_contains($renderer, 'ViewFactory::forTheme($themeKey)'), 'Pricing renderer bypasses the active theme view cascade.');
         $assert(str_contains($view, 'premium-cenik-head') && str_contains($view, '$packages as $package'), 'Pricing theme archetype does not preserve DB-driven package rendering.');
         $assert(!str_contains($view, '14 900') && !str_contains($view, '24 900') && !str_contains($view, '34 900'), 'Static package prices leaked into the theme archetype.');
         $assert(str_contains($css, 'justify-items:start') && str_contains($css, '.ckp-card--featured { color:var(--ink)'), 'Reference hero alignment or light featured card styling is missing.');
         $assert(str_contains($css, 'grid-template-columns:1fr'), 'Pricing cards do not collapse to one column on mobile.');
+        $assert(str_contains($css, 'right:0 !important; left:0 !important; width:max-content'), 'Featured pricing badge is not centered independently of legacy offsets.');
+        $assert(str_contains($css, '.cenik-other h2') && str_contains($css, 'text-align:center !important'), 'Supplementary pricing copy has no explicit centering contract.');
+        $assert(str_contains($seeder, 'vše ze Standardního balíčku') && str_contains($migration, 'vše ze Standardního balíčku'), 'Balanced Premium package copy is missing from seed or migration paths.');
+        $assert(!str_contains($migration, '• online galerie') && !str_contains($migration, '• konzultace před svatbou'), 'Premium migration still duplicates Standard package features.');
     });
 
     $test('premium photo homepage suppresses legacy fades and preserves the scroll timeline axis', function () use ($assert, $themeDir): void {

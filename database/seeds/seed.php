@@ -747,7 +747,7 @@ seedBlock($pdo, $pidCenik, 'cenik_card_2_title','text',     'Karta 2 — nadpis'
 seedBlock($pdo, $pidCenik, 'cenik_card_2_desc', 'textarea', 'Karta 2 — popis',           'Nejoblíbenější volba pro většinu klientů.',  7);
 seedBlock($pdo, $pidCenik, 'cenik_card_2_price','text',     'Karta 2 — cena / patička',  'od 10 000 Kč',                               8);
 seedBlock($pdo, $pidCenik, 'cenik_card_3_title','text',     'Karta 3 — nadpis',          'Prémiový',                                   9);
-seedBlock($pdo, $pidCenik, 'cenik_card_3_desc', 'textarea', 'Karta 3 — popis',           'Komplexní řešení na míru bez kompromisů.',  10);
+seedBlock($pdo, $pidCenik, 'cenik_card_3_desc', 'textarea', 'Karta 3 — popis',           "Komplexní řešení na míru bez kompromisů.\n\nObsahuje:\n• vše ze Standardního balíčku\n• prioritní zpracování\n• delší archivace výstupů",  10);
 seedBlock($pdo, $pidCenik, 'cenik_card_3_price','text',     'Karta 3 — cena / patička',  'od 20 000 Kč',                              11);
 seedBlock($pdo, $pidCenik, 'cta_wrap',          'html',     'CTA',                       '<a href="/kontakt" class="btn-primary">Nez&#225;vazn&#225; popt&#225;vka</a>', 12);
 

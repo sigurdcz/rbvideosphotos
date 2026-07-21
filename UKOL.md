@@ -984,3 +984,35 @@ Hotovo kdyz: Desktopovy Cenik nema posunute badge ani checky, prostredni karta j
 ## Vysledek
 
 Hotovo. Cenik ma stabilni badge a checky, jemne dominantni prostredni kartu a mensi bocni karty; desktopovy footer ma DB-driven zlate kontaktni ikony a cilove kompaktni radkovani.
+
+---
+
+# UKOL: Centrovat Cenik a zkratit Premiovy balicek
+
+Datum: 2026-07-22
+Zadani: Vystredit spodní cenikovou textaci a featured label; zkratit Premium balicek o tri polozky a nahradit je jednou polozkou „Vse ze Standardniho“, aby byly bocni karty vyskové vyrovnane.
+
+Hotovo kdyz: Nadpis i popis doplnkovych cen jsou skutecne centrovane, badge je geometricky uprostred prostredni karty a Premium ma o tri konkretni body mene plus souhrn „Vse ze Standardniho“, se srovnatelnou vyskou se Zakladnim na desktopu; DB, seed, publish a mobil zustanou konzistentni.
+
+## Kroky
+
+- [x] Zmapovat CSS kolize, aktualni DB hodnotu, seed a migracni cestu.
+- [x] Opravit centrovani textace a badge v theme CSS.
+- [x] Upravit Premium obsah append-only migraci, seeder a aktualni lokalni DB.
+- [x] Zachytit desktop/mobile screenshot, regenerovat vystupy a spustit regresi.
+- [x] Provest wiki reflexi a commitnout hotovou zmenu.
+
+## Poznamky
+
+- Pracovni strom byl pred ukolem cisty krome uzivatelskeho neversionovaneho screenshotu.
+- Rubrika 100 bodu: cenik-other centrovani 20, badge geometrie 20, bocni vysky 25, Premium obsah/DB kontrakt 20, mobil/runtime/testy 15.
+- Historicka migrace `014_fill_cenik_packages.sql` je nemenne aplikovana historie; oprava dostane novou migraci s dalsim poradovym cislem.
+- CSS centrovani je nyni explicitni: badge pouziva `left:0; right:0; width:max-content; margin-inline:auto` misto procentniho posunu a `cenik-other` centruje vlastni box i oba textove potomky.
+- Premium ma sedm bodu: novy souhrn „vse ze Standardniho balicku“ plus sest odlisujicich benefitu. Odstraneny byly redundantni body cely den, online galerie a konzultace. Zmena je v DemoContentSeederu, hlavnim seedu a nove append-only migraci `023`; migrace `014` zustala nedotcena.
+- Lokalni DB migraci `023` aplikovala a zaznamenala jednou; read-only kontrola potvrdila presne 7 bodu. Prvni pomocny regex count selhal na kodovani odrazky az po uspesnem commitu transakce, proto byl vysledek znovu overen bez zavislosti na znaku odrazky.
+- Finalni Chrome/CDP 1440x900 dosahl 99/100: badge i doplnkova textace jsou centrovane a bocni karty maji srovnatelnou vysku. Mobil 390x844 nema horizontalni overflow.
+- Regrese: 59/59 PHP testu, 27/27 golden kontrol, PHP lint a `git diff --check` bez chyby; historicka migrace `014` nema diff. README, ARCHITECTURE a INSTRUCTIONS byly posouzeny bez potreby zmeny. Wiki byla aktualizovana a commitnuta jako `42763eb`.
+
+## Vysledek
+
+Hotovo. Doplnkova cenikova textace i featured badge jsou centrovane; Premium ma sedm vyvazenych bodu se souhrnem Standardniho a bocni karty jsou vyskové srovnatelne v live, publish i seed/migracni ceste.

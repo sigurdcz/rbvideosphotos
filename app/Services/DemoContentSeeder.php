@@ -761,13 +761,11 @@ CSS;
                 'Prémiový',
                 "Kompletní zachycení celého svatebního dne bez spěchu a kompromisů. Přibližně 10–12 hodin focení, prioritní zpracování a svatební video / reels v ceně. Delší archivace výstupů.\n\n"
                 . "Obsahuje:\n"
+                . "• vše ze Standardního balíčku\n"
                 . "• focení cca 10–12 hodin\n"
-                . "• celý den od příprav až po večerní zábavu\n"
                 . "• větší počet upravených fotografií\n"
                 . "• detailní zachycení atmosféry, hostů a momentů\n"
                 . "• svatební video + krátký sestřih / reels v ceně\n"
-                . "• online galerie\n"
-                . "• konzultace před svatbou\n"
                 . "• prioritní zpracování\n"
                 . "• archivace hotových výstupů na 5 let",
                 'od 34 900 Kč',
