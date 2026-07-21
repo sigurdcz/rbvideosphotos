@@ -359,6 +359,30 @@ a.tile:hover,.tile.is-link:hover{transform:translateY(-4px);box-shadow:0 18px 40
   font-family:var(--font-mono);font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(246,244,239,.45);
 }
 .foot-bottom a:hover{color:var(--champagne)}
+.foot-mobile{display:none}
+
+@media (max-width:640px){
+  body.theme-premium-photo .site-footer-rich{padding:10px 0 18px}
+  body.theme-premium-photo .site-footer-rich > .wrap{padding-inline:39px}
+  .foot-desktop{display:none !important}
+  .foot-mobile{display:block}
+  .foot-mobile-contact{margin-inline:8px;border-top:1px solid var(--line-inv)}
+  .foot-mobile-contact__row{display:grid;grid-template-columns:30px 1fr;align-items:center;gap:9px;min-height:44px;border-bottom:1px solid var(--line-inv);color:var(--porcelain)}
+  .foot-mobile-contact__row:hover{color:var(--champagne)}
+  .foot-mobile-contact__row small,.foot-mobile-contact__row strong{display:block;font-weight:400;line-height:1.25}
+  .foot-mobile-contact__row small{font-size:.67rem;color:rgba(246,244,239,.62);margin-bottom:2px}
+  .foot-mobile-contact__row strong{font-size:.78rem;color:rgba(246,244,239,.88)}
+  .foot-mobile-contact__icon{width:28px;height:28px;border:1px solid rgba(194,161,100,.26);border-radius:8px;display:grid;place-items:center;color:var(--champagne)}
+  .foot-mobile-contact__icon svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  .foot-mobile-socials{justify-content:center;margin:18px 0 14px;gap:14px}
+  .foot-mobile-socials a{width:34px;height:34px;border-radius:50%}
+  .foot-mobile-nav{border-top:1px solid var(--line-inv)}
+  .foot-mobile-nav a{display:flex;align-items:center;justify-content:space-between;min-height:29px;border-bottom:1px solid var(--line-inv);font-size:.76rem;color:rgba(246,244,239,.78)}
+  .foot-mobile-nav a span:last-child{color:rgba(246,244,239,.38);font-size:1rem}
+  .foot-mobile-bottom{padding-top:15px;text-align:center;color:rgba(246,244,239,.48);font-size:.65rem}
+  .foot-mobile-legal{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:5px 8px;margin-top:8px;font-size:.58rem}
+  .foot-mobile-legal a{color:rgba(246,244,239,.52)}
+}
 
 /* ---------- cookie lišta ---------- */
 

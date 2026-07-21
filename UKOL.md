@@ -857,3 +857,35 @@ Hotovo kdyz: Detail blogu i portfolio detail zobrazi prvni dostupne DB medium v 
 ## Vysledek
 
 Implementace a QA hotove se skore 100/100: oba detailni hero bloky pouzivaji prvni dostupne DB medium bez duplicity, FAQ copy je uvnitr hero, navigace Sluzby ma normalni vahu 300 a desktop/mobil nemaji horizontalni overflow. Regrese: 57/57 testu a 27/27 golden kontrol.
+
+---
+
+# UKOL: Premium Photo mobilni paticka podle reference
+
+Datum: 2026-07-22
+Zadani: Upravit pouze mobilni paticku Premium Photo podle prvni dodane reference: kontaktni radky s ikonami, centrovane socialni site, oddelene navigacni radky se sipkami a kompaktni pravni spodek.
+
+Hotovo kdyz: Pri mobilnim viewportu 390 CSS px odpovida poradi, geometrie, hierarchie a vizual paticky prvnimu obrazku, vsechny hodnoty zustavaji DB-driven, desktopova paticka se nezmeni, nevznikne horizontalni overflow a cerstvy Chrome screenshot projde rubrikou.
+
+## Kroky
+
+- [x] Zmapovat datovy kontrakt footeru, aktualni DOM/CSS a zachytit mobilni baseline.
+- [x] Upravit Premium Photo footer partial a mobilni CSS bez hardcoded klientskych dat.
+- [x] Regenerovat vystupy a iterovat Chrome screenshot proti reference.
+- [x] Spustit regresni testy, posoudit dokumentaci a provest wiki reflexi.
+
+## Poznamky
+
+- Referencni rubrika 100 bodu: poradi a kompletni obsah 30, kontaktni ikony/radky 20, socialni ikony 10, navigacni radky se sipkami 20, pravni spodek 10, responzivita/runtime 10.
+- Dodane obrazky jsou konverzacni reference; existujici uzivatelsky PNG v rootu zustava mimo Git.
+- Baseline 390x844 mela desktopovy sloupcovy footer vysoky pres viewport: logo/socials, Web a Kontakt pod sebou, bez kontaktnich ikon, navigacnich separatoru a kompaktniho pravniho radku. Skore 24/100.
+- Theme partial nyni obsahuje samostatny mobilni DOM. Kontaktni hodnoty a socialni site nadale cte z `FooterViewData`; prezentacni ikony jsou lokalni inline SVG. Desktopovy `foot-grid` zustal zachovan.
+- Mobilni navigace ma referencni poradi Nase prace, Cenik, Blog, FAQ, Kontakt; pro existujici DB stranky prebira jejich aktualni label, systemovy odkaz Cenik ma prezentacni vychozi label.
+- Datovy kontrakt test nyni hlida mobilni kontaktni DOM, DB promenne, odkaz Cenik a izolaci desktop/mobile CSS. Publish a golden vystupy byly regenerovany.
+- Iterace 1 dosahla 96/100: povinne prvky, poradi, ikony a separatorove radky odpovidaji reference; zbyvala prilis siroka kompozice a o 31 px vyssi navigace. Druha CSS korekce nastavila referencni bocni rytmus a 29px navigacni radky.
+- Finalni Chrome QA: mobil 390x844 a desktop 1440x900 maji nulovy horizontalni overflow. Mobilni rubrika 100/100; desktopova paticka zustala ve stejne trisloupcove kompozici.
+- Regrese prosla 57/57 testu a 27/27 golden kontrol; `git diff --check` bez chyby. README, ARCHITECTURE a INSTRUCTIONS byly posouzeny bez nutnosti zmeny. Pipeline wiki byla aktualizovana a commitnuta jako `a58eef7`.
+
+## Vysledek
+
+Hotovo. Premium Photo ma na telefonu referencni kontaktni paticku s DB kontakty, lokalnimi SVG ikonami, centrovanymi socialnimi sitemi, petiradkovou navigaci a kompaktnim pravnim spodkem; desktop zustal beze zmeny.

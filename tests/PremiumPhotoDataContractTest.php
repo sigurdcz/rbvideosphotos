@@ -45,6 +45,12 @@ function register_premium_photo_data_contract_tests(callable $test, callable $as
         $assert(str_contains($layout, '{site_name}'), 'Site name placeholder is missing.');
         $assert(str_contains($layout, '{nav}'), 'Dynamic navigation placeholder is missing.');
         $assert(str_contains($layout, '<footer class="site-footer"'), 'Footer injection target is missing.');
+        $footer = (string)file_get_contents($themeDir . '/views/partials/footer.phtml');
+        $css = (string)file_get_contents($themeDir . '/assets/theme.css');
+        $assert(str_contains($footer, 'foot-mobile-contact') && str_contains($footer, 'foot-mobile-nav'), 'Reference mobile footer structure is missing.');
+        $assert(str_contains($footer, '$__phones[0]') && str_contains($footer, '$__email') && str_contains($footer, '$__addr'), 'Mobile footer contact rows are not sourced from footer view data.');
+        $assert(str_contains($footer, "['url' => '/cenik', 'label' => 'Ceník']"), 'Mobile footer pricing navigation entry is missing.');
+        $assert(str_contains($css, '@media (max-width:640px)') && str_contains($css, '.foot-desktop{display:none !important}'), 'Mobile footer is not isolated from the desktop footer.');
         $assert(!str_contains($layout, 'info@rbvideos.cz'), 'Static contact details remain in the layout.');
         $assert(!str_contains($layout, 'href="#" aria-label="Instagram"'), 'Static social links remain in the layout.');
     });
