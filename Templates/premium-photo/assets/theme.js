@@ -156,6 +156,18 @@ if (premiumHome) {
   if (pricing && faq) pricing.after(faq);
   if (faq && reviews) faq.after(reviews);
   if (reviews && contact) reviews.after(contact);
+
+  // Reuse the DB-rendered FAQ preview next to the contact form. Moving the
+  // existing node preserves inline editing and avoids duplicate content.
+  const contactGrid = contact?.querySelector(".premium-contact-grid");
+  const faqContent = faq?.querySelector(":scope > .container");
+  if (contactGrid && faq && faqContent && !contactGrid.querySelector(":scope > .premium-contact-faq")) {
+    faq.removeAttribute("id");
+    faqContent.id = "faq";
+    faqContent.classList.add("premium-contact-faq");
+    contactGrid.appendChild(faqContent);
+    faq.remove();
+  }
 }
 
 const reviewsRoute = document.querySelector(".premium-reviews-route");

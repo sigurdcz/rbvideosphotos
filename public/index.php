@@ -2297,14 +2297,13 @@ try {
         $name    = $cleanHeaderValue((string) ($_POST['name'] ?? ''));
         $contact = trim((string) ($_POST['contact_value'] ?? ''));
         $shootingType = trim($_POST['shooting_type'] ?? '');
-        $eventDate = trim((string) ($_POST['event_date'] ?? ''));
         $eventPlace = trim((string) ($_POST['event_place'] ?? ''));
         $message = trim($_POST['message']       ?? '');
         $privacyConsent = !empty($_POST['privacy_consent']);
         $contactMailSent = false;
         if ($name && $contact && $shootingType && $message && $privacyConsent && $formEmail && filter_var($formEmail, FILTER_VALIDATE_EMAIL)) {
             $subject = 'Nová zpráva z webu — ' . $name;
-            $body    = "Jméno: {$name}\nKontakt: {$contact}\nTyp focení: {$shootingType}\nDatum akce: {$eventDate}\nMísto akce: {$eventPlace}\n\nZpráva:\n{$message}";
+            $body    = "Jméno: {$name}\nKontakt: {$contact}\nTyp focení: {$shootingType}\nMísto akce: {$eventPlace}\n\nZpráva:\n{$message}";
             RequestThrottle::hit('contact_form', $contactThrottleKey, 3, 10 * 60, 10 * 60);
             $appHost = parse_url((string) Config::get('app', 'url', ''), PHP_URL_HOST);
             $mailHost = is_string($appHost) && $appHost !== '' ? $appHost : 'localhost';
@@ -2380,4 +2379,3 @@ try {
 } catch (\Throwable $e) {
     Runtime::handleException($e);
 }
-

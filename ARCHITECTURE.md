@@ -60,7 +60,7 @@ request -> admin/index.php -> Core\Router -> Controller -> Repository/Service ->
 8. /blog                -> tryServeBlogListingPage()
 9. /faq                 -> tryServeFaqPage() z `faq_items`
 10. /kontakt            -> tryServeKontaktPage() z `contact_info`
-11. POST /kontakt/odeslat -> CSRF, honeypot, throttling a `mail()`
+11. POST /kontakt/odeslat -> CSRF, honeypot, throttling a `mail()`; veřejný kontrakt přijímá jméno, kontakt, typ focení, místo a zprávu, nikoli datum akce
 12. CMS stranka z DB    -> tryServeDatabasePage()
 13. Blog detail         -> tryServeBlogPostPage()
 14. Portfolio detail    -> tryServePortfolioPage(..., true)

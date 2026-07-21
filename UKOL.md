@@ -889,3 +889,36 @@ Hotovo kdyz: Pri mobilnim viewportu 390 CSS px odpovida poradi, geometrie, hiera
 ## Vysledek
 
 Hotovo. Premium Photo ma na telefonu referencni kontaktni paticku s DB kontakty, lokalnimi SVG ikonami, centrovanymi socialnimi sitemi, petiradkovou navigaci a kompaktnim pravnim spodkem; desktop zustal beze zmeny.
+
+---
+
+# UKOL: Odstraneni data z kontaktu a homepage FAQ/form layout
+
+Datum: 2026-07-22
+Zadani: Odstranit pole datum ze vsech frontendovych kontaktnich formularu i backendoveho zpracovani a e-mailu; na homepage zobrazit FAQ ukazku a kontaktni formular vedle sebe na desktopu a pod sebou na mobilu.
+
+Hotovo kdyz: Zadny verejny kontaktni formular nerenderuje ani neposila `event_date`, backend tento vstup nepouziva a e-mail datum neobsahuje. Homepage ma pri desktopu dvousloupcovy FAQ/form layout, pri mobilu jednosloupcovy, bez overflow a se zachovanym DB obsahem.
+
+## Kroky
+
+- [x] Zmapovat vsechny FE formulare, POST handler, mail builder, testy a homepage FAQ/contact kompozici.
+- [x] Odstranit datum z FE, backend prijmu a e-mailoveho vystupu vcetne regresnich testu.
+- [x] Upravit homepage FAQ/form layout pro desktop a mobil.
+- [x] Regenerovat vystupy, overit runtime viewporty a kompletni regresi.
+- [x] Posoudit dokumentaci, provest wiki reflexi a commitnout hotovy ukol.
+
+## Poznamky
+
+- Predchozi hotova mobilni paticka byla pred zahajenim commitnuta samostatne jako `d523b6e`; uzivatelsky screenshot zustal mimo Git.
+- Bezpecnostni kontrakt: i kdyby klient poslal podvrzene `event_date`, backend jej nesmi zahrnout do predmetu, tela e-mailu ani dalsiho zpracovani.
+- Runtime mel datum ve ctyrech verejnych view cestach a MarkupNormalizer jej navic menil na `type=date`; POST handler hodnotu cetl a vkladal do mail body. Premium Photo pole byla odstranena primo a centralni normalizacni guard odstrani legacy `event_date` i z dalsich aktivnich view bez skryteho prijmu na backendu.
+- Premium Photo JS presouva existujici DB-renderovany FAQ container do kontaktniho gridu bez klonovani textu. Desktop grid ma dva stejne sloupce, breakpoint do 850 px zachovava jeden sloupec.
+- Legacy normalizace odstranuje datum i v publish ceste, ktera zamerne nepousti accessibility pass. Regresni kontrakt hlida Premium Photo FE, absenci backendoveho POST/mail pouziti a dvousloupcovou homepage kompozici.
+- Prvni runtime kontrola potvrdila spravnou geometrii a absenci data, ale odhalila vyssi specificitu puvodniho svetleho FAQ pravidla. Oprava pouziva stejne body/theme/home scope, aby byl FAQ sloupec v tmave kontaktni sekci citelny.
+- Projektova architektura nyni explicitne dokumentuje verejny POST kontrakt bez data. Wiki pipeline zaznamenava FE/BE guard i responzivni presun FAQ bez duplikace DB obsahu.
+- Finalni Chrome QA: homepage 1440x900 ma formular a FAQ vedle sebe; homepage 390x844 je radi pod sebe; `/kontakt` 390x844 nema datum. Vsechny tri capture maji `scrollWidth === clientWidth`.
+- Finalni regrese: 58/58 testu, 27/27 golden kontrol a `git diff --check` bez chyby. README a INSTRUCTIONS byly posouzeny bez nutnosti zmeny; ARCHITECTURE bylo aktualizovano. Wiki update je commit `4e58228`.
+
+## Vysledek
+
+Hotovo. Datum bylo odstraneno z Premium Photo formularu, ze vsech live/publish vystupu pres centralni guard a z backendoveho mail kontraktu; FAQ ukazka sdili s homepage formularem responzivni dvousloupcovy/jednosloupcovy layout.

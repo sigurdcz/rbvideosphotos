@@ -55,6 +55,17 @@ function register_premium_photo_data_contract_tests(callable $test, callable $as
         $assert(!str_contains($layout, 'href="#" aria-label="Instagram"'), 'Static social links remain in the layout.');
     });
 
+    $test('public contact contract excludes event dates on frontend and backend', function () use ($assert, $themeDir): void {
+        $homeContact = (string)file_get_contents($themeDir . '/views/partials/home-contact.phtml');
+        $contactPage = (string)file_get_contents($themeDir . '/views/archetypes/kontakt.phtml');
+        $publicIndex = (string)file_get_contents(dirname($themeDir, 2) . '/public/index.php');
+        $normalizer = (string)file_get_contents(dirname($themeDir, 2) . '/app/Services/Render/MarkupNormalizer.php');
+
+        $assert(!str_contains($homeContact, 'event_date') && !str_contains($contactPage, 'event_date'), 'Premium Photo still renders an event date field.');
+        $assert(!str_contains($publicIndex, "\$_POST['event_date']") && !str_contains($publicIndex, 'Datum akce:'), 'Contact POST handler still consumes or mails an event date.');
+        $assert(str_contains($normalizer, 'name="event_date"'), 'Legacy frontend date-field guard is missing.');
+    });
+
     $test('premium photo homepage suppresses legacy fades and preserves the scroll timeline axis', function () use ($assert, $themeDir): void {
         $css = (string)file_get_contents($themeDir . '/assets/cms.css');
         $js = (string)file_get_contents($themeDir . '/assets/theme.js');
@@ -87,6 +98,8 @@ function register_premium_photo_data_contract_tests(callable $test, callable $as
         $assert(str_contains($css, 'grid-template-columns:1fr'), 'Mobile navigation is not a vertical single-column list.');
         $assert(!str_contains($js, 'pricing.hidden = true'), 'Homepage pricing is still hidden by the theme.');
         $assert(!str_contains($js, 'faq.hidden = true'), 'Homepage FAQ is still hidden by the theme.');
+        $assert(str_contains($js, 'contactGrid.appendChild(faqContent)'), 'Homepage FAQ preview is not composed next to the contact form.');
+        $assert(str_contains($cmsCss, 'grid-template-columns: minmax(0, 1fr) minmax(0, 1fr)'), 'Homepage FAQ and contact form do not use a desktop two-column grid.');
         $assert(str_contains($js, 'premium-review-controls'), 'Desktop review carousel controls are missing.');
         $assert(str_contains($js, 'aria-label", "Předchozí recenze'), 'Review carousel previous control is not accessible.');
         $assert(str_contains($js, 'aria-label", "Další recenze'), 'Review carousel next control is not accessible.');

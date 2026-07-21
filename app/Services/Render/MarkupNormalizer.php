@@ -186,7 +186,9 @@ final class MarkupNormalizer
      * Unifying this behavior is deferred (contact archetype, phase 4).
      */
     public static function normalizeLegacyFrontendMarkup(string $html, bool $withContactAccessibility = false): string
-{
+    {
+    $html = preg_replace('~<div(?:\s+class="[^"]*")?>\s*<label[^>]*>[^<]*Datum[^<]*</label>\s*<input[^>]*name="event_date"[^>]*>\s*</div>~ui', '', $html) ?? $html;
+    $html = preg_replace('~<label[^>]*>[^<]*Datum[^<]*</label>\s*<input[^>]*name="event_date"[^>]*>~ui', '', $html) ?? $html;
     $html = preg_replace(
         '~<div>\s*(<a\b(?=[^>]*\bclass=(["\'])[^"\']*\bbtn-secondary\b[^"\']*\2)[^>]*>.*?</a>)\s*</div>~is',
         '<div class="hp-section-cta">$1</div>',
@@ -211,11 +213,14 @@ final class MarkupNormalizer
 
     public static function normalizeContactFormAccessibility(string $html): string
 {
+    // Event dates are intentionally outside the public contact contract. This
+    // also strips the field from legacy/custom views that have not been updated.
+    $html = preg_replace('~<div(?:\s+class="[^"]*")?>\s*<label[^>]*>[^<]*Datum[^<]*</label>\s*<input[^>]*name="event_date"[^>]*>\s*</div>~ui', '', $html) ?? $html;
+    $html = preg_replace('~<label[^>]*>[^<]*Datum[^<]*</label>\s*<input[^>]*name="event_date"[^>]*>~ui', '', $html) ?? $html;
     $html = str_replace('<p class="kt-form-intro">', '<p class="kt-form-intro" id="kontakt-form-intro">', $html);
     $html = preg_replace('~<label>([^<]*\*)</label><input type="text" name="name"~u', '<label for="kontakt-name">$1</label><input id="kontakt-name" type="text" name="name" autocomplete="name"', $html) ?? $html;
     $html = preg_replace('~<label>([^<]*\*)</label><input type="text" name="contact_value"~u', '<label for="kontakt-value">$1</label><input id="kontakt-value" type="text" name="contact_value" autocomplete="email" inputmode="email"', $html) ?? $html;
     $html = preg_replace('~<label>([^<]*\*)</label><select name="shooting_type"~u', '<label for="kontakt-shooting-type">$1</label><select id="kontakt-shooting-type" name="shooting_type"', $html) ?? $html;
-    $html = preg_replace('~<label>([^<]*)</label><input type="text" name="event_date"~u', '<label for="kontakt-event-date">$1</label><input id="kontakt-event-date" type="date" name="event_date" autocomplete="off"', $html) ?? $html;
     $html = preg_replace('~<label>([^<]*)</label><input type="text" name="event_place"~u', '<label for="kontakt-event-place">$1</label><input id="kontakt-event-place" type="text" name="event_place" autocomplete="address-level2"', $html) ?? $html;
     $html = preg_replace('~<label>([^<]*)</label><textarea name="message"~u', '<label for="kontakt-message">$1</label><textarea id="kontakt-message" name="message"', $html) ?? $html;
     $html = str_replace('<label class="kt-consent"><input type="checkbox" required>', '<label class="kt-consent" for="kontakt-consent"><input id="kontakt-consent" type="checkbox" name="privacy_consent" required>', $html);
