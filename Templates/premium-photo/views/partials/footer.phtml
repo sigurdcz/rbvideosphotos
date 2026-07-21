@@ -1,0 +1,43 @@
+<?php
+/**
+ * Premium Photo footer override. Data comes from App\Services\Render\FooterViewData::forSite()
+ * (same source as the core footer) — this partial only owns the designer markup/classes.
+ * @var array $footer
+ */
+$__b = $footer['brand'];
+$__phones = $footer['phones'];
+$__email = (string) $footer['email'];
+$__addr = $footer['addressLines'];
+$__nav = $footer['navLinks'];
+$__hasContact = $__phones || $__email !== '' || $__addr;
+?>
+<div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-col foot-brand">
+        <?php if (($__b['logoUrl'] ?? '') !== ''): ?>
+        <a class="logo" href="/"><img src="<?= $this->e($__b['logoUrl']) ?>" alt="<?= $this->e($__b['name']) ?>" style="max-height:36px;width:auto;display:block"></a>
+        <?php else: ?>
+        <a class="logo" href="/" style="color:var(--porcelain)"><?= $this->e($__b['name']) ?></a>
+        <?php endif; ?>
+        <div class="socials"><?= $this->partial('partials/footer-socials', ['socials' => $footer['socials']]) ?></div>
+      </div>
+      <div class="foot-col">
+        <h4>Web</h4>
+        <?php if ($__nav): ?><ul><?php foreach ($__nav as $__link): ?><li><a href="<?= $this->e($__link['url']) ?>"><?= $this->e($__link['label']) ?></a></li><?php endforeach; ?></ul><?php endif; ?>
+      </div>
+      <div class="foot-col">
+        <h4>Kontakt</h4>
+        <?php if ($__hasContact): ?>
+        <ul>
+          <?php foreach ($__phones as $__p): ?><li><a href="tel:<?= $this->e($__p['tel']) ?>"><?= $this->e($__p['display']) ?></a></li><?php endforeach; ?>
+          <?php if ($__email !== ''): ?><li><a href="mailto:<?= $this->e($__email) ?>"><?= $this->e($__email) ?></a></li><?php endif; ?>
+          <?php if ($__addr): ?><li><?php foreach ($__addr as $__j => $__line): ?><?php if ($__j > 0): ?><br><?php endif; ?><?= $this->e($__line) ?><?php endforeach; ?></li><?php endif; ?>
+          <li><a href="/podminky-uziti">Podmínky užití</a></li>
+        </ul>
+        <?php else: ?>
+        <ul><li><a href="/podminky-uziti">Podmínky užití</a></li></ul>
+        <?php endif; ?>
+      </div>
+    </div>
+    <div class="foot-bottom site-footer-bottom">&copy; <?= $this->e($footer['year']) ?> <?= $this->e($__b['name']) ?></div>
+  </div>

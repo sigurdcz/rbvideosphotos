@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Render;
 
 use App\Repositories\ContactRepository;
+use App\Repositories\PageRepository;
 use App\Repositories\SiteRepository;
 
 /**
@@ -24,6 +25,7 @@ final class FooterViewData
      *   email: string,
      *   addressLines: array<int, string>,
      *   socials: array<int, array{type:string, url:string, label:string, iconSvg:string}>,
+     *   navLinks: array<int, array{url:string, label:string}>,
      *   year: string
      * }
      */
@@ -75,6 +77,17 @@ final class FooterViewData
             ];
         }
 
+        $pages = new PageRepository();
+        $navLinks = [];
+        foreach (['nase-prace' => 'Naše práce', 'blog' => 'Blog', 'hodnoceni' => 'Hodnocení', 'faq' => 'FAQ', 'kontakt' => 'Kontakt'] as $urlPath => $fallbackLabel) {
+            $page = $pages->findByUrlPath($urlPath);
+            if (!$page || (int)($page['site_id'] ?? 0) !== $siteId) {
+                continue;
+            }
+            $label = trim((string)($page['title'] ?? '')) ?: $fallbackLabel;
+            $navLinks[] = ['url' => '/' . $urlPath, 'label' => $label];
+        }
+
         return [
             'brand' => [
                 'logoUrl' => $logoUrl,
@@ -85,6 +98,7 @@ final class FooterViewData
             'email' => $email,
             'addressLines' => $addressLines,
             'socials' => $socials,
+            'navLinks' => $navLinks,
             'year' => date('Y'),
         ];
     }

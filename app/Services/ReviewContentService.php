@@ -39,6 +39,11 @@ class ReviewContentService
             );
     }
 
+    public function countActive(int $siteId): int
+    {
+        return count($this->reviews->allActive($siteId));
+    }
+
     public function buildListingHtml(int $siteId, ?string $themeKey = null): string
     {
         // Phase 4 of the templating refactor: the /hodnoceni listing grid now

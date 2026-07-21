@@ -242,7 +242,7 @@ body > footer { display: block; }
 .premium-service-card:first-child .premium-card-copy p { color: rgba(246,244,239,.72); }
 
 .premium-portfolio-section { padding-bottom: 0 !important; }
-.premium-portfolio-section .hp-portfolio-placeholder { margin: 0; }
+.premium-portfolio-section .hp-portfolio-placeholder { margin-top: 0; margin-bottom: 36px; }
 .premium-portfolio-grid { margin-top: 38px; }
 .premium-portfolio-grid .tile { min-height: 230px; }
 .premium-portfolio-grid .premium-media { position: absolute; inset: 0; min-height: 100% !important; border-radius: 0; background-size: cover; background-position: center; }
@@ -259,7 +259,7 @@ body > footer { display: block; }
 
 .premium-photo-home #hodnoceni { padding-top: 0; color: var(--ink); background: var(--paper); }
 .premium-photo-home #hodnoceni .section-intro { color: var(--ink-soft); }
-.premium-photo-home #hodnoceni .premium-review-grid { margin-top: 32px; }
+.premium-photo-home #hodnoceni .premium-review-grid { margin-top: 32px; margin-bottom: 36px; }
 .premium-photo-home #hodnoceni .review { color: var(--ink); border-color: var(--line); background: #fff; }
 .premium-photo-home #hodnoceni .review p { color: var(--ink-soft); }
 

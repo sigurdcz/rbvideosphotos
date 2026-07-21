@@ -153,7 +153,8 @@ class HomepageContentService
         $this->applyBlockFallback($blocks, 'cenik_cta', fn() => $this->buildPageCtaHtml($siteId, 'cenik'));
         $this->applyBlockFallback($blocks, 'pricing_cta', fn() => $this->buildPageCtaHtml($siteId, 'cenik'));
         $this->applyBlockFallback($blocks, 'reviews_demo', fn() => $this->reviewContent->buildHomepageHtml($siteId, 10, $this->currentThemeKey));
-        $this->applyBlockFallback($blocks, 'reviews_cta', fn() => $this->buildPageCtaHtml($siteId, 'hodnoceni'));
+        // partials/home-reviews.phtml always slices the homepage teaser to 3 items.
+        $this->applyBlockFallback($blocks, 'reviews_cta', fn() => $this->buildReviewsCtaHtml($siteId, 3));
         $this->applyBlockFallback($blocks, 'kontakt_info', fn() => $this->buildContactHtml($siteId));
         $this->applyBlockFallback($blocks, 'contact_info', fn() => $this->buildContactHtml($siteId));
         $this->applyBlockFallback($blocks, 'faq_cta', fn() => $this->buildPageCtaHtml($siteId, 'faq'));
@@ -433,6 +434,28 @@ class HomepageContentService
         if ($url === '/') {
             return '';
         }
+
+        return $this->renderHomePartial('home-section-cta', HomepageData::sectionCta($url, $label));
+    }
+
+    /**
+     * Reviews CTA label reflects the real remaining review count instead of
+     * the static /hodnoceni page title, e.g. "Dalších 30 hodnocení".
+     */
+    private function buildReviewsCtaHtml(int $siteId, int $shownOnHomepage): string
+    {
+        $page = $this->pages->findByUrlPath('hodnoceni');
+        if (!$page || (int)($page['site_id'] ?? 0) !== $siteId) {
+            return '';
+        }
+
+        $url = '/' . trim((string)($page['url_path'] ?? 'hodnoceni'), '/');
+        if ($url === '/') {
+            return '';
+        }
+
+        $remaining = max(0, $this->reviewContent->countActive($siteId) - $shownOnHomepage);
+        $label = $remaining > 0 ? "Dalších {$remaining} hodnocení" : 'Všechna hodnocení';
 
         return $this->renderHomePartial('home-section-cta', HomepageData::sectionCta($url, $label));
     }

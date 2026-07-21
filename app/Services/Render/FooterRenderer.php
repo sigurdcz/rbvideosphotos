@@ -17,7 +17,15 @@ final class FooterRenderer
     {
         // Rendered by the PHTML partial (app/Views/partials/footer.phtml); the data
         // shape is produced by FooterViewData so live and publish share one source.
-        return \App\View\ViewFactory::forTheme(null)->render('partials/footer', [
+        // Resolves the site's active theme so a theme can override the footer
+        // markup (Templates/<key>/views/partials/footer.phtml) the same way
+        // every other partial/archetype does; falls back to the core partial
+        // when no theme is active or it doesn't provide its own override.
+        $site = (new \App\Repositories\SiteRepository())->findById($siteId);
+        $theme = $site ? (new \App\Services\ThemeTemplateRegistry())->resolveForSite($site) : null;
+        $themeKey = trim((string)($theme['key'] ?? '')) ?: null;
+
+        return \App\View\ViewFactory::forTheme($themeKey)->render('partials/footer', [
             'footer' => FooterViewData::forSite($siteId),
         ]);
     }
