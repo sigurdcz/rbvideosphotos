@@ -1,9 +1,5 @@
 <?php
-/**
- * Premium Photo footer override. Data comes from App\Services\Render\FooterViewData::forSite()
- * (same source as the core footer) — this partial only owns the designer markup/classes.
- * @var array $footer
- */
+/** Premium Photo footer; all content comes from FooterViewData::forSite(). */
 $__b = $footer['brand'];
 $__phones = $footer['phones'];
 $__email = (string) $footer['email'];
@@ -16,51 +12,42 @@ foreach ($__nav as $__link) {
 $__hasContact = $__phones || $__email !== '' || $__addr;
 ?>
 <div class="wrap">
-    <div class="foot-grid foot-desktop">
-      <div class="foot-col foot-brand">
-        <?php if (($__b['logoUrl'] ?? '') !== ''): ?>
-        <a class="logo" href="/"><img src="<?= $this->e($__b['logoUrl']) ?>" alt="<?= $this->e($__b['name']) ?>" style="max-height:36px;width:auto;display:block"></a>
-        <?php else: ?>
-        <a class="logo" href="/" style="color:var(--porcelain)"><?= $this->e($__b['name']) ?></a>
-        <?php endif; ?>
-        <div class="socials"><?= $this->partial('partials/footer-socials', ['socials' => $footer['socials']]) ?></div>
-      </div>
-      <div class="foot-col">
-        <h4>Web</h4>
-        <?php if ($__nav): ?><ul><?php foreach ($__nav as $__link): ?><li><a href="<?= $this->e($__link['url']) ?>"><?= $this->e($__link['label']) ?></a></li><?php endforeach; ?></ul><?php endif; ?>
-      </div>
-      <div class="foot-col">
-        <h4>Kontakt</h4>
-        <?php if ($__hasContact): ?>
-        <ul>
-          <?php foreach ($__phones as $__p): ?><li><a href="tel:<?= $this->e($__p['tel']) ?>"><?= $this->e($__p['display']) ?></a></li><?php endforeach; ?>
-          <?php if ($__email !== ''): ?><li><a href="mailto:<?= $this->e($__email) ?>"><?= $this->e($__email) ?></a></li><?php endif; ?>
-          <?php if ($__addr): ?><li><?php foreach ($__addr as $__j => $__line): ?><?php if ($__j > 0): ?><br><?php endif; ?><?= $this->e($__line) ?><?php endforeach; ?></li><?php endif; ?>
-          <li><a href="/podminky-uziti">Podmínky užití</a></li>
-        </ul>
-        <?php else: ?>
-        <ul><li><a href="/podminky-uziti">Podmínky užití</a></li></ul>
-        <?php endif; ?>
-      </div>
+  <div class="foot-grid foot-desktop">
+    <div class="foot-col foot-brand">
+      <?php if (($__b['logoUrl'] ?? '') !== ''): ?><a class="logo" href="/"><img src="<?= $this->e($__b['logoUrl']) ?>" alt="<?= $this->e($__b['name']) ?>" style="max-height:36px;width:auto;display:block"></a><?php else: ?><a class="logo" href="/" style="color:var(--porcelain)"><?= $this->e($__b['name']) ?></a><?php endif; ?>
+      <div class="socials"><?= $this->partial('partials/footer-socials', ['socials' => $footer['socials']]) ?></div>
     </div>
-    <div class="foot-bottom site-footer-bottom foot-desktop">&copy; <?= $this->e($footer['year']) ?> <?= $this->e($__b['name']) ?></div>
-
-    <div class="foot-mobile">
-      <div class="foot-mobile-contact">
-        <?php if ($__phones): ?><a class="foot-mobile-contact__row" href="tel:<?= $this->e($__phones[0]['tel']) ?>"><span class="foot-mobile-contact__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7.2 3.5 10 7.7 8.3 9.4c1.1 2.2 2.1 3.2 4.3 4.3l1.7-1.7 4.2 2.8-.8 3.1c-.2.7-.8 1.1-1.5 1.1C9.9 18.4 5.6 14.1 5 7.8c-.1-.7.4-1.3 1.1-1.5l1.1-2.8Z"/></svg></span><span><small>Telefon</small><strong><?= $this->e($__phones[0]['display']) ?></strong></span></a><?php endif; ?>
-        <?php if ($__email !== ''): ?><a class="foot-mobile-contact__row" href="mailto:<?= $this->e($__email) ?>"><span class="foot-mobile-contact__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="5.5" width="17" height="13" rx="1.5"/><path d="m4.5 7 7.5 6 7.5-6"/></svg></span><span><small>E-mail</small><strong><?= $this->e($__email) ?></strong></span></a><?php endif; ?>
-        <?php if ($__addr): ?><div class="foot-mobile-contact__row"><span class="foot-mobile-contact__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21s6-5.7 6-11a6 6 0 1 0-12 0c0 5.3 6 11 6 11Z"/><circle cx="12" cy="10" r="2"/></svg></span><span><small>Působíme v</small><strong><?php foreach ($__addr as $__j => $__line): ?><?php if ($__j > 0): ?>, <?php endif; ?><?= $this->e($__line) ?><?php endforeach; ?></strong></span></div><?php endif; ?>
-      </div>
-
-      <div class="socials foot-mobile-socials"><?= $this->partial('partials/footer-socials', ['socials' => $footer['socials']]) ?></div>
-
-      <nav class="foot-mobile-nav" aria-label="Navigace v patičce">
-        <?php foreach ([['url' => '/nase-prace', 'label' => 'Naše práce'], ['url' => '/cenik', 'label' => 'Ceník'], ['url' => '/blog', 'label' => 'Blog'], ['url' => '/faq', 'label' => 'FAQ'], ['url' => '/kontakt', 'label' => 'Kontakt']] as $__mobileLink): ?><?php $__resolvedLink = $__navByUrl[$__mobileLink['url']] ?? $__mobileLink; ?><a href="<?= $this->e($__resolvedLink['url']) ?>"><span><?= $this->e($__resolvedLink['label']) ?></span><span aria-hidden="true">›</span></a><?php endforeach; ?>
-      </nav>
-
-      <div class="foot-mobile-bottom">
-        <div>&copy; <?= $this->e($footer['year']) ?> <?= $this->e($__b['name']) ?></div>
-        <div class="foot-mobile-legal"><a href="/podminky-uziti">Podmínky užití</a><span>•</span><a href="/podminky-uziti">Ochrana osobních údajů</a><span>•</span><a href="/podminky-uziti#cookies">Cookies</a></div>
-      </div>
+    <div class="foot-col">
+      <h4>Web</h4>
+      <?php if ($__nav): ?><ul><?php foreach ($__nav as $__link): ?><li><a href="<?= $this->e($__link['url']) ?>"><?= $this->e($__link['label']) ?></a></li><?php endforeach; ?></ul><?php endif; ?>
+    </div>
+    <div class="foot-col foot-contact">
+      <h4>Kontakt</h4>
+      <?php if ($__hasContact): ?>
+      <ul class="foot-contact-list">
+        <?php foreach ($__phones as $__p): ?><li class="foot-contact-row"><span class="foot-contact-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7.2 3.5 10 7.7 8.3 9.4c1.1 2.2 2.1 3.2 4.3 4.3l1.7-1.7 4.2 2.8-.8 3.1c-.2.7-.8 1.1-1.5 1.1C9.9 18.4 5.6 14.1 5 7.8c-.1-.7.4-1.3 1.1-1.5l1.1-2.8Z"/></svg></span><a href="tel:<?= $this->e($__p['tel']) ?>"><?= $this->e($__p['display']) ?></a></li><?php endforeach; ?>
+        <?php if ($__email !== ''): ?><li class="foot-contact-row"><span class="foot-contact-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="5.5" width="17" height="13" rx="1.5"/><path d="m4.5 7 7.5 6 7.5-6"/></svg></span><a href="mailto:<?= $this->e($__email) ?>"><?= $this->e($__email) ?></a></li><?php endif; ?>
+        <?php if ($__addr): ?><li class="foot-contact-row foot-contact-row--address"><span class="foot-contact-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21s6-5.7 6-11a6 6 0 1 0-12 0c0 5.3 6 11 6 11Z"/><circle cx="12" cy="10" r="2"/></svg></span><span><?php foreach ($__addr as $__j => $__line): ?><?php if ($__j > 0): ?><br><?php endif; ?><?= $this->e($__line) ?><?php endforeach; ?></span></li><?php endif; ?>
+        <li class="foot-contact-legal"><a href="/podminky-uziti">Podm&iacute;nky u&#382;it&iacute;</a></li>
+      </ul>
+      <?php else: ?><ul><li><a href="/podminky-uziti">Podm&iacute;nky u&#382;it&iacute;</a></li></ul><?php endif; ?>
     </div>
   </div>
+  <div class="foot-bottom site-footer-bottom foot-desktop">&copy; <?= $this->e($footer['year']) ?> <?= $this->e($__b['name']) ?></div>
+
+  <div class="foot-mobile">
+    <div class="foot-mobile-contact">
+      <?php if ($__phones): ?><a class="foot-mobile-contact__row" href="tel:<?= $this->e($__phones[0]['tel']) ?>"><span class="foot-mobile-contact__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7.2 3.5 10 7.7 8.3 9.4c1.1 2.2 2.1 3.2 4.3 4.3l1.7-1.7 4.2 2.8-.8 3.1c-.2.7-.8 1.1-1.5 1.1C9.9 18.4 5.6 14.1 5 7.8c-.1-.7.4-1.3 1.1-1.5l1.1-2.8Z"/></svg></span><span><small>Telefon</small><strong><?= $this->e($__phones[0]['display']) ?></strong></span></a><?php endif; ?>
+      <?php if ($__email !== ''): ?><a class="foot-mobile-contact__row" href="mailto:<?= $this->e($__email) ?>"><span class="foot-mobile-contact__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="5.5" width="17" height="13" rx="1.5"/><path d="m4.5 7 7.5 6 7.5-6"/></svg></span><span><small>E-mail</small><strong><?= $this->e($__email) ?></strong></span></a><?php endif; ?>
+      <?php if ($__addr): ?><div class="foot-mobile-contact__row"><span class="foot-mobile-contact__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21s6-5.7 6-11a6 6 0 1 0-12 0c0 5.3 6 11 6 11Z"/><circle cx="12" cy="10" r="2"/></svg></span><span><small>P&#367;sob&iacute;me v</small><strong><?php foreach ($__addr as $__j => $__line): ?><?php if ($__j > 0): ?>, <?php endif; ?><?= $this->e($__line) ?><?php endforeach; ?></strong></span></div><?php endif; ?>
+    </div>
+    <div class="socials foot-mobile-socials"><?= $this->partial('partials/footer-socials', ['socials' => $footer['socials']]) ?></div>
+    <nav class="foot-mobile-nav" aria-label="Navigace v pati&#269;ce">
+      <?php foreach ([['url' => '/nase-prace', 'label' => 'Naše práce'], ['url' => '/cenik', 'label' => 'Ceník'], ['url' => '/blog', 'label' => 'Blog'], ['url' => '/faq', 'label' => 'FAQ'], ['url' => '/kontakt', 'label' => 'Kontakt']] as $__mobileLink): ?><?php $__resolvedLink = $__navByUrl[$__mobileLink['url']] ?? $__mobileLink; ?><a href="<?= $this->e($__resolvedLink['url']) ?>"><span><?= $this->e($__resolvedLink['label']) ?></span><span aria-hidden="true">&#8250;</span></a><?php endforeach; ?>
+    </nav>
+    <div class="foot-mobile-bottom">
+      <div>&copy; <?= $this->e($footer['year']) ?> <?= $this->e($__b['name']) ?></div>
+      <div class="foot-mobile-legal"><a href="/podminky-uziti">Podm&iacute;nky u&#382;it&iacute;</a><span>&bull;</span><a href="/podminky-uziti">Ochrana osobn&iacute;ch &uacute;daj&#367;</a><span>&bull;</span><a href="/podminky-uziti#cookies">Cookies</a></div>
+    </div>
+  </div>
+</div>

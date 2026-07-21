@@ -48,6 +48,8 @@ function register_premium_photo_data_contract_tests(callable $test, callable $as
         $footer = (string)file_get_contents($themeDir . '/views/partials/footer.phtml');
         $css = (string)file_get_contents($themeDir . '/assets/theme.css');
         $assert(str_contains($footer, 'foot-mobile-contact') && str_contains($footer, 'foot-mobile-nav'), 'Reference mobile footer structure is missing.');
+        $assert(str_contains($footer, 'foot-contact-row') && substr_count($footer, 'foot-contact-icon') >= 3, 'Desktop footer contact icon rows are missing.');
+        $assert(str_contains($footer, 'href="tel:') && str_contains($footer, 'href="mailto:'), 'Desktop footer contact rows lost their actionable DB links.');
         $assert(str_contains($footer, '$__phones[0]') && str_contains($footer, '$__email') && str_contains($footer, '$__addr'), 'Mobile footer contact rows are not sourced from footer view data.');
         $assert(str_contains($footer, "['url' => '/cenik', 'label' => 'Ceník']"), 'Mobile footer pricing navigation entry is missing.');
         $assert(str_contains($css, '@media (max-width:640px)') && str_contains($css, '.foot-desktop{display:none !important}'), 'Mobile footer is not isolated from the desktop footer.');

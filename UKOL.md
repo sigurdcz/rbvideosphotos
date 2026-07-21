@@ -953,3 +953,34 @@ Hotovo kdyz: Pri desktopovem viewportu 1440 CSS px odpovida hero, sekcni hierarc
 ## Vysledek
 
 Hotovo. Cenik pouziva DB-driven Premium Photo archetyp, fotograficky hero s obsahem vlevo, tri svetle balickove karty s cernym featured stitkem a jednosloupcovy mobilni layout.
+
+---
+
+# UKOL: Doladeni karet Ceniku a desktopove paticky
+
+Datum: 2026-07-22
+Zadani: Opravit geometrii labelu a checku v cenikovych kartach, lehce zvetsit prostredni balicek a zmensit bocni karty; desktopovou paticku doplnit o spravne kontaktni ikony, radkovani a typografii podle reference.
+
+Hotovo kdyz: Desktopovy Cenik nema posunute badge ani checky, prostredni karta je zretelne ale jemne dominantni, bocni karty jsou mensi; paticka ma zlate ikony telefonu/e-mailu/adresy a odpovida cilovemu odsazeni bez mobilni regrese nebo overflow.
+
+## Kroky
+
+- [x] Zachytit baseline a zmerit kolize cenikovych karet a paticky.
+- [x] Upravit cenikove karty a overit novym desktop screenshotem.
+- [x] Upravit desktopovou paticku vcetne datove napojenych ikon a responzivity.
+- [x] Regenerovat vystupy, spustit testy, wiki reflexi a uzavrit task.
+
+## Poznamky
+
+- Predchozi hotova verze byla pred zahajenim ulozena v commitu `108712e`; uzivatelsky screenshot zustal mimo Git.
+- Rubrika 100 bodu: cenikova geometrie 30, label/check alignment 20, featured/bocni proporce 15, paticka ikony a data 15, paticka typografie/spacing 15, runtime/mobil 5.
+- Baseline Chrome/CDP 1440x900 mela 72/100: legacy pseudo-element prepisoval checky, badge kolidoval s hranou a vsechny karty mely stejnou dominanci; desktopovy kontakt v paticce nemel ikony ani cilove kompaktni radkovani.
+- Theme CSS nyni neutralizuje pozdni legacy pravidla explicitnim checkmark boxem, pouziva desktop grid `.94fr 1.08fr .94fr` a vysku 610/638 px. Footer partial dostal DB-driven radky telefonu, e-mailu a adresy s inline SVG ikonami; mobilni struktura zustala samostatna.
+- Regresni kontrakt navic hlida tri desktopove kontaktni ikonove radky a zachovani klikatelnych `tel:`/`mailto:` odkazu z DB dat.
+- Iterace 1 dosahla 89/100: checky, badge a footer byly opraveny, ale pevna vyska 610 px nechala delsi Premie seznam pretect. Pevne vysky byly odstraneny; grid nyni natahne obsahove karty a dominance prostredni karty vznika 14px svislym odsazenim pouze u bocnich karet.
+- Iterace 2 dosahla 97/100. Finalni desktop 1440x900 a mobil 390x844 nemaji horizontalni overflow; zadny seznam nepreteka a mobilni footer zustal v samostatnem puvodnim layoutu.
+- Regrese: 59/59 PHP testu, 27/27 golden kontrol a `git diff --check` bez chyby. README, ARCHITECTURE a INSTRUCTIONS byly posouzeny bez potreby zmeny; wiki pipeline byla aktualizovana a commitnuta jako `d25c03d`.
+
+## Vysledek
+
+Hotovo. Cenik ma stabilni badge a checky, jemne dominantni prostredni kartu a mensi bocni karty; desktopovy footer ma DB-driven zlate kontaktni ikony a cilove kompaktni radkovani.
