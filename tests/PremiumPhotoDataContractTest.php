@@ -89,10 +89,18 @@ function register_premium_photo_data_contract_tests(callable $test, callable $as
         $reviewPartial = (string)file_get_contents($themeDir . '/views/partials/home-reviews.phtml');
         $assert(!str_contains($reviewPartial, 'array_slice($items, 0, 3)'), 'Premium Photo still discards reviews required by the desktop carousel.');
 
-        foreach (['kontakt.phtml', 'blog-listing.phtml', 'portfolio-listing.phtml', 'blog-detail.phtml', 'portfolio-detail.phtml', 'sluzby.phtml'] as $view) {
+        foreach (['kontakt.phtml', 'blog-listing.phtml', 'portfolio-listing.phtml', 'blog-detail.phtml', 'portfolio-detail.phtml', 'sluzby.phtml', 'faq.phtml'] as $view) {
             $markup = (string)file_get_contents($themeDir . '/views/archetypes/' . $view);
             $assert(str_contains($markup, 'page-head--hero'), 'Hero copy is outside the image band in ' . $view);
         }
+
+        $blogDetail = (string)file_get_contents($themeDir . '/views/archetypes/blog-detail.phtml');
+        $assert(str_contains($blogDetail, '$heroImage') && str_contains($blogDetail, 'class="hero-bg"'), 'Blog detail does not render its primary media in the hero.');
+        $assert(str_contains($blogDetail, '$articleGallery') && !str_contains($blogDetail, 'premium-article-cover'), 'Blog primary media can still be repeated below the hero.');
+
+        $portfolioDetail = (string)file_get_contents($themeDir . '/views/archetypes/portfolio-detail.phtml');
+        $assert(str_contains($portfolioDetail, '$gallery[0][\'full\']') && str_contains($portfolioDetail, '$articleGallery = array_slice($gallery, 1)'), 'Portfolio detail does not consume the first gallery image as its non-repeated hero.');
+        $assert(str_contains($css, 'font-weight:300'), 'Premium Photo navigation does not neutralize route-specific bold font rules.');
 
         foreach (['faq.phtml', 'blog-listing.phtml', 'blog-detail.phtml', 'portfolio-detail.phtml', 'sluzby.phtml'] as $view) {
             $markup = (string)file_get_contents($themeDir . '/views/archetypes/' . $view);
