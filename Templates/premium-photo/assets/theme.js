@@ -141,6 +141,12 @@ if (reviewsRoute) {
   listSection?.classList.add("premium-list-section");
 }
 
+const serviceHero = document.querySelector(".svc-hero");
+if (serviceHero) {
+  const serviceMedia = document.querySelector("main > .hero-bg, main > .theme-hero-video");
+  if (serviceMedia) serviceHero.prepend(serviceMedia);
+}
+
 // ---------- mobilní menu ----------
 const toggle = document.querySelector(".nav-toggle");
 if (toggle) {
@@ -152,6 +158,20 @@ if (toggle) {
     a.addEventListener("click", () => document.body.classList.remove("nav-open"))
   );
 }
+
+// Aktivni navigace je odvozena z routy. Detailni routy se mapuji na svou
+// rodicovskou sekci, aby uzivatel neztratil kontext.
+const path = window.location.pathname.replace(/\/+$/, "") || "/";
+const pageKey = document.body.dataset.cmsPageKey || "";
+let activeRoot = path;
+if (pageKey === "blog-post" || document.querySelector(".bp-hero")) activeRoot = "/blog";
+if (pageKey === "portfolio-detail" || document.querySelector(".pf-detail-hero")) activeRoot = "/nase-prace";
+if (/^(svatebni|rodinne|reklamni|rande)/.test(pageKey) || document.querySelector(".svc-hero")) activeRoot = "/sluzby";
+document.querySelectorAll(".site-nav .nav-links a").forEach(link => {
+  const href = new URL(link.href, window.location.origin).pathname.replace(/\/+$/, "") || "/";
+  if (href === activeRoot) link.setAttribute("aria-current", "page");
+  else link.removeAttribute("aria-current");
+});
 
 // ---------- paralax ----------
 const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -206,6 +226,7 @@ if (tl) {
     const progress = Math.min(1, Math.max(0, (mid - (rect.top + trackStart)) / trackHeight));
     const progressHeight = trackHeight * progress;
     tl.style.setProperty("--timeline-track-start", trackStart.toFixed(2) + "px");
+    tl.style.setProperty("--timeline-track-height", trackHeight.toFixed(2) + "px");
     tl.style.setProperty("--timeline-progress-height", progressHeight.toFixed(2) + "px");
     if (playhead) {
       playhead.style.top = (trackStart + progressHeight).toFixed(2) + "px";
@@ -219,6 +240,12 @@ if (tl) {
   update();
   window.addEventListener("scroll", update, { passive: true });
   window.addEventListener("resize", update);
+}
+
+// Genericke detailni stranky sluzeb nemaji vlastni Premium Photo archetyp.
+// Tema proto doplni pouze prezentacni CTA; nadpis a data zustavaji v DB hero.
+if (document.querySelector(".svc-hero") && !document.querySelector(".premium-contact-cta")) {
+  document.querySelector("main")?.insertAdjacentHTML("beforeend", '<section class="on-dark premium-page-cta premium-contact-cta"><div class="wrap"><p>Pokud máte nějaké dotazy, neváhejte nás kontaktovat.</p><h2>Vše si vysvětlíme a domluvíme se.</h2><a class="btn btn-solid" href="/kontakt">Kontaktovat nás</a></div></section>');
 }
 
 // ---------- FAQ: vždy jen jedna otevřená (v rámci skupiny) ----------

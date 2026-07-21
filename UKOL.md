@@ -711,3 +711,55 @@ Hotovo kdyz: Pri mobilnim viewportu otevreni burgeru zobrazi polozky v kompaktni
 ## Vysledek
 
 Hotovo. Mobilni burger menu Premium Photo je kompaktni, pet hlavnich odkazu odpovida referencnimu rozlozeni, Nase prace se zalamuje do dvou radku, CTA se na mobilu skryva a kriz ma zlaty ramecek.
+
+---
+
+# UKOL: Premium Photo vicefazove vizualni opravy
+
+Datum: 2026-07-21
+Zadani: V Ralph Loopu sjednotit timeline, navigaci, hero nadpisy, Cenik a kontaktni CTA napric Premium Photo podle dodanych screenshotu a aktualniho vizualu sablony.
+
+Hotovo kdyz: Vsechny nize uvedene routy a interakcni stavy odpovidaji zadani na desktopu i mobilu, pouzivaji DB obsah bez skrytych fallbacku, maji cerstve Chrome screenshoty a projdou PHP/golden testy.
+
+## Kroky
+
+- [x] Zachytit baseline a zmapovat DOM/CSS pro homepage timeline, navigaci, Kontakt, Blog, Nase prace, Cenik, FAQ, Sluzby a detailni routy.
+- [x] Posunout sedou i zlatou timeline linku tak, aby obe zacinaly az v realnem pocatku pohybliveho bodu pod textaci.
+- [x] Zvetsit horizontalni vnitrni prostor desktopoveho tlacitka Kontakt v navigaci.
+- [x] Prevest mobilni otevrene menu z horizontalniho gridu na svisly seznam polozek pod sebou.
+- [x] Presunout title/kicker/popis do obrazove hero sekce na routach Kontakt, Blog a Nase prace a upravit kontrast textu.
+- [x] Stejny hero kontrakt aplikovat na detail blogu, detail Nase prace, detail sluzby a vypis Sluzby.
+- [x] Prevest cely Cenik ze stareho oranzoveho defaultu do aktualniho Premium Photo vizualu.
+- [x] Zvyraznit aktivni hlavni navigacni polozku podle aktualni routy, vcetne mapovani detailu na rodicovskou sekci.
+- [x] Pridat staticky kontaktni CTA blok do FAQ, Blog vypisu, detailu blogu, detailu Nase prace, detailu sluzby a vypisu Sluzby.
+- [x] Regenerovat publish goldeny a overit desktop/mobile screenshoty a interakce pro vsechny dotcene routy.
+- [x] Spustit regresni testy, aktualizovat relevantni dokumentaci a provest wiki reflexi.
+
+## Poznamky
+
+- Kontaktni CTA text: `Pokud mate nejake dotazy, nevahejte nas kontaktovat.` a doplnujici text `Vse si vysvetlime a domluvime se.`; tlacitko vede na `/kontakt` a pouzije vizual sablony.
+- Rubrika 100 bodu: hero kompozice napric routami 25, timeline start 15, Cenik theme fidelity 15, desktop/mobil navigace a aktivni stav 20, CTA bloky a routovani 15, runtime/publish/testy 10.
+- Referencni screenshoty od uzivatele jsou primarni vizualni cil; runtime je `http://127.0.0.1:8766/` a QA pouziva Chrome/CDP s DPR 1.
+- Predchozi stav byl ulozen checkpoint commitem `8c67953`; dodany lokalni referencni PNG zustava mimo Git.
+- Audit potvrdil spolecnou pricinu nizkych title: theme archetypy mely obrazovy `.video-band` a az za nim samostatny svetly `.page-head`; oprava presouva skutecny title/kicker/popis dovnitr hero DOM.
+- `theme.css` meni mobilni `.nav-links` na jednosloupcovy seznam, vraci CTA Kontakt a zvetsuje jeho horizontalni padding; aktivni route dostane `aria-current=page` a podtrzeni.
+- Timeline rail nyni pouziva stejne dynamicke `--timeline-track-start` jako playhead a novou vysku `--timeline-track-height`; seda ani zlata cast uz neprochazi nad bodem.
+- Premium archetypy Blog, Kontakt, Nase prace a Sluzby maji title primo v hero; FAQ/Blog/Sluzby a oba detailni archetypy dostaly staticky kontaktni CTA blok. Genericky detail sluzby dostava stejny blok idempotentne z theme JS.
+- Cenik ma theme-scoped filmovy hero, serifovou typografii, neutralni karty, tmavou featured kartu a tmave CTA misto stare oranzove defaultni vrstvy.
+- Prvni test odhalil zastaralou podminku, ktera vyzadovala sedou osu pres celou sekci. `PremiumPhotoDataContractTest` nyni hlida novy track-start/track-height kontrakt, hero copy uvnitr bandu, aktivni nav, vertikalni mobilni menu a CTA pritomnost.
+- `node --check` neni v prostredi dostupny; chyba byla viditelne zaznamenana a JS bude overen skutecnym Chrome runtime bez nahradniho tvrzeni.
+- Chrome helper nyni explicitne pouziva DPR 1, vypnutou cache a vraci `scrollWidth`, `clientWidth` i horizontalni overflow; nove screenshoty tak splnuji zamknuty QA kontrakt.
+- Iterace 1 Chrome: Kontakt/Blog/Nase prace hero a aktivni nav funguji, mobilni menu je svisle bez overflow; Cenik zbyval na 90/100 kvuli legacy prepisu featured karty. Souhrnne 95/100.
+- Timeline dukaz meri rail i seznam od `y=4233.27` a shodnou vysku `691.83px`; seda linka uz neprochazi titulkem. Aktivni screenshot ukazuje zlatou linku i tercik od stejneho pocatku.
+- Detail sluzby odhalil oddeleny obrazovy sibling pred `.svc-hero`; theme JS jej nyni presouva dovnitr hero a CSS sklada title pres obraz.
+- Cenik featured karta dostala explicitni theme prioritu proti legacy `.hp-cenik-card` pravidlum.
+- Druhy Chrome pruchod potvrdil tmavou featured kartu Ceniku a CTA bloky FAQ/Sluzby/detailu. U detailu sluzby globalni hero CSS stale drzelo media `position:relative !important`; theme scope byl dorovnan explicitnim absolute/inset kontraktem.
+- Opakovany detail ukazal, ze media neni spolehlive dostupne pres `previousElementSibling` kvuli generickemu XML/hero wrapperu; vyber je nyni explicitne `main > .theme-hero-video`, bez nahradniho obrazku.
+- Chrome DOM diagnostika upresnila realny live kontrakt: `main` zacina `NAV.breadcrumbs -> IMG.hero-bg -> HEADER.hero.svc-hero`; selector proto zahrnuje skutecny `main > .hero-bg` a presouva tento DB obraz do headeru.
+- Iterace 2: 100/100. Detail sluzby po finalnim selectoru zkratil stranku z 4203 na 3243 px a hero zacina na `y=106.8`; title, obraz a CTA jsou v jednom kompozicnim bloku. Vsechny zachycene routy maji `scrollWidth === clientWidth`.
+- Finalni regrese: PHP lint vsech Premium Photo archetypu bez chyby, `php tests/run.php` 57/57 a golden checks 27/27, `git diff --check` bez chyb. Live i publish goldeny byly vedome regenerovany.
+- README, ARCHITECTURE a INSTRUCTIONS byly posouzeny bez nutnosti zmeny; implementacni a acceptance kontrakt byl aktualizovan v projektove wiki, samostatny commit `71ded4e`.
+
+## Vysledek
+
+Hotovo. Timeline zacina seda i zlata az u realneho tracku, navigace ma prostornejsi Kontakt, svisle mobilni menu a aktivni route, title jsou v hero napric vypisy a detaily, Cenik odpovida Premium Photo a vsechny pozadovane routy maji jednotne kontaktni CTA.

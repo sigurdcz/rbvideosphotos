@@ -64,6 +64,7 @@ try {
     New-Item -ItemType Directory -Path $profilePath | Out-Null
     $chromeProcess = Start-Process -FilePath $ChromePath -WindowStyle Hidden -PassThru -ArgumentList @(
         '--headless=new',
+        '--force-device-scale-factor=1',
         "--remote-debugging-port=$Port",
         "--user-data-dir=$profilePath",
         "--window-size=$Width,$Height",
@@ -101,6 +102,8 @@ $id = 0
 
 Send-CdpCommand $socket (++$id) 'Page.enable' | Out-Null
 Send-CdpCommand $socket (++$id) 'Runtime.enable' | Out-Null
+Send-CdpCommand $socket (++$id) 'Network.enable' | Out-Null
+Send-CdpCommand $socket (++$id) 'Network.setCacheDisabled' @{ cacheDisabled = $true } | Out-Null
 Send-CdpCommand $socket (++$id) 'Emulation.setDeviceMetricsOverride' @{
     width = $Width
     height = $Height
@@ -290,6 +293,12 @@ $inspection = Send-CdpCommand $socket (++$id) 'Runtime.evaluate' @{
   timeline: Boolean(document.querySelector('.timeline')),
   playhead: Boolean(document.querySelector('.tl-playhead')),
   bodyClass: document.body.className
+  ,scrollWidth: document.documentElement.scrollWidth
+  ,clientWidth: document.documentElement.clientWidth
+  ,horizontalOverflow: document.documentElement.scrollWidth !== document.documentElement.clientWidth
+  ,serviceHero: (() => { const el = document.querySelector('.svc-hero'); if (!el) return null; const r = el.getBoundingClientRect(); return { y:r.y, height:r.height, childMedia:Boolean(el.querySelector(':scope > .theme-hero-video')) }; })()
+  ,serviceMediaParent: document.querySelector('.theme-hero-video')?.parentElement?.className || null
+  ,mainChildren: Array.from(document.querySelector('main')?.children || []).slice(0,4).map(el => ({tag:el.tagName,className:el.className}))
 }))()
 '@
     returnByValue = $true

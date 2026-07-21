@@ -349,11 +349,11 @@ body.theme-premium-photo .premium-photo-home #proces.timeline .tl-item:nth-child
 body.theme-premium-photo .premium-photo-home #proces.timeline .tl-rail {
   position: absolute !important;
   z-index: 8;
-  top: 0 !important;
-  bottom: 0 !important;
+  top: var(--timeline-track-start, 0px) !important;
+  bottom: auto !important;
   left: 50% !important;
   width: 3px;
-  height: auto !important;
+  height: var(--timeline-track-height, 0px) !important;
   margin-left: -1px;
   overflow: visible;
   background: rgba(246,244,239,.38);
@@ -362,7 +362,7 @@ body.theme-premium-photo .premium-photo-home #proces.timeline .tl-rail {
 body.theme-premium-photo .premium-photo-home #proces.timeline .tl-rail::after {
   content: "";
   position: absolute;
-  top: var(--timeline-track-start, 0px);
+  top: 0;
   left: 0;
   width: 100%;
   height: var(--timeline-progress-height, 0px);
@@ -473,6 +473,44 @@ body.theme-premium-photo .video-band > .wrap { position: relative; z-index: 2; }
 body.theme-premium-photo .page-head { padding: 78px var(--pad) 42px; }
 body.theme-premium-photo .page-head h1 { max-width: 930px; font-size: clamp(3.5rem, 7vw, 7rem); line-height: .94; }
 body.theme-premium-photo .page-head .lead { max-width: 720px; }
+body.theme-premium-photo .video-band:has(.page-head--hero) { min-height: clamp(430px, 58vh, 660px); }
+body.theme-premium-photo .video-band .page-head--hero { padding: clamp(64px, 10vh, 120px) 0 58px; color: var(--porcelain); }
+body.theme-premium-photo .video-band .page-head--hero h1,
+body.theme-premium-photo .video-band .page-head--hero .lead { color: var(--porcelain); }
+body.theme-premium-photo .video-band .page-head--hero .lead { color: rgba(246,244,239,.78); }
+body.theme-premium-photo .svc-hero { position:relative; min-height:clamp(430px,65vh,700px); display:grid; align-items:end; overflow:hidden; padding:80px 0 64px; color:var(--porcelain); background:var(--night); }
+body.theme-premium-photo .svc-hero > .theme-hero-video,
+body.theme-premium-photo .svc-hero > .hero-bg { position:absolute !important; inset:0 !important; width:100% !important; height:100% !important; object-fit:cover; background-size:cover; background-position:center; }
+body.theme-premium-photo .svc-hero::after { content:""; position:absolute; inset:0; background:linear-gradient(180deg,rgba(7,8,10,.2),rgba(7,8,10,.82)); }
+body.theme-premium-photo .svc-hero > .container { position:relative; z-index:2; }
+body.theme-premium-photo .svc-hero h1,
+body.theme-premium-photo .svc-hero p { color:var(--porcelain); }
+.premium-contact-cta > .wrap { max-width: 900px; }
+.premium-contact-cta p { margin: 0; color: rgba(246,244,239,.7); }
+.premium-contact-cta h2 { margin: 0; }
+
+body.theme-premium-photo[data-cms-page-key="cenik"] .page-hero { min-height: 520px; display:grid; align-items:end; padding:80px 0 68px; color:var(--porcelain); background:var(--night); }
+body.theme-premium-photo[data-cms-page-key="cenik"] .page-hero .container { position:relative; z-index:2; text-align:left; }
+body.theme-premium-photo[data-cms-page-key="cenik"] .page-hero h1 { color:var(--porcelain); font-family:var(--font-display); font-size:clamp(4rem,8vw,8rem); line-height:.9; }
+body.theme-premium-photo[data-cms-page-key="cenik"] .page-hero .hero-sub { max-width:720px; color:rgba(246,244,239,.76); }
+body.theme-premium-photo[data-cms-page-key="cenik"] .cenik-packages { background:var(--paper); color:var(--ink); }
+body.theme-premium-photo[data-cms-page-key="cenik"] .cenik-packages > .container,
+body.theme-premium-photo[data-cms-page-key="cenik"] .cenik-cta > .container { width:min(100% - 48px,1180px); margin-inline:auto; }
+body.theme-premium-photo[data-cms-page-key="cenik"] .cenik-packages h2 { font-family:var(--font-display); font-size:clamp(2.2rem,4vw,4rem); }
+body.theme-premium-photo[data-cms-page-key="cenik"] .ckp-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:22px; margin-top:36px; }
+body.theme-premium-photo[data-cms-page-key="cenik"] .ckp-card { position:relative; padding:34px 28px; border:1px solid var(--line); border-radius:var(--radius); background:var(--porcelain); box-shadow:none; }
+body.theme-premium-photo[data-cms-page-key="cenik"] .ckp-card--featured { color:var(--porcelain) !important; border-color:var(--night) !important; background:var(--night) !important; transform:translateY(-12px); }
+body.theme-premium-photo[data-cms-page-key="cenik"] .ckp-card--featured .ckp-title,
+body.theme-premium-photo[data-cms-page-key="cenik"] .ckp-card--featured .ckp-desc,
+body.theme-premium-photo[data-cms-page-key="cenik"] .ckp-card--featured .ckp-feats { color:var(--porcelain) !important; }
+body.theme-premium-photo[data-cms-page-key="cenik"] .ckp-title { font-family:var(--font-display); font-size:1.8rem; }
+body.theme-premium-photo[data-cms-page-key="cenik"] .ckp-price { color:var(--champagne-deep); font-family:var(--font-mono); letter-spacing:.08em; }
+body.theme-premium-photo[data-cms-page-key="cenik"] .ckp-feats { padding:0; list-style:none; }
+body.theme-premium-photo[data-cms-page-key="cenik"] .ckp-feats li { padding:8px 0 8px 20px; border-top:1px solid currentColor; border-color:rgba(127,123,116,.2); }
+body.theme-premium-photo[data-cms-page-key="cenik"] .ckp-feats li::before { content:"→"; margin-left:-20px; margin-right:8px; color:var(--champagne-deep); }
+body.theme-premium-photo[data-cms-page-key="cenik"] .ckp-badge { color:var(--champagne); font-family:var(--font-mono); text-transform:uppercase; letter-spacing:.14em; }
+body.theme-premium-photo[data-cms-page-key="cenik"] .cenik-other { margin-top:64px; }
+body.theme-premium-photo[data-cms-page-key="cenik"] .cenik-cta { color:var(--porcelain); background:var(--night); text-align:center; }
 .premium-list-section { padding: 20px 0 88px; }
 .premium-list-grid .tile { min-height: 250px; }
 .premium-list-grid .premium-media { position: absolute; inset: 0; min-height: 100% !important; overflow: hidden; background-size: cover; background-position: center; }
@@ -513,5 +551,7 @@ body.theme-premium-photo .page-head .lead { max-width: 720px; }
   body.theme-premium-photo .page-head { padding-inline: 14px; }
   .premium-blog-list .tile-full { grid-column: auto; }
   .site-header > .wrap > .site-nav .nav-links { display:none; }
-  body.nav-open .site-header > .wrap > .site-nav .nav-links { display:flex; }
+  body.nav-open .site-header > .wrap > .site-nav .nav-links { display:grid; }
+  body.theme-premium-photo[data-cms-page-key="cenik"] .ckp-grid { grid-template-columns:1fr; }
+  body.theme-premium-photo[data-cms-page-key="cenik"] .ckp-card--featured { transform:none; }
 }

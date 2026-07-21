@@ -1,10 +1,9 @@
 <?php /** @var array $hero @var list<array> $entries */ ?>
-<section class="video-band pf-hero"><div class="video-scrim"></div><div class="wrap"><div class="band-cap"><span class="rec">rec</span><span>portfolio · databáze Naše práce</span><span><b>RB</b> showreel</span></div></div></section>
-<section class="page-head wrap">
+<section class="video-band pf-hero"><div class="video-scrim"></div><div class="wrap"><div class="band-cap"><span class="rec">rec</span><span>portfolio · databáze Naše práce</span><span><b>RB</b> showreel</span></div><div class="page-head page-head--hero">
   <span class="eyebrow">Portfolio</span>
   <h1<?= $this->inlineAttr($hero['titleKey'], $hero['titleType']) ?>><?= $this->e($hero['title']) ?></h1>
   <p class="lead"<?= $this->inlineAttr($hero['subKey'], $hero['subType']) ?>><?= $this->e($hero['sub']) ?></p>
-</section>
+</div></div></section>
 <section class="premium-list-section"><div class="wrap"><div class="tiles tiles-4 premium-list-grid"><?php foreach ($entries as $index => $entry): ?>
   <a class="tile<?= $index === 0 || $index % 7 === 0 ? ' tile-w2' : '' ?>" href="/<?= $this->e($entry['slug']) ?>" style="padding:0">
     <div class="ph premium-media" style="min-height:250px;<?= $entry['thumb'] !== '' ? "background-image:url('" . $this->e($entry['thumb']) . "')" : '' ?>">

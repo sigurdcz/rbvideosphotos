@@ -1,9 +1,8 @@
 <?php /** @var array $hero @var list<array> $posts */ ?>
-<section class="video-band bl-hero"><div class="video-scrim"></div><div class="wrap"><div class="band-cap"><span class="rec">rec</span><span>blog · rady z praxe</span><span><b>RB</b> stories</span></div></div></section>
-<section class="page-head wrap"><span class="eyebrow">Blog</span><h1<?= $this->inlineAttr($hero['titleKey'], $hero['titleType']) ?>><?= $this->e($hero['title']) ?></h1><p class="lead"<?= $this->inlineAttr($hero['subKey'], $hero['subType']) ?>><?= $this->e($hero['sub']) ?></p></section>
+<section class="video-band bl-hero"><div class="video-scrim"></div><div class="wrap"><div class="band-cap"><span class="rec">rec</span><span>blog · rady z praxe</span><span><b>RB</b> stories</span></div><div class="page-head page-head--hero"><span class="eyebrow">Blog</span><h1<?= $this->inlineAttr($hero['titleKey'], $hero['titleType']) ?>><?= $this->e($hero['title']) ?></h1><p class="lead"<?= $this->inlineAttr($hero['subKey'], $hero['subType']) ?>><?= $this->e($hero['sub']) ?></p></div></div></section>
 <section class="premium-list-section"><div class="wrap"><div class="tiles tiles-3 premium-blog-list"><?php foreach ($posts as $index => $post): ?>
   <a class="tile<?= $index === 0 ? ' tile-full' : '' ?>" href="/<?= $this->e($post['slug']) ?>">
     <?php if ($post['image_url'] !== ''): ?><div class="ph premium-media" style="min-height:<?= $index === 0 ? '240' : '160' ?>px;margin:-22px -22px 8px;background-image:url('<?= $this->e($post['image_url']) ?>')"><img src="<?= $this->e($post['image_url']) ?>" alt="<?= $this->e($post['title']) ?>" loading="lazy"><span class="ph-cap"><b><?= $index === 0 ? 'doporučujeme' : 'tip' ?></b></span></div><?php endif; ?>
     <span class="t-num"><?= $this->e($post['date']) ?></span><h2><?= $this->e($post['title']) ?></h2><p><?= $this->e($post['excerpt']) ?></p><span class="t-more">Číst článek &rarr;</span>
   </a>
-<?php endforeach; ?></div></div></section><?php ?>
+<?php endforeach; ?></div></div></section><section class="on-dark premium-page-cta premium-contact-cta"><div class="wrap"><p>Pokud máte nějaké dotazy, neváhejte nás kontaktovat.</p><h2>Vše si vysvětlíme a domluvíme se.</h2><a class="btn btn-solid" href="/kontakt">Kontaktovat nás</a></div></section><?php ?>

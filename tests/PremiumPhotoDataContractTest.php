@@ -58,14 +58,33 @@ function register_premium_photo_data_contract_tests(callable $test, callable $as
         $assert(str_contains($css, '.premium-photo-home #nase-prace'), 'Portfolio dark-background override is missing.');
         $assert(str_contains($css, '#proces.timeline .tl-rail'), 'Timeline rail styling is missing.');
         $assert(str_contains($css, '#proces.timeline .tl-playhead'), 'Timeline playhead styling is missing.');
-        $assert(preg_match('/#proces\.timeline \.tl-rail\s*\{[^}]*position:\s*absolute\s*!important;[^}]*bottom:\s*0\s*!important;[^}]*height:\s*auto\s*!important;/s', $css) === 1, 'Timeline rail must be absolutely positioned across the section height.');
+        $assert(preg_match('/#proces\.timeline \.tl-rail\s*\{[^}]*position:\s*absolute\s*!important;[^}]*top:\s*var\(--timeline-track-start,\s*0px\)\s*!important;[^}]*height:\s*var\(--timeline-track-height,\s*0px\)\s*!important;/s', $css) === 1, 'Timeline rail must begin at the playhead track start and match the measured list height.');
         $assert(preg_match('/#proces\.timeline \.tl-playhead\s*\{[^}]*position:\s*absolute\s*!important;/s', $css) === 1, 'Timeline playhead must be absolutely positioned against the timeline.');
         $assert(str_contains($css, 'top: var(--timeline-track-start, 0px)'), 'Timeline progress fill must begin at the dynamic list boundary below the heading.');
         $assert(str_contains($css, '.tl-playhead.is-visible'), 'Timeline playhead needs an explicit visible state.');
         $assert(preg_match('/#proces\.timeline \.tl-playhead\s*\{[^}]*opacity:\s*0\s*!important;[^}]*visibility:\s*hidden\s*!important;/s', $css) === 1, 'Timeline playhead must be hidden in its zero-progress default state.');
         $assert(str_contains($js, 'tl.style.setProperty("--timeline-track-start", trackStart.toFixed(2) + "px")'), 'Timeline rail fill start is not connected to the list geometry.');
+        $assert(str_contains($js, 'tl.style.setProperty("--timeline-track-height", trackHeight.toFixed(2) + "px")'), 'Timeline grey rail height is not connected to the list geometry.');
         $assert(str_contains($js, 'tl.style.setProperty("--timeline-progress-height", progressHeight.toFixed(2) + "px")'), 'Timeline rail fill is not connected to scroll progress.');
         $assert(str_contains($js, 'playhead.classList.toggle("is-visible", progress > 0)'), 'Timeline playhead does not hide at zero progress.');
+    });
+
+    $test('premium photo keeps route context and hero copy inside themed bands', function () use ($assert, $themeDir): void {
+        $js = (string)file_get_contents($themeDir . '/assets/theme.js');
+        $css = (string)file_get_contents($themeDir . '/assets/theme.css');
+        $assert(str_contains($js, 'link.setAttribute("aria-current", "page")'), 'Active route is not reflected in the primary navigation.');
+        $assert(str_contains($css, '.site-nav a[aria-current="page"]::before'), 'Active navigation state has no visible marker.');
+        $assert(str_contains($css, 'grid-template-columns:1fr'), 'Mobile navigation is not a vertical single-column list.');
+
+        foreach (['kontakt.phtml', 'blog-listing.phtml', 'portfolio-listing.phtml', 'blog-detail.phtml', 'portfolio-detail.phtml', 'sluzby.phtml'] as $view) {
+            $markup = (string)file_get_contents($themeDir . '/views/archetypes/' . $view);
+            $assert(str_contains($markup, 'page-head--hero'), 'Hero copy is outside the image band in ' . $view);
+        }
+
+        foreach (['faq.phtml', 'blog-listing.phtml', 'blog-detail.phtml', 'portfolio-detail.phtml', 'sluzby.phtml'] as $view) {
+            $markup = (string)file_get_contents($themeDir . '/views/archetypes/' . $view);
+            $assert(str_contains($markup, 'premium-contact-cta'), 'Contact CTA is missing in ' . $view);
+        }
     });
 
     $test('premium photo owns database snippet markup through theme partials and archetypes', function () use ($assert, $themeDir): void {
