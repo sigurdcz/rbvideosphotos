@@ -7,6 +7,8 @@ param(
     [string]$TimelineStartOutput = '',
     [string]$TimelineActiveStartOutput = '',
     [string]$InteractionOutput = '',
+    [switch]$OpenNavigation,
+    [string]$NavigationOutput = '',
     [string]$ChromePath = 'C:\Program Files\Google\Chrome\Application\chrome.exe'
 )
 
@@ -107,6 +109,32 @@ Send-CdpCommand $socket (++$id) 'Emulation.setDeviceMetricsOverride' @{
 } | Out-Null
 Send-CdpCommand $socket (++$id) 'Page.navigate' @{ url = $Url } | Out-Null
 Start-Sleep -Seconds 4
+
+if ($OpenNavigation) {
+    Send-CdpCommand $socket (++$id) 'Runtime.evaluate' @{
+        expression = @'
+(async () => {
+  const toggle = document.querySelector('.nav-toggle');
+  if (!toggle) return false;
+  if (!document.body.classList.contains('nav-open')) toggle.click();
+  await new Promise(resolve => setTimeout(resolve, 350));
+  return document.body.classList.contains('nav-open');
+})()
+'@
+        returnByValue = $true
+        awaitPromise = $true
+    } | Out-Null
+}
+
+$navigationOutputPath = $null
+if ($NavigationOutput -ne '') {
+    $navigationCapture = Send-CdpCommand $socket (++$id) 'Page.captureScreenshot' @{
+        format = 'png'
+        fromSurface = $true
+    }
+    $navigationOutputPath = [IO.Path]::GetFullPath((Join-Path (Get-Location) $NavigationOutput))
+    [IO.File]::WriteAllBytes($navigationOutputPath, [Convert]::FromBase64String($navigationCapture.data))
+}
 
 $timelineStartOutputPath = $null
 $timelineActiveStartOutputPath = $null
@@ -276,6 +304,7 @@ if ($chromeProcess -and -not $chromeProcess.HasExited) {
     TimelineStartScreenshot = $timelineStartOutputPath
     TimelineActiveStartScreenshot = $timelineActiveStartOutputPath
     InteractionScreenshot = $interactionOutputPath
+    NavigationScreenshot = $navigationOutputPath
     Width = $Width
     Height = $pageHeight
     Runtime = $inspection.result.value

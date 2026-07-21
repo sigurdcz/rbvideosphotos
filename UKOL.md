@@ -678,3 +678,36 @@ Hotovo kdyz: Sekce O nás má pod seznamem bodů tlačítko "Kontakt" odkazujíc
 ## Vysledek
 
 Hotovo. Sekce O nás má nové CTA tlačítko "Kontakt" pod seznamem bodů, odkazuje na `/kontakt`, správně velikostně omezené (ne roztažené), ověřeno na desktopu i mobilu screenshotem a čistým průchodem testů.
+# UKOL: Premium Photo kompaktni burger menu
+
+Datum: 2026-07-21
+Zadani: Opravit otevrene mobilni burger menu Premium Photo tak, aby odpovidalo prvnimu referencnimu obrazku a zustalo jako kompaktni horizontalni navigace v hlavicce.
+
+Hotovo kdyz: Pri mobilnim viewportu otevreni burgeru zobrazi polozky v kompaktnim horizontalnim rozlozeni pod logem, kriz zustane vpravo nahore a nevznikne vysoky svisly panel z aktualniho stavu.
+
+## Kroky
+
+- [x] Dohledat DOM, breakpointy a CSS konflikt otevreneho menu; zachytit baseline a ohodnotit ji.
+- [x] Upravit pouze Premium Photo navigaci bez zmeny DB obsahu.
+- [x] Regenerovat publikovany vystup a overit otevreni/zavreni na mobilu cerstvym Chrome screenshotem.
+- [x] Spustit regresni testy, posoudit dokumentaci a provest wiki reflexi.
+
+## Poznamky
+
+- Rubrika 100 bodu: kompaktni geometrie hlavicky 35, horizontalni rozlozeni odkazu 30, logo a zaviraci kriz 15, typografie/oddelovace/aktivni stav 10, funkcni otevreni-zavreni a runtime integrita 10.
+- Reference od uzivatele: 415x158 px. Aktualni stav: 390x434 px; hlavni vada je vertikalni seznam s radkovymi oddelovaci misto dvouradkove horizontalni navigace.
+- Existujici zmeny `Templates/premium-photo/assets/*.css` a `storage/published/*` byly v pracovnim stromu uz pred timto ukolem a musi zustat zachovane.
+- In-app browser vratil `No browser is available`; chyba je viditelne zaznamenana a QA pokracuje kanonickou Chrome/CDP cestou projektu.
+- `scripts/qa_chrome_cdp_capture.ps1` ma novy prepinac `-OpenNavigation`, ktery pred zachycenim aktivuje skutecne tlacitko `.nav-toggle`; baseline a final tak meri stejny interakcni stav.
+- Baseline `storage/qa/premium-photo-burger/baseline-open-390.png`, Chrome 390x844 (full page 12489 px), skore 35/100: funkcni otevreni a logo ano, ale vyska panelu, svisle odkazy a neorameny kriz neodpovidaji reference.
+- `theme.css` nyni na mobilu sklada `.nav-links` jako kompaktni zalamovany flex bez radkovych oddelovacu; odkazy maji sipku tesne u textu a otevreny kriz dostal 54px zlaty ramecek.
+- Chrome helper uklada pres `-NavigationOutput` take samostatny viewportovy dukaz bez zmenseni cele dlouhe stranky.
+- Iterace 1 `final-open-viewport-390.png`: 88/100. Kompaktni panel, horizontalni odkazy a orameny kriz jsou opraveny; zbyvala mobilni CTA navic a nezalomena polozka Nase prace.
+- Iterace 2 skryva mobilni `.nav-cta` a rozklada pet hlavnich odkazu do jedne gridove rady; odkaz `#nase-prace` ma referencni dvouradkove zalomeni.
+- Finalni dukaz `storage/qa/premium-photo-burger/final-open-viewport-390-v2.png`, Chrome 390x844/DPR 1, skore 100/100; runtime ma `theme-premium-photo nav-open` a full page zustava bez horizontalniho preteceni.
+- `php tests/run.php`: 56 testu a 27 golden kontrol, 0 chyb; `git diff --check` bez chyb. README, ARCHITECTURE a INSTRUCTIONS byly posouzeny bez nutnosti zmeny.
+- Wiki reflection: pipeline domena byla aktualizovana o reprodukovatelny CSS kontrakt, QA prepinace a acceptance; samostatny wiki commit `57649e2`.
+
+## Vysledek
+
+Hotovo. Mobilni burger menu Premium Photo je kompaktni, pet hlavnich odkazu odpovida referencnimu rozlozeni, Nase prace se zalamuje do dvou radku, CTA se na mobilu skryva a kriz ma zlaty ramecek.

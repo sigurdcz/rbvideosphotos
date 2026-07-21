@@ -205,8 +205,10 @@ body > footer { display: block; }
 .site-header > .wrap > .site-nav .brand,
 .site-header > .wrap > .site-nav .nav-toggle-input,
 .site-header > .wrap > .site-nav .nav-toggle-label { display: none !important; }
-.site-header > .wrap > .site-nav .nav-links { display: flex; align-items: center; gap: 26px; }
-.site-header > .wrap > .site-nav .nav-links a { padding: 0; }
+@media (min-width: 960px) {
+  .site-header > .wrap > .site-nav .nav-links { display: flex; align-items: center; gap: 26px; }
+  .site-header > .wrap > .site-nav .nav-links a { padding: 0; }
+}
 
 @media (max-width: 850px) {
   .hp-services-grid, .pt-grid, .hp-blog-grid, .hp-reviews-grid, .bl-grid, .reviews-page-grid { grid-template-columns: 1fr 1fr; }

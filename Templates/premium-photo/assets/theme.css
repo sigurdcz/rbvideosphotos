@@ -140,15 +140,21 @@ section{padding-block:72px}
 .nav-open .nav-toggle span{background:transparent}
 .nav-open .nav-toggle span::before{transform:translateY(7px) rotate(45deg)}
 .nav-open .nav-toggle span::after{transform:translateY(-7px) rotate(-45deg)}
+.nav-open .nav-toggle{
+  width:54px;height:54px;
+  border:2px solid var(--champagne-deep);border-radius:10px;
+}
 
 .site-nav{
   position:fixed;inset:64px 0 auto 0;z-index:55;
   background:var(--porcelain);
   border-bottom:1px solid var(--line);
   display:grid;gap:2px;padding:14px var(--pad) 26px;
-  transform:translateY(-115%);transition:transform .3s ease;
+  transform:translateY(-115%);
+  visibility:hidden;
+  transition:transform .3s ease,visibility 0s linear .3s;
 }
-.nav-open .site-nav{transform:translateY(0)}
+.nav-open .site-nav{transform:translateY(0);visibility:visible;transition:transform .3s ease,visibility 0s linear}
 .site-nav a{
   padding:12px 6px;
   font-size:1rem;letter-spacing:.06em;text-transform:uppercase;
@@ -158,6 +164,17 @@ section{padding-block:72px}
 .site-nav a::after{content:"→";font-family:var(--font-mono);color:var(--champagne-deep);font-size:.8rem}
 .site-nav a[aria-current="page"]{color:var(--champagne-deep)}
 .site-nav .nav-cta{margin-top:14px;border:none}
+
+@media (max-width:959px){
+  .site-nav{padding:16px var(--pad) 28px}
+  .site-nav .nav-links{display:grid;grid-template-columns:repeat(5,auto);align-items:center;justify-content:space-between;gap:0 10px}
+  .site-nav a{
+    width:auto;padding:4px 0;border:0;gap:2px;
+    font-size:.9rem;line-height:1.35;white-space:nowrap;
+  }
+  .site-nav .nav-links a[href="#nase-prace"]{max-width:70px;white-space:normal}
+  .site-nav .nav-cta{display:none;margin-top:0}
+}
 
 /* ---------- tlačítka ---------- */
 
@@ -392,6 +409,7 @@ a.tile:hover,.tile.is-link:hover{transform:translateY(-4px);box-shadow:0 18px 40
   .nav-toggle{display:none}
   .site-nav{
     position:static;transform:none;transition:none;
+    visibility:visible;
     display:flex;gap:26px;padding:0;border:none;background:none;align-items:center;
   }
   .site-nav a{border:none;padding:6px 2px;font-size:.72rem;letter-spacing:.16em}
