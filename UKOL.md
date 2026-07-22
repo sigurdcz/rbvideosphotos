@@ -1041,6 +1041,36 @@ Hotovo kdyz: `cenik-other` zabira vsechny sloupce cenikoveho gridu a nadpis i po
 
 Hotovo. `cenik-other` zabira celou sirku cenikoveho gridu a jeho nadpis i popis jsou skutecne centrovane vuci cele sekci.
 
+---
+
+# UKOL: Hlavicka bez borderu a pomalejsi burger animace
+
+Datum: 2026-07-22
+Zadani: Odstranit obvodove linky hlavicky a prodlouzit prechod ikony burger/krizek o 50 procent.
+
+Hotovo kdyz: Mobilni hlavicka ani rozbalena navigace nemaji oddelovaci border, animace tri linek trva 375 ms misto 250 ms a vzhled je overen v zavrenem i otevrenem stavu.
+
+## Kroky
+
+- [x] Zachytit vychozi mobilni stav a potvrdit zdroj borderu a animace.
+- [x] Upravit theme CSS a pridat regresni kontrakt.
+- [x] Overit zavreny i otevreny stav screenshoty a testy.
+- [x] Provest wiki reflexi a commitnout opravu.
+
+## Poznamky
+
+- Rubrika 100 bodu: hlavicka bez borderu 40, zachovany button styling 15, animace presne 375 ms 25, mobilni layout 10, runtime a regrese 10.
+- Uzivatelsky neversionovany screenshot zustava mimo scope a nebude commitnut.
+- Baseline 60/100: layout a zlaty ramecek tlacitka sedi, ale `.site-header` i mobilni `.site-nav` mely spodni 1px border a transformace ikony trvala jen 250 ms.
+- Theme CSS nyni nastavuje oba obalove prvky na `border:0`; ramecek otevreneho `.nav-toggle` zustava zachovan. Prechod linek je presne 375 ms, tedy 1,5nasobek puvodnich 250 ms.
+- Prvni regresni beh spravne selhal kvuli chybne ceste noveho testu: kontrola cetla `cms.css`, ale hlavicku vlastni `theme.css`. Test byl opraven tak, aby kontroloval skutecny zdroj bez fallbacku.
+- Finalni Chrome/CDP mobil 390x844: zavreny i otevreny stav bez oddelovacich borderu a bez horizontalniho overflow. Finalni skore 100/100; screenshoty `storage/qa/premium-photo-header-final-closed.png` a `storage/qa/premium-photo-header-final-open.png`.
+- Regrese: 59/59 PHP testu a 27/27 golden kontrol. README, ARCHITECTURE a INSTRUCTIONS byly posouzeny bez potreby zmeny; technicky kontrakt byl doplnen do wiki pipeline a commitnut jako `5c1449a`.
+
+## Vysledek
+
+Hotovo. Hlavicka i panel mobilni navigace jsou bez oddelovacich borderu, zlaty ramecek otevreneho tlacitka zustal zachovan a premena burger/krizek byla zpomalena o 50 procent na 375 ms.
+
 ## Vysledek
 
 Hotovo. Doplnkova cenikova textace i featured badge jsou centrovane; Premium ma sedm vyvazenych bodu se souhrnem Standardniho a bocni karty jsou vyskové srovnatelne v live, publish i seed/migracni ceste.

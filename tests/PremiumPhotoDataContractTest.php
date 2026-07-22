@@ -71,6 +71,7 @@ function register_premium_photo_data_contract_tests(callable $test, callable $as
     $test('premium photo pricing route uses themed DB archetype and reference composition', function () use ($assert, $themeDir): void {
         $view = (string)file_get_contents($themeDir . '/views/archetypes/cenik.phtml');
         $css = (string)file_get_contents($themeDir . '/assets/cms.css');
+        $themeCss = (string)file_get_contents($themeDir . '/assets/theme.css');
         $renderer = (string)file_get_contents(dirname($themeDir, 2) . '/app/Services/Render/CenikPageRenderer.php');
         $seeder = (string)file_get_contents(dirname($themeDir, 2) . '/app/Services/DemoContentSeeder.php');
         $migration = (string)file_get_contents(dirname($themeDir, 2) . '/database/migrations/023_balance_cenik_premium_features.sql');
@@ -83,6 +84,8 @@ function register_premium_photo_data_contract_tests(callable $test, callable $as
         $assert(str_contains($css, 'right:0 !important; left:0 !important; width:max-content'), 'Featured pricing badge is not centered independently of legacy offsets.');
         $assert(str_contains($css, '.cenik-other h2') && str_contains($css, 'text-align:center !important'), 'Supplementary pricing copy has no explicit centering contract.');
         $assert(str_contains($css, 'grid-column:1 / -1') && str_contains($css, 'justify-self:stretch'), 'Supplementary pricing copy does not span the full pricing grid.');
+        $assert(str_contains($themeCss, '.site-header{') && str_contains($themeCss, 'backdrop-filter:blur(12px);') && str_contains($themeCss, 'border:0;'), 'Premium Photo header still exposes a separator border.');
+        $assert(str_contains($themeCss, 'transition:transform .375s,opacity .375s'), 'Burger-to-close transition is not slowed by exactly 50 percent.');
         $assert(str_contains($seeder, 'vše ze Standardního balíčku') && str_contains($migration, 'vše ze Standardního balíčku'), 'Balanced Premium package copy is missing from seed or migration paths.');
         $assert(!str_contains($migration, '• online galerie') && !str_contains($migration, '• konzultace před svatbou'), 'Premium migration still duplicates Standard package features.');
     });
