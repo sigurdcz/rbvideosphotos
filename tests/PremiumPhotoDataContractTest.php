@@ -108,6 +108,7 @@ function register_premium_photo_data_contract_tests(callable $test, callable $as
         $normalizer = (string)file_get_contents(dirname($themeDir, 2) . '/app/Services/Render/MarkupNormalizer.php');
 
         $assert(str_contains($homeContact, "partials/contact-form") && str_contains($contactPage, "partials/contact-form"), 'Homepage and contact route do not share the same form partial.');
+        $assert(str_contains($homeContact, 'premium-contact-form-wrap') && str_contains($contactPage, 'premium-contact-form-wrap'), 'Homepage and contact route do not share the same form wrapper hierarchy.');
         $assert(!str_contains($homeContact, '<form class="premium-contact-form"') && !str_contains($contactPage, '<form class="premium-contact-form"'), 'A route still owns a divergent inline contact form.');
         $assert(str_contains($contactForm, '<form class="premium-contact-form"'), 'Shared Premium Photo contact form is missing.');
         $namePosition = strpos($contactForm, 'name="name"');

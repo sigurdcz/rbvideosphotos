@@ -329,8 +329,11 @@ body.theme-premium-photo[data-cms-page-key="cenik"] .cenik-other p { color:var(-
 }
 
 .premium-contact-section { padding-block: 90px !important; }
+.premium-photo-home #kontakt > .container,
+.premium-contact-page > .wrap { box-sizing: border-box; width: min(calc(100% - 48px), 1120px); max-width: none; margin-inline: auto; padding-inline: 0; }
 .premium-contact-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(28px, 4vw, 64px); align-items: start; }
-.premium-contact-form-wrap { width: 100%; }
+.premium-contact-form-wrap { width: 100%; min-width: 0; }
+.premium-contact-form-wrap > .premium-contact-form { width: 100%; }
 .premium-contact-form { display: grid; gap: 12px; padding: 24px; border: 1px solid var(--line-inv); border-radius: var(--radius); background: rgba(255,255,255,.025); }
 .premium-contact-form .field { display: grid; gap: 6px; }
 .premium-contact-form label { color: rgba(246,244,239,.68); font: .66rem var(--font-mono); letter-spacing: .1em; text-transform: uppercase; }
@@ -362,6 +365,8 @@ body.theme-premium-photo .premium-photo-home .premium-contact-grid > #faq .faq-a
 @media (max-width: 850px) {
   .premium-photo-home #sluzby .hp-services-grid.tiles { grid-template-columns: 1fr 1fr; }
   .premium-contact-grid { grid-template-columns: 1fr; }
+  .premium-photo-home #kontakt > .container,
+  .premium-contact-page > .wrap { width: min(calc(100% - 32px), 1120px); }
 }
 @media (max-width: 620px) {
   .premium-photo-home #sluzby .hp-services-grid.tiles,

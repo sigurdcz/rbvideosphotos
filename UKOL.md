@@ -29,6 +29,32 @@ Hotovo kdyz: Nad nadpisem neni zlata vypln, bod pri nulovem progressu neni videt
 Hotovo. Seda osa zustava pres sekci, zlata vypln zacina az pod nadpisem na skutecne hrane seznamu a bod je pri nulovem progressu skryty na desktopu i mobilu.
 
 ---
+# UKOL: Pixelove sjednotit kontaktni formular homepage a /kontakt
+
+Datum: 2026-07-22
+Zadani: Odstranit zbyvajici vizualni rozdil formulare na homepage proti formulari na samostatne kontaktni strance.
+
+## Kroky
+
+- [x] Porovnat sdileny partial a oba rodicovske DOM/CSS kontexty.
+- [x] Sjednotit wrapper, sirku gridu a stretch formulare.
+- [x] Pridat regresni kontrakt a obnovit publikovane vystupy.
+- [x] Overit homepage a /kontakt ve stejnem desktop a mobilnim viewportu.
+- [x] Uzavrit wiki reflexi a commit.
+
+## Poznamky
+
+- Pole uz generuje stejny partial; rozdil zpusobuje odlisna hierarchie grid itemu a implicitni sirka rodicovskeho kontejneru.
+- FAQ preview zustava na homepage i /kontakt vpravo na desktopu a pod formularem na mobilu.
+- Oba vstupy nyni pouzivaji `.premium-contact-form-wrap` a explicitni 1120px shell se stejnym 48px desktop a 32px mobilnim viewport gutterem.
+- Chrome 1440x900: oba formulare maji stejny levy okraj 160 px a sirku 530 px. Chrome 390x844: oba maji levy okraj 16 px a sirku 358 px; horizontalni overflow je nulovy.
+- Finalni vizualni skore 100/100. Regrese: 62/62 PHP testu, 27/27 golden kontrol a `git diff --check` bez chyb.
+
+## Vysledek
+
+Hotovo. Homepage a `/kontakt` sdileji stejny partial, wrapper, grid shell, sirku, paddingy, pole, textarea i tlacitko na desktopu a mobilu.
+
+---
 # UKOL: Sjednotit hero Ceniku se standardem vnitrnich stranek
 
 Datum: 2026-07-22
