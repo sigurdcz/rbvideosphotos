@@ -40,6 +40,17 @@ function register_premium_photo_data_contract_tests(callable $test, callable $as
         $assert(!str_contains($output, 'youtube.com/embed'), 'Homepage view embeds a static hero video.');
     });
 
+    $test('premium photo homepage pricing teaser hides prices and owns its CTA', function () use ($assert, $themeDir): void {
+        $pricing = (string)file_get_contents($themeDir . '/views/partials/home-pricing.phtml');
+        $cta = (string)file_get_contents($themeDir . '/views/partials/home-section-cta.phtml');
+        $css = (string)file_get_contents($themeDir . '/assets/cms.css');
+
+        $assert(!str_contains($pricing, "card['price']") && !str_contains($pricing, 'hp-cenik-card-price'), 'Homepage pricing teaser still renders package prices.');
+        $assert(str_contains($pricing, 'hp-cenik-card-badge') && str_contains($pricing, 'Nejoblíbenější'), 'Featured homepage pricing badge is missing.');
+        $assert(str_contains($cta, "\$url === '/cenik'") && str_contains($cta, 'Více o cenách'), 'Homepage pricing CTA does not use the requested label.');
+        $assert(str_contains($css, 'background:#3a352f') && str_contains($css, 'background:#d7bc8b'), 'Featured homepage pricing colors are not using the muted palette.');
+    });
+
     $test('premium photo chrome exposes dynamic navigation and footer injection targets', function () use ($assert, $themeDir): void {
         $layout = (string)file_get_contents($themeDir . '/layout.html');
         $assert(str_contains($layout, '{site_name}'), 'Site name placeholder is missing.');

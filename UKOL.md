@@ -1071,6 +1071,35 @@ Hotovo kdyz: Mobilni hlavicka ani rozbalena navigace nemaji oddelovaci border, a
 
 Hotovo. Hlavicka i panel mobilni navigace jsou bez oddelovacich borderu, zlaty ramecek otevreneho tlacitka zustal zachovan a premena burger/krizek byla zpomalena o 50 procent na 375 ms.
 
+---
+
+# UKOL: Upravit homepage Cenik teaser
+
+Datum: 2026-07-22
+Zadani: Na homepage skryt ceny balicku, prejmenovat CTA na „Vice o cenach“ a doplnit tlumeny label „Nejoblibenejsi“ na prostredni kartu; samostatny `/cenik` nemenit.
+
+## Kroky
+
+- [x] Zachytit baseline a potvrdit theme-owned renderovaci cestu.
+- [x] Pridat Premium Photo partialy pro cenikove karty a CTA a upravit jejich styling.
+- [x] Pridat regresni kontrakt a overit desktop i mobil screenshoty a testy.
+- [-] Provest wiki reflexi, commitnout a pushnout.
+
+## Poznamky
+
+- Rubrika 100 bodu: ceny na HP skryte 25, CTA „Vice o cenach“ 20, label 20, tlumena featured karta 20, mobil a runtime 15.
+- Zmena bude izolovana do theme partialu; DB ceny a samostatna stranka `/cenik` zustanou beze zmeny.
+- Uzivatelsky neversionovany screenshot zustava mimo scope.
+- Baseline Chrome/CDP 1440x900: 35/100. Karty zobrazovaly ceny, CTA „Cenik“, featured badge chybel a prostredni karta mela tvrde cerne pozadi.
+- Premium Photo nyni vlastni `home-pricing.phtml` a `home-section-cta.phtml`: karta ceny vubec nerenderuje, featured karta ma label a pouze CTA smerujici na `/cenik` dostane text „Vice o cenach“. Samostatny `/cenik` ani DB data se nemeni.
+- Zaverecny diff review odhalil nechtenou zmenu CTA z puvodniho pill tlacitka na hranatou variantu. Partial byl opraven tak, aby zachoval puvodni `btn btn-ghost` markup a menil vyhradne text.
+- Finalni Chrome/CDP: desktop 1440x900 i mobil 390x844 bez horizontalniho overflow, skore 100/100. Screenshoty `storage/qa/premium-photo-home-pricing-final-desktop-section.png` a `storage/qa/premium-photo-home-pricing-final-mobile-section.png`.
+- Regrese: 60/60 PHP testu a 27/27 golden kontrol; `/cenik` golden zustal bez vizualni zmeny. README, ARCHITECTURE a INSTRUCTIONS byly posouzeny bez potreby zmeny. Wiki byla aktualizovana a commitnuta jako `d749ecd`.
+
+## Vysledek
+
+Hotovo. Homepage cenik nezobrazuje ceny, CTA zni „Vice o cenach“ a prostredni karta ma tlumeny teply featured vzhled se stitkem „Nejoblibenejsi“; detail ceniku zustal nedotceny.
+
 ## Vysledek
 
 Hotovo. Doplnkova cenikova textace i featured badge jsou centrovane; Premium ma sedm vyvazenych bodu se souhrnem Standardniho a bocni karty jsou vyskové srovnatelne v live, publish i seed/migracni ceste.

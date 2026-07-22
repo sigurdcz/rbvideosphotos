@@ -304,12 +304,12 @@ body.theme-premium-photo[data-cms-page-key="cenik"] .cenik-other p { color:var(-
 .premium-photo-home #cenik .section-title:empty,
 .premium-photo-home #cenik .section-intro:empty { display: none; }
 .premium-photo-home #cenik .hp-cenik-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--gap); margin: 34px 0 38px; }
-.premium-photo-home #cenik .hp-cenik-card { min-height: 300px; padding: 30px 28px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); }
-.premium-photo-home #cenik .hp-cenik-card--featured { color: var(--porcelain); border-color: var(--night); background: var(--night); }
+.premium-photo-home #cenik .hp-cenik-card { position:relative; min-height: 300px; padding: 30px 28px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); }
+.premium-photo-home #cenik .hp-cenik-card--featured { color: var(--porcelain); border-color:rgba(122,105,80,.5); background:#3a352f; box-shadow:0 16px 38px rgba(45,38,30,.11); }
+.premium-photo-home #cenik .hp-cenik-card-badge { position:absolute; top:-12px; left:50%; padding:5px 13px; border-radius:999px; color:#29251f; background:#d7bc8b; box-shadow:0 5px 14px rgba(55,45,30,.12); font:600 .58rem/1 var(--font-mono); letter-spacing:.12em; text-transform:uppercase; transform:translateX(-50%); }
 .premium-photo-home #cenik .hp-cenik-card-title { margin: 0 0 12px; font: 2rem/1 var(--font-display); }
-.premium-photo-home #cenik .hp-cenik-card-price { margin-bottom: 22px; color: var(--champagne-deep); font: .72rem var(--font-mono); letter-spacing: .08em; text-transform: uppercase; }
 .premium-photo-home #cenik .hp-cenik-card-desc { color: var(--ink-soft); line-height: 1.75; }
-.premium-photo-home #cenik .hp-cenik-card--featured .hp-cenik-card-desc { color: rgba(246,244,239,.7); }
+.premium-photo-home #cenik .hp-cenik-card--featured .hp-cenik-card-desc { color: rgba(246,244,239,.82); }
 
 .premium-photo-home #hodnoceni { padding-top: 0; color: var(--ink); background: var(--paper); }
 .premium-photo-home #hodnoceni .section-intro { color: var(--ink-soft); }
