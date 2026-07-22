@@ -1101,6 +1101,32 @@ Zadani: Na homepage skryt ceny balicku, prejmenovat CTA na „Vice o cenach“ a
 
 Hotovo. Homepage cenik nezobrazuje ceny, CTA zni „Vice o cenach“ a prostredni karta ma tlumeny teply featured vzhled se stitkem „Nejoblibenejsi“; detail ceniku zustal nedotceny.
 
+---
+
+# UKOL: Zvetsit vnitrni prostor tlacitka Kontakt
+
+Datum: 2026-07-22
+Zadani: Na desktopu pridat tlacitku Kontakt vice prostoru vlevo i vpravo, aby text nesplyval s borderem.
+
+## Kroky
+
+- [x] Potvrdit CSS kolizi a zachytit baseline.
+- [x] Opravit specifitu desktopoveho paddingu a pridat regresni kontrolu.
+- [x] Overit screenshotem a testy.
+- [x] Provest wiki reflexi a commitnout.
+
+## Poznamky
+
+- Root cause kandidat: pozdejsi a specifictejsi `.site-header > .wrap > .site-nav .nav-links a { padding:0; }` prebija deklaraci `.nav-cta`.
+- Uzivatelsky screenshot zustava mimo Git.
+- Root cause potvrzen: obecny desktopovy selector mel vyssi specifitu nez puvodni `.site-nav .nav-cta`. Novy cilovy selector nastavuje pouze Kontaktu `padding:9px 30px`.
+- Finalni Chrome/CDP 1440x900 bez horizontalniho overflow; Kontakt ma citelny prostor na obou stranach. Screenshot `storage/qa/premium-photo-contact-padding-final.png`.
+- Regrese: 60/60 PHP testu a 27/27 golden kontrol. README, ARCHITECTURE a INSTRUCTIONS nebylo treba menit; wiki pipeline byla aktualizovana a commitnuta jako `e892984`.
+
+## Vysledek
+
+Hotovo. Desktopove tlacitko Kontakt ma 30 px vodorovneho paddingu a jeho text uz nesplyva s borderem; mobilni navigace zustala beze zmeny.
+
 ## Vysledek
 
 Hotovo. Doplnkova cenikova textace i featured badge jsou centrovane; Premium ma sedm vyvazenych bodu se souhrnem Standardniho a bocni karty jsou vyskové srovnatelne v live, publish i seed/migracni ceste.

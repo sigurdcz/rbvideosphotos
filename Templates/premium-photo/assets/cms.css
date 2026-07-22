@@ -248,6 +248,7 @@ body.theme-premium-photo[data-cms-page-key="cenik"] .cenik-other p { color:var(-
 @media (min-width: 960px) {
   .site-header > .wrap > .site-nav .nav-links { display: flex; align-items: center; gap: 26px; }
   .site-header > .wrap > .site-nav .nav-links a { padding: 0; }
+  .site-header > .wrap > .site-nav .nav-links a.nav-cta { padding:9px 30px; }
 }
 
 @media (max-width: 850px) {

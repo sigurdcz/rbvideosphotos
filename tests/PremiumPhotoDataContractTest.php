@@ -130,6 +130,7 @@ function register_premium_photo_data_contract_tests(callable $test, callable $as
         $assert(str_contains($js, 'window.addEventListener("scroll", requestHomepageNavigationUpdate'), 'Homepage active navigation is not connected to scrolling.');
         $assert(str_contains($css, '.site-nav a[aria-current]:not(.nav-cta)::before'), 'Active navigation state has no visible marker or fails to exclude Contact.');
         $assert(str_contains($css, '.site-nav .nav-cta::before{content:none !important;display:none !important}'), 'Contact navigation CTA can still receive an underline.');
+        $assert(str_contains($cmsCss, '.nav-links a.nav-cta { padding:9px 30px; }'), 'Desktop Contact navigation CTA can lose its readable horizontal padding.');
         $assert(str_contains($css, 'grid-template-columns:1fr'), 'Mobile navigation is not a vertical single-column list.');
         $assert(!str_contains($js, 'pricing.hidden = true'), 'Homepage pricing is still hidden by the theme.');
         $assert(!str_contains($js, 'faq.hidden = true'), 'Homepage FAQ is still hidden by the theme.');
