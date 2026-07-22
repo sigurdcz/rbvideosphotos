@@ -57,10 +57,11 @@ if (premiumHome) {
   // service cards (title + description) rather than inventing new copy.
   if (aboutVisualSource && services && !premiumHome.querySelector(".premium-about-split")) {
     const src = aboutVisualSource.dataset.src || "";
-    const serviceCards = [...services.querySelectorAll(".premium-service-card, .hp-svc-card")].slice(0, 4);
+    const serviceCards = [...services.querySelectorAll(".premium-service-card, .hp-svc-card")].slice(0, 6);
     if (src && serviceCards.length) {
       const about = document.createElement("section");
       about.className = "premium-about-split wrap";
+      about.id = "sluzby";
       about.setAttribute("aria-label", "O nas");
 
       const frame = document.createElement("div");
@@ -95,14 +96,22 @@ if (premiumHome) {
         list.appendChild(item);
       });
 
-      const cta = document.createElement("a");
-      cta.href = "/kontakt";
-      cta.className = "btn btn-ghost";
-      cta.textContent = "Kontakt";
+      const actions = document.createElement("div");
+      actions.className = "premium-about-split__actions";
+      const contactCta = document.createElement("a");
+      contactCta.href = "/kontakt";
+      contactCta.className = "btn btn-ghost";
+      contactCta.textContent = "Kontakt";
+      const servicesCta = document.createElement("a");
+      servicesCta.href = "/sluzby";
+      servicesCta.className = "btn btn-ghost";
+      servicesCta.textContent = "Další služby";
+      actions.append(contactCta, servicesCta);
 
-      body.append(label, list, cta);
+      body.append(label, list, actions);
       about.append(frame, body);
       services.before(about);
+      services.remove();
     }
   }
 

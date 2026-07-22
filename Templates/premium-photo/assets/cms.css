@@ -100,7 +100,7 @@ body > footer { display: block; }
   background: linear-gradient(135deg, rgba(10,11,14,.05), rgba(10,11,14,.42));
 }
 .premium-about-split__body { display: grid; gap: 28px; align-content: start; padding-top: 6px; }
-.premium-about-split__body > .btn { justify-self: start; }
+.premium-about-split__actions { display: flex; flex-wrap: wrap; gap: 12px; justify-self: start; }
 .premium-about-split__list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 26px 32px; }
 .premium-about-split__item { display: grid; gap: 6px; padding-top: 16px; border-top: 1px solid var(--line); }
 .premium-about-split__item .t-num { color: var(--champagne-deep); font: .65rem/1 var(--font-mono); letter-spacing: .18em; }

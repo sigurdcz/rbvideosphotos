@@ -254,6 +254,11 @@ function register_premium_photo_data_contract_tests(callable $test, callable $as
         $js = (string)file_get_contents($themeDir . '/assets/theme.js');
         $assert(str_contains($js, '.premium-photo-home') && str_contains($js, 'document.body.dataset.cmsPageKey === "homepage"'), 'Homepage runtime cannot compose Premium Photo enhancements from published generic markup.');
         $assert(str_contains($js, '.premium-service-card, .hp-svc-card'), 'About section does not support the canonical published service-card markup.');
+        $assert(str_contains($js, '.slice(0, 6)'), 'Homepage about section does not expose all six service items.');
+        $assert(str_contains($js, 'about.id = "sluzby"') && str_contains($js, 'services.remove()'), 'Homepage services anchor is not transferred to About before removing the standalone services section.');
+        $assert(str_contains($js, 'servicesCta.href = "/sluzby"') && str_contains($js, 'servicesCta.textContent = "Další služby"'), 'Homepage About is missing the services CTA.');
+        $aboutCss = (string)file_get_contents($themeDir . '/assets/cms.css');
+        $assert(str_contains($aboutCss, '.premium-about-split__actions'), 'Homepage About CTA group has no responsive presentation contract.');
 
         $requiredViews = [
             'partials/home-service-card.phtml' => 'premium-service-card',

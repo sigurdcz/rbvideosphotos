@@ -25,6 +25,32 @@ Runtime overeni: blog detail vraci hero original `/media/...jpg`, stejna URL je 
 Dokonceno. Hero fotografie nebo video zustava prvni polozkou kompletni galerie u detailu blogu, Nase prace i sluzeb; shodne URL se zobrazi pouze jednou. Blogovy hero pouziva originalni ulozeny soubor, zatimco zmensene varianty zustavaji jen pro nahledy. Aktualizovan je datovy kontrakt, oba detailni archetypy, regresni testy, ARCHITECTURE a projektova wiki. README ani INSTRUCTIONS se nemenily, protoze instalacni postup ani repozitarova pravidla zustala beze zmeny.
 
 ---
+# UKOL: Homepage O nas a sluzby
+
+Datum: 2026-07-22
+Zadani: Odstranit z homepage celou sekci Co nabizime a v sekci O nas zobrazit sest sluzeb vcetne tlacitka Dalsi sluzby vedle tlacitka Kontakt.
+
+## Kroky
+
+- [x] Zmapovat homepage kompozici a datovy zdroj sekci Co nabizime a O nas.
+- [x] Odstranit sekci Co nabizime bez zasahu do samostatne stranky Sluzby.
+- [x] Rozsirit O nas o polozky 05 a 06 a pridat CTA Dalsi sluzby vedle Kontakt.
+- [x] Doplnit regresni kontrakt a overit desktop i mobil pres Chrome CDP.
+- [x] Posoudit dokumentaci a wiki reflexi, uzavrit ukol.
+
+## Poznamky
+
+Hotovo znamena, ze homepage nema nadpis ani karty Co nabizime, O nas obsahuje polozky 01-06 a dvojici CTA Kontakt + Dalsi sluzby bez horizontalniho overflow. Vizualni rubrika: struktura a poradi sekci 35, sest polozek O nas 25, CTA a jejich zarovnani 20, responzivita 15, runtime integrita 5.
+
+Premium Photo homepage sklada O nas z DB-backed karet sluzeb v theme JS. Vyber byl rozsiren ze 4 na 6, puvodni `#sluzby` se po uspesnem sestaveni odstrani a jeho anchor se prenese na O nas, aby homepage navigace zustala funkcni. CTA jsou ve flex wrapperu, ktery se muze na uzke sirce zalomit.
+
+Prvni beh regresniho kontraktu odhalil lokalni chybu noveho testu: CSS assertion odkazovala na nedefinovanou promennou. Test byl opraven tak, aby nacetl `assets/cms.css` explicitne; chyba nebyla skryta ani nahrazena fallbackem.
+
+## Vysledek
+
+Dokonceno. Homepage Premium Photo uz nevykresluje samostatnou sekci Co nabizime. O nas obsahuje sest DB-backed polozek 01-06 a CTA Kontakt + Dalsi sluzby; anchor `#sluzby` zustal zachovan na O nas. Zakladni testy prosly 65/65. Chrome CDP overil 1440 px i 390 px bez horizontalniho overflow. Vizualni skore iterace 1: 98/100 (struktura 35/35, sest polozek 25/25, CTA 19/20, responzivita 14/15, runtime 5/5). README, ARCHITECTURE a INSTRUCTIONS nevyzaduji zmenu, protoze datovy ani provozni kontrakt se nezmenil. Wiki reflexe: SKIP; existujici SEO Editor dossier uz pokryva DB-driven homepage kompozici a tato uprava nepridava novy rekonstrukcni mechanismus.
+
+---
 
 # UKOL: Sitemap Nase prace a sdilena detailni galerie
 
