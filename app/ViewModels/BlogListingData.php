@@ -37,7 +37,7 @@ final class BlogListingData
                 $media = $mediaRepo->findByIdWithThumb((int)$post['featured_image_id']);
                 if ($media) {
                     $imageUrl = MediaUrlResolver::publicMediaUrl(
-                        (string)($media['thumb_path'] ?? $media['medium_path'] ?? $media['storage_path'] ?? '')
+                        (string)($media['storage_path'] ?? $media['medium_path'] ?? $media['thumb_path'] ?? '')
                     );
                 }
             }

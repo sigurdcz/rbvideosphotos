@@ -293,7 +293,17 @@ function register_premium_photo_data_contract_tests(callable $test, callable $as
         $assert(str_contains($cmsCss, '.premium-media--film > img'), 'Film thumbnail image rule is missing.');
         $assert(str_contains($cmsCss, 'height: calc(100% - 40px)'), 'Film thumbnail does not reserve equal top and bottom rails.');
         $assert(str_contains($cmsCss, 'background: #07080a'), 'Film thumbnail rails do not use the dark film canvas.');
+        $assert(str_contains($cmsCss, 'right: 0;') && str_contains($cmsCss, 'bottom: 20px;'), 'Film caption is not aligned to the lower-right image corner.');
+        $assert(str_contains($cmsCss, 'rgba(10,11,14,.42)'), 'Film caption overlay is not using the lighter transparent black treatment.');
         $assert(str_contains($cmsCss, '.bp-hero + .premium-article') && str_contains($cmsCss, '.pf-detail-hero + .premium-article'), 'Blog and portfolio detail media do not keep spacing below the hero.');
+
+        $blogListingData = (string)file_get_contents(dirname(__DIR__) . '/app/ViewModels/BlogListingData.php');
+        $portfolioListingData = (string)file_get_contents(dirname(__DIR__) . '/app/ViewModels/PortfolioListingData.php');
+        $homepageContent = (string)file_get_contents(dirname(__DIR__) . '/app/Services/HomepageContentService.php');
+        $qualityOrder = "['storage_path'] ?? \$media['medium_path'] ?? \$media['thumb_path']";
+        $assert(str_contains($blogListingData, $qualityOrder), 'Blog listing still stretches a derivative before original media.');
+        $assert(str_contains($portfolioListingData, "['storage_path'] ?? \$photos[0]['medium_path'] ?? \$photos[0]['thumb_path']"), 'Portfolio listing still stretches a derivative before original media.');
+        $assert(str_contains($homepageContent, $qualityOrder), 'Homepage blog still stretches a derivative before original media.');
 
         $service = ViewFactory::forTheme('premium-photo', [], 'views')->render('partials/home-service-card', [
             'card' => [

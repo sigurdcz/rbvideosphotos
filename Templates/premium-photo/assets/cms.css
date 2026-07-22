@@ -300,11 +300,12 @@ body.theme-premium-photo[data-cms-page-key="cenik"] .cenik-other p { color:var(-
 }
 .premium-media--film .ph-cap {
   position: absolute;
-  right: 18px;
-  bottom: 28px;
+  right: 0;
+  bottom: 20px;
   left: auto;
   z-index: 3;
   max-width: min(52%, 330px);
+  background: linear-gradient(90deg, rgba(10,11,14,.18), rgba(10,11,14,.42));
 }
 .premium-service-card:hover .premium-media > img, .premium-blog-card:hover .premium-media > img { transform: scale(1.04); }
 .premium-card-copy { display: grid; gap: 10px; padding: 22px; }

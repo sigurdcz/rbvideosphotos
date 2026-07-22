@@ -358,14 +358,14 @@ class HomepageContentService
             $thumb = $hasVideo ? PortfolioRepository::youtubeThumbnail((string)$entry['video_url']) : '';
 
             if ($thumb === '' && !empty($photos)) {
-                $thumbFile = $photos[0]['medium_path'] ?? $photos[0]['thumb_path'] ?? $photos[0]['storage_path'] ?? '';
+                $thumbFile = $photos[0]['storage_path'] ?? $photos[0]['medium_path'] ?? $photos[0]['thumb_path'] ?? '';
                 $thumb = $this->publicMediaUrl((string)$thumbFile);
             }
 
             $photoData = [];
             $stripPhotos = $hasVideo ? array_slice($photos, 0, 3) : array_slice($photos, 1, 3);
             foreach ($stripPhotos as $photo) {
-                $pfile = $photo['medium_path'] ?? $photo['thumb_path'] ?? $photo['storage_path'] ?? '';
+                $pfile = $photo['storage_path'] ?? $photo['medium_path'] ?? $photo['thumb_path'] ?? '';
                 $photoData[] = [
                     'url' => $this->publicMediaUrl((string)$pfile),
                     'alt' => (string)($photo['alt_text'] ?? ''),
@@ -397,7 +397,7 @@ class HomepageContentService
             }
         }
         $imageUrl = $media
-            ? $this->publicMediaUrl((string)($media['thumb_path'] ?? $media['medium_path'] ?? $media['storage_path'] ?? ''))
+            ? $this->publicMediaUrl((string)($media['storage_path'] ?? $media['medium_path'] ?? $media['thumb_path'] ?? ''))
             : '';
 
         return $this->renderHomePartial('home-blog-card', ['card' => HomepageData::blogCard($post, $imageUrl)]);

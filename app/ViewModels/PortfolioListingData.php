@@ -35,7 +35,7 @@ final class PortfolioListingData
             $hasVideo = !empty($entry['video_url']);
             $thumb = $hasVideo ? PortfolioRepository::youtubeThumbnail((string)$entry['video_url']) : '';
             if ($thumb === '' && !empty($photos)) {
-                $thumbFile = $photos[0]['thumb_path'] ?? $photos[0]['medium_path'] ?? $photos[0]['storage_path'] ?? '';
+                $thumbFile = $photos[0]['storage_path'] ?? $photos[0]['medium_path'] ?? $photos[0]['thumb_path'] ?? '';
                 $thumb = MediaUrlResolver::publicMediaUrl((string)$thumbFile);
             }
 

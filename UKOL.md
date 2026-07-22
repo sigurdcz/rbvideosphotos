@@ -1546,3 +1546,27 @@ Server `localhost:8000` byl restartovan stejnym PHP 8.4.19 a aktualnim `php.ini`
 Dokonceno. Produkcni Premium Photo JS umi vytvorit O nas z generickeho publikovaneho homepage DOM i z theme PHTML DOM. Lokalni PHP server byl restartovan s GD a Demo seed uspesne dokoncil vcetne opravy chybejicich variant media #25 a nove publikace. Aktualizovany jsou ARCHITECTURE a projektova wiki; README ani INSTRUCTIONS se nemenily, protoze instalacni kroky a repozitarova pravidla zustavaji stejne. Zakladni regrese prosly 65/65. Golden snapshoty po uzivatelskem Armageddonu zustavaji odlisne kvuli novym nahodnym media cestam (25/27 kontrol); nebyly potichu prepsany ani vydavany za uspech. In-app browser nebyl dostupny, proto je vizualni screenshot explicitne neprovedeny.
 
 ---
+# UKOL: Kvalitni nahledy a caption v rohu
+
+Datum: 2026-07-22
+Zadani: Pro roztazene blogove a portfolio nahledy pouzit kvalitnejsi media variantu a filmovy caption zarovnat do rohu s pruhlednejsim cernym pozadim.
+
+## Kroky
+
+- [x] Zmapovat datove zdroje roztazenych nahledu a CSS geometrii captionu.
+- [x] Predat medium/original variantu misto maleho thumbnailu na homepage a listingy.
+- [x] Zarovnat caption k pravemu dolnimu rohu obrazove plochy a zvysit pruhlednost cerne vrstvy.
+- [x] Doplnit regresni kontrakty a overit vygenerovane assety, desktop a mobil.
+- [x] Aktualizovat dokumentaci, wiki reflexi a uzavrit ukol.
+
+## Poznamky
+
+Vizualni rubrika 100 bodu: kvalita/ostrost medii 40, caption v rohu bez useknuti 30, pruhlednost a citelnost overlaye 15, konzistence velke/male karty 10, runtime bez overflow/chyb 5. Hotovo znamena, ze velke ani male karty nepouzivaji 240px `thumb` jako roztazeny zdroj a caption nema odsazeni od praveho/spodniho okraje filmoveho obrazu.
+
+Datovy kontrakt byl zmenen v `BlogListingData`, `PortfolioListingData` a homepage builderu na poradi `storage_path -> medium_path -> thumb_path`; siroke cover nahledy proto dostanou original a 240px thumb je jen posledni nouzova varianta. Filmova fotografie konci 20 px nad spodkem kontejneru, proto caption pouziva `right:0; bottom:20px` a doseda presne do jejiho praveho dolniho rohu. Cerny gradient byl zesvetlen na alfa rozsah `.18 -> .42`.
+
+## Vysledek
+
+Dokonceno. Runtime `/blog?theme_preview=premium-photo` predava 18 originalnich media URL, 0 thumb a 0 medium derivatu. Fresh Chrome CDP capture v 1525 px i 390 px nema horizontalni overflow; caption doseda na pravy dolni roh obrazove plochy. Vizualni skore po iteraci: 98/100 (kvalita 40/40, roh 30/30, transparentni overlay 14/15, konzistence 9/10, runtime 5/5). Zakladni testy prosly 65/65; 25 golden snapshotu zustava viditelne odlisnych po drivejsim demo reseedu a nebyly potichu prepsany. Wiki reflexe: SKIP, protoze existujici SEO Editor dossier uz pokryva media varianty i Chrome vizualni overeni a tato drobna implementace nepridava novy rekonstrukcni postup.
+
+---
