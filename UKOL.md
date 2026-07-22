@@ -29,6 +29,32 @@ Hotovo kdyz: Nad nadpisem neni zlata vypln, bod pri nulovem progressu neni videt
 Hotovo. Seda osa zustava pres sekci, zlata vypln zacina az pod nadpisem na skutecne hrane seznamu a bod je pri nulovem progressu skryty na desktopu i mobilu.
 
 ---
+# UKOL: Dokoncit vizual kontaktni sekce a FAQ CTA
+
+Datum: 2026-07-22
+Zadani: Na homepage odstranit velky kontaktni title, zrusit dvojity FAQ border a na homepage i /kontakt pridat stylove tlacitko Vsechny otazky.
+
+## Kroky
+
+- [x] Skryt pouze homepage kontaktni H2 bez zasahu do formulare.
+- [x] Odstranit vnejsi border presunutych homepage FAQ karet.
+- [x] Sjednotit CTA Vsechny otazky v obou kontaktnich sekcich.
+- [x] Overit desktop/mobil, testy a publikovane vystupy.
+- [x] Uzavrit wiki reflexi a commit.
+
+## Poznamky
+
+- Homepage FAQ CTA uz existuje v DB DOM; po presunu potrebuje theme styl. Kontakt route potrebuje stejnou CTA strukturu doplnit do archetypu.
+- Jediny viditelny ramecek ma patrit elementu `details.faq-item`, nikoli jeho `.hp-faq-item` obalu.
+- Desktop Chrome 1440x900 potvrdil skryty homepage H2, jeden border na kazde FAQ karte a shodne pill CTA pod otazkami v obou routach.
+- Mobilni Chrome 390x844 potvrdil jednosloupcove poradi formular - FAQ - CTA a nulovy horizontalni overflow na homepage i /kontakt.
+- Finalni vizualni skore 100/100. Regrese: 62/62 PHP testu, 27/27 golden kontrol a `git diff --check` bez chyb.
+
+## Vysledek
+
+Hotovo. Homepage nema velky kontaktni title, FAQ nema dvojite panely a obe kontaktni varianty maji stylove shodne tlacitko Vsechny otazky.
+
+---
 # UKOL: Pixelove sjednotit kontaktni formular homepage a /kontakt
 
 Datum: 2026-07-22

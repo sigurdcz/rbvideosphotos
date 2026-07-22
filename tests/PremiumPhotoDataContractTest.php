@@ -111,6 +111,11 @@ function register_premium_photo_data_contract_tests(callable $test, callable $as
         $assert(str_contains($homeContact, 'premium-contact-form-wrap') && str_contains($contactPage, 'premium-contact-form-wrap'), 'Homepage and contact route do not share the same form wrapper hierarchy.');
         $assert(!str_contains($homeContact, '<form class="premium-contact-form"') && !str_contains($contactPage, '<form class="premium-contact-form"'), 'A route still owns a divergent inline contact form.');
         $assert(str_contains($contactForm, '<form class="premium-contact-form"'), 'Shared Premium Photo contact form is missing.');
+        $assert(str_contains($contactPage, 'class="btn-secondary">Všechny otázky</a>'), 'Contact route is missing the shared all-FAQ CTA.');
+        $contactCss = (string)file_get_contents($themeDir . '/assets/cms.css');
+        $assert(str_contains($contactCss, '#kontakt > .container > .section-title { display: none; }'), 'Homepage contact title is still visible.');
+        $assert(str_contains($contactCss, '.hp-faq-item { padding:0;') && str_contains($contactCss, 'border:0 !important; background:transparent !important;'), 'Moved homepage FAQ cards still expose a duplicate outer border.');
+        $assert(str_contains($contactCss, '.premium-contact-faq > .hp-section-cta .btn-secondary'), 'Shared all-FAQ CTA has no Premium Photo button styling.');
         $namePosition = strpos($contactForm, 'name="name"');
         $contactPosition = strpos($contactForm, 'name="contact_value"');
         $placePosition = strpos($contactForm, 'name="event_place"');

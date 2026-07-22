@@ -334,6 +334,7 @@ body.theme-premium-photo[data-cms-page-key="cenik"] .cenik-other p { color:var(-
 .premium-contact-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(28px, 4vw, 64px); align-items: start; }
 .premium-contact-form-wrap { width: 100%; min-width: 0; }
 .premium-contact-form-wrap > .premium-contact-form { width: 100%; }
+body.theme-premium-photo .premium-photo-home #kontakt > .container > .section-title { display: none; }
 .premium-contact-form { display: grid; gap: 12px; padding: 24px; border: 1px solid var(--line-inv); border-radius: var(--radius); background: rgba(255,255,255,.025); }
 .premium-contact-form .field { display: grid; gap: 6px; }
 .premium-contact-form label { color: rgba(246,244,239,.68); font: .66rem var(--font-mono); letter-spacing: .1em; text-transform: uppercase; }
@@ -352,9 +353,27 @@ body.theme-premium-photo .premium-photo-home .premium-contact-grid > #faq { padd
 body.theme-premium-photo .premium-photo-home .premium-contact-grid > #faq .section-title { color: var(--porcelain) !important; }
 body.theme-premium-photo .premium-photo-home .premium-contact-grid > #faq .section-intro { color: rgba(246,244,239,.66); }
 body.theme-premium-photo .premium-photo-home .premium-contact-grid > #faq .hp-faq-grid { max-width: none; }
-body.theme-premium-photo .premium-photo-home .premium-contact-grid > #faq .hp-faq-item { color: var(--porcelain); border-color: var(--line-inv) !important; background: rgba(255,255,255,.025) !important; }
+body.theme-premium-photo .premium-photo-home .premium-contact-grid > #faq .hp-faq-item { padding:0; color:var(--porcelain); border:0 !important; background:transparent !important; }
 body.theme-premium-photo .premium-photo-home .premium-contact-grid > #faq .faq-item summary { color: var(--porcelain) !important; }
 body.theme-premium-photo .premium-photo-home .premium-contact-grid > #faq .faq-a { color: rgba(246,244,239,.66) !important; }
+.premium-contact-faq > .hp-section-cta { margin-top:20px; }
+.premium-contact-faq > .hp-section-cta .btn-secondary {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:44px;
+  padding:10px 24px;
+  border:1px solid var(--line-inv);
+  border-radius:999px;
+  color:var(--porcelain);
+  background:transparent;
+  font-family:var(--font-mono);
+  font-size:.68rem;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+}
+.premium-contact-faq > .hp-section-cta .btn-secondary:hover,
+.premium-contact-faq > .hp-section-cta .btn-secondary:focus-visible { border-color:var(--champagne); color:var(--night); background:var(--champagne); }
 
 .premium-photo-home .hp-process.timeline { padding-block: 96px 110px; }
 .premium-photo-home .hp-process .section-label,
