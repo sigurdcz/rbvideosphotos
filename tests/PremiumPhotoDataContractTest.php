@@ -141,7 +141,16 @@ function register_premium_photo_data_contract_tests(callable $test, callable $as
         $assert(str_contains($css, 'max-width:none !important; margin:64px auto 0 !important'), 'Supplementary pricing copy cannot override the global 860px runtime constraint.');
         $assert(str_contains($runtimeCss, 'body:not(.theme-premium-photo)[data-cms-page-key="cenik"] .cenik-other'), 'Global runtime pricing width constraint still targets Premium Photo.');
         $assert(str_contains($themeCss, '.site-header{') && str_contains($themeCss, 'backdrop-filter:blur(12px);') && str_contains($themeCss, 'border:0;'), 'Premium Photo header still exposes a separator border.');
-        $assert(str_contains($themeCss, 'transition:transform .375s,opacity .375s'), 'Burger-to-close transition is not slowed by exactly 50 percent.');
+        $assert(str_contains($themeCss, 'transition:transform .65s,opacity .65s'), 'Burger-to-close transition does not use the required 0.65 second duration.');
+        $assert(str_contains($themeCss, '.nav-toggle{display:grid;place-items:center;width:44px;height:44px;padding:0;border:0'), 'Navigation toggle base state is not explicitly borderless.');
+        $assert(str_contains($themeCss, 'border:0;border-radius:0;'), 'Open navigation toggle is not explicitly borderless.');
+
+        $portfolioListing = file_get_contents($themeDir . '/views/archetypes/portfolio-listing.phtml');
+        $faqView = file_get_contents($themeDir . '/views/archetypes/faq.phtml');
+        $assert(is_string($portfolioListing) && str_contains($portfolioListing, 'portfolio · Naše práce'), 'Portfolio hero meta label is incorrect.');
+        $assert(is_string($portfolioListing) && !str_contains($portfolioListing, 'databáze Naše práce'), 'Legacy portfolio database label is still present.');
+        $assert(is_string($faqView) && str_contains($faqView, 'FAQ · časté dotazy'), 'FAQ hero meta label is incorrect.');
+        $assert(is_string($faqView) && !str_contains($faqView, 'odpovědi ze systému'), 'Legacy FAQ system-answer label is still present.');
         $assert(str_contains($seeder, 'vše ze Standardního balíčku') && str_contains($migration, 'vše ze Standardního balíčku'), 'Balanced Premium package copy is missing from seed or migration paths.');
         $assert(!str_contains($migration, '• online galerie') && !str_contains($migration, '• konzultace před svatbou'), 'Premium migration still duplicates Standard package features.');
     });

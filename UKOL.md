@@ -1267,3 +1267,29 @@ Zadani: Sjednotit vsechny non-homepage hero sekce podle geometrie stranky Sluzby
 Hotovo. Vsechny pozadovane vnitrni routy sdileji jednu zkracenou hero geometrii a levou obsahovou osu; homepage zustala beze zmeny. Horni i desktop dolni logo ma viditelny text `RB Videos & Photos.`. Relevantni projektove Markdown soubory mimo `UKOL.md` nebylo nutne menit; trvaly kontrakt je zachycen v pracovni wiki.
 
 ---
+# UKOL: Opravit mobilni toggle a hero meta texty
+
+Datum: 2026-07-22
+Zadani: Odebrat border otevreneho burger tlacitka, zpomalit morph burger/krizek a upravit meta texty hero na routach Nase prace a FAQ.
+
+## Kroky
+
+- [x] Opravit CSS otevreneho navigation toggle a rychlost morph animace.
+- [x] Zmenit `databaze Nase prace` na `Nase prace` a `odpovedi ze systemu` na `caste dotazy`.
+- [x] Aktualizovat regresni kontrakt a golden vystupy.
+- [x] Overit otevrene mobilni menu a obe hero v Chrome.
+- [x] Provest wiki reflexi a commitnout.
+
+## Poznamky
+
+- Acceptance: krizek nema ramecek v zadnem stavu; transformace tri car trva 0,65 s; ostatni border navigacnich odkazu zustava beze zmeny.
+- Textova zmena se tyka jen meta radku uvnitr hero, ne H1 ani navigacnich labelu.
+- Chrome 390x844 s otevrenym menu potvrdil borderless krizek a zachovane oramovani odkazu Kontakt; stranka nema horizontalni overflow.
+- Chrome 1440x900 potvrdil `PORTFOLIO · NASE PRACE` a `FAQ · CASTE DOTAZY` primo v hero meta radku.
+- Regrese: `php tests/run.php` 62/62, golden kontroly 27/27 a `git diff --check` bez chyb.
+
+## Vysledek
+
+Hotovo. Toggle je bez borderu v zavrenem i otevrenem stavu, morph trva 0,65 s a oba hero meta texty odpovidaji zadani.
+
+---

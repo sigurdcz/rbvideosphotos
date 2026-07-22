@@ -137,9 +137,9 @@ section{padding-block:72px}
 .premium-brand-logo__text{font-family:var(--font-display);font-size:1.05rem;letter-spacing:.035em;white-space:nowrap}
 .premium-brand-logo--footer .premium-brand-logo__text{color:var(--porcelain);font-size:1.2rem}
 
-.nav-toggle{display:grid;place-items:center;width:44px;height:44px}
+.nav-toggle{display:grid;place-items:center;width:44px;height:44px;padding:0;border:0;background:transparent;cursor:pointer}
 .nav-toggle span,.nav-toggle span::before,.nav-toggle span::after{
-  content:"";display:block;width:22px;height:1.6px;background:var(--ink);position:relative;transition:transform .375s,opacity .375s;
+  content:"";display:block;width:22px;height:1.6px;background:var(--ink);position:relative;transition:transform .65s,opacity .65s;
 }
 .nav-toggle span::before{position:absolute;top:-7px}
 .nav-toggle span::after{position:absolute;top:7px}
@@ -148,7 +148,7 @@ section{padding-block:72px}
 .nav-open .nav-toggle span::after{transform:translateY(-7px) rotate(-45deg)}
 .nav-open .nav-toggle{
   width:54px;height:54px;
-  border:2px solid var(--champagne-deep);border-radius:10px;
+  border:0;border-radius:0;
 }
 
 .site-nav{
