@@ -29,7 +29,36 @@ Hotovo kdyz: Nad nadpisem neni zlata vypln, bod pri nulovem progressu neni videt
 Hotovo. Seda osa zustava pres sekci, zlata vypln zacina az pod nadpisem na skutecne hrane seznamu a bod je pri nulovem progressu skryty na desktopu i mobilu.
 
 ---
-# UKOL: Import demo clanku Nase prace z dodanych dat
+# UKOL: Opravit duplicitni obrazky v nahledech clanku
+
+Datum: 2026-07-22
+Zadani: Opravit karty clanku na homepage, `/nase-prace` a `/blog`, aby jeden obrazek nebyl soucasne pozadim i `<img>` a media mela jednotny filmovy letterbox s hornim a spodnim rameckem.
+
+## Kroky
+
+- [x] Najit sdileny zdroj duplicitniho background-image a `<img>` ve vsech trech vypisech.
+- [x] Upravit sablony a CSS tak, aby `<img>` vyplnilo sirku, zachovalo pomer stran a melo cerny horni i spodni filmovy ramecek.
+- [x] Doplnit regresni kontrakt pro homepage, Nase prace a Blog.
+- [x] Overit runtime DOM, computed styly, desktop screenshoty a mobilni responzivitu.
+- [x] Aktualizovat dokumentaci, wiki reflexi a uzavrit checklist.
+
+## Poznamky
+
+Vizuální rubrika 100 bodu: bez duplicitniho media 35, jednotny letterbox/crop 25, grid a geometrie karet 15, titulky a overlay 10, desktop/mobil 10, runtime a assety 5. Povinne acceptance: zadna karta nesmi mit stejny obrazek v `background-image` i `<img>` a vsechny tri routy musi pouzit stejny media kontrakt.
+
+Pricina: ctyri Premium Photo sablony zapisovaly stejnou URL do inline `background-image` i do polopruhledneho `<img>`. Sablony ted pouzivaji pouze `<img>` a modifier `premium-media--film`; CSS vytvari 20px cerny ramecek nahore i dole bez druhe obrazove vrstvy.
+
+Screenshot iterace 1: 72/100. Duplicita zmizela, ale flex kontejner povazoval caption za druhy sloupec a zmensil obraz. Media je proto absolutne umistene pres celou sirku mezi filmove listy a caption je absolutni overlay.
+
+Screenshot iterace 2: 96/100 pri 1440px desktopu a 390px mobilu. Vsechny tri routy maji plnou sirku obrazu, symetricke 20px listy, overlay caption a `scrollWidth === clientWidth`. Runtime DOM: homepage 15/15, Nase prace 12/12 a Blog 5/5 filmovych medii s `<img>`; 0 inline duplicitnich backgroundu. Lazy obrazky mimo mobilni full-page viewport se nacitaji az pri skutecnem scrollu.
+
+## Vysledek
+
+Opraveno ve ctyrech Premium Photo rendererech a sdilenem `cms.css`. Doplnila se kontraktni regrese, aktualizovaly se golden baselines a `ARCHITECTURE.md`. Overeni: 64/64 zakladnich testu a 27/27 golden kontrol, PHP lint, HTTP/DOM kontrola a Chrome/CDP screenshoty bez horizontalniho overflow.
+
+---
+
+# Archiv: Import demo clanku Nase prace z dodanych dat
 
 Datum: 2026-07-22
 Zadani: Nacist podklady z `Data pro clanky/RB_Videos_Photos_NASE_PRACE`, vytvorit z nich demo clanky Nase prace, naparovat obrazky podle obsahu a data a importovat je pres Media Library vcetne thumbnailu.

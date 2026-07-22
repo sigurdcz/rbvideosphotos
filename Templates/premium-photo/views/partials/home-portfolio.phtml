@@ -1,7 +1,7 @@
 <?php /** @var list<array> $tiles */ ?>
 <div class="tiles tiles-4 tiles-photos premium-portfolio-grid"><?php foreach ($tiles as $index => $tile): ?>
   <a class="tile<?= $index >= 4 ? ' tile-w2' : '' ?>" href="<?= $this->e($tile['href']) ?>" style="padding:0">
-    <div class="ph premium-media" style="min-height:220px;<?= $tile['thumbUrl'] !== '' ? "background-image:url('" . $this->e($tile['thumbUrl']) . "')" : '' ?>">
+    <div class="ph premium-media premium-media--film" style="--premium-media-height:220px">
       <?php if ($tile['thumbUrl'] !== ''): ?><img src="<?= $this->e($tile['thumbUrl']) ?>" alt="<?= $this->e($tile['title']) ?>" loading="lazy"><?php endif; ?>
       <span class="ph-cap"><b><?= $tile['hasVideo'] ? 'film' : 'foto' ?></b> · <?= $this->e($tile['title']) ?></span>
     </div>

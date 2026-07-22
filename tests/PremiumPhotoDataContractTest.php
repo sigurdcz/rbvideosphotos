@@ -252,6 +252,21 @@ function register_premium_photo_data_contract_tests(callable $test, callable $as
         $reviewsView = (string)file_get_contents($themeDir . '/views/archetypes/reviews.phtml');
         $assert(str_contains($reviewsView, 'array_slice($items, 0, 6)'), 'Standalone reviews must keep the designer six-card composition.');
 
+        foreach ([
+            'partials/home-portfolio.phtml',
+            'partials/home-blog-card.phtml',
+            'archetypes/portfolio-listing.phtml',
+            'archetypes/blog-listing.phtml',
+        ] as $mediaView) {
+            $markup = (string)file_get_contents($themeDir . '/views/' . $mediaView);
+            $assert(str_contains($markup, 'premium-media--film'), 'Film media contract is missing in ' . $mediaView);
+            $assert(!str_contains($markup, 'background-image:url'), 'Article thumbnail is duplicated as CSS background in ' . $mediaView);
+        }
+        $cmsCss = (string)file_get_contents($themeDir . '/assets/cms.css');
+        $assert(str_contains($cmsCss, '.premium-media--film > img'), 'Film thumbnail image rule is missing.');
+        $assert(str_contains($cmsCss, 'height: calc(100% - 40px)'), 'Film thumbnail does not reserve equal top and bottom rails.');
+        $assert(str_contains($cmsCss, 'background: #07080a'), 'Film thumbnail rails do not use the dark film canvas.');
+
         $service = ViewFactory::forTheme('premium-photo', [], 'views')->render('partials/home-service-card', [
             'card' => [
                 'num' => '01',

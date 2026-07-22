@@ -6,7 +6,7 @@
 </div></div></section>
 <section class="premium-list-section"><div class="wrap"><div class="tiles tiles-4 premium-list-grid"><?php foreach ($entries as $index => $entry): ?>
   <a class="tile<?= $index === 0 || $index % 7 === 0 ? ' tile-w2' : '' ?>" href="/<?= $this->e($entry['slug']) ?>" style="padding:0">
-    <div class="ph premium-media" style="min-height:250px;<?= $entry['thumb'] !== '' ? "background-image:url('" . $this->e($entry['thumb']) . "')" : '' ?>">
+    <div class="ph premium-media premium-media--film" style="--premium-media-height:250px">
       <?php if ($entry['thumb'] !== ''): ?><img src="<?= $this->e($entry['thumb']) ?>" alt="<?= $this->e($entry['title']) ?>" loading="lazy"><?php endif; ?>
       <span class="ph-cap"><b><?= $this->e($entry['type_label']) ?></b> · <?= $this->e($entry['title']) ?></span>
     </div>

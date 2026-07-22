@@ -279,6 +279,33 @@ body.theme-premium-photo[data-cms-page-key="cenik"] .cenik-other p { color:var(-
 .premium-service-card .premium-media { position: relative; min-height: 150px; border-radius: 0; background-size: cover; background-position: center; overflow: hidden; }
 .premium-service-card.tile-w2 .premium-media { min-height: 220px; }
 .premium-media > img { width: 100%; height: 100%; object-fit: cover; opacity: .82; transition: transform .5s ease; }
+.premium-media--film {
+  display: block;
+  position: relative;
+  height: var(--premium-media-height, 220px);
+  min-height: var(--premium-media-height, 220px) !important;
+  background: #07080a;
+}
+.premium-media--film > img {
+  position: absolute;
+  top: 20px;
+  left: 0;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: calc(100% - 40px);
+  min-height: 0 !important;
+  object-fit: cover;
+  opacity: 1;
+}
+.premium-media--film .ph-cap {
+  position: absolute;
+  right: 18px;
+  bottom: 28px;
+  left: auto;
+  z-index: 3;
+  max-width: min(52%, 330px);
+}
 .premium-service-card:hover .premium-media > img, .premium-blog-card:hover .premium-media > img { transform: scale(1.04); }
 .premium-card-copy { display: grid; gap: 10px; padding: 22px; }
 .premium-card-copy p { margin: 0; color: var(--ink-soft); }
@@ -290,6 +317,7 @@ body.theme-premium-photo[data-cms-page-key="cenik"] .cenik-other p { color:var(-
 .premium-portfolio-grid { margin-top: 38px; }
 .premium-portfolio-grid .tile { min-height: 230px; }
 .premium-portfolio-grid .premium-media { position: absolute; inset: 0; min-height: 100% !important; border-radius: 0; background-size: cover; background-position: center; }
+.premium-portfolio-grid .premium-media--film { height: 100%; background: #07080a; }
 .premium-portfolio-grid .premium-media::after { content: ""; position: absolute; inset: 0; background: linear-gradient(transparent 48%, rgba(7,8,10,.82)); }
 .premium-portfolio-grid .ph-cap { z-index: 2; }
 .premium-portfolio-section + .timeline { margin-top: 0; }
@@ -615,6 +643,7 @@ body.theme-premium-photo[data-cms-page-key="cenik"] .cenik-cta { color:var(--por
 .premium-list-section { padding: 20px 0 88px; }
 .premium-list-grid .tile { min-height: 250px; }
 .premium-list-grid .premium-media { position: absolute; inset: 0; min-height: 100% !important; overflow: hidden; background-size: cover; background-position: center; }
+.premium-list-grid .premium-media--film { height: 100%; background: #07080a; }
 .premium-list-grid .premium-media::after { content: ""; position: absolute; inset: 0; background: linear-gradient(transparent 50%, rgba(7,8,10,.82)); }
 .premium-list-grid .ph-cap { z-index: 2; }
 .premium-blog-list .tile { color: var(--ink); text-decoration: none; }
