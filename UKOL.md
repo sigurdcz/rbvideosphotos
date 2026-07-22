@@ -29,6 +29,32 @@ Hotovo kdyz: Nad nadpisem neni zlata vypln, bod pri nulovem progressu neni videt
 Hotovo. Seda osa zustava pres sekci, zlata vypln zacina az pod nadpisem na skutecne hrane seznamu a bod je pri nulovem progressu skryty na desktopu i mobilu.
 
 ---
+# UKOL: Import demo clanku Nase prace z dodanych dat
+
+Datum: 2026-07-22
+Zadani: Nacist podklady z `Data pro clanky/RB_Videos_Photos_NASE_PRACE`, vytvorit z nich demo clanky Nase prace, naparovat obrazky podle obsahu a data a importovat je pres Media Library vcetne thumbnailu.
+
+## Kroky
+
+- [x] Inventarizovat zdrojove texty, data, obrazky a jejich vazby.
+- [x] Zmapovat existujici blogovy demo seeder, Media Library a thumbnail pipeline.
+- [x] Implementovat idempotentni demo import clanku Nase prace a medii.
+- [x] Spustit import na demo datech a overit clanky, media zaznamy a derivaty.
+- [x] Doplnit regresni testy, dokumentaci a wiki reflexi.
+
+## Poznamky
+
+- Primarni cesta musi pouzit skutecnou Media Library; zadne prime skryte kopirovani obrazku bez DB media zaznamu a generovani thumbnailu.
+- Parovani ma vychazet z obsahu, nazvu souboru a datumu podkladu; nejasne nebo chybejici vazby se musi reportovat, ne nahrazovat tichym fallbackem.
+- Hotovo znamena: vsechny validni podklady maji demo clanek Nase prace, spravne serazena media, prvni obrazek jako hero a fyzicky existujici thumbnail derivaty.
+
+## Vysledek
+
+Import vytvari 12 publikovanych zaznamu Nase prace, 24 medii a 24 thumbnailu. Stare genericke demo zaznamy Nase prace jsou pri seedu cilene odstraneny. Rozpor data u Martiny a Jaroslava je explicitne uveden ve vystupu seederu; vazba fotografii je podle unikatnich jmen paru.
+
+Overeni: `php database/seeds/demo_content.php`; 12 DB zaznamu, 24 medii, 24 fyzickych thumbnailu; HTTP 200 pro `/nase-prace` i detail a bez uniku instrukcni casti. Zakladni sada ma 64/64 PASS. Golden-master cast hlasi 25 starsich render driftu napric nesouvisejicimi routami a nebyla hromadne prepsana.
+
+---
 # UKOL: Dokoncit vizual kontaktni sekce a FAQ CTA
 
 Datum: 2026-07-22

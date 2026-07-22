@@ -20,3 +20,7 @@ echo 'Demo content seed dokončen: '
     . (int)$result['reviews'] . ' recenzí'
     . (!empty($result['published']) ? ' a web byl znovu publikován' : '')
     . ".\n";
+
+foreach (($result['portfolio_warnings'] ?? []) as $warning) {
+    fwrite(STDERR, "UPOZORNĚNÍ Naše práce: {$warning}\n");
+}
