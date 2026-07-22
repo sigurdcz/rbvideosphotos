@@ -681,3 +681,91 @@ body.theme-premium-photo[data-cms-page-key="cenik"] .cenik-other p { width:100%;
   body.theme-premium-photo[data-cms-page-key="cenik"] .page-hero .container { align-items:center; text-align:center !important; }
   body.theme-premium-photo[data-cms-page-key="cenik"] .page-hero .hero-sub { text-align:center !important; }
 }
+
+/* One internal-page hero contract. Homepage is intentionally excluded. */
+body.theme-premium-photo:not([data-cms-page-key="homepage"]) {
+  --premium-inner-hero-height: clamp(320px, 39vh, 440px);
+}
+body.theme-premium-photo:not([data-cms-page-key="homepage"]) .premium-inner-hero {
+  box-sizing:border-box;
+  width:100%;
+  height:var(--premium-inner-hero-height) !important;
+  min-height:var(--premium-inner-hero-height) !important;
+  max-height:none;
+  padding:0 !important;
+  overflow:hidden;
+  color:var(--porcelain);
+  background-color:var(--night);
+}
+body.theme-premium-photo:not([data-cms-page-key="homepage"]) .video-band.premium-inner-hero { display:block; }
+body.theme-premium-photo:not([data-cms-page-key="homepage"]) .video-band.premium-inner-hero > .wrap {
+  position:relative;
+  z-index:2;
+  height:100%;
+}
+body.theme-premium-photo:not([data-cms-page-key="homepage"]) .video-band.premium-inner-hero .band-cap {
+  position:absolute;
+  top:0;
+  right:0;
+  left:0;
+  min-height:28px;
+  padding:0;
+}
+body.theme-premium-photo:not([data-cms-page-key="homepage"]) .premium-inner-hero .page-head--hero {
+  box-sizing:border-box;
+  height:100%;
+  align-content:center;
+  gap:14px;
+  padding:36px 0 24px !important;
+  text-align:left;
+}
+body.theme-premium-photo:not([data-cms-page-key="homepage"]) .premium-inner-hero > .container {
+  position:relative;
+  z-index:2;
+  box-sizing:border-box;
+  display:grid;
+  align-content:center;
+  justify-items:start;
+  gap:14px;
+  width:min(calc(100% - 48px),1120px);
+  height:100%;
+  margin:0 auto;
+  padding:30px 0 22px;
+  text-align:left !important;
+}
+body.theme-premium-photo:not([data-cms-page-key="homepage"]) .premium-inner-hero h1 {
+  width:auto;
+  max-width:930px;
+  margin:0 !important;
+  color:var(--porcelain);
+  font-family:var(--font-display);
+  font-size:clamp(3rem,5.4vw,5.6rem);
+  line-height:.94;
+  text-align:left !important;
+}
+body.theme-premium-photo:not([data-cms-page-key="homepage"]) .premium-inner-hero h1::after { content:none !important; display:none !important; }
+body.theme-premium-photo:not([data-cms-page-key="homepage"]) .premium-inner-hero .lead,
+body.theme-premium-photo:not([data-cms-page-key="homepage"]) .premium-inner-hero .hero-sub,
+body.theme-premium-photo:not([data-cms-page-key="homepage"]) .premium-inner-hero > .container > p {
+  max-width:720px;
+  margin:0;
+  color:rgba(246,244,239,.78);
+  font-family:var(--font-sans);
+  font-size:.95rem;
+  line-height:1.65;
+  text-align:left !important;
+}
+body.theme-premium-photo:not([data-cms-page-key="homepage"]) .svc-hero .hero-tag { margin:0; }
+body.theme-premium-photo:not([data-cms-page-key="homepage"]) .svc-hero .svc-actions { justify-content:flex-start; margin-top:4px; }
+
+@media (max-width:620px) {
+  .premium-brand-logo{gap:8px}
+  .premium-brand-logo--header img{width:42px;height:42px}
+  .premium-brand-logo--header .premium-brand-logo__text{font-size:.82rem}
+  body.theme-premium-photo:not([data-cms-page-key="homepage"]) { --premium-inner-hero-height:360px; }
+  body.theme-premium-photo:not([data-cms-page-key="homepage"]) .premium-inner-hero { height:auto !important; min-height:var(--premium-inner-hero-height) !important; }
+  body.theme-premium-photo:not([data-cms-page-key="homepage"]) .premium-inner-hero .page-head--hero,
+  body.theme-premium-photo:not([data-cms-page-key="homepage"]) .premium-inner-hero > .container { min-height:var(--premium-inner-hero-height); padding:48px 0 30px !important; }
+  body.theme-premium-photo:not([data-cms-page-key="homepage"]) .premium-inner-hero h1 { font-size:clamp(2.45rem,13vw,3.8rem); }
+  body.theme-premium-photo:not([data-cms-page-key="homepage"]) .premium-inner-hero > .container { width:min(calc(100% - 32px),1120px); }
+}

@@ -191,6 +191,24 @@ if (serviceHero) {
   if (serviceMedia) serviceHero.prepend(serviceMedia);
 }
 
+// All internal routes share one hero geometry. Generic CMS page heroes do not
+// carry an eyebrow in their stored HTML, so derive it from the visible title.
+const innerPageKey = document.body.dataset.cmsPageKey || "";
+if (innerPageKey !== "homepage") {
+  const innerHero = document.querySelector("main > .video-band:has(.page-head--hero), main > .svc-hero, main > .page-hero");
+  innerHero?.classList.add("premium-inner-hero");
+  if (innerHero?.classList.contains("page-hero")) {
+    const innerHeroCopy = innerHero.querySelector(":scope > .container");
+    const innerHeroTitle = innerHeroCopy?.querySelector(":scope > h1");
+    if (innerHeroCopy && innerHeroTitle && !innerHeroCopy.querySelector(":scope > .eyebrow")) {
+      const eyebrow = document.createElement("span");
+      eyebrow.className = "eyebrow";
+      eyebrow.textContent = innerHeroTitle.textContent.trim();
+      innerHeroCopy.prepend(eyebrow);
+    }
+  }
+}
+
 // ---------- mobilní menu ----------
 const toggle = document.querySelector(".nav-toggle");
 if (toggle) {

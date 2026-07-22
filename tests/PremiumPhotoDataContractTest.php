@@ -79,8 +79,23 @@ function register_premium_photo_data_contract_tests(callable $test, callable $as
         }
         $assert(str_contains($layout, '/assets/demo/logos/rb-logo-black.png'), 'Light header does not use the black logo variant.');
         $assert(str_contains($footer, '/assets/demo/logos/rb-logo-beige.png'), 'Dark footer does not use the beige logo variant.');
-        $assert(str_contains($layout, 'alt="{site_name}"') && str_contains($footer, "alt=\"<?= \$this->e(\$__b['name']) ?>\""), 'Logo images must preserve an accessible brand name.');
+        $assert(str_contains($layout, 'aria-label="{site_name}"') && str_contains($footer, "aria-label=\"<?= \$this->e(\$__b['name']) ?>\""), 'Logo links must preserve an accessible brand name.');
+        $assert(str_contains($layout, '<span class="premium-brand-logo__text">{site_name}.</span>') && str_contains($footer, 'premium-brand-logo__text'), 'Header or footer is missing the visible brand text next to its logo.');
+        $assert(substr_count($layout, 'alt=""') >= 1 && substr_count($footer, 'alt=""') >= 1, 'Decorative logo marks must not duplicate the accessible brand name.');
         $assert(str_contains($css, '.premium-brand-logo--header img') && str_contains($css, '.premium-brand-logo--footer img'), 'Logo dimensions are not owned by Premium Photo CSS.');
+    });
+
+    $test('premium photo internal routes share one shortened hero contract', function () use ($assert, $themeDir): void {
+        $css = (string)file_get_contents($themeDir . '/assets/cms.css');
+        $js = (string)file_get_contents($themeDir . '/assets/theme.js');
+
+        $assert(str_contains($css, '--premium-inner-hero-height: clamp(320px, 39vh, 440px)'), 'Desktop internal hero is not two thirds of the Services reference height.');
+        $assert(str_contains($css, 'not([data-cms-page-key="homepage"]) .premium-inner-hero'), 'Internal hero contract is not explicitly isolated from homepage.');
+        $assert(str_contains($css, 'width:min(calc(100% - 48px),1120px)') && str_contains($css, 'justify-items:start'), 'Generic and service-detail heroes do not share the Services content axis.');
+        $assert(str_contains($css, '.premium-inner-hero .page-head--hero') && str_contains($css, '.premium-inner-hero h1'), 'Listing/detail hero typography is not owned by the shared contract.');
+        $assert(str_contains($css, '--premium-inner-hero-height:360px'), 'Mobile internal hero height contract is missing.');
+        $assert(str_contains($js, 'innerPageKey !== "homepage"') && str_contains($js, 'classList.add("premium-inner-hero")'), 'Runtime does not classify non-homepage hero variants consistently.');
+        $assert(str_contains($js, 'eyebrow.textContent = innerHeroTitle.textContent.trim()'), 'Generic Ceník and legal heroes do not derive their missing section label from the real H1.');
     });
 
     $test('public contact contract excludes event dates on frontend and backend', function () use ($assert, $themeDir): void {

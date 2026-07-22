@@ -1236,3 +1236,34 @@ Zadani: Presunout PNG soubory z root slozky `Loga` do vhodneho demo/public umist
 Hotovo. Tri dodana PNG jsou v `public/assets/demo/logos/`; Premium Photo pouziva cernou variantu na svetlem pozadi a bezovou na tmavem. Oranzova je zachovana jako demo akcent. Dokumentace projektu mimo `UKOL.md` nepotrebovala zmenu; trvaly asset kontrakt je zapsan do pracovni wiki.
 
 ---
+# UKOL: Sjednotit vnitrni hero sekce a brand text
+
+Datum: 2026-07-22
+Zadani: Sjednotit vsechny non-homepage hero sekce podle geometrie stranky Sluzby, zkratit jejich vysku o tretinu a pridat text `RB Videos & Photos` vedle loga v hlavicce i desktop paticce.
+
+## Kroky
+
+- [x] Zmapovat hero DOM/CSS vsech pozadovanych listing/detail rout a zachytit baseline.
+- [x] Zavest jeden sdileny non-homepage hero kontrakt s vyskou 2/3 puvodni Sluzby reference.
+- [x] Doplnenit brand text vedle horniho a dolniho loga vcetne mobilniho chovani.
+- [x] Pridat regresni kontrakt a aktualizovat live/publish goldeny.
+- [x] Overit reprezentativni routy v Chrome na desktopu i mobilu a zapsat skore.
+- [x] Provest wiki reflexi a commitnout zmenu.
+
+## Poznamky
+
+- Homepage hero je explicitne mimo scope.
+- Scope rout: Sluzby, detail sluzby, Nase prace, detail Nase prace, Blog, blog detail, Cenik, FAQ, Kontakt a Podminky uziti.
+- Reference: desktop Sluzby; zachovat leve zarovnani eyebrow/title/description a crop/overlay, cilova vyska je priblizne 67 % soucasneho hero.
+- Vizuální rubrika 100 bodu: hero geometrie 35, typografie/pozice 25, media/overlay 15, brand loga 15, responsive/runtime 10.
+- Baseline 1440x900: Sluzby hero cca 522 px, detail sluzby 585 px; Cenik/Podminky pouzivaly odlisny generic container. Baseline score 56/100.
+- Systemovy kontrakt pridava `.premium-inner-hero`, desktop vysku `clamp(320px,39vh,440px)` (351 px pri 900px viewportu), jednotny 1120px levy container, typografii a popis. Generic page hero dostane eyebrow z viditelneho H1; homepage se vylucuje.
+- Brand text je soucast stejneho odkazu jako logo, obrazek je dekorativni (`alt=""`) a pristupny nazev zustava v `aria-label`.
+- Iterace 1: 94/100. Desktop Sluzby, detail sluzby, blog detail, Cenik a Podminky maji 351px hero a jednotnou levou osu; mobilni Blog ma 360px minimum a nulovy horizontalni overflow. Zbyvajici body jsou jen data-driven absence popisu u portfolio detailu, nikoli geometricka chyba.
+- Finalni matice pridala Nase prace listing/detail, FAQ a Kontakt. Finalni score 98/100; 2 body jsou transparentne ponechane za chybejici data-driven popis portfolio detailu. Overeni: 62/62 PHP testu, 27/27 golden kontrol, desktop/mobile bez horizontalniho overflow.
+
+## Vysledek
+
+Hotovo. Vsechny pozadovane vnitrni routy sdileji jednu zkracenou hero geometrii a levou obsahovou osu; homepage zustala beze zmeny. Horni i desktop dolni logo ma viditelny text `RB Videos & Photos.`. Relevantni projektove Markdown soubory mimo `UKOL.md` nebylo nutne menit; trvaly kontrakt je zachycen v pracovni wiki.
+
+---
