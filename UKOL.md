@@ -1,3 +1,31 @@
+# UKOL: Hero media zachovat v galerii a zvysit kvalitu
+
+Datum: 2026-07-22
+Zadani: Ve vsech typech clanku ponechat kazdou fotografii a video vcetne hero media v galerii pod hero a pro hero fotografie pouzit kvalitnejsi full/original variantu.
+
+## Kroky
+
+- [x] Zmapovat odkud blog, Nase prace a sluzby berou hero a galerijni media a kde se voli jejich varianta.
+- [x] Predat blogovemu hero full/original URL misto medium varianty.
+- [x] Zajistit, ze hero foto/video je vzdy prvni polozkou sdilene galerie a zadne dalsi medium se neztrati.
+- [x] Doplnit regresni kontrakty pro plny seznam medii a kvalitu hero zdroje.
+- [x] Overit vsechny tri typy detailu, hashovane assety a kompletni testy.
+- [x] Aktualizovat dokumentaci, wiki reflexi a uzavrit ukol.
+
+## Poznamky
+
+Hotovo znamena: media pouzita v hero zustanou viditelna jako prvni slide galerie dole, kazde dalsi unikatni foto/video bude nasledovat prave jednou a blog hero pouzije originalni/full soubor namisto zmensene `medium` varianty. Prazdne media se nebudou nahrazovat fallbackem.
+
+Mapovani potvrdilo: blog jako jediny posilal do hero `medium_path`; Nase prace uz pouziva `gallery[0].full` a sluzby maji originalni page/site hero URL. `BlogPostData` nyni pouziva `storage_path`, vlozi featured fotografii jako prvni galerijni zaznam a dalsi media deduplikuje podle full URL. Premium Photo blog a portfolio archetypy uz galerii neorezavaji pres `array_slice`; sdilene JS po prevzeti celeho seznamu stejnou hero URL deduplikuje, takze prvni slide zustane dostupny prave jednou.
+
+Runtime overeni: blog detail vraci hero original `/media/...jpg`, stejna URL je prvnim galerijnim odkazem a vedle ni zustava druha fotografie. Portfolio detail vraci full hero a stejnou URL v serverovem gallery seznamu. Sluzba vraci hero i body fotografii; pokud jde o stejnou URL, JS ji spravne zobrazi jako jeden unikatni slide. `BlogPostData` kontrola potvrdila `hero_is_original=true`, `hero_is_gallery_first=true`, 2 unikatni galerijni media. PHP lint i regrese prosly 65/65 testu a 27/27 golden kontrol.
+
+## Vysledek
+
+Dokonceno. Hero fotografie nebo video zustava prvni polozkou kompletni galerie u detailu blogu, Nase prace i sluzeb; shodne URL se zobrazi pouze jednou. Blogovy hero pouziva originalni ulozeny soubor, zatimco zmensene varianty zustavaji jen pro nahledy. Aktualizovan je datovy kontrakt, oba detailni archetypy, regresni testy, ARCHITECTURE a projektova wiki. README ani INSTRUCTIONS se nemenily, protoze instalacni postup ani repozitarova pravidla zustala beze zmeny.
+
+---
+
 # UKOL: Sitemap Nase prace a sdilena detailni galerie
 
 Datum: 2026-07-22

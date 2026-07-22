@@ -30,11 +30,14 @@ final class BlogPostData
     public static function forPost(array $post): array
     {
         $imageUrl = '';
+        $featuredMedia = null;
         if (!empty($post['featured_image_id'])) {
-            $media = (new MediaRepository())->findByIdWithThumb((int)$post['featured_image_id']);
-            if ($media) {
+            $featuredMedia = (new MediaRepository())->findByIdWithThumb((int)$post['featured_image_id']);
+            if ($featuredMedia) {
+                // Hero is a large-format surface: use the original/full file,
+                // never the <=900 px medium derivative used by thumbnails.
                 $imageUrl = MediaUrlResolver::publicMediaUrl(
-                    (string)($media['medium_path'] ?? $media['storage_path'] ?? '')
+                    (string)($featuredMedia['storage_path'] ?? '')
                 );
             }
         }
@@ -46,18 +49,36 @@ final class BlogPostData
         }
 
         $gallery = [];
-        foreach ($galleryItems as $idx => $g) {
+        $seenFullUrls = [];
+        if ($featuredMedia && $imageUrl !== '') {
+            $featuredAlt = (string)($featuredMedia['alt_text'] ?? $post['title'] ?? '');
+            $gallery[] = [
+                'thumb' => MediaUrlResolver::publicMediaUrl(
+                    (string)($featuredMedia['thumb_path'] ?? $featuredMedia['medium_path'] ?? $featuredMedia['storage_path'] ?? '')
+                ),
+                'full' => $imageUrl,
+                'alt' => $featuredAlt,
+                'label' => trim($featuredAlt) !== '' ? trim($featuredAlt) : 'Hlavní fotografie',
+            ];
+            $seenFullUrls[$imageUrl] = true;
+        }
+        foreach ($galleryItems as $g) {
+            $fullUrl = MediaUrlResolver::publicMediaUrl((string)($g['storage_path'] ?? ''));
+            if ($fullUrl === '' || isset($seenFullUrls[$fullUrl])) {
+                continue;
+            }
             $label = trim((string)($g['alt_text'] ?? '')) !== ''
                 ? trim((string)$g['alt_text'])
-                : ('Fotka ' . ($idx + 1));
+                : ('Fotka ' . (count($gallery) + 1));
             $gallery[] = [
                 'thumb' => MediaUrlResolver::publicMediaUrl(
                     (string)($g['thumb_path'] ?? $g['medium_path'] ?? $g['storage_path'] ?? '')
                 ),
-                'full' => MediaUrlResolver::publicMediaUrl((string)($g['storage_path'] ?? '')),
+                'full' => $fullUrl,
                 'alt' => (string)($g['alt_text'] ?? ''),
                 'label' => $label,
             ];
+            $seenFullUrls[$fullUrl] = true;
         }
 
         return [

@@ -213,10 +213,10 @@ function register_premium_photo_data_contract_tests(callable $test, callable $as
 
         $blogDetail = (string)file_get_contents($themeDir . '/views/archetypes/blog-detail.phtml');
         $assert(str_contains($blogDetail, '$heroImage') && str_contains($blogDetail, 'class="hero-bg"'), 'Blog detail does not render its primary media in the hero.');
-        $assert(str_contains($blogDetail, '$articleGallery') && !str_contains($blogDetail, 'premium-article-cover'), 'Blog primary media can still be repeated below the hero.');
+        $assert(str_contains($blogDetail, '$articleGallery = $gallery') && !str_contains($blogDetail, 'premium-article-cover'), 'Blog detail does not retain its hero media in the shared gallery.');
 
         $portfolioDetail = (string)file_get_contents($themeDir . '/views/archetypes/portfolio-detail.phtml');
-        $assert(str_contains($portfolioDetail, '$gallery[0][\'full\']') && str_contains($portfolioDetail, '$articleGallery = array_slice($gallery, 1)'), 'Portfolio detail does not consume the first gallery image as its non-repeated hero.');
+        $assert(str_contains($portfolioDetail, '$gallery[0][\'full\']') && str_contains($portfolioDetail, '$articleGallery = $gallery'), 'Portfolio detail does not retain its hero image in the shared gallery.');
         $assert(str_contains($css, 'font-weight:300'), 'Premium Photo navigation does not neutralize route-specific bold font rules.');
 
         foreach (['faq.phtml', 'blog-listing.phtml', 'blog-detail.phtml', 'portfolio-detail.phtml', 'sluzby.phtml'] as $view) {
@@ -230,6 +230,9 @@ function register_premium_photo_data_contract_tests(callable $test, callable $as
     $test('premium photo detail gallery shares smooth accessible controls across content types', function () use ($assert, $themeDir): void {
         $js = (string)file_get_contents($themeDir . '/assets/theme.js');
         $css = (string)file_get_contents($themeDir . '/assets/cms.css');
+        $blogDetail = (string)file_get_contents($themeDir . '/views/archetypes/blog-detail.phtml');
+        $portfolioDetail = (string)file_get_contents($themeDir . '/views/archetypes/portfolio-detail.phtml');
+        $blogData = (string)file_get_contents(dirname(__DIR__) . '/app/ViewModels/BlogPostData.php');
 
         foreach (['.bp-hero', '.pf-detail-hero', '.svc-hero'] as $detailHook) {
             $assert(str_contains($js, $detailHook), 'Shared detail gallery misses route hook ' . $detailHook);
@@ -241,6 +244,10 @@ function register_premium_photo_data_contract_tests(callable $test, callable $as
         $assert(str_contains($js, 'youtube.com/embed') && str_contains($js, 'player.vimeo.com/video'), 'Detail gallery video embedding is incomplete.');
         $assert(str_contains($css, '.detail-media-gallery__dot.is-active') && str_contains($css, 'width:28px'), 'Active gallery position is not visibly enlarged.');
         $assert(str_contains($css, 'cubic-bezier(.22,1,.36,1)') && str_contains($css, '@media (prefers-reduced-motion:reduce)'), 'Smooth gallery motion or reduced-motion handling is missing.');
+        $assert(!str_contains($blogDetail, 'array_slice($gallery, 1)') && !str_contains($portfolioDetail, 'array_slice($gallery, 1)'), 'Hero media is removed from the detail gallery list.');
+        $assert(str_contains($blogDetail, '$articleGallery = $gallery') && str_contains($portfolioDetail, '$articleGallery = $gallery'), 'Detail gallery does not retain the complete media list.');
+        $assert(str_contains($blogData, "(string)(\$featuredMedia['storage_path'] ?? '')"), 'Blog hero does not use the full/original featured image.');
+        $assert(str_contains($blogData, '$gallery[] = [') && str_contains($blogData, "'full' => \$imageUrl"), 'Featured blog image is not prepended to the gallery data.');
     });
 
     $test('premium photo owns database snippet markup through theme partials and archetypes', function () use ($assert, $themeDir): void {
