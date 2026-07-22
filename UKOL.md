@@ -1168,7 +1168,7 @@ Zadani: S nejvyssi prioritou odstranit globalni runtime kolizi, aby Premium Phot
 - [x] Overit aktualni produkcni CSS a geometrii.
 - [x] Vyloucit Premium Photo z globalniho 860px omezeni a pridat regresni kontrolu.
 - [x] Overit lokalni geometrii, testy a publish asset.
-- [-] Commitnout a pushnout.
+- [x] Commitnout a pushnout.
 
 ## Poznamky
 
@@ -1180,7 +1180,7 @@ Zadani: S nejvyssi prioritou odstranit globalni runtime kolizi, aby Premium Phot
 
 ## Vysledek
 
-Systemova implementace i overeni jsou hotove; zbyva commit a push projektu.
+Hotovo. Systemova oprava byla commitnuta jako `f478766` a uspesne pushnuta na `origin/master`.
 
 ## Vysledek
 
