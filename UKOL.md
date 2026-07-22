@@ -1156,6 +1156,32 @@ Zadani: Opravit textaci „Rodinne, portretni a firemni foceni“ tak, aby byla 
 
 Hotovo. Textace je geometricky presne uprostred na desktopu i mobilu. Implementace byla commitnuta jako `53b8bba` a uspesne pushnuta na `origin/master`.
 
+---
+
+# UKOL: Systemove zpevnit centrovani cenik-other
+
+Datum: 2026-07-22
+Zadani: S nejvyssi prioritou odstranit globalni runtime kolizi, aby Premium Photo centrovani nezaviselo na prebijeni `!important`; commitnout a pushnout.
+
+## Kroky
+
+- [x] Overit aktualni produkcni CSS a geometrii.
+- [x] Vyloucit Premium Photo z globalniho 860px omezeni a pridat regresni kontrolu.
+- [x] Overit lokalni geometrii, testy a publish asset.
+- [-] Commitnout a pushnout.
+
+## Poznamky
+
+- Produkce pred touto zmenou jiz vraci novy CSS override a pri 1600 px meri center 800 px, delta 0 px; dodany screenshot odpovida starsimu assetu/stavu.
+- Systemovy fix odstrani samotny zdroj kolize pro `body.theme-premium-photo`, misto aby theme dlouhodobe bojovalo s globalnim `!important`.
+- `frontend-runtime.css` omezuje 860px sirku uz jen na `body:not(.theme-premium-photo)`; regresni test tento scope vyzaduje.
+- Lokalni Chrome/CDP 1600x900 po systemove oprave: `cenik-other`, `h2` i `p` center 800 px, delta 0 px, bez horizontalniho overflow. Screenshot `storage/qa/premium-photo-cenik-other-systemic-final.png`.
+- Regrese: 60/60 PHP testu a 27/27 golden kontrol. Produkce pred hardeningem jiz vracela delta 0 px a nacitala novy theme override; wiki commit `564c184` zachycuje rozdil mezi starsim screenshotem a aktualnim assetem.
+
+## Vysledek
+
+Systemova implementace i overeni jsou hotove; zbyva commit a push projektu.
+
 ## Vysledek
 
 Hotovo. Doplnkova cenikova textace i featured badge jsou centrovane; Premium ma sedm vyvazenych bodu se souhrnem Standardniho a bocni karty jsou vyskové srovnatelne v live, publish i seed/migracni ceste.
