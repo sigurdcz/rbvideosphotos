@@ -1083,7 +1083,7 @@ Zadani: Na homepage skryt ceny balicku, prejmenovat CTA na „Vice o cenach“ a
 - [x] Zachytit baseline a potvrdit theme-owned renderovaci cestu.
 - [x] Pridat Premium Photo partialy pro cenikove karty a CTA a upravit jejich styling.
 - [x] Pridat regresni kontrakt a overit desktop i mobil screenshoty a testy.
-- [-] Provest wiki reflexi, commitnout a pushnout.
+- [x] Provest wiki reflexi, commitnout a pushnout.
 
 ## Poznamky
 
@@ -1095,6 +1095,7 @@ Zadani: Na homepage skryt ceny balicku, prejmenovat CTA na „Vice o cenach“ a
 - Zaverecny diff review odhalil nechtenou zmenu CTA z puvodniho pill tlacitka na hranatou variantu. Partial byl opraven tak, aby zachoval puvodni `btn btn-ghost` markup a menil vyhradne text.
 - Finalni Chrome/CDP: desktop 1440x900 i mobil 390x844 bez horizontalniho overflow, skore 100/100. Screenshoty `storage/qa/premium-photo-home-pricing-final-desktop-section.png` a `storage/qa/premium-photo-home-pricing-final-mobile-section.png`.
 - Regrese: 60/60 PHP testu a 27/27 golden kontrol; `/cenik` golden zustal bez vizualni zmeny. README, ARCHITECTURE a INSTRUCTIONS byly posouzeny bez potreby zmeny. Wiki byla aktualizovana a commitnuta jako `d749ecd`.
+- Implementace byla commitnuta jako `016e6fb` a uspesne pushnuta na `origin/master`.
 
 ## Vysledek
 
