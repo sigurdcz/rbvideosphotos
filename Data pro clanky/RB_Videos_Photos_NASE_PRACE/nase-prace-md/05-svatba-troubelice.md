@@ -1,11 +1,11 @@
 ---
 document_type: ai_web_page_source
-content_section: nase-prace
+content_section: blog
 page_type: wedding_case_study
 brand: RB Videos & Photos
 language: cs-CZ
 status: ready_for_ai
-target_path: /nase-prace/svatba-troubelice-marie-miroslav/
+target_path: /svatba-troubelice-marie-miroslav/
 slug: svatba-troubelice-marie-miroslav
 title: Svatba Marie a Miroslava v Troubelicích
 seo:
@@ -41,8 +41,8 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 ## Povinná pravidla
 
-- Stránka patří do sekce **Naše práce** a její adresa je `/nase-prace/svatba-troubelice-marie-miroslav/`.
-- Nepoužívej označení „blog“, „blogový článek“ ani „portfolio“.
+- Stránka patří do blogu a její adresa je `/svatba-troubelice-marie-miroslav/`.
+- Používej označení „blogový článek“; nepoužívej označení „portfolio“.
 - Piš přirozeně v první osobě množného čísla: „fotíme“, „natáčíme“, „pracujeme“.
 - Zachovej lidský, prémiový a konkrétní tón bez prázdných reklamních frází.
 - Neměň jména, datum, místa ani odkaz na video.
@@ -83,9 +83,9 @@ Marie a Miroslav prožili svůj svatební den 1. června 2024 v Troubelicích. O
 
 ## Troubelice jako součást Hané
 
-Troubelice jsou hanáckou obcí v Olomouckém kraji severně od Uničova. Součástí obce jsou také místní části Pískov, Lazce a Dědinka. [1][2]
+Troubelice jsou hanáckou obcí v Olomouckém kraji severně od Uničova. Součástí obce jsou také místní části Pískov, Lazce a Dědinka.
 
-Program rozvoje obce uvádí Dům podporovaného bydlení s 19 byty určenými seniorům. Stejný dokument popisuje nově postavený kulturní dům jako prostor pro veřejné i soukromé rodinné akce. K takovému místu je důležité přistupovat s respektem: nejde o turistickou atrakci, ale o prostředí spojené s místní komunitou a každodenním životem. [2]
+Program rozvoje obce uvádí Dům podporovaného bydlení s 19 byty určenými seniorům. Stejný dokument popisuje nově postavený kulturní dům jako prostor pro veřejné i soukromé rodinné akce. K takovému místu je důležité přistupovat s respektem: nejde o turistickou atrakci, ale o prostředí spojené s místní komunitou a každodenním životem.
 
 ## Když je svatba opravdu místní
 

@@ -1,11 +1,11 @@
 ---
 document_type: ai_web_page_source
-content_section: nase-prace
+content_section: blog
 page_type: wedding_case_study
 brand: RB Videos & Photos
 language: cs-CZ
 status: ready_for_ai
-target_path: /nase-prace/svatba-best-hospudka-ve-stodole-paja-marek/
+target_path: /svatba-best-hospudka-ve-stodole-paja-marek/
 slug: svatba-best-hospudka-ve-stodole-paja-marek
 title: Svatba Páji a Marka v Hospůdce ve stodole Bešť
 seo:
@@ -40,8 +40,8 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 ## Povinná pravidla
 
-- Stránka patří do sekce **Naše práce** a její adresa je `/nase-prace/svatba-best-hospudka-ve-stodole-paja-marek/`.
-- Nepoužívej označení „blog“, „blogový článek“ ani „portfolio“.
+- Stránka patří do blogu a její adresa je `/svatba-best-hospudka-ve-stodole-paja-marek/`.
+- Používej označení „blogový článek“; nepoužívej označení „portfolio“.
 - Piš přirozeně v první osobě množného čísla: „fotíme“, „natáčíme“, „pracujeme“.
 - Zachovej lidský, prémiový a konkrétní tón bez prázdných reklamních frází.
 - Neměň jména, datum, místa ani odkaz na video.
@@ -82,9 +82,9 @@ Pája a Marek Krylovi si pro 26. září 2025 vybrali Hospůdku ve stodole Beš�
 
 ## Zábeštní Lhota a jméno Bešť
 
-Oficiální web obce uvádí, že Zábeštní Lhota leží přibližně 12 kilometrů od Přerova a první zmínky o osadě pocházejí z roku 1397. Zajímavostí je vysvětlení názvu obce: na cestě od Penčic leží mlýn Bešť a obec se nachází „za Beštěm“. [1]
+Oficiální web obce uvádí, že Zábeštní Lhota leží přibližně 12 kilometrů od Přerova a první zmínky o osadě pocházejí z roku 1397. Zajímavostí je vysvětlení názvu obce: na cestě od Penčic leží mlýn Bešť a obec se nachází „za Beštěm“.
 
-Svatební portál Budeme svoji popisuje Hospůdku ve stodole jako prostor pro svatební hostiny, narozeniny a další slavnostní příležitosti. Aktuální provozní podmínky je vhodné ověřit přímo s provozovatelem. [2]
+Svatební portál Budeme svoji popisuje Hospůdku ve stodole jako prostor pro svatební hostiny, narozeniny a další slavnostní příležitosti. Aktuální provozní podmínky je vhodné ověřit přímo s provozovatelem.
 
 ## Jak zachytit rustikální svatbu přirozeně
 

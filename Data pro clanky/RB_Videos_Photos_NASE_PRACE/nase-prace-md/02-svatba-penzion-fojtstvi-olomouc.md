@@ -1,11 +1,11 @@
 ---
 document_type: ai_web_page_source
-content_section: nase-prace
+content_section: blog
 page_type: wedding_case_study
 brand: RB Videos & Photos
 language: cs-CZ
 status: ready_for_ai
-target_path: /nase-prace/svatba-penzion-fojtstvi-olomouc-nikola-jirka/
+target_path: /svatba-penzion-fojtstvi-olomouc-nikola-jirka/
 slug: svatba-penzion-fojtstvi-olomouc-nikola-jirka
 title: Svatba Nikoly a Jirky v Penzionu Fojtství
 seo:
@@ -41,8 +41,8 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 ## Povinná pravidla
 
-- Stránka patří do sekce **Naše práce** a její adresa je `/nase-prace/svatba-penzion-fojtstvi-olomouc-nikola-jirka/`.
-- Nepoužívej označení „blog“, „blogový článek“ ani „portfolio“.
+- Stránka patří do blogu a její adresa je `/svatba-penzion-fojtstvi-olomouc-nikola-jirka/`.
+- Používej označení „blogový článek“; nepoužívej označení „portfolio“.
 - Piš přirozeně v první osobě množného čísla: „fotíme“, „natáčíme“, „pracujeme“.
 - Zachovej lidský, prémiový a konkrétní tón bez prázdných reklamních frází.
 - Neměň jména, datum, místa ani odkaz na video.
@@ -83,7 +83,7 @@ Nikola a Jirka Kaňkovští měli obřad i svatební oslavu 20. května 2023 v P
 
 ## Historický areál na Svatém Kopečku
 
-Oficiální web Fojtství uvádí, že objekt byl postaven v roce 1744. Svatební areál na Svatém Kopečku zahrnuje restauraci, sály, zahradu a zastřešenou pavlač; obřad může podle aktuální nabídky proběhnout v zahradě nebo v sále. Součástí areálu je také ubytování. [1][2]
+Oficiální web Fojtství uvádí, že objekt byl postaven v roce 1744. Svatební areál na Svatém Kopečku zahrnuje restauraci, sály, zahradu a zastřešenou pavlač; obřad může podle aktuální nabídky proběhnout v zahradě nebo v sále. Součástí areálu je také ubytování.
 
 Starší architektura dává fotografiím texturu, kterou v moderním hotelu často nenajdeme. Dřevo, omítka, dvůr, zahrada a drobné historické detaily pomáhají vytvořit vizuálně bohatou galerii, aniž by snímky působily přeplněně. Ve videu lze přirozeně střídat celek areálu s detaily výzdoby, rukou a emocí.
 

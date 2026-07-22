@@ -668,6 +668,8 @@ body.theme-premium-photo[data-cms-page-key="cenik"] .cenik-cta { color:var(--por
 .premium-contact-cards { display: flex; flex-wrap: wrap; gap: 12px 28px; margin-top: 28px; color: rgba(246,244,239,.75); }
 .premium-contact-cards a, .premium-contact-cards span { color: inherit; }
 .premium-article { padding-bottom: 88px; }
+.bp-hero + .premium-article,
+.pf-detail-hero + .premium-article { padding-top: 48px; }
 .premium-article-cover img { width: 100%; max-height: 680px; object-fit: cover; }
 .premium-article-body { max-width: 850px; padding-block: 54px; font-size: 1.08rem; }
 .premium-article-body h2, .premium-article-body h3 { margin: 1.6em 0 .6em; }

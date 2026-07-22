@@ -58,8 +58,9 @@ class DemoContentSeeder
         $mediaCount = $this->seedMediaLibrary($siteId);
         $defaultHeroPosterUrl = $this->seedDefaultHeroPoster($siteId);
         $blogCount = $this->seedBlogPosts($siteId);
-        $nasePrace = (new NasePraceDemoContentImporter())->import($siteId);
-        $portfolioCount = $nasePrace['articles'];
+        $weddingBlog = (new WeddingBlogDemoContentImporter())->import($siteId);
+        $blogCount += $weddingBlog['articles'];
+        $portfolioCount = $this->seedPortfolioEntries($siteId);
         $this->resetHomepageAutofillBlocks();
         $this->seedHomepageElegantWhiteBlocks($siteId);
         $reviewCount = $this->seedReviewRows($siteId);
@@ -85,8 +86,8 @@ class DemoContentSeeder
         return [
             'blog_posts' => $blogCount,
             'portfolio_entries' => $portfolioCount,
-            'portfolio_media' => $nasePrace['media'],
-            'portfolio_warnings' => $nasePrace['warnings'],
+            'wedding_blog_media' => $weddingBlog['media'],
+            'wedding_blog_warnings' => $weddingBlog['warnings'],
             'reviews' => $reviewCount,
             'faq_items' => $faqCount,
             'media' => $mediaCount,

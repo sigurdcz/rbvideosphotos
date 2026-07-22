@@ -1,11 +1,11 @@
 ---
 document_type: ai_web_page_source
-content_section: nase-prace
+content_section: blog
 page_type: wedding_case_study
 brand: RB Videos & Photos
 language: cs-CZ
 status: ready_for_ai
-target_path: /nase-prace/svatba-sportovne-strelecky-areal-jivova-lucie-miroslav/
+target_path: /svatba-sportovne-strelecky-areal-jivova-lucie-miroslav/
 slug: svatba-sportovne-strelecky-areal-jivova-lucie-miroslav
 title: Svatba Lucie a Miroslava v areálu Jívová
 seo:
@@ -40,8 +40,8 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 ## Povinná pravidla
 
-- Stránka patří do sekce **Naše práce** a její adresa je `/nase-prace/svatba-sportovne-strelecky-areal-jivova-lucie-miroslav/`.
-- Nepoužívej označení „blog“, „blogový článek“ ani „portfolio“.
+- Stránka patří do blogu a její adresa je `/svatba-sportovne-strelecky-areal-jivova-lucie-miroslav/`.
+- Používej označení „blogový článek“; nepoužívej označení „portfolio“.
 - Piš přirozeně v první osobě množného čísla: „fotíme“, „natáčíme“, „pracujeme“.
 - Zachovej lidský, prémiový a konkrétní tón bez prázdných reklamních frází.
 - Neměň jména, datum, místa ani odkaz na video.
@@ -82,9 +82,9 @@ Lucie a Miroslav Provazovi uspořádali 7. června 2025 obřad i svatební oslav
 
 ## Svatební areál v krajině Nízkého Jeseníku
 
-Oficiální web areálu uvádí možnost svatby s obřadem, cateringem a ubytováním. Provozovatel uvádí kapacitu až 150 hostů a svatební tabule přibližně pro 120 osob. Aktuální nabídku je vždy nutné potvrdit přímo s provozovatelem. [1]
+Oficiální web areálu uvádí možnost svatby s obřadem, cateringem a ubytováním. Provozovatel uvádí kapacitu až 150 hostů a svatební tabule přibližně pro 120 osob. Aktuální nabídku je vždy nutné potvrdit přímo s provozovatelem.
 
-Jívová leží v Nízkém Jeseníku severovýchodně od Olomouce, přibližně v nadmořské výšce 560 metrů. Vyšší a otevřenější poloha nabízí delší výhledy do krajiny; při plánování venkovního programu je rozumné počítat s větrem a chladnějším večerem. [2]
+Jívová leží v Nízkém Jeseníku severovýchodně od Olomouce, přibližně v nadmořské výšce 560 metrů. Vyšší a otevřenější poloha nabízí delší výhledy do krajiny; při plánování venkovního programu je rozumné počítat s větrem a chladnějším večerem.
 
 ## Jak pracujeme s otevřeným areálem
 

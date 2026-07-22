@@ -1,11 +1,11 @@
 ---
 document_type: ai_web_page_source
-content_section: nase-prace
+content_section: blog
 page_type: wedding_case_study
 brand: RB Videos & Photos
 language: cs-CZ
 status: ready_for_ai
-target_path: /nase-prace/svatba-u-robinsona-martina-jaroslav/
+target_path: /svatba-u-robinsona-martina-jaroslav/
 slug: svatba-u-robinsona-martina-jaroslav
 title: Svatba Martiny a Jaroslava U Robinsona
 seo:
@@ -40,8 +40,8 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 ## Povinná pravidla
 
-- Stránka patří do sekce **Naše práce** a její adresa je `/nase-prace/svatba-u-robinsona-martina-jaroslav/`.
-- Nepoužívej označení „blog“, „blogový článek“ ani „portfolio“.
+- Stránka patří do blogu a její adresa je `/svatba-u-robinsona-martina-jaroslav/`.
+- Používej označení „blogový článek“; nepoužívej označení „portfolio“.
 - Piš přirozeně v první osobě množného čísla: „fotíme“, „natáčíme“, „pracujeme“.
 - Zachovej lidský, prémiový a konkrétní tón bez prázdných reklamních frází.
 - Neměň jména, datum, místa ani odkaz na video.
@@ -84,7 +84,7 @@ Martina a Jaroslav Žáčkovi měli obřad i svatební oslavu 2. září 2025 U 
 
 Na stejném místě nevznikne stejná svatba. Výzdoba, roční období, hosté, čas obřadu a osobnost páru mění způsob, jakým prostor působí. Proto nepoužíváme pevný seznam „povinných“ fotografií z lokace. Nejprve sledujeme světlo a program, potom vybíráme místa, která odpovídají konkrétnímu dni.
 
-Lokální badatelská práce spojuje dům č. 31 v Hradečné se sladovnou z roku 1868 a pozdějším hostincem. Po požáru v roce 1891 nebyla sladovna obnovena; František Kuba opravil hostinec a podle místního pramene získal kvůli bílému plnovousu přezdívku Robinson. Od ní se odvozuje název U Robinsona. [1]
+Lokální badatelská práce spojuje dům č. 31 v Hradečné se sladovnou z roku 1868 a pozdějším hostincem. Po požáru v roce 1891 nebyla sladovna obnovena; František Kuba opravil hostinec a podle místního pramene získal kvůli bílému plnovousu přezdívku Robinson. Od ní se odvozuje název U Robinsona.
 
 ## Přirozený dokument místo opakované šablony
 

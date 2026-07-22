@@ -6,11 +6,12 @@ namespace App\Services;
 
 use App\Core\Database;
 use App\Repositories\MediaRepository;
+use App\Repositories\BlogRepository;
 use App\Repositories\PortfolioRepository;
 use PDO;
 use RuntimeException;
 
-final class NasePraceDemoContentImporter
+final class WeddingBlogDemoContentImporter
 {
     private const CONTENT_MARKER = '# Schválený redakční text';
 
@@ -37,6 +38,7 @@ final class NasePraceDemoContentImporter
     private PDO $db;
     private MediaIngestionService $ingestion;
     private MediaRepository $media;
+    private BlogRepository $blog;
     private PortfolioRepository $portfolio;
 
     public function __construct()
@@ -44,6 +46,7 @@ final class NasePraceDemoContentImporter
         $this->db = Database::getInstance();
         $this->ingestion = new MediaIngestionService();
         $this->media = new MediaRepository();
+        $this->blog = new BlogRepository();
         $this->portfolio = new PortfolioRepository();
     }
 
@@ -55,7 +58,7 @@ final class NasePraceDemoContentImporter
             throw new RuntimeException('Chybí zdroj demo obsahu Naše práce: ' . $root);
         }
 
-        $this->removeLegacyDemoEntries($siteId);
+        $this->removeIncorrectPortfolioEntries($siteId);
 
         $records = [];
         $warnings = [];
@@ -72,8 +75,7 @@ final class NasePraceDemoContentImporter
 
         usort($records, static fn(array $a, array $b): int => strcmp($b['date'], $a['date']));
         $mediaCount = 0;
-        foreach ($records as $index => $record) {
-            $portfolioId = $this->upsertEntry($siteId, $record, $index + 1);
+        foreach ($records as $record) {
             $mediaIds = [];
             $images = glob($record['image_directory'] . '/*.{jpg,jpeg,png,webp}', GLOB_BRACE) ?: [];
             sort($images, SORT_NATURAL | SORT_FLAG_CASE);
@@ -84,21 +86,16 @@ final class NasePraceDemoContentImporter
                 $mediaIds[] = $this->ingestImage($siteId, $record, $imagePath, $imageIndex + 1);
                 $mediaCount++;
             }
-            $this->portfolio->setMedia($portfolioId, $mediaIds);
+            $blogPostId = $this->upsertEntry($siteId, $record, $mediaIds[0]);
+            $this->blog->setGallery($blogPostId, array_slice($mediaIds, 1));
         }
 
         return ['articles' => count($records), 'media' => $mediaCount, 'warnings' => $warnings];
     }
 
-    private function removeLegacyDemoEntries(int $siteId): void
+    private function removeIncorrectPortfolioEntries(int $siteId): void
     {
-        $legacySlugs = [
-            'svatebni-foto-video-olomouc',
-            'svatebni-fotograf-brno',
-            'rodinne-portretni-foceni',
-            'reklamni-foto-video-olomouc',
-            'portretni-foceni-olomouc',
-        ];
+        $legacySlugs = $this->manifestSlugs();
         $stmt = $this->db->prepare('SELECT id FROM portfolio_entries WHERE site_id = ? AND slug = ? LIMIT 1');
         foreach ($legacySlugs as $slug) {
             $stmt->execute([$siteId, $slug]);
@@ -136,7 +133,7 @@ final class NasePraceDemoContentImporter
             'couple' => $this->yamlNestedScalar($front, 'event', 'couple'),
             'date' => trim($this->yamlNestedScalar($front, 'event', 'date_iso'), "'\"") ,
             'video_url' => $this->yamlNestedScalar($front, 'event', 'video_url'),
-            'description' => $this->markdownToHtml($markdown),
+            'description' => $this->markdownToHtml((string)preg_replace('/\s*\[\d+\](?:\[\d+\])*/u', '', $markdown)),
         ];
     }
 
@@ -167,7 +164,7 @@ final class NasePraceDemoContentImporter
     /** @param array<string,mixed> $record */
     private function validateRecord(array $record): void
     {
-        $expectedPath = '/nase-prace/' . $record['slug'] . '/';
+        $expectedPath = '/' . $record['slug'] . '/';
         if ($record['target_path'] !== $expectedPath) {
             throw new RuntimeException('Nesouhlasí target_path u ' . $record['source']);
         }
@@ -180,37 +177,46 @@ final class NasePraceDemoContentImporter
     }
 
     /** @param array<string,mixed> $record */
-    private function upsertEntry(int $siteId, array $record, int $sortOrder): int
+    private function upsertEntry(int $siteId, array $record, int $featuredImageId): int
     {
-        $stmt = $this->db->prepare('SELECT id FROM portfolio_entries WHERE site_id = ? AND slug = ? LIMIT 1');
+        $stmt = $this->db->prepare('SELECT id FROM blog_posts WHERE site_id = ? AND slug = ? LIMIT 1');
         $stmt->execute([$siteId, $record['slug']]);
         $id = (int)($stmt->fetchColumn() ?: 0);
         $data = [
             'site_id' => $siteId,
             'title' => $record['title'],
             'slug' => $record['slug'],
-            'description' => $record['description'],
-            'video_url' => $record['video_url'] !== '' ? $record['video_url'] : null,
+            'excerpt' => $record['meta_description'],
+            'content' => $record['description'],
+            'featured_image_id' => $featuredImageId,
             'status' => 'published',
             'published_at' => $record['date'] . ' 12:00:00',
-            'sort_order' => $sortOrder,
             'meta_title' => $record['meta_title'],
             'meta_description' => $record['meta_description'],
         ];
         if ($id > 0) {
-            $this->portfolio->update($id, $data);
+            $this->blog->update($id, $data);
             return $id;
         }
-        return $this->portfolio->create($data);
+        return $this->blog->create($data);
     }
 
     /** @param array<string,mixed> $record */
     private function ingestImage(int $siteId, array $record, string $sourcePath, int $position): int
     {
-        $originalFilename = sprintf('nase-prace-%s-%02d.%s', $record['slug'], $position, strtolower(pathinfo($sourcePath, PATHINFO_EXTENSION)));
+        $extension = strtolower(pathinfo($sourcePath, PATHINFO_EXTENSION));
+        $originalFilename = sprintf('wedding-blog-%s-%02d.%s', $record['slug'], $position, $extension);
         $stmt = $this->db->prepare('SELECT id, storage_path FROM media WHERE site_id = ? AND original_filename = ? LIMIT 1');
         $stmt->execute([$siteId, $originalFilename]);
         $existing = $stmt->fetch();
+        if (!$existing) {
+            $legacyFilename = sprintf('nase-prace-%s-%02d.%s', $record['slug'], $position, $extension);
+            $stmt->execute([$siteId, $legacyFilename]);
+            $existing = $stmt->fetch();
+            if ($existing) {
+                $this->db->prepare('UPDATE media SET original_filename = ? WHERE id = ?')->execute([$originalFilename, (int)$existing['id']]);
+            }
+        }
         if ($existing) {
             $this->assertThumbExists((int)$existing['id'], (string)$existing['storage_path']);
             return (int)$existing['id'];
@@ -226,6 +232,21 @@ final class NasePraceDemoContentImporter
         }
         $this->assertThumbExists($mediaId, (string)($result['storage_path'] ?? ''));
         return $mediaId;
+    }
+
+    /** @return list<string> */
+    private function manifestSlugs(): array
+    {
+        $root = dirname(__DIR__, 2) . '/Data pro clanky/RB_Videos_Photos_NASE_PRACE/nase-prace-md';
+        $slugs = [];
+        foreach (self::MANIFEST as $item) {
+            $source = file_get_contents($root . '/' . $item['article']);
+            if ($source === false || !preg_match('/^slug:\s*(.+)$/mu', $source, $match)) {
+                throw new RuntimeException('Nelze zjistit slug pro odstraneni chybneho portfolio zaznamu: ' . $item['article']);
+            }
+            $slugs[] = trim($match[1], " \t'\"");
+        }
+        return $slugs;
     }
 
     private function assertThumbExists(int $mediaId, string $storagePath): void

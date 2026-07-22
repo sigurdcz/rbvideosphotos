@@ -1,11 +1,11 @@
 ---
 document_type: ai_web_page_source
-content_section: nase-prace
+content_section: blog
 page_type: wedding_case_study
 brand: RB Videos & Photos
 language: cs-CZ
 status: ready_for_ai
-target_path: /nase-prace/podzimni-svatba-u-robinsona-ester-tomas/
+target_path: /podzimni-svatba-u-robinsona-ester-tomas/
 slug: podzimni-svatba-u-robinsona-ester-tomas
 title: Podzimní svatba Ester a Tomáše U Robinsona
 seo:
@@ -40,8 +40,8 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 ## Povinná pravidla
 
-- Stránka patří do sekce **Naše práce** a její adresa je `/nase-prace/podzimni-svatba-u-robinsona-ester-tomas/`.
-- Nepoužívej označení „blog“, „blogový článek“ ani „portfolio“.
+- Stránka patří do blogu a její adresa je `/podzimni-svatba-u-robinsona-ester-tomas/`.
+- Používej označení „blogový článek“; nepoužívej označení „portfolio“.
 - Piš přirozeně v první osobě množného čísla: „fotíme“, „natáčíme“, „pracujeme“.
 - Zachovej lidský, prémiový a konkrétní tón bez prázdných reklamních frází.
 - Neměň jména, datum, místa ani odkaz na video.
@@ -82,7 +82,7 @@ Ester a Tomáš Krůpovi uspořádali obřad i svatební oslavu 14. října 2023
 
 ## Místo s vlastním příběhem
 
-Lokální badatelská práce spojuje dům č. 31 v Hradečné se sladovnou vybudovanou roku 1868 a pozdějším hostincem. Sladovna po požáru v roce 1891 zanikla a nebyla obnovena; František Kuba následně opravil hostinec. Podle stejného zdroje mu hosté kvůli bílému plnovousu říkali Robinson, z čehož vzniklo označení U Robinsona. Jde o místní historickou práci, nikoliv oficiální památkový registr. [1]
+Lokální badatelská práce spojuje dům č. 31 v Hradečné se sladovnou vybudovanou roku 1868 a pozdějším hostincem. Sladovna po požáru v roce 1891 zanikla a nebyla obnovena; František Kuba následně opravil hostinec. Podle stejného zdroje mu hosté kvůli bílému plnovousu říkali Robinson, z čehož vzniklo označení U Robinsona. Jde o místní historickou práci, nikoliv oficiální památkový registr.
 
 Právě místa, která nejsou anonymním konferenčním sálem, mají ve svatebním filmu přirozenou hodnotu. Dvůr, zahrada, zeleň nebo starší prvky stavby vytvářejí prostředí, které není nutné složitě dekorovat. Stačí jej vnímat a dobře využít.
 

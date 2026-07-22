@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use App\Services\NasePraceDemoContentImporter;
+use App\Services\WeddingBlogDemoContentImporter;
 
-function register_nase_prace_demo_content_tests(callable $test, callable $assert): void
+function register_wedding_blog_demo_content_tests(callable $test, callable $assert): void
 {
-    $test('Nase prace demo manifest maps 12 approved articles to 24 images', function () use ($assert): void {
+    $test('wedding blog demo manifest maps 12 approved articles to 24 images', function () use ($assert): void {
         $root = dirname(__DIR__) . '/Data pro clanky/RB_Videos_Photos_NASE_PRACE/nase-prace-md';
-        $manifest = (new ReflectionClass(NasePraceDemoContentImporter::class))->getReflectionConstant('MANIFEST')->getValue();
+        $manifest = (new ReflectionClass(WeddingBlogDemoContentImporter::class))->getReflectionConstant('MANIFEST')->getValue();
         $assert(count($manifest) === 12, 'Demo manifest must contain exactly 12 articles.');
 
         $images = 0;
@@ -20,7 +20,8 @@ function register_nase_prace_demo_content_tests(callable $test, callable $assert
             $assert(is_dir($directory), 'Missing mapped image directory: ' . $item['directory']);
             $source = (string)file_get_contents($article);
             $assert(str_contains($source, '# Schválený redakční text'), 'Article lacks approved copy: ' . $item['article']);
-            $assert(str_contains($source, 'content_section: nase-prace'), 'Article is not marked as Nase prace: ' . $item['article']);
+            $assert(str_contains($source, 'content_section: blog'), 'Article is not marked as Blog: ' . $item['article']);
+            $assert(!preg_match('/\[\d+\]/', $source), 'Article still contains numeric citation markers: ' . $item['article']);
             $count = count(glob($directory . '/*.{jpg,jpeg,png,webp}', GLOB_BRACE) ?: []);
             $assert($count === 2, 'Each source article must have exactly two explicitly mapped images: ' . $item['article']);
             $images += $count;
@@ -33,10 +34,14 @@ function register_nase_prace_demo_content_tests(callable $test, callable $assert
         $assert($exceptions === 1, 'Expected exactly one documented date mismatch.');
     });
 
-    $test('Nase prace importer requires Media Library thumbnails', function () use ($assert): void {
-        $source = (string)file_get_contents(dirname(__DIR__) . '/app/Services/NasePraceDemoContentImporter.php');
+    $test('wedding blog importer requires Media Library thumbnails and blog ownership', function () use ($assert): void {
+        $source = (string)file_get_contents(dirname(__DIR__) . '/app/Services/WeddingBlogDemoContentImporter.php');
+        $publishSource = (string)file_get_contents(dirname(__DIR__) . '/app/Services/PublishService.php');
         $assert(str_contains($source, 'ingestUploadedFile('), 'Importer bypasses MediaIngestionService.');
         $assert(str_contains($source, "=== 'thumb'"), 'Importer does not verify thumbnail variants.');
         $assert(str_contains($source, 'throw new RuntimeException'), 'Importer must surface primary-path failures.');
+        $assert(str_contains($source, 'blog_posts') && str_contains($source, 'setGallery'), 'Importer does not persist articles through the blog model.');
+        $assert(str_contains($source, 'removeIncorrectPortfolioEntries'), 'Importer does not clean the incorrectly classified portfolio records.');
+        $assert(str_contains($publishSource, 'blogPostsAsSitemapItems($siteId)'), 'Full publish does not add published blog articles to sitemap.xml.');
     });
 }

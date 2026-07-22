@@ -1,4 +1,37 @@
-# UKOL: Premium Photo zacatek timeline progressu
+# UKOL: Prevest nove realizace na blog a doplnit sitemap
+
+Datum: 2026-07-22
+Zadani: Prevest 12 novych demo realizaci z Nase prace na blogove clanky, zajistit jejich publikaci v sitemap.xml, pridat odstup prvniho media od hero a odstranit z textu citacni znacky `[1]`, `[2]` atd.
+
+## Kroky
+
+- [x] Zmapovat blogovy import, galerii a generovani sitemap pri plnem publish.
+- [x] Prevest importer na `blog_posts` + `blog_media` a pri seedu odstranit chybne portfolio zaznamy.
+- [x] Zajistit vsech 12 publikovanych URL v sitemap vcetne spravneho lastmod.
+- [x] Odstranit citacni znacky ze zdrojovych Markdownu a importovaneho HTML.
+- [x] Pridat svisly odstup prvniho videa/fotky od hero v obou detailech.
+- [x] Doplnit testy, spustit seed/publish, overit DB, sitemap a frontend.
+- [x] Aktualizovat dokumentaci a wiki reflexi; commit je posledni krok pred uzavrenim.
+
+## Poznamky
+
+Hotovo znamena: ukazkova URL `/svatba-sportovne-strelecky-areal-jivova-lucie-miroslav` je blogovy clanek, je v publikovane sitemap.xml, vsech 12 novych clanku je v `blog_posts`, zadny z nich nezustane v `portfolio_entries`, text neobsahuje samostatne citace `[N]` a prvni media nejsou nalepena na hero.
+
+Pricina sitemap: `PublishService::regenerateSitemapAndRobots()` sklada publikovane stranky, vestavene routy a `BlogRepository::allPublished()`. `portfolio_entries` do sitemap zamerne nevstupuji. Importer byl prepojen na `blog_posts`; prvni medium je featured hero a pouze druhe medium se zapisuje do `blog_media`, takze se hlavni fotografie neopakuje v galerii.
+
+Zdrojove Markdowny maji nyni `content_section: blog`, rootovou URL bez `/nase-prace/`, blogovou terminologii a nemaji zadne citacni znacky `[N]`. Importer je navic odstranuje pred renderem, aby se vycistila i drive ulozena data pri opakovanem seedu.
+
+Premium Photo detail blogu i Nase prace ma mezi hero a `premium-article` 48px; core blog detail ma mezi `.bp-hero` a featured fotografii 42px. Tím se prvni fotografie/video nelepí na spodni hranu hero.
+
+Overeni: seed vytvoril 17 blogu a 5 portfolio zaznamu; 12 svatebnich blogu ma 12 galerijnich medii, 0 duplicit v portfoliu a 0 clanku s `[N]`. Publikovana sitemap ma vsech 12 novych URL (30 URL celkem). Ukazkova URL vraci HTTP 200. Regrese prosla 64/64 testu a 27/27 golden kontrol.
+
+## Vysledek
+
+Hotovo. Svatebni realizace jsou blogove clanky a plny publish je zaradi do sitemap.xml.
+
+---
+
+# Archiv: Premium Photo zacatek timeline progressu
 
 Datum: 2026-07-20
 Zadani: Nechat sedou osu pres sekci, ale zlaty scroll progress zacit az pod nadpisem a skryt bod, dokud je timeline na nulovem hornim progressu.

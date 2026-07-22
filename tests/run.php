@@ -364,8 +364,8 @@ register_archetype_theme_override_tests($test, $assert);
 require __DIR__ . '/PremiumPhotoDataContractTest.php';
 register_premium_photo_data_contract_tests($test, $assert);
 
-require __DIR__ . '/NasePraceDemoContentTest.php';
-register_nase_prace_demo_content_tests($test, $assert);
+require __DIR__ . '/WeddingBlogDemoContentTest.php';
+register_wedding_blog_demo_content_tests($test, $assert);
 
 $failures = 0;
 foreach ($tests as [$name, $callback]) {

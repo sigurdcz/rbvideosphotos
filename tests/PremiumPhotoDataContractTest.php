@@ -266,6 +266,7 @@ function register_premium_photo_data_contract_tests(callable $test, callable $as
         $assert(str_contains($cmsCss, '.premium-media--film > img'), 'Film thumbnail image rule is missing.');
         $assert(str_contains($cmsCss, 'height: calc(100% - 40px)'), 'Film thumbnail does not reserve equal top and bottom rails.');
         $assert(str_contains($cmsCss, 'background: #07080a'), 'Film thumbnail rails do not use the dark film canvas.');
+        $assert(str_contains($cmsCss, '.bp-hero + .premium-article') && str_contains($cmsCss, '.pf-detail-hero + .premium-article'), 'Blog and portfolio detail media do not keep spacing below the hero.');
 
         $service = ViewFactory::forTheme('premium-photo', [], 'views')->render('partials/home-service-card', [
             'card' => [

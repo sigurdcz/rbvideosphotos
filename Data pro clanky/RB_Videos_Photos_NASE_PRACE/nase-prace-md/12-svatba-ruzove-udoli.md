@@ -1,11 +1,11 @@
 ---
 document_type: ai_web_page_source
-content_section: nase-prace
+content_section: blog
 page_type: wedding_case_study
 brand: RB Videos & Photos
 language: cs-CZ
 status: ready_for_ai
-target_path: /nase-prace/svatba-ruzove-udoli-ivanka-lubomir/
+target_path: /svatba-ruzove-udoli-ivanka-lubomir/
 slug: svatba-ruzove-udoli-ivanka-lubomir
 title: Svatba Ivanky a Lubomíra v Růžovém údolí
 seo:
@@ -39,8 +39,8 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 ## Povinná pravidla
 
-- Stránka patří do sekce **Naše práce** a její adresa je `/nase-prace/svatba-ruzove-udoli-ivanka-lubomir/`.
-- Nepoužívej označení „blog“, „blogový článek“ ani „portfolio“.
+- Stránka patří do blogu a její adresa je `/svatba-ruzove-udoli-ivanka-lubomir/`.
+- Používej označení „blogový článek“; nepoužívej označení „portfolio“.
 - Piš přirozeně v první osobě množného čísla: „fotíme“, „natáčíme“, „pracujeme“.
 - Zachovej lidský, prémiový a konkrétní tón bez prázdných reklamních frází.
 - Neměň jména, datum, místa ani odkaz na video.
@@ -81,7 +81,7 @@ Ivanka a Lubomír Nevěřilovi si pro 6. června 2026 vybrali Růžové údolí 
 
 ## Růžové údolí jako svatební místo
 
-Turistické informační centrum Zábřeh uvádí, že se zde konají svatební hostiny a v letních měsících lze uspořádat obřad přímo v hotelovém parku. Velký sál má podle záznamu kapacitu až 100 míst, navazující salonek dalších 28 míst a ubytovací část nabízí 12 pokojů. Údaje byly na stránce naposledy aktualizovány 10. října 2025. [1]
+Turistické informační centrum Zábřeh uvádí, že se zde konají svatební hostiny a v letních měsících lze uspořádat obřad přímo v hotelovém parku. Velký sál má podle záznamu kapacitu až 100 míst, navazující salonek dalších 28 míst a ubytovací část nabízí 12 pokojů. Údaje byly na stránce naposledy aktualizovány 10. října 2025.
 
 Pro aktuální kapacitu, ceny a podobu služeb je vždy rozhodující přímá informace provozovatele.
 

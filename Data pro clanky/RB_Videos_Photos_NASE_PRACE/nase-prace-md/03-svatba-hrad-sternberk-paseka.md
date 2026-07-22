@@ -1,11 +1,11 @@
 ---
 document_type: ai_web_page_source
-content_section: nase-prace
+content_section: blog
 page_type: wedding_case_study
 brand: RB Videos & Photos
 language: cs-CZ
 status: ready_for_ai
-target_path: /nase-prace/svatba-hrad-sternberk-paseka-marketa-petr/
+target_path: /svatba-hrad-sternberk-paseka-marketa-petr/
 slug: svatba-hrad-sternberk-paseka-marketa-petr
 title: Svatba Markéty a Petra na hradě Šternberk
 seo:
@@ -42,8 +42,8 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 ## Povinná pravidla
 
-- Stránka patří do sekce **Naše práce** a její adresa je `/nase-prace/svatba-hrad-sternberk-paseka-marketa-petr/`.
-- Nepoužívej označení „blog“, „blogový článek“ ani „portfolio“.
+- Stránka patří do blogu a její adresa je `/svatba-hrad-sternberk-paseka-marketa-petr/`.
+- Používej označení „blogový článek“; nepoužívej označení „portfolio“.
 - Piš přirozeně v první osobě množného čísla: „fotíme“, „natáčíme“, „pracujeme“.
 - Zachovej lidský, prémiový a konkrétní tón bez prázdných reklamních frází.
 - Neměň jména, datum, místa ani odkaz na video.
@@ -84,7 +84,7 @@ Markéta a Petr Pláškovi spojili 17. června 2023 slavnostní obřad na hradě
 
 ## Hrad Šternberk jako místo svatebního obřadu
 
-Hrad Šternberk patří k významným moravským hradům. Národní památkový ústav uvádí, že jej v polovině 13. století pravděpodobně založil Zdeslav z Chlumce a ze Šternberka; první písemný záznam pochází z roku 1269. Dějiny hradu jsou spojeny s řadou šlechtických rodů a pozdějšími historizujícími úpravami. Hrad zároveň oficiálně nabízí pořádání svatebních obřadů. [1][2]
+Hrad Šternberk patří k významným moravským hradům. Národní památkový ústav uvádí, že jej v polovině 13. století pravděpodobně založil Zdeslav z Chlumce a ze Šternberka; první písemný záznam pochází z roku 1269. Dějiny hradu jsou spojeny s řadou šlechtických rodů a pozdějšími historizujícími úpravami. Hrad zároveň oficiálně nabízí pořádání svatebních obřadů.
 
 Takové prostředí vyžaduje citlivou práci s expozicí i pohybem. Interiéry mohou být tmavší, zatímco nádvoří nebo výhledy jsou výrazně světlejší. Fotograf musí reagovat rychle a kameraman současně hlídá návaznost záběrů i zvuk. Nechceme z obřadu dělat aranžovanou produkci. Důležitější je zachovat atmosféru historického prostoru a přitom být co nejméně nápadní.
 
@@ -94,7 +94,7 @@ Na hradě lze snadno sklouznout k tomu, že stavba převezme hlavní roli a pár
 
 ## Oslava v Pasece
 
-Paseka je obec severně od Šternberka, která v roce 2026 slaví 700 let od první písemné zmínky. Následná část svatebního dne Markéty a Petra proběhla v prostorách Obecního úřadu v Pasece. [3]
+Paseka je obec severně od Šternberka, která v roce 2026 slaví 700 let od první písemné zmínky. Následná část svatebního dne Markéty a Petra proběhla v prostorách Obecního úřadu v Pasece.
 
 Přesun do Paseky změnil rytmus dne. Formální historické prostředí vystřídala bližší, osobnější atmosféra. Právě tento kontrast je pro výsledný film cenný: slavnostní obřad dostane vlastní kapitolu a oslava může být živější, barevnější a více soustředěná na hosty.
 

@@ -1,11 +1,11 @@
 ---
 document_type: ai_web_page_source
-content_section: nase-prace
+content_section: blog
 page_type: wedding_case_study
 brand: RB Videos & Photos
 language: cs-CZ
 status: ready_for_ai
-target_path: /nase-prace/zarijova-svatba-jivova-simona-michal/
+target_path: /zarijova-svatba-jivova-simona-michal/
 slug: zarijova-svatba-jivova-simona-michal
 title: Zářijová svatba Simony a Michala v areálu Jívová
 seo:
@@ -40,8 +40,8 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 ## Povinná pravidla
 
-- Stránka patří do sekce **Naše práce** a její adresa je `/nase-prace/zarijova-svatba-jivova-simona-michal/`.
-- Nepoužívej označení „blog“, „blogový článek“ ani „portfolio“.
+- Stránka patří do blogu a její adresa je `/zarijova-svatba-jivova-simona-michal/`.
+- Používej označení „blogový článek“; nepoužívej označení „portfolio“.
 - Piš přirozeně v první osobě množného čísla: „fotíme“, „natáčíme“, „pracujeme“.
 - Zachovej lidský, prémiový a konkrétní tón bez prázdných reklamních frází.
 - Neměň jména, datum, místa ani odkaz na video.
@@ -82,9 +82,9 @@ Simona a Michal Novákovi uspořádali svatbu 6. září 2025 ve Sportovně stř
 
 ## Jívová jako místo svatby v přírodě
 
-Areál se na svém oficiálním webu prezentuje nejen jako střelnice a prostor pro volný čas, ale také jako místo pro svatby. Uvádí možnost obřadu, cateringu, ubytování a kapacitu až 150 hostů. [1]
+Areál se na svém oficiálním webu prezentuje nejen jako střelnice a prostor pro volný čas, ale také jako místo pro svatby. Uvádí možnost obřadu, cateringu, ubytování a kapacitu až 150 hostů.
 
-Obec Jívová leží v Nízkém Jeseníku. Oficiální chronologie obce uvádí, že rok 1220 se objevuje v listinném falzu, které zmiňuje jívovskou cestu, a jde proto jen o nepřímý doklad existence sídla. První přímá písemná zmínka o vsi Jívová pochází z roku 1364. [2]
+Obec Jívová leží v Nízkém Jeseníku. Oficiální chronologie obce uvádí, že rok 1220 se objevuje v listinném falzu, které zmiňuje jívovskou cestu, a jde proto jen o nepřímý doklad existence sídla. První přímá písemná zmínka o vsi Jívová pochází z roku 1364.
 
 ## Co přináší zářijové světlo
 

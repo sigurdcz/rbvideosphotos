@@ -24,7 +24,7 @@
         <div class="ci-title">Kontaktní informace</div>
         <?php foreach ($contactCards as $card): if ($card['type'] === 'phone'): ?><article class="ci-card"><span class="ci-card__icon">☎</span><div><span class="ci-label">Telefon</span><strong><?php foreach ($card['phones'] as $p): ?><a href="<?= $this->e($p['href']) ?>"<?= $this->inlineAttr($p['inlineKey']) ?>><?= $this->e($p['display']) ?></a><?php endforeach; ?></strong><small>Zavolejte</small></div></article><?php elseif ($card['type'] === 'email'): ?><article class="ci-card"><span class="ci-card__icon">✉</span><div><span class="ci-label">E-mail</span><strong><a href="mailto:<?= $this->e($card['email']) ?>"<?= $this->inlineAttr($card['emailInlineKey']) ?>><?= $this->e($card['email']) ?></a></strong><small>Napsat e-mail</small></div></article><?php elseif ($card['type'] === 'location'): ?><article class="ci-card"><span class="ci-card__icon">⌖</span><div><span class="ci-label">Lokalita</span><strong><?php foreach ($card['addresses'] as $a): ?><span<?= $this->inlineAttr($a['inlineKey']) ?>><?= nl2br($this->e($a['text'])) ?></span><?php endforeach; ?></strong></div></article><?php else: ?><article class="ci-card ci-card--note"><span class="ci-card__icon">◷</span><div><strong>Odpovídáme obvykle do 24 hodin</strong><small>V případě urgentních zakázek nás raději kontaktujte telefonicky.</small></div></article><?php endif; endforeach; ?>
 
-        <?= $mapsUrl !== '' ? '<a href="' . $this->e($mapsUrl) . '" target="_blank" rel="noopener" class="btn-maps">Otevřít mapu</a>' : '' ?>
+<?= $mapsUrl !== '' ? '<a href="' . $this->e($mapsUrl) . '" target="_blank" rel="noopener" class="btn-maps">Otevřít mapu</a>' : '' ?>
 
       </div>
       <div class="kt-form-block" id="kontakt-form">

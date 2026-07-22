@@ -21,6 +21,6 @@ echo 'Demo content seed dokončen: '
     . (!empty($result['published']) ? ' a web byl znovu publikován' : '')
     . ".\n";
 
-foreach (($result['portfolio_warnings'] ?? []) as $warning) {
-    fwrite(STDERR, "UPOZORNĚNÍ Naše práce: {$warning}\n");
+foreach (($result['wedding_blog_warnings'] ?? []) as $warning) {
+    fwrite(STDERR, "UPOZORNĚNÍ svatební blog: {$warning}\n");
 }

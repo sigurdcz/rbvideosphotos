@@ -1,11 +1,11 @@
 ---
 document_type: ai_web_page_source
-content_section: nase-prace
+content_section: blog
 page_type: wedding_case_study
 brand: RB Videos & Photos
 language: cs-CZ
 status: ready_for_ai
-target_path: /nase-prace/svatba-arboretum-bila-lhota-namest-na-hane-helena-tomas/
+target_path: /svatba-arboretum-bila-lhota-namest-na-hane-helena-tomas/
 slug: svatba-arboretum-bila-lhota-namest-na-hane-helena-tomas
 title: Svatba Heleny a Tomáše v Arboretu Bílá Lhota
 seo:
@@ -42,8 +42,8 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 ## Povinná pravidla
 
-- Stránka patří do sekce **Naše práce** a její adresa je `/nase-prace/svatba-arboretum-bila-lhota-namest-na-hane-helena-tomas/`.
-- Nepoužívej označení „blog“, „blogový článek“ ani „portfolio“.
+- Stránka patří do blogu a její adresa je `/svatba-arboretum-bila-lhota-namest-na-hane-helena-tomas/`.
+- Používej označení „blogový článek“; nepoužívej označení „portfolio“.
 - Piš přirozeně v první osobě množného čísla: „fotíme“, „natáčíme“, „pracujeme“.
 - Zachovej lidský, prémiový a konkrétní tón bez prázdných reklamních frází.
 - Neměň jména, datum, místa ani odkaz na video.
@@ -84,13 +84,13 @@ Helena a Tomáš Hufovi si pro svůj svatební den 17. září 2022 vybrali komb
 
 ## Arboretum Bílá Lhota jako přirozená kulisa obřadu
 
-Historie zdejšího areálu sahá hluboko do minulosti. Oficiální web arboreta připomíná, že v Bílé Lhotě stála tvrz už v 15. století a později byla přestavěna na renesanční zámek. Významnou podobu dal parku dendrolog Quido Riedel, který zde ve 20. století rozvíjel sbírku okrasných dřevin. Informační portál Náměště na Hané uvádí, že arboretum zabírá přibližně tři hektary. [1][2]
+Historie zdejšího areálu sahá hluboko do minulosti. Oficiální web arboreta připomíná, že v Bílé Lhotě stála tvrz už v 15. století a později byla přestavěna na renesanční zámek. Významnou podobu dal parku dendrolog Quido Riedel, který zde ve 20. století rozvíjel sbírku okrasných dřevin. Informační portál Náměště na Hané uvádí, že arboretum zabírá přibližně tři hektary.
 
 Pro fotografování je takové místo cenné tím, že není potřeba vytvářet umělou dekoraci. Stromy, průhledy mezi větvemi, cesta parkem i proměnlivá hloubka pozadí vytvářejí několik vizuálních vrstev. U obřadu hlídáme nejen výrazy nevěsty a ženicha, ale i reakce rodičů, svědků a hostů. Ve videu se k celkovým záběrům přidávají drobnosti: pohyb rukou, prsteny, šaty mezi zelení nebo krátký pohled těsně před slibem.
 
 ## Pokračování svatby v Náměšti na Hané
 
-Náměšť na Hané je spojena především s Horním zámkem. Jeho základní kámen byl položen 1. března 1766 poté, co Ferdinand Bonaventura II. Antonín z Harrachu zahájil stavbu nového letního sídla. Oficiální historie popisuje stavbu jako raně klasicistní „moravské“ baroko s francouzskými architektonickými vlivy; zámek obklopuje kruhový park s lipovými alejemi. [3]
+Náměšť na Hané je spojena především s Horním zámkem. Jeho základní kámen byl položen 1. března 1766 poté, co Ferdinand Bonaventura II. Antonín z Harrachu zahájil stavbu nového letního sídla. Oficiální historie popisuje stavbu jako raně klasicistní „moravské“ baroko s francouzskými architektonickými vlivy; zámek obklopuje kruhový park s lipovými alejemi.
 
 Přesun mezi obřadem a oslavou jsme v příběhu svatby nevnímali jako přerušení. Naopak nám pomohl vystavět film i fotografickou galerii ve dvou kapitolách. Arboretum dodalo snímkům jemnost a soukromí, zatímco Náměšť přinesla společenskou energii, gratulace, rodinné skupiny a večerní atmosféru.
 

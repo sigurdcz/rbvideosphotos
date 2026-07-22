@@ -1,11 +1,11 @@
 ---
 document_type: ai_web_page_source
-content_section: nase-prace
+content_section: blog
 page_type: wedding_case_study
 brand: RB Videos & Photos
 language: cs-CZ
 status: ready_for_ai
-target_path: /nase-prace/svatba-rybnik-sobacov-michaela-jan/
+target_path: /svatba-rybnik-sobacov-michaela-jan/
 slug: svatba-rybnik-sobacov-michaela-jan
 title: Letní svatba Michaely a Jana u rybníka Sobáčov
 seo:
@@ -41,8 +41,8 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 ## Povinná pravidla
 
-- Stránka patří do sekce **Naše práce** a její adresa je `/nase-prace/svatba-rybnik-sobacov-michaela-jan/`.
-- Nepoužívej označení „blog“, „blogový článek“ ani „portfolio“.
+- Stránka patří do blogu a její adresa je `/svatba-rybnik-sobacov-michaela-jan/`.
+- Používej označení „blogový článek“; nepoužívej označení „portfolio“.
 - Piš přirozeně v první osobě množného čísla: „fotíme“, „natáčíme“, „pracujeme“.
 - Zachovej lidský, prémiový a konkrétní tón bez prázdných reklamních frází.
 - Neměň jména, datum, místa ani odkaz na video.
@@ -83,7 +83,7 @@ Michaela a Jan Jungligovi měli obřad i svatební oslavu 27. července 2024 u r
 
 ## Sobáčovský rybník a okolní příroda
 
-Turistický portál Olomouckého kraje uvádí, že Sobáčovský rybník má rozlohu přibližně tři hektary a leží na trase mezi Olomoucí a Mohelnicí. Areál je spojen se sportovním rybolovem, ubytováním a dalšími aktivitami. Oficiální web Sobáčova zároveň uvádí možnost pronájmu areálu pro svatby a jiné důležité události. Aktuální provoz jednotlivých částí areálu je vhodné ověřit přímo s provozovatelem. [1][2]
+Turistický portál Olomouckého kraje uvádí, že Sobáčovský rybník má rozlohu přibližně tři hektary a leží na trase mezi Olomoucí a Mohelnicí. Areál je spojen se sportovním rybolovem, ubytováním a dalšími aktivitami. Oficiální web Sobáčova zároveň uvádí možnost pronájmu areálu pro svatby a jiné důležité události. Aktuální provoz jednotlivých částí areálu je vhodné ověřit přímo s provozovatelem.
 
 Voda je pro fotografii krásná, ale technicky náročná. Odrazy mohou být výrazně světlejší než okolní zeleň a v poledne vznikají tvrdé kontrasty. Proto hledáme stín, pracujeme s úhlem vůči slunci a portrétní focení plánujeme spíše na pozdější část dne. Ve videu využíváme hladinu jako přirozený přechod mezi scénami, ne jako efekt za každou cenu.
 

@@ -4,6 +4,7 @@ body{background:#111;color:#fff}
 .bp-hero h1{font-size:clamp(2rem,4vw,3.2rem);color:#fff;margin-bottom:14px;line-height:1.2}
 .bp-hero .bp-excerpt{color:rgba(255,255,255,.72);font-size:1.1rem;max-width:760px;line-height:1.6}
 .bp-featured{width:100%;max-height:480px;overflow:hidden;background:#0e0e11}
+.bp-hero + .bp-featured{margin-top:42px}
 .bp-featured img{width:100%;max-height:480px;object-fit:cover;display:block}
 .bp-content-wrap{padding:48px 0 80px}
 .bp-content{max-width:760px}

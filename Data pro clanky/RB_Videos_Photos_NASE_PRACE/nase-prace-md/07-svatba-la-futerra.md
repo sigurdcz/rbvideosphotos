@@ -1,11 +1,11 @@
 ---
 document_type: ai_web_page_source
-content_section: nase-prace
+content_section: blog
 page_type: wedding_case_study
 brand: RB Videos & Photos
 language: cs-CZ
 status: ready_for_ai
-target_path: /nase-prace/svatba-la-futerra-zlamanka-iveta-rene/
+target_path: /svatba-la-futerra-zlamanka-iveta-rene/
 slug: svatba-la-futerra-zlamanka-iveta-rene
 title: Svatba Ivety a Reného v areálu La Futerra
 seo:
@@ -41,8 +41,8 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 ## Povinná pravidla
 
-- Stránka patří do sekce **Naše práce** a její adresa je `/nase-prace/svatba-la-futerra-zlamanka-iveta-rene/`.
-- Nepoužívej označení „blog“, „blogový článek“ ani „portfolio“.
+- Stránka patří do blogu a její adresa je `/svatba-la-futerra-zlamanka-iveta-rene/`.
+- Používej označení „blogový článek“; nepoužívej označení „portfolio“.
 - Piš přirozeně v první osobě množného čísla: „fotíme“, „natáčíme“, „pracujeme“.
 - Zachovej lidský, prémiový a konkrétní tón bez prázdných reklamních frází.
 - Neměň jména, datum, místa ani odkaz na video.
@@ -83,7 +83,7 @@ Iveta a René Gruntovi si pro 17. srpna 2024 vybrali La Futerra ve Zlámance u K
 
 ## Co nabízí La Futerra
 
-Oficiální prezentace areálu La Futerra popisuje místo jako svatební areál v přírodě pro svatby ve venkovském, vintage, boho i modernějším stylu a uvádí přípravu svatby na míru. Oficiální sociální profil zmiňuje venkovní obřad mezi pastvinami s koňmi. [1][2]
+Oficiální prezentace areálu La Futerra popisuje místo jako svatební areál v přírodě pro svatby ve venkovském, vintage, boho i modernějším stylu a uvádí přípravu svatby na míru. Oficiální sociální profil zmiňuje venkovní obřad mezi pastvinami s koňmi.
 
 Přesnou kapacitu, rozsah ubytování a aktuálně dostupné služby doporučujeme před rezervací potvrdit přímo s provozovatelem.
 
