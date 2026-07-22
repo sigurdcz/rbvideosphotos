@@ -14,7 +14,7 @@ $__hasContact = $__phones || $__email !== '' || $__addr;
 <div class="wrap">
   <div class="foot-grid foot-desktop">
     <div class="foot-col foot-brand">
-      <?php if (($__b['logoUrl'] ?? '') !== ''): ?><a class="logo" href="/"><img src="<?= $this->e($__b['logoUrl']) ?>" alt="<?= $this->e($__b['name']) ?>" style="max-height:36px;width:auto;display:block"></a><?php else: ?><a class="logo" href="/" style="color:var(--porcelain)"><?= $this->e($__b['name']) ?></a><?php endif; ?>
+      <a class="logo premium-brand-logo premium-brand-logo--footer" href="/" aria-label="<?= $this->e($__b['name']) ?>"><img src="/assets/demo/logos/rb-logo-beige.png" alt="<?= $this->e($__b['name']) ?>"></a>
       <div class="socials"><?= $this->partial('partials/footer-socials', ['socials' => $footer['socials']]) ?></div>
     </div>
     <div class="foot-col">

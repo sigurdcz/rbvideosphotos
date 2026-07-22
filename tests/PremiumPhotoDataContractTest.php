@@ -68,6 +68,21 @@ function register_premium_photo_data_contract_tests(callable $test, callable $as
         $assert(!str_contains($layout, 'href="#" aria-label="Instagram"'), 'Static social links remain in the layout.');
     });
 
+    $test('premium photo uses contrast-safe demo logo assets', function () use ($assert, $themeDir, $root): void {
+        $layout = (string)file_get_contents($themeDir . '/layout.html');
+        $footer = (string)file_get_contents($themeDir . '/views/partials/footer.phtml');
+        $css = (string)file_get_contents($themeDir . '/assets/theme.css');
+        $assetDir = $root . '/public/assets/demo/logos';
+
+        foreach (['rb-logo-black.png', 'rb-logo-beige.png', 'rb-logo-orange.png'] as $asset) {
+            $assert(is_file($assetDir . '/' . $asset), 'Missing organized demo logo asset: ' . $asset);
+        }
+        $assert(str_contains($layout, '/assets/demo/logos/rb-logo-black.png'), 'Light header does not use the black logo variant.');
+        $assert(str_contains($footer, '/assets/demo/logos/rb-logo-beige.png'), 'Dark footer does not use the beige logo variant.');
+        $assert(str_contains($layout, 'alt="{site_name}"') && str_contains($footer, "alt=\"<?= \$this->e(\$__b['name']) ?>\""), 'Logo images must preserve an accessible brand name.');
+        $assert(str_contains($css, '.premium-brand-logo--header img') && str_contains($css, '.premium-brand-logo--footer img'), 'Logo dimensions are not owned by Premium Photo CSS.');
+    });
+
     $test('public contact contract excludes event dates on frontend and backend', function () use ($assert, $themeDir): void {
         $homeContact = (string)file_get_contents($themeDir . '/views/partials/home-contact.phtml');
         $contactPage = (string)file_get_contents($themeDir . '/views/archetypes/kontakt.phtml');

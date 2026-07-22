@@ -1210,3 +1210,29 @@ Hotovo. Homepage i `/kontakt` renderuji stejny theme partial formulare. Desktop 
 ## Vysledek
 
 Hotovo. Doplnkova cenikova textace i featured badge jsou centrovane; Premium ma sedm vyvazenych bodu se souhrnem Standardniho a bocni karty jsou vyskové srovnatelne v live, publish i seed/migracni ceste.
+# UKOL: Zapojit oficialni demo loga
+
+Datum: 2026-07-22
+Zadani: Presunout PNG soubory z root slozky `Loga` do vhodneho demo/public umisteni a pouzit spravnou barevnou variantu loga v Premium Photo strance podle pozadi.
+
+## Kroky
+
+- [x] Zkontrolovat varianty PNG, soucasny logo renderer a demo asset pipeline.
+- [x] Presunout a pojmenovat logo assety do stabilniho verejneho umisteni.
+- [x] Zapojit svetlou/tmavou variantu do hlavicky a paticky bez hardcoded obchodnich dat.
+- [x] Pridat regresni kontrakt a overit desktop/mobile live i publish vystup.
+- [x] Provest wiki reflexi a commitnout zmenu.
+
+## Poznamky
+
+- Vstupni soubory jsou uzivatelske demo assety v `Loga/*.png`; nesmi zustat jako neorganizovana root slozka.
+- Acceptance: svetla hlavicka pouzije tmave logo, tmava paticka svetle logo; obrazky maji smysluplny alt a nezpusobi overflow.
+- Assety jsou presunute do `public/assets/demo/logos/` a prejmenovane na stabilni ASCII nazvy. Cerna varianta je v hlavicce, bezova v paticce; oranzova zustava jako nepouzity demo akcent.
+- Regresni test kontroluje existenci vsech tri assetu, kontrastni varianty hlavicky/paticky, pristupny alt a theme-owned rozmery.
+- Chrome QA: 1200x800 i 390x844 bez horizontalniho overflow; cerne logo je v hlavicce a bezove v desktop paticce. `php tests/run.php`: 61/61 testu a 27/27 golden kontrol.
+
+## Vysledek
+
+Hotovo. Tri dodana PNG jsou v `public/assets/demo/logos/`; Premium Photo pouziva cernou variantu na svetlem pozadi a bezovou na tmavem. Oranzova je zachovana jako demo akcent. Dokumentace projektu mimo `UKOL.md` nepotrebovala zmenu; trvaly asset kontrakt je zapsan do pracovni wiki.
+
+---

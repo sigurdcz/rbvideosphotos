@@ -665,6 +665,7 @@ body.theme-premium-photo[data-cms-page-key="cenik"] .cenik-other p { width:100%;
   body.theme-premium-photo .site-footer .foot-col ul { gap:6px; font-size:.88rem; line-height:1.35; }
   body.theme-premium-photo .site-footer .foot-col a { color:rgba(246,244,239,.82); }
   body.theme-premium-photo .site-footer .foot-brand .logo { font-size:1.35rem; line-height:1.15; }
+  body.theme-premium-photo .site-footer .foot-brand .premium-brand-logo { line-height:0; }
   body.theme-premium-photo .site-footer .socials { margin-top:16px; gap:14px; }
   body.theme-premium-photo .site-footer .socials a { width:46px; height:46px; border-radius:8px; }
   body.theme-premium-photo .site-footer .foot-contact-list { display:grid; gap:3px; }
