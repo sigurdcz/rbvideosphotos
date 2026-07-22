@@ -1,0 +1,15 @@
+<?php
+/** @var array $form */
+$honeypotField = trim((string)($form['honeypotField'] ?? 'website')) ?: 'website';
+?>
+<form class="premium-contact-form" method="POST" action="/kontakt/odeslat">
+  <input type="hidden" name="_csrf" value="<?= $this->e($form['csrfToken']) ?>">
+  <input type="text" name="<?= $this->e($honeypotField) ?>" hidden tabindex="-1" autocomplete="off">
+  <div class="field"><label>Vaše jména</label><input type="text" name="name" required></div>
+  <div class="field"><label>E-mail nebo telefon</label><input type="text" name="contact_value" required></div>
+  <div class="field"><label>Místo</label><input type="text" name="event_place"></div>
+  <input type="hidden" name="shooting_type" value="svatebni">
+  <div class="field"><label>Co plánujete?</label><textarea name="message" required></textarea></div>
+  <label class="premium-consent"><input type="checkbox" name="privacy_consent" required> Souhlasím se zpracováním osobních údajů.</label>
+  <button class="btn btn-solid" type="submit">Odeslat poptávku</button>
+</form>

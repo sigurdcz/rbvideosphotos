@@ -1182,6 +1182,31 @@ Zadani: S nejvyssi prioritou odstranit globalni runtime kolizi, aby Premium Phot
 
 Hotovo. Systemova oprava byla commitnuta jako `f478766` a uspesne pushnuta na `origin/master`.
 
+---
+
+# UKOL: Sjednotit homepage kontaktni formular s /kontakt
+
+Datum: 2026-07-22
+Zadani: Upravit formular v homepage kontaktni sekci tak, aby pouzival stejny DOM, poradi poli a vizual jako formular na strance `/kontakt`; FAQ panel zachovat vedle nej.
+
+## Kroky
+
+- [x] Zachytit desktop/mobile baseline homepage a referenci `/kontakt`.
+- [x] Vytvorit sdileny theme partial formulare a pouzit jej na obou mistech.
+- [x] Sjednotit layout/styly a pridat regresni kontrakt.
+- [x] Overit desktop/mobile screenshoty a testy.
+- [x] Provest wiki reflexi a commitnout.
+
+## Poznamky
+
+- Acceptance: homepage a `/kontakt` renderuji stejny `.premium-contact-form` partial; poradi je jmeno, e-mail/telefon, misto, zprava, souhlas, tlacitko. Pole datum se nevraci.
+- FAQ zustava na desktopu vedle formulare a na mobilu pod nim.
+- Uzivatelsky screenshot zustava mimo Git.
+
+## Vysledek
+
+Hotovo. Homepage i `/kontakt` renderuji stejny theme partial formulare. Desktop homepage zachovava dva sloupce form/FAQ, mobil jeden sloupec; Chrome QA nema horizontalni overflow. Overeni: 60/60 PHP testu a 27/27 golden kontrol.
+
 ## Vysledek
 
 Hotovo. Doplnkova cenikova textace i featured badge jsou centrovane; Premium ma sedm vyvazenych bodu se souhrnem Standardniho a bocni karty jsou vyskové srovnatelne v live, publish i seed/migracni ceste.

@@ -302,16 +302,16 @@
     <div><div class="premium-contact-grid">
   <div class="premium-contact-form-wrap">
     <form class="premium-contact-form" method="POST" action="/kontakt/odeslat">
-      <input type="hidden" name="_csrf" value="CSRF_TOKEN">
-      <input type="hidden" name="website" value="" autocomplete="off">
-      <div class="field"><label>Va&scaron;e jm&eacute;na</label><input type="text" name="name" required placeholder="Tereza a Marek"></div>
-      <div class="field"><label for="kontakt-event-place">M&iacute;sto</label><input id="kontakt-event-place" type="text" name="event_place" autocomplete="address-level2" placeholder="Olomouc"></div>
-      <div class="field"><label>E-mail nebo telefon</label><input type="text" name="contact_value" required placeholder="vas@email.cz"></div>
-      <input type="hidden" name="shooting_type" value="svatebni">
-      <div class="field"><label for="kontakt-message">Co pl&aacute;nujete?</label><textarea id="kontakt-message" name="message" required placeholder="Chceme foto i video&hellip;"></textarea></div>
-      <label class="premium-consent"><input type="checkbox" name="privacy_consent" required> Souhlas&iacute;m se zpracov&aacute;n&iacute;m osobn&iacute;ch &uacute;daj&#367;.</label>
-      <button class="btn btn-solid" type="submit">Odeslat popt&aacute;vku</button>
-    </form>
+  <input type="hidden" name="_csrf" value="CSRF_TOKEN">
+  <input type="text" name="website" hidden tabindex="-1" autocomplete="off">
+  <div class="field"><label>Va&scaron;e jm&eacute;na</label><input type="text" name="name" required></div>
+  <div class="field"><label>E-mail nebo telefon</label><input type="text" name="contact_value" required></div>
+  <div class="field"><label for="kontakt-event-place">M&iacute;sto</label><input id="kontakt-event-place" type="text" name="event_place" autocomplete="address-level2"></div>
+  <input type="hidden" name="shooting_type" value="svatebni">
+  <div class="field"><label for="kontakt-message">Co pl&aacute;nujete?</label><textarea id="kontakt-message" name="message" required></textarea></div>
+  <label class="premium-consent"><input type="checkbox" name="privacy_consent" required> Souhlas&iacute;m se zpracov&aacute;n&iacute;m osobn&iacute;ch &uacute;daj&#367;.</label>
+  <button class="btn btn-solid" type="submit">Odeslat popt&aacute;vku</button>
+</form>
   </div>
   <aside class="premium-contact-data">
           <a href="tel:+420792483583">+420 792 483 583</a>

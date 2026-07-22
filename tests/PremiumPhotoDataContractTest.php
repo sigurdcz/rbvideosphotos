@@ -71,10 +71,22 @@ function register_premium_photo_data_contract_tests(callable $test, callable $as
     $test('public contact contract excludes event dates on frontend and backend', function () use ($assert, $themeDir): void {
         $homeContact = (string)file_get_contents($themeDir . '/views/partials/home-contact.phtml');
         $contactPage = (string)file_get_contents($themeDir . '/views/archetypes/kontakt.phtml');
+        $contactForm = (string)file_get_contents($themeDir . '/views/partials/contact-form.phtml');
         $publicIndex = (string)file_get_contents(dirname($themeDir, 2) . '/public/index.php');
         $normalizer = (string)file_get_contents(dirname($themeDir, 2) . '/app/Services/Render/MarkupNormalizer.php');
 
-        $assert(!str_contains($homeContact, 'event_date') && !str_contains($contactPage, 'event_date'), 'Premium Photo still renders an event date field.');
+        $assert(str_contains($homeContact, "partials/contact-form") && str_contains($contactPage, "partials/contact-form"), 'Homepage and contact route do not share the same form partial.');
+        $assert(!str_contains($homeContact, '<form class="premium-contact-form"') && !str_contains($contactPage, '<form class="premium-contact-form"'), 'A route still owns a divergent inline contact form.');
+        $assert(str_contains($contactForm, '<form class="premium-contact-form"'), 'Shared Premium Photo contact form is missing.');
+        $namePosition = strpos($contactForm, 'name="name"');
+        $contactPosition = strpos($contactForm, 'name="contact_value"');
+        $placePosition = strpos($contactForm, 'name="event_place"');
+        $messagePosition = strpos($contactForm, 'name="message"');
+        $assert($namePosition !== false && $contactPosition !== false && $placePosition !== false && $messagePosition !== false
+            && $namePosition < $contactPosition && $contactPosition < $placePosition && $placePosition < $messagePosition,
+            'Shared contact fields are not ordered like the contact-page reference.');
+        $assert(!str_contains($contactForm, 'placeholder='), 'Homepage-only placeholders leaked into the shared contact design.');
+        $assert(!str_contains($homeContact, 'event_date') && !str_contains($contactPage, 'event_date') && !str_contains($contactForm, 'event_date'), 'Premium Photo still renders an event date field.');
         $assert(!str_contains($publicIndex, "\$_POST['event_date']") && !str_contains($publicIndex, 'Datum akce:'), 'Contact POST handler still consumes or mails an event date.');
         $assert(str_contains($normalizer, 'name="event_date"'), 'Legacy frontend date-field guard is missing.');
     });
