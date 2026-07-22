@@ -95,6 +95,7 @@ function register_premium_photo_data_contract_tests(callable $test, callable $as
         $assert(str_contains($css, 'right:0 !important; left:0 !important; width:max-content'), 'Featured pricing badge is not centered independently of legacy offsets.');
         $assert(str_contains($css, '.cenik-other h2') && str_contains($css, 'text-align:center !important'), 'Supplementary pricing copy has no explicit centering contract.');
         $assert(str_contains($css, 'grid-column:1 / -1') && str_contains($css, 'justify-self:stretch'), 'Supplementary pricing copy does not span the full pricing grid.');
+        $assert(str_contains($css, 'max-width:none !important; margin:64px auto 0 !important'), 'Supplementary pricing copy cannot override the global 860px runtime constraint.');
         $assert(str_contains($themeCss, '.site-header{') && str_contains($themeCss, 'backdrop-filter:blur(12px);') && str_contains($themeCss, 'border:0;'), 'Premium Photo header still exposes a separator border.');
         $assert(str_contains($themeCss, 'transition:transform .375s,opacity .375s'), 'Burger-to-close transition is not slowed by exactly 50 percent.');
         $assert(str_contains($seeder, 'vše ze Standardního balíčku') && str_contains($migration, 'vše ze Standardního balíčku'), 'Balanced Premium package copy is missing from seed or migration paths.');

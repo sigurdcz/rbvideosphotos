@@ -1127,6 +1127,35 @@ Zadani: Na desktopu pridat tlacitku Kontakt vice prostoru vlevo i vpravo, aby te
 
 Hotovo. Desktopove tlacitko Kontakt ma 30 px vodorovneho paddingu a jeho text uz nesplyva s borderem; mobilni navigace zustala beze zmeny.
 
+---
+
+# UKOL: Prioritni geometricke centrovani cenik-other
+
+Datum: 2026-07-22
+Zadani: Opravit textaci „Rodinne, portretni a firemni foceni“ tak, aby byla prokazatelne uprostred viewportu; nasledne commitnout a pushnout.
+
+## Kroky
+
+- [x] Zmerit bounding boxy viewportu, kontejneru, `cenik-other`, nadpisu a popisu.
+- [x] Opravit skutecny rodicovsky layout a pridat ciselny regresni kontrakt.
+- [x] Overit desktop a mobil novymi screenshoty a testy.
+- [-] Provest wiki reflexi, commitnout a pushnout.
+
+## Poznamky
+
+- Povinna acceptance: rozdil stredu `cenik-other` a stredu viewportu maximalne 1 CSS px; shodne pro `h2` a `p`.
+- Vestaveny browser nebyl v tomto behu dostupny (`No browser is available`); mereni proto provadi explicitne projektovy Chrome/CDP QA skript bez skryteho fallbacku.
+- Uzivatelsky screenshot zustava mimo Git.
+- Baseline pri 1600 px: kontejner center 800 px, ale `cenik-other`, `h2` i `p` center 694 px, delta -106 px.
+- Root cause: `public/assets/frontend-runtime.css` vnucuje `.cenik-other { max-width:860px!important; margin:0!important }`. Theme musi proto pouzit `max-width:none !important` i `margin:64px auto 0 !important`; pouhe `width:100%` a `text-align:center` nestaci.
+- Finalni desktop 1600x900: viewport, kontejner, `cenik-other`, `h2` a `p` maji center 800 px; delta vsech merenych textovych uzlu je 0 px. Mobil 390x844: center 195 px, delta 0 px. Oba bez horizontalniho overflow.
+- Finalni screenshoty: `storage/qa/premium-photo-cenik-other-priority-final-desktop.png` a `storage/qa/premium-photo-cenik-other-priority-final-mobile.png`. Vizualni skore 100/100.
+- Regrese: 60/60 PHP testu a 27/27 golden kontrol. QA skript nyni vraci `pricingOtherGeometry`, aby se centrovani overovalo ciselne. README, ARCHITECTURE a INSTRUCTIONS nebylo treba menit; wiki commit je `a1866e6`.
+
+## Vysledek
+
+Implementace a overeni hotove. Textace je geometricky presne uprostred na desktopu i mobilu; zbyva commit a push projektu.
+
 ## Vysledek
 
 Hotovo. Doplnkova cenikova textace i featured badge jsou centrovane; Premium ma sedm vyvazenych bodu se souhrnem Standardniho a bocni karty jsou vyskové srovnatelne v live, publish i seed/migracni ceste.

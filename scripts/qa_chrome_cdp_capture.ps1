@@ -382,6 +382,16 @@ $inspection = Send-CdpCommand $socket (++$id) 'Runtime.evaluate' @{
   ,serviceHero: (() => { const el = document.querySelector('.svc-hero'); if (!el) return null; const r = el.getBoundingClientRect(); return { y:r.y, height:r.height, childMedia:Boolean(el.querySelector(':scope > .theme-hero-video')) }; })()
   ,serviceMediaParent: document.querySelector('.theme-hero-video')?.parentElement?.className || null
   ,mainChildren: Array.from(document.querySelector('main')?.children || []).slice(0,4).map(el => ({tag:el.tagName,className:el.className}))
+  ,pricingOtherGeometry: (() => {
+    const selectors = ['.cenik-packages > .container', '.cenik-other', '.cenik-other h2', '.cenik-other p'];
+    const viewportCenter = document.documentElement.clientWidth / 2;
+    return Object.fromEntries(selectors.map(selector => {
+      const el = document.querySelector(selector);
+      if (!el) return [selector, null];
+      const r = el.getBoundingClientRect();
+      return [selector, { left:r.left, width:r.width, center:r.left + r.width / 2, viewportCenter, delta:r.left + r.width / 2 - viewportCenter }];
+    }));
+  })()
 }))()
 '@
     returnByValue = $true
