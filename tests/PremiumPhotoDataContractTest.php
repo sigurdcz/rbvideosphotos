@@ -96,6 +96,8 @@ function register_premium_photo_data_contract_tests(callable $test, callable $as
         $assert(str_contains($css, '--premium-inner-hero-height:360px'), 'Mobile internal hero height contract is missing.');
         $assert(str_contains($js, 'innerPageKey !== "homepage"') && str_contains($js, 'classList.add("premium-inner-hero")'), 'Runtime does not classify non-homepage hero variants consistently.');
         $assert(str_contains($js, 'eyebrow.textContent = innerHeroTitle.textContent.trim()'), 'Generic Ceník and legal heroes do not derive their missing section label from the real H1.');
+        $assert(str_contains($js, 'innerPageKey === "cenik"') && str_contains($js, 'ceník · balíčky na míru'), 'Cenik hero does not receive the standard production meta row.');
+        $assert(str_contains($css, '.page-hero.premium-inner-hero > .inner-hero-band-cap') && str_contains($css, 'width:min(calc(100% - 48px),1120px)'), 'Cenik meta row does not share the standard internal hero axis.');
     });
 
     $test('public contact contract excludes event dates on frontend and backend', function () use ($assert, $themeDir): void {

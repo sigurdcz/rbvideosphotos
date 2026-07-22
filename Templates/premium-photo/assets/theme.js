@@ -206,6 +206,12 @@ if (innerPageKey !== "homepage") {
       eyebrow.textContent = innerHeroTitle.textContent.trim();
       innerHeroCopy.prepend(eyebrow);
     }
+    if (innerPageKey === "cenik" && !innerHero.querySelector(":scope > .band-cap")) {
+      const bandCap = document.createElement("div");
+      bandCap.className = "band-cap inner-hero-band-cap";
+      bandCap.innerHTML = '<span class="rec">rec</span><span>ceník · balíčky na míru</span><span><b>RB</b> pricing</span>';
+      innerHero.insertBefore(bandCap, innerHeroCopy);
+    }
   }
 }
 

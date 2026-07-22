@@ -29,6 +29,32 @@ Hotovo kdyz: Nad nadpisem neni zlata vypln, bod pri nulovem progressu neni videt
 Hotovo. Seda osa zustava pres sekci, zlata vypln zacina az pod nadpisem na skutecne hrane seznamu a bod je pri nulovem progressu skryty na desktopu i mobilu.
 
 ---
+# UKOL: Sjednotit hero Ceniku se standardem vnitrnich stranek
+
+Datum: 2026-07-22
+Zadani: Doplnit Ceniku horni produkcni meta radek a sjednotit sekcni label, H1, popis i jejich pozici s referencnim hero Blogu.
+
+## Kroky
+
+- [x] Porovnat DOM a geometrii Ceniku se standardnim hero kontraktem.
+- [x] Doplnit horni meta radek a sjednotit jeho styly s video-band hero.
+- [x] Pridat regresni kontrakt a aktualizovat generovane vystupy.
+- [x] Overit desktop a mobil v Chrome.
+- [x] Uzavrit checklist, wiki reflexi a commit.
+
+## Poznamky
+
+- Zdrojovy DB nadpis a popis zustavaji editovatelne; theme doplnuje jen prezentacni labely stejne jako u ostatnich Premium Photo hero variant.
+- Acceptance: horni radek ma levou REC, stredove `CENIK · BALICKY NA MIRU` a prave `RB PRICING`; obsahova osa odpovida Blogu a nema horizontalni overflow.
+- Chrome 1440x900 potvrdil shodnou 1120px osu meta radku a obsahoveho bloku; H1, sekcni label i popis jsou uvnitr obrazoveho hero.
+- Chrome 390x844 potvrdil spravne poradi obsahu a nulovy horizontalni overflow. Cenik-other zustal na obou view-portech presne uprostred s delta 0 px.
+- Finalni vizualni skore 100/100. Regrese: 62/62 PHP testu, 27/27 golden kontrol a `git diff --check` bez chyb.
+
+## Vysledek
+
+Hotovo. Ceník sdili s Blogem horni produkcni radek, levou obsahovou osu, sekcni label, velke H1 a popis v jednotne vysce hero.
+
+---
 
 # UKOL: Premium Photo viditelny scroll playhead
 
