@@ -130,6 +130,51 @@ class MediaIngestionService
             || in_array($ext, $appCfg['allowed_video_extensions'], true);
     }
 
+    /**
+     * Rebuild derivatives for an already registered image whose original file
+     * exists. Demo imports use this after an earlier run was interrupted while
+     * GD was unavailable; the missing capability remains a visible error.
+     */
+    public function regenerateImageVariants(int $siteId, int $mediaId): int
+    {
+        if (!extension_loaded('gd')) {
+            throw new \RuntimeException('PHP rozšíření GD není načtené; nelze vytvořit thumbnail média #' . $mediaId);
+        }
+
+        $media = $this->media->findById($mediaId);
+        if (!$media || (int)($media['site_id'] ?? 0) !== $siteId) {
+            throw new \RuntimeException('Médium #' . $mediaId . ' nepatří do aktuálního webu.');
+        }
+
+        $relativePath = (string)($media['storage_path'] ?? '');
+        $absolutePath = dirname(__DIR__, 2) . '/' . ltrim($relativePath, '/');
+        if ($relativePath === '' || !is_file($absolutePath)) {
+            throw new \RuntimeException('Chybí originální soubor média #' . $mediaId);
+        }
+
+        $mime = (string)($media['mime_type'] ?? '');
+        $ext = strtolower(pathinfo($relativePath, PATHINFO_EXTENSION));
+        if ($this->isVideo($mime, $ext)) {
+            throw new \RuntimeException('Varianty obrázku nelze vytvořit pro video médium #' . $mediaId);
+        }
+
+        [$width, $height] = $this->variants->getDimensions($absolutePath);
+        if ($width <= 0 || $height <= 0) {
+            throw new \RuntimeException('Nelze načíst rozměry média #' . $mediaId);
+        }
+
+        return $this->generateVariants(
+            $siteId,
+            $mediaId,
+            $absolutePath,
+            dirname($relativePath),
+            dirname($absolutePath),
+            $width,
+            $height,
+            $ext
+        );
+    }
+
     private function createMediaRecord(
         int $siteId,
         string $originalFilename,

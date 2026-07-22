@@ -24,7 +24,8 @@ if (cmsTimeline) {
   }
 }
 
-const premiumHome = document.querySelector(".premium-photo-home");
+const premiumHome = document.querySelector(".premium-photo-home")
+  || (document.body.dataset.cmsPageKey === "homepage" ? document.querySelector("main") : null);
 if (premiumHome) {
   const aboutVisualSource = document.querySelector(".jb-about-visual__source[data-src]");
   const services = premiumHome.querySelector("#sluzby");
@@ -56,7 +57,7 @@ if (premiumHome) {
   // service cards (title + description) rather than inventing new copy.
   if (aboutVisualSource && services && !premiumHome.querySelector(".premium-about-split")) {
     const src = aboutVisualSource.dataset.src || "";
-    const serviceCards = [...services.querySelectorAll(".premium-service-card")].slice(0, 4);
+    const serviceCards = [...services.querySelectorAll(".premium-service-card, .hp-svc-card")].slice(0, 4);
     if (src && serviceCards.length) {
       const about = document.createElement("section");
       about.className = "premium-about-split wrap";
@@ -78,9 +79,9 @@ if (premiumHome) {
       const list = document.createElement("div");
       list.className = "premium-about-split__list";
       serviceCards.forEach(card => {
-        const num = card.querySelector(".t-num")?.textContent || "";
-        const title = card.querySelector("h3")?.textContent || "";
-        const desc = card.querySelector("p")?.textContent || "";
+        const num = card.querySelector(".t-num, .hp-svc-card__num")?.textContent || "";
+        const title = card.querySelector("h3, .hp-svc-card__title")?.textContent || "";
+        const desc = card.querySelector("p, .hp-svc-card__desc")?.textContent || "";
         const item = document.createElement("div");
         item.className = "premium-about-split__item";
         const itemNum = document.createElement("span");

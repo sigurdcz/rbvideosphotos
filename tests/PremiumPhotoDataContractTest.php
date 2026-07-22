@@ -251,6 +251,10 @@ function register_premium_photo_data_contract_tests(callable $test, callable $as
     });
 
     $test('premium photo owns database snippet markup through theme partials and archetypes', function () use ($assert, $themeDir): void {
+        $js = (string)file_get_contents($themeDir . '/assets/theme.js');
+        $assert(str_contains($js, '.premium-photo-home') && str_contains($js, 'document.body.dataset.cmsPageKey === "homepage"'), 'Homepage runtime cannot compose Premium Photo enhancements from published generic markup.');
+        $assert(str_contains($js, '.premium-service-card, .hp-svc-card'), 'About section does not support the canonical published service-card markup.');
+
         $requiredViews = [
             'partials/home-service-card.phtml' => 'premium-service-card',
             'partials/home-portfolio.phtml' => 'premium-portfolio-grid',

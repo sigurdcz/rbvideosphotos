@@ -36,6 +36,10 @@ function register_wedding_blog_demo_content_tests(callable $test, callable $asse
 
     $test('wedding blog importer requires Media Library thumbnails and blog ownership', function () use ($assert): void {
         $source = (string)file_get_contents(dirname(__DIR__) . '/app/Services/WeddingBlogDemoContentImporter.php');
+        $ingestion = (string)file_get_contents(dirname(__DIR__) . '/app/Services/MediaIngestionService.php');
+        $assert(str_contains($source, "extension_loaded('gd')"), 'Wedding demo import does not fail before writes when GD is unavailable.');
+        $assert(str_contains($source, 'regenerateImageVariants($siteId, $mediaId)'), 'Wedding demo import cannot repair existing media without thumbnail variants.');
+        $assert(str_contains($ingestion, 'public function regenerateImageVariants'), 'Media ingestion does not expose explicit derivative repair for existing images.');
         $publishSource = (string)file_get_contents(dirname(__DIR__) . '/app/Services/PublishService.php');
         $assert(str_contains($source, 'ingestUploadedFile('), 'Importer bypasses MediaIngestionService.');
         $assert(str_contains($source, "=== 'thumb'"), 'Importer does not verify thumbnail variants.');

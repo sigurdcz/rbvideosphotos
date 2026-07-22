@@ -1518,3 +1518,31 @@ Zadani: Odebrat border otevreneho burger tlacitka, zpomalit morph burger/krizek 
 Hotovo. Toggle je bez borderu v zavrenem i otevrenem stavu, morph trva 0,65 s a oba hero meta texty odpovidaji zadani.
 
 ---
+# UKOL: Produkcni sekce O nas a oprava Demo seedu
+
+Datum: 2026-07-22
+Zadani: Zajistit, aby se DB-rizena homepage sekce O nas publikovala i na produkci, a opravit lokalni Demo seed, ktery konci na chybejicim thumbnail derivatu media #25.
+
+## Kroky
+
+- [x] Porovnat runtime/publish datovy tok sekce O nas a zjistit presnou pricinu rozdilu produkce.
+- [x] Dohledat v logu a databazi puvod media #25 a pricinu chybejiciho thumbnailu.
+- [x] Opravit publish/seed kontrakt bez skryteho fallbacku a doplnit regrese.
+- [x] Provest Demo seed, publikaci a runtime overeni sekce O nas.
+- [x] Aktualizovat dokumentaci a wiki reflexi, uzavrit ukol.
+
+## Poznamky
+
+Hotovo znamena: cerstve publikovany web obsahuje stejnou sekci O nas jako lokalni homepage a Demo seed dokonci bez chyby chybejiciho derivatu; chyba se neopravuje ignorovanim neplatneho media zaznamu.
+
+Produkce vraci HTTP 200, obsahuje `jb-about-visual__source`, `#sluzby` i Premium Photo JS, ale publikovany DOM ma genericke karty `.hp-svc-card` a chybi mu wrapper `.premium-photo-home`. Puvodni JS vyzadoval vyhradne wrapper a `.premium-service-card`, proto sekci bez chyby preskocil. Kompozitor nyni na homepage prijme i `main` a kanonicke publikovane `.hp-svc-card` vcetne jejich num/title/desc trid.
+
+Lokalni log z 15:36:47 potvrzuje varovani `GD extension not loaded - skipping variant generation` pro media 10-25. Server na portu 8000 bezel z PHP 8.4.19 spusteneho pred nactenim aktualniho php.ini; CLI uz ma `extension=gd` aktivni. Importer nyni kontroluje GD pred prvnim zapisem a existujicimu mediu bez thumbnailu zavola explicitni regeneraci variant namisto trvaleho selhani nebo skryteho ignorovani.
+
+Server `localhost:8000` byl restartovan stejnym PHP 8.4.19 a aktualnim `php.ini`. Skutecny `php database/seeds/demo_content.php` dokoncil 17 clanku, 5 praci, 33 recenzi a publikaci bez chyby; puvodne problemove medium #25 ma po oprave varianty `webp`, `thumb`, `medium`, `og`. Premium Photo preview vraci wrapper, DB marker i genericke `.hp-svc-card` a hashovany JS obsahuje novy homepage fallback i generic-card selektor. In-app browser backend neni v tomto behu dostupny (seznam browseru je prazdny), proto nelze vydavat screenshot za provedeny.
+
+## Vysledek
+
+Dokonceno. Produkcni Premium Photo JS umi vytvorit O nas z generickeho publikovaneho homepage DOM i z theme PHTML DOM. Lokalni PHP server byl restartovan s GD a Demo seed uspesne dokoncil vcetne opravy chybejicich variant media #25 a nove publikace. Aktualizovany jsou ARCHITECTURE a projektova wiki; README ani INSTRUCTIONS se nemenily, protoze instalacni kroky a repozitarova pravidla zustavaji stejne. Zakladni regrese prosly 65/65. Golden snapshoty po uzivatelskem Armageddonu zustavaji odlisne kvuli novym nahodnym media cestam (25/27 kontrol); nebyly potichu prepsany ani vydavany za uspech. In-app browser nebyl dostupny, proto je vizualni screenshot explicitne neprovedeny.
+
+---

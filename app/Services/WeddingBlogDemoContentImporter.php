@@ -53,6 +53,10 @@ final class WeddingBlogDemoContentImporter
     /** @return array{articles:int,media:int,warnings:list<string>} */
     public function import(int $siteId): array
     {
+        if (!extension_loaded('gd')) {
+            throw new RuntimeException('PHP rozšíření GD není načtené; Demo obsah vyžaduje tvorbu thumbnail variant. Restartujte lokální PHP server po zapnutí extension=gd.');
+        }
+
         $root = dirname(__DIR__, 2) . '/Data pro clanky/RB_Videos_Photos_NASE_PRACE/nase-prace-md';
         if (!is_dir($root)) {
             throw new RuntimeException('Chybí zdroj demo obsahu Naše práce: ' . $root);
@@ -218,7 +222,7 @@ final class WeddingBlogDemoContentImporter
             }
         }
         if ($existing) {
-            $this->assertThumbExists((int)$existing['id'], (string)$existing['storage_path']);
+            $this->assertThumbExists($siteId, (int)$existing['id'], (string)$existing['storage_path']);
             return (int)$existing['id'];
         }
 
@@ -230,7 +234,7 @@ final class WeddingBlogDemoContentImporter
         if ($mediaId <= 0) {
             throw new RuntimeException('Media Library nevrátila ID pro ' . $sourcePath);
         }
-        $this->assertThumbExists($mediaId, (string)($result['storage_path'] ?? ''));
+        $this->assertThumbExists($siteId, $mediaId, (string)($result['storage_path'] ?? ''));
         return $mediaId;
     }
 
@@ -249,7 +253,7 @@ final class WeddingBlogDemoContentImporter
         return $slugs;
     }
 
-    private function assertThumbExists(int $mediaId, string $storagePath): void
+    private function assertThumbExists(int $siteId, int $mediaId, string $storagePath): void
     {
         $absoluteOriginal = dirname(__DIR__, 2) . '/' . ltrim($storagePath, '/');
         if (!is_file($absoluteOriginal)) {
@@ -260,6 +264,18 @@ final class WeddingBlogDemoContentImporter
             if (($variant['format'] ?? '') === 'thumb') {
                 $thumb = (string)$variant['path'];
                 break;
+            }
+        }
+        if ($thumb === null || !is_file(dirname(__DIR__, 2) . '/' . ltrim($thumb, '/'))) {
+            $this->ingestion->regenerateImageVariants($siteId, $mediaId);
+            foreach ($this->media->variantsByMediaId($mediaId) as $variant) {
+                $candidate = (string)($variant['path'] ?? '');
+                if (($variant['format'] ?? '') === 'thumb'
+                    && $candidate !== ''
+                    && is_file(dirname(__DIR__, 2) . '/' . ltrim($candidate, '/'))) {
+                    $thumb = $candidate;
+                    break;
+                }
             }
         }
         if ($thumb === null || !is_file(dirname(__DIR__, 2) . '/' . ltrim($thumb, '/'))) {
