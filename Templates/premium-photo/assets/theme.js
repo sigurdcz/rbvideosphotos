@@ -76,6 +76,9 @@ if (premiumHome) {
       const label = document.createElement("p");
       label.className = "section-label";
       label.textContent = "O nás";
+      const introduction = document.createElement("p");
+      introduction.className = "premium-about-split__intro";
+      introduction.textContent = "Jsme dva tvůrci z Olomouce, které spojuje cit pro obraz a poctivě odvedená práce. Každou zakázku tvoříme osobně – od prvního setkání až po finální fotografii a film.";
 
       const list = document.createElement("div");
       list.className = "premium-about-split__list";
@@ -108,7 +111,7 @@ if (premiumHome) {
       servicesCta.textContent = "Další služby";
       actions.append(contactCta, servicesCta);
 
-      body.append(label, list, actions);
+      body.append(label, introduction, list, actions);
       about.append(frame, body);
       services.before(about);
       services.remove();

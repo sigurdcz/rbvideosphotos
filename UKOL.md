@@ -25,6 +25,30 @@ Runtime overeni: blog detail vraci hero original `/media/...jpg`, stejna URL je 
 Dokonceno. Hero fotografie nebo video zustava prvni polozkou kompletni galerie u detailu blogu, Nase prace i sluzeb; shodne URL se zobrazi pouze jednou. Blogovy hero pouziva originalni ulozeny soubor, zatimco zmensene varianty zustavaji jen pro nahledy. Aktualizovan je datovy kontrakt, oba detailni archetypy, regresni testy, ARCHITECTURE a projektova wiki. README ani INSTRUCTIONS se nemenily, protoze instalacni postup ani repozitarova pravidla zustala beze zmeny.
 
 ---
+# UKOL: Vetsi fotografie a predstaveni v O nas
+
+Datum: 2026-07-22
+Zadani: Mirne zvetsit fotografii v homepage sekci O nas a nad seznam sesti sluzeb pridat kratke predstaveni majitelu webu.
+
+## Kroky
+
+- [x] Zkontrolovat aktualni proporce a textovou hierarchii sekce O nas.
+- [x] Zvetsit fotograficky sloupec pri zachovani responzivity.
+- [x] Pridat kratky autorsky text nad seznam sluzeb a odpovidajici styl.
+- [x] Doplnit regresni kontrakt a overit desktop i mobil pres Chrome CDP.
+- [x] Posoudit dokumentaci a wiki reflexi, uzavrit ukol.
+
+## Poznamky
+
+Navrzena textace: „Jsme dva tvůrci z Olomouce, které spojuje cit pro obraz a poctivě odvedená práce. Každou zakázku tvoříme osobně – od prvního setkání až po finální fotografii a film.“ Hotovo znamena vetsi, ale neprevažujici portret, citelny uvodni odstavec pred polozkou 01 a zadny horizontalni overflow. Vizualni rubrika: proporce fotografie 30, hierarchie a text 30, seznam a CTA 20, responzivita 15, runtime 5.
+
+Fotograficky sloupec byl rozsiren z 340 na 390 px a mezera mezi sloupci zmensena na 48 px, aby zustal dostatek mista pro text. Novy odstavec je vlozen mezi label O nas a seznam sluzeb; na sirce pod 850 px ma fotografie responzivni limit 380 px.
+
+## Vysledek
+
+Dokonceno. Fotografie O nas ma desktopovy sloupec 390 px a novy osobni odstavec je mezi labelem a sluzbami. Zakladni testy prosly 65/65. Chrome CDP overil 1440 px i 390 px bez horizontalniho overflow. Baseline 72/100, iterace 1 dosahla 97/100 (fotografie 30/30, hierarchie a text 29/30, seznam a CTA 19/20, responzivita 14/15, runtime 5/5). README, ARCHITECTURE a INSTRUCTIONS nevyzaduji zmenu, protoze jde o izolovanou prezentacni upravu Premium Photo. Wiki reflexe: SKIP; architecture i domain-logic maji coverage `ok` a dossier uz popisuje theme prezentacni vrstvu a Chrome screenshotovy postup. Pred commitem byly na vyslovny pozadavek odstraneny vsechny root-level QA, preview, iteration a reference screenshoty (27 souboru); obsahova media v podadresarich zustala nedotcena.
+
+---
 # UKOL: Homepage O nas a sluzby
 
 Datum: 2026-07-22

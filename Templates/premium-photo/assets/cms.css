@@ -76,8 +76,8 @@ body > footer { display: block; }
 
 .premium-about-split {
   display: grid;
-  grid-template-columns: minmax(0, 340px) minmax(0, 1fr);
-  gap: 56px;
+  grid-template-columns: minmax(0, 390px) minmax(0, 1fr);
+  gap: 48px;
   align-items: start;
   padding-block: 28px 78px;
 }
@@ -100,6 +100,7 @@ body > footer { display: block; }
   background: linear-gradient(135deg, rgba(10,11,14,.05), rgba(10,11,14,.42));
 }
 .premium-about-split__body { display: grid; gap: 28px; align-content: start; padding-top: 6px; }
+.premium-about-split__intro { max-width: 720px; margin: -10px 0 0; color: var(--ink-soft); font-size: 1rem; line-height: 1.75; }
 .premium-about-split__actions { display: flex; flex-wrap: wrap; gap: 12px; justify-self: start; }
 .premium-about-split__list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 26px 32px; }
 .premium-about-split__item { display: grid; gap: 6px; padding-top: 16px; border-top: 1px solid var(--line); }
@@ -108,7 +109,7 @@ body > footer { display: block; }
 .premium-about-split__item p { margin: 0; font-size: .88rem; color: var(--ink-soft); }
 @media (max-width: 850px) {
   .premium-about-split { grid-template-columns: 1fr; gap: 32px; }
-  .premium-about-split__frame { max-width: 320px; margin-inline: auto; }
+  .premium-about-split__frame { width: min(100%, 380px); max-width: none; margin-inline: auto; }
 }
 @media (max-width: 620px) {
   .premium-about-split__list { grid-template-columns: 1fr; }
