@@ -9,6 +9,7 @@ use App\Repositories\BlogRepository;
 use App\Repositories\BlockRepository;
 use App\Repositories\MediaRepository;
 use App\Repositories\PageRepository;
+use App\Repositories\PortfolioRepository;
 use App\Repositories\PublishHistoryRepository;
 use App\Repositories\RedirectRepository;
 use App\Repositories\SeoRepository;
@@ -35,6 +36,7 @@ class PublishService implements PublishPageChrome
     private SiteRepository $sites;
     private MediaRepository $media;
     private BlogRepository $blog;
+    private PortfolioRepository $portfolio;
     private RedirectRepository $redirects;
     private PublishHistoryRepository $history;
     private ThemeTemplateRegistry $themes;
@@ -56,6 +58,7 @@ class PublishService implements PublishPageChrome
         $this->sites      = new SiteRepository();
         $this->media      = new MediaRepository();
         $this->blog       = new BlogRepository();
+        $this->portfolio  = new PortfolioRepository();
         $this->redirects  = new RedirectRepository();
         $this->history    = new PublishHistoryRepository();
         $this->themes     = new ThemeTemplateRegistry();
@@ -261,11 +264,12 @@ class PublishService implements PublishPageChrome
     private function regenerateSitemapAndRobots(int $siteId, array $site): void
     {
         $pages = $this->pages->findPublishedBySite($siteId);
-        $sitemapItems = array_merge(
+        $sitemapItems = $this->uniqueSitemapItems(array_merge(
             $pages,
             $this->builtInPublicRouteSitemapItems($pages),
-            $this->blogPostsAsSitemapItems($siteId)
-        );
+            $this->blogPostsAsSitemapItems($siteId),
+            $this->portfolioEntriesAsSitemapItems($siteId)
+        ));
 
         $seoCfg  = Config::get('seo');
         $sitemapXml = $this->sitemap->generate($sitemapItems, $site['domain'], $seoCfg['sitemap_changefreq'], $seoCfg['sitemap_priority']);
@@ -320,6 +324,41 @@ class PublishService implements PublishPageChrome
         }
 
         return $items;
+    }
+
+    private function portfolioEntriesAsSitemapItems(int $siteId): array
+    {
+        $items = [];
+        foreach ($this->portfolio->allPublished($siteId) as $entry) {
+            $slug = trim((string)($entry['slug'] ?? ''), '/');
+            if ($slug === '') {
+                continue;
+            }
+
+            $items[] = [
+                'url_path' => $slug,
+                'published_at' => $entry['published_at'] ?? null,
+                'updated_at' => $entry['updated_at'] ?? null,
+            ];
+        }
+
+        return $items;
+    }
+
+    /** Keep the first canonical owner when two content types expose one path. */
+    private function uniqueSitemapItems(array $items): array
+    {
+        $unique = [];
+        foreach ($items as $item) {
+            $path = trim((string)($item['url_path'] ?? ''), '/');
+            if (array_key_exists($path, $unique)) {
+                continue;
+            }
+            $item['url_path'] = $path;
+            $unique[$path] = $item;
+        }
+
+        return array_values($unique);
     }
 
     public function generateHtaccess(int $siteId): void

@@ -43,5 +43,7 @@ function register_wedding_blog_demo_content_tests(callable $test, callable $asse
         $assert(str_contains($source, 'blog_posts') && str_contains($source, 'setGallery'), 'Importer does not persist articles through the blog model.');
         $assert(str_contains($source, 'removeIncorrectPortfolioEntries'), 'Importer does not clean the incorrectly classified portfolio records.');
         $assert(str_contains($publishSource, 'blogPostsAsSitemapItems($siteId)'), 'Full publish does not add published blog articles to sitemap.xml.');
+        $assert(str_contains($publishSource, 'portfolioEntriesAsSitemapItems($siteId)'), 'Full publish does not add published portfolio articles to sitemap.xml.');
+        $assert(str_contains($publishSource, 'uniqueSitemapItems('), 'Sitemap does not deduplicate canonical paths across content types.');
     });
 }

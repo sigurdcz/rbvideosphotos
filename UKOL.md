@@ -1,3 +1,34 @@
+# UKOL: Sitemap Nase prace a sdilena detailni galerie
+
+Datum: 2026-07-22
+Zadani: Zahrnout publikovane clanky Nase prace do sitemap.xml a pridat do detailu blogu, Nase prace a sluzeb sdilenou JS/CSS galerii s hlavnim mediem, sipkami, teckami a plynulymi animacemi.
+
+## Kroky
+
+- [x] Zmapovat repozitare, view modely a sablony pro sitemap a media vsech tri typu detailu.
+- [x] Rozsirit plny publish a sitemap o publikovane polozky Nase prace bez duplicit URL.
+- [x] Navrhnout sdileny pristupny HTML kontrakt galerie pro obrazky i video.
+- [x] Zapojit galerii do detailu blogu, Nase prace a sluzby nad skutecnymi medii.
+- [x] Implementovat responzivni CSS a smooth JS ovladani sipkami, teckami, klavesnici a swipem.
+- [x] Doplnit regresni testy a overit sitemap, DOM kontrakt a nacitani komponenty; browser interakce je explicitne neprovedena kvuli nedostupnemu backendu.
+- [x] Aktualizovat dokumentaci, wiki reflexi a uzavrit ukol.
+
+## Poznamky
+
+Hotovo znamena: plny publish vlozi vsechny publikovane blogy i polozky Nase prace do sitemap bez duplicit; kazdy ze tri detailu pouzije jednu sdilenou galerii, jejiz aktivni medium se plynule meni, sipky funguji jen pri vice polozkach a pocet tecek odpovida poctu medii s jednou zvetsenou aktivni teckou. Chybejici media zustanou viditelne prazdnym stavem, nikoli skrytym nahradnim obsahem.
+
+Mapovani: blog detail ma featured foto a `blog_media`; detail Nase prace ma `portfolio_media` a volitelne video; detail sluzby je genericka DB stranka s hero mediem a medii uvnitr HTML bloku `body`. Sdilena galerie proto bude theme JS komponenta, ktera prevezme pouze skutecne DOM zdroje, deduplikuje URL a nevytvari nahradni obrazky. Sitemap nyni sklada pages + routy + blog + publikovane portfolio a pred generovanim deduplikuje kanonickou cestu.
+
+Theme komponenta `.detail-media-gallery` se vklada bezprostredne za detailni hero. Podporuje obrazky, nativni video a YouTube/Vimeo iframe, smyckove sipky, klikaci indikatory, klavesy Left/Right/Home/End a horizontalni swipe. Aktivni tecka se plynule roztahne z 8 na 28 px; track pouziva 720ms easing a pri `prefers-reduced-motion` se animace korektne vypnou. Puvodni samostatne gallery/video bloky a uvodni obrazek sluzby se po prevzeti odstrani, takze se medium nevykresli duplicitne.
+
+Publish overeni: sitemap ma 35 URL, z toho 17 blogu a 5 publikovanych polozek Nase prace; chybi 0 zaznamu a vsech 35 cest je unikatnich. Tri reprezentativni detailni URL vraci HTTP 200, maji spravny hero hook a nacitaji hashovane gallery CSS/JS. Regrese prosla 65/65 PHP testu a 27/27 golden kontrol. Interaktivni kontrola pres primarni browser zustava neprovedena, protoze browser runtime vratil `No browser is available` a `agent.browsers.list()` je prazdny; tento vnejsi blocker neni nahrazen jinym ovladacem.
+
+## Vysledek
+
+Hotovo. Plny publish zahrnuje publikovane blogy i clanky Nase prace a deduplikuje jejich cesty. Premium Photo detail blogu, Nase prace i sluzby pouziva jednu responzivni smooth galerii nad skutecnymi obrazky a videi. Aktualizovan byl `ARCHITECTURE.md`; README ani INSTRUCTIONS nemenily provozni nebo vyvojovy kontrakt. Projektova wiki zachycuje novy sitemap i gallery pipeline.
+
+---
+
 # UKOL: Prevest nove realizace na blog a doplnit sitemap
 
 Datum: 2026-07-22

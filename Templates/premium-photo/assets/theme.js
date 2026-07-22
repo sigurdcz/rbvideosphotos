@@ -216,6 +216,179 @@ if (innerPageKey !== "homepage") {
 }
 
 // ---------- mobilní menu ----------
+// Blog, portfolio and service details share one media viewer. The component
+// only consumes media that already exists in the rendered CMS DOM; it never
+// invents placeholder slides when the primary data path is empty.
+const detailHero = document.querySelector(".bp-hero, .pf-detail-hero, .svc-hero");
+if (detailHero && !document.querySelector(".detail-media-gallery")) {
+  const media = [];
+  const seen = new Set();
+  const absoluteUrl = value => {
+    try { return new URL(value, window.location.href).href; } catch (error) { return ""; }
+  };
+  const addMedia = item => {
+    const src = absoluteUrl(item.src || "");
+    if (!src || seen.has(src)) return;
+    seen.add(src);
+    media.push({ ...item, src });
+  };
+  const addNode = node => {
+    if (!node) return;
+    if (node.matches(".theme-hero-video")) {
+      addNode(node.querySelector("iframe, video, img"));
+    } else if (node.matches("img")) {
+      addMedia({ type: "image", src: node.currentSrc || node.src, alt: node.alt || "" });
+    } else if (node.matches("video")) {
+      addMedia({
+        type: "video",
+        src: node.currentSrc || node.src || node.querySelector("source")?.src,
+        poster: node.poster || "",
+        alt: node.getAttribute("aria-label") || node.getAttribute("title") || "Video",
+      });
+    } else if (node.matches("iframe")) {
+      const youtubeEmbed = node.src.match(/youtube\.com\/embed\/([A-Za-z0-9_-]{6,})/);
+      const vimeoEmbed = node.src.match(/player\.vimeo\.com\/video\/(\d+)/);
+      const src = youtubeEmbed
+        ? `https://www.youtube.com/embed/${youtubeEmbed[1]}`
+        : (vimeoEmbed ? `https://player.vimeo.com/video/${vimeoEmbed[1]}?dnt=1` : node.src);
+      addMedia({ type: "embed", src, alt: node.title || "Video" });
+    } else if (node.matches("a[href]")) {
+      const href = node.href;
+      const youtube = href.match(/(?:youtube\.com\/watch\?.*v=|youtu\.be\/|youtube\.com\/embed\/)([A-Za-z0-9_-]{11})/);
+      const vimeo = href.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+      if (youtube) addMedia({ type: "embed", src: `https://www.youtube.com/embed/${youtube[1]}`, alt: node.textContent.trim() || "Video" });
+      else if (vimeo) addMedia({ type: "embed", src: `https://player.vimeo.com/video/${vimeo[1]}?dnt=1`, alt: node.textContent.trim() || "Video" });
+      else if (/\.(?:avif|gif|jpe?g|png|webp)(?:[?#].*)?$/i.test(href)) addMedia({ type: "image", src: href, alt: node.querySelector("img")?.alt || "" });
+    }
+  };
+
+  addNode(detailHero.querySelector(":scope > .hero-bg, :scope > .theme-hero-video"));
+  document.querySelectorAll([
+    ".premium-video iframe", ".premium-video video",
+    ".premium-article-gallery a[href]",
+    ".premium-article-body img", ".premium-article-body video", ".premium-article-body iframe",
+    ".premium-article-body a[href*='youtube.com']", ".premium-article-body a[href*='youtu.be']", ".premium-article-body a[href*='vimeo.com']",
+    "main .svc-detail__img", "main .svc-hero ~ video", "main .svc-hero ~ iframe",
+    "main .svc-hero ~ a[href*='youtube.com']", "main .svc-hero ~ a[href*='youtu.be']", "main .svc-hero ~ a[href*='vimeo.com']",
+  ].join(",")).forEach(addNode);
+
+  if (media.length) {
+    document.querySelectorAll(".premium-video, .premium-article-gallery").forEach(node => node.remove());
+    document.querySelectorAll("main .svc-detail__img").forEach(node => node.remove());
+
+    const gallery = document.createElement("section");
+    gallery.className = "detail-media-gallery wrap";
+    gallery.setAttribute("aria-label", "Galerie médií");
+    gallery.dataset.galleryCount = String(media.length);
+    const viewport = document.createElement("div");
+    viewport.className = "detail-media-gallery__viewport";
+    viewport.tabIndex = 0;
+    const track = document.createElement("div");
+    track.className = "detail-media-gallery__track";
+
+    const slides = media.map((item, index) => {
+      const slide = document.createElement("figure");
+      slide.className = "detail-media-gallery__slide";
+      slide.setAttribute("aria-label", `${index + 1} z ${media.length}`);
+      if (item.type === "embed") {
+        const frame = document.createElement("iframe");
+        frame.src = item.src;
+        frame.title = item.alt || `Video ${index + 1}`;
+        frame.loading = "lazy";
+        frame.allow = "autoplay; fullscreen; picture-in-picture";
+        frame.allowFullscreen = true;
+        slide.appendChild(frame);
+      } else if (item.type === "video") {
+        const video = document.createElement("video");
+        video.src = item.src;
+        video.controls = true;
+        video.preload = "metadata";
+        if (item.poster) video.poster = item.poster;
+        video.setAttribute("aria-label", item.alt || `Video ${index + 1}`);
+        slide.appendChild(video);
+      } else {
+        const image = document.createElement("img");
+        image.src = item.src;
+        image.alt = item.alt || "";
+        image.loading = index === 0 ? "eager" : "lazy";
+        image.decoding = "async";
+        slide.appendChild(image);
+      }
+      track.appendChild(slide);
+      return slide;
+    });
+    viewport.appendChild(track);
+
+    const previous = document.createElement("button");
+    previous.type = "button";
+    previous.className = "detail-media-gallery__arrow detail-media-gallery__arrow--previous";
+    previous.setAttribute("aria-label", "Předchozí médium");
+    previous.innerHTML = "&#8592;";
+    const next = document.createElement("button");
+    next.type = "button";
+    next.className = "detail-media-gallery__arrow detail-media-gallery__arrow--next";
+    next.setAttribute("aria-label", "Další médium");
+    next.innerHTML = "&#8594;";
+    viewport.append(previous, next);
+
+    const dots = document.createElement("div");
+    dots.className = "detail-media-gallery__dots";
+    dots.setAttribute("aria-label", "Výběr média");
+    const status = document.createElement("p");
+    status.className = "detail-media-gallery__status sr-only";
+    status.setAttribute("aria-live", "polite");
+    gallery.append(viewport, dots, status);
+    detailHero.after(gallery);
+
+    let activeIndex = 0;
+    let dotButtons = [];
+    const show = index => {
+      activeIndex = (index + media.length) % media.length;
+      track.style.transform = `translate3d(${-activeIndex * 100}%,0,0)`;
+      slides.forEach((slide, slideIndex) => slide.setAttribute("aria-hidden", slideIndex === activeIndex ? "false" : "true"));
+      dotButtons.forEach((dot, dotIndex) => {
+        dot.classList.toggle("is-active", dotIndex === activeIndex);
+        dot.setAttribute("aria-current", dotIndex === activeIndex ? "true" : "false");
+      });
+      status.textContent = `Médium ${activeIndex + 1} z ${media.length}`;
+      slides.forEach((slide, slideIndex) => {
+        if (slideIndex !== activeIndex) slide.querySelectorAll("video").forEach(video => video.pause());
+      });
+    };
+    dotButtons = media.map((item, index) => {
+      const dot = document.createElement("button");
+      dot.type = "button";
+      dot.className = "detail-media-gallery__dot";
+      dot.setAttribute("aria-label", `Zobrazit médium ${index + 1} z ${media.length}`);
+      dot.addEventListener("click", () => show(index));
+      dots.appendChild(dot);
+      return dot;
+    });
+    previous.addEventListener("click", () => show(activeIndex - 1));
+    next.addEventListener("click", () => show(activeIndex + 1));
+    viewport.addEventListener("keydown", event => {
+      if (event.key === "ArrowLeft") { event.preventDefault(); show(activeIndex - 1); }
+      if (event.key === "ArrowRight") { event.preventDefault(); show(activeIndex + 1); }
+      if (event.key === "Home") { event.preventDefault(); show(0); }
+      if (event.key === "End") { event.preventDefault(); show(media.length - 1); }
+    });
+    let pointerStart = null;
+    viewport.addEventListener("pointerdown", event => { pointerStart = event.clientX; });
+    viewport.addEventListener("pointerup", event => {
+      if (pointerStart === null) return;
+      const distance = event.clientX - pointerStart;
+      pointerStart = null;
+      if (Math.abs(distance) >= 42) show(activeIndex + (distance < 0 ? 1 : -1));
+    });
+    viewport.addEventListener("pointercancel", () => { pointerStart = null; });
+    if (media.length === 1) {
+      previous.hidden = true;
+      next.hidden = true;
+    }
+    show(0);
+  }
+}
+
 const toggle = document.querySelector(".nav-toggle");
 if (toggle) {
   toggle.addEventListener("click", () => {

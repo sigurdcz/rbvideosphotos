@@ -227,6 +227,22 @@ function register_premium_photo_data_contract_tests(callable $test, callable $as
         $assert(!str_contains($js, 'Vše si vysvětlíme a domluvíme se.'), 'Redundant CTA heading remains in the generated service-detail CTA.');
     });
 
+    $test('premium photo detail gallery shares smooth accessible controls across content types', function () use ($assert, $themeDir): void {
+        $js = (string)file_get_contents($themeDir . '/assets/theme.js');
+        $css = (string)file_get_contents($themeDir . '/assets/cms.css');
+
+        foreach (['.bp-hero', '.pf-detail-hero', '.svc-hero'] as $detailHook) {
+            $assert(str_contains($js, $detailHook), 'Shared detail gallery misses route hook ' . $detailHook);
+        }
+        $assert(str_contains($js, 'detail-media-gallery__track'), 'Detail gallery track is missing.');
+        $assert(str_contains($js, 'data.galleryCount') || str_contains($js, 'dataset.galleryCount'), 'Detail gallery does not expose the real media count.');
+        $assert(str_contains($js, 'ArrowLeft') && str_contains($js, 'ArrowRight'), 'Detail gallery keyboard navigation is missing.');
+        $assert(str_contains($js, 'pointerdown') && str_contains($js, 'pointerup'), 'Detail gallery swipe navigation is missing.');
+        $assert(str_contains($js, 'youtube.com/embed') && str_contains($js, 'player.vimeo.com/video'), 'Detail gallery video embedding is incomplete.');
+        $assert(str_contains($css, '.detail-media-gallery__dot.is-active') && str_contains($css, 'width:28px'), 'Active gallery position is not visibly enlarged.');
+        $assert(str_contains($css, 'cubic-bezier(.22,1,.36,1)') && str_contains($css, '@media (prefers-reduced-motion:reduce)'), 'Smooth gallery motion or reduced-motion handling is missing.');
+    });
+
     $test('premium photo owns database snippet markup through theme partials and archetypes', function () use ($assert, $themeDir): void {
         $requiredViews = [
             'partials/home-service-card.phtml' => 'premium-service-card',
