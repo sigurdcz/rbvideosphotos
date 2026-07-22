@@ -1139,7 +1139,7 @@ Zadani: Opravit textaci „Rodinne, portretni a firemni foceni“ tak, aby byla 
 - [x] Zmerit bounding boxy viewportu, kontejneru, `cenik-other`, nadpisu a popisu.
 - [x] Opravit skutecny rodicovsky layout a pridat ciselny regresni kontrakt.
 - [x] Overit desktop a mobil novymi screenshoty a testy.
-- [-] Provest wiki reflexi, commitnout a pushnout.
+- [x] Provest wiki reflexi, commitnout a pushnout.
 
 ## Poznamky
 
@@ -1154,7 +1154,7 @@ Zadani: Opravit textaci „Rodinne, portretni a firemni foceni“ tak, aby byla 
 
 ## Vysledek
 
-Implementace a overeni hotove. Textace je geometricky presne uprostred na desktopu i mobilu; zbyva commit a push projektu.
+Hotovo. Textace je geometricky presne uprostred na desktopu i mobilu. Implementace byla commitnuta jako `53b8bba` a uspesne pushnuta na `origin/master`.
 
 ## Vysledek
 
