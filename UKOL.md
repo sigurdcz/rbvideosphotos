@@ -1670,3 +1670,5 @@ Push master dokoncen (d320f31). Run 38906062291 sestavil artefakt a nacetl Secre
 Uzivatel opravil FTP_SERVER odstranenenim portu. Produkcni cil opraven z /web/ na /rbvideosphotos.cz/web/ podle Total Commander pripojeni main uctu. Stary rerun zrusen; nasleduje novy push a overeni.
 
 Upresneni uzivatele: produkcni FTP ucet uz je omezen na cilovou slozku hostingu. Workflow musi pouzit server-dir: /; absolutni hostingovou cestu nepridavat. Predchozi beh zrusen.
+
+Nazvy obou workflow opraveny z puvodniho Webzdarma na Active24; jde pouze o zobrazovany nazev, cil urcuje FTP_SERVER.

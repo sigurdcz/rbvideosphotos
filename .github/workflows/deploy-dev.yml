@@ -1,4 +1,4 @@
-name: Deploy to Webzdarma (dev)
+name: Deploy to Active24 (dev)
 
 on:
   push:
