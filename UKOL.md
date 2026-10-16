@@ -1752,7 +1752,7 @@ Doporuceny model: Sol - Prenos novejsiho CMS a migraci s kontrolou kompatibility
 - [x] Prenest sledovane aplikacni zdroje, motivy, assety a append-only migrace 024-102.
 - [x] Zachovat Active24 workflow, bootstrap prvniho admina a explicitni chyby renderovani; sloucit migrator.
 - [x] Overit PHP/JS syntax, regresni testy, registraci motivu a potrebne schema kroky.
-- [ ] Dokumentace, wiki reflexe, commit a nasazeni aktualizace.
+- [x] Dokumentace, wiki reflexe, commit a nasazeni aktualizace.
 ## Poznamky
 Uzivatel vyslovne zvolil prenos celeho aktualniho CMS. Produkcni .env, databaze a runtime media se neprepisuji. Puvodni SQL migrace jsou beze zmen, pouze pribyvaji nove. Golden Bash Diagonal je v novejsim CMS kanonicky default. Testovani musi odlisit funkcni testy od golden kontrol a DB integrace.
 
@@ -1765,3 +1765,6 @@ PHP regrese 216/216 + bootstrap 7/7 prosly. Cista oddelena DB rbvp_import_valida
 DEPLOYMENT.md prepsan pro skutecny Active24 provoz; stare Webzdarma automaticke maintenance kroky nejsou v tomto repozitari zapnute. Zdroj obsahoval dva docasne PHP helpery bez HTTP auth; pridana CLI-only kontrola a vylouceni z artefaktu vcetne tests a lokalniho QA. Finalni overeni: 325 PHP/PHTML syntax OK, 19 JS syntax OK, 216 testu OK, 27/28 golden kontrol OK. Jedina zmena O nas je konkretni jiny poster a rozmery z lokalni DB migrace 103; golden nebyl prepsan.
 
 Do commitu pripravena cela aktualizace (601 souboru pred odstranenim dvou zastaralych planu). Runtime storage/published a public/assets/generated odstraneny pouze z indexu, lokalni obsah zustal zachovan; deployment je stejne vylucuje. Puvodni 001-023 SQL beze zmen, 79 novych SQL souboru. .env a .agents nejsou ve stagingu.
+
+## Vysledek prenosu aktualniho CMS
+Preneseno a nasazeno d7edef4; Actions 38919482148 success. Produkcni manifest golden-bash-diagonal 1.0.0, font CSS, admin login i bootstrap HTTP 200; DNS 37.9.175.211. Homepage HTTP 500 ma konkretni chybu chybejiciho blog_posts.sort_order, ktery pridava dosud nespustena migrace 072. Operator musi provest nove migrace serverovym tokenem, pak publish a zvolit motiv; zadny automaticky Armagedon nebyl proveden. 216+7 testu proslo, 27/28 goldenu; jeden dolozeny lokalni datovy rozdil posteru O nas zustal neprepsan. Testovaci DB po overeni bezpecne odstranena. Aktualizovany README, DEPLOYMENT, .env.example a wiki pipelines/data-model (wiki commit 27a7c10). .agents zustava nesledovana.
