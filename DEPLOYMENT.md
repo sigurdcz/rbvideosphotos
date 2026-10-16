@@ -53,7 +53,7 @@ Ověření vývoje: `php tests/PasswordResetIntegrationTest.php` vytváří a v 
 
 ## Archiv kontaktních zpráv a stav pošty
 
-Po nasazení spusťte migrace včetně **104_add_mail_archive.sql**. V administraci přibyla stránka **Zprávy** (`/admin/messages`, pouze role admin). Obsah poptávky (jméno, kontakt, typ služby, místo, zpráva a balíček) se ukládá do `mail_archive.body` **před pokusem o odeslání**. Příjemce zůstává v nastavení Kontakt/Nastavení (`form_email`, případně kontaktní e-mail). Vytvoření schránky team@rbvideosphotos.cz samo toto nastavení nemění.
+Po nasazení spusťte migrace včetně **104_add_mail_archive.sql**. V administraci přibyla stránka **E-maily a zprávy** (`/admin/messages`, pouze role admin). Obsah poptávky (jméno, kontakt, typ služby, místo, zpráva a balíček) se ukládá do `mail_archive.body` **před pokusem o odeslání**. Příjemce zůstává v nastavení Kontakt/Nastavení (`form_email`, případně kontaktní e-mail). Vytvoření schránky team@rbvideosphotos.cz samo toto nastavení nemění.
 
 Stavy: `stored` = uloženo, výsledek pokusu nepotvrzen (např. přerušení procesu); `accepted` = SMTP server přijal zprávu k doručení, nikoli důkaz doručení do schránky; `failed` = transport odmítl, konfigurace je neplatná nebo nastala chyba. Časové údaje jsou UTC. Přehled zobrazuje příjemce a bezpečný chybový kód. Automatické opakování se neprovádí, aby při nejasném výsledku nevznikaly duplicitní zprávy. Obsah lze v administraci přečíst a požadavek vyřídit přímo.
 
@@ -86,3 +86,12 @@ Zdroje: [Websupport - poštovní protokoly](https://www.websupport.cz/podpora/kb
 
 
 Ověření: `php tests/SmtpMailerTest.php`, `php tests/MailPersistenceIntegrationTest.php`, `php tests/PasswordResetIntegrationTest.php`, `php tests/MigrationUpgradeOrderIntegrationTest.php`. Izolované lokální databáze se po testech odstraní; reálná pošta se v testech neposílá.
+
+## Přehled e-mailů a změna vlastního hesla
+
+- `/admin/messages`: administrátor vidí kontaktní zprávy i metadata obnovy hesla. Filtry `status=accepted|failed|stored` a `kind=contact|password_reset` lze kombinovat. Přehled zobrazuje příjemce, předmět, vznik a poslední pokus (UTC), obsah kontaktu a bezpečný chybový kód. Počty jsou za celý archiv, počet nalezených a seznam respektují filtr. Stránkování po 50 zachovává filtry. `accepted` je předání poštovní službě, nikoli potvrzené doručení. Neplatný filtr vrací HTTP 400; editor nemá k archivu přístup.
+- `/admin/account/password`: každý přihlášený uživatel může změnit **pouze vlastní heslo**. Odkaz je v patičce administrace. Zadává současné heslo, nové heslo (12–72 bajtů, jiné než současné) a jeho potvrzení. POST vyžaduje CSRF a má limit 5 pokusů za 15 minut na účet. Po úspěchu se uživatel odhlásí a přihlásí novým heslem. Ostatní relace budou při dalším požadavku odmítnuty; existující reset odkazy účtu se zneplatní.
+
+Změna hesla neodesílá e-mail a nezávisí na dostupnosti SMTP. Pokud současné heslo neznáte, použijte `/admin/forgot-password`; ten posílá odkaz na skutečný `users.email`, nikoli příjemce kontaktu. Heslo ani reset token se do archivu/logu nepíše, audit změny obsahuje pouze user_id.
+
+Bez nové SQL migrace; vyžaduje existující `password_resets` a `mail_archive` (103/104). `php tests/AccountAdminIntegrationTest.php` ověřuje vlastní účet, reset tokeny, rollback a filtrování na samostatné testovací DB, která se v finally odstraní.

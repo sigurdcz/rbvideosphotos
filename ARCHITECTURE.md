@@ -695,3 +695,9 @@ Kontaktní POST nejdříve validuje CSRF, honeypot, limit a vstup. `MailArchiveS
 Obnova hesla používá stejnou službu, ale ukládá pouze metadata bez těla a tajného tokenu. Automatický retry není zaveden. Nastavení, limity a ověřovací příkazy jsou v `DEPLOYMENT.md`.
 
 SMTP konfigurace je v serverovém `.env` (`SMTP_HOST`, `SMTP_PORT`, `SMTP_ENCRYPTION`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `MAIL_FROM`). From odpovídá účtu, příjemce pochází z CMS. Výjimky se převádějí na bezpečné kódy bez uchování SMTP textu nebo tajných údajů.
+
+## Vlastní heslo a mailový přehled administrace
+
+`AccountController` používá Auth, CSRF a RequestThrottle; identitu bere pouze ze session. `AccountPasswordService` transakčně zamkne users řádek, ověří současný bcrypt hash, uloží nové heslo a odstraní reset tokeny účtu. Selhání odstranění tokenů vrací celou transakci zpět. Controller po úspěchu odhlašuje aktuální relaci, stávající Auth fingerprint odmítne ostatní staré relace při příštím požadavku.
+
+`MessagesController` vyžaduje roli admin a deleguje SQL na `MailArchiveRepository`. Parametrizované filtry mají allowlist status/kind, stránka je kladné číslo nejvýše 1 000 000, limit je 50. Počty za celý archiv jsou oddělené od filtrovaného výsledku. Zobrazení HTML escapuje a nesmí obsahovat resetovací tokeny.

@@ -61,7 +61,7 @@ try {
  catch (PDOException $e) { check($calls === 1, 'DB failure prevents send'); }
  // The admin archive escapes untrusted contact content.
  $rows = [['id'=>1,'created_at'=>'2026-10-16','subject'=>'<em>Subject & text</em>','status'=>'failed','kind'=>'contact','recipient'=>'team@example.test','error_code'=>'transport_rejected','body'=>$body]];
- $total=1;$page=1;$_user=['role'=>'admin'];$_csrfToken='test';
+ $total=1;$page=1;$status='';$kind='';$counts=['stored'=>0,'accepted'=>0,'failed'=>1];$_user=['role'=>'admin'];$_csrfToken='test';
  ob_start();require dirname(__DIR__) . '/admin/views/messages/index.php';$html=ob_get_clean();
  check(!str_contains($html, '<b>client & content</b>') && str_contains($html, '&lt;b&gt;'), 'Admin body escaped');
  check(!str_contains($html, '<em>Subject & text</em>'), 'Admin subject escaped');

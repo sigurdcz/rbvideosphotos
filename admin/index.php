@@ -36,6 +36,9 @@ try {
     $router->post('/admin/reset-password', 'PasswordResetController', 'resetPassword');
     $router->post('/admin/logout','AuthController', 'logout');
 
+    $router->get('/admin/account/password', 'AccountController', 'passwordForm');
+    $router->post('/admin/account/password', 'AccountController', 'changePassword');
+
     $router->get('/admin/messages', 'MessagesController', 'index');
 
     // Dashboard

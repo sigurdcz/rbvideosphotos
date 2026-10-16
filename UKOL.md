@@ -1851,3 +1851,26 @@ Testy: 3 SMTP scenare pres fake kanal skutecne knihovny (SMTPS/STARTTLS, AUTH, M
 Lokalni instalace Composer potrebovala CA z Windows root store, TLS kontrola nebyla vypnuta. Prvni test odhalil Timelimit na spatnem objektu (opraveno na SMTP instanci), registrace testu presunuta pred vykonavaci smycku. Dokumentace: .env.example, DEPLOYMENT.md, ARCHITECTURE.md; wiki smtp-mail.html a souvisejici dossier aktualizovany, odkazy a limity overeny. README onboarding/INSTRUCTIONS zmenu nevyzadovaly.
 ## Vysledek
 SMTP implementovano a lokalne overeno, bez nove SQL migrace. Vyuziti archivu stale vyzaduje migraci 104 z minuleho ukolu. Aktivace vyzaduje nasazeni a doplneni SMTP_PASSWORD do serveroveho .env. Produkcni doruceni neovereno. Push nebyl vyzadan.
+
+---
+# UKOL: Admin email overview and password change
+Datum: 2026-10-16
+Zadani: Zpristupnit prehled odesilanych emailu se stavy a pridat zmenu vlastniho hesla v administraci.
+Doporuceny model: Sol - Bezpecne overeni aktualniho hesla, transakce a revokace pristupu.
+## Kroky
+- [x] Doplnit existujici archiv emailu o filtry/stavy a implementovat vlastni zmenu hesla.
+- [x] Overit autorizaci, CSRF, chyby hesla a zneplatneni reset tokenu i relaci.
+- [x] Aktualizovat dokumentaci/wiki a commitnout.
+## Poznamky
+Prehled uz existuje /admin/messages, pouze admin. Nove vlastni heslo pro prihlaseneho uzivatele, bez volby ciziho user_id. Odeslani neni potvrzeni doruceni. Bez nove SQL migrace; archiv/reset tabulky vyzaduji stavajici migrace 103/104.
+
+AccountPasswordService transakcne overuje aktualni hash, meni pouze session user_id a maze jeho reset tokeny. Controller ma auth, CSRF, limit 5/15 minut a po uspechu odhlaseni. Formular nema pole pro ciziho uzivatele. Archiv ma repository s allowlist filtry, pocty, posledni pokus a strankovani se zachovanim filtru; menu E-maily a zpravy + Zmena hesla.
+
+Pridan AccountAdminIntegrationTest pro chybne/stare/nove heslo, cizi ucet, reset tokeny, rollback a kombinovane filtry/pocty/strankovani mail archivu. Zmena hesla loguje pouze user_id. View prehledu vyzaduje skutecna data repository, nevyrabi nahradni nuly pri chybejicich datech.
+
+12 DB assertions plus invalid cases, 17 archivnich a 10 reset assertions proslo. HTTP test overil login, editor 403 pro maily, filtry a chyby400, CSRF403, spatne/s rozdilem heslo, ignorovani POST user_id=2, uspech a zneplatneni druhe admin relace, editor vlastni heslo zustalo pristupne. DEPLOYMENT a ARCHITECTURE aktualizovany.
+
+219/219 regresi proslo, goldens 27/28 jen znamy About poster. Wiki account-password.html a mail-overview.html obsahuji sluzby/controller/repository, wiring a dukazy. Prehled hlasi prazdny filtrovaný vysledek, nikoli chybne prazdny archiv.
+
+## Vysledek
+Hotovy filtrovatelny prehled emailovych pokusu /admin/messages a vlastni zmena hesla /admin/account/password. Auth, CSRF, tokeny, rollback a stare relace overeny. DEPLOYMENT/ARCHITECTURE a globalni wiki aktualizovany; README/INSTRUCTIONS bez nutne zmeny. Bez nove SQL migrace, vyzaduje dosavadni 103/104. Push ani produkcni nasazeni nebyly pro tento ukol vyzadany.

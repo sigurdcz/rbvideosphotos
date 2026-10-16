@@ -37,13 +37,14 @@
       <li><a href="/admin/settings" class="<?= strpos($requestUri, '/admin/settings') === 0 ? 'active' : '' ?>">Nastaveni</a></li>
       <li><a href="/admin/gtm" class="<?= strpos($requestUri, '/admin/gtm') === 0 ? 'active' : '' ?>">Google Tag Manager</a></li>
       <li><a href="/admin/setup" class="<?= strpos($requestUri, '/admin/setup') === 0 ? 'active' : '' ?>">Pocatecni data</a></li>
-      <?php if (($_user['role'] ?? '') === 'admin'): ?><li><a href="/admin/messages" class="<?= str_starts_with($requestUri, '/admin/messages') ? 'active' : '' ?>">Zprávy</a></li><?php endif; ?>
+      <?php if (($_user['role'] ?? '') === 'admin'): ?><li><a href="/admin/messages" class="<?= str_starts_with($requestUri, '/admin/messages') ? 'active' : '' ?>">E-maily a zprávy</a></li><?php endif; ?>
     </ul>
     <div style="padding:12px 16px 0;display:flex;flex-direction:column;gap:8px">
       <a href="<?= htmlspecialchars($homepageEditUrl) ?>" target="_blank" class="btn btn-inline-edit" style="width:100%;justify-content:center;box-sizing:border-box">&#9998; Editovat inline</a>
       <a href="<?= htmlspecialchars($homepagePreviewUrl) ?>" target="_blank" class="btn btn-secondary" style="width:100%;justify-content:center;box-sizing:border-box">&#128065; Nahled homepage</a>
     </div>
     <div class="sidebar-footer">
+      <a href="/admin/account/password">Změna hesla</a>
       <span><?= htmlspecialchars($_user['email'] ?? '') ?></span>
       <form method="POST" action="/admin/logout" style="display:inline">
         <input type="hidden" name="_csrf" value="<?= htmlspecialchars($_csrfToken ?? '') ?>">
