@@ -4,7 +4,7 @@ namespace App\Services;
 
 /**
  * Generuje robots.txt vcetne vyslovneho povoleni znamych AI/LLM crawleru
- * (AEO/GEO — viditelnost v ChatGPT, Claude, Perplexity, Google AI apod.).
+ * (AEO/GEO - viditelnost v ChatGPT, Claude, Perplexity, Google AI apod.).
  */
 class RobotsGenerator
 {
@@ -33,7 +33,7 @@ class RobotsGenerator
             'User-agent: *',
             'Allow: /',
             '',
-            '# AI / LLM crawlery — vyslovne povoleno pro AI Overviews, ChatGPT, Claude,',
+            '# AI / LLM crawlery - vyslovne povoleno pro AI Overviews, ChatGPT, Claude,',
             '# Perplexity a dalsi generativni vyhledavace (AEO/GEO viditelnost).',
         ];
 

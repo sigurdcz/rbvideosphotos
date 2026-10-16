@@ -59,13 +59,36 @@ final class FrontendAssetManager
         return $tag . $html;
     }
 
+    public static function injectDeferredStylesheet(string $html, string $href, string $marker): string
+    {
+        if (str_contains($html, $marker)) return $html;
+        $safeHref = htmlspecialchars($href, ENT_QUOTES);
+        $tag = '<link rel="stylesheet" href="' . $safeHref . '" media="print" onload="this.media=\'all\'" ' . $marker . '>'
+            . '<noscript><link rel="stylesheet" href="' . $safeHref . '"></noscript>';
+        return str_contains($html, '</head>')
+            ? str_replace('</head>', "\n" . $tag . "\n</head>", $html)
+            : $tag . $html;
+    }
+
+    public static function injectInlineStyle(string $html, string $css, string $marker): string
+    {
+        if (str_contains($html, $marker)) return $html;
+        $css = AssetMinifier::minify(trim($css), 'css');
+        if ($css === '') return $html;
+        $css = preg_replace('~</style~i', '<\\/style', $css) ?? $css;
+        $tag = '<style ' . $marker . '>' . $css . '</style>';
+        return str_contains($html, '</head>')
+            ? str_replace('</head>', "\n" . $tag . "\n</head>", $html)
+            : $tag . $html;
+    }
+
     public static function injectScript(string $html, string $src, string $marker): string
     {
         if (str_contains($html, $marker)) {
             return $html;
         }
 
-        $tag = '<script src="' . htmlspecialchars($src, ENT_QUOTES) . '" ' . $marker . '></script>';
+        $tag = '<script src="' . htmlspecialchars($src, ENT_QUOTES) . '" defer ' . $marker . '></script>';
         if (str_contains($html, '</body>')) {
             return str_replace('</body>', "\n" . $tag . "\n</body>", $html);
         }
@@ -83,7 +106,15 @@ final class FrontendAssetManager
         $path     = rtrim(self::GENERATED_PUBLIC_DIR, '\\/') . DIRECTORY_SEPARATOR . $filename;
 
         if (!is_file($path)) {
-            file_put_contents($path, $content);
+            // Written under a temporary name and moved into place, because these files are
+            // served with a one-year immutable cache: a concurrent request that saw a
+            // half-written file would cache the truncated asset for a year.
+            $temp = $path . '.' . getmypid() . '.tmp';
+            if (file_put_contents($temp, $content) !== false) {
+                if (!@rename($temp, $path)) {
+                    @unlink($temp);
+                }
+            }
         }
 
         return self::GENERATED_RELATIVE_DIR . '/' . $filename;

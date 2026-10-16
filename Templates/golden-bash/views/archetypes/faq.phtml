@@ -1,0 +1,51 @@
+<?php
+/** @var array $hero */
+/** @var array $items */
+?>
+<section class="fq-hero gb-unified-hero">
+  <div class="container">
+    <span class="gb-page-kicker">Časté dotazy</span>
+    <h1<?= $this->inlineAttr($hero['titleKey'], $hero['titleType']) ?>><?= $this->e($hero['title']) ?></h1>
+    <p<?= $this->inlineAttr($hero['subKey'], $hero['subType']) ?>><?= $this->e($hero['sub']) ?></p>
+  </div>
+</section>
+<section class="fq-wrap gb-faq-listing">
+  <div class="container">
+    <header class="gb-faq-listing__intro">
+      <span class="gb-page-kicker">Rychlé odpovědi</span>
+      <h2>Vše důležité na jednom místě</h2>
+      <p>Vyberte téma, které právě řešíte. Odpověď rozbalíte jedním kliknutím.</p>
+    </header>
+    <div class="faq-list">
+      <?php if ($items === []): ?>
+        <p class="faq-empty">Zatím žádné otázky. Napište nám a rádi odpovíme.</p>
+      <?php else: foreach ($items as $index => $item): ?>
+        <details class="faq-item"<?= $this->isEditMode() ? ' open' : '' ?>>
+          <summary class="faq-q-wrap">
+            <h3 class="faq-q"><span class="gb-faq-item__label">Otázka <?= $this->e(str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT)) ?></span><span<?= $this->inlineAttr('faq:' . $item['id'] . ':question') ?>><?= $this->e($item['question']) ?></span></h3>
+          </summary>
+          <div class="faq-a"<?= $this->inlineAttr('faq:' . $item['id'] . ':answer') ?>><?= nl2br($this->e($item['answer'])) ?></div>
+        </details>
+      <?php endforeach; endif; ?>
+    </div>
+  </div>
+</section>
+<section class="gb-route-cta">
+  <div class="container">
+    <span class="gb-page-kicker">Nenašli jste odpověď?</span>
+    <h2>Rádi vám poradíme osobně</h2>
+    <p>Napište nám, co plánujete. Ozveme se vám s jasnou odpovědí a doporučením dalšího postupu.</p>
+    <div class="gb-route-cta__actions"><a class="gb-button" href="/kontakt">Napsat nám</a></div>
+  </div>
+</section>
+<?php if ($items !== []): ?>
+<script type="application/ld+json"><?= json_encode([
+    '@context' => 'https://schema.org',
+    '@type' => 'FAQPage',
+    'mainEntity' => array_map(static fn (array $item): array => [
+        '@type' => 'Question',
+        'name' => $item['question'],
+        'acceptedAnswer' => ['@type' => 'Answer', 'text' => $item['answer']],
+    ], $items),
+], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?></script>
+<?php endif; ?>

@@ -31,13 +31,13 @@ $templateHtml = <<<'HTML'
 <section class="page-hero">
   <div class="container">
     <h1 data-block="hero_h1">Podmínky užití</h1>
-    <p data-block="hero_sub" class="hero-sub">Pravidla provozu webu, pouzivani obsahu a informace o cookies.</p>
+    <p data-block="hero_sub" class="hero-sub">Pravidla provozu webu, používání obsahu a informace o cookies.</p>
   </div>
 </section>
 <section class="section">
   <div class="container">
     <p class="section-label">Pravidla provozu</p>
-    <h2 data-block="rules_title" class="section-title">Co plati pri pouzivani tohoto webu</h2>
+    <h2 data-block="rules_title" class="section-title">Co platí při používání tohoto webu</h2>
     <p data-block="rules_intro" class="section-intro">Stranka shrnuje zakladni podminky pouzivani, pravidla pro cookies a zpusob kontaktu.</p>
     <div class="legal-grid">
       <article data-block="rule_1" class="legal-card"></article>
@@ -88,14 +88,14 @@ if ($page) {
 
 $blocks = [
     ['hero_h1', 'text', 'Hero - nadpis', 'Podmínky užití', 1],
-    ['hero_sub', 'textarea', 'Hero - intro', 'Pravidla provozu webu, pouzivani obsahu a informace o cookies.', 2],
-    ['rules_title', 'text', 'Pravidla - nadpis', 'Co plati pri pouzivani tohoto webu', 3],
-    ['rules_intro', 'textarea', 'Pravidla - intro', 'Pouzivanim tohoto webu potvrzujete, ze jste si precetli tato pravidla. Pokud s nimi nesouhlasite, web nepouzivejte.', 4],
-    ['rule_1', 'html', 'Pravidlo 1', '<h3>Pouzivani webu</h3><p>Web pouzivejte pouze zakonnym a bezpecnym zpusobem. Nesmite se pokouset o naruseni provozu, zneuziti formularu ani o zasahy do zabezpeceni.</p>', 5],
-    ['rule_2', 'html', 'Pravidlo 2', '<h3>Cookies a souhlasy</h3><p>Nezbytne cookies pouzivame pro fungovani webu. Analyticke a marketingove cookies se aktivuji az po vasem jasnem souhlasu v cookie liste. Sve volby muzete kdykoli zmenit pres nastaveni cookies.</p>', 6],
-    ['rule_3', 'html', 'Pravidlo 3', '<h3>Obsah a autorska prava</h3><p>Fotografie, videa, texty a znacka webu zustavaji chranenym obsahem provozovatele nebo jeho klientu. Bez souhlasu je nepouzivejte dale, nekopirujte a nevydavejte za vlastni.</p>', 7],
-    ['rule_4', 'html', 'Pravidlo 4', '<h3>Zmeny a kontakt</h3><p>Obsah webu i tato pravidla se mohou prubezne menit. Pokud mate dotaz k provozu webu, soukromi nebo souhlasu s cookies, napiste nam pres kontaktni stranku.</p>', 8],
-    ['cta_wrap', 'html', 'CTA', '<a href="/kontakt" class="btn-secondary">Kontaktovat nas</a>', 9],
+    ['hero_sub', 'textarea', 'Hero - intro', 'Pravidla provozu webu, používání obsahu a informace o cookies.', 2],
+    ['rules_title', 'text', 'Pravidla - nadpis', 'Co platí při používání tohoto webu', 3],
+    ['rules_intro', 'textarea', 'Pravidla - intro', 'Používáním tohoto webu potvrzujete, že jste si přečetli tato pravidla. Pokud s nimi nesouhlasíte, web nepoužívejte.', 4],
+    ['rule_1', 'html', 'Pravidlo 1', '<h3>Používání webu</h3><p>Web používejte pouze zákonným a bezpečným způsobem. Nesmíte se pokoušet o narušení provozu, zneužití formulářů ani o zásahy do zabezpečení.</p>', 5],
+    ['rule_2', 'html', 'Pravidlo 2', '<h3>Cookies a souhlasy</h3><p>Nezbytné cookies používáme pro fungování webu. Analytické a marketingové cookies se aktivují až po vašem jasném souhlasu v cookie liště. Své volby můžete kdykoli změnit přes nastavení cookies.</p>', 6],
+    ['rule_3', 'html', 'Pravidlo 3', '<h3>Obsah a autorská práva</h3><p>Fotografie, videa, texty a značka webu zůstávají chráněným obsahem provozovatele nebo jeho klientů. Bez souhlasu je nepoužívejte dále, nekopírujte a nevydávejte za vlastní.</p>', 7],
+    ['rule_4', 'html', 'Pravidlo 4', '<h3>Změny a kontakt</h3><p>Obsah webu i tato pravidla se mohou průběžně měnit. Pokud máte dotaz k provozu webu, soukromí nebo souhlasu s cookies, napište nám přes kontaktní stránku.</p>', 8],
+    ['cta_wrap', 'html', 'CTA', '<a href="/kontakt" class="btn-secondary">Kontaktovat nás</a>', 9],
 ];
 
 foreach ($blocks as [$key, $type, $label, $content, $order]) {

@@ -16,6 +16,19 @@ use App\Repositories\MediaRepository;
  */
 final class MediaUrlResolver
 {
+    public static function absolutePublicMediaUrl(string $storagePath, string $domain): string
+    {
+        $publicPath = self::publicMediaUrl($storagePath);
+        if ($publicPath === '') {
+            return '';
+        }
+        if (preg_match('~^https?://~i', $publicPath)) {
+            return $publicPath;
+        }
+
+        return rtrim($domain, '/') . '/' . ltrim($publicPath, '/');
+    }
+
     public static function normalizePublicAssetUrl(string $value): string
 {
     $normalized = str_replace('\\', '/', trim($value));

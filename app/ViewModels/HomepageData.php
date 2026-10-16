@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace App\ViewModels;
 
+use App\Services\Render\PortfolioCaptionFormatter;
+
+use App\Domain\PricingPackageCatalog;
+
 /**
- * Pure data provider ("ViewModel") for the homepage section fragments — phase 5
+ * Pure data provider ("ViewModel") for the homepage section fragments - phase 5
  * of the templating refactor.
  *
- * Background: unlike the phase-4 special pages (faq/sluzby/kontakt/... — full
+ * Background: unlike the phase-4 special pages (faq/sluzby/kontakt/... - full
  * heredoc routes replaced by a single archetype), the homepage is a *generic
  * database page*: it goes through public/index.php::tryServeDatabasePage() /
  * PublishService::publishPage(), its section shells (hero, section labels,
@@ -20,7 +24,7 @@ namespace App\ViewModels;
  * for the reviews teaser). This class replaces that concatenation with plain
  * view DATA, which the matching app/Views/partials/home-*.phtml partials render.
  *
- * Contract: every method returns scalars/arrays only — no HTML, no escaping (the
+ * Contract: every method returns scalars/arrays only - no HTML, no escaping (the
  * partials call ViewContext::e()). Media URLs are already root-relative
  * (/media/...) because the DB-heavy optimized-variant resolution stays in
  * HomepageContentService (it owns the MediaRepository); this class receives the
@@ -30,6 +34,17 @@ namespace App\ViewModels;
  */
 final class HomepageData
 {
+    /**
+     * Packages shown in the homepage pricing teaser, in display order. The
+     * highlighted card is whichever of them carries a badge on /cenik
+     * (`cenik_card_<slot>_badge`), i.e. the middle "Kompletni balicek".
+     */
+    private const HOMEPAGE_PRICING_PACKAGES = [
+        PricingPackageCatalog::WEDDING_PHOTO_FULL_DAY,
+        PricingPackageCatalog::PHOTO_VIDEO_COMPLETE,
+        PricingPackageCatalog::WEDDING_VIDEO_ONLY_FULL_DAY,
+    ];
+
     /**
      * One homepage service card (`.hp-svc-card`). Mirrors the field derivation of
      * the former HomepageContentService::buildServiceCardHtml() so the rendered
@@ -59,24 +74,51 @@ final class HomepageData
 
     /**
      * The three homepage pricing cards (`.hp-cenik-grid`). $map is the cenik
-     * page's block_key => content map. The card summary is the first paragraph of
-     * the package description (everything up to the first blank line) — the detail
-     * "Obsahuje" list stays on /cenik only, matching the former
-     * HomepageContentService::buildPricingHtml().
+     * page's block_key => content map. Homepage intentionally omits prices and
+     * uses at most four concise feature bullets from the stored package detail.
+     * Legacy descriptions without a detail list fall back to sentence bullets.
+     * The cards are bound to packages, not to /cenik slots, so reordering the
+     * pricing page (migration 094) does not change the homepage selection.
      *
      * @param array<string,string> $map
-     * @return list<array{title:string,price:string,summary:string,featured:bool}>
+     * @return list<array{id:string,title:string,category:string,badge:string,features:list<string>,featured:bool}>
      */
     public static function pricingCards(array $map): array
     {
         $cards = [];
-        for ($i = 1; $i <= 3; $i++) {
+        foreach (self::HOMEPAGE_PRICING_PACKAGES as $packageId) {
+            $i = PricingPackageCatalog::slotForId($packageId);
             $fullDesc = trim((string)($map['cenik_card_' . $i . '_desc'] ?? ''));
+            $parts = preg_split('/\n\s*\n/', $fullDesc) ?: [];
+            $summary = trim((string)($parts[0] ?? ''));
+            $details = trim(implode("\n\n", array_slice($parts, 1)));
+            $features = [];
+
+            foreach ((preg_split('/\R+/', $details) ?: []) as $feature) {
+                $feature = trim((string)preg_replace('/^\s*[-*•]\s*/u', '', (string)$feature));
+                if ($feature === '' || preg_match('/^obsahuje:?$/iu', $feature)) {
+                    continue;
+                }
+                if (preg_match('/\b\d[\d\s.,]*(?:Kč|Kc|CZK)\b/iu', $feature)) {
+                    continue;
+                }
+                $features[] = $feature;
+            }
+            if ($features === [] && $summary !== '') {
+                $features = array_values(array_filter(array_map(
+                    'trim',
+                    preg_split('/(?<=[.!?])\s+/u', $summary) ?: []
+                ), static fn (string $sentence): bool => !preg_match('/\b\d[\d\s.,]*(?:Kč|Kc|CZK)\b/iu', $sentence)));
+            }
+
+            $badge = trim((string)($map['cenik_card_' . $i . '_badge'] ?? ''));
             $cards[] = [
+                'id' => $packageId,
                 'title' => (string)($map['cenik_card_' . $i . '_title'] ?? ''),
-                'price' => trim((string)($map['cenik_card_' . $i . '_price'] ?? '')),
-                'summary' => trim(preg_split('/\n\s*\n/', $fullDesc)[0] ?? ''),
-                'featured' => $i === 2,
+                'category' => trim((string)($map['cenik_card_' . $i . '_category'] ?? '')),
+                'badge' => $badge,
+                'features' => array_slice($features, 0, 4),
+                'featured' => $badge !== '',
             ];
         }
 
@@ -90,19 +132,27 @@ final class HomepageData
      * HomepageContentService::buildPortfolioHtml() heredoc.
      *
      * @param string $thumbUrl '' → the tile renders the ▶ placeholder instead of an <img>
-     * @param list<array{url:string,alt:string}> $photos already-resolved strip photos
-     * @return array{href:string,title:string,thumbUrl:string,hasVideo:bool,photos:list<array{url:string,alt:string}>}
+     * @param list<array{url:string,fullUrl:string,alt:string}> $photos preview and original gallery URLs
+     * @param string $videoEmbedUrl '' for photo entries; the playable embed URL for video entries
+     * @return array{href:string,title:string,date:string,description:string,thumbUrl:string,hasVideo:bool,photos:list<array{url:string,fullUrl:string,alt:string}>,videoEmbedUrl:string}
      */
-    public static function portfolioTile(array $entry, string $thumbUrl, bool $hasVideo, array $photos): array
+    public static function portfolioTile(array $entry, string $thumbUrl, bool $hasVideo, array $photos, string $videoEmbedUrl = ''): array
     {
         $slug = (string)($entry['slug'] ?? '');
+        $caption = PortfolioCaptionFormatter::fromHtml((string)($entry['description'] ?? ''), 220);
 
         return [
             'href' => $slug !== '' ? '/' . $slug : '/nase-prace',
             'title' => (string)($entry['title'] ?? ''),
+            'date' => !empty($entry['published_at'])
+                ? date('j. n. Y', (int)strtotime((string)$entry['published_at']))
+                : '',
+            'description' => $caption['description'],
+            'author' => $caption['author'],
             'thumbUrl' => $thumbUrl,
             'hasVideo' => $hasVideo,
             'photos' => $photos,
+            'videoEmbedUrl' => $videoEmbedUrl,
         ];
     }
 
@@ -142,7 +192,7 @@ final class HomepageData
     /**
      * The homepage reviews teaser cards (`.hp-reviews-grid` / `.hp-review-card`),
      * rendered by app/Views/partials/home-reviews.phtml: the star string is built
-     * from the clamped 1–5 rating. The teaser's own inline <style> stays in
+     * from the clamped 1-5 rating. The teaser's own inline <style> stays in
      * ReviewContentService::homepageCss() (byte-identical to before; its
      * relocation to a shared asset is a possible future cleanup).
      *
@@ -168,11 +218,21 @@ final class HomepageData
      * A section CTA button (`.hp-section-cta`). Both inputs are already validated
      * / resolved by the caller (an invalid CTA returns '' before reaching here).
      *
-     * @return array{url:string,label:string}
+     * @return array{url:string,label:string,secondaryUrl:string,secondaryLabel:string}
      */
-    public static function sectionCta(string $url, string $label): array
+    public static function sectionCta(
+        string $url,
+        string $label,
+        string $secondaryUrl = '',
+        string $secondaryLabel = ''
+    ): array
     {
-        return ['url' => $url, 'label' => $label];
+        return [
+            'url' => $url,
+            'label' => $label,
+            'secondaryUrl' => $secondaryUrl,
+            'secondaryLabel' => $secondaryLabel,
+        ];
     }
 
     /**
@@ -182,7 +242,7 @@ final class HomepageData
      * byte-identical (the downstream normalizeContactFormAccessibility() pass
      * then upgrades the event-date field the same way as before).
      *
-     * SECURITY: the CSRF token is a caller-supplied parameter — it is NEVER
+     * SECURITY: the CSRF token is a caller-supplied parameter - it is NEVER
      * generated inside this ViewModel or the view. The view only echoes it
      * (escaped). $cta is already-rendered, trusted HTML (from the section-cta
      * partial) and is emitted raw.
@@ -192,7 +252,7 @@ final class HomepageData
      * @param string $cta       already-rendered CTA HTML ('' = none)
      * @return array{lines:list<array<string,string>>,map:array{kind:string,url:string},cta:string,form:array{csrfToken:string,showMissingEmailNote:bool}}
      */
-    public static function contact(array $contact, string $csrfToken, string $cta): array
+    public static function contact(array $contact, string $csrfToken, string $cta, string $imageUrl = ''): array
     {
         $lines = [];
         foreach (['phone_1', 'phone_2', 'phone_3'] as $phoneKey) {
@@ -239,6 +299,7 @@ final class HomepageData
         }
 
         return [
+            'imageUrl' => $imageUrl,
             'lines' => $lines,
             'map' => $map,
             'cta' => $cta,

@@ -20,7 +20,7 @@ seo:
   robots: index,follow
   schema_type: Article
 event:
-  couple: Michaela a Jan Jungligovi
+  couple: Michaela a Jan
   date_iso: '2024-07-27'
   date_display: 27. července 2024
   ceremony: Rybník Sobáčov
@@ -55,7 +55,7 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 ## Uzamčené údaje
 
-- Pár: **Michaela a Jan Jungligovi**
+- Pár: **Michaela a Jan**
 - Datum: **27. července 2024**
 - Obřad: **Rybník Sobáčov**
 - Oslava: **Rybník Sobáčov**
@@ -79,7 +79,7 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 # Letní svatba Michaely a Jana u rybníka Sobáčov
 
-Michaela a Jan Jungligovi měli obřad i svatební oslavu 27. července 2024 u rybníka Sobáčov. Svatba u vody má vlastní rytmus: otevřenější prostor, odlesky na hladině, zeleň a možnost propojit obřad, portréty i oslavu bez dlouhých přejezdů.
+Michaela a Jan měli obřad i svatební oslavu 27. července 2024 u rybníka Sobáčov. Svatba u vody má vlastní rytmus: otevřenější prostor, odlesky na hladině, zeleň a možnost propojit obřad, portréty i oslavu bez dlouhých přejezdů.
 
 ## Sobáčovský rybník a okolní příroda
 

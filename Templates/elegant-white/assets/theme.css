@@ -5971,7 +5971,7 @@ body.theme-elegant-white .theme-nav-wrap .nav-links a.nav-cta.nav-active {
   background: transparent !important;
   box-shadow: none !important;
   color: #514942 !important;
-  font-size: 11px !important;
+  font-size: 12px !important;
   font-weight: 600 !important;
   line-height: 1 !important;
   letter-spacing: .16em !important;
@@ -6209,7 +6209,7 @@ body.theme-elegant-white .service-card p {
 body.theme-elegant-white .service-card a {
   margin-top: auto !important;
   color: var(--ew-2026-gold-dark) !important;
-  font-size: 11px !important;
+  font-size: 12px !important;
   font-weight: 700 !important;
   letter-spacing: .2em !important;
   text-decoration: none !important;
@@ -6508,7 +6508,7 @@ body.theme-elegant-white .kt-kicker,
 body.theme-elegant-white .kt-section-kicker,
 body.theme-elegant-white .ci-title {
   color: var(--ew-2026-gold-dark) !important;
-  font-size: 11px !important;
+  font-size: 12px !important;
   font-weight: 700 !important;
   letter-spacing: .22em !important;
   text-transform: uppercase !important;
@@ -6543,7 +6543,7 @@ body.theme-elegant-white .kt-btn {
   border-radius: 999px !important;
   background: rgba(255, 255, 255, .54) !important;
   color: #675844 !important;
-  font-size: 10px !important;
+  font-size: 11px !important;
   font-weight: 700 !important;
   letter-spacing: .16em !important;
 }
@@ -6638,7 +6638,7 @@ body.theme-elegant-white .kt-consent {
   min-height: 18px !important;
   margin: 18px 0 !important;
   padding: 0 !important;
-  font-size: 10px !important;
+  font-size: 11px !important;
   line-height: 1.45 !important;
 }
 
@@ -7091,7 +7091,7 @@ body.theme-elegant-white .site-footer-brand__name {
 body.theme-elegant-white[data-cms-page-key="homepage"] .theme-nav-wrap .nav-links a,
 body.theme-elegant-white[data-cms-page-key="homepage"] .theme-nav-wrap .nav-links .ew-home-link,
 body.theme-elegant-white[data-cms-page-key="homepage"] .theme-nav-wrap .nav-links .ew-nav-cta {
-  font-size: 11px !important;
+  font-size: 12px !important;
   font-weight: 600 !important;
 }
 

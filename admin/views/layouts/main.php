@@ -1,10 +1,15 @@
+<?php $adminAssetVersion = static function (string $relative): string {
+    $absolute = dirname(__DIR__, 2) . '/assets/' . ltrim($relative, '/');
+    $stamp = is_file($absolute) ? (string) filemtime($absolute) : '0';
+    return '/admin/assets/' . ltrim($relative, '/') . '?v=' . $stamp;
+}; ?>
 <!DOCTYPE html>
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><?= isset($pageTitle) ? htmlspecialchars($pageTitle) . ' - ' : '' ?>SEO Mini CMS</title>
-  <link rel="stylesheet" href="/admin/assets/admin.css">
+  <link rel="stylesheet" href="<?= htmlspecialchars($adminAssetVersion('admin.css')) ?>">
 </head>
 <body>
 <?php $requestUri = $_SERVER['REQUEST_URI'] ?? ''; ?>
@@ -23,7 +28,8 @@
       <li><a href="/admin/shablony" class="<?= (strpos($requestUri, '/admin/shablony') === 0 || strpos($requestUri, '/admin/themes') === 0) ? 'active' : '' ?>">Sablony</a></li>
       <li><a href="/admin/media" class="<?= strpos($requestUri, '/admin/media') === 0 ? 'active' : '' ?>">Media</a></li>
       <li><a href="/admin/blog" class="<?= strpos($requestUri, '/admin/blog') === 0 ? 'active' : '' ?>">Blog - clanky</a></li>
-      <li><a href="/admin/portfolio" class="<?= strpos($requestUri, '/admin/portfolio') === 0 ? 'active' : '' ?>">Nase prace</a></li>
+      <li><a href="/admin/portfolio" class="<?= strpos($requestUri, '/admin/portfolio') === 0 ? 'active' : '' ?>">Naše práce</a></li>
+      <li><a href="/admin/shared-sections" class="<?= strpos($requestUri, '/admin/shared-sections') === 0 ? 'active' : '' ?>">Sdilene sekce</a></li>
       <li><a href="/admin/reviews" class="<?= strpos($requestUri, '/admin/reviews') === 0 ? 'active' : '' ?>">Recenze</a></li>
       <li><a href="/admin/redirects" class="<?= strpos($requestUri, '/admin/redirects') === 0 ? 'active' : '' ?>">Redirecty</a></li>
       <li><a href="/admin/publish" class="<?= strpos($requestUri, '/admin/publish') === 0 ? 'active' : '' ?>">Publikovani</a></li>
@@ -40,7 +46,7 @@
       <span><?= htmlspecialchars($_user['email'] ?? '') ?></span>
       <form method="POST" action="/admin/logout" style="display:inline">
         <input type="hidden" name="_csrf" value="<?= htmlspecialchars($_csrfToken ?? '') ?>">
-        <button type="submit" class="btn-link">Odhlasit</button>
+        <button type="submit" class="btn-link">Odhlásit</button>
       </form>
       <div class="sidebar-version"><?= \App\Core\Version::APP ?></div>
     </div>
@@ -67,6 +73,18 @@
     </main>
   </div>
 </div>
-<script src="/admin/assets/admin.js"></script>
+<div class="admin-media-picker" id="admin-media-picker" aria-hidden="true">
+  <div class="admin-media-picker__dialog" role="dialog" aria-modal="true" aria-labelledby="admin-media-picker-title">
+    <div class="admin-media-picker__head">
+      <div><strong id="admin-media-picker-title">Vybrat z médií</strong><div class="form-hint">Knihovna se načítá až po otevření tohoto okna.</div></div>
+      <button type="button" class="btn btn-secondary" data-picker-close>Zavřít</button>
+    </div>
+    <form class="admin-media-picker__search" data-picker-search><input type="search" placeholder="Hledat podle názvu nebo ALT textu" aria-label="Hledat média"><button class="btn btn-secondary" type="submit">Hledat</button></form>
+    <div class="admin-media-picker__status" data-picker-status></div>
+    <div class="admin-media-picker__grid" data-picker-grid></div>
+    <div class="admin-media-picker__foot"><button type="button" class="btn btn-secondary" data-picker-prev>Předchozí</button><span data-picker-page></span><button type="button" class="btn btn-secondary" data-picker-next>Další</button><button type="button" class="btn btn-primary" data-picker-confirm>Potvrdit výběr</button></div>
+  </div>
+</div>
+<script src="<?= htmlspecialchars($adminAssetVersion('admin.js')) ?>"></script>
 </body>
 </html>

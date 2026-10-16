@@ -9,6 +9,7 @@
 
 require dirname(__DIR__) . '/vendor/autoload.php';
 
+use App\Domain\PricingPackageCatalog;
 use App\Core\Auth;
 use App\Core\Config;
 use App\Core\Env;
@@ -22,6 +23,7 @@ use App\Repositories\FaqRepository;
 use App\Repositories\MediaRepository;
 use App\Repositories\PageRepository;
 use App\Repositories\PortfolioRepository;
+use App\Repositories\RedirectRepository;
 use App\Repositories\SeoRepository;
 use App\Repositories\ServiceRepository;
 use App\Repositories\SiteRepository;
@@ -85,6 +87,67 @@ $earlyUri = rtrim((string) $earlyUri, '/') ?: '/';
 if (tryServeSecurityTxt($earlyUri)) {
     exit;
 }
+
+function tryServePublicAssetWithoutSession(string $uri): bool
+{
+    $isMedia = str_starts_with($uri, '/media/');
+    $isAsset = str_starts_with($uri, '/assets/');
+    if (!$isMedia && !$isAsset) return false;
+
+    $base = realpath($isMedia ? dirname(__DIR__) . '/storage/media' : __DIR__ . '/assets');
+    $relative = ltrim(substr($uri, strlen($isMedia ? '/media/' : '/assets/')), '/');
+    $file = realpath(($isMedia ? dirname(__DIR__) . '/storage/media/' : __DIR__ . '/assets/') . $relative);
+    if ($base === false || $file === false || !str_starts_with($file, $base . DIRECTORY_SEPARATOR) || !is_file($file)) {
+        return false;
+    }
+
+    $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+    $mime = match ($ext) {
+        'css' => 'text/css; charset=UTF-8',
+        'js' => 'application/javascript; charset=UTF-8',
+        'png' => 'image/png',
+        'jpg', 'jpeg' => 'image/jpeg',
+        'webp' => 'image/webp',
+        'gif' => 'image/gif',
+        'svg' => 'image/svg+xml',
+        'woff' => 'font/woff',
+        'woff2' => 'font/woff2',
+        default => 'application/octet-stream',
+    };
+    $mtime = (int)(filemtime($file) ?: 0);
+    $size = (int)(filesize($file) ?: 0);
+    $etag = '"' . hash('sha256', $mtime . ':' . $size . ':' . basename($file)) . '"';
+
+    header_remove('Set-Cookie');
+    header_remove('Pragma');
+    header_remove('Expires');
+    header('Content-Type: ' . $mime);
+    // Fonts are versioned by filename, so they can be cached like a hashed asset. Without
+    // this they expired after an hour, and a font that still needs revalidating counts as
+    // available to font-display:optional only if the conditional request finishes inside
+    // its ~100ms window, which over a real network it usually does not - so a visitor
+    // returning later usually saw the fallback face no matter how early it was preloaded.
+    // The consequence of caching by name: a changed face needs a NEW filename.
+    $isHashedAsset = (bool)preg_match('~^/assets/generated/[a-z0-9-]+-[a-f0-9]{16}\.(?:css|js)$~i', $uri)
+        || (bool)preg_match('~^/assets/fonts/[a-z0-9-]+\.woff2$~i', $uri);
+    header('Cache-Control: public, max-age=' . (($isMedia || $isHashedAsset) ? '31536000, immutable' : '3600, must-revalidate'));
+    header('ETag: ' . $etag);
+    if ($mtime > 0) header('Last-Modified: ' . gmdate('D, d M Y H:i:s', $mtime) . ' GMT');
+
+    $ifNoneMatch = trim((string)($_SERVER['HTTP_IF_NONE_MATCH'] ?? ''));
+    if ($ifNoneMatch !== '' && $ifNoneMatch === $etag) {
+        http_response_code(304);
+        return true;
+    }
+
+    header('Content-Length: ' . $size);
+    if (strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'HEAD') readfile($file);
+    return true;
+}
+
+if (tryServePublicAssetWithoutSession($earlyUri)) {
+    exit;
+}
 Auth::start();
 
 function tryServeDatabasePage(string $uri, bool $authenticated = false, bool $previewMode = false): bool
@@ -130,8 +193,15 @@ function tryServeDatabasePage(string $uri, bool $authenticated = false, bool $pr
         $pagePath = trim((string)($page['url_path'] ?? ''), '/');
         $pageUrl = rtrim((string)$site['domain'], '/') . ($pagePath === '' ? '/' : '/' . $pagePath);
 
-        $ogImageUrl = resolveSocialImageUrl($mediaRepo, $seo['og_image_id'] ?? null, $site);
-        $twImageUrl = resolveSocialImageUrl($mediaRepo, $seo['twitter_image_id'] ?? null, $site);
+        $ogImageId = $seo['og_image_id'] ?? $site['default_og_image_id'] ?? null;
+        $twImageId = $seo['twitter_image_id']
+            ?? $site['default_twitter_image_id']
+            ?? $seo['og_image_id']
+            ?? $site['default_og_image_id']
+            ?? null;
+        $ogImageUrl = resolveSocialImageUrl($mediaRepo, $ogImageId, $site);
+        $twImageUrl = resolveSocialImageUrl($mediaRepo, $twImageId, $site);
+        $schemaImageUrl = resolveSocialImageUrl($mediaRepo, $seo['schema_image_id'] ?? null, $site);
 
         $fragment = $renderer->render(
             normalizeLegacyTemplateSource((string)($template['html_source'] ?? '')),
@@ -141,7 +211,7 @@ function tryServeDatabasePage(string $uri, bool $authenticated = false, bool $pr
         );
         // Phase 5: generic CMS pages (and the homepage) flow their legacy
         // PageRenderer fragment through the generic `page` archetype. Byte-for-byte
-        // passthrough — data-block/inline-editor mechanics are unchanged.
+        // passthrough - data-block/inline-editor mechanics are unchanged.
         // Phase 6 / manifest v2: a theme that opts into the PHTML views cascade
         // (declares views_dir) may override a generic page's content view via
         // overrides.<pageKey>.view or <views_dir>/pages/<pageKey>.phtml. Themes
@@ -153,7 +223,18 @@ function tryServeDatabasePage(string $uri, bool $authenticated = false, bool $pr
         $contentView = getThemeTemplateRegistry()->pageContentViewForSite($site, $themeKey, $themePreviewKey);
         $html = $contentView !== null
             ? \App\View\ViewFactory::forTheme($contentView['themeKey'], ['editMode' => $authenticated && !$previewMode], $contentView['viewsDir'])
-                ->render($contentView['view'], ['fragment' => $fragment, 'pageKey' => $themeKey])
+                ->render($contentView['view'], [
+                    'fragment' => $fragment,
+                    'pageKey' => $themeKey,
+                    'blocks' => $blocks,
+                    'videoAutoplay' => (int)($site['video_autoplay_enabled'] ?? 1) === 1,
+                    'reviews' => $themeKey === 'o-nas'
+                        ? array_slice((new \App\Repositories\ReviewRepository())->allActive((int)$site['id']), 0, 3)
+                        : [],
+                    'stories' => $themeKey === 'o-nas'
+                        ? \App\ViewModels\AboutStoriesData::forSite((int)$site['id'], 3)
+                        : [],
+                ])
             : \App\View\ViewFactory::forTheme(null)->render('archetypes/page', ['fragment' => $fragment]);
         $isHome = ltrim((string)($page['url_path'] ?? ''), '/') === '';
         $themeNav = resolveThemeNav($site, $isHome);
@@ -188,7 +269,7 @@ function tryServeDatabasePage(string $uri, bool $authenticated = false, bool $pr
             'html'        => $html,
             'css'         => $css,
             'js'          => $js,
-            'seoHead'     => $seoRenderer->renderHead($seo, $site, $pageUrl, $ogImageUrl, $twImageUrl),
+            'seoHead'     => $seoRenderer->renderHead($seo, $site, $pageUrl, $ogImageUrl, $twImageUrl, $schemaImageUrl),
             'bodyScripts' => $seoRenderer->renderBodyScripts($site),
             'blocks'      => $blocks,
             'site'        => $site,
@@ -221,7 +302,8 @@ function injectCookieConsent(string $html): string
     }
 
     $runtime = '';
-    if (!str_contains($html, 'cookie-consent-runtime.js')) {
+    // Matches the content-hashed filename too, which no longer ends in the plain name.
+    if (!str_contains($html, 'cookie-consent-runtime')) {
         try {
             $site = (new SiteRepository())->findFirst();
             if ($site) {
@@ -244,10 +326,35 @@ function injectCookieConsent(string $html): string
 
 function sanitizeFrontendHtml(string $html, ?array $site = null): string
 {
+    $html = \App\Services\Render\SharedProcessRenderer::inject(
+        $html,
+        str_contains($html, 'theme-golden-bash') ? 'golden-bash' : null
+    );
+    $socialImageTags = [];
+    $structuredDataScripts = [];
+    $html = preg_replace_callback(
+        '~<script\b[^>]*type=(["\'])application/ld\+json\1[^>]*>.*?</script>~is',
+        static function (array $match) use (&$structuredDataScripts): string {
+            $token = '<!--cms-structured-data-' . count($structuredDataScripts) . '-->';
+            $structuredDataScripts[$token] = $match[0];
+            return $token;
+        },
+        $html
+    ) ?? $html;
+    $html = preg_replace_callback(
+        '~<meta\b(?=[^>]*(?:property=(["\'])og:image\1|name=(["\'])twitter:image\2))[^>]*>~i',
+        static function (array $match) use (&$socialImageTags): string {
+            $token = '<!--cms-social-image-' . count($socialImageTags) . '-->';
+            $socialImageTags[$token] = $match[0];
+            return $token;
+        },
+        $html
+    ) ?? $html;
     $html = preg_replace('~https?://localhost(?::\d+)?/storage/media/~i', '/media/', $html) ?? $html;
     $html = str_replace('/storage/media/', '/media/', $html);
     $html = normalizeLegacyFrontendMarkup($html);
     $html = convertInlineHeroBackgrounds($html);
+    $html = injectImagePerformanceAttributes($html, (int)($site['id'] ?? 0));
     $html = ensureMainContentAnchor($html);
     $html = injectSkipLink($html);
     $html = normalizeExternalLinkRel($html);
@@ -259,7 +366,19 @@ function sanitizeFrontendHtml(string $html, ?array $site = null): string
     $html = injectFaviconLinks($html, $site);
     $html = extractInlineStyleBlocks($html);
     $html = extractInlineBodyScripts($html);
-    return $html;
+    if ($socialImageTags !== []) {
+        $html = strtr($html, $socialImageTags);
+    }
+    $html = $structuredDataScripts !== [] ? strtr($html, $structuredDataScripts) : $html;
+
+    // Last step on purpose: the page-scoped stylesheet is chosen from the finished markup,
+    // so anything injected above (footer, cookie bar, hero) counts towards what it keeps.
+    return \App\Support\PageCssSubsetter::apply($html);
+}
+
+function injectImagePerformanceAttributes(string $html, int $siteId = 0): string
+{
+    return \App\Services\Render\ResponsiveImageMarkupService::optimize($html, $siteId);
 }
 
 function convertInlineHeroBackgrounds(string $html): string
@@ -320,7 +439,7 @@ function injectSkipLink(string $html): string
         return $html;
     }
 
-    $skipLink = '<a class="skip-link" href="#main-content">Preskocit na hlavni obsah</a>';
+    $skipLink = '<a class="skip-link" href="#main-content">Přeskočit na hlavní obsah</a>';
     return preg_replace('/(<body\b[^>]*>)/i', '$1' . $skipLink, $html, 1) ?? $html;
 }
 
@@ -491,7 +610,14 @@ function normalizeCanonicalUrl(string $candidate, array $site, string $fallbackP
 function upsertHeadTag(string $html, string $pattern, string $tag): string
 {
     if (preg_match($pattern, $html)) {
-        return preg_replace($pattern, $tag, $html, 1) ?? $html;
+        $replacementCount = 0;
+        return preg_replace_callback(
+            $pattern,
+            static function () use (&$replacementCount, $tag): string {
+                return $replacementCount++ === 0 ? $tag : '';
+            },
+            $html
+        ) ?? $html;
     }
 
     if (stripos($html, '</head>') === false) {
@@ -507,15 +633,61 @@ function injectPageHeadMetadata(string $html, array $site, array $meta): string
         return $html;
     }
 
-    $title = htmlspecialchars((string)($meta['title'] ?? ($site['name'] ?? 'Web')), ENT_QUOTES, 'UTF-8');
-    $description = htmlspecialchars(trim((string)($meta['description'] ?? '')), ENT_QUOTES, 'UTF-8');
     $path = (string)($meta['path'] ?? '/');
-    $canonical = htmlspecialchars(normalizeCanonicalUrl((string)($meta['canonical'] ?? ''), $site, $path), ENT_QUOTES, 'UTF-8');
-    $robots = htmlspecialchars((string)($meta['robots'] ?? 'index,follow'), ENT_QUOTES, 'UTF-8');
+    $pageSeo = [];
+    $page = (new PageRepository())->findPublishedByUrlPath(trim($path, '/'));
+    if ($page && (int)($page['site_id'] ?? 0) === (int)($site['id'] ?? 0)) {
+        $pageSeo = (new SeoRepository())->findByPage((int)$page['id']) ?? [];
+    }
+
+    $titleValue = trim((string)($pageSeo['meta_title'] ?? '')) ?: (string)($meta['title'] ?? ($site['name'] ?? 'Web'));
+    $descriptionValue = trim((string)($pageSeo['meta_description'] ?? '')) ?: trim((string)($meta['description'] ?? ''));
+    $canonicalValue = trim((string)($pageSeo['canonical_url'] ?? '')) ?: (string)($meta['canonical'] ?? '');
+    $robotsValue = array_key_exists('robots_index', $pageSeo) || array_key_exists('robots_follow', $pageSeo)
+        ? ((!empty($pageSeo['robots_index']) ? 'index' : 'noindex') . ',' . (!empty($pageSeo['robots_follow']) ? 'follow' : 'nofollow'))
+        : (string)($meta['robots'] ?? 'index,follow');
+
+    $title = htmlspecialchars($titleValue, ENT_QUOTES, 'UTF-8');
+    $description = htmlspecialchars($descriptionValue, ENT_QUOTES, 'UTF-8');
+    $canonical = htmlspecialchars(normalizeCanonicalUrl($canonicalValue, $site, $path), ENT_QUOTES, 'UTF-8');
+    $robots = htmlspecialchars($robotsValue, ENT_QUOTES, 'UTF-8');
     $ogType = htmlspecialchars((string)($meta['og_type'] ?? 'website'), ENT_QUOTES, 'UTF-8');
     $siteName = htmlspecialchars((string)($site['name'] ?? 'Web'), ENT_QUOTES, 'UTF-8');
+    $ogTitleValue = trim((string)($pageSeo['og_title'] ?? '')) ?: $titleValue;
+    $ogDescriptionValue = trim((string)($pageSeo['og_description'] ?? '')) ?: $descriptionValue;
+    $twitterTitleValue = trim((string)($pageSeo['twitter_title'] ?? '')) ?: $ogTitleValue;
+    $twitterDescriptionValue = trim((string)($pageSeo['twitter_description'] ?? '')) ?: $ogDescriptionValue;
+    $ogTitle = htmlspecialchars($ogTitleValue, ENT_QUOTES, 'UTF-8');
+    $ogDescription = htmlspecialchars($ogDescriptionValue, ENT_QUOTES, 'UTF-8');
+    $twitterTitle = htmlspecialchars($twitterTitleValue, ENT_QUOTES, 'UTF-8');
+    $twitterDescription = htmlspecialchars($twitterDescriptionValue, ENT_QUOTES, 'UTF-8');
     $ogImage = trim((string)($meta['og_image'] ?? ''));
-    $twitterImage = trim((string)($meta['twitter_image'] ?? $ogImage));
+    $twitterImage = trim((string)($meta['twitter_image'] ?? ''));
+    $mediaRepo = new MediaRepository();
+    if (!empty($pageSeo['og_image_id'])) {
+        $ogImage = (string)(resolveSocialImageUrl($mediaRepo, $pageSeo['og_image_id'], $site) ?? '');
+    }
+    if (!empty($pageSeo['twitter_image_id'])) {
+        $twitterImage = (string)(resolveSocialImageUrl($mediaRepo, $pageSeo['twitter_image_id'], $site) ?? '');
+    }
+    if ($twitterImage === '' && !empty($site['default_twitter_image_id'])) {
+        $twitterImage = (string)(resolveSocialImageUrl($mediaRepo, $site['default_twitter_image_id'], $site) ?? '');
+    }
+    if ($ogImage === '' && !empty($site['default_og_image_id'])) {
+        $ogImage = (string)(resolveSocialImageUrl($mediaRepo, $site['default_og_image_id'], $site) ?? '');
+    }
+    if ($twitterImage === '' && $ogImage !== '') {
+        $twitterImage = $ogImage;
+    }
+    if ($twitterImage === '') {
+        $twitterImage = $ogImage;
+    }
+    if ($ogImage !== '') {
+        $ogImage = normalizeCanonicalUrl($ogImage, $site, $path);
+    }
+    if ($twitterImage !== '') {
+        $twitterImage = normalizeCanonicalUrl($twitterImage, $site, $path);
+    }
 
     if (!preg_match('~<meta\s+charset=~i', $html)) {
         $html = str_replace('<head>', "<head>\n<meta charset=\"UTF-8\">", $html);
@@ -530,16 +702,18 @@ function injectPageHeadMetadata(string $html, array $site, array $meta): string
     }
     $html = upsertHeadTag($html, '~<meta\s+name=(["\'])robots\1[^>]*>~i', '<meta name="robots" content="' . $robots . '">');
     $html = upsertHeadTag($html, '~<link\s+rel=(["\'])canonical\1[^>]*>~i', '<link rel="canonical" href="' . $canonical . '">');
-    $html = upsertHeadTag($html, '~<meta\s+property=(["\'])og:title\1[^>]*>~i', '<meta property="og:title" content="' . $title . '">');
-    if ($description !== '') {
-        $html = upsertHeadTag($html, '~<meta\s+property=(["\'])og:description\1[^>]*>~i', '<meta property="og:description" content="' . $description . '">');
-        $html = upsertHeadTag($html, '~<meta\s+name=(["\'])twitter:description\1[^>]*>~i', '<meta name="twitter:description" content="' . $description . '">');
+    $html = upsertHeadTag($html, '~<meta\s+property=(["\'])og:title\1[^>]*>~i', '<meta property="og:title" content="' . $ogTitle . '">');
+    if ($ogDescription !== '') {
+        $html = upsertHeadTag($html, '~<meta\s+property=(["\'])og:description\1[^>]*>~i', '<meta property="og:description" content="' . $ogDescription . '">');
+    }
+    if ($twitterDescription !== '') {
+        $html = upsertHeadTag($html, '~<meta\s+name=(["\'])twitter:description\1[^>]*>~i', '<meta name="twitter:description" content="' . $twitterDescription . '">');
     }
     $html = upsertHeadTag($html, '~<meta\s+property=(["\'])og:type\1[^>]*>~i', '<meta property="og:type" content="' . $ogType . '">');
     $html = upsertHeadTag($html, '~<meta\s+property=(["\'])og:url\1[^>]*>~i', '<meta property="og:url" content="' . $canonical . '">');
     $html = upsertHeadTag($html, '~<meta\s+property=(["\'])og:site_name\1[^>]*>~i', '<meta property="og:site_name" content="' . $siteName . '">');
     $html = upsertHeadTag($html, '~<meta\s+name=(["\'])twitter:card\1[^>]*>~i', '<meta name="twitter:card" content="summary_large_image">');
-    $html = upsertHeadTag($html, '~<meta\s+name=(["\'])twitter:title\1[^>]*>~i', '<meta name="twitter:title" content="' . $title . '">');
+    $html = upsertHeadTag($html, '~<meta\s+name=(["\'])twitter:title\1[^>]*>~i', '<meta name="twitter:title" content="' . $twitterTitle . '">');
     if ($ogImage !== '') {
         $safeOgImage = htmlspecialchars($ogImage, ENT_QUOTES, 'UTF-8');
         $html = upsertHeadTag($html, '~<meta\s+property=(["\'])og:image\1[^>]*>~i', '<meta property="og:image" content="' . $safeOgImage . '">');
@@ -559,6 +733,19 @@ function injectPageHeadMetadata(string $html, array $site, array $meta): string
             continue;
         }
         $html = str_replace('</head>', '<script type="application/ld+json" ' . $marker . '>' . $jsonLd . '</script>' . "\n</head>", $html);
+    }
+
+    $seoRenderer = new SeoRenderer();
+    if (!str_contains($html, 'data-cms-organization-schema')) {
+        $html = str_replace('</head>', $seoRenderer->renderOrganizationSchema($site, $ogImage !== '' ? $ogImage : null) . "\n</head>", $html);
+    }
+    if (!str_contains($html, 'cms-tracking-config')) {
+        $html = str_replace(
+            '</head>',
+            $seoRenderer->renderConsentRuntime($site) . "\n"
+                . $seoRenderer->renderTrackingRuntime($site) . "\n</head>",
+            $html
+        );
     }
 
     return injectFaviconLinks($html, $site);
@@ -642,6 +829,11 @@ function renderBlogListingJsonLd(array $site, array $posts): string
             '@type' => 'BlogPosting',
             'headline' => $title,
             'url' => absolutePublicUrl($site, '/' . $slug),
+            'author' => [
+                '@type' => 'Organization',
+                '@id' => absolutePublicUrl($site, '/#organization'),
+                'name' => (string)($site['name'] ?? 'RB Videos & Photos'),
+            ],
         ];
         if (!empty($post['published_at'])) {
             $blogPost['datePublished'] = date(DATE_ATOM, strtotime((string)$post['published_at']));
@@ -673,6 +865,11 @@ function renderBlogPostJsonLd(array $site, array $post, string $canonical, ?stri
         'headline' => trim((string)($post['title'] ?? '')),
         'url' => $canonical,
         'mainEntityOfPage' => $canonical,
+        'author' => [
+            '@type' => 'Organization',
+            '@id' => absolutePublicUrl($site, '/#organization'),
+            'name' => (string)($site['name'] ?? 'RB Videos & Photos'),
+        ],
     ];
 
     $description = trim((string)($post['meta_description'] ?? $post['excerpt'] ?? ''));
@@ -692,10 +889,35 @@ function renderBlogPostJsonLd(array $site, array $post, string $canonical, ?stri
     return jsonLd($payload);
 }
 
+function renderPortfolioVideoJsonLd(array $site, array $entry, string $canonical, ?string $imageUrl = null): string
+{
+    $videoUrl = trim((string)($entry['video_url'] ?? ''));
+    if ($videoUrl === '') {
+        return '';
+    }
+
+    $payload = [
+        '@context' => 'https://schema.org',
+        '@type' => 'VideoObject',
+        'name' => trim((string)($entry['title'] ?? 'Ukázka videa')),
+        'description' => trim(strip_tags((string)($entry['meta_description'] ?? $entry['description'] ?? ''))),
+        'url' => $canonical,
+        'embedUrl' => PortfolioRepository::embedUrl($videoUrl),
+    ];
+    if ($imageUrl !== null && trim($imageUrl) !== '') {
+        $payload['thumbnailUrl'] = $imageUrl;
+    }
+    if (!empty($entry['published_at'])) {
+        $payload['uploadDate'] = date(DATE_ATOM, strtotime((string)$entry['published_at']));
+    }
+
+    return jsonLd($payload);
+}
+
 /**
  * Centralni doplneni favicon odkazu do <head> pro vsechny stranky.
  * Specialni handlery (FAQ, Kontakt, portfolio, hodnoceni, blog) vkladaji do
- * <head> jen <title>, takze jim favicon chybel — tady ho doplnime jednotne.
+ * <head> jen <title>, takze jim favicon chybel - tady ho doplnime jednotne.
  * Idempotentni: pokud uz <head> nejaky favicon obsahuje (bezne stranky pres
  * SeoRenderer::renderHead), neprida se nic.
  */
@@ -788,7 +1010,7 @@ function injectGlobalVideoOverlayStyles(string $html, ?array $site = null): stri
   isolation:isolate;
   overflow:hidden;
 }
-.hp-hero::before,.hero::before,.page-hero::before,.pf-hero::before,.bl-hero::before,.kt-hero::before,.fq-hero::before,.bp-hero::before,.pf-detail-hero::before,.bp-detail-hero::before{
+.hero::before,.page-hero::before,.pf-hero::before,.bl-hero::before,.kt-hero::before,.fq-hero::before,.bp-hero::before,.pf-detail-hero::before,.bp-detail-hero::before{
   content:"";
   position:absolute;
   inset:0;
@@ -804,6 +1026,11 @@ function injectGlobalVideoOverlayStyles(string $html, ?array $site = null): stri
   z-index:2;
   pointer-events:none;
   background:linear-gradient(90deg,rgba(0,0,0,var(--cms-video-overlay-opacity)),rgba(0,0,0,var(--cms-video-overlay-soft-opacity)),rgba(0,0,0,var(--cms-video-overlay-opacity)));
+}
+/* Homepage hero: no darkening over the video. The theme already fades it into the
+   paper background with a mask, so a second overlay only muddies it. */
+.hp-hero .theme-hero-video::after{
+  content:none;
 }
 .theme-hero-video{
   position:absolute;
@@ -855,7 +1082,7 @@ function injectGlobalVideoOverlayStyles(string $html, ?array $site = null): stri
 }
 CSS;
 
-    return FrontendAssetManager::injectGeneratedCss($html, $css, 'video-overlay', 'data-cms-video-overlay');
+    return FrontendAssetManager::injectInlineStyle($html, $css, 'data-cms-video-overlay');
 }
 
 function extractInlineStyleBlocks(string $html): string
@@ -910,7 +1137,7 @@ function injectCmsEditorChrome(string $html, string $uri, string $pageTitle, ?in
     <a class="cms-ab-btn" href="/admin">Administrace</a>
     <form method="POST" action="/admin/logout" class="cms-ab-form">
       <input type="hidden" name="_csrf" value="{$csrfToken}">
-      <button type="submit" class="cms-ab-btn cms-ab-logout">Odhlasit</button>
+      <button type="submit" class="cms-ab-btn cms-ab-logout">Odhlásit</button>
     </form>
   </div>
 </div>
@@ -1057,7 +1284,7 @@ function resolveHomepageHeroImageUrl(int $siteId): string
         foreach (array_slice($entries, 0, 3) as $entry) {
             $mediaItems = $portfolioRepo->getMedia((int)$entry['id']);
             if (!empty($mediaItems)) {
-                $candidate = (string)($mediaItems[0]['medium_path'] ?? $mediaItems[0]['thumb_path'] ?? $mediaItems[0]['storage_path'] ?? '');
+                $candidate = (string)($mediaItems[0]['storage_path'] ?? $mediaItems[0]['medium_path'] ?? $mediaItems[0]['thumb_path'] ?? '');
                 $url = publicMediaUrl($candidate);
                 if ($url !== '') {
                     return $url;
@@ -1082,7 +1309,7 @@ function resolveHomepageHeroImageUrl(int $siteId): string
                 continue;
             }
 
-            $candidate = (string)($media['medium_path'] ?? $media['thumb_path'] ?? $media['storage_path'] ?? '');
+            $candidate = (string)($media['storage_path'] ?? $media['medium_path'] ?? $media['thumb_path'] ?? '');
             $url = publicMediaUrl($candidate);
             if ($url !== '') {
                 return $url;
@@ -1107,20 +1334,31 @@ function injectPageHeroVideo(string $html, array $site, ?int $pageId, string $pa
     }
 
     $posterUrl = normalizePublicAssetUrl((string)($site['default_hero_poster_url'] ?? ''));
+    $autoplay = (int)($site['video_autoplay_enabled'] ?? 1) === 1;
 
     $isHomepage = $pageKey === 'homepage';
     // Priorita: 1) page hero_video, 2) homepage site default video, 3) page hero_bg foto, 4) site default poster foto, 5) site default video.
     $videoHtml = '';
-    $pageVideo = ($pageId !== null && $pageId > 0) ? resolvePageBlockUrl($pageId, 'hero_video') : '';
+    $pid = (int)($pageId ?? 0);
+    $pageVideo = $pid > 0 ? resolvePageBlockUrl($pid, 'hero_video') : '';
+    $defaultVideo = normalizePublicAssetUrl((string)($site['default_hero_video_url'] ?? ''));
+    // Which trio wins is decided in one shared place, so live and publish cannot disagree.
+    $heroUrls = \App\Services\Render\HeroMediaRenderer::pickHeroVideoUrls(
+        $pageVideo,
+        $pid > 0 ? resolvePageBlockUrl($pid, 'hero_video_tablet') : '',
+        $pid > 0 ? resolvePageBlockUrl($pid, 'hero_video_mobile') : '',
+        $defaultVideo,
+        normalizePublicAssetUrl((string)($site['default_hero_video_url_tablet'] ?? '')),
+        normalizePublicAssetUrl((string)($site['default_hero_video_url_mobile'] ?? ''))
+    );
     if ($pageVideo !== '') {
-        $videoHtml = buildHeroVideoHtml($pageVideo, $posterUrl);
+        $videoHtml = buildHeroVideoHtml($pageVideo, $posterUrl, $autoplay, $heroUrls['tablet'], $heroUrls['mobile']);
     } else {
-        $defaultVideo = normalizePublicAssetUrl((string)($site['default_hero_video_url'] ?? ''));
         if ($isHomepage && $defaultVideo !== '') {
-            $videoHtml = buildHeroVideoHtml($defaultVideo, $posterUrl);
+            $videoHtml = buildHeroVideoHtml($defaultVideo, $posterUrl, $autoplay, $heroUrls['tablet'], $heroUrls['mobile']);
         }
 
-        $pagePhoto = ($pageId !== null && $pageId > 0) ? resolvePageHeroImageUrl($pageId) : '';
+        $pagePhoto = $pid > 0 ? resolvePageHeroImageUrl($pid) : '';
         if ($videoHtml === '' && $pagePhoto !== '') {
             $videoHtml = buildHeroImageHtml($pagePhoto);
         }
@@ -1130,7 +1368,7 @@ function injectPageHeroVideo(string $html, array $site, ?int $pageId, string $pa
         }
 
         if ($videoHtml === '' && $defaultVideo !== '') {
-            $videoHtml = buildHeroVideoHtml($defaultVideo, $posterUrl);
+            $videoHtml = buildHeroVideoHtml($defaultVideo, $posterUrl, $autoplay, $heroUrls['tablet'], $heroUrls['mobile']);
         }
     }
 
@@ -1192,7 +1430,7 @@ function buildHeroImageHtml(string $imageUrl): string
 }
 
 /**
- * URL pro OG/Twitter nahled — preferuje variantu 'og' (1200x630), jinak original.
+ * URL pro OG/Twitter nahled - preferuje variantu 'og' (1200x630), jinak original.
  */
 function resolveSocialImageUrl(MediaRepository $mediaRepo, $imageId, array $site): ?string
 {
@@ -1216,12 +1454,15 @@ function resolveSocialImageUrl(MediaRepository $mediaRepo, $imageId, array $site
         return null;
     }
 
-    return rtrim((string) ($site['domain'] ?? ''), '/') . '/' . ltrim($path, '/');
+    return \App\Services\Render\MediaUrlResolver::absolutePublicMediaUrl(
+        $path,
+        (string)($site['domain'] ?? '')
+    );
 }
 
-function buildHeroVideoHtml(string $videoUrl, string $posterUrl = ''): string
+function buildHeroVideoHtml(string $videoUrl, string $posterUrl = '', bool $autoplay = false, string $tabletUrl = '', string $mobileUrl = ''): string
 {
-    return \App\Services\Render\HeroMediaRenderer::buildHeroVideoHtml($videoUrl, $posterUrl);
+    return \App\Services\Render\HeroMediaRenderer::buildHeroVideoHtml($videoUrl, $posterUrl, $autoplay, $tabletUrl, $mobileUrl);
 }
 
 function hasHeroVideoElement(string $html): bool
@@ -1452,15 +1693,14 @@ function applyThemeTemplate(PageRenderer $renderer, array $site, string $pageKey
 
 function resolveThemeNav(array $site, bool $isHome): string
 {
+    $nav = '';
     if ($isHome && !empty($site['layout_nav_home'])) {
-        return (string)$site['layout_nav_home'];
+        $nav = (string)$site['layout_nav_home'];
+    } elseif (!empty($site['layout_nav_sub'])) {
+        $nav = (string)$site['layout_nav_sub'];
     }
 
-    if (!empty($site['layout_nav_sub'])) {
-        return (string)$site['layout_nav_sub'];
-    }
-
-    return '';
+    return \App\Services\Render\NavigationNormalizer::ensureReviewsLink($nav);
 }
 
 function findPageIdForHeroPath(string $path, int $siteId): ?int
@@ -1494,7 +1734,7 @@ function renderPortfolioNav(string $siteName, string $active = 'portfolio'): str
     <a href="/" class="brand">{$brand}</a>
     <div class="nav-links">
       <a href="/sluzby"{$servicesClass}>Sluzby</a>
-      <a href="/#nase-prace"{$portfolioClass}>Nase prace</a>
+      <a href="/#nase-prace"{$portfolioClass}>Naše práce</a>
       <a href="/#reference">Reference</a>
       <a href="/#kontakt" class="nav-cta">Kontakt</a>
     </div>
@@ -1526,7 +1766,10 @@ function tryServeServicesPage(string $uri): bool
     );
     $editMode = Auth::check() && !isset($_GET['cms_preview']) && $page !== null;
 
-    $sluzbyData = SluzbyPageData::forSite((int)$site['id']);
+    $sluzbyData = SluzbyPageData::forSite(
+        (int)$site['id'],
+        (string)($pageBlocks['hero_bg']['content'] ?? '')
+    );
     $css = rtrim((string)file_get_contents(ViewFactory::base() . '/app/Views/assets/sluzby.css'), "\n");
 
     $renderer = new PageRenderer();
@@ -1573,6 +1816,7 @@ HTML;
     }
 
     $html = injectFooterSocials($html, (int)$site['id']);
+    $html = injectSiteLogo($html, $site);
     $html = injectPageHeroVideo($html, $site, isset($page['id']) ? (int)$page['id'] : findPageIdForHeroPath('sluzby', (int)$site['id']), 'sluzby');
     $html = injectCmsEditorChrome($html, '/sluzby', $heroTitle, isset($page['id']) ? (int)$page['id'] : null, Auth::check() && isset($_GET['cms_preview']));
     $html = injectBreadcrumbTrail($html, $site, breadcrumbItems('Služby', '/sluzby'));
@@ -1606,6 +1850,32 @@ function tryRedirectLegacyContentPath(string $uri): bool
     return false;
 }
 
+function tryRedirectConfiguredPath(string $uri): bool
+{
+    $site = (new SiteRepository())->findFirst();
+    if (!$site) {
+        return false;
+    }
+    $redirect = (new RedirectRepository())->findByPath((int)$site['id'], $uri);
+    if (!$redirect) {
+        return false;
+    }
+
+    $target = trim((string)($redirect['to_path'] ?? ''));
+    if ($target === '' || $target === $uri || !str_starts_with($target, '/')) {
+        throw new RuntimeException('Neplatné interní přesměrování pro ' . $uri);
+    }
+    $query = trim((string)parse_url((string)($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_QUERY));
+    if ($query !== '') {
+        $target .= (str_contains($target, '?') ? '&' : '?') . $query;
+    }
+    $status = in_array((int)($redirect['status_code'] ?? 301), [301, 302], true)
+        ? (int)$redirect['status_code']
+        : 301;
+    header('Location: ' . $target, true, $status);
+    return true;
+}
+
 function tryServePortfolioPage(string $uri, bool $detailOnly = false): bool
 {
     $site = (new SiteRepository())->findFirst();
@@ -1625,13 +1895,14 @@ function tryServePortfolioPage(string $uri, bool $detailOnly = false): bool
         $editMode = Auth::check() && !isset($_GET['cms_preview']) && $page !== null;
         $siteNameEsc = $h($siteName);
 
-        // CSS specific to portfolio pages — nav/footer/base reset comes from layout_css when layout is active
+        // CSS specific to portfolio pages - nav/footer/base reset comes from layout_css when layout is active
         $portfolioListingCss = rtrim((string)file_get_contents(ViewFactory::base() . '/app/Views/assets/portfolio-listing.css'), "\n");
 
         $renderer   = new PageRenderer();
         $nav = resolveThemeNav($site, false);
         $previewKeyParam = isset($_GET['theme_preview']) ? trim((string)$_GET['theme_preview']) : null;
         $activeThemeKey = resolveActiveThemeKeyForSite($site, $previewKeyParam);
+        $portfolioData = PortfolioListingData::forSite((int)$site['id']);
         $pageContent = ViewFactory::forTheme($activeThemeKey, ['editMode' => $editMode])->render('archetypes/portfolio-listing', [
             'hero' => [
                 'title' => $heroTitle,
@@ -1641,7 +1912,13 @@ function tryServePortfolioPage(string $uri, bool $detailOnly = false): bool
                 'subKey' => $heroSubKey,
                 'subType' => $heroSubType,
             ],
-            'entries' => PortfolioListingData::forSite((int)$site['id'])['entries'],
+            'entries' => $portfolioData['entries'],
+            'mixedEntries' => $portfolioData['mixedEntries'],
+            'photoEntries' => $portfolioData['photoEntries'],
+            'videoEntries' => $portfolioData['videoEntries'],
+            // The listing's own copy (kickers, headings, empty state, CTA) is
+            // stored per page like any other block, so the view needs them.
+            'blocks' => array_values($pageBlocks),
         ]);
         [$pageContent, $themeCss, $themeJs, $themeActive] = applyThemeTemplate(
             $renderer,
@@ -1672,7 +1949,7 @@ function tryServePortfolioPage(string $uri, bool $detailOnly = false): bool
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nase prace | {$siteNameEsc}</title>
+  <title>Naše práce | {$siteNameEsc}</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:system-ui,-apple-system,sans-serif;background:#111;color:#fff}
@@ -1701,8 +1978,14 @@ HTML;
         header('Content-Type: text/html; charset=UTF-8');
         $html = injectPageHeroVideo($html, $site, findPageIdForHeroPath('nase-prace', (int)$site['id']), 'portfolio');
         $html = injectFooterSocials($html, (int)$site['id']);
+        $html = injectSiteLogo($html, $site);
         $html = injectCmsEditorChrome($html, $uri, $heroTitle, isset($page['id']) ? (int)$page['id'] : null, Auth::check() && isset($_GET['cms_preview']));
-        $html = injectBreadcrumbTrail($html, $site, breadcrumbItems('Nase prace', '/nase-prace'));
+        $html = injectBreadcrumbTrail($html, $site, breadcrumbItems('Naše práce', '/nase-prace'));
+        $html = injectPageHeadMetadata($html, $site, [
+            'title' => "Na\u{161}e pr\u{E1}ce | " . $siteName,
+            'description' => $heroSub,
+            'path' => '/nase-prace',
+        ]);
         echo sanitizeFrontendHtml($html, $site);
         return true;
     }
@@ -1720,7 +2003,7 @@ HTML;
         $siteNameEsc = $h($siteName);
         $metaDescription = $h($detailData['entry']['meta_description']);
 
-        // CSS specific to portfolio detail — nav/footer/base reset comes from layout_css when layout is active
+        // CSS specific to portfolio detail - nav/footer/base reset comes from layout_css when layout is active
         $portfolioDetailCss = rtrim((string)file_get_contents(ViewFactory::base() . '/app/Views/assets/portfolio-detail.css'), "\n");
 
         $renderer = new PageRenderer();
@@ -1743,7 +2026,8 @@ HTML;
             $nav,
             $previewKeyParam
         );
-        $titleTag = '<title>' . $h("{$entry['title']} | {$siteName}") . '</title>';
+        $metaTitle = (string)$detailData['entry']['meta_title'];
+        $titleTag = '<title>' . $h($metaTitle) . '</title>';
         $metaDesc = '<meta name="description" content="' . $metaDescription . '">';
         if ($themeActive) {
             $html = $pageContent;
@@ -1790,9 +2074,23 @@ HTML;
 
         header('Content-Type: text/html; charset=UTF-8');
         $html = injectFooterSocials($html, (int)$site['id']);
+        $html = injectSiteLogo($html, $site);
         $html = injectBreadcrumbTrail($html, $site, breadcrumbItems($entry['title'] ?? 'Detail prace', '/' . $slug, [
-            ['label' => 'Nase prace', 'url' => '/nase-prace'],
+            ['label' => 'Naše práce', 'url' => '/nase-prace'],
         ]));
+        $html = injectPageHeadMetadata($html, $site, [
+            'title' => $metaTitle,
+            'description' => $detailData['entry']['meta_description'],
+            'path' => '/' . $slug,
+            'canonical' => '/' . $slug,
+            'og_image' => $detailData['entry']['hero_image'],
+            'json_ld' => [renderPortfolioVideoJsonLd(
+                $site,
+                $entry,
+                absolutePublicUrl($site, '/' . $slug),
+                $detailData['entry']['hero_image']
+            )],
+        ]);
         echo sanitizeFrontendHtml($html, $site);
         return true;
     }
@@ -1877,6 +2175,7 @@ function tryServeFaqPage(): bool
     header('Content-Type: text/html; charset=UTF-8');
     $html = injectPageHeroVideo($html, $site, findPageIdForHeroPath('faq', (int)$site['id']), 'faq');
     $html = injectFooterSocials($html, (int)$site['id']);
+    $html = injectSiteLogo($html, $site);
     $html = injectCmsEditorChrome($html, '/faq', $heroTitle, isset($page['id']) ? (int)$page['id'] : null, Auth::check() && isset($_GET['cms_preview']));
     $html = injectBreadcrumbTrail($html, $site, breadcrumbItems('FAQ', '/faq'));
     $html = injectPageHeadMetadata($html, $site, [
@@ -1936,7 +2235,8 @@ function tryServeKontaktPage(): bool
     $sentState = isset($_GET['sent']) ? (string)$_GET['sent'] : null;
     $kontaktCss = rtrim((string)file_get_contents(ViewFactory::base() . '/app/Views/assets/kontakt.css'), "\n");
 
-    $kontaktData = KontaktPageData::forSite((int)$site['id'], $csrfToken, $sentState);
+    $packageId = isset($_GET['balicek']) ? (string) $_GET['balicek'] : null;
+    $kontaktData = KontaktPageData::forSite((int)$site['id'], $csrfToken, $sentState, $packageId);
 
     $renderer   = new PageRenderer();
     $nav        = resolveThemeNav($site, false);
@@ -1969,7 +2269,7 @@ function tryServeKontaktPage(): bool
         $nav,
         $previewKeyParam
     );
-    $contactDescription = trim((string)$heroSub) !== '' ? trim((string)$heroSub) : 'Kontaktni formular a informace pro poptavku foceni nebo videa.';
+    $contactDescription = trim((string)$heroSub) !== '' ? trim((string)$heroSub) : 'Kontaktní formulář a informace pro poptavku foceni nebo videa.';
     if ($themeActive) {
         $html = $pageContent;
         $html = $renderer->injectAssets($html, $kontaktCss . "\n" . $themeCss, $themeJs);
@@ -1986,6 +2286,7 @@ function tryServeKontaktPage(): bool
 
     header('Content-Type: text/html; charset=UTF-8');
     $html = injectFooterSocials($html, (int)$site['id']);
+    $html = injectSiteLogo($html, $site);
     $html = injectPageHeroVideo($html, $site, isset($page['id']) ? (int)$page['id'] : findPageIdForHeroPath('kontakt', (int)$site['id']), 'contact');
     $html = injectCmsEditorChrome($html, '/kontakt', $heroTitle, isset($page['id']) ? (int)$page['id'] : null, Auth::check() && isset($_GET['cms_preview']));
     $html = injectBreadcrumbTrail($html, $site, breadcrumbItems('Kontakt', '/kontakt'));
@@ -2031,6 +2332,9 @@ function tryServeBlogListingPage(): bool
             'subType' => $heroSubType,
         ],
         'posts' => BlogListingData::forSite((int)$site['id'])['posts'],
+        // The listing's own copy (kickers, empty state, CTA) is stored per page
+        // like any other block, so the view needs them.
+        'blocks' => array_values($pageBlocks),
     ]);
     [$pageContent, $themeCss, $themeJs, $themeActive] = applyThemeTemplate(
         $renderer,
@@ -2066,6 +2370,7 @@ HTML;
 
     header('Content-Type: text/html; charset=UTF-8');
     $html = injectFooterSocials($html, (int)$site['id']);
+    $html = injectSiteLogo($html, $site);
     $html = injectPageHeroVideo($html, $site, isset($page['id']) ? (int)$page['id'] : findPageIdForHeroPath('blog', (int)$site['id']), 'blog');
     $html = injectCmsEditorChrome($html, '/blog', $heroTitle, isset($page['id']) ? (int)$page['id'] : null, Auth::check() && isset($_GET['cms_preview']));
     $html = injectBreadcrumbTrail($html, $site, breadcrumbItems('Blog', '/blog'));
@@ -2103,6 +2408,7 @@ function tryServeBlogPostPage(string $uri): bool
 
     $rawMetaTitle = trim((string)($post['meta_title'] ?? ''));
     $fullTitle = $rawMetaTitle !== '' ? $rawMetaTitle : (string)$post['title'];
+    $fullTitle = preg_replace('~\s*\|\s*RB\s+(?:Photos\s*&\s*Videos|Videos\s*&\s*Photos)\s*$~iu', '', $fullTitle) ?? $fullTitle;
     if ($siteName !== '' && !preg_match('~\|\s*' . preg_quote($siteName, '~') . '\s*$~u', $fullTitle)) {
         $fullTitle .= ' | ' . $siteName;
     }
@@ -2157,7 +2463,8 @@ HTML;
 
     header('Content-Type: text/html; charset=UTF-8');
     $html = injectFooterSocials($html, (int)$site['id']);
-    $html = injectBreadcrumbTrail($html, $site, breadcrumbItems($post['title'] ?? 'Clanek', '/' . $slug, [
+    $html = injectSiteLogo($html, $site);
+    $html = injectBreadcrumbTrail($html, $site, breadcrumbItems($post['title'] ?? 'Článek', '/' . $slug, [
         ['label' => 'Blog', 'url' => '/blog'],
     ]));
     $html = injectPageHeadMetadata($html, $site, [
@@ -2175,7 +2482,7 @@ HTML;
 
 // The golden-master test harness (tests/GoldenMasterRunner.php) requires this file
 // once to obtain the tryServe*() function definitions and the app bootstrap
-// (Env/Config/Runtime/Auth) without triggering the routing dispatch below — it calls
+// (Env/Config/Runtime/Auth) without triggering the routing dispatch below - it calls
 // the tryServe*() functions directly per simulated route instead. This constant is
 // never defined outside that harness, so real requests are unaffected.
 if (defined('SEO_CMS_GOLDEN_BOOTSTRAP')) {
@@ -2232,6 +2539,10 @@ try {
     }
 
     if (tryRedirectLegacyContentPath($uri)) {
+        exit;
+    }
+
+    if (tryRedirectConfiguredPath($uri)) {
         exit;
     }
 
@@ -2300,12 +2611,18 @@ try {
         $contact = trim((string) ($_POST['contact_value'] ?? ''));
         $shootingType = trim($_POST['shooting_type'] ?? '');
         $eventPlace = trim((string) ($_POST['event_place'] ?? ''));
+        $selectedPackageId = trim((string) ($_POST['selected_package_id'] ?? ''));
+        $selectedPackage = PricingPackageCatalog::resolve($selectedPackageId);
+        $invalidPackageSelection = $selectedPackageId !== '' && $selectedPackage === null;
         $message = trim($_POST['message']       ?? '');
         $privacyConsent = !empty($_POST['privacy_consent']);
         $contactMailSent = false;
-        if ($name && $contact && $shootingType && $message && $privacyConsent && $formEmail && filter_var($formEmail, FILTER_VALIDATE_EMAIL)) {
-            $subject = 'Nová zpráva z webu — ' . $name;
+        if (!$invalidPackageSelection && $name && $contact && $shootingType && $message && $privacyConsent && $formEmail && filter_var($formEmail, FILTER_VALIDATE_EMAIL)) {
+            $subject = 'Nová zpráva z webu - ' . $name;
             $body    = "Jméno: {$name}\nKontakt: {$contact}\nTyp focení: {$shootingType}\nMísto akce: {$eventPlace}\n\nZpráva:\n{$message}";
+            if ($selectedPackage !== null) {
+                $body .= "\n\nVybraný balíček: {$selectedPackage['name']} ({$selectedPackage['price']})";
+            }
             RequestThrottle::hit('contact_form', $contactThrottleKey, 3, 10 * 60, 10 * 60);
             $appHost = parse_url((string) Config::get('app', 'url', ''), PHP_URL_HOST);
             $mailHost = is_string($appHost) && $appHost !== '' ? $appHost : 'localhost';
@@ -2326,10 +2643,17 @@ try {
                 'has_message' => $message !== '',
                 'has_privacy_consent' => $privacyConsent,
                 'has_valid_recipient' => $formEmail !== null && filter_var((string) $formEmail, FILTER_VALIDATE_EMAIL) !== false,
+                'has_invalid_package_selection' => $invalidPackageSelection,
             ]);
         }
-        $redirectStatus = $contactMailSent ? '1' : (($name && $contact && $shootingType && $message && $privacyConsent) ? 'error' : 'invalid');
-        header('Location: /kontakt?sent=' . $redirectStatus);
+        $redirectStatus = $invalidPackageSelection
+            ? 'invalid-package'
+            : ($contactMailSent ? '1' : (($name && $contact && $shootingType && $message && $privacyConsent) ? 'error' : 'invalid'));
+        $redirectQuery = ['sent' => $redirectStatus];
+        if ($selectedPackage !== null) {
+            $redirectQuery['balicek'] = $selectedPackage['id'];
+        }
+        header('Location: /kontakt?' . http_build_query($redirectQuery));
         exit;
     }
 

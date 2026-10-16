@@ -20,6 +20,7 @@ use App\Services\Render\PageComposer;
 use App\Services\Render\PublishPageChrome;
 use App\Services\ThemeTemplateRegistry;
 use App\Support\FrontendAssetManager;
+use App\Services\Render\HeroMediaRenderer;
 
 class PublishService implements PublishPageChrome
 {
@@ -92,8 +93,16 @@ class PublishService implements PublishPageChrome
         $pageUrl = rtrim($site['domain'], '/') . '/' . ltrim($page['url_path'], '/');
 
         // Resolve OG/Twitter image URLs
-        $ogImageUrl = $this->resolveImageUrl($seo['og_image_id'] ?? null, $site);
-        $twImageUrl = $this->resolveImageUrl($seo['twitter_image_id'] ?? null, $site);
+        $ogImageId = $seo['og_image_id'] ?? $site['default_og_image_id'] ?? null;
+        $twImageId = $seo['twitter_image_id']
+            ?? $site['default_twitter_image_id']
+            ?? $seo['og_image_id']
+            ?? $site['default_og_image_id']
+            ?? null;
+        $ogImageUrl = $this->resolveImageUrl($ogImageId !== null ? (int)$ogImageId : null, $site);
+        $twImageUrl = $this->resolveImageUrl($twImageId !== null ? (int)$twImageId : null, $site);
+        $schemaImageId = $seo['schema_image_id'] ?? null;
+        $schemaImageUrl = $this->resolveImageUrl($schemaImageId !== null ? (int)$schemaImageId : null, $site);
 
         $theme = $this->themes->resolveForSite($site);
 
@@ -101,7 +110,7 @@ class PublishService implements PublishPageChrome
         $archetypeCss = '';
         [$archetypeHtml, $archetypeCss] = $this->renderArchetypeContent($pageKey, $page, $blocks, $theme['key'] ?? null);
         // Phase 5: generic CMS pages (and the homepage) flow their legacy
-        // PageRenderer fragment through the generic `page` archetype — the same
+        // PageRenderer fragment through the generic `page` archetype - the same
         // byte-for-byte passthrough wrapper the live path uses in
         // tryServeDatabasePage(). Dedicated archetypes (faq, sluzby, …) above take
         // precedence via $archetypeHtml.
@@ -117,7 +126,18 @@ class PublishService implements PublishPageChrome
             $contentView = $this->themes->pageContentView($theme, $pageKey);
             $html = $contentView !== null
                 ? \App\View\ViewFactory::forTheme($contentView['themeKey'], [], $contentView['viewsDir'])
-                    ->render($contentView['view'], ['fragment' => $fragment, 'pageKey' => $pageKey])
+                    ->render($contentView['view'], [
+                        'fragment' => $fragment,
+                        'pageKey' => $pageKey,
+                        'blocks' => $blocks,
+                        'videoAutoplay' => (int)($site['video_autoplay_enabled'] ?? 1) === 1,
+                        'reviews' => $pageKey === 'o-nas'
+                            ? array_slice((new \App\Repositories\ReviewRepository())->allActive((int)$site['id']), 0, 3)
+                            : [],
+                        'stories' => $pageKey === 'o-nas'
+                            ? \App\ViewModels\AboutStoriesData::forSite((int)$site['id'], 3)
+                            : [],
+                    ])
                 : \App\View\ViewFactory::forTheme(null)->render('archetypes/page', ['fragment' => $fragment]);
         }
         Logger::infoTo('theme-debug', 'theme.publish.request', 'Publish theme resolution requested', [
@@ -135,6 +155,7 @@ class PublishService implements PublishPageChrome
         $themeNav = $isHome && !empty($site['layout_nav_home'])
             ? (string)$site['layout_nav_home']
             : (!empty($site['layout_nav_sub']) ? (string)$site['layout_nav_sub'] : '');
+        $themeNav = \App\Services\Render\NavigationNormalizer::ensureReviewsLink($themeNav);
         if ($theme) {
             $themeCss = $this->themes->getCssForPage($theme, $pageKey);
             $themeJs = $this->themes->getJsForPage($theme, $pageKey);
@@ -192,7 +213,7 @@ class PublishService implements PublishPageChrome
             // folded into the branch-specific $css formulas above.
             $css = $archetypeCss . "\n" . $css;
         }
-        $seoHead     = $this->seoRenderer->renderHead($seo, $site, $pageUrl, $ogImageUrl, $twImageUrl);
+        $seoHead     = $this->seoRenderer->renderHead($seo, $site, $pageUrl, $ogImageUrl, $twImageUrl, $schemaImageUrl);
         $bodyScripts = $this->seoRenderer->renderBodyScripts($site);
         $html = PageComposer::compose([
             'mode'        => PageComposer::MODE_PUBLISH,
@@ -264,9 +285,13 @@ class PublishService implements PublishPageChrome
     private function regenerateSitemapAndRobots(int $siteId, array $site): void
     {
         $pages = $this->pages->findPublishedBySite($siteId);
+        $indexablePages = array_values(array_filter($pages, function (array $page): bool {
+            $seo = $this->seo->findByPage((int)$page['id']) ?? [];
+            return (int)($seo['robots_index'] ?? 0) === 1;
+        }));
         $sitemapItems = $this->uniqueSitemapItems(array_merge(
-            $pages,
-            $this->builtInPublicRouteSitemapItems($pages),
+            $indexablePages,
+            $this->builtInPublicRouteSitemapItems($indexablePages),
             $this->blogPostsAsSitemapItems($siteId),
             $this->portfolioEntriesAsSitemapItems($siteId)
         ));
@@ -364,7 +389,22 @@ class PublishService implements PublishPageChrome
     public function generateHtaccess(int $siteId): void
     {
         $redirects = $this->redirects->allBySite($siteId);
-        $lines = ["Options -Indexes", "RewriteEngine On", "ErrorDocument 404 /404.html", ""];
+        $lines = [
+            "Options -Indexes",
+            "RewriteEngine On",
+            "",
+            "# SEO REDIRECT: HTTP/WWW -> HTTPS NON-WWW",
+            "RewriteCond %{HTTP_HOST} ^www\\.([a-z0-9.-]+)(:[0-9]+)?$ [NC]",
+            "RewriteRule ^ https://%1%2%{REQUEST_URI} [R=301,L,NE]",
+            "",
+            "RewriteCond %{HTTPS} !=on",
+            "RewriteCond %{HTTP:X-Forwarded-Proto} !https [NC]",
+            "RewriteCond %{HTTP_HOST} !^(localhost|127\\.0\\.0\\.1)(:[0-9]+)?$ [NC]",
+            "RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L,NE]",
+            "",
+            "ErrorDocument 404 /404.html",
+            "",
+        ];
         $site = $this->sites->findById($siteId);
         if ($site) {
             $payload = $this->securityTxt->publicPayload($site);
@@ -413,7 +453,7 @@ class PublishService implements PublishPageChrome
 
     public function generate404(array $site): void
     {
-        $name   = htmlspecialchars($site['name'] ?? 'RB Photos & Videos', ENT_QUOTES);
+        $name   = htmlspecialchars($site['name'] ?? 'RB Videos & Photos', ENT_QUOTES);
         $domain = rtrim($site['domain'] ?? '', '/');
         $stamp  = '<!-- cms: ' . Version::APP . ' published: ' . date('Y-m-d H:i:s') . " -->\n";
 
@@ -480,7 +520,7 @@ a{color:#c4963c;text-decoration:none}
 </html>
 HTML;
 
-        file_put_contents($this->publishedDir . '/404.html', $stamp . $html);
+        file_put_contents($this->publishedDir . '/404.html', $stamp . \App\Services\Render\MarkupNormalizer::injectLightOnlyColorScheme($html));
     }
 
     private function resolveFilePath(string $urlPath): string
@@ -538,7 +578,10 @@ HTML;
 
         if ($pageKey === 'sluzby') {
             $siteId = (int)($page['site_id'] ?? 0);
-            $sluzbyData = \App\ViewModels\SluzbyPageData::forSite($siteId);
+            $sluzbyData = \App\ViewModels\SluzbyPageData::forSite(
+                $siteId,
+                \App\Services\Render\HomepageSectionRenderer::blockContent($blocks, 'hero_bg')
+            );
             [$titleKey, $title, $titleType] = \App\Services\Render\HomepageSectionRenderer::firstBlockValue(
                 $blocks,
                 ['hero_h1', 'hero_heading'],
@@ -591,6 +634,7 @@ HTML;
                     'subType' => $subType,
                 ],
                 'posts' => $blogData['posts'],
+                'blocks' => $blocks,
             ]);
             $css = rtrim((string)file_get_contents(\App\View\ViewFactory::base() . '/app/Views/assets/blog-listing.css'), "\n");
 
@@ -621,6 +665,10 @@ HTML;
                     'subType' => $subType,
                 ],
                 'entries' => $portfolioData['entries'],
+                'mixedEntries' => $portfolioData['mixedEntries'],
+                'photoEntries' => $portfolioData['photoEntries'],
+                'videoEntries' => $portfolioData['videoEntries'],
+                'blocks' => $blocks,
             ]);
             $css = rtrim((string)file_get_contents(\App\View\ViewFactory::base() . '/app/Views/assets/portfolio-listing.css'), "\n");
 
@@ -660,7 +708,10 @@ HTML;
         }
         if ($path === '') return null;
 
-        return rtrim($site['domain'], '/') . '/' . ltrim($path, '/');
+        return \App\Services\Render\MediaUrlResolver::absolutePublicMediaUrl(
+            $path,
+            (string)($site['domain'] ?? '')
+        );
     }
 
     public function injectPageHeroImage(string $html, int $pageId, array $site = []): string
@@ -685,19 +736,35 @@ HTML;
 
         $posterUrl = $this->normalizePublicAssetUrl((string)($site['default_hero_poster_url'] ?? ''));
 
+        $autoplay = (int)($site['video_autoplay_enabled'] ?? 1) === 1;
+
         $page = $this->pages->findById($pageId);
         $isHomepage = trim((string)($page['url_path'] ?? '')) === '';
         // Priorita: 1) page hero_video, 2) homepage site default video, 3) page hero_bg foto, 4) site default poster foto, 5) site default video.
         $videoBlock = $this->blocks->findByKey($pageId, 'hero_video');
         $pageVideo = $videoBlock ? $this->normalizePublicAssetUrl((string)($videoBlock['content'] ?? '')) : '';
+        $blockUrl = function (string $key) use ($pageId): string {
+            $block = $this->blocks->findByKey($pageId, $key);
+
+            return $block ? $this->normalizePublicAssetUrl((string)($block['content'] ?? '')) : '';
+        };
+        $defaultVideo = $this->normalizePublicAssetUrl((string)($site['default_hero_video_url'] ?? ''));
+        // Which trio wins is decided in one shared place, so live and publish cannot disagree.
+        $heroUrls = HeroMediaRenderer::pickHeroVideoUrls(
+            $pageVideo,
+            $blockUrl('hero_video_tablet'),
+            $blockUrl('hero_video_mobile'),
+            $defaultVideo,
+            $this->normalizePublicAssetUrl((string)($site['default_hero_video_url_tablet'] ?? '')),
+            $this->normalizePublicAssetUrl((string)($site['default_hero_video_url_mobile'] ?? ''))
+        );
 
         $videoHtml = '';
         if ($pageVideo !== '') {
-            $videoHtml = $this->buildHeroVideoHtml($pageVideo, $posterUrl);
+            $videoHtml = $this->buildHeroVideoHtml($pageVideo, $posterUrl, $autoplay, $heroUrls['tablet'], $heroUrls['mobile']);
         } else {
-            $defaultVideo = $this->normalizePublicAssetUrl((string)($site['default_hero_video_url'] ?? ''));
             if ($isHomepage && $defaultVideo !== '') {
-                $videoHtml = $this->buildHeroVideoHtml($defaultVideo, $posterUrl);
+                $videoHtml = $this->buildHeroVideoHtml($defaultVideo, $posterUrl, $autoplay, $heroUrls['tablet'], $heroUrls['mobile']);
             }
 
             $photoBlock = $this->blocks->findByKey($pageId, 'hero_bg');
@@ -711,7 +778,7 @@ HTML;
             }
 
             if ($videoHtml === '' && $defaultVideo !== '') {
-                $videoHtml = $this->buildHeroVideoHtml($defaultVideo, $posterUrl);
+                $videoHtml = $this->buildHeroVideoHtml($defaultVideo, $posterUrl, $autoplay, $heroUrls['tablet'], $heroUrls['mobile']);
             }
         }
 
@@ -742,9 +809,9 @@ HTML;
         return \App\Services\Render\HeroMediaRenderer::ensureHeroVideoStyle($html);
     }
 
-    private function buildHeroVideoHtml(string $videoUrl, string $posterUrl = ''): string
+    private function buildHeroVideoHtml(string $videoUrl, string $posterUrl = '', bool $autoplay = false, string $tabletUrl = '', string $mobileUrl = ''): string
     {
-        return \App\Services\Render\HeroMediaRenderer::buildHeroVideoHtml($videoUrl, $posterUrl);
+        return \App\Services\Render\HeroMediaRenderer::buildHeroVideoHtml($videoUrl, $posterUrl, $autoplay, $tabletUrl, $mobileUrl);
     }
 
     private function buildHeroImageHtml(string $imageUrl): string
@@ -792,9 +859,14 @@ HTML;
   pointer-events:none;
   background:linear-gradient(90deg,rgba(0,0,0,var(--cms-video-overlay-opacity)),rgba(0,0,0,var(--cms-video-overlay-soft-opacity)),rgba(0,0,0,var(--cms-video-overlay-opacity)));
 }
+/* Homepage hero: no darkening over the video. The theme already fades it into the
+   paper background with a mask, so a second overlay only muddies it. */
+.hp-hero .theme-hero-video::after{
+  content:none;
+}
 CSS;
 
-        return FrontendAssetManager::injectGeneratedCss($html, $css, 'video-overlay', 'data-cms-video-overlay');
+        return FrontendAssetManager::injectInlineStyle($html, $css, 'data-cms-video-overlay');
     }
 
     private function normalizeLegacyTemplateSource(string $html): string

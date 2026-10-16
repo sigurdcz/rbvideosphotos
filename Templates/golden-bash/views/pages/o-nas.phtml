@@ -1,0 +1,142 @@
+<?php
+$blockMap = [];
+foreach (($blocks ?? []) as $block) {
+    $blockMap[(string) ($block['block_key'] ?? '')] = (string) ($block['content'] ?? '');
+}
+/**
+ * Editable copy: the database block wins, the literal below is the fallback that
+ * keeps the page intact before the migration runs (and on a site that never gets
+ * one). Every key passed here is also wired to inlineAttr(), so the same text is
+ * editable both in the admin "Bloky obsahu" tab and inline on the page.
+ */
+$t = static fn(string $key, string $default): string =>
+    trim((string) ($blockMap[$key] ?? '')) !== '' ? (string) $blockMap[$key] : $default;
+$photographerImage = trim($blockMap['about_photographer_image'] ?? '');
+$cameramanImage = trim($blockMap['about_cameraman_image'] ?? '');
+$photographerVideoUrl = trim($blockMap['about_photographer_video'] ?? '');
+$cameramanVideoUrl = trim($blockMap['about_cameraman_video'] ?? '');
+$photographerVideoEmbed = $photographerVideoUrl !== '' ? \App\Services\Render\HeroMediaRenderer::buildVideoEmbedUrl($photographerVideoUrl) : '';
+$cameramanVideoEmbed = $cameramanVideoUrl !== '' ? \App\Services\Render\HeroMediaRenderer::buildVideoEmbedUrl($cameramanVideoUrl) : '';
+$heroHeading = trim($blockMap['hero_h1'] ?? $blockMap['hero_heading'] ?? '');
+if ($heroHeading === '') {
+    throw new RuntimeException('Stránka O nás vyžaduje databázový H1 nadpis.');
+}
+$reviews = array_values(array_filter(
+    is_array($reviews ?? null) ? $reviews : [],
+    static fn(array $review): bool => trim((string)($review['review_text'] ?? '')) !== ''
+));
+$stories = array_values(array_filter(
+    is_array($stories ?? null) ? $stories : [],
+    static fn(array $story): bool => trim((string)($story['slug'] ?? '')) !== ''
+        && trim((string)($story['title'] ?? '')) !== ''
+));
+if ($photographerImage === '' || $cameramanImage === '') {
+    throw new RuntimeException('Stránka O nás vyžaduje oba mediální bloky týmu.');
+}
+$sourceFragment = preg_replace(
+    '~<h1\b([^>]*)>.*?</h1>~is',
+    '<h2$1>Dva lidé, jeden společný příběh</h2>',
+    (string) $fragment,
+    1
+) ?? (string) $fragment;
+?>
+<section class="page-hero gb-about-hero">
+  <div class="container">
+    <h1<?= $this->inlineAttr(isset($blockMap['hero_h1']) ? 'hero_h1' : 'hero_heading') ?>><?= $this->e($heroHeading) ?></h1>
+    <p<?= $this->inlineAttr('hero_sub') ?>><?= $this->e($t('hero_sub', 'Jsme Zdeněk a Tomáš - fotograf a kameraman. Zachycujeme pravé emoce, krásu okamžiku a příběhy, které vydrží navždy.')) ?></p>
+    <div class="gb-about-actions">
+      <a class="gb-button gb-button--primary"<?= $this->inlineAttr('about_hero_cta_primary') ?> href="/kontakt"><svg class="gb-about-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5H5.75A1.75 1.75 0 0 0 4 7.25v11A1.75 1.75 0 0 0 5.75 20h12.5A1.75 1.75 0 0 0 20 18.25v-11a1.75 1.75 0 0 0-1.75-1.75H16"/><path d="M9 3.5h6a1 1 0 0 1 1 1v2H8v-2a1 1 0 0 1 1-1Z"/><path d="m8.25 13 2.25 2.25 5.25-5.25"/></svg><?= $this->e($t('about_hero_cta_primary', 'Získat nabídku')) ?></a>
+      <a class="gb-button"<?= $this->inlineAttr('about_hero_cta_secondary') ?> href="/nase-prace"><svg class="gb-about-action-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m6.5 16 3.25-3.5 2.5 2.5 2-2 3.25 3.5"/><circle cx="16.75" cy="8.75" r="1.5"/><path d="m10 7.5 4 2.5-4 2.5Z"/></svg><?= $this->e($t('about_hero_cta_secondary', 'Podívat se na ukázky')) ?></a>
+    </div>
+  </div>
+</section>
+
+<section class="gb-about-section gb-about-team" aria-labelledby="gb-about-team-title">
+  <div class="container">
+    <h2 id="gb-about-team-title"<?= $this->inlineAttr('about_team_heading') ?>><?= $this->e($t('about_team_heading', 'Kdo stojí za RB Videos & Photos')) ?></h2>
+    <div class="gb-about-team-grid">
+      <article class="gb-about-person<?= $photographerVideoEmbed !== '' ? ' gb-about-person--video' : '' ?>">
+        <?php if ($photographerVideoEmbed !== ''): ?>
+        <div class="gb-about-person__photo gb-about-person__photo--video" data-hero-video-facade<?= !empty($videoAutoplay) ? ' data-hero-video-autoplay' : '' ?> data-embed-url="<?= $this->e($photographerVideoEmbed) ?>">
+          <img class="gb-about-person__photo-poster" src="<?= $this->e($photographerImage) ?>" alt="<?= $this->e($t('about_photographer_photo_alt', 'Zdeněk Černohlávek, fotograf')) ?>">
+          <button class="theme-hero-video__play" type="button" aria-label="<?= $this->e($t('about_photographer_video_label', 'Přehrát video se Zdeňkem Černohlávkem')) ?>"><span aria-hidden="true">&#9654;</span></button>
+          <span class="theme-hero-video__status" role="status" aria-live="polite"></span>
+        </div>
+        <?php else: ?>
+        <img class="gb-about-person__photo" src="<?= $this->e($photographerImage) ?>" alt="<?= $this->e($t('about_photographer_photo_alt', 'Zdeněk Černohlávek, fotograf')) ?>">
+        <?php endif; ?>
+        <div class="gb-about-person__body">
+          <h3<?= $this->inlineAttr('about_photographer_name') ?>><?= $this->e($t('about_photographer_name', 'Zdeněk Černohlávek')) ?></h3><strong<?= $this->inlineAttr('about_photographer_role') ?>><?= $this->e($t('about_photographer_role', 'Fotograf')) ?></strong>
+          <p<?= $this->inlineAttr('about_photographer_quote') ?>><?= $this->e($t('about_photographer_quote', 'Zachycuji emoce a přirozenost tak, abyste se k nim mohli vracet i po letech a znovu je prožívat. Věnuji se focení od roku 2015.')) ?></p>
+          <ul><li<?= $this->inlineAttr('about_photographer_point_1') ?>><?= $this->e($t('about_photographer_point_1', 'Stovky spokojených klientů')) ?></li><li<?= $this->inlineAttr('about_photographer_point_2') ?>><?= $this->e($t('about_photographer_point_2', 'Cit pro detail a světlo')) ?></li><li<?= $this->inlineAttr('about_photographer_point_3') ?>><?= $this->e($t('about_photographer_point_3', 'Individuální přístup ke každému páru')) ?></li></ul>
+          <div class="gb-about-person__links"><a class="gb-button gb-button--primary"<?= $this->inlineAttr('about_photographer_cta_primary') ?> href="/nase-prace#fotogalerie"><?= $this->e($t('about_photographer_cta_primary', 'Ukázky práce')) ?></a><a class="gb-button"<?= $this->inlineAttr('about_photographer_cta_secondary') ?> href="/kontakt"><?= $this->e($t('about_photographer_cta_secondary', 'Spojit se')) ?></a></div>
+        </div>
+      </article>
+      <article class="gb-about-person<?= $cameramanVideoEmbed !== '' ? ' gb-about-person--video' : '' ?>">
+        <?php if ($cameramanVideoEmbed !== ''): ?>
+        <div class="gb-about-person__photo gb-about-person__photo--video" data-hero-video-facade<?= !empty($videoAutoplay) ? ' data-hero-video-autoplay' : '' ?> data-embed-url="<?= $this->e($cameramanVideoEmbed) ?>">
+          <img class="gb-about-person__photo-poster" src="<?= $this->e($cameramanImage) ?>" alt="<?= $this->e($t('about_cameraman_photo_alt', 'Tomáš Šincl, kameraman')) ?>">
+          <button class="theme-hero-video__play" type="button" aria-label="<?= $this->e($t('about_cameraman_video_label', 'Přehrát video s Tomášem Šinclem')) ?>"><span aria-hidden="true">&#9654;</span></button>
+          <span class="theme-hero-video__status" role="status" aria-live="polite"></span>
+        </div>
+        <?php else: ?>
+        <img class="gb-about-person__photo" src="<?= $this->e($cameramanImage) ?>" alt="<?= $this->e($t('about_cameraman_photo_alt', 'Tomáš Šincl, kameraman')) ?>">
+        <?php endif; ?>
+        <div class="gb-about-person__body">
+          <h3<?= $this->inlineAttr('about_cameraman_name') ?>><?= $this->e($t('about_cameraman_name', 'Tomáš Šincl')) ?></h3><strong<?= $this->inlineAttr('about_cameraman_role') ?>><?= $this->e($t('about_cameraman_role', 'Kameraman a editor')) ?></strong>
+          <p<?= $this->inlineAttr('about_cameraman_quote') ?>><?= $this->e($t('about_cameraman_quote', 'Vyprávím vaše příběhy pohyblivým obrazem, který dojme a zůstane navždy.')) ?></p>
+          <ul><li<?= $this->inlineAttr('about_cameraman_point_1') ?>><?= $this->e($t('about_cameraman_point_1', 'Filmové svatební video')) ?></li><li<?= $this->inlineAttr('about_cameraman_point_2') ?>><?= $this->e($t('about_cameraman_point_2', 'Dynamické střihy a emoce')) ?></li><li<?= $this->inlineAttr('about_cameraman_point_3') ?>><?= $this->e($t('about_cameraman_point_3', 'Příběh, který má začátek i konec')) ?></li></ul>
+          <div class="gb-about-person__links"><a class="gb-button gb-button--primary"<?= $this->inlineAttr('about_cameraman_cta_primary') ?> href="/nase-prace#videogalerie"><?= $this->e($t('about_cameraman_cta_primary', 'Ukázky práce')) ?></a><a class="gb-button"<?= $this->inlineAttr('about_cameraman_cta_secondary') ?> href="/kontakt"><?= $this->e($t('about_cameraman_cta_secondary', 'Spojit se')) ?></a></div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="gb-about-section gb-about-values" aria-labelledby="gb-about-values-title">
+  <div class="container">
+    <h2 id="gb-about-values-title"<?= $this->inlineAttr('about_values_heading') ?>><?= $this->e($t('about_values_heading', 'Naše zkušenosti a přístup')) ?></h2>
+    <div class="gb-about-values-grid">
+      <article><svg class="gb-about-value-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="M5 11.5h22a2 2 0 0 1 2 2V26a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V13.5a2 2 0 0 1 2-2Z"/><path d="m9 11.5 2.5-4h9l2.5 4M6.5 8h3"/><circle cx="16" cy="19.5" r="5.5"/><circle cx="16" cy="19.5" r="2"/><path d="M25 15.5h.01"/></svg><h3<?= $this->inlineAttr('about_value_1_title') ?>><?= $this->e($t('about_value_1_title', 'Profesionální technika')) ?></h3></article>
+      <article><svg class="gb-about-value-icon" viewBox="0 0 32 32" aria-hidden="true"><circle cx="11.5" cy="10" r="4"/><path d="M4.5 25.5v-2.75a7 7 0 0 1 7-7c2.05 0 3.9.88 5.18 2.28"/><path d="M23.5 15.5c-3.4-3.35-8.75 1.85 0 8.5 8.75-6.65 3.4-11.85 0-8.5Z"/></svg><h3<?= $this->inlineAttr('about_value_2_title') ?>><?= $this->e($t('about_value_2_title', 'Individuální přístup')) ?></h3></article>
+      <article><svg class="gb-about-value-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3.5 26 7v7.5c0 6.65-4.25 11.35-10 14-5.75-2.65-10-7.35-10-14V7Z"/><path d="m11 16 3.2 3.2L21.5 12"/></svg><h3<?= $this->inlineAttr('about_value_3_title') ?>><?= $this->e($t('about_value_3_title', 'Důvěra a diskrétnost')) ?></h3></article>
+      <article><svg class="gb-about-value-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="M3.5 16s4.8-8 12.5-8 12.5 8 12.5 8-4.8 8-12.5 8S3.5 16 3.5 16Z"/><circle cx="16" cy="16" r="4"/><path d="m25 5 .7 2.3L28 8l-2.3.7L25 11l-.7-2.3L22 8l2.3-.7L25 5Z"/></svg><h3<?= $this->inlineAttr('about_value_4_title') ?>><?= $this->e($t('about_value_4_title', 'Vkus a cit pro detail')) ?></h3></article>
+    </div>
+  </div>
+</section>
+
+<?php if ($reviews !== []): ?><section class="gb-about-proof" aria-labelledby="gb-about-proof-title">
+  <div class="container">
+    <h2 id="gb-about-proof-title"<?= $this->inlineAttr('about_reviews_heading') ?>><?= $this->e($t('about_reviews_heading', 'Reference klientů')) ?></h2>
+    <div class="gb-about-proof__quotes"><?php foreach (array_slice($reviews, 0, 3) as $review): ?><blockquote><p><span><?= $this->e(str_repeat('★', max(1, min(5, (int)($review['rating'] ?? 5))))) ?></span><?= nl2br($this->e((string)$review['review_text'])) ?></p><cite><?= $this->e((string)($review['author_name'] ?? '')) ?></cite></blockquote><?php endforeach; ?></div>
+  </div>
+</section><?php endif; ?>
+
+<section class="gb-about-section gb-about-process" aria-labelledby="gb-about-process-title">
+  <div class="container"><h2 id="gb-about-process-title">Jak pracujeme</h2><ol>
+    <li><span>1</span><i class="material-symbols-outlined">event</i><div><h3>Seznámení</h3><p>Nezávazná konzultace, poznáme se a probereme vaši představu.</p></div></li>
+    <li><span>2</span><i class="material-symbols-outlined">assignment</i><div><h3>Plánování</h3><p>Domluvíme detaily, harmonogram a vše důležité k vašemu dni.</p></div></li>
+    <li><span>3</span><i class="material-symbols-outlined">photo_camera</i><div><h3>Svatba</h3><p>Diskrétně zachytíme každý důležitý okamžik a emoce.</p></div></li>
+    <li><span>4</span><i class="material-symbols-outlined">play_circle</i><div><h3>Předání</h3><p>Rychlé dodání ukázek, kompletních fotek a filmu v nejvyšší kvalitě.</p></div></li>
+  </ol></div>
+</section>
+
+<section class="gb-about-section gb-about-trust" aria-labelledby="gb-about-trust-title">
+  <div class="container"><h2 id="gb-about-trust-title"<?= $this->inlineAttr('about_trust_heading') ?>><?= $this->e($t('about_trust_heading', 'Důvěra a transparentnost')) ?></h2><div class="gb-about-trust-grid">
+    <a href="/kontakt"><i class="material-symbols-outlined">description</i><span<?= $this->inlineAttr('about_trust_link_1') ?>><?= $this->e($t('about_trust_link_1', 'IČO a fakturační údaje')) ?></span>›</a>
+    <a href="/podminky-uziti"><i class="material-symbols-outlined">receipt_long</i><span<?= $this->inlineAttr('about_trust_link_2') ?>><?= $this->e($t('about_trust_link_2', 'Obchodní podmínky')) ?></span>›</a>
+    <a href="/podminky-uziti"><i class="material-symbols-outlined">verified_user</i><span<?= $this->inlineAttr('about_trust_link_3') ?>><?= $this->e($t('about_trust_link_3', 'GDPR ochrana')) ?></span>›</a>
+    <a href="/cenik"><i class="material-symbols-outlined">sell</i><span<?= $this->inlineAttr('about_trust_link_4') ?>><?= $this->e($t('about_trust_link_4', 'Orientační ceník')) ?></span>›</a>
+    <a href="/faq"><i class="material-symbols-outlined">schedule</i><span<?= $this->inlineAttr('about_trust_link_5') ?>><?= $this->e($t('about_trust_link_5', 'Dodací termíny')) ?></span>›</a>
+    <a href="/kontakt"><i class="material-symbols-outlined">event_available</i><span<?= $this->inlineAttr('about_trust_link_6') ?>><?= $this->e($t('about_trust_link_6', 'Rezervační postup')) ?></span>›</a>
+  </div></div>
+</section>
+
+<?php if ($stories !== []): ?><section class="gb-about-section gb-about-stories" aria-labelledby="gb-about-stories-title">
+  <div class="container"><h2 id="gb-about-stories-title"<?= $this->inlineAttr('about_stories_heading') ?>><?= $this->e($t('about_stories_heading', 'Příběhy z praxe / případové studie')) ?></h2><div class="gb-about-story-grid">
+    <?php foreach (array_slice($stories, 0, 3) as $story): ?><article><?php if (trim((string)($story['image_url'] ?? '')) !== ''): ?><img class="gb-about-story__media" src="<?= $this->e((string)$story['image_url']) ?>" alt="<?= $this->e((string)$story['title']) ?>" loading="eager"><?php else: ?><div class="gb-about-story__media"></div><?php endif; ?><div><strong<?= $this->inlineAttr('about_stories_kicker') ?>><?= $this->e($t('about_stories_kicker', 'Blog')) ?></strong><h3<?= $this->inlineAttr('blog:' . (int)($story['id'] ?? 0) . ':title') ?>><?= $this->e((string)$story['title']) ?></h3><p<?= $this->inlineAttr('blog:' . (int)($story['id'] ?? 0) . ':excerpt') ?>><?= $this->e((string)($story['excerpt'] ?? '')) ?></p><a<?= $this->inlineAttr('about_stories_link_label') ?> href="/<?= $this->e(ltrim((string)$story['slug'], '/')) ?>"><?= $this->e($t('about_stories_link_label', 'Zobrazit příběh ›')) ?></a></div></article><?php endforeach; ?>
+  </div></div>
+</section><?php endif; ?>
+
+<section class="gb-about-cta"><div class="container"><h2<?= $this->inlineAttr('about_cta_heading') ?>><?= $this->e($t('about_cta_heading', 'Pojďme si vytvořit vzpomínky na celý život')) ?></h2><div><a class="gb-button gb-button--primary"<?= $this->inlineAttr('about_cta_primary') ?> href="/kontakt"><?= $this->e($t('about_cta_primary', 'Získat nabídku')) ?></a><a class="gb-button"<?= $this->inlineAttr('about_cta_secondary') ?> href="/kontakt"><?= $this->e($t('about_cta_secondary', 'Napište nám')) ?></a></div></div></section>
+<div class="gb-about-source" hidden><?= $this->raw($sourceFragment) ?></div>

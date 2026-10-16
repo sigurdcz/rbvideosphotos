@@ -131,7 +131,7 @@
   };
   setEditorialCopy(sections.services, 'Více než fotografie a video', 'Spojujeme cit pro detail, kreativitu a zkušenosti, abychom vytvořili upřímné příběhy, které přežijí generace.', 'Více o nás');
   setEditorialCopy(sections.portfolio, 'Vybrané příběhy', 'Každá svatba je jedinečná. Tady je pár našich oblíbených.', 'Prohlédnout portfolio');
-  setEditorialCopy(sections.process, 'Jak spolupráce probíhá', 'Od první zprávy až po hotové vzpomínky — klidně, jasně a v tempu vašeho dne.', 'Kontaktovat nás');
+  setEditorialCopy(sections.process, 'Jak spolupráce probíhá', 'Od první zprávy až po hotové vzpomínky - klidně, jasně a v tempu vašeho dne.', 'Kontaktovat nás');
   setEditorialCopy(sections.pricing, 'Balíčky na míru vašemu příběhu', 'Každý příběh je jedinečný, stejně jako naše balíčky.', 'Zjistit více');
   setEditorialCopy(sections.reviews, 'Co o nás říkají klienti', 'Důvěra a radost klientů jsou pro nás nejlepší vizitkou.', 'Další reference');
   setEditorialCopy(sections.blog, 'Rady pro den, který si užijete', 'Výběr dodavatelů i příprava dne bez zbytečného stresu.', 'Všechny články');

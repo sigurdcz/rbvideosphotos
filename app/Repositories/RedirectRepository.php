@@ -29,6 +29,16 @@ class RedirectRepository
         return $row ?: null;
     }
 
+    public function findByPath(int $siteId, string $fromPath): ?array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT * FROM redirects WHERE site_id = ? AND from_path = ? ORDER BY id DESC LIMIT 1'
+        );
+        $stmt->execute([$siteId, $fromPath]);
+        $row = $stmt->fetch();
+        return $row ?: null;
+    }
+
     public function create(array $data): int
     {
         $stmt = $this->db->prepare(

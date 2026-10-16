@@ -1,1 +1,0 @@
-:root{--cms-video-overlay-opacity:0.620;--cms-video-overlay-soft-opacity:0.217}.theme-hero-video::after,.pf-video-wrap::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(0,0,0,var(--cms-video-overlay-opacity)),rgba(0,0,0,var(--cms-video-overlay-soft-opacity)),rgba(0,0,0,var(--cms-video-overlay-opacity)))}

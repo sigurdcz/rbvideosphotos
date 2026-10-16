@@ -57,7 +57,7 @@ ob_start();
   </div>
 
   <div style="display:flex;gap:10px;margin-top:4px">
-    <button type="submit" class="btn btn-primary"><?= $isEdit ? 'Ulozit zmeny' : 'Vytvorit layout' ?></button>
+    <button type="submit" class="btn btn-primary"><?= $isEdit ? 'Uložit změny' : 'Vytvorit layout' ?></button>
     <?php if ($isEdit): ?>
       <a href="/admin/layouts/parse?id=<?= (int)$template['id'] ?>" class="btn btn-secondary" id="btn-parse" target="_blank">Zobrazit bloky</a>
     <?php endif; ?>

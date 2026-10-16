@@ -9,14 +9,14 @@ namespace App\Services\Render;
  * the live render path in phase 2 (logo, page hero image/video, video overlay
  * styles).
  *
- * These are NOT duplicated helpers — the live path has different, richer
+ * These are NOT duplicated helpers - the live path has different, richer
  * implementations (webp <picture>, optimized media resolution, full overlay
  * CSS). Unifying them is scheduled for phases 3/6 (layout partials + theme
  * hack migration). Until then PublishService owns the publish variants and
  * exposes them to PageComposer through this contract so the publish cascade
  * has a single orchestration home.
  *
- * Phase 6: the former injectEditorialGoldOverrides() left this contract — the
+ * Phase 6: the former injectEditorialGoldOverrides() left this contract - the
  * editorial-gold CTA fixes now live in Templates/editorial-gold/assets/overrides.css
  * (a normal theme asset), removing the theme-specific branch from core.
  */

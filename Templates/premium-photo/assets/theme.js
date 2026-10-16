@@ -2,7 +2,7 @@
 if (document.body.dataset.premiumPhotoReady === "1") return;
 document.body.dataset.premiumPhotoReady = "1";
 
-/* RB Videos & Photos — sdílené chování */
+/* RB Videos & Photos - sdílené chování */
 
 // CMS markup stays data-driven; these classes only adapt its presentation to
 // the designer's Premium Photo components.
@@ -78,7 +78,7 @@ if (premiumHome) {
       label.textContent = "O nás";
       const introduction = document.createElement("p");
       introduction.className = "premium-about-split__intro";
-      introduction.textContent = "Jsme dva tvůrci z Olomouce, které spojuje cit pro obraz a poctivě odvedená práce. Každou zakázku tvoříme osobně – od prvního setkání až po finální fotografii a film.";
+      introduction.textContent = "Jsme dva tvůrci z Olomouce, které spojuje cit pro obraz a poctivě odvedená práce. Každou zakázku tvoříme osobně - od prvního setkání až po finální fotografii a film.";
 
       const list = document.createElement("div");
       list.className = "premium-about-split__list";

@@ -13,24 +13,15 @@ class BlogSyncService
         $page = (new PageRepository())->findByUrlPath('');
         if (!$page) return;
 
-        $posts  = array_slice($repo->allPublished($siteId), 0, 3);
+        $posts = array_slice($repo->allPublished($siteId), 0, 3);
         $blocks = new BlockRepository();
-        $h      = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
+        // The same builder the homepage autofill uses, so a saved article keeps the
+        // card it had - with its photo - instead of a plainer copy of it.
+        $homepage = new HomepageContentService();
 
         for ($i = 0; $i < 3; $i++) {
             $key = 'blog_' . ($i + 1);
-            if (isset($posts[$i])) {
-                $post    = $posts[$i];
-                $excerpt = mb_strimwidth(strip_tags((string)($post['excerpt'] ?? '')), 0, 120, '…');
-                $content = '<div class="hp-blog-body">'
-                    . '<h3 class="hp-blog-title"><a href="/' . $h($post['slug']) . '" class="blog-title-link">'
-                    . $h($post['title']) . '</a></h3>'
-                    . '<p class="hp-blog-excerpt">' . $h($excerpt) . '</p>'
-                    . '<a href="/' . $h($post['slug']) . '" class="hp-blog-link">&#268;&#237;st d&#225;l &rarr;</a>'
-                    . '</div>';
-            } else {
-                $content = '';
-            }
+            $content = isset($posts[$i]) ? $homepage->buildBlogCardHtml($siteId, $i) : '';
 
             $blocks->upsert((int)$page['id'], $key, [
                 'block_type' => 'html',

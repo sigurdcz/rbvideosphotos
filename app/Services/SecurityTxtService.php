@@ -76,7 +76,7 @@ class SecurityTxtService
             $this->cache->forget((int) $site['id']);
             $this->refreshCache($site, $now);
         } catch (Throwable $e) {
-            $cacheWarning = 'Nastaveni bylo ulozeno, ale cache security.txt se nepodarilo obnovit.';
+            $cacheWarning = 'Nastavení bylo uloženo, ale mezipaměť security.txt se nepodařilo obnovit.';
             Logger::warning('security_txt', $cacheWarning, [
                 'site_id' => (int) $site['id'],
                 'error' => $e->getMessage(),

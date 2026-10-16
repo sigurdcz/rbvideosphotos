@@ -47,6 +47,10 @@ function normalizeHtmlForGolden(string $html, bool $editMode = false): string
 {
     $html = str_replace(["\r\n", "\r"], "\n", $html);
 
+    // Database revision diagnostics vary with the local fixture database; they
+    // are not page content and must not invalidate every route snapshot.
+    $html = preg_replace('~<!-- build [^\r\n]*?\| migrations: [^\r\n]*?-->~', '<!-- build BUILD | migrations: MIGRATIONS -->', $html) ?? $html;
+
     // Publish stamp, e.g. "<!-- cms: v_1.3.0 published: 2026-07-17 12:34:56 -->".
     $html = preg_replace(
         '/<!--\s*cms:\s*\S+\s+published:\s*\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\s*-->\n?/',
@@ -61,9 +65,18 @@ function normalizeHtmlForGolden(string $html, bool $editMode = false): string
     $html = preg_replace('/(name="_csrf"\s+value=")[a-f0-9]{16,}(")/i', '${1}CSRF_TOKEN${2}', $html) ?? $html;
     $html = preg_replace('/(name="inline-csrf"\s+content=")[a-f0-9]{16,}(")/i', '${1}CSRF_TOKEN${2}', $html) ?? $html;
 
+    // The inlined @font-face block (App\Services\Render\MarkupNormalizer::inlineFontFaces).
+    // Kept as a placeholder so the goldens still prove it is present and injected once,
+    // without 25 files churning every time a font file is renamed.
+    $html = preg_replace(
+        '~(<style data-cms-fonts-css>).*?(</style>)~s',
+        '${1}FONT_FACES${2}',
+        $html
+    ) ?? $html;
+
     // Content-hashed generated asset filenames (App\Support\FrontendAssetManager).
     $html = preg_replace(
-        '/((?:page-css|page-js|body-vars|video-overlay|inline-style-blocks|inline-body-scripts)-)[0-9a-f]{16}(\.(?:css|js))/',
+        '/((?:page-css|page-js|body-vars|video-overlay|inline-style-blocks|inline-body-scripts|cookie-consent-runtime|cookie-consent|frontend-runtime|tracking)-)[0-9a-f]{16}(\.(?:css|js))/',
         '${1}HASH${2}',
         $html
     ) ?? $html;
@@ -217,7 +230,7 @@ final class GoldenMasterRunner
             return ["{$label}: MISSING (no golden — run --update-goldens)", true];
         }
 
-        $golden = (string) file_get_contents($goldenFile);
+        $golden = normalizeHtmlForGolden((string) file_get_contents($goldenFile));
         if ($golden === $current) {
             return ["{$label}: OK", false];
         }

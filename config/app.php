@@ -2,7 +2,7 @@
 
 use App\Core\Env;
 
-// Pojistka pro pripad primeho web pristupu (/config/app.php) bez autoloaderu —
+// Pojistka pro pripad primeho web pristupu (/config/app.php) bez autoloaderu -
 // vrat 404 + prazdnou konfiguraci misto fatal erroru. Pristup blokuje i .htaccess.
 if (!class_exists(Env::class, true)) {
     http_response_code(404);
@@ -31,8 +31,8 @@ return [
         : filter_var($debugEnv, FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE) ?? false,
     'timezone'    => 'Europe/Prague',
     'session_name' => 'seo_cms_session',
-    'upload_max_size'       => 10  * 1024 * 1024,  // 10 MB  — obrázky
-    'upload_video_max_size' => 512 * 1024 * 1024,  // 512 MB — videa
+    'upload_max_size'       => 10  * 1024 * 1024,  // 10 MB  - obrázky
+    'upload_video_max_size' => 512 * 1024 * 1024,  // 512 MB - videa
     'allowed_image_types'      => ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
     'allowed_image_extensions' => ['jpg', 'jpeg', 'png', 'webp', 'gif'],
     'allowed_video_types'      => ['video/mp4', 'video/quicktime', 'video/webm', 'video/avi', 'video/x-msvideo', 'video/x-matroska'],

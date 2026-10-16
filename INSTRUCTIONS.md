@@ -48,7 +48,7 @@ Tento soubor je obecny pracovni navod pro vsechny AI asistenty i lidske vyvojare
 - Seed nesmi menit schema. Pokud je potreba schema upravit, musi vzniknout nova migrace.
 - Media generovana seedem maji projit stejnou media pipeline jako uzivatelsky upload.
 - Admin Armagedon a lokalni reset musi pouzivat stejnou `SetupEnvironmentService`; druhou kopii DROP/migration/seed poradi nevytvarejte.
-- Referencni Demo obsah musi explicitne nastavit vychozi `Elegant White` (`elegant-white`, verze `1.0.0`) do DB i `storage/active-theme-key.txt`.
+- Referencni Demo obsah musi explicitne nastavit vychozi `Golden Bash Diagonal` (`golden-bash-diagonal`, verze `1.0.0`) do DB i `storage/active-theme-key.txt`.
 - Hlavni seed musi pro INSERT i UPDATE nastavit `cookie_consent_enabled=0`; analyticke a marketingove kategorie tim nevypinejte.
 - Hlavni i Demo seed musi nastavit `default_hero_poster_url` na konkretni existujici zaznam demo media knihovny; chybejici povinny hero soubor musi seed viditelne zastavit.
 - Paritu lokal/online overujte pres `DemoStateFingerprintService`; rozdil fingerprintu je viditelna chyba, ne povoleny fallback.
@@ -75,6 +75,7 @@ Tento soubor je obecny pracovni navod pro vsechny AI asistenty i lidske vyvojare
 ## Git a commit zpravy
 
 - Pred commitem zkontrolujte `git status --short` a commitujte jen souvisejici zmeny.
+- Rebuild/regenerovane zmeny (napr. `tests/goldens/**` po `--update-goldens`, prekompilovane assety, katalogy generovane skriptem) commitujte **oddelene** od zdrojove zmeny, ktera je vyvolala. Duvod: recenzent (clovek i AI) potrebuje v jednom commitu videt bud logiku/obsah, nebo jeji mechanicky odvozeny vystup - ne oboje smichane, protoze pak nejde poznat, jestli se zmenila jen forma, nebo i chovani.
 - Commit zpravy piste tak, aby je AI i clovek pochopili bez dohledavani kontextu.
 - Preferovany format je `type(scope): co se zmenilo a proc`.
 - `type` ma rict druh zmeny, napr. `feature`, `fix`, `refactor`, `docs`, `chore`, `test`.
@@ -98,3 +99,9 @@ Po dokonceni se zastavte a polozte si tyto otazky:
 - Lze to udelat jednoduseji nebo bezpecneji?
 
 Pokud je odpoved ano, vratte se k praci a upravte vysledek.
+
+## Sdilene obsahove kontrakty
+
+- Opakovany marketingovy obsah nekopiruj do route views. Rozsir `shared_sections` nebo existujici centralni repository (FAQ/reviews).
+- Hero, CTA, nadpisy, popisy a obrazky patri do `content_blocks`, `sites` nebo domenove tabulky. Theme smi natvrdo drzet technicke/taxonomicke popisky a prezentacni markup.
+- Portfolio listing musi respektovat `content_type`, `sort_order ASC, id ASC` a oddelene foto/video skupiny v live i publish ceste.

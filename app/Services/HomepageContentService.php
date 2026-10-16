@@ -16,6 +16,8 @@ use App\ViewModels\HomepageData;
 
 class HomepageContentService
 {
+    public const HOMEPAGE_PORTFOLIO_BATCH_SIZE = 5;
+
     private const AUTOFILL_BLOCKS = [
         'sluzby_items' => ['label' => 'Služby', 'hint' => 'Automaticky doplnit z dat služby.'],
         'sluzby_grid' => ['label' => 'Služby grid', 'hint' => 'Automaticky doplnit z dat služby.'],
@@ -38,7 +40,7 @@ class HomepageContentService
         'faq_5' => ['label' => 'FAQ 5', 'hint' => 'Automaticky doplnit z aktivních FAQ položek.'],
         'kontakt_info' => ['label' => 'Kontakt', 'hint' => 'Automaticky doplnit z kontaktních údajů.'],
         'contact_info' => ['label' => 'Kontakt', 'hint' => 'Automaticky doplnit z kontaktních údajů.'],
-        'contact_visual' => ['label' => 'Kontaktni vizual', 'hint' => 'Obrazek pro kontaktni panel na homepage. Doplni demo obsah.'],
+        'contact_visual' => ['label' => 'Kontaktní vizuál', 'hint' => 'Obrazek pro kontaktni panel na homepage. Doplni demo obsah.'],
         'process_label' => ['label' => 'Proces - stitek', 'hint' => 'Textovy blok z demo obsahu.'],
         'process_title' => ['label' => 'Proces - nadpis', 'hint' => 'Textovy blok z demo obsahu.'],
         'process_intro' => ['label' => 'Proces - uvod', 'hint' => 'Textovy blok z demo obsahu.'],
@@ -62,7 +64,7 @@ class HomepageContentService
      * applyFallbacks() call and reused by renderHomePartial() below so every
      * homepage section partial can be overridden per-theme via
      * Templates/<key>/views/partials/home-*.phtml (same ViewResolver cascade
-     * the dedicated archetypes use). Null when no theme resolves — the cascade
+     * the dedicated archetypes use). Null when no theme resolves - the cascade
      * then falls back to the core partial, unchanged from before.
      */
     private ?string $currentThemeKey = null;
@@ -156,8 +158,10 @@ class HomepageContentService
         // Premium Photo keeps the loaded review set for its desktop carousel;
         // other themes still control their own teaser presentation in partials.
         $this->applyBlockFallback($blocks, 'reviews_cta', fn() => $this->buildReviewsCtaHtml($siteId, 3));
-        $this->applyBlockFallback($blocks, 'kontakt_info', fn() => $this->buildContactHtml($siteId));
-        $this->applyBlockFallback($blocks, 'contact_info', fn() => $this->buildContactHtml($siteId));
+        $this->refreshReviewsCta($blocks, $siteId, 3);
+        $contactVisual = $this->blockContent($blocks, 'contact_visual');
+        $this->applyBlockFallback($blocks, 'kontakt_info', fn() => $this->buildContactHtml($siteId, $contactVisual));
+        $this->applyBlockFallback($blocks, 'contact_info', fn() => $this->buildContactHtml($siteId, $contactVisual));
         $this->applyBlockFallback($blocks, 'faq_cta', fn() => $this->buildPageCtaHtml($siteId, 'faq'));
         $this->applyBlockFallback($blocks, 'blog_cta', fn() => $this->buildPageCtaHtml($siteId, 'blog'));
         $this->applyBlockFallback($blocks, 'kontakt_cta', fn() => $this->buildPageCtaHtml($siteId, 'kontakt'));
@@ -166,6 +170,23 @@ class HomepageContentService
     private function fillPortfolioFallbacks(array &$blocks, int $siteId): void
     {
         $this->applyBlockFallback($blocks, 'portfolio-tiles', fn() => $this->buildPortfolioHtml($siteId));
+        $this->refreshPortfolioTiles($blocks, $siteId);
+    }
+
+    /** Keep the DB-owned gallery projection current unless an editor disabled autofill. */
+    private function refreshPortfolioTiles(array &$blocks, int $siteId): void
+    {
+        foreach ($blocks as &$block) {
+            if (($block['block_key'] ?? '') !== 'portfolio-tiles') {
+                continue;
+            }
+
+            if (empty($block['autofill_disabled'])) {
+                $block['content'] = $this->buildPortfolioHtml($siteId);
+            }
+            return;
+        }
+        unset($block);
     }
 
     private function fillBlogFallbacks(array &$blocks, int $siteId): void
@@ -214,8 +235,9 @@ class HomepageContentService
 
     private function fillContactFallbacks(array &$blocks, int $siteId): void
     {
-        $this->applyBlockFallback($blocks, 'kontakt_info', fn() => $this->buildContactHtml($siteId));
-        $this->applyBlockFallback($blocks, 'contact_info', fn() => $this->buildContactHtml($siteId));
+        $contactVisual = $this->blockContent($blocks, 'contact_visual');
+        $this->applyBlockFallback($blocks, 'kontakt_info', fn() => $this->buildContactHtml($siteId, $contactVisual));
+        $this->applyBlockFallback($blocks, 'contact_info', fn() => $this->buildContactHtml($siteId, $contactVisual));
     }
 
     private function applyBlockFallback(array &$blocks, string $key, callable $builder): void
@@ -346,7 +368,13 @@ class HomepageContentService
 
     private function buildPortfolioHtml(int $siteId): string
     {
-        $entries = $this->portfolio->allPublished($siteId);
+        // Homepage is a sampler, not the listing: photos and videos alternate by their
+        // count ratio so the first batch (HOMEPAGE_PORTFOLIO_BATCH_SIZE) always shows
+        // both. The typed number still decides the order inside each type.
+        $entries = PortfolioRepository::interleaveTypes($this->portfolio->allPublished($siteId));
+        if (!ThemeTemplateRegistry::isGoldenBashFamily($this->currentThemeKey)) {
+            $entries = array_slice($entries, 0, self::HOMEPAGE_PORTFOLIO_BATCH_SIZE);
+        }
         if (empty($entries)) {
             return '';
         }
@@ -356,30 +384,45 @@ class HomepageContentService
             $photos = $this->portfolio->getMedia((int)$entry['id']);
             $hasVideo = !empty($entry['video_url']);
             $thumb = $hasVideo ? PortfolioRepository::youtubeThumbnail((string)$entry['video_url']) : '';
+            $videoEmbedUrl = $hasVideo ? PortfolioRepository::embedUrl((string)$entry['video_url']) : '';
 
             if ($thumb === '' && !empty($photos)) {
-                $thumbFile = $photos[0]['storage_path'] ?? $photos[0]['medium_path'] ?? $photos[0]['thumb_path'] ?? '';
+                $thumbFile = $photos[0]['medium_path'] ?? $photos[0]['thumb_path'] ?? $photos[0]['storage_path'] ?? '';
                 $thumb = $this->publicMediaUrl((string)$thumbFile);
             }
 
             $photoData = [];
-            $stripPhotos = $hasVideo ? array_slice($photos, 0, 3) : array_slice($photos, 1, 3);
+            // The hidden strip is also the lightbox data source. Keep the cover
+            // as its first item so opening a card exposes the complete gallery.
+            $stripPhotos = $photos;
             foreach ($stripPhotos as $photo) {
-                $pfile = $photo['storage_path'] ?? $photo['medium_path'] ?? $photo['thumb_path'] ?? '';
+                $previewFile = $photo['medium_path'] ?? $photo['thumb_path'] ?? $photo['storage_path'] ?? '';
+                $fullFile = $photo['storage_path'] ?? $previewFile;
                 $photoData[] = [
-                    'url' => $this->publicMediaUrl((string)$pfile),
+                    'url' => $this->publicMediaUrl((string)$previewFile),
+                    'fullUrl' => $this->publicMediaUrl((string)$fullFile),
                     'alt' => (string)($photo['alt_text'] ?? ''),
                 ];
             }
 
-            $tiles[] = HomepageData::portfolioTile($entry, $thumb, $hasVideo, $photoData);
+            $tiles[] = HomepageData::portfolioTile($entry, $thumb, $hasVideo, $photoData, $videoEmbedUrl);
         }
 
         return $this->renderHomePartial('home-portfolio', ['tiles' => $tiles]);
     }
 
-    private function buildBlogCardHtml(int $siteId, int $index): string
+    /**
+     * The homepage card for the n-th published article, thumbnail included. Public
+     * because BlogSyncService writes the same markup into the blog_* blocks when an
+     * article is saved - it used to build its own, thumbnail-less copy, which then
+     * counted as "block already filled" and permanently replaced this card.
+     */
+    public function buildBlogCardHtml(int $siteId, int $index): string
     {
+        // Called straight from BlogSyncService too, where applyFallbacks() has not run
+        // and the theme is still unknown - without this the card would silently come
+        // out in the core markup on a site using a theme of its own.
+        $this->currentThemeKey ??= $this->resolveThemeKeyForSite($siteId);
         $posts = array_slice($this->blog->allPublished($siteId), 0, 3);
         if (!isset($posts[$index])) {
             return '';
@@ -439,6 +482,22 @@ class HomepageContentService
         return $this->renderHomePartial('home-section-cta', HomepageData::sectionCta($url, $label));
     }
 
+    /** Keep the DB-backed reviews CTA current unless an editor disabled autofill. */
+    private function refreshReviewsCta(array &$blocks, int $siteId, int $shownOnHomepage): void
+    {
+        foreach ($blocks as &$block) {
+            if (($block['block_key'] ?? '') !== 'reviews_cta') {
+                continue;
+            }
+
+            if (empty($block['autofill_disabled'])) {
+                $block['content'] = $this->buildReviewsCtaHtml($siteId, $shownOnHomepage);
+            }
+            return;
+        }
+        unset($block);
+    }
+
     /**
      * Reviews CTA label reflects the real remaining review count instead of
      * the static /hodnoceni page title, e.g. "Dalších 30 hodnocení".
@@ -458,7 +517,16 @@ class HomepageContentService
         $remaining = max(0, $this->reviewContent->countActive($siteId) - $shownOnHomepage);
         $label = $remaining > 0 ? "Dalších {$remaining} hodnocení" : 'Všechna hodnocení';
 
-        return $this->renderHomePartial('home-section-cta', HomepageData::sectionCta($url, $label));
+        $contact = $this->contact->findBySiteSafe($siteId);
+        $reviewsUrl = trim((string)($contact['reviews_url'] ?? ''));
+        if ($reviewsUrl !== '' && filter_var($reviewsUrl, FILTER_VALIDATE_URL) === false) {
+            $reviewsUrl = '';
+        }
+
+        return $this->renderHomePartial(
+            'home-section-cta',
+            HomepageData::sectionCta($url, $label, $reviewsUrl, 'Recenze na Google')
+        );
     }
 
     private function buildFaqItemHtml(int $siteId, int $index): string
@@ -476,7 +544,7 @@ class HomepageContentService
      * (app/Views/partials/home-*.phtml). Phase 5 of the templating refactor:
      * the autofill builders below prepare view DATA (via App\ViewModels\HomepageData)
      * and delegate markup to these partials instead of concatenating HTML here.
-     * Core-only resolution (no theme override) matches the previous behaviour —
+     * Core-only resolution (no theme override) matches the previous behaviour -
      * the fragment used to be produced by this service, not by a theme.
      */
     private function renderHomePartial(string $name, array $data): string
@@ -484,10 +552,10 @@ class HomepageContentService
         return ViewFactory::forTheme($this->currentThemeKey)->render('partials/' . $name, $data);
     }
 
-    public function buildContactHtml(int $siteId): string
+    public function buildContactHtml(int $siteId, string $contactVisual = ''): string
     {
         // CSRF token is generated exactly once here (never inside the ViewModel or
-        // the view) and handed to the partial as data — the /kontakt/odeslat POST
+        // the view) and handed to the partial as data - the /kontakt/odeslat POST
         // handler still validates it via Auth::csrfVerify() unchanged.
         $contact = $this->contact->findBySiteSafe($siteId) ?: [];
         $csrfToken = \App\Core\Auth::csrfToken();
@@ -495,8 +563,18 @@ class HomepageContentService
 
         return $this->renderHomePartial(
             'home-contact',
-            HomepageData::contact($contact, $csrfToken, $contactCta)
+            HomepageData::contact($contact, $csrfToken, $contactCta, $contactVisual !== '' ? $this->resolveOptimizedMediaUrl($siteId, $contactVisual) : '')
         );
+    }
+
+    private function blockContent(array $blocks, string $key): string
+    {
+        foreach ($blocks as $block) {
+            if (($block['block_key'] ?? '') === $key) {
+                return trim((string)($block['content'] ?? ''));
+            }
+        }
+        return '';
     }
 
     private function publicMediaUrl(string $storagePath): string

@@ -1,0 +1,44 @@
+<?php
+/** @var array $hero */
+/** @var array $posts */
+$blockMap = [];
+foreach (($blocks ?? []) as $block) {
+    $blockMap[(string) ($block['block_key'] ?? '')] = (string) ($block['content'] ?? '');
+}
+/** Database block first, the former hardcoded literal as the fallback. */
+$t = static fn(string $key, string $default): string =>
+    trim((string) ($blockMap[$key] ?? '')) !== '' ? (string) $blockMap[$key] : $default;
+?>
+<section class="bl-hero gb-unified-hero">
+  <div class="container">
+    <span class="gb-page-kicker"<?= $this->inlineAttr('listing_kicker') ?>><?= $this->e($t('listing_kicker', 'Blog')) ?></span>
+    <h1<?= $this->inlineAttr($hero['titleKey'], $hero['titleType']) ?>><?= $this->e($hero['title']) ?></h1>
+    <p<?= $this->inlineAttr($hero['subKey'], $hero['subType']) ?>><?= $this->e($hero['sub']) ?></p>
+  </div>
+</section>
+<section class="bl-grid-wrap gb-blog-listing">
+  <div class="container">
+    <p class="gb-list-kicker"<?= $this->inlineAttr('blog_list_kicker') ?>><?= $this->e($t('blog_list_kicker', 'Nejnovější články')) ?></p>
+    <div class="bl-grid"><?php if ($posts === []): ?><p class="bl-empty"<?= $this->inlineAttr('blog_empty_text') ?>><?= $this->e($t('blog_empty_text', 'Zatím žádné články.')) ?></p><?php else: foreach ($posts as $post): ?>
+      <article class="bl-card">
+        <a class="bl-thumb" href="/<?= $this->e($post['slug']) ?>" aria-label="<?= $this->e($post['title']) ?>">
+          <?php if ($post['image_url'] !== ''): ?><img src="<?= $this->e($post['image_url']) ?>" alt="<?= $this->e($post['title']) ?>" loading="lazy"><?php endif; ?>
+        </a>
+        <div class="bl-body">
+          <div class="bl-date"><?= $this->e($post['date']) ?></div>
+          <h2 class="bl-title"<?= $this->inlineAttr('blog:' . $post['id'] . ':title') ?>><a href="/<?= $this->e($post['slug']) ?>"><?= $this->e($post['title']) ?></a></h2>
+          <p class="bl-excerpt"<?= $this->inlineAttr('blog:' . $post['id'] . ':excerpt') ?>><?= $this->e($post['excerpt']) ?></p>
+          <a class="bl-more" href="/<?= $this->e($post['slug']) ?>"><?= $this->e($t('blog_more_label', 'Číst článek')) ?> <span aria-hidden="true">→</span></a>
+        </div>
+      </article>
+    <?php endforeach; endif; ?></div>
+  </div>
+</section>
+<section class="gb-route-cta">
+  <div class="container">
+    <span class="gb-page-kicker"<?= $this->inlineAttr('route_cta_kicker') ?>><?= $this->e($t('route_cta_kicker', 'Váš den, váš příběh')) ?></span>
+    <h2<?= $this->inlineAttr('route_cta_heading') ?>><?= $this->e($t('route_cta_heading', 'Chcete podobné vzpomínky?')) ?></h2>
+    <p<?= $this->inlineAttr('route_cta_text') ?>><?= $this->e($t('route_cta_text', 'Řekněte nám o svém termínu a představě. Společně vybereme focení nebo video, které vám bude sedět.')) ?></p>
+    <div class="gb-route-cta__actions"><a class="gb-button"<?= $this->inlineAttr('route_cta_button') ?> href="/kontakt"><?= $this->e($t('route_cta_button', 'Nezávazná poptávka')) ?></a></div>
+  </div>
+</section>

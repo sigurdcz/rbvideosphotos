@@ -37,6 +37,10 @@ jobs:
             --exclude='.env.*' \
             --exclude='.agents/' \
             --exclude='.codex/' \
+            --exclude='.codex-qa/' \
+            --exclude='.tmp*' \
+            --exclude='.htaccess.backup' \
+            --exclude='tests/' \
             --exclude='.claude/' \
             --exclude='_deploy/' \
             --exclude='*.bat' \

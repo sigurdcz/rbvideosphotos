@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Content\CustomerReviewDataset;
 use App\Core\Database;
 use App\Repositories\BlockRepository;
 use App\Repositories\BlogRepository;
@@ -19,6 +20,15 @@ class DemoContentSeeder
 {
     public const DEFAULT_THEME_KEY = ThemeTemplateRegistry::DEFAULT_THEME_KEY;
     public const DEFAULT_HERO_POSTER_ASSET = 'svatba-nevesta-zenich-polibek-kamenna-zed.webp';
+    /** First /sluzby card; seed and migration 097 resolve it by title or detail URL, never by id. */
+    public const FIRST_SERVICE_TITLE = 'Svatební den - foto + video';
+    public const FIRST_SERVICE_DETAIL_URL = '/svatebni-foto-video';
+    /** Demo asset shown on the first service card (seed = migration 097). */
+    public const FIRST_SERVICE_VISUAL = 'weare5.jpg';
+    /** Poster/fallback shown before Tomas's About video facade is activated. */
+    public const ABOUT_CAMERAMAN_FALLBACK_ASSET = 'fallback tomáš.png';
+    /** Hero photograph for the /nase-prace portfolio listing. */
+    public const WORK_LISTING_HERO_ASSET = 'Snímek obrazovky 2026-10-06 132148.png';
 
     private PDO $db;
     private MediaIngestionService $media;
@@ -28,7 +38,7 @@ class DemoContentSeeder
     private BlockRepository $blocks;
     private TemplateRepository $templates;
 
-    /** filename (demo_assets) => media_id — naplneno v seedMediaLibrary(). */
+    /** filename (demo_assets) => media_id - naplneno v seedMediaLibrary(). */
     private array $demoMedia = [];
 
     public function __construct()
@@ -52,19 +62,22 @@ class DemoContentSeeder
         $siteId = (int)$site['id'];
         $themeRegistry = new ThemeTemplateRegistry();
         if ($themeRegistry->find(self::DEFAULT_THEME_KEY) === null) {
-            throw new \RuntimeException('Vychozi demo motiv nebyl nalezen: ' . self::DEFAULT_THEME_KEY);
+            throw new \RuntimeException('Výchozí demo motiv nebyl nalezen: ' . self::DEFAULT_THEME_KEY);
         }
 
         $mediaCount = $this->seedMediaLibrary($siteId);
+        $this->applyApprovedSiteDefaultsAndAboutProfile($siteId);
         $defaultHeroPosterUrl = $this->seedDefaultHeroPoster($siteId);
         $blogCount = $this->seedBlogPosts($siteId);
         $weddingBlog = (new WeddingBlogDemoContentImporter())->import($siteId);
         $blogCount += $weddingBlog['articles'];
-        $portfolioCount = $this->seedPortfolioEntries($siteId);
+        $portfolioResult = (new PortfolioDemoContentImporter())->import($siteId);
+        $portfolioCount = $portfolioResult['entries'];
         $this->resetHomepageAutofillBlocks();
         $this->seedHomepageElegantWhiteBlocks($siteId);
         $reviewCount = $this->seedReviewRows($siteId);
         $this->seedCenikCards($siteId);
+        $this->seedRealPricingContent($siteId);
         $this->seedDemoContactInfo($siteId);
         $faqCount = $this->seedFaqItems($siteId);
         $this->seedHeroBackgrounds($siteId);
@@ -73,6 +86,7 @@ class DemoContentSeeder
         $this->seedServiceVisuals($siteId);
         $servicePageCount = $this->seedServicePages($siteId, $site);
         $this->seedPageSeo($siteId, $site);
+        $this->seedPageHeadings();
 
         (new SiteRepository())->update($siteId, ['active_theme_key' => self::DEFAULT_THEME_KEY]);
         $themeRegistry->persistActiveThemeKey(self::DEFAULT_THEME_KEY);
@@ -86,6 +100,7 @@ class DemoContentSeeder
         return [
             'blog_posts' => $blogCount,
             'portfolio_entries' => $portfolioCount,
+            'portfolio_media' => $portfolioResult['media'],
             'wedding_blog_media' => $weddingBlog['media'],
             'wedding_blog_warnings' => $weddingBlog['warnings'],
             'reviews' => $reviewCount,
@@ -96,6 +111,380 @@ class DemoContentSeeder
             'default_hero_poster_url' => $defaultHeroPosterUrl,
             'published' => $published,
         ];
+    }
+
+    /** Number of individually processed base assets in the HTTP batch pipeline. */
+    public function demoAssetBatchCount(): int
+    {
+        return count($this->demoAssetPaths());
+    }
+
+    /** @return array{label:string,media_id:int} */
+    public function seedDemoAssetBatchItem(int $siteId, int $index): array
+    {
+        $paths = $this->demoAssetPaths();
+        if (!isset($paths[$index])) {
+            throw new \RuntimeException('Neplatný index dávky základních médií: ' . $index);
+        }
+        $filename = basename($paths[$index]);
+        $id = $this->ingestDemoAsset($siteId, $filename, $this->altFromFilename($filename));
+        if ($id <= 0) {
+            throw new \RuntimeException('Demo médium se nepodařilo importovat: ' . $filename);
+        }
+        return ['label' => $filename, 'media_id' => $id];
+    }
+
+    /** Execute a short, named content phase after base media have been ingested. */
+    public function runBatchContentPhase(string $phase, int $siteId, ?int $userId): array
+    {
+        $site = (new SiteRepository())->findById($siteId);
+        if (!$site) {
+            throw new \RuntimeException('Web pro Demo seed nebyl nalezen.');
+        }
+        $this->hydrateDemoMediaMap($siteId);
+
+        switch ($phase) {
+            case 'default_poster':
+                return ['label' => 'Hlavní obrázek webu', 'value' => $this->seedDefaultHeroPoster($siteId)];
+            case 'base_blog':
+                return ['label' => 'Základní blogové články', 'count' => $this->seedBlogPosts($siteId)];
+            case 'homepage':
+                $this->resetHomepageAutofillBlocks();
+                $this->seedHomepageElegantWhiteBlocks($siteId);
+                return ['label' => 'Obsah homepage'];
+            case 'business_content':
+                $this->applyApprovedSiteDefaultsAndAboutProfile($siteId);
+                $reviews = $this->seedReviewRows($siteId);
+                $this->seedCenikCards($siteId);
+                $this->seedRealPricingContent($siteId);
+                $this->seedDemoContactInfo($siteId);
+                $faq = $this->seedFaqItems($siteId);
+                return ['label' => 'Recenze, ceník, kontakt a FAQ', 'reviews' => $reviews, 'faq' => $faq];
+            case 'services':
+                $this->seedHeroBackgrounds($siteId);
+                $this->seedServiceItems($siteId);
+                $this->resetServiceBlocks($siteId);
+                $this->seedServiceVisuals($siteId);
+                $count = $this->seedServicePages($siteId, $site);
+                return ['label' => 'Služby a jejich média', 'count' => $count];
+            case 'seo_theme':
+                $this->seedPageSeo($siteId, $site);
+                $this->seedPageHeadings();
+                (new SiteRepository())->update($siteId, ['active_theme_key' => self::DEFAULT_THEME_KEY]);
+                (new ThemeTemplateRegistry())->persistActiveThemeKey(self::DEFAULT_THEME_KEY);
+                return ['label' => 'SEO metadata a motiv', 'theme' => self::DEFAULT_THEME_KEY];
+            case 'publish':
+                if (!$userId) {
+                    throw new \RuntimeException('Publikování vyžaduje přihlášeného administrátora.');
+                }
+                $result = (new PublishService())->publishSite($siteId, $userId);
+                if (empty($result['success'])) {
+                    throw new \RuntimeException((string)($result['message'] ?? 'Publikování webu selhalo.'));
+                }
+                return ['label' => 'Publikování webu', 'published' => true];
+        }
+        throw new \RuntimeException('Neznámá fáze Demo seedu: ' . $phase);
+    }
+
+    /**
+     * Restore only the client-approved pricing blocks in an existing database.
+     * Used by restricted-hosting migration compatibility; it does not reset any
+     * other demo content and does not publish the site.
+     */
+    public function restoreRealPricingContent(int $siteId): void
+    {
+        $this->seedRealPricingContent($siteId);
+    }
+
+    /**
+     * Restore only public service pages and page-level SEO settings required by
+     * the production smoke contract. No portfolio, blog, review, media, contact
+     * or theme reset is performed.
+     */
+    public function restoreProductionSeoContent(int $siteId): void
+    {
+        $site = (new SiteRepository())->findById($siteId);
+        if (!$site) {
+            throw new \RuntimeException('Web pro obnovu SEO obsahu nebyl nalezen.');
+        }
+
+        $this->seedServicePages($siteId, $site);
+        $this->seedPageSeo($siteId, $site);
+        $this->seedPageHeadings();
+    }
+
+    /**
+     * Apply the approved content/intent remediation to an existing site without
+     * resetting unrelated reviews, pricing, contact details, theme or media.
+     */
+    public function restoreContentSeoRemediation(int $siteId): void
+    {
+        $site = (new SiteRepository())->findById($siteId);
+        if (!$site) {
+            throw new \RuntimeException('Web pro obsahovou SEO opravu nebyl nalezen.');
+        }
+
+        $this->hydrateDemoMediaMap($siteId);
+        $this->assertContentSeoMediaAvailable();
+
+        $startedTransaction = !$this->db->inTransaction();
+        if ($startedTransaction) {
+            $this->db->beginTransaction();
+        }
+        try {
+            $this->seedServicePages($siteId, $site);
+            $this->seedPageSeo($siteId, $site);
+            $this->seedPageHeadings();
+            $this->seedBlogPosts($siteId, false);
+            (new WeddingBlogDemoContentImporter())->migrateLegacySlugs($siteId);
+            (new PortfolioDemoContentImporter())->refreshSeoMetadata($siteId);
+            if ($startedTransaction) {
+                $this->db->commit();
+            }
+        } catch (\Throwable $e) {
+            if ($startedTransaction && $this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    /**
+     * Restore the client-approved homepage team photograph without resetting
+     * any unrelated homepage content. The source is ingested through the same
+     * Media Library pipeline as an admin upload.
+     */
+    public function restoreHomepageAboutVisual(int $siteId): void
+    {
+        $this->replaceHomepageAboutVisual($siteId, 'weare4.jpg');
+    }
+
+    public function replaceHomepageAboutVisualWithWeare5(int $siteId): void
+    {
+        $this->replaceHomepageAboutVisual($siteId, 'weare5.jpg');
+    }
+
+    public function applyApprovedSiteDefaultsAndAboutProfile(int $siteId): void
+    {
+        (new SiteRepository())->update($siteId, [
+            'company_registration_id' => '29719194',
+            'default_hero_video_url' => 'https://vimeo.com/1229273025',
+            // Tablet plays the desktop video: an empty variant falls back to it (migration 100).
+            'default_hero_video_url_tablet' => null,
+            'default_hero_video_url_mobile' => 'https://vimeo.com/1228952734',
+        ]);
+
+        $aboutPage = null;
+        foreach ($this->pages->allBySite($siteId) as $page) {
+            if (trim((string)($page['url_path'] ?? ''), '/') === 'o-nas') {
+                $aboutPage = $page;
+                break;
+            }
+        }
+        if (!$aboutPage) {
+            throw new \RuntimeException('Stranka O nas pro obnovu profilu nebyla nalezena.');
+        }
+
+        $mediaId = $this->ingestDemoAsset(
+            $siteId,
+            'aboutuszdenek.jpg',
+            'Zdenek Cernohlavek, fotograf'
+        );
+        if ($mediaId <= 0) {
+            throw new \RuntimeException('Fotografii aboutuszdenek.jpg se nepodarilo nahrat do Media Library.');
+        }
+        $photoUrl = $this->mediaPathById($mediaId);
+        if ($photoUrl === '') {
+            throw new \RuntimeException('Medium aboutuszdenek.jpg nema platnou cestu v Media Library.');
+        }
+
+        $pageId = (int)$aboutPage['id'];
+        $this->blocks->upsert($pageId, 'about_photographer_image', [
+            'block_type' => 'image',
+            'label' => 'Zdenek Cernohlavek - fotograf',
+            'content' => $photoUrl,
+            'sort_order' => 4,
+            'autofill_disabled' => 1,
+        ]);
+        $this->blocks->upsert($pageId, 'about_cameraman_video', [
+            'block_type' => 'video',
+            'label' => 'Tomas Sincl - video misto fotky (nepovinne)',
+            'content' => 'https://vimeo.com/1228181473',
+            'sort_order' => 6,
+            'autofill_disabled' => 1,
+        ]);
+        $this->replaceAboutCameramanFallback($siteId);
+    }
+
+    public function replaceAboutCameramanFallback(int $siteId): void
+    {
+        $aboutPage = null;
+        foreach ($this->pages->allBySite($siteId) as $page) {
+            if (trim((string)($page['url_path'] ?? ''), '/') === 'o-nas') {
+                $aboutPage = $page;
+                break;
+            }
+        }
+        if (!$aboutPage) {
+            throw new \RuntimeException('Stranka O nas pro obnovu Tomasovy fotografie nebyla nalezena.');
+        }
+
+        $mediaId = $this->ingestDemoAsset(
+            $siteId,
+            self::ABOUT_CAMERAMAN_FALLBACK_ASSET,
+            'Tomas Sincl, kameraman'
+        );
+        if ($mediaId <= 0) {
+            throw new \RuntimeException(
+                'Fotografii ' . self::ABOUT_CAMERAMAN_FALLBACK_ASSET . ' se nepodarilo nahrat do Media Library.'
+            );
+        }
+        $photoUrl = $this->mediaPathById($mediaId);
+        if ($photoUrl === '') {
+            throw new \RuntimeException(
+                'Medium ' . self::ABOUT_CAMERAMAN_FALLBACK_ASSET . ' nema platnou cestu v Media Library.'
+            );
+        }
+
+        $this->blocks->upsert((int)$aboutPage['id'], 'about_cameraman_image', [
+            'block_type' => 'image',
+            'label' => 'Tomas Sincl - kameraman',
+            'content' => $photoUrl,
+            'sort_order' => 3,
+            'autofill_disabled' => 1,
+        ]);
+    }
+
+    private function replaceHomepageAboutVisual(int $siteId, string $filename): void
+    {
+        $homepage = null;
+        foreach ($this->pages->allBySite($siteId) as $page) {
+            if (trim((string)($page['url_path'] ?? ''), '/') === '') {
+                $homepage = $page;
+                break;
+            }
+        }
+        if (!$homepage) {
+            throw new \RuntimeException('Homepage pro obnovu fotografie O nas nebyla nalezena.');
+        }
+
+        $mediaId = $this->ingestDemoAsset($siteId, $filename, 'RB Videos & Photos - fotograf a kameraman');
+        if ($mediaId <= 0) {
+            throw new \RuntimeException('Fotografii ' . $filename . ' se nepodarilo nahrat do Media Library.');
+        }
+
+        $visual = $this->mediaPathById($mediaId);
+        if ($visual === '') {
+            throw new \RuntimeException('Medium ' . $filename . ' nema platnou cestu v Media Library.');
+        }
+
+        $this->blocks->upsert((int)$homepage['id'], 'jb-about-visual__media', [
+            'block_type' => 'image',
+            'label' => 'Homepage O nas - tym',
+            'content' => $visual,
+            'sort_order' => 86,
+            'autofill_disabled' => 1,
+        ]);
+    }
+
+    /** Re-encode only the existing homepage team photograph before publish. */
+    public function optimizeHomepageLcpMedia(int $siteId): int
+    {
+        $homepage = null;
+        foreach ($this->pages->allBySite($siteId) as $page) {
+            if (trim((string)($page['url_path'] ?? ''), '/') === '') {
+                $homepage = $page;
+                break;
+            }
+        }
+        if (!$homepage) {
+            throw new \RuntimeException('Homepage pro optimalizaci LCP média nebyla nalezena.');
+        }
+        $visual = $this->blocks->findByKey((int)$homepage['id'], 'jb-about-visual__media');
+        $path = trim((string)($visual['content'] ?? ''));
+        if ($path === '') {
+            throw new \RuntimeException('Homepage LCP médium není nastaveno v bloku jb-about-visual__media.');
+        }
+        return $this->media->regenerateImageVariantsByStoragePath($siteId, $path);
+    }
+
+    /**
+     * Restore the historically approved sixth service and regenerate only the
+     * two service-list blocks. Existing services and unrelated content remain
+     * untouched.
+     */
+    public function restoreSixthService(int $siteId): void
+    {
+        $filename = 'svatba-nevesta-zenich-polibek-kamenna-zed.webp';
+        $mediaId = $this->ingestDemoAsset($siteId, $filename, 'Svatebni foto a video z dronu');
+        if ($mediaId <= 0) {
+            throw new \RuntimeException('Obrazek pro sluzbu Letecke zabery dronem se nepodarilo nahrat do Media Library.');
+        }
+
+        $imageUrl = $this->mediaPathById($mediaId);
+        if ($imageUrl === '') {
+            throw new \RuntimeException('Obrazek pro sluzbu Letecke zabery dronem nema platnou cestu.');
+        }
+
+        $values = [
+            'Letecké záběry dronem',
+            'Letecké záběry místa, příjezdu novomanželů i okolní krajiny dodají svatebnímu filmu působivou perspektivu a atmosféru.',
+            $imageUrl,
+            'Chci vědět víc',
+            '/kontakt',
+            6,
+            1,
+        ];
+        $stmt = $this->db->prepare(
+            'SELECT id FROM service_items
+             WHERE site_id = ? AND (sort_order = 6 OR title = ?)
+             ORDER BY id ASC LIMIT 1'
+        );
+        $stmt->execute([$siteId, $values[0]]);
+        $serviceId = (int)($stmt->fetchColumn() ?: 0);
+
+        if ($serviceId > 0) {
+            $this->db->prepare(
+                'UPDATE service_items
+                 SET title = ?, description = ?, image_url = ?, button_text = ?, button_url = ?, sort_order = ?, is_active = ?
+                 WHERE id = ? AND site_id = ?'
+            )->execute([...$values, $serviceId, $siteId]);
+        } else {
+            $this->db->prepare(
+                'INSERT INTO service_items
+                    (site_id, title, description, image_url, button_text, button_url, sort_order, is_active)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+            )->execute([$siteId, ...$values]);
+        }
+
+        $homepage = null;
+        $servicesPage = null;
+        foreach ($this->pages->allBySite($siteId) as $page) {
+            $path = trim((string)($page['url_path'] ?? ''), '/');
+            if ($path === '') {
+                $homepage = $page;
+            } elseif ($path === 'sluzby') {
+                $servicesPage = $page;
+            }
+        }
+        if (!$homepage || !$servicesPage) {
+            throw new \RuntimeException('Homepage nebo stranka Sluzby nebyla nalezena pro obnovu seste sluzby.');
+        }
+
+        $this->blocks->upsert((int)$homepage['id'], 'sluzby_items', [
+            'block_type' => 'html',
+            'label' => 'Služby - karty',
+            'content' => (new HomepageContentService())->buildServicesHtml($siteId, 6),
+            'sort_order' => 12,
+            'autofill_disabled' => 0,
+        ]);
+        $this->blocks->upsert((int)$servicesPage['id'], 'sluzby_grid', [
+            'block_type' => 'html',
+            'label' => 'Služby - karty',
+            'content' => (new HomepageContentService())->buildServicesHtml($siteId, 0),
+            'sort_order' => 3,
+            'autofill_disabled' => 0,
+        ]);
     }
 
     /**
@@ -111,11 +500,7 @@ class DemoContentSeeder
         }
 
         $count = 0;
-        $paths = [];
-        foreach (['webp', 'png', 'jpg', 'jpeg'] as $ext) {
-            $paths = array_merge($paths, glob($dir . '/*.' . $ext) ?: []);
-        }
-        sort($paths, SORT_NATURAL | SORT_FLAG_CASE);
+        $paths = $this->demoAssetPaths();
 
         foreach ($paths as $path) {
             $filename = basename($path);
@@ -128,6 +513,62 @@ class DemoContentSeeder
         }
 
         return $count;
+    }
+
+    /** @return list<string> */
+    private function demoAssetPaths(): array
+    {
+        $dir = dirname(__DIR__, 2) . '/database/seeds/demo_assets';
+        if (!is_dir($dir)) {
+            throw new \RuntimeException('Chybí adresář základních Demo médií: ' . $dir);
+        }
+        $paths = [];
+        foreach (['webp', 'png', 'jpg', 'jpeg'] as $ext) {
+            $paths = array_merge($paths, glob($dir . '/*.' . $ext) ?: []);
+        }
+        sort($paths, SORT_NATURAL | SORT_FLAG_CASE);
+        return array_values($paths);
+    }
+
+    /** Populate the filename map from already-ingested Media Library rows. */
+    private function hydrateDemoMediaMap(int $siteId): void
+    {
+        $stmt = $this->db->prepare('SELECT id, original_filename FROM media WHERE site_id = ?');
+        $stmt->execute([$siteId]);
+        foreach ($stmt->fetchAll() ?: [] as $row) {
+            $filename = trim((string)($row['original_filename'] ?? ''));
+            if ($filename !== '') {
+                $this->demoMedia[$filename] = (int)$row['id'];
+            }
+        }
+    }
+
+    /** Fail before writes instead of replacing missing real photos with placeholders. */
+    private function assertContentSeoMediaAvailable(): void
+    {
+        $required = [];
+        foreach ($this->servicePages() as $service) {
+            $required[] = (string)$service['image'];
+        }
+        foreach ([
+            ['svatba-nevesta-kytice-zapad-slunce-u-vody.webp', 'par-v-prirode-romanticky-portret-zapad-slunce.webp', 'svatba-nevesta-zenich-objeti-kytice-les.webp'],
+            ['svatba-nevesta-zenich-zavoj-tanec-priroda.webp', 'svatba-nevesta-zenich-polibek-kamenna-zed.webp', 'svatba-nevesta-zavoj-cernobily-portret.webp'],
+            ['svatba-nevesta-zenich-polibek-kamenna-zed.webp', 'snubni-prsteny-listy-zapad-slunce-detail.webp', 'svatba-nevesta-kytice-zapad-slunce-u-vody.webp'],
+            ['rodinne-foceni-rodina-dite-louka.webp', 'rodinne-tehotenske-foceni-rodina-pole.webp', 'detske-foceni-chlapec-odrazedlo-zapad-slunce.webp'],
+            ['sportovni-auto-nissan-silnice-les-pohyb.webp', 'koncert-zpevak-mikrofon-cernobila-fotografie.webp'],
+        ] as $filenames) {
+            array_push($required, ...$filenames);
+        }
+
+        $missing = array_values(array_filter(
+            array_unique($required),
+            fn(string $filename): bool => empty($this->demoMedia[$filename])
+        ));
+        if ($missing !== []) {
+            throw new \RuntimeException(
+                'Obsahovou SEO opravu nelze provest: v Media Library chybi ' . implode(', ', $missing) . '.'
+            );
+        }
     }
 
     private function ingestDemoAsset(int $siteId, string $filename, string $alt): int
@@ -179,6 +620,24 @@ class DemoContentSeeder
         return $path !== '' ? '/' . ltrim($path, '/') : '';
     }
 
+    private function requiredMediaVariantPathById(int $id, string $format): string
+    {
+        $stmt = $this->db->prepare(
+            'SELECT path FROM media_variants WHERE media_id = ? AND format = ? ORDER BY id DESC LIMIT 1'
+        );
+        $stmt->execute([$id, $format]);
+        $path = (string)($stmt->fetchColumn() ?: '');
+        if ($path === '') {
+            throw new \RuntimeException(sprintf(
+                'Medium #%d nema povinnou optimalizovanou variantu %s.',
+                $id,
+                $format
+            ));
+        }
+
+        return '/' . ltrim($path, '/');
+    }
+
     /**
      * Nastavi hero foto (hero_bg) na strankach, kde chybi hero pozadi. Foto se
      * zobrazi jako hero pozadi vsude, kde neni hero video (viz priorita
@@ -187,13 +646,15 @@ class DemoContentSeeder
     private function seedHeroBackgrounds(int $siteId): void
     {
         $map = [
-            'sluzby' => 'sluzby.png',
-            'cenik' => 'cenik.png',
-            'faq' => 'faq.png',
-            'nase-prace' => 'nase-prace.png',
-            'blog' => 'blog.png',
-            'kontakt' => 'kontakt.png',
-            'podminky-uziti' => 'podminky-uziti.png',
+            'sluzby' => 'hero-sluzby-cream.png',
+            'cenik' => 'hero-cenik-cream.png',
+            'faq' => 'hero-faq-cream.png',
+            'nase-prace' => self::WORK_LISTING_HERO_ASSET,
+            'blog' => 'hero-blog-cream.png',
+            'kontakt' => 'hero-kontakt-cream.png',
+            'o-nas' => 'hero-o-nas-cream.png',
+            'hodnoceni' => 'hero-reference-cream.png',
+            'podminky-uziti' => 'rodinne-foceni-rodina-dite-louka.webp',
         ];
 
         foreach ($map as $urlPath => $filename) {
@@ -218,6 +679,39 @@ class DemoContentSeeder
         }
     }
 
+    public function replaceWorkListingHero(int $siteId): void
+    {
+        $page = $this->pages->findByUrlPath('nase-prace');
+        if (!$page) {
+            throw new \RuntimeException('Stranka Nase prace pro obnovu hero fotografie nebyla nalezena.');
+        }
+
+        $mediaId = $this->ingestDemoAsset(
+            $siteId,
+            self::WORK_LISTING_HERO_ASSET,
+            'Svatebni par v krajine - Nase prace'
+        );
+        if ($mediaId <= 0) {
+            throw new \RuntimeException(
+                'Hero fotografii ' . self::WORK_LISTING_HERO_ASSET . ' se nepodarilo nahrat do Media Library.'
+            );
+        }
+        $heroUrl = $this->mediaPathById($mediaId);
+        if ($heroUrl === '') {
+            throw new \RuntimeException(
+                'Hero medium ' . self::WORK_LISTING_HERO_ASSET . ' nema platnou cestu v Media Library.'
+            );
+        }
+
+        $this->blocks->upsert((int)$page['id'], 'hero_bg', [
+            'block_type' => 'image',
+            'label' => 'Hero foto',
+            'content' => $heroUrl,
+            'sort_order' => 5,
+            'autofill_disabled' => 1,
+        ]);
+    }
+
     /**
      * Seed sluzeb (service_items) pro /sluzby i homepage grid. Builder cte tato
      * data primarne ze service_items (ServiceRepository), takze obsah patri sem.
@@ -236,10 +730,10 @@ class DemoContentSeeder
         // canonical demo dataset instead of being embedded in theme markup.
         $items = [
             [
-                'title' => 'Svatební den — foto + video',
+                'title' => self::FIRST_SERVICE_TITLE,
                 'description' => 'Celodenní reportáž od příprav po večerní zábavu. Fotografie i svatební film v jednom balíčku, jeden sehraný tým.',
                 'image_url' => $image(0), 'button_text' => 'Více informací',
-                'button_url' => '/svatebni-foto-video', 'sort_order' => 1, 'is_active' => 1,
+                'button_url' => self::FIRST_SERVICE_DETAIL_URL, 'sort_order' => 1, 'is_active' => 1,
             ],
             [
                 'title' => 'Svatební klipy',
@@ -249,7 +743,7 @@ class DemoContentSeeder
             ],
             [
                 'title' => 'Zásnuby & páry',
-                'description' => 'Focení před svatbou — poznáme se, vy si zvyknete na objektiv a v den D už jsme staří známí.',
+                'description' => 'Focení před svatbou - poznáme se, vy si zvyknete na objektiv a v den D už jsme staří známí.',
                 'image_url' => $image(3), 'button_text' => 'Více informací',
                 'button_url' => '/rande-a-zasnuby', 'sort_order' => 3, 'is_active' => 1,
             ],
@@ -266,8 +760,8 @@ class DemoContentSeeder
                 'button_url' => '/reklamni-foto-video', 'sort_order' => 5, 'is_active' => 1,
             ],
             [
-                'title' => 'Dron & same-day edit',
-                'description' => 'Letecké záběry areálu a krátký klip sestříhaný během svatebního večera k promítnutí přímo na hostině.',
+                'title' => 'Letecké záběry dronem',
+                'description' => 'Letecké záběry místa, příjezdu novomanželů i okolní krajiny dodají svatebnímu filmu působivou perspektivu a atmosféru.',
                 'image_url' => $image(0), 'button_text' => 'Chci vědět víc',
                 'button_url' => '/kontakt', 'sort_order' => 6, 'is_active' => 1,
             ],
@@ -278,7 +772,7 @@ class DemoContentSeeder
 
     /**
      * Vymaze ulozene service bloky (homepage grid i /sluzby stranka), aby se pri
-     * publikaci znovu vygenerovaly z aktualnich service_items — jinak zustanou
+     * publikaci znovu vygenerovaly z aktualnich service_items - jinak zustanou
      * stara tlacitka (napr. odkaz na /kontakt misto na detailni stranku sluzby).
      */
     private function resetServiceBlocks(int $siteId): void
@@ -308,65 +802,79 @@ class DemoContentSeeder
         return [
             [
                 'slug' => 'svatebni-foto-video',
-                'title' => 'Svatební foto & video',
+                'title' => 'Svatební fotografie a video v Olomouci',
                 'image' => 'svatba-nevesta-zenich-polibek-kamenna-zed.webp',
-                'lead' => 'Zachytíme každý dotek, každý pohled i každou slzu štěstí. Přirozené reportážní fotografie a filmové video, které vám budou váš den připomínat celý život.',
+                'lead' => 'Fotografie i svatební film od jednoho týmu. Přirozeně zachytíme průběh dne, důležité lidi, pohyb, hlasy i atmosféru v Olomouci, na Moravě a po celé České republice.',
                 'sections' => [
-                    ['Váš den, vyprávěný přirozeně', 'Svatbu fotím i natáčím reportážně — bez zbytečného pózování a režírování. Většinu dne jsem nenápadně poblíž a zachytávám skutečné momenty: přípravy, obřad, gratulace, smích hostů i tiché detaily, kterých si v tom shonu možná ani nevšimnete.'],
-                    ['Foto i video pohromadě', 'Fotografie zastaví konkrétní okamžik, video k němu přidá pohyb, hlasy a atmosféru. Dohromady vznikne vzpomínka, ke které se budete vracet celý život. Vše ladím tak, aby výstupy působily jednotně a opravdově.'],
-                    ['Co je součástí', '<ul><li>celodenní nebo půldenní focení dle balíčku</li><li>filmový sestřih / svatební video</li><li>online galerie a předání ke stažení</li><li>archivace hotových výstupů</li></ul>'],
+                    ['Váš svatební den vyprávíme přirozeně', 'Svatbu fotografujeme a natáčíme reportážně, bez zbytečného zastavování programu. Sledujeme přípravy, obřad, gratulace, rodinu, přátele, výzdobu i večerní atmosféru. Do dění vstupujeme jen tehdy, když je potřeba poradit se světlem, místem nebo jednoduchým postavením. Výsledkem má být souvislý příběh vašeho dne, ne série strojených scén.'],
+                    ['Fotograf a kameraman v jednom týmu', 'Fotografie zachytí konkrétní okamžik, svatební video k němu vrátí pohyb, hlasy a hudbu. Harmonogram a důležité záběry plánujeme společně, takže si při práci nepřekážíme a výstupy působí jednotně. Před svatbou projdeme místo, přesuny, důležité osoby i situace, které si přejete zachovat.'],
+                    ['Jak spolupráce probíhá', 'Po nezávazné poptávce ověříme termín a společně vybereme vhodný rozsah. Při konzultaci projdeme harmonogram, styl a podobu výsledných fotografií nebo filmu. Ve svatební den přijedeme s předstihem, pracujeme nenápadně a portrétní část vedeme pomocí jednoduchých pokynů. Přesný termín předání vždy potvrdíme v nabídce.'],
+                    ['Co dostanete', '<ul><li>pečlivě vybrané a upravené fotografie v online galerii,</li><li>svatební film nebo kratší sestřih podle zvolené varianty,</li><li>fotografie připravené pro tisk i běžné sdílení,</li><li>jasně domluvený rozsah, termín předání a archivaci hotových výstupů.</li></ul>'],
+                    ['Kde působíme', 'Nejčastěji pracujeme v Olomouci a Olomouckém kraji, ale na svatby vyjíždíme také po Moravě a po celé České republice. Místo není překážkou; před potvrzením nabídky vždy domluvíme dopravu, čas příjezdu a případné přesuny během dne.'],
+                    ['Ukázky, reference a cena', '<p>Skutečné svatby najdete v našem <a href="/nase-prace">svatebním portfoliu</a> a zkušenosti párů na stránce <a href="/hodnoceni">Reference a hodnocení klientů</a>. Rozsah jednotlivých variant je uveden v <a href="/cenik">ceníku focení a svatebního videa</a>. Pro ověření volného termínu použijte <a href="/kontakt">nezávaznou poptávku</a>.</p>'],
                 ],
-                'seo_title' => 'Svatební foto a video | RB Videos Photos',
-                'seo_desc' => 'Svatební focení a video od jednoho týmu. Přirozené momenty, filmový výstup, rychlé dodání a působnost Olomouc, Morava i celá ČR.',
-                'seo_kw' => 'svatební foto video Olomouc, svatební fotograf, svatební kameraman, svatební video',
+                'seo_title' => 'Svatební foto a video Olomouc | RB Videos & Photos',
+                'seo_desc' => 'Fotografie i svatební film od jednoho týmu. Podívejte se na průběh spolupráce, ukázky práce a možnosti focení v Olomouci i po celé ČR.',
+                'seo_kw' => 'svatební foto a video Olomouc, svatební fotograf, svatební kameraman, svatební video Olomouc',
             ],
             [
                 'slug' => 'rodinne-a-portretni-foceni',
-                'title' => 'Rodinné & portrétní focení',
+                'title' => 'Rodinné a portrétní focení v Olomouci',
                 'image' => 'rodinne-foceni-rodina-dite-louka.webp',
                 'lead' => 'Rodinné vzpomínky, těhotenské focení, křtiny i portréty. Přirozené, nenucené a krásné snímky, ke kterým se budete rádi vracet.',
                 'sections' => [
-                    ['Focení bez stresu', 'Rodinné a portrétní focení vedu tak, aby bylo příjemné i pro ty, kdo se neradi fotí. Děti nemusí sedět jako v katalogu a vy nemusíte umět pózovat — navedu vás jednoduše a nechám prostor přirozenosti.'],
-                    ['Vzpomínky, ke kterým se vracíte', 'Těhotenské focení, křtiny, rodinné portréty i osobní fotky na míru tomu, k čemu je potřebujete. Společně vybereme místo i styl tak, aby snímky působily uvolněně a opravdově.'],
-                    ['Kde fotíme', '<ul><li>v přírodě, parku nebo na místě, které máte rádi</li><li>ateliérové i venkovní portréty</li><li>kratší session vhodná i pro malé děti</li></ul>'],
+                    ['Focení bez stresu a nucených úsměvů', 'Rodinné a portrétní focení vedeme tak, aby bylo příjemné i lidem, kteří se před fotoaparátem necítí jistě. Děti nemusí stát na místě a dospělí nemusí znát žádné pózy. Dáváme jednoduché pokyny a necháváme prostor pro pohyb, blízkost a situace, které jsou pro vaši rodinu přirozené.'],
+                    ['Pro koho je focení vhodné', 'Fotíme rodiny s dětmi, páry, nastávající rodiče, křtiny i samostatné portréty. Předem si ujasníme, pro koho fotografie vznikají a jak je chcete používat. Jinak připravíme klidné těhotenské focení, jinak svižnou rodinnou procházku s malými dětmi a jinak pracovní nebo osobní portrét.'],
+                    ['Kde fotografujeme', 'V Olomouci a okolí můžeme vybrat park, přírodu, městské prostředí nebo místo, ke kterému máte vztah. Podle domluvy je možné také ateliérové focení. Při výběru řešíme dostupnost, světlo, počasí a dostatek prostoru pro děti, nikoli jen vzhled lokality na jedné fotografii.'],
+                    ['Jak se připravit', 'Doporučíme oblečení, jehož barvy spolu přirozeně ladí a ve kterém se můžete volně pohybovat. Není potřeba pořizovat zvláštní kostýmy ani nutit děti k dlouhé přípravě. Pokud si nejste jistí výběrem oblečení nebo místa, můžete nám před focením poslat fotografie variant a vše společně projdeme.'],
+                    ['Průběh a předání fotografií', 'Na začátku si necháme čas na seznámení a vyzkoušení světla. Během focení střídáme vedené portréty s volnějšími situacemi. Po focení vybereme a upravíme výslednou sérii a předáme ji v online galerii. Konkrétní počet fotografií a termín dodání potvrdíme podle vybrané varianty.'],
+                    ['Ukázky a rezervace', '<p>Prohlédněte si <a href="/nase-prace">ukázky rodinných a portrétních fotografií</a>, přečtěte si <a href="/hodnoceni">reference klientů</a> a zkontrolujte <a href="/cenik">ceník focení</a>. Volný termín ověříte pomocí <a href="/kontakt">nezávazné poptávky</a>.</p>'],
                 ],
-                'seo_title' => 'Rodinné a portrétní focení | RB Videos Photos',
+                'seo_title' => 'Rodinné a portrétní focení Olomouc | RB Videos & Photos',
                 'seo_desc' => 'Rodinné, těhotenské a portrétní focení v Olomouci. Přirozené snímky bez stresu, ke kterým se budete rádi vracet.',
                 'seo_kw' => 'rodinné focení Olomouc, portrétní focení, těhotenské focení, focení dětí',
             ],
             [
                 'slug' => 'reklamni-foto-video',
-                'title' => 'Reklamní foto & video',
+                'title' => 'Firemní fotografie a reklamní video',
                 'image' => 'sportovni-auto-nissan-silnice-les-pohyb.webp',
                 'lead' => 'Profesionální vizuální obsah pro firmy, produkty, kapely i značky. Obsah, který buduje důvěru, odlišuje a prodává.',
                 'sections' => [
-                    ['Obsah, který buduje důvěru', 'Pomáhám firmám, kapelám i značkám ukázat jejich práci tak, aby působila profesionálně a důvěryhodně. Žádné prázdné snímky z fotobanky — reálné prostředí, lidé a produkty v dobrém světle.'],
-                    ['Podle toho, kde se obsah použije', 'Web, sociální sítě, reklama nebo Google profil — každé využití potřebuje trochu jiný přístup. Když to promyslíme dopředu, vznikne materiál, se kterým se dá dlouhodobě pracovat.'],
-                    ['Pro koho', '<ul><li>firmy, e-shopy a lokální značky</li><li>produktové a reklamní foto i video</li><li>kapely, klipy a firemní prezentace</li></ul>'],
+                    ['Vlastní obsah místo anonymní fotobanky', 'Pomáháme firmám, e-shopům, kapelám a značkám ukázat skutečné lidi, produkty, prostředí a způsob práce. Fotografie a video připravujeme podle toho, co má návštěvník pochopit a kde se s obsahem setká. Výsledkem nemá být jen hezký obrázek, ale srozumitelná prezentace firmy.'],
+                    ['Nejdříve řešíme použití výstupů', 'Web, sociální sítě, reklamní kampaň, nábor nebo firemní profil potřebují odlišné formáty a kompozice. Před produkcí si proto ujasníme cílové stránky, poměry stran, potřebné varianty a prostor pro text. Díky tomu lze jednu realizaci využít na více místech bez dodatečného ořezávání důležitých částí.'],
+                    ['Co můžeme fotografovat a natáčet', '<ul><li>tým, provozovnu a práci v reálném prostředí,</li><li>produkty, služby a jednotlivé kroky výroby,</li><li>firemní akce, koncerty a prezentace,</li><li>krátká videa, rozhovory a materiál pro sociální sítě.</li></ul>'],
+                    ['Příprava zadání', 'Stačí popsat, co nabízíte, komu je obsah určený a kde jej chcete použít. Společně sestavíme seznam záběrů, časový plán a priority. U lidí před kamerou počítáme s časem na základní vedení; není nutná předchozí zkušenost s focením nebo natáčením.'],
+                    ['Licence, formáty a předání', 'Předem si potvrdíme rozsah použití, požadované rozměry a formát výsledných souborů. Cena se odvíjí od rozsahu produkce, počtu míst, délky natáčení a množství výstupů. Konkrétní nabídku připravíme až po upřesnění zadání, aby odpovídala skutečné potřebě projektu.'],
+                    ['Ukázky a poptávka', '<p>Realizované fotografie a videa najdete na stránce <a href="/nase-prace">Naše práce</a>. Zkušenosti zákazníků jsou na stránce <a href="/hodnoceni">Reference</a>. Pro návrh rozsahu a termínu pošlete <a href="/kontakt">nezávaznou firemní poptávku</a>.</p>'],
                 ],
-                'seo_title' => 'Reklamní foto a video pro firmy | RB Videos Photos',
-                'seo_desc' => 'Profesionální reklamní foto a video pro firmy, produkty i značky. Vizuální obsah, který buduje důvěru a prodává.',
-                'seo_kw' => 'reklamní foto video, firemní focení, produktové foto, video pro firmy Olomouc',
+                'seo_title' => 'Firemní foto a reklamní video Olomouc | RB Videos & Photos',
+                'seo_desc' => 'Produktové, firemní a reklamní fotografie i video pro web, sociální sítě a kampaně. Domluvte si rozsah, výstupy a termín realizace.',
+                'seo_kw' => 'firemní fotograf Olomouc, reklamní video Olomouc, produktové fotografie, video pro firmy',
             ],
             [
                 'slug' => 'rande-a-zasnuby',
-                'title' => 'Rande & zásnuby',
-                'image' => 'koncert-zpevak-mikrofon-cernobila-fotografie.webp',
-                'lead' => 'Přirozené párové focení, žádost o ruku i malé příběhy ve dvou. Jemné vedení a dost prostoru pro skutečné emoce.',
+                'title' => 'Párové a zásnubní focení v Olomouci',
+                'image' => 'par-v-prirode-romanticky-portret-zapad-slunce.webp',
+                'lead' => 'Přirozené párové focení, žádost o ruku i předsvatební focení v Olomouci. Pomůžeme s místem, světlem a nenápadným plánem zásnub.',
                 'sections' => [
-                    ['Dokumentace bez kompromisů', 'Konference, kulturní akce, plesy, koncerty i firemní večery zachytím tak, aby byla vidět atmosféra i důležité momenty. Pohybuji se nenápadně a soustředím se na to podstatné.'],
-                    ['Rychlé a použitelné výstupy', 'Z akce dostanete fotografie i případný videosestřih ve formě, kterou rovnou využijete na web i sociální sítě. Termín, rozsah i způsob předání domluvíme podle konkrétní události.'],
-                    ['Co nafotím', '<ul><li>konference, semináře a firemní akce</li><li>plesy, koncerty a kulturní události</li><li>reportážní foto i krátké video</li></ul>'],
+                    ['Jak focení probíhá', 'Předem si upřesníme, zda chcete společné fotografie, předsvatební focení nebo nenápadně zachytit žádost o ruku. Na místě vás jednoduše vedeme, ale necháváme dost prostoru pro blízkost, pohyb a přirozené reakce. Běžné párové focení trvá přibližně hodinu; konkrétní délku vždy potvrdíme podle zvoleného místa a záměru.'],
+                    ['Výběr lokality', 'V Olomouci a okolí vybereme místo podle světla, roční doby, dostupnosti a atmosféry, kterou chcete na fotografiích zachovat. Může to být park, příroda, městská ulice nebo místo, ke kterému máte vlastní vztah.'],
+                    ['Přirozené fotografie bez nuceného pózování', 'Nemusíte mít zkušenosti před fotoaparátem. Dostanete jednoduché pokyny, kam se postavit nebo kudy se projít, ale výsledkem mají být skutečné společné momenty, ne strojené pózy.'],
+                    ['Co si vzít na párové focení', 'Doporučíme oblečení, ve kterém se cítíte dobře a jehož barvy spolu přirozeně ladí. Vhodné jsou čisté střihy bez výrazných nápisů; konkrétní volbu můžeme před focením společně projít podle lokality a počasí.'],
+                    ['Zásnubní a předsvatební focení', 'Při plánované žádosti o ruku pomůžeme zvolit místo, čas i nenápadný scénář. Fotograf zůstane před samotným okamžikem v pozadí a po prvních emocích může následovat krátké párové focení. Předsvatební focení vám zároveň umožní poznat způsob práce před svatebním dnem.'],
+                    ['Výsledné fotografie a jejich předání', '<p>Po focení vybereme a upravíme výslednou sérii. Hotové fotografie předáme v online galerii ke stažení a sdílení; přesný rozsah a termín předání potvrdíme v nabídce.</p><p>Prohlédněte si <a href="/nase-prace">ukázky realizací</a>, <a href="/hodnoceni">reference klientů</a> a orientační <a href="/cenik">ceník focení</a>. Pro konkrétní termín použijte <a href="/kontakt">nezávaznou poptávku</a>.</p>'],
+                    ['Kdy je vhodné focení naplánovat', 'Pro běžné párové focení vybíráme čas podle světla, počasí a zvolené lokality. U žádosti o ruku navíc domluvíme přesný bod setkání a nenápadný způsob komunikace. Pokud má focení navazovat na svatbu, můžeme výsledné fotografie využít také pro oznámení nebo výzdobu.'],
+                    ['Co když se před fotoaparátem necítíte jistě', 'To je běžné a počítáme s tím. Začínáme jednoduchou chůzí nebo rozhovorem, při kterém nemusíte sledovat objektiv. Postupně přidáme několik vedených portrétů, ale zachováme prostor pro vaše vlastní reakce. Cílem není sehrát cizí scénář, ale vytvořit fotografie, ve kterých se poznáte.'],
                 ],
-                'seo_title' => 'Rande a zásnuby | RB Videos Photos',
-                'seo_desc' => 'Přirozené párové focení a fotografování zásnub v Olomouci a okolí.',
+                'seo_title' => 'Párové a zásnubní focení Olomouc | RB Videos & Photos',
+                'seo_desc' => 'Přirozené párové a zásnubní focení v Olomouci. Zjistěte, jak focení probíhá, jak vybrat lokalitu a jak se připravit.',
                 'seo_kw' => 'párové focení Olomouc, fotograf zásnub, rande focení',
             ],
         ];
     }
 
     /**
-     * Vytvoří (nebo aktualizuje) detailní stránky služeb — jednu pro každou službu
+     * Vytvoří (nebo aktualizuje) detailní stránky služeb - jednu pro každou službu
      * z servicePages(). Každá stránka = pages řádek (published) se sdílenou šablonou
      * "Služba detail" + content_blocks + SEO. Publish (na konci run()) je pak vyrenderuje
      * do storage/published/<slug>/index.html. Idempotentní podle url_path.
@@ -378,15 +886,15 @@ class DemoContentSeeder
         $seoStmt = $this->db->prepare(
             'REPLACE INTO seo_settings
                (page_id, meta_title, meta_description, meta_keywords, canonical_url, robots_index, robots_follow,
-                og_title, og_description, og_image_id, twitter_title, twitter_description, twitter_image_id, schema_type, schema_json)
-             VALUES (?, ?, ?, ?, ?, 1, 1, ?, ?, ?, ?, ?, ?, ?, ?)'
+                og_title, og_description, og_image_id, twitter_title, twitter_description, twitter_image_id, schema_type, schema_name, schema_description)
+             VALUES (?, ?, ?, ?, ?, 1, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
 
         $count = 0;
         foreach ($this->servicePages() as $i => $svc) {
             $slug = $svc['slug'];
             $urlPath = '/' . $slug;
-            $pageTitle = $svc['title'] . ' | RB Photos & Videos';
+            $pageTitle = $svc['title'] . ' | RB Videos & Photos';
 
             $existing = $this->pages->findByUrlPath($slug);
             if ($existing) {
@@ -414,16 +922,16 @@ class DemoContentSeeder
             $imageUrl = $imageId ? $this->mediaPathById($imageId) : '';
 
             $this->blocks->upsert($pageId, 'hero_tag', [
-                'block_type' => 'text', 'label' => 'Hero — štítek',
+                'block_type' => 'text', 'label' => 'Hero - štítek',
                 'content' => 'Služba ' . sprintf('%02d', $i + 1),
                 'sort_order' => 1, 'autofill_disabled' => 1,
             ]);
             $this->blocks->upsert($pageId, 'hero_heading', [
-                'block_type' => 'text', 'label' => 'Hero — nadpis',
+                'block_type' => 'text', 'label' => 'Hero - nadpis',
                 'content' => $svc['title'], 'sort_order' => 2, 'autofill_disabled' => 1,
             ]);
             $this->blocks->upsert($pageId, 'hero_sub', [
-                'block_type' => 'textarea', 'label' => 'Hero — podnadpis',
+                'block_type' => 'textarea', 'label' => 'Hero - podnadpis',
                 'content' => $svc['lead'], 'sort_order' => 3, 'autofill_disabled' => 1,
             ]);
             $this->blocks->upsert($pageId, 'body', [
@@ -432,21 +940,20 @@ class DemoContentSeeder
                 'sort_order' => 4, 'autofill_disabled' => 1,
             ]);
             $this->blocks->upsert($pageId, 'cta_heading', [
-                'block_type' => 'text', 'label' => 'CTA — nadpis',
+                'block_type' => 'text', 'label' => 'CTA - nadpis',
                 'content' => 'Pojďme naplánovat vaše focení', 'sort_order' => 5, 'autofill_disabled' => 1,
             ]);
             $this->blocks->upsert($pageId, 'cta_sub', [
-                'block_type' => 'textarea', 'label' => 'CTA — podnadpis',
-                'content' => 'Nezávazně se ozvěte — domluvíme termín, rozsah i výstupy přesně podle vašich představ.',
+                'block_type' => 'textarea', 'label' => 'CTA - podnadpis',
+                'content' => 'Nezávazně se ozvěte - domluvíme termín, rozsah i výstupy přesně podle vašich představ.',
                 'sort_order' => 6, 'autofill_disabled' => 1,
             ]);
 
-            $schemaJson = $this->buildSchemaJson('Service', $svc['seo_title'], $svc['seo_desc'], $urlPath, $imageUrl, $site);
             $seoStmt->execute([
                 $pageId, $svc['seo_title'], $svc['seo_desc'], $svc['seo_kw'], $urlPath,
                 $svc['seo_title'], $svc['seo_desc'], $imageId ?: null,
                 $svc['seo_title'], $svc['seo_desc'], $imageId ?: null,
-                'Service', $schemaJson,
+                'Service', $svc['seo_title'], $svc['seo_desc'],
             ]);
 
             $count++;
@@ -472,7 +979,7 @@ class DemoContentSeeder
 
     /**
      * Zajistí sdílenou šablonu "Služba detail" (hero + obsah + CTA). Obsahuje jen obsah
-     * stránky — nav, patičku a obal doplní site layout při publish. CSS je samonosné,
+     * stránky - nav, patičku a obal doplní site layout při publish. CSS je samonosné,
      * aby stránka vypadala dobře i bez aktivního tématu.
      */
     private function ensureServiceTemplate(int $siteId): int
@@ -497,7 +1004,7 @@ class DemoContentSeeder
     <h2 data-block="cta_heading"></h2>
     <p data-block="cta_sub"></p>
     <div class="svc-actions">
-      <a href="tel:792483583" class="btn btn-primary">792&#160;483&#160;583</a>
+      <a href="/kontakt" class="btn btn-primary">Nezávazná poptávka</a>
       <a href="/sluzby" class="btn btn-secondary">Zpět na služby</a>
     </div>
   </div>
@@ -550,23 +1057,71 @@ CSS;
 
     private function seedServiceVisuals(int $siteId): void
     {
-        if (empty($this->demoMedia['weare2.png'])) {
+        if (empty($this->demoMedia[self::FIRST_SERVICE_VISUAL])) {
             return;
         }
 
-        $imageUrl = $this->mediaPathById((int) $this->demoMedia['weare2.png']);
+        $imageUrl = $this->mediaPathById((int) $this->demoMedia[self::FIRST_SERVICE_VISUAL]);
         if ($imageUrl === '') {
             return;
         }
 
+        $this->assignFirstServiceVisual($siteId, $imageUrl);
+    }
+
+    /**
+     * Migration 097: put weare5.jpg on the first service card ("Svatební den -
+     * foto + video") of an existing site. The photo is reused from the Media
+     * Library by original_filename (its alt/title stay untouched) or ingested
+     * from demo_assets through the upload pipeline. The card <img> alt is the
+     * service title, so no shared media metadata changes.
+     */
+    public function replaceFirstServiceVisualWithWeare5(int $siteId): void
+    {
+        $mediaId = $this->ingestDemoAsset($siteId, self::FIRST_SERVICE_VISUAL, self::FIRST_SERVICE_TITLE);
+        if ($mediaId <= 0) {
+            throw new \RuntimeException('Fotografii ' . self::FIRST_SERVICE_VISUAL . ' se nepodarilo najit ani nahrat do Media Library.');
+        }
+        $imageUrl = $this->mediaPathById($mediaId);
+        if ($imageUrl === '') {
+            throw new \RuntimeException('Medium ' . self::FIRST_SERVICE_VISUAL . ' nema platnou cestu v Media Library.');
+        }
+
+        $this->assignFirstServiceVisual($siteId, $imageUrl);
+
+        // Stored service-list HTML would keep the old card image. Like the Demo
+        // seed (resetServiceBlocks), clear it so render/publish rebuilds the
+        // cards from service_items - only where a block has content and the
+        // editor kept autofill enabled.
+        foreach (['', 'sluzby'] as $urlPath) {
+            $page = $this->pages->findByUrlPath($urlPath);
+            if (!$page) {
+                continue;
+            }
+            $this->db->prepare(
+                "UPDATE content_blocks SET content = ''
+                 WHERE page_id = ? AND block_key IN ('sluzby_items', 'sluzby_grid', 'service_1')
+                   AND autofill_disabled = 0 AND content IS NOT NULL AND content <> ''"
+            )->execute([(int)$page['id']]);
+        }
+    }
+
+    private function assignFirstServiceVisual(int $siteId, string $imageUrl): void
+    {
         $stmt = $this->db->prepare(
-            'UPDATE service_items
-             SET image_url = ?
-             WHERE site_id = ?
-             ORDER BY sort_order ASC, id ASC
+            'SELECT id FROM service_items
+             WHERE site_id = ? AND (title = ? OR button_url = ?)
+             ORDER BY (title = ?) DESC, sort_order ASC, id ASC
              LIMIT 1'
         );
-        $stmt->execute([$imageUrl, $siteId]);
+        $stmt->execute([$siteId, self::FIRST_SERVICE_TITLE, self::FIRST_SERVICE_DETAIL_URL, self::FIRST_SERVICE_TITLE]);
+        $serviceId = (int)($stmt->fetchColumn() ?: 0);
+        if ($serviceId <= 0) {
+            throw new \RuntimeException('Sluzba "' . self::FIRST_SERVICE_TITLE . '" nebyla nalezena.');
+        }
+
+        $this->db->prepare('UPDATE service_items SET image_url = ? WHERE id = ? AND site_id = ?')
+            ->execute([$imageUrl, $serviceId, $siteId]);
     }
 
     /**
@@ -579,30 +1134,43 @@ CSS;
         $brand = 'RB Videos & Photos';
         // [title, desc, canonical, keywords, hero foto (pro OG/Twitter image), schema_type]
         $seo = [
-            '' => ['Svatební fotograf a kameraman Olomouc | ' . $brand, 'Svatební fotografie a video v Olomouci a po celé ČR. Přirozené záběry, filmové video a profesionální přístup pro váš den.', '/', 'svatební fotograf Olomouc, svatební video Olomouc, svatební kameraman, fotograf Olomouc, foto a video svatba', 'svatba-nevesta-zenich-polibek-kamenna-zed.webp', 'LocalBusiness'],
-            'sluzby' => ['Služby — foto a video na míru | ' . $brand, 'Svatební, rodinné, portrétní i reklamní foto a video. Profesionální výsledky a přátelský přístup. Olomouc a celá ČR.', '/sluzby', 'svatební focení, rodinné focení, portrétní focení, reklamní video, fotograf Olomouc', 'svatba-nevesta-zavoj-cernobily-portret.webp', 'WebPage'],
-            'cenik' => ['Ceník svatebního focení a videa — Olomouc | ' . $brand, 'Transparentní ceník svatebních balíčků od 14 900 Kč. Foto i video, online galerie a archivace výstupů. Nabídka na míru.', '/cenik', 'ceník svatebního focení, cena svatební fotograf, svatební balíčky, fotograf Olomouc cena', 'svatba-nevesta-kytice-zapad-slunce-u-vody.webp', 'WebPage'],
-            'faq' => ['Často kladené otázky — svatební focení | ' . $brand, 'Odpovědi na nejčastější dotazy o rezervaci termínu, dodání fotografií, videu, archivaci i průběhu svatebního focení.', '/faq', 'svatební focení otázky, rezervace fotografa, dodání fotografií, svatební video, archivace', 'svatba-nevesta-zenich-objeti-kytice-les.webp', 'WebPage'],
-            'nase-prace' => ['Naše práce — svatební foto a video | ' . $brand, 'Galerie svatebních fotografií a videí z Olomouce a celé ČR. Reálné realizace, párové i rodinné focení.', '/nase-prace', 'svatební fotografie, portfolio fotograf Olomouc, svatební video ukázky, naše práce', 'svatba-nevesta-zenich-zavoj-tanec-priroda.webp', 'WebPage'],
-            'blog' => ['Blog — tipy a inspirace pro focení | ' . $brand, 'Rady od profesionálního fotografa: příprava na focení, svatební video, výběr místa a tipy pro klienty.', '/blog', 'tipy svatební focení, příprava na focení, svatební video, fotograf blog, inspirace', 'par-v-prirode-romanticky-portret-zapad-slunce.webp', 'WebPage'],
-            'kontakt' => ['Kontakt — svatební fotograf Olomouc | ' . $brand, 'Ozvěte se nám — Olomouc a celá ČR. Volejte nebo napište na sociální sítě, odpovídáme rychle.', '/kontakt', 'kontakt svatební fotograf Olomouc, rezervace termínu, fotograf telefon', 'zamilovany-par-objeti-zapad-slunce-podzim.webp', 'LocalBusiness'],
+            '' => ['Svatební fotograf a kameraman Olomouc | ' . $brand, 'Svatební fotografie a video v Olomouci a po celé ČR. Přirozené záběry, filmové video a profesionální přístup pro váš den.', '/', 'svatební fotograf Olomouc, svatební video Olomouc, svatební kameraman Olomouc', 'svatba-nevesta-zenich-polibek-kamenna-zed.webp', 'LocalBusiness'],
+            'sluzby' => ['Služby - foto a video na míru | ' . $brand, 'Svatební, rodinné, portrétní i reklamní focení a video v Olomouci a po celé ČR. Vyberte si službu a domluvte si nezávaznou konzultaci.', '/sluzby', 'svatební focení, rodinné focení, portrétní focení, reklamní video, fotograf Olomouc', 'svatba-nevesta-zavoj-cernobily-portret.webp', 'WebPage'],
+            'cenik' => ['Ceník svatebního focení a videa - Olomouc | ' . $brand, 'Transparentní ceník svatebních balíčků od 14 900 Kč. Foto i video, online galerie a archivace výstupů. Nabídka na míru.', '/cenik', 'ceník svatebního focení, cena svatební fotograf, svatební balíčky, fotograf Olomouc cena', 'svatba-nevesta-kytice-zapad-slunce-u-vody.webp', 'WebPage'],
+            'faq' => ['Časté otázky ke svatebnímu focení a videu | ' . $brand, 'Odpovědi na nejčastější dotazy o rezervaci termínu, dodání fotografií, videu, archivaci i průběhu svatebního focení.', '/faq', 'svatební focení otázky, rezervace fotografa, dodání fotografií, svatební video, archivace', 'svatba-nevesta-zenich-objeti-kytice-les.webp', 'WebPage'],
+            'nase-prace' => ['Svatební portfolio - fotografie a video | ' . $brand, 'Prohlédněte si skutečné svatební, párové a portrétní galerie z Olomouce i celé ČR. Fotografie a videa ukazují náš přirozený styl práce.', '/nase-prace', 'svatební portfolio, svatební fotografie, svatební video ukázky', 'svatba-nevesta-zenich-zavoj-tanec-priroda.webp', 'WebPage'],
+            'blog' => ['Tipy pro svatební a rodinné focení | ' . $brand, 'Praktické rady k přípravě na svatební, párové i rodinné focení, výběru místa a videu. Inspirace od fotografa a kameramana z Olomouce.', '/blog', 'tipy pro focení, příprava na focení, svatební video, rodinné focení', 'par-v-prirode-romanticky-portret-zapad-slunce.webp', 'WebPage'],
+            'hodnoceni' => ['Reference na focení a video | ' . $brand, 'Přečtěte si zkušenosti párů, rodin a firem s focením a videem od RB Videos & Photos. Skutečné reference klientů z Olomouce i celé ČR.', '/hodnoceni', 'reference fotograf Olomouc, hodnocení focení, zkušenosti klientů', 'svatba-nevesta-zenich-objeti-kytice-les.webp', 'WebPage'],
+            'kontakt' => ['Kontakt - svatební fotograf Olomouc | ' . $brand, 'Rezervujte si svatební focení nebo video v Olomouci a po celé ČR. Zavolejte, napište e-mail nebo pošlete nezávaznou poptávku přes formulář.', '/kontakt', 'kontakt svatební fotograf Olomouc, rezervace termínu, fotograf telefon', 'zamilovany-par-objeti-zapad-slunce-podzim.webp', 'LocalBusiness'],
+            'o-nas' => ['O nás - fotograf a kameraman Olomouc | ' . $brand, 'Poznejte fotografa Zdeňka Černohlávka a kameramana Tomáše Šincla z RB Videos & Photos. Sehraná dvojice pro přirozené fotografie a filmové video.', '/o-nas', 'fotograf a kameraman Olomouc, RB Videos & Photos, Zdeněk Černohlávek, Tomáš Šincl', 'hero-o-nas-cream.png', 'AboutPage'],
+            'podminky-uziti' => ['Podmínky užití a ochrana obsahu | ' . $brand, 'Pravidla používání webu RB Videos & Photos, informace o cookies, autorských právech, ochraně fotografií a možnostech kontaktu.', '/podminky-uziti', 'podmínky užití, cookies, autorská práva, ochrana fotografií', 'rodinne-foceni-rodina-dite-louka.webp', 'WebPage'],
         ];
 
         $stmt = $this->db->prepare(
             'REPLACE INTO seo_settings
                (page_id, meta_title, meta_description, meta_keywords, canonical_url, robots_index, robots_follow,
-                og_title, og_description, og_image_id, twitter_title, twitter_description, twitter_image_id, schema_type, schema_json)
-             VALUES (?, ?, ?, ?, ?, 1, 1, ?, ?, ?, ?, ?, ?, ?, ?)'
+                og_title, og_description, og_image_id, twitter_title, twitter_description, twitter_image_id, schema_type, schema_name, schema_description)
+             VALUES (?, ?, ?, ?, ?, 1, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
 
+        $seo['cenik'] = [
+            'Ceník focení a svatebního videa | ' . $brand,
+            'Přehledný ceník svatebního focení, celodenního videa, portrétního, rodinného a ateliérového focení. Vyberte si foto, video nebo společný balíček.',
+            '/cenik',
+            'ceník focení, ceník svatebního focení, svatební fotograf, svatební video, foto a video na svatbu, portrétní focení, rodinné focení, ateliérové focení',
+            'svatba-nevesta-kytice-zapad-slunce-u-vody.webp',
+            'WebPage',
+        ];
+
         $seoImageOverrides = [
-            'sluzby' => 'sluzby.png',
-            'cenik' => 'cenik.png',
-            'faq' => 'faq.png',
-            'nase-prace' => 'nase-prace.png',
-            'blog' => 'blog.png',
-            'kontakt' => 'kontakt.png',
-            'podminky-uziti' => 'podminky-uziti.png',
+            'sluzby' => 'svatba-nevesta-zenich-polibek-kamenna-zed.webp',
+            'cenik' => 'snubni-prsteny-listy-zapad-slunce-detail.webp',
+            'faq' => 'svatba-nevesta-kytice-zapad-slunce-u-vody.webp',
+            'nase-prace' => 'par-v-prirode-romanticky-portret-zapad-slunce.webp',
+            'blog' => 'koncert-zpevak-mikrofon-cernobila-fotografie.webp',
+            'hodnoceni' => 'svatba-nevesta-zenich-objeti-kytice-les.webp',
+            'kontakt' => 'zamilovany-par-objeti-zapad-slunce-podzim.webp',
+            'podminky-uziti' => 'rodinne-foceni-rodina-dite-louka.webp',
         ];
 
         foreach ($seo as $urlPath => [$title, $desc, $canonical, $keywords, $imageFile, $schemaType]) {
@@ -612,47 +1180,18 @@ CSS;
                 continue;
             }
             $imageId = !empty($this->demoMedia[$imageFile]) ? (int) $this->demoMedia[$imageFile] : null;
-            $imageUrl = $imageId ? $this->mediaPathById($imageId) : '';
-            $schemaJson = $this->buildSchemaJson($schemaType, $title, $desc, $canonical, $imageUrl, $site);
 
             $stmt->execute([
                 (int) $page['id'], $title, $desc, $keywords, $canonical,
                 $title, $desc, $imageId,
-                $title, $desc, $imageId,
-                $schemaType, $schemaJson,
+                $title, $desc, null,
+                $schemaType, $title, $desc,
             ]);
         }
     }
 
-    private function buildSchemaJson(string $type, string $title, string $desc, string $url, string $imageUrl, array $site): string
-    {
-        $base = rtrim((string) ($site['domain'] ?? ''), '/');
-        $data = [
-            '@context' => 'https://schema.org',
-            '@type' => $type,
-            'name' => $title,
-            'description' => $desc,
-            'url' => ($base !== '' ? $base : '') . $url,
-        ];
-        if ($imageUrl !== '') {
-            $data['image'] = ($base !== '' ? $base : '') . $imageUrl;
-        }
-        if ($type === 'LocalBusiness') {
-            $data['telephone'] = '+420 792 483 583';
-            $data['areaServed'] = [
-                'Olomouc',
-                'Olomoucký kraj',
-                'Morava',
-                'Česká republika',
-            ];
-            $data['priceRange'] = '$$';
-        }
-
-        return (string) json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-    }
-
     /**
-     * Svatebni cenik (3 baliky) — prepise cenik_card_N na strance Cenik.
+     * Svatebni cenik (3 baliky) - prepise cenik_card_N na strance Cenik.
      * Zdroj pro homepage teaser i /cenik. Bez toho zustanou genericke hodnoty
      * z migrace 014.
      */
@@ -735,7 +1274,7 @@ CSS;
         $cards = [
             1 => [
                 'Základní',
-                "Pro menší svatby a samotný obřad – obřad, gratulace, skupinové fotografie a krátké focení novomanželů. Přibližně 3 hodiny focení a nejméně 100 upravených fotografií.\n\n"
+                "Pro menší svatby a samotný obřad - obřad, gratulace, skupinové fotografie a krátké focení novomanželů. Přibližně 3 hodiny focení a nejméně 100 upravených fotografií.\n\n"
                 . "Obsahuje:\n"
                 . "• focení cca 3 hodiny\n"
                 . "• obřad, gratulace, skupinové fotografie\n"
@@ -748,13 +1287,13 @@ CSS;
             ],
             2 => [
                 'Standardní',
-                "Nejoblíbenější volba pro hlavní část svatebního dne, od příprav po první tanec nebo večerní program. Přibližně 8 hodin focení, 300–500 upravených fotografií a svatební video v ceně.\n\n"
+                "Nejoblíbenější volba pro hlavní část svatebního dne, od příprav po první tanec nebo večerní program. Přibližně 8 hodin focení, 300-500 upravených fotografií a svatební video v ceně.\n\n"
                 . "Obsahuje:\n"
                 . "• focení cca 8 hodin\n"
                 . "• přípravy, obřad, gratulace, skupinky\n"
                 . "• párové focení novomanželů\n"
                 . "• hostina, detaily a atmosféra dne\n"
-                . "• minimálně 300–500 upravených fotografií\n"
+                . "• minimálně 300-500 upravených fotografií\n"
                 . "• svatební video / sestřih dne\n"
                 . "• online galerie\n"
                 . "• konzultace před svatbou\n"
@@ -763,10 +1302,10 @@ CSS;
             ],
             3 => [
                 'Prémiový',
-                "Kompletní zachycení celého svatebního dne bez spěchu a kompromisů. Přibližně 10–12 hodin focení, prioritní zpracování a svatební video / reels v ceně. Delší archivace výstupů.\n\n"
+                "Kompletní zachycení celého svatebního dne bez spěchu a kompromisů. Přibližně 10-12 hodin focení, prioritní zpracování a svatební video / reels v ceně. Delší archivace výstupů.\n\n"
                 . "Obsahuje:\n"
                 . "• vše ze Standardního balíčku\n"
-                . "• focení cca 10–12 hodin\n"
+                . "• focení cca 10-12 hodin\n"
                 . "• větší počet upravených fotografií\n"
                 . "• detailní zachycení atmosféry, hostů a momentů\n"
                 . "• svatební video + krátký sestřih / reels v ceně\n"
@@ -847,21 +1386,21 @@ HTML;
         foreach ($cards as $i => [$title, $desc, $price]) {
             $this->blocks->upsert($pageId, 'cenik_card_' . $i . '_title', [
                 'block_type' => 'text',
-                'label' => 'Karta ' . $i . ' — nadpis',
+                'label' => 'Karta ' . $i . ' - nadpis',
                 'content' => $title,
                 'sort_order' => $order++,
                 'autofill_disabled' => 1,
             ]);
             $this->blocks->upsert($pageId, 'cenik_card_' . $i . '_desc', [
                 'block_type' => 'textarea',
-                'label' => 'Karta ' . $i . ' — popis',
+                'label' => 'Karta ' . $i . ' - popis',
                 'content' => $desc,
                 'sort_order' => $order++,
                 'autofill_disabled' => 1,
             ]);
             $this->blocks->upsert($pageId, 'cenik_card_' . $i . '_price', [
                 'block_type' => 'text',
-                'label' => 'Karta ' . $i . ' — cena',
+                'label' => 'Karta ' . $i . ' - cena',
                 'content' => $price,
                 'sort_order' => $order++,
                 'autofill_disabled' => 1,
@@ -879,7 +1418,7 @@ HTML;
 
         $this->blocks->upsert($pageId, 'cta_wrap', [
             'block_type' => 'html',
-            'label' => 'Ceník — poznámka a CTA',
+            'label' => 'Ceník - poznámka a CTA',
             'content' => $note,
             'sort_order' => 90,
             'autofill_disabled' => 1,
@@ -887,8 +1426,140 @@ HTML;
     }
 
     /**
-     * Svatebni FAQ (12 otazek) do tabulky faq_items — zdroj pro /faq stranku.
+     * Svatebni FAQ (12 otazek) do tabulky faq_items - zdroj pro /faq stranku.
      */
+    /**
+     * Presny verejny cenik RB Videos & Photos dodany klientem.
+     * Data zustavaji v content_blocks, nikoli v theme.
+     */
+    private function seedRealPricingContent(int $siteId): void
+    {
+        $page = $this->pages->findByUrlPath('cenik');
+        if (!$page || (int)($page['site_id'] ?? 0) !== $siteId) {
+            return;
+        }
+        $pageId = (int)$page['id'];
+        $copy = [
+            'hero_heading' => ['text', 'Hero - nadpis', 'Ceník focení a svatebního videa', 1],
+            'hero_intro' => ['textarea', 'Hero - intro', 'Přehledné balíčky pro svatby, portréty, rodiny i ateliérové focení. Vyberte si rozsah podle toho, zda potřebujete zachytit pouze obřad, celý svatební den, video nebo kompletní foto + video.', 2],
+            'pricing_weddings_heading' => ['text', 'Ceník - nadpis balíčků', 'Vyberte si balíček', 3],
+            'pricing_weddings_sub' => ['textarea', 'Ceník - úvod balíčků', 'Každý balíček má jasně danou cenu a stručný popis, aby bylo hned zřejmé, pro jaký typ focení nebo natáčení se hodí. Konkrétní rozsah vždy doladíme podle místa, délky akce a vašich představ.', 4],
+            'pricing_transport_heading' => ['text', 'Ceník - doprava nadpis', 'Doprava a individuální domluva', 70],
+            'pricing_transport_text' => ['textarea', 'Ceník - doprava text', 'U kompletního svatebního balíčku foto + video je doprava do 80 km zdarma. U balíčku se dvěma kameramany počítáme dopravu 7 Kč / km. Finální rozsah služeb vždy ladíme podle místa, délky akce a konkrétní představy klienta.', 71],
+            'cta_heading' => ['text', 'CTA - nadpis', 'Chcete ověřit volný termín?', 90],
+            'cta_sub' => ['textarea', 'CTA - text', 'Napište nám datum, místo konání a službu, o kterou máte zájem. Ozveme se vám s možnostmi a doporučením vhodného balíčku.', 91],
+            'cta_wrap' => ['html', 'CTA - tlačítko', '<a href="/kontakt" class="btn-primary">Nezávazně poptat termín</a>', 92],
+        ];
+        foreach ($copy as $key => [$type, $label, $content, $sortOrder]) {
+            $this->blocks->upsert($pageId, $key, [
+                'block_type' => $type, 'label' => $label, 'content' => $content,
+                'sort_order' => $sortOrder, 'autofill_disabled' => 1,
+            ]);
+        }
+
+        $cards = [
+            ['Svatební focení', 'Celodenní svatební focení', '15 000 Kč', 'nad 8 hodin / celý den', 'Celodenní focení pro páry, které chtějí mít zdokumentovaný celý svatební den od příprav přes obřad až po večerní zábavu.', ['focení nad 8 hodin', 'přípravy, obřad, portréty i večer', 'reportážní fotografie celého dne', 'detaily, hosté, emoce a atmosféra'], '', 'Poptat celodenní focení', '/kontakt?sluzba=foto-cely-den'],
+            ['Kompletní balíček', 'Kompletní balíček foto + video', '32 000 Kč', 'celý den', 'Kompletní celodenní balíček pro páry, které chtějí mít svatební den zachycený fotograficky i ve videu. Ideální řešení, pokud chcete sjednotit styl, komunikaci i výsledek.', ['celodenní svatební focení', 'celodenní svatební video', 'obřad, portréty, hostina i atmosféra dne', 'doprava do 80 km zdarma'], 'Nejžádanější', 'Nezávazně poptat termín', '/kontakt?sluzba=foto-video-komplet'],
+            ['Svatební video', 'Celodenní svatební video', '17 000 Kč', 'celý den', 'Celodenní svatební video bez focení zachytí atmosféru celého dne od důležitých okamžiků až po přirozené emoce hostů. Vhodné pro páry, které chtějí mít ze svatby živou vzpomínku v pohybu.', ['natáčení celého svatebního dne', 'zachycení obřadu, hostů a atmosféry', 'reportážní styl videa'], '', 'Poptat natáčení svatby', '/kontakt?sluzba=jen-natoceni-svatby'],
+            ['Svatební video', 'Dva kameramani', '25 000 Kč', 'celý den', 'Dva kameramani zachytí svatební den z více úhlů a umožní současně pokrýt hlavní okamžiky i přirozené reakce hostů.', ['dva kameramani po celý svatební den', 'více úhlů obřadu a důležitých okamžiků', 'zachycení hostů, detailů a atmosféry', 'doprava za 7 Kč / km'], '', 'Poptat dva kameramany', '/kontakt?sluzba=svatebni-video'],
+            ['Svatební focení', 'Focení obřadu a portrétů', '7 000 Kč', 'balíček', 'Kratší svatební focení pro páry, které chtějí zachytit hlavně samotný obřad, společné fotografie a portréty novomanželů.', ['focení svatebního obřadu', 'portréty novomanželů', 'základní skupinové fotografie', 'vhodné pro menší svatby'], '', 'Poptat focení obřadu', '/kontakt?sluzba=obrad-portrety'],
+            ['Svatební focení', 'Svatební focení do 8 hodin', '10 000 Kč', 'do 8 hodin', 'Praktický balíček pro svatby, kde chcete zachytit obřad, portréty, rodinu, hosty i část hostiny. Dobrá volba pro menší a středně velké svatby.', ['focení do 8 hodin', 'obřad, portréty a reportáž', 'fotografie rodiny a hostů', 'zachycení přirozené atmosféry'], '', 'Ověřit termín', '/kontakt?sluzba=foto-do-8-hodin'],
+            ['Portrétní a rodinné focení', 'Portrétní a rodinné focení', '2 000 Kč', 'focení', 'Přirozené portrétní, párové nebo rodinné focení vhodné pro rodiny, děti, páry, těhotenské fotografie i osobní prezentaci.', ['portrétní nebo rodinné focení', 'přirozený styl fotografií', 'vhodné pro rodiny, páry i jednotlivce', 'focení podle domluvy'], '', 'Domluvit focení', '/kontakt?sluzba=portretni-rodinne-foceni'],
+            ['Ateliérové focení', 'Fotografování v ateliéru', '3 000 Kč', 'focení', 'Ateliérové focení pro portréty, rodiny, děti, páry nebo osobní fotografie. Vhodné pro čistý vizuální styl, kontrolované světlo a elegantní výsledek.', ['focení v ateliéru', 'portréty, rodinné i osobní fotografie', 'kontrolované světlo', 'profesionální prostředí'], '', 'Poptat ateliérové focení', '/kontakt?sluzba=atelierove-foceni'],
+        ];
+
+        $legacyCards = '<div class="ckp-grid">';
+        $order = 10;
+        foreach ($cards as $index => [$category, $title, $price, $unit, $summary, $features, $badge, $ctaLabel, $ctaUrl]) {
+            $i = $index + 1;
+            $description = $summary . "\n\nObsahuje:\n• " . implode("\n• ", $features);
+            foreach ([
+                'title' => ['text', $title], 'desc' => ['textarea', $description],
+                'price' => ['text', $price], 'unit' => ['text', $unit],
+                'category' => ['text', $category], 'badge' => ['text', $badge],
+                'cta_label' => ['text', $ctaLabel], 'cta_url' => ['text', $ctaUrl],
+            ] as $suffix => [$type, $content]) {
+                $this->blocks->upsert($pageId, 'cenik_card_' . $i . '_' . $suffix, [
+                    'block_type' => $type, 'label' => 'Karta ' . $i . ' - ' . $suffix,
+                    'content' => $content, 'sort_order' => $order++, 'autofill_disabled' => 1,
+                ]);
+            }
+            $featuredClass = $badge !== '' ? ' ckp-card--featured' : '';
+            $badgeHtml = $badge !== '' ? '<span class="ckp-badge">' . htmlspecialchars($badge, ENT_QUOTES, 'UTF-8') . '</span>' : '';
+            $featureHtml = '<li>' . implode('</li><li>', array_map(
+                static fn(string $feature): string => htmlspecialchars($feature, ENT_QUOTES, 'UTF-8'),
+                $features
+            )) . '</li>';
+            $legacyCards .= '<article class="ckp-card' . $featuredClass . '">' . $badgeHtml
+                . '<span class="ckp-category">' . htmlspecialchars($category, ENT_QUOTES, 'UTF-8') . '</span>'
+                . '<h3 class="ckp-title">' . htmlspecialchars($title, ENT_QUOTES, 'UTF-8') . '</h3>'
+                . '<div class="ckp-price">' . htmlspecialchars($price, ENT_QUOTES, 'UTF-8') . '</div>'
+                . '<p class="ckp-desc">' . htmlspecialchars($summary, ENT_QUOTES, 'UTF-8') . '</p>'
+                . '<ul class="ckp-feats">' . $featureHtml . '</ul>'
+                . '<a href="' . htmlspecialchars($ctaUrl, ENT_QUOTES, 'UTF-8') . '" class="btn-primary">'
+                . htmlspecialchars($ctaLabel, ENT_QUOTES, 'UTF-8') . '</a></article>';
+        }
+        $legacyCards .= '</div>';
+        foreach (['pricing_packages', 'pricing_body'] as $key) {
+            $this->blocks->upsert($pageId, $key, [
+                'block_type' => 'html', 'label' => 'Ceník - osm reálných balíčků',
+                'content' => $legacyCards, 'sort_order' => 60, 'autofill_disabled' => 1,
+            ]);
+        }
+
+        $faq = [
+            ['Kolik stojí svatební focení?', 'Svatební focení začíná od 7 000 Kč za obřad a portréty. Focení do 8 hodin stojí 10 000 Kč a celodenní svatební focení nad 8 hodin stojí 15 000 Kč.'],
+            ['Kolik stojí svatební video se dvěma kameramany?', 'Balíček se dvěma kameramany stojí 25 000 Kč. K ceně se připočítává doprava 7 Kč / km.'],
+            ['Nabízíte foto a video dohromady?', 'Ano. Kompletní balíček foto + video na celý den stojí 32 000 Kč a doprava do 80 km je zdarma.'],
+            ['Fotíte i portrétní a rodinné fotografie?', 'Ano. Portrétní a rodinné focení stojí 2 000 Kč. Fotografování v ateliéru stojí 3 000 Kč.'],
+            ['Je doprava v ceně?', 'U kompletního balíčku foto + video je doprava do 80 km zdarma. U balíčku se dvěma kameramany je doprava 7 Kč / km.'],
+        ];
+        $faqOrder = 80;
+        foreach ($faq as $index => [$question, $answer]) {
+            $i = $index + 1;
+            foreach (['question' => $question, 'answer' => $answer] as $suffix => $content) {
+                $this->blocks->upsert($pageId, 'cenik_faq_' . $i . '_' . $suffix, [
+                    'block_type' => $suffix === 'question' ? 'text' : 'textarea',
+                    'label' => 'Ceník FAQ ' . $i . ' - ' . $suffix,
+                    'content' => $content, 'sort_order' => $faqOrder++, 'autofill_disabled' => 1,
+                ]);
+            }
+        }
+    }
+
+    /** Keep listing-page H1 copy aligned with its unique search intent. */
+    private function seedPageHeadings(): void
+    {
+        $headings = [
+            'blog' => ['Tipy pro svatební, párové a rodinné focení', 'Tipy pro svatební a rodinné focení'],
+            'nase-prace' => ['Svatební fotografie a videa - naše práce', 'Svatební portfolio'],
+            'hodnoceni' => ['Reference a hodnocení klientů', 'Reference na focení a video'],
+            'faq' => ['Časté otázky ke svatebnímu focení a videu', 'Časté otázky'],
+            'o-nas' => ['Fotograf a kameraman z Olomouce.', 'O nás'],
+        ];
+
+        foreach ($headings as $path => [$heading, $pageTitle]) {
+            $page = $this->pages->findByUrlPath($path);
+            if (!$page) {
+                continue;
+            }
+            $this->pages->update((int)$page['id'], ['title' => $pageTitle]);
+            $existing = $this->blocks->findByKey((int)$page['id'], 'hero_h1')
+                ?: $this->blocks->findByKey((int)$page['id'], 'hero_heading');
+            $blockKey = is_array($existing) ? (string)($existing['block_key'] ?? 'hero_h1') : 'hero_h1';
+            $blockType = is_array($existing) ? (string)($existing['block_type'] ?? 'text') : 'text';
+            $blockLabel = is_array($existing) ? (string)($existing['label'] ?? 'Hero - nadpis') : 'Hero - nadpis';
+            $sortOrder = is_array($existing) ? (int)($existing['sort_order'] ?? 1) : 1;
+            $this->blocks->upsert((int)$page['id'], $blockKey, [
+                'block_type' => $blockType,
+                'label' => $blockLabel,
+                'content' => $heading,
+                'sort_order' => $sortOrder,
+                'autofill_disabled' => 1,
+            ]);
+        }
+    }
+
     private function ensurePricingTemplate(int $siteId): int
     {
         $html = <<<'HTML'
@@ -975,8 +1646,8 @@ CSS;
         $phone1 = '+420 792 483 583';
         $phone2 = '+420 604 225 032';
         $email = 'rb_vp@volny.cz';
-        $address1 = 'Horní náměstí 583/1';
-        $address2 = '779 00 Olomouc';
+        $address1 = 'Mozartova 1113/65';
+        $address2 = '779 00 Olomouc, Nová Ulice';
         $formEmail = ContactRepository::DEFAULT_FORM_EMAIL;
 
         (new ContactRepository())->upsert($siteId, [
@@ -986,6 +1657,7 @@ CSS;
             'email' => $email,
             'address_1' => $address1,
             'address_2' => $address2,
+            'reviews_url' => ContactRepository::DEFAULT_REVIEWS_URL,
             'form_email' => $formEmail,
             'social_1_type' => 'instagram',
             'social_1_url' => 'https://www.instagram.com/rb_videos_photos/',
@@ -1043,86 +1715,95 @@ CSS;
         return count($rows);
     }
 
-    private function seedBlogPosts(int $siteId): int
+    private function seedBlogPosts(int $siteId, bool $allowGeneratedFallback = true): int
     {
         $posts = [
             [
                 'slug' => 'jak-vybrat-misto-na-foceni',
-                'title' => 'Jak vybrat místo na focení',
-                'excerpt' => 'Místo na focení nemusí být slavné ani dokonalé. Důležité je, aby vám sedělo, bylo příjemné a pomohlo vytvořit fotky, které nebudou působit strojeně.',
-                'intro' => 'Místo na focení nemusí být slavné ani dokonalé. Důležité je, aby vám sedělo, bylo příjemné a pomohlo vytvořit fotky, které nebudou působit strojeně.',
-                'paragraphs' => [
-                    'Když se domlouvám na focení, výběr místa řeším vždycky hned na začátku. Ne proto, že bych potřeboval za každou cenu nějakou „instagramovou“ lokalitu, ale proto, že místo hodně ovlivní náladu celého focení.',
-                    'Někdy stačí obyčejná louka, klidná ulička, park, zahrada nebo místo, kde to máte rádi. Nemusí to být nic velkého. Důležitější je světlo, klid a to, abyste se tam necítili divně.',
-                    'U svatby se snažím vybírat místa hlavně prakticky. Nechci vás tahat na hodinu pryč od hostů jen kvůli fotkám. Většinou se dá najít hezké místo někde poblíž, jen je potřeba se na něj podívat správně.',
-                    'U rodinného nebo portrétního focení zase řeším, aby se tam dobře fungovalo vám. Pokud máte děti, je lepší místo, kde se můžou trochu hýbat. Pokud chcete klidnější portréty, hledám prostředí, které nebude rušit.',
-                    'Za mě je nejlepší místo takové, kde se cítíte přirozeně. Fotky pak nejsou jen hezké, ale mají v sobě i něco vašeho.',
+                'title' => 'Jak vybrat místo na focení - praktický průvodce',
+                'excerpt' => 'Jak vybrat místo na svatební, párové nebo rodinné focení podle světla, dostupnosti, počasí a atmosféry, která vám bude přirozená.',
+                'intro' => 'Dobré místo na focení nemusí být slavné ani dokonalé. Mělo by vám být příjemné, odpovídat typu focení a fungovat ve světle i čase, který máme k dispozici.',
+                'sections' => [
+                    ['Začněte tím, co budete fotografovat', ['Jinou lokalitu potřebuje krátké svatební portrétní focení, jinou rodina s malými dětmi a jinou samostatný portrét. U svatby hlídáme hlavně vzdálenost od obřadu nebo hostiny, aby focení nenarušilo program. U rodinného focení potřebujeme bezpečný prostor pro pohyb a místo, kde se děti nebudou muset neustále hlídat.']],
+                    ['Světlo je důležitější než známá adresa', ['Park, louka, zahrada nebo klidná městská ulice mohou fungovat lépe než vyhlášená lokalita v nevhodnou denní dobu. Sledujeme směr světla, stín, otevřený prostor a možnost změnit úhel. Proto před focením potvrzujeme také konkrétní čas, ne pouze adresu.']],
+                    ['Myslete na dostupnost a počasí', ['Ověřte parkování, délku chůze, případné vstupné a možnost ukrýt se při dešti. U svatby je praktické mít náhradní místo v interiéru nebo alespoň krátkou variantu focení poblíž programu. U rodin s kočárkem nebo malými dětmi vybíráme trasu, kterou lze bez stresu zkrátit.']],
+                    ['Vyberte prostředí, které k vám patří', ['Místo může mít osobní význam, ale není to podmínka. Důležité je, abyste se v něm necítili jako na cizí scéně. Pokud máte rádi přírodu, nemusíme vás nutit do rušného centra. Pokud vám vyhovuje architektura a město, není důvod hledat louku jen proto, že se často objevuje ve svatebních galeriích.']],
+                    ['Co nám poslat předem', ['Pomůže typ focení, počet lidí, věk dětí, přibližný termín a informace o dopravě. U svatby potřebujeme znát místo obřadu, hostiny a čas vyhrazený na portréty. Na základě toho navrhneme několik realistických možností a vysvětlíme jejich výhody i omezení.']],
                 ],
                 'conclusion' => 'Jestli nevíte, kde fotit, klidně to nechte na mě. Navrhnu pár míst podle toho, co spolu budeme fotit a jakou atmosféru chcete.',
+                'related_links' => [['/rodinne-a-portretni-foceni', 'rodinné a portrétní focení'], ['/rande-a-zasnuby', 'párové a zásnubní focení'], ['/kontakt', 'konzultace vhodného místa']],
                 'topic' => 'Svatebni misto na foceni',
                 'color' => ['151515', 'E6B45D'],
             ],
             [
                 'slug' => 'proc-mit-svatebni-video',
-                'title' => 'Proč mít svatební video',
-                'excerpt' => 'Fotky jsou krásná vzpomínka. Video ale zachytí i hlas, pohyb, smích a atmosféru, která se do jedné fotky prostě nevejde.',
-                'intro' => 'Fotky jsou krásná vzpomínka. Video ale zachytí i hlas, pohyb, smích a atmosféru, která se do jedné fotky prostě nevejde.',
-                'paragraphs' => [
-                    'Svatební video podle mě není jen něco navíc. Je to jiný způsob, jak si ten den uchovat.',
-                    'Fotka zastaví jeden okamžik. Video vám ho po čase připomene trochu jinak. Uslyšíte sliby, smích hostů, hudbu, gratulace, nervozitu před obřadem i malé věci, kterých si v den svatby možná ani nevšimnete.',
-                    'Nesnažím se ze svatby dělat hraný film. Mám raději, když video působí opravdově. Když je v něm vidět, jaký ten den skutečně byl, kdo tam byl s vámi a co se dělo kolem.',
-                    'Hodně lidí si řekne, že fotky stačí. A ano, fotky jsou základ. Ale video má sílu hlavně v čase. Po pár letech si nepustíte jen obraz, ale i zvuk a atmosféru. A to je něco, co časem získává mnohem větší hodnotu.',
-                    'Nejde o to mít video za každou cenu. Jde o to, jestli chcete mít ze svatby vzpomínku, která bude živější než samotné fotky.',
+                'title' => 'Proč mít svatební video a co zachytí navíc',
+                'excerpt' => 'Svatební video uchová pohyb, hlasy, hudbu i atmosféru dne. Zjistěte, v čem se liší od fotografií a kdy pro vás dává smysl.',
+                'intro' => 'Fotografie zastaví jednotlivé okamžiky. Svatební video k nim přidá pohyb, hlasy, hudbu a souvislost mezi událostmi.',
+                'sections' => [
+                    ['Co video zachytí jinak než fotografie', ['Ve filmu znovu uslyšíte sliby, gratulace, smích i hlasy blízkých. Uvidíte příchod k obřadu, pohyb šatů, tanec a drobné reakce, které se do jedné fotografie nevejdou. Fotografie a video si proto nekonkurují; každé uchovává jinou část vzpomínky.']],
+                    ['Nemusíte celý den hrát před kamerou', ['Svatební den natáčíme převážně reportážně. Nepřerušujeme důležité situace kvůli opakování záběru a většinu programu necháváme přirozeně plynout. Krátké vedení využíváme při portrétech nebo tehdy, když je potřeba upravit světlo a postavení.']],
+                    ['Krátký sestřih nebo delší film', ['Vhodná podoba výstupu záleží na tom, k čemu se chcete vracet. Krátký sestřih soustředí hlavní emoce a snadno se sdílí. Delší film může zachovat větší část obřadu, proslovy a návaznost celého dne. Přesný obsah vždy vychází ze zvolené varianty a předem potvrzeného rozsahu.']],
+                    ['Zvuk potřebuje stejnou pozornost jako obraz', ['Kvalitu filmu netvoří pouze pěkné záběry. Před obřadem proto řešíme také místo, ozvučení a možnosti zachycení mluveného slova. U proslovů nebo živé hudby se domlouváme podle konkrétního programu a podmínek na místě.']],
+                    ['Kdy video nemusí být pro vás', ['Pokud chcete pouze několik portrétů nebo velmi krátký obřad bez dalšího programu, může vám fotografická galerie stačit. Smyslem není přidávat službu za každou cenu. Při konzultaci si otevřeně řekneme, jaký rozsah odpovídá vašemu dni a očekávání.']],
                 ],
                 'conclusion' => 'Pokud nad videem váháte, za mě dává smysl hlavně tehdy, když chcete zachytit nejen to, jak svatba vypadala, ale i jak zněla a jaká byla.',
+                'related_links' => [['/svatebni-foto-video', 'svatební fotografie a video'], ['/nase-prace', 'ukázky skutečných svateb'], ['/cenik', 'varianty a ceník']],
                 'topic' => 'Svatebni video',
                 'color' => ['211811', 'F1D19A'],
             ],
             [
                 'slug' => 'svatebni-fotograf-olomouc',
-                'title' => 'Svatební fotograf Olomouc: jak probíhá focení',
-                'excerpt' => 'Svatební focení nemusí narušit celý den. Když se dobře naplánuje, proběhne v klidu a vy si ho nemusíte zbytečně hlídat.',
-                'intro' => 'Svatební focení nemusí narušit celý den. Když se dobře naplánuje, proběhne v klidu a vy si ho nemusíte zbytečně hlídat.',
-                'paragraphs' => [
-                    'Svatba není focení v ateliéru. Je to živý den, kde se pořád něco děje. Proto se snažím být připravený, ale zároveň do všeho zbytečně nezasahovat.',
-                    'Před svatbou si projdu harmonogram. Zajímá mě obřad, místo hostiny, důležití lidé, skupinové fotky a čas, kdy bude prostor na portréty. Díky tomu pak v den svatby nemusíte všechno vysvětlovat znovu.',
-                    'Během dne fotím hlavně přirozené momenty. Přípravy, obřad, gratulace, hosty, detaily, smích, nervozitu i malé situace kolem. To jsou věci, které podle mě ke svatbě patří stejně jako portréty.',
-                    'Když přijde čas na společné focení novomanželů, povedu vás. Nemusíte vědět, jak stát nebo co dělat s rukama. Řeknu vám to jednoduše a bez zbytečného pózování.',
-                    'V Olomouci a okolí se dá najít hodně hezkých míst, ale vždycky řeším hlavně to, aby to zapadlo do vašeho dne. Fotky jsou důležité, ale nechci, abyste kvůli nim přišli o půlku svatby.',
+                'title' => 'Jak probíhá svatební focení v Olomouci',
+                'excerpt' => 'Praktický průběh svatebního focení od plánování harmonogramu přes reportáž a portréty až po výběr a předání hotových fotografií.',
+                'intro' => 'Svatební focení nemusí narušit celý den. Když předem známe harmonogram, důležité lidi a vaše priority, může proběhnout klidně a bez zbytečného hlídání.',
+                'sections' => [
+                    ['Před svatbou projdeme harmonogram', ['Potřebujeme znát místo příprav, obřadu a hostiny, přibližné časy přesunů a seznam důležitých skupinových fotografií. Upozorníme na místa, kde se hodí časová rezerva, a společně vybereme vhodný okamžik pro portréty. Díky tomu nemusíte v den svatby vše vysvětlovat znovu.']],
+                    ['Reportáž během dne', ['Přípravy, obřad, gratulace, hosté, výzdoba a drobné reakce fotografujeme převážně bez zásahu. Sledujeme světlo a dění kolem, ale nepřerušujeme skutečné situace jen proto, abychom je znovu naaranžovali. Pokud je potřeba něco organizačně upřesnit, domlouváme se stručně se svědky nebo koordinátorem.']],
+                    ['Portréty bez složitého pózování', ['Při společném focení vás jednoduše navedeme, kam se postavit nebo kudy se projít. Není potřeba vědět, co dělat s rukama ani trénovat pózy. Portrétní část plánujeme tak, aby zapadla do programu a neodvedla vás na dlouhou dobu od hostů.']],
+                    ['Místa pro focení v Olomouci a okolí', ['Lokalitu vybíráme podle místa svatby, světla, počasí a času na přesun. Známé místo není automaticky nejlepší. Často lépe funguje klidný park, zahrada nebo krátká cesta poblíž areálu, kde můžeme fotografovat bez stresu a složité logistiky.']],
+                    ['Výběr, úpravy a předání', ['Po svatbě fotografie vytřídíme, barevně upravíme a připravíme do online galerie. Přesný rozsah, termín předání a dobu archivace potvrzujeme podle vybrané varianty. Neupravené záběry nejsou běžnou součástí výsledného předání.']],
                 ],
                 'conclusion' => 'Pokud chcete svatební focení v Olomouci v klidu a bez strojeného pózování, můžeme si projít váš den a vymyslet, jak to udělat přirozeně.',
+                'related_links' => [
+                    ['/svatebni-foto-video', 'svatební foto a video služba'],
+                    ['/cenik', 'balíčky a ceník svatebního focení'],
+                    ['/kontakt', 'nezávazná poptávka termínu'],
+                ],
                 'topic' => 'Svatebni fotograf Olomouc',
                 'color' => ['111827', 'D9A441'],
             ],
             [
                 'slug' => 'rodinne-foceni-olomouc',
-                'title' => 'Rodinné focení v Olomouci bez stresu',
-                'excerpt' => 'Rodinné focení nemusí být o nucených úsměvech. Může to být klidná procházka, pár společných momentů a fotky, na kterých se opravdu poznáte.',
-                'intro' => 'Rodinné focení nemusí být o nucených úsměvech. Může to být klidná procházka, pár společných momentů a fotky, na kterých se opravdu poznáte.',
-                'paragraphs' => [
-                    'U rodinného focení často slyším: „Děti asi nevydrží,“ nebo „My se neumíme fotit.“ To je úplně normální. A upřímně, ani nechci, aby děti stály půl hodiny na místě a usmívaly se na povel.',
-                    'Nejhezčí rodinné fotky většinou vzniknou ve chvíli, kdy se trochu zapomene, že se fotí. Když se děti smějí, běží, drží se vás, něco ukazují nebo se prostě chovají tak, jak je znáte.',
-                    'Focení vedu tak, aby bylo jednoduché. Řeknu vám, kam si stoupnout, co udělat a jak se natočit. Zároveň ale nechávám prostor tomu, co se děje samo.',
-                    'V Olomouci a okolí je dost míst, kde se dá fotit příjemně a bez velkého stresu. Parky, příroda, klidnější zákoutí nebo místa, kam chodíte rádi. Nemusíme hledat nic složitého. Hlavní je, aby vám tam bylo dobře.',
-                    'Cílem není vytvořit dokonale naaranžovanou rodinu. Cílem je zachytit vás tak, jak spolu opravdu jste.',
+                'title' => 'Jak probíhá rodinné focení v Olomouci',
+                'excerpt' => 'Jak se připravit na rodinné focení v Olomouci, vybrat místo a oblečení a zvládnout focení s dětmi bez nucených úsměvů.',
+                'intro' => 'Rodinné focení může být klidná procházka a několik společných situací, ne dlouhé stání v řadě před fotoaparátem.',
+                'sections' => [
+                    ['Děti nemusí stát na místě', ['Počítáme s tím, že malé děti potřebují pohyb, pauzu nebo čas na seznámení. Začínáme jednoduše a střídáme krátké vedené fotografie s volnějšími situacemi. Když děti běží, smějí se nebo se přijdou obejmout, často vzniknou přirozenější snímky než při úsměvu na povel.']],
+                    ['Jak vybrat místo', ['V Olomouci a okolí vybíráme parky, přírodu, městská zákoutí nebo místo, které máte rádi. Sledujeme dostupnost, bezpečí, světlo a prostor pro pohyb. S kočárkem nebo malými dětmi dává větší smysl snadno přístupná lokalita než složitá cesta za jediným výhledem.']],
+                    ['Co si vzít na sebe', ['Oblečení nemusí být stejné, mělo by ale barevně a stylem přirozeně ladit. Doporučujeme pohodlné věci bez výrazných nápisů, ve kterých se můžete posadit, obejmout nebo jít s dětmi. Pokud váháte mezi několika variantami, můžete je předem poslat ke konzultaci.']],
+                    ['Jak focení vedeme', ['Řekneme vám, kde je dobré světlo, kam se postavit a co zkusit. Nečekáme, že budete umět pózovat. Začínáme jednoduchou chůzí, rozhovorem nebo společnou činností a teprve potom přidáme klidnější portréty. Cílem je zachytit vztah mezi vámi, ne vytvořit obraz cizí rodiny.']],
+                    ['Co se děje po focení', ['Vybereme výslednou sérii, upravíme barvy a připravíme fotografie do online galerie. Počet snímků a termín předání se odvíjí od zvolené varianty a potvrzujeme je před focením. Galerie umožní fotografie stáhnout a jednoduše sdílet s rodinou.']],
                 ],
                 'conclusion' => 'Jestli máte z rodinného focení trochu obavy, vůbec nevadí. Provedu vás tím tak, aby to bylo co nejpřirozenější.',
+                'related_links' => [['/rodinne-a-portretni-foceni', 'rodinné a portrétní focení'], ['/cenik', 'ceník focení'], ['/kontakt', 'rezervace termínu']],
                 'topic' => 'Rodinne foceni Olomouc',
                 'color' => ['2B2118', 'FFE2A8'],
             ],
             [
                 'slug' => 'reklamni-foto-video-pro-firmy',
-                'title' => 'Reklamní foto a video pro firmy',
-                'excerpt' => 'Dobré fotky a video nejsou jen výplň webu. Často rozhodují o tom, jestli firma působí důvěryhodně, nebo obyčejně.',
-                'intro' => 'Dobré fotky a video nejsou jen výplň webu. Často rozhodují o tom, jestli firma působí důvěryhodně, nebo obyčejně.',
-                'paragraphs' => [
-                    'Když přijdu na firemní web a vidím tam náhodné ilustrační fotky, většinou mi tam něco chybí. Nevidím lidi, prostředí, práci ani skutečnou atmosféru firmy.',
-                    'A přesně proto má smysl mít vlastní fotky a videa.',
-                    'Nejde jen o to, aby výstup hezky vypadal. Dobrý vizuální obsah má lidem rychle ukázat, kdo jste, co děláte a proč vám mají věřit. U firmy to může být provozovna, tým, výrobek, služba, práce v terénu, zákulisí nebo konkrétní proces.',
-                    'Před focením nebo natáčením se vždycky ptám, kde se budou výstupy používat. Web potřebuje něco jiného než sociální sítě. Reklama zase něco jiného než profil na Googlu. Když se tohle promyslí dopředu, vzniknou materiály, které mají mnohem větší využití.',
-                    'Nemám rád obsah, který působí jako prázdná reklama. Lepší je ukázat firmu čistě, hezky, ale pořád lidsky. Aby zákazník neměl pocit, že se dívá na něco umělého.',
+                'title' => 'Jak připravit reklamní focení a video pro firmu',
+                'excerpt' => 'Co připravit před firemním focením a natáčením, jak vytvořit zadání a naplánovat fotografie a video pro web, sociální sítě nebo reklamu.',
+                'intro' => 'Nejlepší firemní fotografie a video nevznikají bez zadání. Před produkcí je potřeba vědět, komu má obsah sloužit, kde se použije a co má zákazník pochopit.',
+                'sections' => [
+                    ['Určete účel a cílovou skupinu', ['Jiné záběry potřebuje úvodní stránka webu, náborová kampaň, produktový detail nebo krátké video na sociální sítě. Sepište hlavní službu, publikum a jednu věc, kterou si má člověk po zhlédnutí odnést. Tento základ pomůže rozhodnout, co skutečně fotografovat a co by bylo jen dekorací.']],
+                    ['Připravte seznam potřebných výstupů', ['U každého použití si poznamenejte formát, přibližný počet fotografií nebo délku videa a místo, kde bude kolem obrazu text. Pro web se hodí vodorovné i svislé varianty, pro sociální sítě často potřebujete kratší formáty. Plán předem šetří čas a omezuje dodatečné ořezy.']],
+                    ['Vyberte lidi, produkty a prostředí', ['Rozhodněte, kdo bude firmu představovat, které činnosti lze během produkce skutečně ukázat a zda je prostor připravený. Produkty očistěte a seřaďte, u lidí potvrďte čas a vhodné oblečení. Není potřeba vytvářet umělé situace, pokud lze srozumitelně zachytit reálnou práci.']],
+                    ['Sestavte realistický harmonogram', ['Počítejte s přípravou světla, přesuny mezi místy a opakováním důležitých situací z několika úhlů. U rozhovorů je nutný klid na zvuk. U provozu je potřeba domluvit bezpečný pohyb techniky a souhlas lidí, kteří budou rozpoznatelní.']],
+                    ['Potvrďte použití a předání', ['Předem si ujasníme, kde budou fotografie a video zveřejněny, jaké varianty souborů potřebujete a kdo bude výstupy schvalovat. Rozsah licence, počet výstupů, termín a cenu uvedeme v konkrétní nabídce podle skutečného zadání.']],
                 ],
                 'conclusion' => 'Pokud chcete, aby vaše firma působila lépe a důvěryhodněji, vlastní foto a video je jedna z nejpraktičtějších věcí, kterou můžete udělat.',
+                'related_links' => [['/reklamni-foto-video', 'firemní fotografie a reklamní video'], ['/nase-prace', 'ukázky realizací'], ['/kontakt', 'nezávazná firemní poptávka']],
                 'topic' => 'Reklamni foto video',
                 'color' => ['0D1117', '9FDBFF'],
             ],
@@ -1139,6 +1820,9 @@ CSS;
         foreach ($posts as $index => $post) {
             $mediaIds = $this->pickMedia($blogImages[$post['slug']] ?? []);
             if ($mediaIds === []) {
+                if (!$allowGeneratedFallback) {
+                    throw new \RuntimeException('Pro clanek chybi schvalena media: ' . $post['slug']);
+                }
                 $mediaIds = $this->seedImageSet($siteId, 'blog-' . $post['slug'], $post['topic'], $post['color'][0], $post['color'][1], 7);
             }
             $featured = $mediaIds[0] ?? null;
@@ -1154,7 +1838,7 @@ CSS;
         $entries = [
             [
                 'slug' => 'svatebni-foto-video-olomouc',
-                'title' => 'Svatební foto a video Olomouc',
+                'title' => 'Realizace svatebního foto a videa v Olomouci',
                 'excerpt' => 'Svatbu fotím a natáčím tak, aby vzpomínky působily opravdově. Ne jako póza, ale jako váš den se vším, co k němu patřilo.',
                 'intro' => 'Svatbu fotím a natáčím tak, aby vzpomínky působily opravdově. Ne jako póza, ale jako váš den se vším, co k němu patřilo.',
                 'paragraphs' => [
@@ -1165,13 +1849,18 @@ CSS;
                     'Nejde mi o to udělat svatbu efektnější, než byla. Jde mi o to zachytit ji tak, abyste se v těch fotkách a videu poznali.',
                 ],
                 'conclusion' => 'Pokud chcete ze svatby fotky i video v osobním a přirozeném stylu, rád s vámi projdu plán dne a navrhnu, jak vše zachytit co nejlépe.',
+                'related_links' => [
+                    ['/svatebni-foto-video', 'rozsah svatební foto a video služby'],
+                    ['/cenik', 'svatební balíčky a orientační ceny'],
+                    ['/kontakt', 'poptávka dostupného termínu'],
+                ],
                 'topic' => 'Svatebni foto video Olomouc',
                 'color' => ['17110B', 'E7B75E'],
                 'video_url' => 'https://vimeo.com/1122538281',
             ],
             [
                 'slug' => 'svatebni-fotograf-brno',
-                'title' => 'Svatební fotograf Brno',
+                'title' => 'Svatební focení v Brně - ukázka realizace',
                 'excerpt' => 'Svatební focení v Brně dělám tak, aby bylo přirozené, klidné a zapadlo do vašeho dne bez zbytečného stresu.',
                 'intro' => 'Svatební focení v Brně dělám tak, aby bylo přirozené, klidné a zapadlo do vašeho dne bez zbytečného stresu.',
                 'paragraphs' => [
@@ -1188,7 +1877,7 @@ CSS;
             ],
             [
                 'slug' => 'rodinne-portretni-foceni',
-                'title' => 'Rodinné a portrétní focení',
+                'title' => 'Rodinné a portrétní focení - ukázka realizace',
                 'excerpt' => 'Fotím lidi tak, aby se na fotkách poznali. Přirozeně, jednoduše a bez pocitu, že musí před foťákem něco hrát.',
                 'intro' => 'Fotím lidi tak, aby se na fotkách poznali. Přirozeně, jednoduše a bez pocitu, že musí před foťákem něco hrát.',
                 'paragraphs' => [
@@ -1205,7 +1894,7 @@ CSS;
             ],
             [
                 'slug' => 'reklamni-foto-video-olomouc',
-                'title' => 'Reklamní foto a video Olomouc',
+                'title' => 'Reklamní foto a video v Olomouci - realizace',
                 'excerpt' => 'Pomáhám firmám ukázat jejich práci tak, aby působila dobře, srozumitelně a důvěryhodně. Bez zbytečně umělé reklamy.',
                 'intro' => 'Pomáhám firmám ukázat jejich práci tak, aby působila dobře, srozumitelně a důvěryhodně. Bez zbytečně umělé reklamy.',
                 'paragraphs' => [
@@ -1222,7 +1911,7 @@ CSS;
             ],
             [
                 'slug' => 'portretni-foceni-olomouc',
-                'title' => 'Portrétní focení Olomouc',
+                'title' => 'Portrétní focení v Olomouci - ukázka realizace',
                 'excerpt' => 'Portrétní focení nemusí být nepříjemné. Pomůžu vám s pózou, výrazem i místem, aby fotky působily přirozeně a dobře vás vystihly.',
                 'intro' => 'Portrétní focení nemusí být nepříjemné. Pomůžu vám s pózou, výrazem i místem, aby fotky působily přirozeně a dobře vás vystihly.',
                 'paragraphs' => [
@@ -1261,42 +1950,7 @@ CSS;
 
     private function seedHomepageReviews(int $siteId): int
     {
-        $reviews = [
-            ['Jan Jüngling', 'Svatba M+H', 'Kluci jsou naprostí profesionálové. Jsou pečliví a zachytili přesně atmosféru našeho dne.'],
-            ['Václav Konopka', 'Svatební focení', 'Super domluva, milý přístup a fotky dodané dříve, než jsme čekali. Velká spokojenost.'],
-            ['Jana Dudková', 'Rodinné focení', 'Moc doporučuji. Děti se cítily přirozeně a fotky mají krásné barvy i emoce.'],
-            ['Markéta a Tomáš', 'Svatební video', 'Video vystihlo atmosféru dne do posledního detailu. Vracíme se k němu pořád dokola.'],
-            ['Lucie Nováková', 'Portrétní focení', 'Focení bylo uvolněné a bez stresu. Výsledek působí přirozeně a profesionálně.'],
-            ['Petr Malý', 'Firemní akce', 'Rychlá domluva, jistota na místě a výstupy použitelné rovnou na web i sociální sítě.'],
-            ['Anna a Michal', 'Svatba', 'Fotky mají nádhernou atmosféru. Oceňujeme hlavně klidný přístup během celého dne.'],
-            ['Kateřina D.', 'Rodinné focení', 'Děti nebyly strojené, všechno proběhlo hravě a výsledek je přesně náš.'],
-            ['Dominik S.', 'Reklamní video', 'Skvělá práce se světlem, obrazem i střihem. Výstup působí draze a čistě.'],
-            ['Veronika a Pavel', 'Svatba', 'Výborná komunikace před svatbou i během dne. Fotky i video jsou krásná vzpomínka.'],
-            ['Ellie Lachnitova', 'Foceni s Bannym', 'Foceni s Bannym me moc bavilo. Super pristup, atmosfera i fotky. Rozhodne doporucuji! :)'],
-            ['Michael Latal', 'Foceni', 'Velmi super pristup i fotky.'],
-            ['Roman Vrana', 'Svatebni foceni', 'Rychlost, super provedeni, nadherne fotky, ktere rychle dodal upravene. 11/10, jeste jednou moc dekujeme <3'],
-            ['Tomas Pavlat', 'Portretni foceni', 'Profesionalita, ochota, vstricnost a hlavne poradi i se scenou. Chces mit profi foto a nevis komu rict a poradit s kompozici? Tak ted uz vis.'],
-            ['Lucie Fedorova', 'Foceni', 'Lepsiho fotografa neznam. :) Uzasny pristup, nadherny fotky. Doporucuji.'],
-            ['Zuzana Horakova', 'Rodinne foceni', 'Perfektni. Foceni velmi prijemne a fotky krasne. Doporucuji vsemi deseti.'],
-            ['Martina Bobkova', 'Foceni', 'Super fotky a super pokec :) doporucuji moc moc.'],
-            ['Darca Polaskova', 'Svatebni foceni', 'Super domluva, zabava a vtipky pri samotnem foceni, fotky skvele a je jich hodne :3 Rozhodne doporucuji :)'],
-            ['Dana Kneblova', 'Foceni', 'Bylo to zabavne a uplne pohodove foceni ;)'],
-            ['Veronika Bokova', 'Rodinne foceni', 'Domluva skvela, foceni zabavne, takze z cloveka hned odpadne nervozita a fotky paradni...Doporucuji! :)'],
-            ['Michal Kucera', 'Foceni', 'Skvela komunikace, super fotky jen doporucuji.'],
-            ['Dominika Jecminkova', 'Foceni', 'Skvela komunikace, skvele fotky ^^ Kdykoliv se jde domluvit, aby to vyhovovalo obema stranam :) Muzu jen doporucit.'],
-            ['Rose De Clermont', 'Foceni', 'Velka spokojenost! Dvakrat nam foceni zrusilo spatne pocasi, ale diky dobre komunikaci s fotografem se foceni fakt uskutecnilo :) I po foceni je paradni domluva, kdyz chci jeste nejakou dalsi z fotek upravit. Doporucuji :)'],
-            ['Aneta Jenesova', 'Foceni', 'Super fotky a skvela domluva s panem fotografem doporucuji :)'],
-            ['Jenny Molatova', 'Foceni', 'Super fotky ^^'],
-            ['Martin Jenes', 'Foceni', 'Vrele doporucuji. Perfektni prace pana fotografa.'],
-            ['Vojtech Vrana', 'Hudebni klip', 'Cerstvy klip z nove desky WE ARE HERE. Jsme nataceli s RB - Videos & Photos, jsou to sikovni panove.'],
-            ['Veronika Saskova', 'Celodenni foceni', 'Diky klukum z rbvideosphotos jsem mela moznost vyzkouset si celodenni foceni v pronajatem apartmanu, kde se vystridalo nekolik modelek. Byla to fajn zkusenost :)'],
-            ['Diana Smidova', 'Foceni', 'Dekujeme za nejkrasnejsi vzpominku! Super prace.'],
-            ['Clarissa cosplayer', 'Photo shoot', 'Today is nice day. I already have photos from the photo shoot. Thank you so much to the photographer for the photos and video.'],
-            ['Tomas Fyfty Fiala', 'Hudebni klip', 'A je to venku. Klip k novemu songu SVETLO. Velke diky klukum z RB - Videos & Photos.'],
-            ['Katerina Vaclavkova', 'Foceni', 'Super :) :)'],
-            ['Radka Polynkova', 'Foceni', 'Moc dekujeme za uzasne fotky <3'],
-        ];
-
+        $reviews = CustomerReviewDataset::all();
         $homepage = $this->pages->findByUrlPath('');
         if (!$homepage) {
             return 0;
@@ -1306,7 +1960,9 @@ CSS;
 
         $html = '<div class="hp-reviews-grid">';
         foreach ($reviews as $review) {
-            [$author, $context, $text] = $review;
+            $author = $review['author_name'];
+            $context = $review['context_label'];
+            $text = $review['review_text'];
             $html .= '<article class="hp-review-card">'
                 . '<div class="hp-review-stars">★★★★★</div>'
                 . '<p>„' . $this->h($text) . '“</p>'
@@ -1329,42 +1985,7 @@ CSS;
 
     private function seedReviewRows(int $siteId): int
     {
-        $reviews = [
-            ['author_name' => 'Jan Jungling', 'context_label' => 'Svatba M+H', 'review_text' => 'Kluci jsou naprosti profesionalove. Jsou peclivi a zachytili presne atmosferu naseho dne.', 'rating' => 5, 'sort_order' => 1, 'is_active' => 1],
-            ['author_name' => 'Vaclav Konopka', 'context_label' => 'Svatebni foceni', 'review_text' => 'Super domluva, mily pristup a fotky dodane drive, nez jsme cekali. Velka spokojenost.', 'rating' => 5, 'sort_order' => 2, 'is_active' => 1],
-            ['author_name' => 'Jana Dudkova', 'context_label' => 'Rodinne foceni', 'review_text' => 'Moc doporucuji. Deti se citily prirozene a fotky maji krasne barvy i emoce.', 'rating' => 5, 'sort_order' => 3, 'is_active' => 1],
-            ['author_name' => 'Marketa a Tomas', 'context_label' => 'Svatebni video', 'review_text' => 'Video vystihlo atmosferu dne do posledniho detailu. Vracime se k nemu porad dokola.', 'rating' => 5, 'sort_order' => 4, 'is_active' => 1],
-            ['author_name' => 'Lucie Novakova', 'context_label' => 'Portretni foceni', 'review_text' => 'Foceni bylo uvolnene a bez stresu. Vysledek pusobi prirozene a profesionalne.', 'rating' => 5, 'sort_order' => 5, 'is_active' => 1],
-            ['author_name' => 'Petr Maly', 'context_label' => 'Firemni akce', 'review_text' => 'Rychla domluva, jistota na miste a vystupy pouzitelne rovnou na web i socialni site.', 'rating' => 5, 'sort_order' => 6, 'is_active' => 1],
-            ['author_name' => 'Anna a Michal', 'context_label' => 'Svatba', 'review_text' => 'Fotky maji nadhernou atmosferu. Ocenujeme hlavne klidny pristup behem celeho dne.', 'rating' => 5, 'sort_order' => 7, 'is_active' => 1],
-            ['author_name' => 'Katerina D.', 'context_label' => 'Rodinne foceni', 'review_text' => 'Deti nebyly strojene, vsechno probehlo hrave a vysledek je presne nas.', 'rating' => 5, 'sort_order' => 8, 'is_active' => 1],
-            ['author_name' => 'Dominik S.', 'context_label' => 'Reklamni video', 'review_text' => 'Skvela prace se svetlem, obrazem i strihem. Vystup pusobi draze a ciste.', 'rating' => 5, 'sort_order' => 9, 'is_active' => 1],
-            ['author_name' => 'Veronika a Pavel', 'context_label' => 'Svatba', 'review_text' => 'Vyborna komunikace pred svatbou i behem dne. Fotky i video jsou krasna vzpominka.', 'rating' => 5, 'sort_order' => 10, 'is_active' => 1],
-            ['author_name' => 'Ellie Lachnitova', 'context_label' => 'Foceni s Bannym', 'review_text' => 'Foceni s Bannym me moc bavilo. Super pristup, atmosfera i fotky. Rozhodne doporucuji! :)', 'rating' => 5, 'sort_order' => 11, 'is_active' => 1],
-            ['author_name' => 'Michael Latal', 'context_label' => 'Foceni', 'review_text' => 'Velmi super pristup i fotky.', 'rating' => 5, 'sort_order' => 12, 'is_active' => 1],
-            ['author_name' => 'Roman Vrana', 'context_label' => 'Svatebni foceni', 'review_text' => 'Rychlost, super provedeni, nadherne fotky, ktere rychle dodal upravene. 11/10, jeste jednou moc dekujeme <3', 'rating' => 5, 'sort_order' => 13, 'is_active' => 1],
-            ['author_name' => 'Tomas Pavlat', 'context_label' => 'Portretni foceni', 'review_text' => 'Profesionalita, ochota, vstricnost a hlavne poradi i se scenou. Chces mit profi foto a nevis komu rict a poradit s kompozici? Tak ted uz vis.', 'rating' => 5, 'sort_order' => 14, 'is_active' => 1],
-            ['author_name' => 'Lucie Fedorova', 'context_label' => 'Foceni', 'review_text' => 'Lepsiho fotografa neznam. :) Uzasny pristup, nadherny fotky. Doporucuji.', 'rating' => 5, 'sort_order' => 15, 'is_active' => 1],
-            ['author_name' => 'Zuzana Horakova', 'context_label' => 'Rodinne foceni', 'review_text' => 'Perfektni. Foceni velmi prijemne a fotky krasne. Doporucuji vsemi deseti.', 'rating' => 5, 'sort_order' => 16, 'is_active' => 1],
-            ['author_name' => 'Martina Bobkova', 'context_label' => 'Foceni', 'review_text' => 'Super fotky a super pokec :) doporucuji moc moc.', 'rating' => 5, 'sort_order' => 17, 'is_active' => 1],
-            ['author_name' => 'Darca Polaskova', 'context_label' => 'Svatebni foceni', 'review_text' => 'Super domluva, zabava a vtipky pri samotnem foceni, fotky skvele a je jich hodne :3 Rozhodne doporucuji :)', 'rating' => 5, 'sort_order' => 18, 'is_active' => 1],
-            ['author_name' => 'Dana Kneblova', 'context_label' => 'Foceni', 'review_text' => 'Bylo to zabavne a uplne pohodove foceni ;)', 'rating' => 5, 'sort_order' => 19, 'is_active' => 1],
-            ['author_name' => 'Veronika Bokova', 'context_label' => 'Rodinne foceni', 'review_text' => 'Domluva skvela, foceni zabavne, takze z cloveka hned odpadne nervozita a fotky paradni...Doporucuji! :)', 'rating' => 5, 'sort_order' => 20, 'is_active' => 1],
-            ['author_name' => 'Michal Kucera', 'context_label' => 'Foceni', 'review_text' => 'Skvela komunikace, super fotky jen doporucuji.', 'rating' => 5, 'sort_order' => 21, 'is_active' => 1],
-            ['author_name' => 'Dominika Jecminkova', 'context_label' => 'Foceni', 'review_text' => 'Skvela komunikace, skvele fotky ^^ Kdykoliv se jde domluvit, aby to vyhovovalo obema stranam :) Muzu jen doporucit.', 'rating' => 5, 'sort_order' => 22, 'is_active' => 1],
-            ['author_name' => 'Rose De Clermont', 'context_label' => 'Foceni', 'review_text' => 'Velka spokojenost! Dvakrat nam foceni zrusilo spatne pocasi, ale diky dobre komunikaci s fotografem se foceni fakt uskutecnilo :) I po foceni je paradni domluva, kdyz chci jeste nejakou dalsi z fotek upravit. Doporucuji :)', 'rating' => 5, 'sort_order' => 23, 'is_active' => 1],
-            ['author_name' => 'Aneta Jenesova', 'context_label' => 'Foceni', 'review_text' => 'Super fotky a skvela domluva s panem fotografem doporucuji :)', 'rating' => 5, 'sort_order' => 24, 'is_active' => 1],
-            ['author_name' => 'Jenny Molatova', 'context_label' => 'Foceni', 'review_text' => 'Super fotky ^^', 'rating' => 5, 'sort_order' => 25, 'is_active' => 1],
-            ['author_name' => 'Martin Jenes', 'context_label' => 'Foceni', 'review_text' => 'Vrele doporucuji. Perfektni prace pana fotografa.', 'rating' => 5, 'sort_order' => 26, 'is_active' => 1],
-            ['author_name' => 'Vojtech Vrana', 'context_label' => 'Hudebni klip', 'review_text' => 'Cerstvy klip z nove desky WE ARE HERE. Jsme nataceli s RB - Videos & Photos, jsou to sikovni panove.', 'rating' => 5, 'sort_order' => 27, 'is_active' => 1],
-            ['author_name' => 'Veronika Saskova', 'context_label' => 'Celodenni foceni', 'review_text' => 'Diky klukum z rbvideosphotos jsem mela moznost vyzkouset si celodenni foceni v pronajatem apartmanu, kde se vystridalo nekolik modelek. Byla to fajn zkusenost :)', 'rating' => 5, 'sort_order' => 28, 'is_active' => 1],
-            ['author_name' => 'Diana Smidova', 'context_label' => 'Foceni', 'review_text' => 'Dekujeme za nejkrasnejsi vzpominku! Super prace.', 'rating' => 5, 'sort_order' => 29, 'is_active' => 1],
-            ['author_name' => 'Clarissa cosplayer', 'context_label' => 'Photo shoot', 'review_text' => 'Today is nice day. I already have photos from the photo shoot. Thank you so much to the photographer for the photos and video.', 'rating' => 5, 'sort_order' => 30, 'is_active' => 1],
-            ['author_name' => 'Tomas Fyfty Fiala', 'context_label' => 'Hudebni klip', 'review_text' => 'A je to venku. Klip k novemu songu SVETLO. Velke diky klukum z RB - Videos & Photos.', 'rating' => 5, 'sort_order' => 31, 'is_active' => 1],
-            ['author_name' => 'Katerina Vaclavkova', 'context_label' => 'Foceni', 'review_text' => 'Super :) :)', 'rating' => 5, 'sort_order' => 32, 'is_active' => 1],
-            ['author_name' => 'Radka Polynkova', 'context_label' => 'Foceni', 'review_text' => 'Moc dekujeme za uzasne fotky <3', 'rating' => 5, 'sort_order' => 33, 'is_active' => 1],
-        ];
-
+        $reviews = CustomerReviewDataset::all();
         (new ReviewRepository())->replaceAllBySite($siteId, $reviews);
         (new ReviewContentService())->ensureHomepageSection($siteId);
 
@@ -1400,10 +2021,6 @@ CSS;
             'blog_2',
             'blog_3',
             'blog_cta',
-            'cenik_title',
-            'cenik_intro',
-            'pricing_title',
-            'pricing_intro',
             'cenik_body',
             'pricing_body',
             'pricing_cta',
@@ -1421,6 +2038,8 @@ CSS;
             'contact_card',
             'contact_visual',
             'jb-about-visual__media',
+            'jb-about-photographer__media',
+            'jb-about-cameraman__media',
             'process_label',
             'process_title',
             'process_intro',
@@ -1435,6 +2054,7 @@ CSS;
         $stmt->execute([(int)$homepage['id'], ...$keys]);
 
         $this->normalizeHomepageTemplateLabels($homepage);
+        $this->removeHomepageHeroLabel($homepage);
     }
 
     private function seedDefaultHeroPoster(int $siteId): string
@@ -1444,10 +2064,7 @@ CSS;
             throw new \RuntimeException('Chybi povinna demo fotografie pro vychozi hero pozadi: ' . self::DEFAULT_HERO_POSTER_ASSET);
         }
 
-        $url = $this->mediaPathById($mediaId);
-        if ($url === '') {
-            throw new \RuntimeException('Nelze zjistit cestu povinne demo fotografie pro vychozi hero pozadi.');
-        }
+        $url = $this->requiredMediaVariantPathById($mediaId, 'medium');
 
         (new SiteRepository())->update($siteId, ['default_hero_poster_url' => $url]);
         return $url;
@@ -1515,14 +2132,19 @@ CSS;
             'autofill_disabled' => 1,
         ]);
 
-        if (!empty($this->demoMedia['weare2.png'])) {
-            $visual = $this->mediaPathById((int) $this->demoMedia['weare2.png']);
-            if ($visual !== '') {
-                $this->blocks->upsert($pageId, 'jb-about-visual__media', [
+        foreach ([
+            'jb-about-visual__media' => ['weare5.jpg', 'Homepage O nas - tym', 86],
+        ] as $blockKey => [$filename, $label, $sortOrder]) {
+            if (!empty($this->demoMedia[$filename])) {
+                $visual = $this->mediaPathById((int)$this->demoMedia[$filename]);
+                if ($visual === '') {
+                    continue;
+                }
+                $this->blocks->upsert($pageId, $blockKey, [
                     'block_type' => 'image',
-                    'label' => 'Co nabizime - vizual',
+                    'label' => $label,
                     'content' => $visual,
-                    'sort_order' => 86,
+                    'sort_order' => $sortOrder,
                     'autofill_disabled' => 1,
                 ]);
             }
@@ -1533,7 +2155,7 @@ CSS;
             if ($visual !== '') {
                 $this->blocks->upsert($pageId, 'contact_visual', [
                     'block_type' => 'image',
-                    'label' => 'Kontaktni vizual',
+                    'label' => 'Kontaktní vizuál',
                     'content' => $visual,
                     'sort_order' => 90,
                     'autofill_disabled' => 1,
@@ -1668,6 +2290,38 @@ HTML;
         ]);
     }
 
+    private function removeHomepageHeroLabel(array $homepage): void
+    {
+        $templateId = (int)($homepage['template_id'] ?? 0);
+        if ($templateId <= 0) {
+            return;
+        }
+
+        $template = $this->templates->findById($templateId);
+        if (!$template) {
+            return;
+        }
+
+        $html = (string)($template['html_source'] ?? '');
+        $updated = preg_replace(
+            '~(<section\b[^>]*\bid=(["\'])uvod\2[^>]*>\s*<div\b[^>]*\bclass=(["\'])container\3[^>]*>\s*)<p\b[^>]*\bclass=(["\'])section-label\4[^>]*>.*?</p>\s*~is',
+            '$1',
+            $html,
+            1
+        ) ?? $html;
+
+        if ($updated === $html) {
+            return;
+        }
+
+        $this->templates->update($templateId, [
+            'name' => $template['name'],
+            'html_source' => $updated,
+            'css_source' => $template['css_source'] ?? '',
+            'js_source' => $template['js_source'] ?? '',
+        ]);
+    }
+
     private function seedImageSet(int $siteId, string $prefix, string $topic, string $bg, string $fg, int $count): array
     {
         $ids = [];
@@ -1694,18 +2348,18 @@ HTML;
             $featuredImageId,
             'published',
             $publishedAt,
-            $post['title'] . ' | RB Photos & Videos',
+            $post['title'] . ' | RB Videos & Photos',
             $post['excerpt'],
         ];
 
         if ($existing) {
-            $this->db->prepare('UPDATE blog_posts SET title=?, excerpt=?, content=?, featured_image_id=?, status=?, published_at=?, meta_title=?, meta_description=?, updated_at=NOW() WHERE id=?')
-                ->execute([...$data, $existing]);
+            $this->db->prepare('UPDATE blog_posts SET title=?, excerpt=?, content=?, featured_image_id=?, status=?, meta_title=?, meta_description=?, updated_at=NOW() WHERE id=?')
+                ->execute([$data[0], $data[1], $data[2], $data[3], $data[4], $data[6], $data[7], $existing]);
             return $existing;
         }
 
         $this->db->prepare('INSERT INTO blog_posts (site_id, title, slug, excerpt, content, featured_image_id, status, published_at, meta_title, meta_description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
-            ->execute([$siteId, $post['title'], $post['slug'], $post['excerpt'], $content, $featuredImageId, 'published', $publishedAt, $post['title'] . ' | RB Photos & Videos', $post['excerpt']]);
+            ->execute([$siteId, $post['title'], $post['slug'], $post['excerpt'], $content, $featuredImageId, 'published', $publishedAt, $post['title'] . ' | RB Videos & Photos', $post['excerpt']]);
         return (int)$this->db->lastInsertId();
     }
 
@@ -1718,22 +2372,45 @@ HTML;
             $entry['title'],
             $description,
             $entry['video_url'],
+            !empty($entry['video_url']) ? 'video' : 'photo',
             'published',
             $publishedAt,
             $index + 1,
-            $entry['title'] . ' | Portfolio',
+            $entry['title'] . ' | RB Videos & Photos',
             $entry['excerpt'] ?? ('Ukázková práce fotografa: ' . $entry['title']),
         ];
 
         if ($existing) {
-            $this->db->prepare('UPDATE portfolio_entries SET title=?, description=?, video_url=?, status=?, published_at=?, sort_order=?, meta_title=?, meta_description=?, updated_at=NOW() WHERE id=?')
+            $this->db->prepare('UPDATE portfolio_entries SET title=?, description=?, video_url=?, content_type=?, status=?, published_at=?, sort_order=?, meta_title=?, meta_description=?, updated_at=NOW() WHERE id=?')
                 ->execute([...$data, $existing]);
+            $this->syncPortfolioVideos($existing, (string)($entry['video_url'] ?? ''));
             return $existing;
         }
 
         $this->db->prepare('INSERT INTO portfolio_entries (site_id, title, slug, description, video_url, status, published_at, sort_order, meta_title, meta_description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
-            ->execute([$siteId, $entry['title'], $entry['slug'], $description, $entry['video_url'], 'published', $publishedAt, $index + 1, $entry['title'] . ' | Portfolio', 'Ukázková práce fotografa: ' . $entry['title']]);
-        return (int)$this->db->lastInsertId();
+            ->execute([$siteId, $entry['title'], $entry['slug'], $description, $entry['video_url'], 'published', $publishedAt, $index + 1, $entry['title'] . ' | RB Videos & Photos', $entry['excerpt'] ?? ('Ukázka realizace: ' . $entry['title'])]);
+        $createdId = (int)$this->db->lastInsertId();
+        $this->db->prepare('UPDATE portfolio_entries SET content_type = ? WHERE id = ?')
+            ->execute([!empty($entry['video_url']) ? 'video' : 'photo', $createdId]);
+        $this->syncPortfolioVideos($createdId, (string)($entry['video_url'] ?? ''));
+        return $createdId;
+    }
+
+    /**
+     * Demo content owns a single video per entry and writes it straight into the
+     * portfolio_entries.video_url mirror, so the portfolio_videos rows have to be
+     * rewritten with it - otherwise a reseed would leave the mirror and the list
+     * disagreeing, and the listing and the detail page would show different videos.
+     */
+    private function syncPortfolioVideos(int $portfolioId, string $videoUrl): void
+    {
+        $this->db->prepare('DELETE FROM portfolio_videos WHERE portfolio_id = ?')->execute([$portfolioId]);
+        $videoUrl = trim($videoUrl);
+        if ($videoUrl === '') {
+            return;
+        }
+        $this->db->prepare('INSERT INTO portfolio_videos (portfolio_id, video_url, sort_order) VALUES (?, ?, 0)')
+            ->execute([$portfolioId, $videoUrl]);
     }
 
     private function ensureReviewsBlockInHomepageTemplate(array $homepage): void
@@ -1760,7 +2437,7 @@ HTML;
     <p class="section-label">Co o nás říkají</p>
     <h2 class="section-title">Hodnocení našich párů</h2>
     <div data-block="reviews_demo"><!-- Demo recenze --></div>
-    <div data-block="reviews_cta" class="hp-section-cta"><a href="/hodnoceni" class="btn-secondary">Vsechny recenze</a></div>
+    <div data-block="reviews_cta" class="hp-section-cta"><a href="/hodnoceni" class="btn-secondary">Všechny recenze</a></div>
   </div>
 </section>
 HTML;
@@ -1788,11 +2465,32 @@ HTML;
 
     private function longformContent(array $item): string
     {
-        // Bez nadpisu sekci (Krátký úvod / Text / Závěr) — jen odstavce s mezerou.
+        // Bez nadpisu sekci (Krátký úvod / Text / Závěr) - jen odstavce s mezerou.
         $html = '';
         $intro = trim((string)($item['intro'] ?? ''));
-        if ($intro !== '') {
+        $excerpt = trim((string)($item['excerpt'] ?? ''));
+        if ($intro !== '' && $intro !== $excerpt) {
             $html .= '<p>' . $this->h($intro) . '</p>';
+        }
+
+        $sections = $item['sections'] ?? [];
+        if (is_array($sections)) {
+            foreach ($sections as $section) {
+                if (!is_array($section) || count($section) < 2) {
+                    continue;
+                }
+                $heading = trim((string)$section[0]);
+                if ($heading !== '') {
+                    $html .= '<h2>' . $this->h($heading) . '</h2>';
+                }
+                $sectionParagraphs = is_array($section[1]) ? $section[1] : [$section[1]];
+                foreach ($sectionParagraphs as $paragraph) {
+                    $paragraph = trim((string)$paragraph);
+                    if ($paragraph !== '') {
+                        $html .= '<p>' . $this->h($paragraph) . '</p>';
+                    }
+                }
+            }
         }
 
         $paragraphs = $item['paragraphs'] ?? [];
@@ -1809,6 +2507,20 @@ HTML;
         $conclusion = trim((string)($item['conclusion'] ?? ''));
         if ($conclusion !== '') {
             $html .= '<p>' . $this->h($conclusion) . '</p>';
+        }
+
+        $relatedLinks = $item['related_links'] ?? [];
+        if (is_array($relatedLinks) && $relatedLinks !== []) {
+            $links = [];
+            foreach ($relatedLinks as $link) {
+                if (!is_array($link) || count($link) < 2) {
+                    continue;
+                }
+                $links[] = '<a href="' . $this->h((string)$link[0]) . '">' . $this->h((string)$link[1]) . '</a>';
+            }
+            if ($links !== []) {
+                $html .= '<p class="content-related-links">Související informace: ' . implode(', ', $links) . '.</p>';
+            }
         }
 
         return $html;

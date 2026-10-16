@@ -2,6 +2,7 @@
 /storage/media/
 /storage/cache/
 /storage/logs/
+/storage/published/
 /storage/active-theme-key.txt
 /storage/database.sqlite
 /storage/*.sqlite
@@ -16,8 +17,12 @@ _deploy/
 .idea/
 .vscode/
 .claude
+/.codex-qa/
 
 # Local visual QA captures; keep canonical preview targets tracked separately.
 /qa-mobile-baseline-*.jpg
 /visual-progress-mobile-*.png
 /visual-progress-ew3-*.png
+/*.png
+/*.jpg
+__pycache__/

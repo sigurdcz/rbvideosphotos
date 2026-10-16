@@ -39,7 +39,7 @@ ob_start();
 
     <div class="form-row">
       <div class="form-group">
-        <label for="review-rating">Hodnoceni</label>
+        <label for="review-rating">Hodnocení</label>
         <select id="review-rating" name="rating" style="max-width:140px">
           <?php for ($rating = 5; $rating >= 1; $rating--): ?>
           <option value="<?= $rating ?>" <?= (int)($item['rating'] ?? 5) === $rating ? 'selected' : '' ?>>
@@ -65,7 +65,7 @@ ob_start();
   </div>
 
   <div style="display:flex;gap:8px;margin-top:16px">
-    <button type="submit" class="btn btn-primary">Ulozit recenzi</button>
+    <button type="submit" class="btn btn-primary">Uložit recenzi</button>
     <a href="/admin/reviews" class="btn btn-secondary">Zrusit</a>
   </div>
 </form>

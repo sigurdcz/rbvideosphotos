@@ -84,6 +84,13 @@ class PageRenderer
                     if ($content !== '' && !preg_match('~^https?://~i', (string)$content)) {
                         $node->setAttribute('src', $content);
                     }
+                    // A <video> with no source still claims a 300x150 replaced-element box and
+                    // pushes everything below it down. The theme takes it out of flow, and it
+                    // needs a dependable hook to do that: a CSS :empty test would stop matching
+                    // the moment anything - even a stray newline - lands inside the element.
+                    if (!$node->hasAttribute('src') && $node->getElementsByTagName('source')->length === 0) {
+                        $node->setAttribute('class', trim(($node->getAttribute('class') ?: '') . ' hero-video--sourceless'));
+                    }
                     continue;
                 }
 
@@ -112,7 +119,7 @@ class PageRenderer
                         }
                     }
                 } else {
-                    // text / textarea / link — plain text, encode non-ASCII for XML safety
+                    // text / textarea / link - plain text, encode non-ASCII for XML safety
                     $encoded  = mb_encode_numericentity($content, [0x80, 0x10FFFF, 0, 0x1FFFFF], 'UTF-8');
                     $fragment = $dom->createDocumentFragment();
                     $ok       = @$fragment->appendXML($encoded);
@@ -161,9 +168,9 @@ class PageRenderer
      * Wrap rendered page content with the site-level layout.
      *
      * Supported placeholders in $layoutHtml:
-     *   {page_content} — replaced with $content
-     *   {site_name}    — replaced with escaped site name
-     *   {nav}          — replaced with $nav HTML (pass '' to leave unreplaced)
+     *   {page_content} - replaced with $content
+     *   {site_name}    - replaced with escaped site name
+     *   {nav}          - replaced with $nav HTML (pass '' to leave unreplaced)
      */
     public function applyLayout(string $layoutHtml, string $content, string $siteName, string $nav = ''): string
     {
@@ -181,6 +188,9 @@ class PageRenderer
     {
         // Insert before </head>
         if ($seoHead !== '') {
+            if (preg_match('~<title\b[^>]*>.*?</title>~is', $seoHead)) {
+                $html = preg_replace('~\s*<title\b[^>]*>.*?</title>~is', '', $html) ?? $html;
+            }
             $html = str_replace('</head>', "\n" . $seoHead . "\n</head>", $html);
         }
         // Insert before </body>
@@ -206,7 +216,7 @@ class PageRenderer
         }
 
         if (preg_match('~vimeo\.com/(?:video/)?([0-9]+)~i', $url, $m)) {
-            return 'https://player.vimeo.com/video/' . $m[1] . '?background=1&autoplay=1&loop=1&muted=1&playsinline=1';
+            return 'https://player.vimeo.com/video/' . $m[1] . '?background=1&autoplay=1&loop=1&muted=1&playsinline=1&dnt=1';
         }
 
         $youtubeId = '';

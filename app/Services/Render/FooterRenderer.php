@@ -13,7 +13,7 @@ namespace App\Services\Render;
  */
 final class FooterRenderer
 {
-    public static function buildRichFooterHtml(int $siteId): string
+    public static function buildRichFooterHtml(int $siteId, ?string $themeKey = null): string
     {
         // Rendered by the PHTML partial (app/Views/partials/footer.phtml); the data
         // shape is produced by FooterViewData so live and publish share one source.
@@ -21,18 +21,21 @@ final class FooterRenderer
         // markup (Templates/<key>/views/partials/footer.phtml) the same way
         // every other partial/archetype does; falls back to the core partial
         // when no theme is active or it doesn't provide its own override.
-        $site = (new \App\Repositories\SiteRepository())->findById($siteId);
-        $theme = $site ? (new \App\Services\ThemeTemplateRegistry())->resolveForSite($site) : null;
-        $themeKey = trim((string)($theme['key'] ?? '')) ?: null;
+        $themeKey = trim((string)$themeKey) ?: null;
+        if ($themeKey === null) {
+            $site = (new \App\Repositories\SiteRepository())->findById($siteId);
+            $theme = $site ? (new \App\Services\ThemeTemplateRegistry())->resolveForSite($site) : null;
+            $themeKey = trim((string)($theme['key'] ?? '')) ?: null;
+        }
 
         return \App\View\ViewFactory::forTheme($themeKey)->render('partials/footer', [
             'footer' => FooterViewData::forSite($siteId),
         ]);
     }
 
-    public static function injectFooterSocials(string $html, int $siteId): string
+    public static function injectFooterSocials(string $html, int $siteId, ?string $themeKey = null): string
 {
-    $socials = \App\Services\Render\FooterRenderer::buildRichFooterHtml($siteId);
+    $socials = \App\Services\Render\FooterRenderer::buildRichFooterHtml($siteId, $themeKey);
     if ($socials === '') {
         return $html;
     }

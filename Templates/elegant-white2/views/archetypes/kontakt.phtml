@@ -1,25 +1,25 @@
 <?php
 /**
- * DEMO theme override — proves the per-theme archetype cascade works end to end.
+ * DEMO theme override - proves the per-theme archetype cascade works end to end.
  *
  * This file exists purely as a live example: any theme can override any
  * archetype's page content by dropping a file at
- * Templates/<theme-key>/views/archetypes/<archetype-name>.phtml — no manifest
+ * Templates/<theme-key>/views/archetypes/<archetype-name>.phtml - no manifest
  * change needed (ViewFactory::forTheme() always checks Templates/<key>/views/
  * first). Try it: open /kontakt with ?theme_preview=elegant-white2, or make
  * elegant-white2 the active theme in the admin.
  *
  * The data contract ($hero, $contactCards, $mapsUrl, $heroActions, $faqItems,
  * $form) is identical to app/Views/archetypes/kontakt.phtml (the core
- * default) — copy that file as your starting point for a real override and
+ * default) - copy that file as your starting point for a real override and
  * keep the same variable names. Security-sensitive fields (CSRF token,
- * honeypot field name) are handed to this view as already-generated data —
+ * honeypot field name) are handed to this view as already-generated data -
  * never generate or validate them here; see the security note on $form below.
  *
  * @var array $hero  ['title','sub','titleKey','titleType','subKey','subType']
  * @var array $contactCards, $mapsUrl, $heroActions, $faqItems, $form  from KontaktPageData::forSite()
  * Security: $form['csrfToken'] is generated once by the caller (Auth::csrfToken())
- * and only echoed here — this view never generates or validates CSRF/honeypot.
+ * and only echoed here - this view never generates or validates CSRF/honeypot.
  */
 ?>
 <section class="ew2-demo-kontakt-hero">

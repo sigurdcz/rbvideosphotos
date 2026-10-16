@@ -1,0 +1,37 @@
+<?php
+$section = is_array($section ?? null) ? $section : [];
+$steps = array_values((array)($section['steps'] ?? []));
+$benefits = array_values((array)($section['benefits'] ?? []));
+$icons = [
+    'mail' => '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/>',
+    'assignment' => '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2.5h6V4M8.5 9h7M8.5 13h7M8.5 17h4.5"/>',
+    'photo_camera' => '<path d="M4 7h3l1.5-2h7L17 7h3v12H4z"/><circle cx="12" cy="13" r="4"/>',
+    'video_library' => '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="m10 8 6 4-6 4z"/>',
+    'chat' => '<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/>',
+    'event_available' => '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 9h16m-11 5 2 2 4-4"/>',
+    'schedule' => '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    'favorite' => '<path d="M20.5 8.8c0 5-8.5 10-8.5 10s-8.5-5-8.5-10A4.3 4.3 0 0 1 12 6a4.3 4.3 0 0 1 8.5 2.8z"/>',
+];
+?>
+<section class="gb-shared-process" id="jak-to-probiha" aria-labelledby="gb-shared-process-title">
+  <div class="gb-shared-process__ornament gb-shared-process__ornament--left" aria-hidden="true"></div>
+  <div class="gb-shared-process__ornament gb-shared-process__ornament--right" aria-hidden="true"></div>
+  <div class="container">
+    <header class="gb-shared-process__header">
+      <span class="gb-shared-process__kicker"><?= $this->e($section['kicker'] ?? '') ?></span>
+      <span class="gb-shared-process__spark" aria-hidden="true">&#10022;</span>
+      <h2 id="gb-shared-process-title"><?= $this->e($section['title'] ?? '') ?></h2>
+      <p><?= nl2br($this->e($section['intro'] ?? '')) ?></p>
+    </header>
+    <ol class="gb-shared-process__steps">
+      <?php foreach ($steps as $index => $step): $number = str_pad((string)($index + 1), 2, '0', STR_PAD_LEFT); $icon = (string)($step['icon'] ?? ''); ?>
+        <li class="gb-shared-process__step"><span class="gb-shared-process__number"><?= $this->e($number) ?></span><svg class="gb-shared-process__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" data-process-icon="<?= $this->e($icon) ?>"><?= $icons[$icon] ?? $icons['assignment'] ?></svg><div class="gb-shared-process__copy"><h3><?= $this->e($step['title'] ?? '') ?></h3><p><?= $this->e($step['text'] ?? '') ?></p></div></li>
+      <?php endforeach; ?>
+    </ol>
+    <ul class="gb-shared-process__benefits" aria-label="Vyhody spoluprace">
+      <?php foreach ($benefits as $benefit): $icon = (string)($benefit['icon'] ?? ''); ?>
+        <li><svg class="gb-shared-process__benefit-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" data-process-icon="<?= $this->e($icon) ?>"><?= $icons[$icon] ?? $icons['favorite'] ?></svg><div><strong><?= $this->e($benefit['title'] ?? '') ?></strong><p><?= $this->e($benefit['text'] ?? '') ?></p></div></li>
+      <?php endforeach; ?>
+    </ul>
+  </div>
+</section>

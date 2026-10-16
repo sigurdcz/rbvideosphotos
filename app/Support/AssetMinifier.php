@@ -34,7 +34,7 @@ final class AssetMinifier
     {
         // Remove block comments (keep /*! preserved comments)
         $js = preg_replace('~/\*(?!!)[^*]*\*+(?:[^/*][^*]*\*+)*/~s', '', $js) ?? $js;
-        // Remove single-line comments — skip URLs (preceded by : or /) and shebang
+        // Remove single-line comments - skip URLs (preceded by : or /) and shebang
         $js = preg_replace('~(?<![:/=\'"])//[^\n]*~m', '', $js) ?? $js;
         // Collapse whitespace
         $js = preg_replace('~[ \t]+~', ' ', $js) ?? $js;

@@ -1,28 +1,8 @@
-<?php
-/**
- * Portfolio listing archetype — phase 4b of the templating refactor.
- * @var array $hero    ['title','sub','titleKey','titleType','subKey','subType']
- * @var array $entries [['id','slug','title','thumb','has_video','excerpt','type_label'], ...] from PortfolioListingData::forSite()
- */
-?>
-<section class="pf-hero">
-  <div class="container">
-    <h1<?= $this->inlineAttr($hero['titleKey'], $hero['titleType']) ?>><?= $this->e($hero['title']) ?></h1>
-    <p<?= $this->inlineAttr($hero['subKey'], $hero['subType']) ?>><?= $this->e($hero['sub']) ?></p>
-  </div>
-</section>
-<section class="grid-wrap">
-  <div class="container">
-    <div class="pt-grid"><?php if ($entries === []): ?><p class="pt-empty">Zat&#237;m &#382;&#225;dn&#233; publikovan&#233; pr&#225;ce.</p><?php else: foreach ($entries as $entry): ?><a class="bl-card pt-card" href="/<?= $this->e($entry['slug']) ?>">
-  <?= $entry['thumb'] !== '' ? '<div class="bl-thumb"><img src="' . $this->e($entry['thumb']) . '" alt="' . $this->e($entry['title']) . '" loading="lazy">' . ($entry['has_video'] ? '<span class="bl-play">&#9654;</span>' : '') . '</div>' : '<div class="bl-thumb bl-thumb--empty"></div>' ?>
-
-  <div class="bl-body pt-card-body">
-    <div class="bl-date"><?= $this->e($entry['type_label']) ?></div>
-    <h2 class="bl-title pt-title"<?= $this->inlineAttr('portfolio:' . $entry['id'] . ':title') ?>><?= $this->e($entry['title']) ?></h2>
-    <?= $entry['excerpt'] !== '' ? '<p class="bl-excerpt">' . $this->e($entry['excerpt']) . '</p>' : '' ?>
-
-    <span class="bl-more">Zobrazit praci &rarr;</span>
-  </div>
-</a><?php endforeach; endif; ?></div>
-  </div>
-</section><?php ?>
+<?php $groups = [['id' => 'fotogalerie', 'title' => 'Fotogalerie', 'entries' => $photoEntries ?? []], ['id' => 'videogalerie', 'title' => 'Videogalerie', 'entries' => $videoEntries ?? []]]; ?>
+<section class="pf-hero"><div class="container"><h1<?= $this->inlineAttr($hero['titleKey'], $hero['titleType']) ?>><?= $this->e($hero['title']) ?></h1><p<?= $this->inlineAttr($hero['subKey'], $hero['subType']) ?>><?= $this->e($hero['sub']) ?></p></div></section>
+<?php foreach ($groups as $group): ?>
+<section class="grid-wrap portfolio-media-group" id="<?= $this->e($group['id']) ?>"><div class="container"><h2 class="portfolio-media-group__title"><?= $this->e($group['title']) ?></h2><div class="pt-grid">
+<?php if ($group['entries'] === []): ?><p class="pt-empty">V teto kategorii zatim neni publikovany obsah.</p><?php else: foreach ($group['entries'] as $entry): ?>
+<a class="bl-card pt-card" href="/<?= $this->e($entry['slug']) ?>" data-gallery-date="<?= $this->e($entry['date']) ?>" data-gallery-description="<?= $this->e($entry['gallery_description']) ?>" data-gallery-author="<?= $this->e($entry['gallery_author']) ?>"><?php if ($entry['thumb'] !== ''): ?><div class="bl-thumb"><img src="<?= $this->e($entry['thumb']) ?>" alt="<?= $this->e($entry['title']) ?>" loading="lazy"><?php if ($entry['has_video']): ?><span class="bl-play">&#9654;</span><?php endif; ?></div><?php else: ?><div class="bl-thumb bl-thumb--empty"></div><?php endif; ?><div class="bl-body pt-card-body"><div class="bl-date"><?= $this->e($entry['type_label']) ?></div><h3 class="bl-title pt-title"<?= $this->inlineAttr('portfolio:' . $entry['id'] . ':title') ?>><?= $this->e($entry['title']) ?></h3><?php if ($entry['excerpt'] !== ''): ?><p class="bl-excerpt"><?= $this->e($entry['excerpt']) ?></p><?php endif; ?><span class="bl-more">Zobrazit praci &rarr;</span></div><div class="pt-photos"><?php foreach ($entry['photos'] as $photo): ?><img src="<?= $this->e($photo['url']) ?>" alt="<?= $this->e($photo['alt']) ?>" loading="lazy"><?php endforeach; ?></div></a>
+<?php endforeach; endif; ?></div></div></section>
+<?php endforeach; ?>

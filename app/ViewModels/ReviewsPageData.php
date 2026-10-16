@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\ViewModels;
 
 use App\Repositories\ReviewRepository;
+use App\Repositories\ContactRepository;
 
 /**
  * Pure data provider for the `reviews` archetype (app/Views/archetypes/reviews.phtml),
@@ -13,19 +14,19 @@ use App\Repositories\ReviewRepository;
  * Phase 4 of the templating refactor: replaces the former string-concatenation
  * HTML for the standalone /hodnoceni listing (ReviewContentService::buildListingHtml())
  * with the reviews archetype. The homepage reviews teaser (buildHomepageHtml(),
- * different CSS classes + its own inline <style>) is out of scope here — it
+ * different CSS classes + its own inline <style>) is out of scope here - it
  * belongs to the homepage section partials (phase 5).
  *
  * Unlike faq/sluzby/cenik, /hodnoceni already shared this data source between
  * live and publish before phase 4 (HomepageContentService::applyFallbacks()
  * runs identically in both public/index.php::tryServeDatabasePage() and
- * PublishService::publishPage()) — this change is a pure refactor of how the
+ * PublishService::publishPage()) - this change is a pure refactor of how the
  * HTML is produced, not a live/publish unification fix.
  */
 final class ReviewsPageData
 {
     /**
-     * @return array{items: list<array{id:int,rating:int,review_text:string,author_name:string,context_label:string}>}
+     * @return array{items: list<array{id:int,rating:int,review_text:string,author_name:string,context_label:string}>,reviewsUrl:string}
      */
     public static function forSite(int $siteId): array
     {
@@ -41,6 +42,11 @@ final class ReviewsPageData
             ];
         }
 
-        return ['items' => $items];
+        $contact = (new ContactRepository())->findBySiteSafe($siteId);
+
+        return [
+            'items' => $items,
+            'reviewsUrl' => trim((string)($contact['reviews_url'] ?? '')),
+        ];
     }
 }

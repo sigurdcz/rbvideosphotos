@@ -91,7 +91,7 @@ class ApiController
         exit;
     }
 
-    // ── Articles — read ───────────────────────────────────────────────────────
+    // ── Articles - read ───────────────────────────────────────────────────────
 
     private function listArticles(): void
     {
@@ -115,7 +115,7 @@ class ApiController
         echo json_encode($this->formatPost($post, $site), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
     }
 
-    // ── Articles — write ──────────────────────────────────────────────────────
+    // ── Articles - write ──────────────────────────────────────────────────────
 
     private function createArticle(): void
     {
@@ -154,6 +154,7 @@ class ApiController
                 'featured_image_id' => $this->intOrNull($data['featured_image_id'] ?? null),
                 'status'            => $status,
                 'published_at'      => $status === 'published' ? date('Y-m-d H:i:s') : null,
+                'sort_order'        => PortfolioRepository::clampSortOrder($data['sort_order'] ?? 0),
                 'meta_title'        => trim((string)($data['meta_title'] ?? '')) ?: null,
                 'meta_description'  => trim((string)($data['meta_description'] ?? '')) ?: null,
             ]);
@@ -167,7 +168,7 @@ class ApiController
         }
 
         if (isset($data['gallery_ids']) && is_array($data['gallery_ids'])) {
-            $repo->setGallery($id, $data['gallery_ids']);
+            $repo->setGallery($id, $data['gallery_ids'], self::postedMediaSort($data, 'gallery_sort'));
         }
 
         (new BlogSyncService())->syncHomepageBlocks($repo, $site['id']);
@@ -213,6 +214,7 @@ class ApiController
                 'featured_image_id' => isset($data['featured_image_id']) ? $this->intOrNull($data['featured_image_id']) : ($post['featured_image_id'] ?? null),
                 'status'            => $status,
                 'published_at'      => $publishedAt,
+                'sort_order'        => isset($data['sort_order']) ? PortfolioRepository::clampSortOrder($data['sort_order']) : (int)($post['sort_order'] ?? 0),
                 'meta_title'        => isset($data['meta_title'])        ? (trim((string)$data['meta_title']) ?: null)        : $post['meta_title'],
                 'meta_description'  => isset($data['meta_description'])  ? (trim((string)$data['meta_description']) ?: null)  : $post['meta_description'],
             ]);
@@ -226,7 +228,7 @@ class ApiController
         }
 
         if (isset($data['gallery_ids']) && is_array($data['gallery_ids'])) {
-            $repo->setGallery((int)$post['id'], $data['gallery_ids']);
+            $repo->setGallery((int)$post['id'], $data['gallery_ids'], self::postedMediaSort($data, 'gallery_sort'));
         }
 
         $site = (new SiteRepository())->findFirst() ?? [];
@@ -257,7 +259,7 @@ class ApiController
         echo json_encode(['success' => true, 'deleted_slug' => $slug]);
     }
 
-    // ── Portfolio — read ──────────────────────────────────────────────────────
+    // ── Portfolio - read ──────────────────────────────────────────────────────
 
     private function listPortfolio(): void
     {
@@ -283,7 +285,7 @@ class ApiController
         echo json_encode($this->formatEntry($entry, $repo, $site), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
     }
 
-    // ── Portfolio — write ─────────────────────────────────────────────────────
+    // ── Portfolio - write ─────────────────────────────────────────────────────
 
     private function createPortfolioEntry(): void
     {
@@ -321,7 +323,7 @@ class ApiController
                 'video_url'        => trim((string)($data['video_url'] ?? '')) ?: null,
                 'status'           => $status,
                 'published_at'     => $status === 'published' ? date('Y-m-d H:i:s') : null,
-                'sort_order'       => (int)($data['sort_order'] ?? 0),
+                'sort_order'       => PortfolioRepository::clampSortOrder($data['sort_order'] ?? 0),
                 'meta_title'       => trim((string)($data['meta_title'] ?? '')) ?: null,
                 'meta_description' => trim((string)($data['meta_description'] ?? '')) ?: null,
             ]);
@@ -335,7 +337,14 @@ class ApiController
         }
 
         if (isset($data['media_ids']) && is_array($data['media_ids'])) {
-            $repo->setMedia($id, $data['media_ids']);
+            $repo->setMedia($id, $data['media_ids'], self::postedMediaSort($data, 'media_sort'));
+        }
+        // `video_urls` is the full ordered list; a lone `video_url` still means one video.
+        // Sending neither leaves the entry's videos untouched.
+        if (isset($data['video_urls']) && is_array($data['video_urls'])) {
+            $repo->setVideos($id, $data['video_urls']);
+        } elseif (trim((string)($data['video_url'] ?? '')) !== '') {
+            $repo->setVideos($id, [$data['video_url']]);
         }
 
         $svc = new PortfolioPublishService();
@@ -384,7 +393,7 @@ class ApiController
                 'video_url'        => isset($data['video_url'])    ? (trim((string)$data['video_url']) ?: null) : $entry['video_url'],
                 'status'           => $status,
                 'published_at'     => $publishedAt,
-                'sort_order'       => isset($data['sort_order']) ? (int)$data['sort_order'] : (int)$entry['sort_order'],
+                'sort_order'       => isset($data['sort_order']) ? PortfolioRepository::clampSortOrder($data['sort_order']) : (int)$entry['sort_order'],
                 'meta_title'       => isset($data['meta_title'])       ? (trim((string)$data['meta_title']) ?: null)       : $entry['meta_title'],
                 'meta_description' => isset($data['meta_description']) ? (trim((string)$data['meta_description']) ?: null) : $entry['meta_description'],
             ]);
@@ -398,7 +407,12 @@ class ApiController
         }
 
         if (isset($data['media_ids']) && is_array($data['media_ids'])) {
-            $repo->setMedia((int)$entry['id'], $data['media_ids']);
+            $repo->setMedia((int)$entry['id'], $data['media_ids'], self::postedMediaSort($data, 'media_sort'));
+        }
+        if (isset($data['video_urls']) && is_array($data['video_urls'])) {
+            $repo->setVideos((int)$entry['id'], $data['video_urls']);
+        } elseif (isset($data['video_url'])) {
+            $repo->setVideos((int)$entry['id'], [$data['video_url']]);
         }
 
         $site = (new SiteRepository())->findFirst();
@@ -540,10 +554,38 @@ class ApiController
             'meta_title'         => $p['meta_title'],
             'meta_description'   => $p['meta_description'],
             'status'             => $p['status'],
+            'sort_order'         => (int)($p['sort_order'] ?? 0),
             'published_at'       => $p['published_at'],
             'created_at'         => $p['created_at'],
             'updated_at'         => $p['updated_at'],
         ];
+    }
+
+    /**
+     * Optional per-photo order numbers, sent as {"<media id>": n}. Absent or
+     * unusable input means null, which leaves the repository ordering the gallery by
+     * the position of each id - the behaviour every older client relies on.
+     *
+     * @param array<string,mixed> $data
+     * @return array<int,int>|null
+     */
+    private static function postedMediaSort(array $data, string $key): ?array
+    {
+        if (!isset($data[$key]) || !is_array($data[$key])) {
+            return null;
+        }
+
+        $map = [];
+        foreach ($data[$key] as $mediaId => $sort) {
+            // Only a plain digit string is a media id; "5abc" would otherwise cast to
+            // 5 and silently renumber a different photo.
+            if (!is_scalar($sort) || !ctype_digit((string)$mediaId) || (int)$mediaId <= 0) {
+                continue;
+            }
+            $map[(int)$mediaId] = PortfolioRepository::clampSortOrder($sort);
+        }
+
+        return $map;
     }
 
     private function formatEntry(array $e, PortfolioRepository $repo, array $site): array
@@ -566,6 +608,9 @@ class ApiController
             'video_url'        => $e['video_url'],
             'video_embed_url'  => $e['video_url'] ? PortfolioRepository::embedUrl($e['video_url']) : null,
             'video_thumbnail'  => $e['video_url'] ? PortfolioRepository::youtubeThumbnail($e['video_url']) : null,
+            // video_url/video_embed_url/video_thumbnail stay the FIRST video; `videos`
+            // is the whole ordered list.
+            'videos'           => $repo->getVideos((int)$e['id']),
             'photos'           => $photos,
             'meta_title'       => $e['meta_title'],
             'meta_description' => $e['meta_description'],

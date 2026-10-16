@@ -100,6 +100,11 @@ ob_start();
           <input type="url" name="maps_url" value="<?= $v('maps_url') ?>" placeholder="https://maps.google.com/...">
           <div class="form-hint">Zkopirujte odkaz z Google Maps.</div>
         </div>
+        <div class="form-group">
+          <label>Odkaz na Google recenze</label>
+          <input type="url" name="reviews_url" value="<?= $v('reviews_url') ?>" placeholder="https://maps.app.goo.gl/...">
+          <div class="form-hint">Verejny odkaz na firemni profil nebo prehled recenzi. Zobrazi se na strance Reference.</div>
+        </div>
         <?php if (!empty($c['maps_url'])): ?>
         <div style="margin-top:12px">
           <a href="<?= $h($c['maps_url']) ?>" target="_blank" class="btn btn-sm btn-secondary">Otevrit mapu &rarr;</a>
@@ -108,7 +113,7 @@ ob_start();
       </div>
 
       <div class="card">
-        <div class="card-title">Kontaktni formular</div>
+        <div class="card-title">Kontaktní formulář</div>
         <div class="form-group">
           <label>E-mail pro prijem zprav z formulare</label>
           <input type="email" name="form_email" value="<?= $v('form_email') ?>" placeholder="notifikace@firma.cz">
@@ -119,7 +124,7 @@ ob_start();
   </div>
 
   <div style="margin-top:16px">
-    <button type="submit" class="btn btn-primary">Ulozit kontaktni informace</button>
+    <button type="submit" class="btn btn-primary">Uložit kontaktní informace</button>
   </div>
 </form>
 <?php

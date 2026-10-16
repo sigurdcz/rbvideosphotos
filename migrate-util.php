@@ -8,6 +8,10 @@ require BASE_PATH . '/vendor/autoload.php';
 
 use App\Core\Env;
 use App\Core\Logger;
+use App\Repositories\SiteRepository;
+use App\Repositories\UserRepository;
+use App\Services\ApplicationCompatibleMigrationService;
+use App\Services\PublishService;
 
 Env::load(BASE_PATH . '/.env');
 
@@ -83,23 +87,10 @@ try {
         }
     }
 
-    if ($pending === []) {
-        Logger::info('migration', 'Migration utility up to date', [
-            'driver' => 'mysql',
-            'database' => $db,
-            'applied' => count($applied),
-        ]);
-
-        renderPage(
-            'Migrace aktualni',
-            'Up to date',
-            '<h1>Zadne nove migrace nejsou k dispozici.</h1><p>Tabulka <code>schema_migrations</code> uz obsahuje posledni verzi. Utility muzes spoustet opakovane bez mazani souboru.</p>'
-        );
-    }
-
     $migrationAlreadySatisfied = require BASE_PATH . '/database/migration-schema-state.php';
     $executed = [];
-    $schemaSatisfied = [];
+    $deferred = [];
+    $applicationMigrations = new ApplicationCompatibleMigrationService();
     foreach ($files as $filePath) {
         $name = basename($filePath);
         $applied = $pdo->query('SELECT migration FROM schema_migrations')->fetchAll(PDO::FETCH_COLUMN) ?: [];
@@ -108,10 +99,21 @@ try {
         }
 
         if ($migrationAlreadySatisfied($pdo, $name)) {
+            $pdo->prepare('INSERT INTO schema_migrations (migration) VALUES (?)')->execute([$name]);
+            $executed[] = $name . ':schema-already-satisfied';
+            continue;
+        }
+
+        if ($applicationMigrations->supports($name) && !(new SiteRepository())->findFirst()) {
+            $deferred[] = $name;
+            continue;
+        }
+
+        if ($applicationMigrations->supports($name)) {
+            $result = $applicationMigrations->apply($name);
             $pdo->prepare('INSERT INTO schema_migrations (migration) VALUES (?)')
                 ->execute([$name]);
-            $schemaSatisfied[] = $name;
-            $executed[] = $name . ' (schema already matches; recorded without reapplying)';
+            $executed[] = $name . ':' . $result;
             continue;
         }
 
@@ -130,15 +132,42 @@ try {
         'driver' => 'mysql',
         'database' => $db,
         'applied' => $executed,
-        'schema_already_satisfied' => $schemaSatisfied,
+        'deferred_until_site_exists' => $deferred,
     ]);
 
+    $publishRequested = (string)($_GET['publish'] ?? '') === '1';
+    $publishSummary = '';
+    if ($publishRequested) {
+        $site = (new SiteRepository())->findFirst();
+        $userId = (new UserRepository())->firstId();
+        if (!$site || $userId === null) {
+            throw new RuntimeException('Úplný publish nelze spustit: chybí web nebo systémový uživatel.');
+        }
+        $publish = (new PublishService())->publishSite((int)$site['id'], $userId);
+        if (empty($publish['success'])) {
+            throw new RuntimeException('Úplný publish selhal: ' . implode(' | ', $publish['errors'] ?? []));
+        }
+        $publishSummary = '<p class="ok">Úplný publish webu proběhl úspěšně.</p>';
+        Logger::info('migration', 'Token maintenance publish completed', [
+            'site_id' => (int)$site['id'],
+            'user_id' => $userId,
+        ]);
+    }
+
+    $deferredSummary = $deferred === [] ? ''
+        : '<h2>Obsahové migrace čekají na vytvoření webu</h2><p>Nejprve spusť základní seed v /admin/setup a potom tuto migraci znovu. Tyto migrace zatím nebyly označeny jako hotové:</p><pre>'
+            . htmlspecialchars(implode("\n", $deferred), ENT_QUOTES, 'UTF-8') . '</pre>';
+
+    $migrationSummary = $executed === []
+        ? '<p>Žádné nové migrace nebyly k dispozici.</p>'
+        : '<p>Nasazené migrace:</p><div class="panel"><pre>'
+            . htmlspecialchars(implode("\n", $executed), ENT_QUOTES, 'UTF-8')
+            . '</pre></div>';
+
     renderPage(
-        'Migrace dokoncena',
+        $publishRequested ? 'Údržba dokončena' : 'Migrace dokončena',
         'Success',
-        '<h1>Migrace probehla uspesne.</h1><p>Nasazene migrace:</p><div class="panel"><pre>' .
-        htmlspecialchars(implode("\n", $executed), ENT_QUOTES, 'UTF-8') .
-        '</pre></div>'
+        '<h1>Databázová údržba proběhla úspěšně.</h1>' . $migrationSummary . $publishSummary . $deferredSummary
     );
 } catch (Throwable $e) {
     Logger::criticalTo('exceptions', 'migration_failure', $e->getMessage(), [

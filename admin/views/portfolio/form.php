@@ -13,7 +13,8 @@ $publicMediaUrl = static function (?string $path): string {
     if (str_starts_with($normalized, 'storage/media/')) return '/media/' . ltrim(substr($normalized, strlen('storage/media/')), '/');
     return '/' . ltrim($normalized, '/');
 };
-$selectedSet = array_flip(array_map('intval', $selected ?? []));
+$selectedMedia = $selectedMedia ?? [];
+$videos = array_values(array_filter((array)($videos ?? []), static fn($v): bool => is_array($v) && trim((string)($v['url'] ?? '')) !== ''));
 ob_start();
 ?>
 <div class="page-header">
@@ -45,26 +46,47 @@ ob_start();
       </div>
       <div class="form-group">
         <label>Pořadí</label>
-        <input type="number" name="sort_order" value="<?= (int)($entry['sort_order'] ?? 0) ?>" min="0" style="max-width:80px">
-        <div class="form-hint">Nižší = dříve</div>
+        <input type="number" name="sort_order" value="<?= (int)($entry['sort_order'] ?? 0) ?>" min="0" max="1000000" style="max-width:80px">
+        <div class="form-hint">1 = první. 0 znamená bez ručního pořadí - taková práce zůstane za očíslovanými. Na úvodní stránce se fotky a videa střídají; číslo tam určuje pořadí uvnitř fotek a uvnitř videí.</div>
+      </div>
+      <div class="form-group">
+        <label>Typ obsahu</label>
+        <select name="content_type">
+          <option value="photo" <?= ($entry['content_type'] ?? 'photo') === 'photo' ? 'selected' : '' ?>>Fotogalerie</option>
+          <option value="video" <?= ($entry['content_type'] ?? '') === 'video' ? 'selected' : '' ?>>Videogalerie</option>
+        </select>
       </div>
     </div>
   </div>
 
-  <!-- Video URL -->
+  <!-- Video URLs -->
   <div class="card">
-    <div class="card-title">Video</div>
-    <div class="form-group">
-      <label>YouTube nebo Vimeo URL</label>
-      <input type="url" id="video-url" name="video_url" value="<?= $h($entry['video_url'] ?? '') ?>"
-             placeholder="https://www.youtube.com/watch?v=... nebo https://vimeo.com/...">
-      <div class="form-hint">Zadejte odkaz na video — automaticky se zobrazí náhled níže</div>
-    </div>
-    <div id="video-preview" style="display:none;max-width:640px;margin-top:8px">
-      <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:8px;background:#000">
-        <iframe id="video-frame" src="" frameborder="0" allow="autoplay; fullscreen" style="position:absolute;top:0;left:0;width:100%;height:100%"></iframe>
+    <div class="card-title">Videa</div>
+    <p style="font-size:13px;color:var(--c-muted);margin-bottom:12px">
+      Libovolný počet odkazů na YouTube nebo Vimeo. Číslo vlevo určuje pořadí, 1 = první;
+      při stejném čísle rozhodne pořadí řádků. Video, které vyjde první, je hlavní - zobrazí se
+      na dlaždici ve výpisu a v náhledovém přehrávači; ostatní se přidají pod něj na detailu.
+    </p>
+    <div id="pf-video-rows">
+      <?php foreach (($videos ?: [['url' => '', 'sort_order' => 0]]) as $videoRowIndex => $video): ?>
+      <div class="pf-video-row">
+        <div class="pf-video-row__head">
+          <?php // Rows arrive ordered; the position is the number, so "1" always means first. ?>
+          <input type="number" name="video_sort[]" value="<?= $videoRowIndex + 1 ?>" min="1" max="1000000" step="1"
+                 class="pf-video-sort" title="Pořadí (1 = první)" aria-label="Pořadí videa">
+          <input type="url" name="video_urls[]" value="<?= $h($video['url'] ?? '') ?>" class="pf-video-input"
+                 placeholder="https://www.youtube.com/watch?v=... nebo https://vimeo.com/...">
+          <button type="button" class="btn btn-secondary pf-video-up" title="Posunout nahoru" aria-label="Posunout nahoru">&uarr;</button>
+          <button type="button" class="btn btn-secondary pf-video-down" title="Posunout dolů" aria-label="Posunout dolů">&darr;</button>
+          <button type="button" class="btn btn-secondary pf-video-remove" title="Odebrat" aria-label="Odebrat video">&times;</button>
+        </div>
+        <div class="pf-video-preview" hidden>
+          <iframe src="" frameborder="0" allow="autoplay; fullscreen"></iframe>
+        </div>
       </div>
+      <?php endforeach; ?>
     </div>
+    <button type="button" class="btn btn-secondary" id="pf-video-add">+ Přidat video</button>
   </div>
 
   <!-- Description editor -->
@@ -107,36 +129,15 @@ ob_start();
   <!-- Gallery picker -->
   <div class="card">
     <div class="card-title">Fotogalerie</div>
-    <?php if (empty($media)): ?>
-      <p style="color:var(--c-muted)">Nejsou žádná média. <a href="/admin/media">Nahrát fotky</a>.</p>
-    <?php else: ?>
-      <p style="font-size:13px;color:var(--c-muted);margin-bottom:12px">
-        Klikněte na fotky pro výběr/odznačení. Pořadí odpovídá pořadí kliknutí.
-        <span id="pm-count" style="font-weight:600;color:var(--c-primary)">
-          <?= count($selectedSet) ?> vybráno
-        </span>
-      </p>
-      <div class="media-grid" id="pm-grid">
-        <?php foreach ($media as $m): ?>
-        <div class="media-card pm-item <?= isset($selectedSet[(int)$m['id']]) ? 'pm-selected' : '' ?>"
-             data-media-id="<?= (int)$m['id'] ?>"
-             data-order="<?= isset($selectedSet[(int)$m['id']]) ? array_search((int)$m['id'], array_keys($selectedSet)) : '' ?>"
-             style="cursor:pointer">
-          <img src="<?= $h($publicMediaUrl((string)($m['storage_path'] ?? ''))) ?>" alt="<?= $h($m['alt_text']) ?>" loading="lazy" style="height:90px;object-fit:cover;display:block;width:100%">
-          <div class="media-card-info" style="display:flex;justify-content:space-between;padding:5px 8px">
-            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><?= $h($m['original_filename']) ?></span>
-            <span class="pm-check" style="flex-shrink:0;font-size:14px;color:#16a34a">✓</span>
-          </div>
-        </div>
-        <?php endforeach; ?>
-      </div>
-    <?php endif; ?>
-    <!-- Hidden inputs for selected media IDs (in order) -->
-    <div id="pm-hidden">
-      <?php foreach (array_keys($selectedSet) as $mid): ?>
-        <input type="hidden" name="media_ids[]" value="<?= (int)$mid ?>">
-      <?php endforeach; ?>
-    </div>
+    <p style="font-size:13px;color:var(--c-muted);margin-bottom:12px">
+      Číslo u fotky určuje pořadí v galerii, 1 = první. Karty jsou seřazené tak, jak fotky uvidí
+      návštěvník (první je i náhled práce), a po každé změně se přečíslují od jedničky.
+      <span id="pm-count" style="font-weight:600;color:var(--c-primary)">
+        <?= count($selectedMedia) ?> vybráno
+      </span>
+    </p>
+    <button type="button" class="btn btn-secondary" id="pm-modal-open"><?= $selectedMedia ? 'Změnit obrázky' : 'Vybrat obrázky' ?></button>
+    <div id="pm-hidden"></div>
   </div>
 
   <div style="margin-top:16px;display:flex;gap:8px">
@@ -146,19 +147,52 @@ ob_start();
 </form>
 
 <style>
-.pm-item { transition: box-shadow .15s, outline .1s; outline: 3px solid transparent; }
-.pm-item .pm-check { display: none; }
-.pm-item.pm-selected { outline-color: #6366f1; }
-.pm-item.pm-selected .pm-check { display: inline; }
+.pf-video-row { margin-bottom: 12px; }
+.pf-video-row__head { display: flex; gap: 6px; align-items: center; }
+.pf-video-row__head .pf-video-input { flex: 1 1 auto; min-width: 0; }
+.pf-video-row__head .btn { flex: 0 0 auto; padding: 6px 10px; }
+.pf-video-preview { position: relative; width: min(100%, 480px); margin-top: 8px; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 8px; background: #000; }
+.pf-video-preview[hidden] { display: none; }
+.pf-video-preview iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+.pf-video-row__head .pf-video-sort { flex: 0 0 70px; width: 70px; }
 </style>
 
 <script>
-// Video URL → embed preview
+let portfolioSelection = null;
+// admin.js is loaded at the end of the layout, after this script, so the shared
+// renderer only exists once the document is parsed.
+document.addEventListener('DOMContentLoaded', () => {
+portfolioSelection = window.AdminMediaSelection.mount({
+  container: document.getElementById('pm-hidden'),
+  idsName: 'media_ids',
+  sortName: 'media_sort',
+  items: <?= json_encode(array_map(static fn($m) => [
+      'id' => (int)$m['id'],
+      'name' => (string)($m['original_filename'] ?? ''),
+      'thumb' => $publicMediaUrl((string)($m['thumb_path'] ?? $m['storage_path'] ?? '')),
+      'sort' => (int)($m['pm_sort'] ?? 0),
+  ], $selectedMedia)) ?>,
+  onChange: items => {
+    document.getElementById('pm-count').textContent = items.length + ' vybráno';
+    document.getElementById('pm-modal-open').textContent = items.length ? 'Změnit obrázky' : 'Vybrat obrázky';
+  },
+});
+});
+document.getElementById('pm-modal-open').addEventListener('click', function () {
+  if (!portfolioSelection) return;
+  AdminMediaPicker.open({
+    mode: 'multiple',
+    imagesOnly: true,
+    selected: portfolioSelection.getItems(),
+    onConfirm: list => portfolioSelection.setItems(list),
+  });
+});
+
+// Video URLs → repeatable rows with an embed preview each
 (function() {
-  const input   = document.getElementById('video-url');
-  const preview = document.getElementById('video-preview');
-  const frame   = document.getElementById('video-frame');
-  if (!input) return;
+  const rows = document.getElementById('pf-video-rows');
+  const add  = document.getElementById('pf-video-add');
+  if (!rows || !add) return;
 
   function getEmbed(url) {
     let m = url.match(/(?:youtube\.com\/watch\?.*v=|youtu\.be\/|youtube\.com\/embed\/)([A-Za-z0-9_-]{11})/);
@@ -168,13 +202,52 @@ ob_start();
     return null;
   }
 
-  function refresh() {
-    const embed = getEmbed(input.value.trim());
-    if (embed) { frame.src = embed; preview.style.display = 'block'; }
-    else        { frame.src = ''; preview.style.display = 'none'; }
+  function refresh(row) {
+    const input   = row.querySelector('.pf-video-input');
+    const preview = row.querySelector('.pf-video-preview');
+    const frame   = preview.querySelector('iframe');
+    const embed   = getEmbed(input.value.trim());
+    // The src is cleared as well as hidden, otherwise a removed player keeps loading.
+    if (embed) { if (frame.src !== embed) frame.src = embed; preview.hidden = false; }
+    else       { frame.src = ''; preview.hidden = true; }
   }
-  input.addEventListener('input', refresh);
-  refresh();
+
+  function refreshAll() {
+    rows.querySelectorAll('.pf-video-row').forEach(refresh);
+  }
+
+  rows.addEventListener('input', function (event) {
+    const row = event.target.closest('.pf-video-row');
+    if (row) refresh(row);
+  });
+
+  rows.addEventListener('click', function (event) {
+    const button = event.target.closest('button');
+    const row = event.target.closest('.pf-video-row');
+    if (!button || !row) return;
+    if (button.classList.contains('pf-video-remove')) {
+      // The last row stays as an empty input so there is always somewhere to type.
+      if (rows.querySelectorAll('.pf-video-row').length > 1) row.remove();
+      else { row.querySelector('.pf-video-input').value = ''; refresh(row); }
+    } else if (button.classList.contains('pf-video-up') && row.previousElementSibling) {
+      row.parentNode.insertBefore(row, row.previousElementSibling);
+    } else if (button.classList.contains('pf-video-down') && row.nextElementSibling) {
+      row.parentNode.insertBefore(row.nextElementSibling, row);
+    }
+  });
+
+  add.addEventListener('click', function () {
+    const row = rows.querySelector('.pf-video-row').cloneNode(true);
+    row.querySelector('.pf-video-input').value = '';
+    row.querySelector('.pf-video-sort').value = String(rows.querySelectorAll('.pf-video-row').length + 1);
+    const preview = row.querySelector('.pf-video-preview');
+    preview.hidden = true;
+    preview.querySelector('iframe').src = '';
+    rows.appendChild(row);
+    row.querySelector('.pf-video-input').focus();
+  });
+
+  refreshAll();
 })();
 
 // Auto-slug
@@ -189,42 +262,6 @@ ob_start();
   });
 })();
 
-// Gallery multi-select picker
-(function() {
-  const grid    = document.getElementById('pm-grid');
-  const hidden  = document.getElementById('pm-hidden');
-  const counter = document.getElementById('pm-count');
-  if (!grid) return;
-
-  const order = [];
-  // Pre-populate from already-selected items
-  grid.querySelectorAll('.pm-item.pm-selected').forEach(el => order.push(parseInt(el.dataset.mediaId)));
-
-  grid.querySelectorAll('.pm-item').forEach(item => {
-    item.addEventListener('click', () => {
-      const id = parseInt(item.dataset.mediaId);
-      const idx = order.indexOf(id);
-      if (idx === -1) {
-        order.push(id);
-        item.classList.add('pm-selected');
-      } else {
-        order.splice(idx, 1);
-        item.classList.remove('pm-selected');
-      }
-      syncHidden();
-    });
-  });
-
-  function syncHidden() {
-    hidden.innerHTML = '';
-    for (const id of order) {
-      const inp = document.createElement('input');
-      inp.type = 'hidden'; inp.name = 'media_ids[]'; inp.value = id;
-      hidden.appendChild(inp);
-    }
-    if (counter) counter.textContent = order.length + ' vybráno';
-  }
-})();
 </script>
 <?php
 $slot = ob_get_clean();

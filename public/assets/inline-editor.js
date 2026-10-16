@@ -1,4 +1,4 @@
-/* Inline editor — front-end script */
+/* Inline editor - front-end script */
 (function () {
   'use strict';
 
@@ -110,7 +110,7 @@
 
     const el = e.target.closest('[data-inline-key]');
     if (!el) {
-      // Click outside — if we had an active text block, commit it
+      // Click outside - if we had an active text block, commit it
       if (activeNode && activeType === 'text' && activeNode.isContentEditable) {
         commitTextEdit();
       }
@@ -139,7 +139,7 @@
       enableSave(true);
       btnCancel.style.display = '';
     } else {
-      // html or image — open modal
+      // html or image - open modal
       openModal(type, key, el);
     }
 

@@ -11,7 +11,7 @@ use App\Repositories\SiteRepository;
 /**
  * View-model provider for the rich footer partial (app/Views/partials/footer.phtml).
  *
- * Returns plain data (scalars/arrays) only — never HTML markup, except for the
+ * Returns plain data (scalars/arrays) only - never HTML markup, except for the
  * trusted inline social icon SVG which is emitted through raw() in the view.
  * The shape mirrors exactly what FooterRenderer::buildRichFooterHtml() used to
  * concatenate inline, so the PHTML partial reproduces byte-identical output.

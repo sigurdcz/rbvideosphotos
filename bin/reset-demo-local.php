@@ -34,5 +34,8 @@ try {
     fwrite(STDOUT, 'Fingerprint: ' . $fingerprint . "\n");
 } catch (Throwable $e) {
     fwrite(STDERR, 'Lokální reset selhal: ' . $e->getMessage() . "\n");
+    if (in_array('--debug', $argv, true)) {
+        fwrite(STDERR, $e->getTraceAsString() . "\n");
+    }
     exit(1);
 }

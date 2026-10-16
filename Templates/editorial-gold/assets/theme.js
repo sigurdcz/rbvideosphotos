@@ -64,9 +64,9 @@
     var body = document.createElement('div');
     body.className = 'eg-reviews__body';
     body.innerHTML =
-      '<button class="eg-review-arrow eg-review-arrow--prev" type="button" aria-label="Predchozi recenze">&lsaquo;</button>' +
+      '<button class="eg-review-arrow eg-review-arrow--prev" type="button" aria-label="Předchozí recenze">&lsaquo;</button>' +
       '<div class="eg-reviews__viewport"></div>' +
-      '<button class="eg-review-arrow eg-review-arrow--next" type="button" aria-label="Dalsi recenze">&rsaquo;</button>';
+      '<button class="eg-review-arrow eg-review-arrow--next" type="button" aria-label="Další recenze">&rsaquo;</button>';
     var viewport = qs('.eg-reviews__viewport', body);
     sourceGrid.parentNode.insertBefore(body, sourceGrid);
     viewport.appendChild(sourceGrid);

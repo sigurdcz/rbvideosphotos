@@ -14,7 +14,7 @@ namespace App\View;
  * layout view is rendered within the SAME context so its renderSlot() calls and
  * the extracted slot variables both resolve.
  *
- * No eval, no database access — pure rendering from the supplied data.
+ * No eval, no database access - pure rendering from the supplied data.
  */
 final class ViewEngine
 {

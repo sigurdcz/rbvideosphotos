@@ -13,12 +13,17 @@ function register_wedding_blog_demo_content_tests(callable $test, callable $asse
 
         $images = 0;
         $exceptions = 0;
+        $surnames = ['Hufovi', 'Kaňkovští', 'Pláškovi', 'Krůpovi', 'Jungligovi', 'Gruntovi', 'Provazovi', 'Krylovi', 'Novákovi', 'Žáčkovi', 'Nevěřilovi'];
         foreach ($manifest as $item) {
             $article = $root . '/' . $item['article'];
             $directory = $root . '/' . $item['directory'];
             $assert(is_file($article), 'Missing source article: ' . $item['article']);
             $assert(is_dir($directory), 'Missing mapped image directory: ' . $item['directory']);
             $source = (string)file_get_contents($article);
+            foreach ($surnames as $surname) {
+                $assert(!str_contains($source, $surname), 'Current blog article exposes surname ' . $surname . ': ' . $item['article']);
+                $assert(!str_contains($item['directory'], $surname), 'Current blog media directory exposes surname ' . $surname . ': ' . $item['directory']);
+            }
             $assert(str_contains($source, '# Schválený redakční text'), 'Article lacks approved copy: ' . $item['article']);
             $assert(str_contains($source, 'content_section: blog'), 'Article is not marked as Blog: ' . $item['article']);
             $assert(!preg_match('/\[\d+\]/', $source), 'Article still contains numeric citation markers: ' . $item['article']);
@@ -49,5 +54,29 @@ function register_wedding_blog_demo_content_tests(callable $test, callable $asse
         $assert(str_contains($publishSource, 'blogPostsAsSitemapItems($siteId)'), 'Full publish does not add published blog articles to sitemap.xml.');
         $assert(str_contains($publishSource, 'portfolioEntriesAsSitemapItems($siteId)'), 'Full publish does not add published portfolio articles to sitemap.xml.');
         $assert(str_contains($publishSource, 'uniqueSitemapItems('), 'Sitemap does not deduplicate canonical paths across content types.');
+    });
+
+    $test('five overlong wedding URLs have stable 301 redirects', function () use ($assert): void {
+        $reflection = new ReflectionClass(WeddingBlogDemoContentImporter::class);
+        $redirects = $reflection->getReflectionConstant('LEGACY_SLUG_REDIRECTS')->getValue();
+        $sourceRoot = dirname(__DIR__) . '/Data pro clanky/RB_Videos_Photos_NASE_PRACE/nase-prace-md';
+        $importerSource = (string)file_get_contents(dirname(__DIR__) . '/app/Services/WeddingBlogDemoContentImporter.php');
+
+        $assert(count($redirects) === 5, 'Exactly five audited wedding URLs must be shortened.');
+        foreach ($redirects as $oldSlug => $newSlug) {
+            $assert(strlen($newSlug) < strlen($oldSlug), 'Replacement slug is not shorter: ' . $newSlug);
+            $matches = glob($sourceRoot . '/*.md') ?: [];
+            $found = false;
+            foreach ($matches as $path) {
+                $article = (string)file_get_contents($path);
+                if (str_contains($article, 'slug: ' . $newSlug)) {
+                    $found = true;
+                    break;
+                }
+            }
+            $assert($found, 'Shortened slug is missing from article sources: ' . $newSlug);
+        }
+        $assert(str_contains($importerSource, 'public function migrateLegacySlugs'));
+        $assert(str_contains($importerSource, 'status_code) VALUES (?, ?, ?, 301)'));
     });
 }

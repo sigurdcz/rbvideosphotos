@@ -123,7 +123,7 @@
       var target = e.target;
       var a = target && target.closest ? target.closest('a[href^="tel:"]') : null;
       if (!a) return;
-      trackEvent('phone_click', { event_category: 'contact', event_label: a.href });
+      trackEvent('click_phone', { event_category: 'contact', event_label: a.href });
     });
   }
 
@@ -134,7 +134,7 @@
       var a = target && target.closest ? target.closest('a[href^="mailto:"]') : null;
       if (!a) return;
       var addr = (a.href || '').replace(/^mailto:/i, '').split('?')[0];
-      trackEvent('email_click', { event_category: 'contact', event_label: addr });
+      trackEvent('click_email', { event_category: 'contact', event_label: addr });
     });
   }
 
@@ -220,17 +220,22 @@
 
   // Event: video play
   function setupVideoPlay() {
-    var tracked = false;
+    var started = [];
 
-    function fireVideoPlay(label) {
-      if (tracked) return;
-      tracked = true;
-      trackEvent('video_play', { event_category: 'video', event_label: label || 'hero' });
+    function fireVideoStart(label, element) {
+      if (element && started.indexOf(element) !== -1) return;
+      if (element) started.push(element);
+      trackEvent('video_start', { event_category: 'video', event_label: label || 'hero' });
     }
 
     // Native <video>
     document.addEventListener('play', function (e) {
-      if (e.target && e.target.tagName === 'VIDEO') fireVideoPlay('video_element');
+      if (e.target && e.target.tagName === 'VIDEO') fireVideoStart('video_element', e.target);
+    }, true);
+    document.addEventListener('ended', function (e) {
+      if (e.target && e.target.tagName === 'VIDEO') {
+        trackEvent('video_complete', { event_category: 'video', event_label: 'video_element' });
+      }
     }, true);
 
     // Video toggle button (theme uses .eg-video-toggle)
@@ -238,7 +243,7 @@
       var target = e.target;
       var btn = target && target.closest ? target.closest('.eg-video-toggle, [data-video-play]') : null;
       if (!btn) return;
-      fireVideoPlay('video_toggle');
+      fireVideoStart('video_toggle', btn);
     });
 
     // YouTube iframe postMessage (YouTube API)
@@ -248,7 +253,11 @@
         var data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
         if (data && (data.event === 'video-play' ||
             (data.info && typeof data.info.playerState === 'number' && data.info.playerState === 1))) {
-          fireVideoPlay('youtube_iframe');
+          fireVideoStart('youtube_iframe');
+        }
+        if (data && (data.event === 'video-complete' ||
+            (data.info && typeof data.info.playerState === 'number' && data.info.playerState === 0))) {
+          trackEvent('video_complete', { event_category: 'video', event_label: 'youtube_iframe' });
         }
       } catch (ex) {}
     });
@@ -264,7 +273,16 @@
       if (!el) return;
       var titleEl = el.querySelector('.hp-cenik-card-title, h3, h2');
       var label   = titleEl ? (titleEl.textContent || '').trim() : 'pricing';
-      trackEvent('pricing_click', { event_category: 'engagement', event_label: label });
+      trackEvent('select_package', { event_category: 'engagement', event_label: label });
+    });
+  }
+
+  function setupGoogleReviewsClick() {
+    document.addEventListener('click', function (e) {
+      var target = e.target;
+      var a = target && target.closest ? target.closest('a[href*="maps.app.goo.gl"], [data-google-reviews]') : null;
+      if (!a) return;
+      trackEvent('view_google_reviews', { event_category: 'outbound', event_label: a.href || 'google_reviews' });
     });
   }
 
@@ -290,14 +308,15 @@
     }
     log('AppTracking init', { requireConsent: requireConsent, debug: debug, events: events });
 
-    if (events.phone_click         !== false) setupPhoneClick();
-    if (events.email_click         !== false) setupEmailClick();
+    if (events.click_phone         !== false) setupPhoneClick();
+    if (events.click_email         !== false) setupEmailClick();
     if (events.cta_click           !== false) setupCtaClick();
     if (events.social_click        !== false) setupSocialClick();
     if (events.lead_form_submit    !== false) setupFormSubmit();
     if (events.gallery_open        !== false) setupGalleryOpen();
-    if (events.video_play          !== false) setupVideoPlay();
-    if (events.pricing_click       !== false) setupPricingClick();
+    if (events.video_start         !== false || events.video_complete !== false) setupVideoPlay();
+    if (events.select_package      !== false) setupPricingClick();
+    if (events.view_google_reviews !== false) setupGoogleReviewsClick();
     if (events.scroll_90           !== false) setupScroll90();
 
     // Thank-you page fires immediately

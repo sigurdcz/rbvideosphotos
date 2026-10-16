@@ -134,10 +134,14 @@ final class DemoStateFingerprintService
                 'SELECT p.url_path AS page, s.meta_title, s.meta_description, s.meta_keywords,
                         s.canonical_url, s.robots_index, s.robots_follow, s.og_title, s.og_description,
                         om.original_filename AS og_image, s.twitter_title, s.twitter_description,
-                        tm.original_filename AS twitter_image, s.schema_type, s.schema_json
+                        tm.original_filename AS twitter_image, s.schema_type,
+                        s.schema_name, s.schema_description, s.schema_contact_auto,
+                        s.schema_telephone, s.schema_email, s.schema_address_street,
+                        s.schema_address_locality, sm.original_filename AS schema_image
                  FROM seo_settings s JOIN pages p ON p.id = s.page_id
                  LEFT JOIN media om ON om.id = s.og_image_id
                  LEFT JOIN media tm ON tm.id = s.twitter_image_id
+                 LEFT JOIN media sm ON sm.id = s.schema_image_id
                  WHERE p.site_id = ? ORDER BY p.url_path',
                 [$siteId]
             ),

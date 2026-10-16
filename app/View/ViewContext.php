@@ -77,7 +77,7 @@ final class ViewContext
     }
 
     // ------------------------------------------------------------------
-    // Content blocks (injected as data — never a DB query from a view)
+    // Content blocks (injected as data - never a DB query from a view)
     // ------------------------------------------------------------------
 
     /**
@@ -111,11 +111,20 @@ final class ViewContext
     // ------------------------------------------------------------------
 
     /**
-     * Emit ` data-inline-key="…" data-inline-type="…"` — but ONLY when edit
+     * Emit ` data-inline-key="…" data-inline-type="…"` - but ONLY when edit
      * mode is active in the shared options. Otherwise returns an empty string.
      * Mirrors the output of the legacy inlineAttrs() helper so the inline editor
      * keeps working unchanged. Type defaults to "text".
      */
+    /**
+     * True when the page is rendered inside the admin inline editor.
+     * Templates use it to keep collapsible content expanded while editing.
+     */
+    public function isEditMode(): bool
+    {
+        return !empty($this->options['editMode']);
+    }
+
     public function inlineAttr(string $key, ?string $type = null): string
     {
         if (empty($this->options['editMode']) || $key === '') {
@@ -192,7 +201,7 @@ final class ViewContext
     /**
      * Build a URL to a theme/core asset. Absolute URLs and root-relative paths
      * pass through untouched; relative paths are prefixed with the configured
-     * asset base (root-relative, never domain-qualified — INSTRUCTIONS.md).
+     * asset base (root-relative, never domain-qualified - INSTRUCTIONS.md).
      */
     public function asset(string $path): string
     {

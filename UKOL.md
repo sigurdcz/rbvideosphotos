@@ -1728,3 +1728,40 @@ Doporuceny model: Terra - Ohranicena diagnostika produkcniho renderovani.
 tryServeDatabasePage zachyti libovolnou Throwable, zaloguje frontend-render a vrati false; caller pak vraci 404. Oprava zachova log a preda vyjimku existujicimu globalnimu handleru (HTTP 500, detail jen pri APP_DEBUG). Skutecna pricina zatim neni znama.
 
 public/index.php po zalogovani render vyjimku znovu vyhodi; README popisuje rozdil 404/500. PHP lint a diff check prosly. Pricina produkcniho render selhani stale ceka na log.
+
+---
+# UKOL: Obnovit Golden Bash Diagonal
+Datum: 2026-10-16
+Zadani: Doplnit chybejici originalni motiv Golden Bash Diagonal do noveho projektu a nasadit jej.
+Doporuceny model: Sol - Motiv pochazi z novejsiho zdrojoveho projektu a vyzaduje kontrolu kompatibility.
+## Kroky
+- [x] Potvrdit absenci motivu v checkoutu a historii.
+- [-] Nacist original z puvodniho seo-cms a zkontrolovat zavislosti.
+- [ ] Doplnit motiv a potrebnou integraci bez nahrazovani vzhledu jinou sablonou.
+- [ ] Overit registraci, testy a nasazeni.
+## Poznamky
+Verejne API vracelo 404; autentizovany dotaz originalni slozku nalezl. Nacita se zdrojova historie bez prepnuti aktualni vetve. Predchozi homepage 404 neni zatim vysvetlena: uzivatel predtim spoustel seed na starem hostingu, nikoli na nove produkci.
+
+---
+# UKOL: Aktualni CMS ze seo-cms do rbvideosphotos
+Datum: 2026-10-16
+Zadani: Prenest aktualni CMS b8da8da z puvodniho seo-cms vcetne Golden Bash Diagonal; zachovat Active24 deployment a bezpecny bootstrap admina.
+Doporuceny model: Sol - Prenos novejsiho CMS a migraci s kontrolou kompatibility a zachovanim produkcni konfigurace.
+## Kroky
+- [x] Potvrdit zdroj b8da8da02878735ef10c506fb75c43cf41984542 a shodu historickych migraci 001-023.
+- [x] Prenest sledovane aplikacni zdroje, motivy, assety a append-only migrace 024-102.
+- [x] Zachovat Active24 workflow, bootstrap prvniho admina a explicitni chyby renderovani; sloucit migrator.
+- [x] Overit PHP/JS syntax, regresni testy, registraci motivu a potrebne schema kroky.
+- [ ] Dokumentace, wiki reflexe, commit a nasazeni aktualizace.
+## Poznamky
+Uzivatel vyslovne zvolil prenos celeho aktualniho CMS. Produkcni .env, databaze a runtime media se neprepisuji. Puvodni SQL migrace jsou beze zmen, pouze pribyvaji nove. Golden Bash Diagonal je v novejsim CMS kanonicky default. Testovani musi odlisit funkcni testy od golden kontrol a DB integrace.
+
+Preneseny aktualni sledovane zdroje vcetne vsech motivu, render pipeline a novych migraci. Active24 workflow, bootstrap admina a lokalni konfigurace zachovany. CLI a web sdileji rozsirene schema-state kontroly; web viditelne odlozi obsahove migrace bez webu a neoznaci je za hotove. Zachovano explicitni HTTP 500 pri render vyjimce.
+
+Overeni odhalilo Windows CRLF nesoulad textovych kontraktu testu; pridano .gitattributes pro stabilni LF zdroje. Testy migraci zohlednuji sdileny helper a deploy test kontroluje zamerne zachovany Active24 workflow namisto puvodniho Webzdarma. Staging pouziva take koren uctu /. Root .htaccess blokuje prime cteni .env.
+
+PHP regrese 216/216 + bootstrap 7/7 prosly. Cista oddelena DB rbvp_import_validation_20261016: 89 migraci aplikovano, 15 obsahovych viditelne odlozeno do existence webu, bez SQL chyby. Lokalni existujici DB je napred (103), zdrojovy repozitar konci 102; nebyla zpetne menena. Golden normalizer nove ignoruje pouze diagnosticky build/migration komentar, nikoli obsah. README a .env.example popisuji Active24 a novy instalacni postup.
+
+DEPLOYMENT.md prepsan pro skutecny Active24 provoz; stare Webzdarma automaticke maintenance kroky nejsou v tomto repozitari zapnute. Zdroj obsahoval dva docasne PHP helpery bez HTTP auth; pridana CLI-only kontrola a vylouceni z artefaktu vcetne tests a lokalniho QA. Finalni overeni: 325 PHP/PHTML syntax OK, 19 JS syntax OK, 216 testu OK, 27/28 golden kontrol OK. Jedina zmena O nas je konkretni jiny poster a rozmery z lokalni DB migrace 103; golden nebyl prepsan.
+
+Do commitu pripravena cela aktualizace (601 souboru pred odstranenim dvou zastaralych planu). Runtime storage/published a public/assets/generated odstraneny pouze z indexu, lokalni obsah zustal zachovan; deployment je stejne vylucuje. Puvodni 001-023 SQL beze zmen, 79 novych SQL souboru. .env a .agents nejsou ve stagingu.

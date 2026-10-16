@@ -8,13 +8,13 @@ use App\View\ViewFactory;
 use App\ViewModels\CenikPageData;
 
 /**
- * Cenik "packages + CTA" section splice — phase 4 of the templating refactor.
+ * Cenik "packages + CTA" section splice - phase 4 of the templating refactor.
  *
  * Replaces the pair of live-only global functions in public/index.php
  * (injectCenikPageLayout() / buildCenikPackageCardsHtml()). Those functions
  * were only reachable from the live request (public/index.php's global
- * scope), so App\Services\PublishService — which boots from a different
- * entry point — could never call them; publish instead fell back to whatever
+ * scope), so App\Services\PublishService - which boots from a different
+ * entry point - could never call them; publish instead fell back to whatever
  * static HTML happened to be baked into the page's content_blocks (a stale,
  * non-accented snapshot, see UKOL.md phase 4 notes). Moving the logic to
  * CenikPageData + archetypes/cenik.phtml, both autoloadable from anywhere,
@@ -24,12 +24,21 @@ use App\ViewModels\CenikPageData;
  * The splice mechanism itself (regex-replacing the page-hero…footer span) is
  * unchanged: /cenik is a generic content_blocks/html_source page, not a
  * dedicated tryServe*Page() route like faq/sluzby, so its hero/breadcrumb/SEO
- * still come from the shared page pipeline — only the package cards + CTA
+ * still come from the shared page pipeline - only the package cards + CTA
  * (previously assembled by string concatenation) are now ViewModel + PHTML.
  */
 final class CenikPageRenderer
 {
-    public static function inject(string $html, array $blocks, string $pageKey, ?string $themeKey = null): string
+    /**
+     * $editMode is threaded in explicitly: unlike the routes that build their own
+     * ViewFactory (blog/portfolio listings), /cenik is rendered from inside the
+     * post-render cascade, so nothing here knows about the admin session unless
+     * PageComposer::composeLive passes it. Without it the archetype's
+     * inlineAttr() calls stay empty and inline editing cannot work on /cenik at
+     * all. The publish cascade deliberately leaves it false - published pages are
+     * static, logged-out snapshots.
+     */
+    public static function inject(string $html, array $blocks, string $pageKey, ?string $themeKey = null, bool $editMode = false): string
     {
         if ($pageKey !== 'cenik') {
             return $html;
@@ -40,7 +49,7 @@ final class CenikPageRenderer
             return $html;
         }
 
-        $content = ViewFactory::forTheme($themeKey)->render('archetypes/cenik', $data);
+        $content = ViewFactory::forTheme($themeKey, ['editMode' => $editMode])->render('archetypes/cenik', $data);
 
         $updated = preg_replace(
             '~(<section\b[^>]*\bclass=(["\'])[^"\']*\bpage-hero\b[^"\']*\2[^>]*>.*?</section>)\s*.*?(<footer\b)~is',

@@ -30,7 +30,9 @@ class SeoRepository
             'robots_index','robots_follow',
             'og_title','og_description','og_image_id',
             'twitter_title','twitter_description','twitter_image_id',
-            'schema_type','schema_json',
+            'schema_type','schema_name','schema_description','schema_image_id',
+            'schema_contact_auto','schema_telephone','schema_email',
+            'schema_address_street','schema_address_locality',
         ];
         if ($existing) {
             $sets = [];

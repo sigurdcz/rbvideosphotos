@@ -10,7 +10,7 @@ use App\Repositories\FaqRepository;
  * Pure data provider for the `faq` archetype (app/Views/archetypes/faq.phtml).
  *
  * Phase 4 of the templating refactor: replaces the ad-hoc HTML built inline in
- * public/index.php::tryServeFaqPage(). Returns scalars/arrays only — no HTML,
+ * public/index.php::tryServeFaqPage(). Returns scalars/arrays only - no HTML,
  * no escaping (the view calls ViewContext::e()/inlineAttr()).
  */
 final class FaqPageData

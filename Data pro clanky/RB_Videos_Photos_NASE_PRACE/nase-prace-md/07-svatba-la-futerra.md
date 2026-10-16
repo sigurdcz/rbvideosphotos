@@ -20,7 +20,7 @@ seo:
   robots: index,follow
   schema_type: Article
 event:
-  couple: Iveta a René Gruntovi
+  couple: Iveta a René
   date_iso: '2024-08-17'
   date_display: 17. srpna 2024
   ceremony: La Futerra, Zlámanka u Kroměříže
@@ -55,7 +55,7 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 ## Uzamčené údaje
 
-- Pár: **Iveta a René Gruntovi**
+- Pár: **Iveta a René**
 - Datum: **17. srpna 2024**
 - Obřad: **La Futerra, Zlámanka u Kroměříže**
 - Oslava: **La Futerra, Zlámanka u Kroměříže**
@@ -79,7 +79,7 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 # Svatba Ivety a Reného v areálu La Futerra u Kroměříže
 
-Iveta a René Gruntovi si pro 17. srpna 2024 vybrali La Futerra ve Zlámance u Kroměříže. Obřad i oslava na jednom místě vytvořily kompaktní den bez zbytečného přesouvání. Venkovský areál je vhodný pro páry, které chtějí svobodu v dekoracích, venkovní prostředí a večer, jenž nemusí končit přesunem do jiného sálu.
+Iveta a René si pro 17. srpna 2024 vybrali La Futerra ve Zlámance u Kroměříže. Obřad i oslava na jednom místě vytvořily kompaktní den bez zbytečného přesouvání. Venkovský areál je vhodný pro páry, které chtějí svobodu v dekoracích, venkovní prostředí a večer, jenž nemusí končit přesunem do jiného sálu.
 
 ## Co nabízí La Futerra
 

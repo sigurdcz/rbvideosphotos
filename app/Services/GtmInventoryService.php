@@ -76,7 +76,7 @@ class GtmInventoryService
 
     /**
      * Lehky load pouze entit workspace (tagy, triggery, promenne) pro plan/apply.
-     * Setri GTM API kvotu — nenacita ucty, kontejnery, workspace ani verze.
+     * Setri GTM API kvotu - nenacita ucty, kontejnery, workspace ani verze.
      */
     public function loadWorkspaceEntities(int $siteId): array
     {

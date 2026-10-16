@@ -15,7 +15,7 @@ use InvalidArgumentException;
  *     is assembled (no dots at all, so `..` traversal is impossible; no leading
  *     slash, backslash, colon, null byte or uppercase);
  *   - the assembled path is passed through realpath() and must stay contained
- *     inside one of the allowed roots — a resolved path that escapes the root
+ *     inside one of the allowed roots - a resolved path that escapes the root
  *     (e.g. via a symlink) is rejected even if the name looked valid.
  *
  * The resolver never trusts an assembled path without realpath containment.

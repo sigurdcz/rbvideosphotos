@@ -84,7 +84,7 @@
     function syncSettingsButton(){
       if(!settingsBtn) return;
       var expanded=box.dataset.mode==='settings';
-      settingsBtn.textContent=expanded?'Skryt nastaveni':'Nastaveni';
+      settingsBtn.textContent=expanded?'Skrýt nastavení':'Nastaveni';
       settingsBtn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
     }
     function sync(){
@@ -102,17 +102,23 @@
     function show(mode){
       sync();
       syncCategoryVisibility();
+      var selectedMode=mode==='settings'?'settings':'summary';
       host.hidden=false;
-      box.dataset.mode=mode||'summary';
+      box.dataset.mode=selectedMode;
       box.hidden=false;
-      backdrop.hidden=false;
+      backdrop.hidden=selectedMode!=='settings';
       host.style.display='block';
       box.style.display='block';
-      backdrop.style.display='block';
+      backdrop.style.display=selectedMode==='settings'?'block':'none';
       box.style.visibility='visible';
-      backdrop.style.visibility='visible';
+      backdrop.style.visibility=selectedMode==='settings'?'visible':'hidden';
       box.style.opacity='1';
-      backdrop.style.opacity='1';
+      backdrop.style.opacity=selectedMode==='settings'?'1':'0';
+      box.setAttribute('role',selectedMode==='settings'?'dialog':'region');
+      // aria-modal is only valid on a dialog. Leaving aria-modal="false" on the region
+      // banner failed aria-allowed-attr, which cost both Accessibility and Agentic Browsing.
+      if(selectedMode==='settings'){box.setAttribute('aria-modal','true');}
+      else{box.removeAttribute('aria-modal');}
       syncSettingsButton();
     }
     function hide(){
@@ -126,9 +132,13 @@
       syncSettingsButton();
     }
     function openSettings(){ show('settings'); }
+    function closeSettings(){
+      if(pref()) hide();
+      else show('summary');
+    }
     function toggleSettings(){
       if(box.dataset.mode==='settings'){
-        show('summary');
+        closeSettings();
         return;
       }
       openSettings();
@@ -151,7 +161,7 @@
       button.type='button';
       button.className='cookie-consent-link';
       button.dataset.cookieOpenSettings='1';
-      button.textContent='Nastaveni cookies';
+      button.textContent='Nastavení cookies';
       if (footer.classList && footer.classList.contains('site-footer-bottom')) {
         footer.appendChild(document.createTextNode(' · '));
       }
@@ -164,7 +174,7 @@
 
     if(backdrop.dataset.cookieBound!=='1'){
       backdrop.dataset.cookieBound='1';
-      backdrop.addEventListener('click',hide);
+      backdrop.addEventListener('click',closeSettings);
     }
     if(acceptAll&&acceptAll.dataset.cookieBound!=='1'){
       acceptAll.dataset.cookieBound='1';
@@ -200,7 +210,7 @@
       document.documentElement.dataset.cookieEscBound='1';
       document.addEventListener('keydown',function(e){
         if(e.key==='Escape'&&!box.hidden){
-          hide();
+          if(box.dataset.mode==='settings') closeSettings();
         }
       });
     }

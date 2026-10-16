@@ -305,9 +305,9 @@
       var body = document.createElement('div');
       body.className = 'eg-reviews__body';
       body.innerHTML =
-        '<button class="eg-review-arrow eg-review-arrow--prev" type="button" aria-label="Predchozi recenze">&lsaquo;</button>' +
+        '<button class="eg-review-arrow eg-review-arrow--prev" type="button" aria-label="Předchozí recenze">&lsaquo;</button>' +
         '<div class="eg-reviews__viewport"></div>' +
-        '<button class="eg-review-arrow eg-review-arrow--next" type="button" aria-label="Dalsi recenze">&rsaquo;</button>';
+        '<button class="eg-review-arrow eg-review-arrow--next" type="button" aria-label="Další recenze">&rsaquo;</button>';
       var viewport = qs('.eg-reviews__viewport', body);
       sourceGrid.parentNode.insertBefore(body, sourceGrid);
       viewport.appendChild(sourceGrid);
@@ -376,6 +376,8 @@
 
   function initHeroParallax() {
     if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (window.matchMedia && window.matchMedia('(max-width: 900px)').matches) return;
+    if (navigator.connection && navigator.connection.saveData) return;
     var heroes = Array.prototype.slice.call(document.querySelectorAll('.hp-hero,.hero,.page-hero,.pf-hero,.bl-hero,.kt-hero,.fq-hero,.bp-hero,.pf-detail-hero,.bp-detail-hero,.services-hero'))
       .filter(function(hero) {
         return !!hero.querySelector('.theme-hero-video,.hero-bg');
@@ -386,12 +388,15 @@
     function sync() {
       ticking = false;
       var viewport = window.innerHeight || document.documentElement.clientHeight || 1;
-      heroes.forEach(function(hero) {
+      var measurements = heroes.map(function(hero) {
         var rect = hero.getBoundingClientRect();
-        if (rect.bottom < 0 || rect.top > viewport) return;
+        if (rect.bottom < 0 || rect.top > viewport) return null;
         var centerOffset = (rect.top + rect.height / 2) - viewport / 2;
         var shift = Math.max(-54, Math.min(54, centerOffset * -0.08));
-        hero.style.setProperty('--ew-hero-parallax-y', shift.toFixed(2) + 'px');
+        return {hero: hero, value: shift.toFixed(2) + 'px'};
+      }).filter(Boolean);
+      measurements.forEach(function(item) {
+        item.hero.style.setProperty('--ew-hero-parallax-y', item.value);
       });
     }
 
@@ -406,9 +411,107 @@
     sync();
   }
 
+  function initHeroVideoFacades() {
+    var facades = Array.prototype.slice.call(document.querySelectorAll('[data-hero-video-facade]'));
+    if (!facades.length) return;
+
+    function status(facade, message) {
+      var node = facade.querySelector('.theme-hero-video__status');
+      if (node) node.textContent = message || '';
+    }
+
+    // The window width decides which of the three embedded videos plays; a hero video
+    // served as a plain file lets the browser choose through <source media="...">.
+    // The numbers match the
+    // theme breakpoints in theme.css and critical-above-fold.css - a media query cannot be
+    // shared with JavaScript without a build step, so they are kept equal by a test.
+    var HERO_VIDEO_MOBILE_MAX = 700;
+    var HERO_VIDEO_TABLET_MAX = 1050;
+
+    // Picked once, when the player is inserted - re-picking on resize would mean a second
+    // multi-megabyte player, a flash and a restart of playback. A phone held sideways is a
+    // tablet here, exactly as the theme's CSS treats that width.
+    function pickEmbedUrl(facade) {
+      var desktop = facade.getAttribute('data-embed-url') || '';
+      if (!window.matchMedia) return desktop;
+      if (window.matchMedia('(max-width: ' + HERO_VIDEO_MOBILE_MAX + 'px)').matches) {
+        return facade.getAttribute('data-embed-url-mobile')
+          || facade.getAttribute('data-embed-url-tablet')
+          || desktop;
+      }
+      if (window.matchMedia('(max-width: ' + HERO_VIDEO_TABLET_MAX + 'px)').matches) {
+        return facade.getAttribute('data-embed-url-tablet') || desktop;
+      }
+      return desktop;
+    }
+
+    // Hero video autoplay is intentionally exempt from marketing cookie
+    // consent - the client wants the background video playing immediately
+    // and permanently for every visitor, gated or not.
+    function play(facade) {
+      if (facade.dataset.videoLoaded === '1') return;
+
+      var embedUrl = pickEmbedUrl(facade);
+      if (!/^https:\/\/(?:www\.youtube(?:-nocookie)?\.com\/embed\/|player\.vimeo\.com\/video\/)/i.test(embedUrl)) {
+        status(facade, 'Video nelze načíst: neplatná adresa přehrávače.');
+        return;
+      }
+
+      var iframe = document.createElement('iframe');
+      iframe.src = embedUrl;
+      iframe.title = 'Úvodní video';
+      iframe.allow = 'autoplay; fullscreen; picture-in-picture';
+      iframe.loading = 'eager';
+      iframe.tabIndex = -1;
+      facade.appendChild(iframe);
+      facade.dataset.videoLoaded = '1';
+      facade.classList.add('is-playing');
+      facade.setAttribute('aria-hidden', 'true');
+      var button = facade.querySelector('.theme-hero-video__play');
+      if (button) button.remove();
+      status(facade, '');
+    }
+
+    // The player used to be injected during the initial render, which pulled ~9 MB of
+    // Vimeo into the critical path. Deferring it until after paint was measured and made
+    // things worse (16 MB, because an idle page lets the player buffer freely), so the
+    // hero now stays a poster until somebody asks for the video.
+    //
+    // Autoplay can be re-enabled per facade with data-hero-video-autoplay, which then
+    // waits for paint and for the hero to be near the viewport.
+    function scheduleAutoplay(facade) {
+      if (facade.getAttribute('data-hero-video-autoplay') === null) return;
+
+      var started = false;
+      function start() { if (!started) { started = true; play(facade); } }
+      function whenIdle() {
+        if ('requestIdleCallback' in window) window.requestIdleCallback(start, { timeout: 2500 });
+        else window.setTimeout(start, 900);
+      }
+      function afterPaint() {
+        if (!('IntersectionObserver' in window)) { whenIdle(); return; }
+        var observer = new IntersectionObserver(function (entries) {
+          for (var i = 0; i < entries.length; i++) {
+            if (entries[i].isIntersecting) { observer.disconnect(); whenIdle(); return; }
+          }
+        }, { rootMargin: '200px' });
+        observer.observe(facade);
+      }
+      if (document.readyState === 'complete') afterPaint();
+      else window.addEventListener('load', afterPaint, { once: true });
+    }
+
+    facades.forEach(function(facade) {
+      var button = facade.querySelector('.theme-hero-video__play');
+      if (button) button.addEventListener('click', function(){ play(facade); });
+      scheduleAutoplay(facade);
+    });
+  }
+
   initActiveNav();
   initPricingModal();
   initEditorialGoldEnhancements();
+  initHeroVideoFacades();
   initHeroParallax();
   syncAdminBarOffset();
   window.addEventListener('resize', syncAdminBarOffset);

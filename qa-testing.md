@@ -6,8 +6,10 @@ Tento postup overuje skutecny lokalni runtime SEO Editoru. Zdroj volby viewportu
 
 Vsechny nove vizualni screenshoty se porizuji v **Google Chrome**. Rucni
 capture pouzije Chrome DevTools (`Capture screenshot` nebo `Capture full size
-screenshot`); automatizovany capture pouzije `qa_visual_capture.py`, ktery
-spousti explicitne instalovany Chrome. VS Code Integrated Browser je pouze
+screenshot`); izolovany automatizovany homepage capture pouzije
+`scripts/qa_chrome_cdp_capture.ps1` a plosny audit
+`scripts/qa_full_site_visual_audit.ps1`. Obe cesty spousteji explicitne
+instalovany Chrome. VS Code Integrated Browser je pouze
 historicky diagnosticky povrch a nesmi potichu nahradit Chrome QA.
 
 ## Pevne viewporty
@@ -50,6 +52,11 @@ Pri zmene homepage poradi, theme CSS nebo theme JavaScriptu overit:
 2. Zkontrolovat, ze odpoved obsahuje spravnou tridu tematu a ze se nacetly aktualni generovane CSS a JS assety.
 3. Zachytit novy screenshot cele stranky v Google Chrome; nepouzivat stary
    obraz, snimek plochy ani VS Code Integrated Browser jako dukaz runtime stavu.
+   Finalni automatizovany capture je platny jen pri `HeightStable=true`, prazdnem
+   `LazyLoad.failedVisibleImages` a shode poctu nactenych a viditelnych obrazku.
+   Kazdou nahlasenou nebo rizikovou oblast otevrit take v samostatnem 100%
+   viewportovem detailu; zmenseny celostrankovy nahled nestaci pro overlap karet,
+   CTA, procesni text ani footer.
 4. Overit horizontalni overflow:
 
    ```js
@@ -62,9 +69,9 @@ Pri zmene homepage poradi, theme CSS nebo theme JavaScriptu overit:
 6. Otestovat interakce: otevreni/zavreni mobilniho menu, FAQ, formular, odkazy na interní routy a klavesu Escape pro zavreni menu/dialogu.
 7. Zkontrolovat konzoli a sit: zadne chyby JavaScriptu, selhane CSS/JS assety ani neocekavane 404.
 
-## Homepage: Elegant White 3
+## Homepage: aktivni Golden Bash
 
-Pro aktualni fix-up kontrolovat na obou viewportech toto poradi:
+Pro aktualni verejny runtime kontrolovat na obou viewportech toto poradi:
 
 ```text
 Hero
@@ -79,7 +86,7 @@ Hero
 -> Paticka
 ```
 
-`Co nabizime / Sluzby` je v aktualnich datech DB-renderovany blok `#sluzby`; nevytvaret druhou hardcoded sekci `O nas` pouze kvuli poradi.
+`Co nabizime / Sluzby` je DB-renderovany blok. Aktivni vychozi theme key musi byt `golden-bash-diagonal`; neaktivni sablonu testovat pouze s vyslovne uvedenym `theme_preview`.
 
 ## Zaznam iterace
 
@@ -109,3 +116,7 @@ Zmena je pripravena k odevzdani pouze kdyz na obou pevných viewportech plati:
 - `php tests/run.php` a `git diff --check` prochazeji.
 
 Tablet neni soucasti zakladni dvojice, protoze podle predane analytiky tvori jen 0,8 %. Otestovat jej navic pri chybe specificke pro tablet nebo pri zasahu do breakpointu mezi mobilem a desktopem.
+
+Pri breakpointove oprave doplnit obe strany kazde dotcene hranice (napr. 1199/1200 a 700/701 px). Automaticke nulove overflow metriky nenahrazuji rucni kontrolu PNG; mohou minout prekryv gridovych polozek uvnitr viewportu.
+
+Pokud novy uzivatelsky screenshot odporuje poslednimu PASS, okamzite odvolat PASS i skore, zapsat novou baseline do `UKOL.md` a znovu proverit oznacene oblasti ve 100% detailu. Automaticky vysledek se proti viditelne vade neobhajuje.

@@ -1,5 +1,5 @@
 <?php
-$pageTitle = 'Nastaveni webu';
+$pageTitle = 'Nastavení webu';
 $h = fn($v) => htmlspecialchars((string)($v ?? ''));
 $media = $media ?? [];
 $contact = $contact ?? [];
@@ -23,6 +23,15 @@ $mediaThumb = function(array $m) use ($mediaUrl, $publicMediaUrl): string {
     }
     return $mediaUrl($m);
 };
+$imageMediaById = [];
+foreach ($media as $item) {
+    if (str_starts_with((string)($item['mime_type'] ?? ''), 'image/')) {
+        $imageMediaById[(int)$item['id']] = $item;
+    }
+}
+$selectedDefaultOg = $imageMediaById[(int)($site['default_og_image_id'] ?? 0)] ?? null;
+$selectedDefaultInstagram = $imageMediaById[(int)($site['default_instagram_image_id'] ?? 0)] ?? null;
+$selectedDefaultTwitter = $imageMediaById[(int)($site['default_twitter_image_id'] ?? 0)] ?? null;
 
 $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
 $requestHost = trim((string)($_SERVER['HTTP_HOST'] ?? ''));
@@ -42,7 +51,7 @@ $mediaImageQuality = max(1, min(100, $mediaImageQuality));
 ob_start();
 ?>
 <div class="page-header">
-  <h1>Nastaveni webu</h1>
+  <h1>Nastavení webu</h1>
 </div>
 
 <?php if ($isLocalDomain && !$isRequestLocal && $requestUrl !== ''): ?>
@@ -68,12 +77,111 @@ ob_start();
       </div>
     </div>
     <div class="form-group">
-      <label>Vychozi jazyk</label>
+      <label for="company-registration-id">IČO</label>
+      <input id="company-registration-id" type="text" name="company_registration_id" value="<?= $h($site['company_registration_id'] ?? '') ?>" inputmode="numeric" maxlength="8" pattern="[0-9]{8}" placeholder="12345678" aria-describedby="company-registration-id-help">
+      <p class="help-text" id="company-registration-id-help" style="margin-top:6px">Osmimístné identifikační číslo firmy. Po uložení se zobrazí v kontaktních informacích.</p>
+    </div>
+    <div class="form-group">
+      <label>Výchozí jazyk</label>
       <select name="default_language">
         <option value="cs" <?= ($site['default_language'] ?? 'cs') === 'cs' ? 'selected' : '' ?>>Cestina</option>
         <option value="en" <?= ($site['default_language'] ?? '') === 'en' ? 'selected' : '' ?>>English</option>
         <option value="sk" <?= ($site['default_language'] ?? '') === 'sk' ? 'selected' : '' ?>>Slovencina</option>
       </select>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Obrazky pro sdileni na socialnich sitich</div>
+    <p class="help-text" style="margin-bottom:16px">
+      Stranka nebo clanek muze globalni obrazek prepsat vlastnim SEO obrazkem.
+      Pouzij JPG nebo WebP, hlavni motiv a text nech s bezpecnym odsazenim od okraju.
+    </p>
+    <div class="form-row-3" style="align-items:stretch">
+    <div class="form-group" style="min-width:0">
+      <label>Facebook / Open Graph</label>
+      <div class="help-text" style="min-height:54px;margin-bottom:8px">
+        Nejlepsi je <strong>landscape 1,91:1</strong>, idealne <strong>1200 &times; 630 px</strong>.
+        Pouziva se jako <code>og:image</code>.
+      </div>
+      <div class="brand-asset-picker">
+        <input
+          type="hidden"
+          name="default_og_image_id"
+          id="default-og-image-id"
+          data-brand-value-mode="id"
+          value="<?= $selectedDefaultOg ? (int)$selectedDefaultOg['id'] : '' ?>"
+        >
+        <div class="brand-asset-preview" data-brand-preview for="default-og-image-id">
+          <?php if ($selectedDefaultOg): ?>
+            <img src="<?= $h($mediaThumb($selectedDefaultOg)) ?>" alt="<?= $h($selectedDefaultOg['alt_text'] ?? $selectedDefaultOg['original_filename'] ?? '') ?>">
+          <?php else: ?>
+            <span>Neni vybrano</span>
+          <?php endif; ?>
+        </div>
+        <div class="brand-asset-actions">
+          <button type="button" class="btn btn-secondary" data-open-brand-media data-target="default-og-image-id">Vybrat z medii</button>
+          <button type="button" class="btn btn-secondary" data-clear-brand-media data-target="default-og-image-id">Odebrat</button>
+        </div>
+        <div class="help-text brand-asset-path" data-brand-path for="default-og-image-id"><?= $selectedDefaultOg ? $h($mediaUrl($selectedDefaultOg)) : '' ?></div>
+      </div>
+    </div>
+    <div class="form-group" style="min-width:0">
+      <label>Instagram</label>
+      <div class="help-text" style="min-height:54px;margin-bottom:8px">
+        Pro prispevek zvol <strong>square 1:1</strong>, idealne <strong>1080 &times; 1080 px</strong>;
+        pro vyssi plochu lze portrait 1080 &times; 1350 px. Instagram obrazek slouzi jako exportni podklad a webove OG tagy jej automaticky nepublikuji.
+      </div>
+      <div class="brand-asset-picker">
+        <input
+          type="hidden"
+          name="default_instagram_image_id"
+          id="default-instagram-image-id"
+          data-brand-value-mode="id"
+          value="<?= $selectedDefaultInstagram ? (int)$selectedDefaultInstagram['id'] : '' ?>"
+        >
+        <div class="brand-asset-preview" data-brand-preview for="default-instagram-image-id">
+          <?php if ($selectedDefaultInstagram): ?>
+            <img src="<?= $h($mediaThumb($selectedDefaultInstagram)) ?>" alt="<?= $h($selectedDefaultInstagram['alt_text'] ?? $selectedDefaultInstagram['original_filename'] ?? '') ?>">
+          <?php else: ?>
+            <span>Neni vybrano</span>
+          <?php endif; ?>
+        </div>
+        <div class="brand-asset-actions">
+          <button type="button" class="btn btn-secondary" data-open-brand-media data-target="default-instagram-image-id">Vybrat z medii</button>
+          <button type="button" class="btn btn-secondary" data-clear-brand-media data-target="default-instagram-image-id">Odebrat</button>
+        </div>
+        <div class="help-text brand-asset-path" data-brand-path for="default-instagram-image-id"><?= $selectedDefaultInstagram ? $h($mediaUrl($selectedDefaultInstagram)) : '' ?></div>
+      </div>
+    </div>
+    <div class="form-group" style="min-width:0">
+      <label>Twitter / X</label>
+      <div class="help-text" style="min-height:54px;margin-bottom:8px">
+        Pro velkou kartu zvol <strong>landscape 2:1</strong>, idealne <strong>1200 &times; 600 px</strong>.
+        Pouziva se jako <code>twitter:image</code>.
+      </div>
+      <div class="brand-asset-picker">
+        <input
+          type="hidden"
+          name="default_twitter_image_id"
+          id="default-twitter-image-id"
+          data-brand-value-mode="id"
+          value="<?= $selectedDefaultTwitter ? (int)$selectedDefaultTwitter['id'] : '' ?>"
+        >
+        <div class="brand-asset-preview" data-brand-preview for="default-twitter-image-id">
+          <?php if ($selectedDefaultTwitter): ?>
+            <img src="<?= $h($mediaThumb($selectedDefaultTwitter)) ?>" alt="<?= $h($selectedDefaultTwitter['alt_text'] ?? $selectedDefaultTwitter['original_filename'] ?? '') ?>">
+          <?php else: ?>
+            <span>Neni vybrano</span>
+          <?php endif; ?>
+        </div>
+        <div class="brand-asset-actions">
+          <button type="button" class="btn btn-secondary" data-open-brand-media data-target="default-twitter-image-id">Vybrat z medii</button>
+          <button type="button" class="btn btn-secondary" data-clear-brand-media data-target="default-twitter-image-id">Odebrat</button>
+        </div>
+        <div class="help-text brand-asset-path" data-brand-path for="default-twitter-image-id"><?= $selectedDefaultTwitter ? $h($mediaUrl($selectedDefaultTwitter)) : '' ?></div>
+      </div>
+    </div>
     </div>
   </div>
 
@@ -107,7 +215,7 @@ ob_start();
         <div class="brand-asset-picker">
           <input type="hidden" name="logo_url" id="brand-logo-url" value="<?= $h($site['logo_url'] ?? '') ?>">
           <div class="brand-asset-preview" data-brand-preview for="brand-logo-url">
-            <?php if (!empty($site['logo_url'])): ?><img src="<?= $h($site['logo_url']) ?>" alt="Logo"><?php else: ?><span>Neni vybrano</span><?php endif; ?>
+            <?php if (!empty($site['logo_url'])): ?><img src="<?= $h($publicMediaUrl($site['logo_url'] ?? '')) ?>" alt="Logo"><?php else: ?><span>Neni vybrano</span><?php endif; ?>
           </div>
           <div class="brand-asset-actions">
             <button type="button" class="btn btn-secondary" data-open-brand-media data-target="brand-logo-url">Vybrat z medii</button>
@@ -122,7 +230,7 @@ ob_start();
         <div class="brand-asset-picker">
           <input type="hidden" name="favicon_ico_url" id="brand-favicon-ico-url" value="<?= $h($site['favicon_ico_url'] ?? '') ?>">
           <div class="brand-asset-preview brand-asset-preview--icon" data-brand-preview for="brand-favicon-ico-url">
-            <?php if (!empty($site['favicon_ico_url'])): ?><img src="<?= $h($site['favicon_ico_url']) ?>" alt="Favicon ICO"><?php else: ?><span>Neni vybrano</span><?php endif; ?>
+            <?php if (!empty($site['favicon_ico_url'])): ?><img src="<?= $h($publicMediaUrl($site['favicon_ico_url'] ?? '')) ?>" alt="Favicon ICO"><?php else: ?><span>Neni vybrano</span><?php endif; ?>
           </div>
           <div class="brand-asset-actions">
             <button type="button" class="btn btn-secondary" data-open-brand-media data-target="brand-favicon-ico-url">Vybrat z medii</button>
@@ -139,7 +247,7 @@ ob_start();
         <div class="brand-asset-picker">
           <input type="hidden" name="favicon_png_url" id="brand-favicon-png-url" value="<?= $h($site['favicon_png_url'] ?? '') ?>">
           <div class="brand-asset-preview brand-asset-preview--icon" data-brand-preview for="brand-favicon-png-url">
-            <?php if (!empty($site['favicon_png_url'])): ?><img src="<?= $h($site['favicon_png_url']) ?>" alt="Favicon PNG/SVG"><?php else: ?><span>Neni vybrano</span><?php endif; ?>
+            <?php if (!empty($site['favicon_png_url'])): ?><img src="<?= $h($publicMediaUrl($site['favicon_png_url'] ?? '')) ?>" alt="Favicon PNG/SVG"><?php else: ?><span>Neni vybrano</span><?php endif; ?>
           </div>
           <div class="brand-asset-actions">
             <button type="button" class="btn btn-secondary" data-open-brand-media data-target="brand-favicon-png-url">Vybrat z medii</button>
@@ -154,7 +262,7 @@ ob_start();
         <div class="brand-asset-picker">
           <input type="hidden" name="apple_touch_icon_url" id="brand-apple-touch-icon-url" value="<?= $h($site['apple_touch_icon_url'] ?? '') ?>">
           <div class="brand-asset-preview brand-asset-preview--icon" data-brand-preview for="brand-apple-touch-icon-url">
-            <?php if (!empty($site['apple_touch_icon_url'])): ?><img src="<?= $h($site['apple_touch_icon_url']) ?>" alt="Apple touch icon"><?php else: ?><span>Neni vybrano</span><?php endif; ?>
+            <?php if (!empty($site['apple_touch_icon_url'])): ?><img src="<?= $h($publicMediaUrl($site['apple_touch_icon_url'] ?? '')) ?>" alt="Apple touch icon"><?php else: ?><span>Neni vybrano</span><?php endif; ?>
           </div>
           <div class="brand-asset-actions">
             <button type="button" class="btn btn-secondary" data-open-brand-media data-target="brand-apple-touch-icon-url">Vybrat z medii</button>
@@ -168,16 +276,35 @@ ob_start();
   </div>
 
   <div class="card">
-    <div class="card-title">Vychozi hero video</div>
+    <div class="card-title">Výchozí hero video</div>
     <p class="help-text" style="margin-bottom:16px">
       Toto video se pouzije jako fallback pro vsechny stranky, pokud konkretni stranka nema vlastni hero video.
       Poster obrazek se zobrazi okamzite pri nacitani videa, aby uzivatel nevidel cernou plochu.
     </p>
+    <div class="form-group">
+      <label style="display:flex;align-items:center;gap:8px">
+        <input type="checkbox" name="video_autoplay_enabled" value="1" <?= (int)($site['video_autoplay_enabled'] ?? 1) === 1 ? 'checked' : '' ?> style="width:auto">
+        Prehravat videa automaticky po nacteni stranky
+      </label>
+      <p class="help-text" style="margin-top:6px">
+        Tyka se hero videa na hlavni strance a videa Tomase Sincla na strance O nas.
+        Kdyz je vypnuto, na videu zustane tlacitko pro prehrani a prehravac se nacte az po kliknuti.
+        <strong>Zapnute automaticke prehravani stranku vyrazne zteziuje</strong> - merene 495 kB bez videa
+        proti 1644 kB s videem, a necinna stranka necha prehravac bufferovat dal. Na pomalem mobilnim
+        pripojeni to zpomali nacteni.
+      </p>
+    </div>
     <div class="form-row">
       <div class="form-group">
         <label>Defaultni hero video URL</label>
         <div class="help-text" style="margin-bottom:8px">Vlozte odkaz z Vimeo nebo YouTube, napr. <code>https://vimeo.com/123456789</code> nebo <code>https://www.youtube.com/watch?v=...</code>.</div>
         <input type="url" name="default_hero_video_url" id="default-hero-video-url" value="<?= $h($site['default_hero_video_url'] ?? '') ?>" placeholder="https://vimeo.com/... nebo https://www.youtube.com/watch?v=...">
+        <label style="margin-top:12px">Hero video pro tablet (volitelne)</label>
+        <div class="help-text" style="margin-bottom:8px">Prehraje se pri sirce okna 701-1050 px. Prazdne = na tabletu se prehraje desktopove video (vychozi nastaveni webu).</div>
+        <input type="url" name="default_hero_video_url_tablet" id="default-hero-video-url-tablet" value="<?= $h($site['default_hero_video_url_tablet'] ?? '') ?>" placeholder="https://vimeo.com/... nebo https://www.youtube.com/watch?v=...">
+        <label style="margin-top:12px">Hero video pro mobil (volitelne)</label>
+        <div class="help-text" style="margin-bottom:8px">Prehraje se pri sirce okna do 700 px. Prazdne = pouzije se tabletove, jinak desktopove video.</div>
+        <input type="url" name="default_hero_video_url_mobile" id="default-hero-video-url-mobile" value="<?= $h($site['default_hero_video_url_mobile'] ?? '') ?>" placeholder="https://vimeo.com/... nebo https://www.youtube.com/watch?v=...">
       </div>
       <div class="form-group">
         <label>Placeholder / poster obrazek</label>
@@ -185,7 +312,7 @@ ob_start();
         <div class="brand-asset-picker">
           <input type="hidden" name="default_hero_poster_url" id="default-hero-poster-url" value="<?= $h($site['default_hero_poster_url'] ?? '') ?>">
           <div class="brand-asset-preview" data-brand-preview for="default-hero-poster-url">
-            <?php if (!empty($site['default_hero_poster_url'])): ?><img src="<?= $h($site['default_hero_poster_url']) ?>" alt="Hero poster"><?php else: ?><span>Neni vybrano</span><?php endif; ?>
+            <?php if (!empty($site['default_hero_poster_url'])): ?><img src="<?= $h($publicMediaUrl($site['default_hero_poster_url'] ?? '')) ?>" alt="Hero poster"><?php else: ?><span>Neni vybrano</span><?php endif; ?>
           </div>
           <div class="brand-asset-actions">
             <button type="button" class="btn btn-secondary" data-open-brand-media data-target="default-hero-poster-url">Vybrat z medii</button>
@@ -378,7 +505,7 @@ ob_start();
       <div class="form-group">
         <label>Microsoft Clarity ID</label>
         <input type="text" name="clarity_id" value="<?= $h($site['clarity_id'] ?? '') ?>" placeholder="xxxxxxxxxx" style="font-family:monospace">
-        <p class="help-text">Najdes na clarity.microsoft.com → Nastaveni projektu. Spusti se s Analytics consent.</p>
+        <p class="help-text">Najdes na clarity.microsoft.com → Nastavení projektu. Spusti se s Analytics consent.</p>
       </div>
       <div class="form-group">
         <label>Meta Pixel ID</label>
@@ -407,9 +534,9 @@ ob_start();
     <div class="card-title">Layout webu (spolecna hlavicka a paticka)</div>
     <p class="help-text" style="margin-bottom:16px">
       HTML layout obali kazdou stranku. Dostupne placeholdery:<br>
-      <code>{page_content}</code> — obsah stranky &nbsp;|&nbsp;
-      <code>{site_name}</code> — nazev webu &nbsp;|&nbsp;
-      <code>{nav}</code> — navigace (viz pole nav nize). Ponech prazdne, pokud kazda sablona ma vlastni HTML.
+      <code>{page_content}</code> - obsah stranky &nbsp;|&nbsp;
+      <code>{site_name}</code> - nazev webu &nbsp;|&nbsp;
+      <code>{nav}</code> - navigace (viz pole nav nize). Ponech prazdne, pokud kazda sablona ma vlastni HTML.
     </p>
     <div class="form-group">
       <label>Layout HTML</label>
@@ -417,27 +544,27 @@ ob_start();
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label>Layout CSS (spolecne styly — nav, paticka, zaklad)</label>
+        <label>Layout CSS (spolecne styly - nav, paticka, zaklad)</label>
         <textarea class="code" name="layout_css" rows="10"><?= $h($site['layout_css'] ?? '') ?></textarea>
       </div>
       <div class="form-group">
-        <label>Layout JS (spolecny skript — scroll, nav efekty)</label>
+        <label>Layout JS (spolecny skript - scroll, nav efekty)</label>
         <textarea class="code" name="layout_js" rows="10"><?= $h($site['layout_js'] ?? '') ?></textarea>
       </div>
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label>Nav — homepage (hash anchory pro One Page scroll)</label>
+        <label>Nav - homepage (hash anchory pro One Page scroll)</label>
         <textarea class="code" name="layout_nav_home" rows="8"><?= $h($site['layout_nav_home'] ?? '') ?></textarea>
       </div>
       <div class="form-group">
-        <label>Nav — subpages (prime URL na jednotlive stranky)</label>
+        <label>Nav - subpages (prime URL na jednotlive stranky)</label>
         <textarea class="code" name="layout_nav_sub" rows="8"><?= $h($site['layout_nav_sub'] ?? '') ?></textarea>
       </div>
     </div>
   </div>
 
-  <button type="submit" class="btn btn-primary">Ulozit nastaveni</button>
+  <button type="submit" class="btn btn-primary">Uložit nastavení</button>
 </form>
 
 <div class="card" style="margin-top:24px">
@@ -454,18 +581,18 @@ ob_start();
   <div class="form-group" style="margin-top:4px">
     <label>Dostupne endpointy</label>
     <ul style="margin:4px 0 0 18px;font-size:13px;color:var(--c-muted);line-height:1.8">
-      <li><code>GET    /api/v1/articles</code> — seznam vsech clanku</li>
-      <li><code>POST   /api/v1/articles</code> — vytvorit novy clanek (JSON: title*, slug, excerpt, content, status, featured_image_id, gallery_ids[], meta_title, meta_description)</li>
-      <li><code>GET    /api/v1/articles/{slug}</code> — detail clanku</li>
-      <li><code>PUT    /api/v1/articles/{slug}</code> — aktualizovat clanek (JSON: stejna tela jako POST, vsechna pole volitelna)</li>
-      <li><code>DELETE /api/v1/articles/{slug}</code> — smazat clanek</li>
-      <li style="margin-top:6px"><code>GET    /api/v1/portfolio</code> — seznam portfolia</li>
-      <li><code>POST   /api/v1/portfolio</code> — vytvorit polozku (JSON: title*, slug, description, video_url, status, sort_order, media_ids[], meta_title, meta_description)</li>
-      <li><code>GET    /api/v1/portfolio/{slug}</code> — detail polozky</li>
-      <li><code>PUT    /api/v1/portfolio/{slug}</code> — aktualizovat polozku (JSON: stejna tela jako POST, vsechna pole volitelna)</li>
-      <li><code>DELETE /api/v1/portfolio/{slug}</code> — smazat polozku</li>
-      <li style="margin-top:6px"><code>POST   /api/v1/media</code> — nahrat medium (multipart/form-data: file/files[], alt_text*, title)</li>
-      <li><code>DELETE /api/v1/media/{id}</code> — smazat medium</li>
+      <li><code>GET    /api/v1/articles</code> - seznam vsech clanku</li>
+      <li><code>POST   /api/v1/articles</code> - vytvorit novy clanek (JSON: title*, slug, excerpt, content, status, featured_image_id, gallery_ids[], meta_title, meta_description)</li>
+      <li><code>GET    /api/v1/articles/{slug}</code> - detail clanku</li>
+      <li><code>PUT    /api/v1/articles/{slug}</code> - aktualizovat clanek (JSON: stejna tela jako POST, vsechna pole volitelna)</li>
+      <li><code>DELETE /api/v1/articles/{slug}</code> - smazat clanek</li>
+      <li style="margin-top:6px"><code>GET    /api/v1/portfolio</code> - seznam portfolia</li>
+      <li><code>POST   /api/v1/portfolio</code> - vytvorit polozku (JSON: title*, slug, description, video_url, status, sort_order, media_ids[], meta_title, meta_description)</li>
+      <li><code>GET    /api/v1/portfolio/{slug}</code> - detail polozky</li>
+      <li><code>PUT    /api/v1/portfolio/{slug}</code> - aktualizovat polozku (JSON: stejna tela jako POST, vsechna pole volitelna)</li>
+      <li><code>DELETE /api/v1/portfolio/{slug}</code> - smazat polozku</li>
+      <li style="margin-top:6px"><code>POST   /api/v1/media</code> - nahrat medium (multipart/form-data: file/files[], alt_text*, title)</li>
+      <li><code>DELETE /api/v1/media/{id}</code> - smazat medium</li>
     </ul>
     <p class="help-text" style="margin-top:8px">* povinna pole &nbsp;|&nbsp; status: <code>draft</code> (vychozi) nebo <code>published</code></p>
   </div>
@@ -535,7 +662,7 @@ ob_start();
       <button type="button" class="btn btn-secondary" data-brand-media-close>Zavrit</button>
     </div>
     <?php if (empty($media)): ?>
-      <p class="help-text">Zatim nejsou nahrana zadna media. Nejdrive je nahraj v sekci <a href="/admin/media">Media</a>.</p>
+      <p class="help-text">Zatím nejsou nahrána žádná media. Nejdrive je nahraj v sekci <a href="/admin/media">Media</a>.</p>
     <?php else: ?>
       <div class="brand-media-list">
         <?php foreach ($media as $m): ?>
@@ -545,7 +672,7 @@ ob_start();
             $mime = (string)($m['mime_type'] ?? '');
             $isImage = str_starts_with($mime, 'image/');
           ?>
-          <button type="button" class="brand-media-item" data-brand-media-item data-url="<?= $h($url) ?>" data-mime="<?= $h($mime) ?>" title="<?= $h($m['original_filename'] ?? '') ?>">
+          <button type="button" class="brand-media-item" data-brand-media-item data-id="<?= (int)$m['id'] ?>" data-url="<?= $h($url) ?>" data-mime="<?= $h($mime) ?>" title="<?= $h($m['original_filename'] ?? '') ?>">
             <div class="brand-media-thumb">
               <?php if ($isImage): ?>
                 <img src="<?= $h($thumb) ?>" alt="<?= $h($m['alt_text'] ?? $m['original_filename'] ?? '') ?>" loading="lazy">
@@ -580,10 +707,25 @@ ob_start();
     return document.querySelector('[data-brand-path][for="' + targetId + '"]');
   }
 
-  function setAsset(targetId, url, mime) {
+  // Stored paths look like /storage/media/..., but the public route serves /media/...
+  // Mirrors the $publicMediaUrl helper above so previews resolve the same way.
+  // Media paths always arrive from the server with forward slashes.
+  const STORAGE_PREFIX = '/storage/media/';
+  function toPublicMediaUrl(url) {
+    const value = String(url || '').trim();
+    if (value === '') return '';
+    const absolute = value.match(/^https?:\/\/[^/]+(\/storage\/media\/.*)$/i);
+    if (absolute) return '/media/' + absolute[1].slice(STORAGE_PREFIX.length);
+    if (value.startsWith(STORAGE_PREFIX)) return '/media/' + value.slice(STORAGE_PREFIX.length);
+    if (value.startsWith(STORAGE_PREFIX.slice(1))) return '/media/' + value.slice(STORAGE_PREFIX.length - 1);
+    return value;
+  }
+
+  function setAsset(targetId, url, mime, mediaId) {
     const input = document.getElementById(targetId);
     if (!input) return;
-    input.value = url;
+    const valueMode = input.dataset.brandValueMode || 'url';
+    input.value = valueMode === 'id' ? (mediaId || '') : url;
     const preview = previewFor(targetId);
     const path = pathFor(targetId);
     if (preview) {
@@ -591,7 +733,7 @@ ob_start();
       if (url) {
         if ((mime || '').startsWith('image/')) {
           const img = document.createElement('img');
-          img.src = url;
+          img.src = toPublicMediaUrl(url);
           img.alt = '';
           preview.appendChild(img);
         } else {
@@ -611,18 +753,25 @@ ob_start();
   document.querySelectorAll('[data-open-brand-media]').forEach(btn => {
     btn.addEventListener('click', () => {
       activeTarget = btn.dataset.target || '';
-      modal.classList.add('is-open');
-      modal.setAttribute('aria-hidden', 'false');
+      const target = document.getElementById(activeTarget);
+      AdminMediaPicker.open({mode:'single',imagesOnly:target && target.dataset.brandValueMode==='id',onConfirm:list=>{
+        const item=list[0]; if(item) setAsset(activeTarget,item.url,item.mime,item.id);
+      }});
     });
   });
 
   document.querySelectorAll('[data-clear-brand-media]').forEach(btn => {
-    btn.addEventListener('click', () => setAsset(btn.dataset.target || '', '', ''));
+    btn.addEventListener('click', () => setAsset(btn.dataset.target || '', '', '', ''));
   });
 
   modal.querySelectorAll('[data-brand-media-item]').forEach(item => {
     item.addEventListener('click', () => {
-      if (activeTarget) setAsset(activeTarget, item.dataset.url || '', item.dataset.mime || '');
+      const target = document.getElementById(activeTarget);
+      if (target && target.dataset.brandValueMode === 'id' && !(item.dataset.mime || '').startsWith('image/')) {
+        window.alert('Pro OG fotografii lze vybrat pouze obrazek.');
+        return;
+      }
+      if (activeTarget) setAsset(activeTarget, item.dataset.url || '', item.dataset.mime || '', item.dataset.id || '');
       closeModal();
     });
   });

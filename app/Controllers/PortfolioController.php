@@ -33,13 +33,84 @@ class PortfolioController extends Controller
         ]);
     }
 
+    /**
+     * Videos posted by the form: the URL of each row paired with the order number
+     * typed next to it. `video_urls[]` is what the form sends today; a single
+     * `video_url` is still accepted so a cached old form (or an external post) keeps
+     * working. Unsupported addresses are dropped, not rejected - the caller reports
+     * them, because losing the whole save over one typo is worse than saving the rest.
+     *
+     * @return array{items: list<array{url:string,sort_order:int}>, rejected: list<string>}
+     */
+    private function postedVideos(): array
+    {
+        $rawUrls = $_POST['video_urls'] ?? null;
+        $rawSort = (array)($_POST['video_sort'] ?? []);
+        if ($rawUrls === null && isset($_POST['video_url'])) {
+            $rawUrls = [$_POST['video_url']];
+            $rawSort = [];
+        }
+
+        $raw = [];
+        foreach (array_values((array)($rawUrls ?? [])) as $i => $url) {
+            $url = is_scalar($url) ? trim((string)$url) : '';
+            if ($url === '') {
+                continue;
+            }
+            $sort = $rawSort[$i] ?? 0;
+            $raw[] = ['url' => $url, 'sort_order' => is_scalar($sort) ? max(0, (int)$sort) : 0];
+        }
+
+        $items = PortfolioRepository::orderVideoItems(PortfolioRepository::normalizeVideoItems($raw));
+        $rejected = array_values(array_diff(array_column($raw, 'url'), array_column($items, 'url')));
+
+        return ['items' => $items, 'rejected' => $rejected];
+    }
+
+    /**
+     * The per-photo order numbers posted as `<key>[<media id>]`. Keyed by id rather
+     * than by position, so a reordered selection can never shift the numbers onto the
+     * wrong photos; anything missing or unparsable counts as 0.
+     *
+     * @return array<int,int>
+     */
+    private function postedSortMap(string $key): array
+    {
+        $map = [];
+        foreach ((array)($_POST[$key] ?? []) as $mediaId => $sort) {
+            // Only a plain digit string is a media id; "5abc" would otherwise cast to
+            // 5 and silently renumber a different photo.
+            if (!is_scalar($sort) || !ctype_digit((string)$mediaId) || (int)$mediaId <= 0) {
+                continue;
+            }
+            $map[(int)$mediaId] = PortfolioRepository::clampSortOrder($sort);
+        }
+
+        return $map;
+    }
+
+    /** Warn about addresses the save silently dropped, and about a video entry left without one. */
+    private function flashVideoNotices(array $posted, string $contentType): void
+    {
+        $notices = [];
+        if ($posted['rejected'] !== []) {
+            $notices[] = 'Tyto adresy nejsou YouTube ani Vimeo a nebyly ulozeny: ' . implode(', ', $posted['rejected']);
+        }
+        if ($contentType === 'video' && $posted['items'] === []) {
+            $notices[] = 'Prace je oznacena jako videogalerie, ale nema zadne video.';
+        }
+        if ($notices !== []) {
+            $this->flash('error', implode(' ', $notices));
+        }
+    }
+
     public function create(array $params): void
     {
         $this->requireAuth();
         $this->view('portfolio.form', [
             'entry'    => null,
-            'media'    => $this->allMedia(),
-            'selected' => [],
+            'selectedMedia' => [],
+            'videos' => [],
         ]);
     }
 
@@ -56,6 +127,8 @@ class PortfolioController extends Controller
 
         $slug   = $this->makeSlug($_POST['slug'] ?? '', $_POST['title'] ?? '');
         $status = ($_POST['status'] ?? 'draft') === 'published' ? 'published' : 'draft';
+        $contentType = ($_POST['content_type'] ?? 'photo') === 'video' ? 'video' : 'photo';
+        $postedVideos = $this->postedVideos();
 
         $repo = new PortfolioRepository();
         $id   = $repo->create([
@@ -63,15 +136,20 @@ class PortfolioController extends Controller
             'title'            => trim($_POST['title'] ?? ''),
             'slug'             => $slug,
             'description'      => $_POST['description'] ?? '',
-            'video_url'        => trim($_POST['video_url'] ?? '') ?: null,
+            'video_url'        => $postedVideos['items'][0]['url'] ?? null,
+            'content_type'     => $contentType,
             'status'           => $status,
             'published_at'     => $status === 'published' ? date('Y-m-d H:i:s') : null,
-            'sort_order'       => (int)($_POST['sort_order'] ?? 0),
+            'sort_order'       => PortfolioRepository::clampSortOrder($_POST['sort_order'] ?? 0),
             'meta_title'       => trim($_POST['meta_title']       ?? '') ?: null,
             'meta_description' => trim($_POST['meta_description'] ?? '') ?: null,
         ]);
 
-        $repo->setMedia($id, $_POST['media_ids'] ?? []);
+        $repo->setMedia($id, $_POST['media_ids'] ?? [], $this->postedSortMap('media_sort'));
+        // Videos must be stored before the entry is published - the static export and
+        // the listing both read them back from the database.
+        $repo->setVideos($id, $postedVideos['items']);
+        $this->flashVideoNotices($postedVideos, $contentType);
 
         $svc = new PortfolioPublishService();
         if ($status === 'published') {
@@ -94,12 +172,12 @@ class PortfolioController extends Controller
             $this->redirect('/admin/portfolio');
         }
 
-        $selected = array_column($repo->getMedia($id), 'id');
+        $selectedMedia = $repo->getMedia($id);
 
         $this->view('portfolio.form', [
             'entry'    => $entry,
-            'media'    => $this->allMedia(),
-            'selected' => $selected,
+            'selectedMedia' => $selectedMedia,
+            'videos' => $repo->getVideos($id),
             'success'  => $this->getFlash('success'),
             'error'    => $this->getFlash('error'),
         ]);
@@ -120,6 +198,8 @@ class PortfolioController extends Controller
 
         $slug        = $this->makeSlug($_POST['slug'] ?? '', $_POST['title'] ?? '');
         $status      = ($_POST['status'] ?? 'draft') === 'published' ? 'published' : 'draft';
+        $contentType = ($_POST['content_type'] ?? 'photo') === 'video' ? 'video' : 'photo';
+        $postedVideos = $this->postedVideos();
         $publishedAt = $status === 'published'
             ? ($entry['published_at'] ?? date('Y-m-d H:i:s'))
             : null;
@@ -128,15 +208,18 @@ class PortfolioController extends Controller
             'title'            => trim($_POST['title'] ?? ''),
             'slug'             => $slug,
             'description'      => $_POST['description'] ?? '',
-            'video_url'        => trim($_POST['video_url'] ?? '') ?: null,
+            'video_url'        => $postedVideos['items'][0]['url'] ?? null,
+            'content_type'     => $contentType,
             'status'           => $status,
             'published_at'     => $publishedAt,
-            'sort_order'       => (int)($_POST['sort_order'] ?? 0),
+            'sort_order'       => PortfolioRepository::clampSortOrder($_POST['sort_order'] ?? 0),
             'meta_title'       => trim($_POST['meta_title']       ?? '') ?: null,
             'meta_description' => trim($_POST['meta_description'] ?? '') ?: null,
         ]);
 
-        $repo->setMedia($id, $_POST['media_ids'] ?? []);
+        $repo->setMedia($id, $_POST['media_ids'] ?? [], $this->postedSortMap('media_sort'));
+        $repo->setVideos($id, $postedVideos['items']);
+        $this->flashVideoNotices($postedVideos, $contentType);
 
         $site = (new SiteRepository())->findFirst();
         $svc  = new PortfolioPublishService();
@@ -182,9 +265,4 @@ class PortfolioController extends Controller
         return (int)(\App\Core\Auth::user()['id'] ?? 0);
     }
 
-    private function allMedia(): array
-    {
-        $site = (new SiteRepository())->findFirst();
-        return $site ? (new MediaRepository())->allBySite($site['id']) : [];
-    }
 }

@@ -20,6 +20,69 @@ class PageController extends Controller
 {
     use SlugTrait;
 
+    /**
+     * Every editable text of the o-nas page: [block_key, block_type, label,
+     * default content, sort_order]. The defaults are the literals the theme
+     * template falls back to, so materialising a row never changes the page.
+     */
+    private const ABOUT_COPY_BLOCKS = [
+        ['about_hero_cta_primary', 'text', 'Hero - hlavní tlačítko', 'Získat nabídku', 10],
+        ['about_hero_cta_secondary', 'text', 'Hero - druhé tlačítko', 'Podívat se na ukázky', 11],
+        ['about_team_heading', 'text', 'Tým - nadpis sekce', 'Kdo stojí za RB Videos & Photos', 12],
+        ['about_photographer_name', 'text', 'Fotograf - jméno', 'Zdeněk Černohlávek', 13],
+        ['about_photographer_role', 'text', 'Fotograf - role', 'Fotograf', 14],
+        ['about_photographer_quote', 'textarea', 'Fotograf - citát', 'Zachycuji emoce a přirozenost tak, abyste se k nim mohli vracet i po letech a znovu je prožívat. Věnuji se focení od roku 2015.', 15],
+        ['about_photographer_point_1', 'text', 'Fotograf - odrážka 1', 'Stovky spokojených klientů', 16],
+        ['about_photographer_point_2', 'text', 'Fotograf - odrážka 2', 'Cit pro detail a světlo', 17],
+        ['about_photographer_point_3', 'text', 'Fotograf - odrážka 3', 'Individuální přístup ke každému páru', 18],
+        ['about_photographer_cta_primary', 'text', 'Fotograf - tlačítko 1', 'Ukázky práce', 19],
+        ['about_photographer_cta_secondary', 'text', 'Fotograf - tlačítko 2', 'Spojit se', 20],
+        ['about_photographer_photo_alt', 'text', 'Fotograf - popis fotky (alt)', 'Zdeněk Černohlávek, fotograf', 21],
+        ['about_photographer_video_label', 'text', 'Fotograf - popis tlačítka přehrát video', 'Přehrát video se Zdeňkem Černohlávkem', 22],
+        ['about_cameraman_name', 'text', 'Kameraman - jméno', 'Tomáš Šincl', 23],
+        ['about_cameraman_role', 'text', 'Kameraman - role', 'Kameraman a editor', 24],
+        ['about_cameraman_quote', 'textarea', 'Kameraman - citát', 'Vyprávím vaše příběhy pohyblivým obrazem, který dojme a zůstane navždy.', 25],
+        ['about_cameraman_point_1', 'text', 'Kameraman - odrážka 1', 'Filmové svatební video', 26],
+        ['about_cameraman_point_2', 'text', 'Kameraman - odrážka 2', 'Dynamické střihy a emoce', 27],
+        ['about_cameraman_point_3', 'text', 'Kameraman - odrážka 3', 'Příběh, který má začátek i konec', 28],
+        ['about_cameraman_cta_primary', 'text', 'Kameraman - tlačítko 1', 'Ukázky práce', 29],
+        ['about_cameraman_cta_secondary', 'text', 'Kameraman - tlačítko 2', 'Spojit se', 30],
+        ['about_cameraman_photo_alt', 'text', 'Kameraman - popis fotky (alt)', 'Tomáš Šincl, kameraman', 31],
+        ['about_cameraman_video_label', 'text', 'Kameraman - popis tlačítka přehrát video', 'Přehrát video s Tomášem Šinclem', 32],
+        ['about_values_heading', 'text', 'Hodnoty - nadpis sekce', 'Naše zkušenosti a přístup', 33],
+        ['about_value_1_title', 'text', 'Hodnota 1 - nadpis', 'Profesionální technika', 34],
+        ['about_value_2_title', 'text', 'Hodnota 2 - nadpis', 'Individuální přístup', 35],
+        ['about_value_3_title', 'text', 'Hodnota 3 - nadpis', 'Důvěra a diskrétnost', 36],
+        ['about_value_4_title', 'text', 'Hodnota 4 - nadpis', 'Vkus a cit pro detail', 37],
+        ['about_reviews_heading', 'text', 'Reference - nadpis sekce', 'Reference klientů', 38],
+        ['about_trust_heading', 'text', 'Důvěra - nadpis sekce', 'Důvěra a transparentnost', 39],
+        ['about_trust_link_1', 'text', 'Důvěra - odkaz 1', 'IČO a fakturační údaje', 40],
+        ['about_trust_link_2', 'text', 'Důvěra - odkaz 2', 'Obchodní podmínky', 41],
+        ['about_trust_link_3', 'text', 'Důvěra - odkaz 3', 'GDPR ochrana', 42],
+        ['about_trust_link_4', 'text', 'Důvěra - odkaz 4', 'Orientační ceník', 43],
+        ['about_trust_link_5', 'text', 'Důvěra - odkaz 5', 'Dodací termíny', 44],
+        ['about_trust_link_6', 'text', 'Důvěra - odkaz 6', 'Rezervační postup', 45],
+        ['about_stories_heading', 'text', 'Příběhy - nadpis sekce', 'Příběhy z praxe / případové studie', 46],
+        ['about_stories_kicker', 'text', 'Příběhy - štítek karty', 'Blog', 47],
+        ['about_stories_link_label', 'text', 'Příběhy - text odkazu', 'Zobrazit příběh ›', 48],
+        ['about_cta_heading', 'text', 'Závěrečné CTA - nadpis', 'Pojďme si vytvořit vzpomínky na celý život', 49],
+        ['about_cta_primary', 'text', 'Závěrečné CTA - tlačítko 1', 'Získat nabídku', 50],
+        ['about_cta_secondary', 'text', 'Závěrečné CTA - tlačítko 2', 'Napište nám', 51],
+    ];
+
+    /**
+     * Optional team videos of the o-nas page (same shape for both people): an
+     * empty block keeps the portrait photo, a filled YouTube/Vimeo URL turns the
+     * card into the video variant. Created by migration 068 and seed.php; here
+     * only materialised when missing, always empty, so the page never changes
+     * and an existing (admin-edited) row is never touched. The portraits
+     * themselves (about_*_image) are mandatory media and stay with 037/087.
+     */
+    private const ABOUT_TEAM_VIDEO_BLOCKS = [
+        ['about_photographer_video', 'video', 'Zdeněk Černohlávek - video místo fotky (nepovinné)', '', 5],
+        ['about_cameraman_video', 'video', 'Tomáš Šincl - video místo fotky (nepovinné)', '', 6],
+    ];
+
     public function index(array $params): void
     {
         $this->requireAuth();
@@ -51,7 +114,6 @@ class PageController extends Controller
             'faqItems'   => [],
             'contact'    => [],
             'serviceItems' => [],
-            'media'      => $site ? (new MediaRepository())->allBySiteWithVariants((int)$site['id']) : [],
             'isHomepage' => false,
             'homepageAutofillBlocks' => [],
         ]);
@@ -119,6 +181,9 @@ class PageController extends Controller
         if ($isHomepage) {
             $this->ensureHomepageAboutVisualMediaBlock($id);
         }
+        if (trim((string)($page['url_path'] ?? ''), '/') === 'o-nas') {
+            $this->ensureAboutCopyBlocks($id);
+        }
         $templates = (new TemplateRepository())->allForAdmin();
         $template  = $page['template_id'] ? (new TemplateRepository())->findById((int)$page['template_id']) : null;
         $layout    = $this->resolveLayoutType($template['name'] ?? '');
@@ -130,7 +195,6 @@ class PageController extends Controller
             ? (new HomepageContentService())->getAutofillDefinitions()
             : [];
         $serviceItems = ($layout === 'services' || $isHomepage) ? (new ServiceRepository())->allBySite((int)$page['site_id']) : [];
-        $media = (new MediaRepository())->allBySiteWithVariants((int)$page['site_id']);
 
         $this->view('pages.form', [
             'page'       => $page,
@@ -141,7 +205,6 @@ class PageController extends Controller
             'faqItems'   => $layout === 'faq' ? (new FaqRepository())->allBySite((int)$page['site_id']) : [],
             'contact'    => $layout === 'contact' ? (new ContactRepository())->findBySiteSafe((int)$page['site_id']) : [],
             'serviceItems' => $serviceItems,
-            'media'      => $media,
             'site'       => $sites->findById($page['site_id']),
             'isHomepage' => $isHomepage,
             'homepageAutofillBlocks' => $homepageAutofillBlocks,
@@ -190,6 +253,9 @@ class PageController extends Controller
         $this->ensurePageHeroVideoBlock($id);
         if ($isHomepage) {
             $this->ensureHomepageAboutVisualMediaBlock($id);
+        }
+        if (trim((string)($page['url_path'] ?? ''), '/') === 'o-nas') {
+            $this->ensureAboutCopyBlocks($id);
         }
         if ($layoutType === 'services') {
             $this->ensureServicesHeroImageBlock($id);
@@ -262,17 +328,26 @@ class PageController extends Controller
     private function ensurePageHeroVideoBlock(int $pageId): void
     {
         $blockRepo = new BlockRepository();
-        if ($blockRepo->findByKey($pageId, 'hero_video')) {
-            return;
-        }
+        // Tablet and mobile are optional overrides of the desktop video; a page that has no
+        // row for them simply falls back to the desktop one.
+        $blocks = [
+            'hero_video' => 'Hero - video pozadi (Vimeo/YouTube URL)',
+            'hero_video_tablet' => 'Hero - video pro tablet (do 1050 px)',
+            'hero_video_mobile' => 'Hero - video pro mobil (do 700 px)',
+        ];
+        foreach ($blocks as $key => $label) {
+            if ($blockRepo->findByKey($pageId, $key)) {
+                continue;
+            }
 
-        $blockRepo->upsert($pageId, 'hero_video', [
-            'block_type' => 'link',
-            'label' => 'Hero - video pozadi (Vimeo/YouTube URL)',
-            'content' => '',
-            'sort_order' => 2,
-            'autofill_disabled' => 0,
-        ]);
+            $blockRepo->upsert($pageId, $key, [
+                'block_type' => 'link',
+                'label' => $label,
+                'content' => '',
+                'sort_order' => 2,
+                'autofill_disabled' => 0,
+            ]);
+        }
     }
 
     private function ensureServicesHeroImageBlock(int $pageId): void
@@ -284,7 +359,7 @@ class PageController extends Controller
 
         $blockRepo->upsert($pageId, 'hero_bg', [
             'block_type' => 'image',
-            'label' => 'Hero — obrazek / medium',
+            'label' => 'Hero - obrazek / medium',
             'content' => '',
             'sort_order' => 3,
             'autofill_disabled' => 0,
@@ -305,6 +380,39 @@ class PageController extends Controller
             'sort_order' => 13,
             'autofill_disabled' => 0,
         ]);
+    }
+
+    /**
+     * Safety net for the o-nas copy blocks created by migrations 074/075.
+     *
+     * The theme template renders every one of these texts from its block with a
+     * hardcoded fallback, so a missing row is invisible on the page - and also
+     * invisible in the admin, because the generic "Bloky obsahu" tab only lists
+     * rows that exist. A site that skipped the migration would therefore never
+     * be able to edit the About copy. Opening or saving the page materialises
+     * the rows with exactly the template's own defaults; an existing row is
+     * never touched.
+     *
+     * Keep in sync with database/migrations/074_add_about_team_copy_blocks.sql,
+     * database/migrations/075_add_about_rest_copy_blocks.sql and
+     * database/seeds/seed.php.
+     */
+    private function ensureAboutCopyBlocks(int $pageId): void
+    {
+        $blockRepo = new BlockRepository();
+        foreach (array_merge(self::ABOUT_COPY_BLOCKS, self::ABOUT_TEAM_VIDEO_BLOCKS) as [$key, $type, $label, $content, $order]) {
+            if ($blockRepo->findByKey($pageId, $key)) {
+                continue;
+            }
+
+            $blockRepo->upsert($pageId, $key, [
+                'block_type' => $type,
+                'label' => $label,
+                'content' => $content,
+                'sort_order' => $order,
+                'autofill_disabled' => 0,
+            ]);
+        }
     }
 
     private function syncHomepageAboutVisualBlock(int $pageId): void
@@ -416,7 +524,7 @@ class PageController extends Controller
 
         (new BlockRepository())->upsert((int)$page['id'], 'kontakt_info', [
             'block_type' => 'html',
-            'label'      => 'Kontakt — info',
+            'label'      => 'Kontakt - info',
             'content'    => $content,
             'sort_order' => 62,
         ]);
@@ -474,7 +582,7 @@ class PageController extends Controller
         $content = (new HomepageContentService())->buildServicesHtml($siteId, 0);
         (new BlockRepository())->upsert((int)$page['id'], 'sluzby_grid', [
             'block_type' => 'html',
-            'label' => 'Služby — karty',
+            'label' => 'Služby - karty',
             'content' => $content,
             'sort_order' => 3,
         ]);
@@ -487,10 +595,10 @@ class PageController extends Controller
             return;
         }
 
-        $content = (new HomepageContentService())->buildServicesHtml($siteId, 5);
+        $content = (new HomepageContentService())->buildServicesHtml($siteId, 6);
         (new BlockRepository())->upsert((int)$page['id'], 'sluzby_items', [
             'block_type' => 'html',
-            'label' => 'Služby — karty',
+            'label' => 'Služby - karty',
             'content' => $content,
             'sort_order' => 12,
         ]);

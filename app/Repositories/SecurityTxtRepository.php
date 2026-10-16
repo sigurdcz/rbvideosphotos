@@ -27,7 +27,7 @@ class SecurityTxtRepository
 
         foreach (['security_txt_configs', 'security_txt_contacts'] as $table) {
             $stmt = $this->db->prepare(
-                'SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = ?'
+                'SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND CONVERT(table_name USING utf8mb4) = ?'
             );
             $stmt->execute([$table]);
             if ((int) $stmt->fetchColumn() !== 1) {

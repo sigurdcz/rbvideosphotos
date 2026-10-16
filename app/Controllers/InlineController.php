@@ -31,6 +31,10 @@ class InlineController extends Controller
             $this->json(['ok' => false, 'error' => 'Chybí parametry.'], 400);
         }
 
+        if (!preg_match('/^[a-z0-9_:-]{1,100}$/', $key)) {
+            $this->json(['ok' => false, 'error' => 'Neplatný klíč bloku.'], 400);
+        }
+
         $pages = new PageRepository();
         $page  = $pages->findById($pageId);
         if (!$page) {
@@ -49,7 +53,9 @@ class InlineController extends Controller
         }
 
         $blocks = new BlockRepository();
-        $blocks->updateContent($pageId, $key, $content);
+        if (!$blocks->updateContent($pageId, $key, $content)) {
+            $this->createMissingBlock($blocks, $pageId, $key, $content);
+        }
 
         $this->maybeSyncFaqToHomepage($page, $key, $content);
 
@@ -150,6 +156,25 @@ class InlineController extends Controller
         return true;
     }
 
+    /**
+     * Create the content_blocks row an inline edit was aimed at.
+     *
+     * Templates render their copy from a DB block with a hardcoded default, so
+     * the very first inline edit of such a text has no row to update yet. The
+     * key comes from the template's own inlineAttr() call, so it is a known
+     * block key and safe to materialise with plain-text defaults; the admin
+     * "Bloky obsahu" tab picks the new row up automatically.
+     */
+    private function createMissingBlock(BlockRepository $blocks, int $pageId, string $key, string $content): void
+    {
+        $blocks->upsert($pageId, $key, [
+            'block_type' => 'text',
+            'label'      => $key,
+            'content'    => $content,
+            'sort_order' => 0,
+        ]);
+    }
+
     private function maybeSyncFaqToHomepage(array $page, string $key, string $content): void
     {
         if (!in_array($key, ['faq_1', 'faq_2', 'faq_3', 'faq_4'], true)) return;
@@ -176,6 +201,10 @@ class InlineController extends Controller
 
         if (!$pageId || $key === '') {
             $this->json(['ok' => false, 'error' => 'Chybí parametry.'], 400);
+        }
+
+        if (!preg_match('/^[a-z0-9_:-]{1,100}$/', $key)) {
+            $this->json(['ok' => false, 'error' => 'Neplatný klíč bloku.'], 400);
         }
 
         $file = $_FILES['file'] ?? null;
@@ -236,7 +265,15 @@ class InlineController extends Controller
 
         // Update block content with the public-facing path
         $publicPath = '/' . $storagePath . '/' . $newName;
-        (new BlockRepository())->updateContent($pageId, $key, $publicPath);
+        $blocks = new BlockRepository();
+        if (!$blocks->updateContent($pageId, $key, $publicPath)) {
+            $blocks->upsert($pageId, $key, [
+                'block_type' => 'image',
+                'label'      => $key,
+                'content'    => $publicPath,
+                'sort_order' => 0,
+            ]);
+        }
 
         $user   = Auth::user();
         $result = (new PublishService())->publishPage($pageId, $user['id']);

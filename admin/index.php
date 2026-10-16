@@ -78,7 +78,8 @@ try {
     $router->post('/admin/seo/update', 'SeoController', 'update');
 
     // Media
-    $router->get('/admin/media',         'MediaController', 'index');
+      $router->get('/admin/media',         'MediaController', 'index');
+      $router->get('/admin/media/picker',  'MediaController', 'picker');
     $router->post('/admin/media/upload', 'MediaController', 'upload');
     $router->post('/admin/media/update', 'MediaController', 'update');
     $router->post('/admin/media/delete', 'MediaController', 'delete');
@@ -136,6 +137,11 @@ try {
     $router->post('/admin/portfolio/update', 'PortfolioController', 'update');
     $router->post('/admin/portfolio/delete', 'PortfolioController', 'delete');
 
+    // Shared/global marketing sections
+    $router->get('/admin/shared-sections', 'SharedSectionController', 'index');
+    $router->get('/admin/shared-sections/edit', 'SharedSectionController', 'edit');
+    $router->post('/admin/shared-sections/update', 'SharedSectionController', 'update');
+
     // Reviews
     $router->get('/admin/reviews',         'ReviewController', 'index');
     $router->get('/admin/reviews/create',  'ReviewController', 'create');
@@ -147,7 +153,10 @@ try {
     // Setup / seed
     $router->get('/admin/setup',      'SetupController', 'index');
     $router->post('/admin/setup/run', 'SetupController', 'run');
-    $router->post('/admin/setup/demo-content', 'SetupController', 'demoContent');
+    $router->post('/admin/setup/demo-content/start', 'SetupController', 'demoContentStart');
+    $router->post('/admin/setup/demo-content/step', 'SetupController', 'demoContentStep');
+    $router->get('/admin/setup/demo-content/status', 'SetupController', 'demoContentStatus');
+    $router->post('/admin/setup/demo-content/retry', 'SetupController', 'demoContentRetry');
     $router->post('/admin/setup/armageddon', 'SetupController', 'armageddon');
 
     $router->dispatch();

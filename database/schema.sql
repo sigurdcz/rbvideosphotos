@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS `sites` (
   `id`                    INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `name`                  VARCHAR(255) NOT NULL,
   `domain`                VARCHAR(255) NOT NULL,
+  `company_registration_id` VARCHAR(20) DEFAULT NULL,
   `default_language`      VARCHAR(10) NOT NULL DEFAULT 'cs',
   `google_analytics_id`   VARCHAR(50) DEFAULT NULL,
   `google_tag_manager_id` VARCHAR(50) DEFAULT NULL,
@@ -39,8 +40,13 @@ CREATE TABLE IF NOT EXISTS `sites` (
   `layout_js`             LONGTEXT DEFAULT NULL,
   `layout_nav_home`       LONGTEXT DEFAULT NULL,
   `layout_nav_sub`        LONGTEXT DEFAULT NULL,
-  `active_theme_key`      VARCHAR(120) DEFAULT 'elegant-white',
+  `active_theme_key`      VARCHAR(120) DEFAULT 'golden-bash-diagonal',
   `media_image_quality`    TINYINT UNSIGNED NOT NULL DEFAULT 90,
+  `default_hero_video_url`        VARCHAR(1000) DEFAULT NULL,
+  `default_hero_video_url_tablet` VARCHAR(1000) DEFAULT NULL,
+  `default_hero_video_url_mobile` VARCHAR(1000) DEFAULT NULL,
+  `default_hero_poster_url`       VARCHAR(1000) DEFAULT NULL,
+  `video_autoplay_enabled`        TINYINT(1) NOT NULL DEFAULT 1,
   `created_at`            DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at`            DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   KEY `idx_sites_active_theme_key` (`active_theme_key`),
@@ -198,16 +204,26 @@ CREATE TABLE IF NOT EXISTS `seo_settings` (
   `twitter_description` VARCHAR(500) DEFAULT NULL,
   `twitter_image_id`    INT UNSIGNED DEFAULT NULL,
   `schema_type`         VARCHAR(100) DEFAULT NULL,
-  `schema_json`         LONGTEXT DEFAULT NULL,
+  `schema_name`             VARCHAR(255) DEFAULT NULL,
+  `schema_description`      VARCHAR(1000) DEFAULT NULL,
+  `schema_image_id`         INT UNSIGNED DEFAULT NULL,
+  `schema_contact_auto`     TINYINT(1) NOT NULL DEFAULT 1,
+  `schema_telephone`        VARCHAR(100) DEFAULT NULL,
+  `schema_email`            VARCHAR(255) DEFAULT NULL,
+  `schema_address_street`   VARCHAR(255) DEFAULT NULL,
+  `schema_address_locality` VARCHAR(255) DEFAULT NULL,
+  `schema_json`         LONGTEXT DEFAULT NULL, -- deprecated: unread/unwritten since migration 079, structured schema_* columns above are authoritative
   `created_at`          DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at`          DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `fk_seo_page` (`page_id`),
   KEY `fk_seo_og_image` (`og_image_id`),
   KEY `fk_seo_tw_image` (`twitter_image_id`),
+  KEY `fk_seo_schema_image` (`schema_image_id`),
   CONSTRAINT `fk_seo_page` FOREIGN KEY (`page_id`) REFERENCES `pages` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_seo_og_image` FOREIGN KEY (`og_image_id`) REFERENCES `media` (`id`) ON DELETE SET NULL,
-  CONSTRAINT `fk_seo_tw_image` FOREIGN KEY (`twitter_image_id`) REFERENCES `media` (`id`) ON DELETE SET NULL
+  CONSTRAINT `fk_seo_tw_image` FOREIGN KEY (`twitter_image_id`) REFERENCES `media` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_seo_schema_image` FOREIGN KEY (`schema_image_id`) REFERENCES `media` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -257,6 +273,7 @@ CREATE TABLE IF NOT EXISTS `blog_posts` (
   `featured_image_id` INT UNSIGNED DEFAULT NULL,
   `status`            ENUM('draft','published') NOT NULL DEFAULT 'draft',
   `published_at`      DATETIME DEFAULT NULL,
+  `sort_order`        INT UNSIGNED NOT NULL DEFAULT 0,
   `meta_title`        VARCHAR(255) DEFAULT NULL,
   `meta_description`  VARCHAR(500) DEFAULT NULL,
   `created_at`        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -264,6 +281,7 @@ CREATE TABLE IF NOT EXISTS `blog_posts` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_blog_posts_site_slug` (`site_id`, `slug`),
   KEY `fk_blog_posts_site` (`site_id`),
+  KEY `idx_blog_posts_site_status_order` (`site_id`, `status`, `sort_order`, `published_at`),
   KEY `fk_blog_posts_featured_media` (`featured_image_id`),
   CONSTRAINT `fk_blog_posts_site` FOREIGN KEY (`site_id`) REFERENCES `sites` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_blog_posts_featured_media` FOREIGN KEY (`featured_image_id`) REFERENCES `media` (`id`) ON DELETE SET NULL
@@ -305,6 +323,19 @@ CREATE TABLE IF NOT EXISTS `portfolio_media` (
   KEY `fk_portfolio_media_media` (`media_id`),
   CONSTRAINT `fk_portfolio_media_entry` FOREIGN KEY (`portfolio_id`) REFERENCES `portfolio_entries` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_portfolio_media_media` FOREIGN KEY (`media_id`) REFERENCES `media` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Vice videi (YouTube / Vimeo) u polozky portfolia; portfolio_entries.video_url
+-- zustava zrcadlem prvniho videa (viz migrace 071).
+CREATE TABLE IF NOT EXISTS `portfolio_videos` (
+  `id`           INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `portfolio_id` INT UNSIGNED NOT NULL,
+  `video_url`    VARCHAR(1000) NOT NULL,
+  `sort_order`   INT UNSIGNED NOT NULL DEFAULT 0,
+  `created_at`   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_portfolio_videos_entry_order` (`portfolio_id`, `sort_order`, `id`),
+  CONSTRAINT `fk_portfolio_videos_entry` FOREIGN KEY (`portfolio_id`) REFERENCES `portfolio_entries` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -371,6 +402,7 @@ CREATE TABLE IF NOT EXISTS `contact_info` (
   `address_1`     VARCHAR(500) DEFAULT NULL,
   `address_2`     VARCHAR(500) DEFAULT NULL,
   `maps_url`      VARCHAR(1000) DEFAULT NULL,
+  `reviews_url`   VARCHAR(1000) DEFAULT NULL,
   `social_1_type` VARCHAR(30) DEFAULT NULL,
   `social_1_url`  VARCHAR(500) DEFAULT NULL,
   `social_2_type` VARCHAR(30) DEFAULT NULL,
@@ -385,6 +417,26 @@ CREATE TABLE IF NOT EXISTS `contact_info` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_contact_info_site` (`site_id`),
   CONSTRAINT `fk_contact_info_site` FOREIGN KEY (`site_id`) REFERENCES `sites` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+-- reviews
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `reviews` (
+  `id`            INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `site_id`       INT UNSIGNED NOT NULL,
+  `author_name`   VARCHAR(160) NOT NULL,
+  `context_label` VARCHAR(160) DEFAULT NULL,
+  `rating`        TINYINT UNSIGNED NOT NULL DEFAULT 5,
+  `review_text`   TEXT NOT NULL,
+  `sort_order`    INT NOT NULL DEFAULT 0,
+  `is_active`     TINYINT(1) NOT NULL DEFAULT 1,
+  `created_at`    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at`    TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_reviews_site_sort` (`site_id`, `sort_order`, `id`),
+  KEY `idx_reviews_site_active` (`site_id`, `is_active`, `sort_order`, `id`),
+  CONSTRAINT `fk_reviews_site` FOREIGN KEY (`site_id`) REFERENCES `sites` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;

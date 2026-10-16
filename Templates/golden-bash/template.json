@@ -1,0 +1,30 @@
+{
+  "key": "golden-bash",
+  "name": "Golden Bash",
+  "description": "Svetla luxusni svatebni sablona se zlatymi akcenty, editorialni typografii, asymetrickym hero a kompaktnimi obsahovymi pasy.",
+  "version": "1.0.0",
+  "author": "SEO CMS",
+  "sort_order": 59,
+  "layout_html": "layout.html",
+  "layout_css": "assets/theme.css",
+  "layout_js": "assets/theme.js",
+  "views_dir": "views",
+  "pages": [
+    "homepage",
+    "sluzby",
+    "portfolio",
+    "portfolio-detail",
+    "blog",
+    "blog-post",
+    "cenik",
+    "faq",
+    "kontakt",
+    "reviews",
+    "o-nas",
+    "podminky-uziti"
+  ],
+  "assets": {
+    "css": [],
+    "js": []
+  }
+}

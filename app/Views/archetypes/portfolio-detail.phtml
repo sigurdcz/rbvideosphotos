@@ -1,6 +1,6 @@
 <?php
 /**
- * Portfolio detail archetype — phase 4b of the templating refactor.
+ * Portfolio detail archetype - phase 4b of the templating refactor.
  * @var array $entry   ['title','description','video_embed_url','meta_description'] from PortfolioDetailData::forEntry()
  * @var array $gallery [['thumb','full','alt'], ...]
  */
@@ -12,7 +12,7 @@
 </section>
 <main class="pf-main">
   <div class="container">
-    <?= $entry['video_embed_url'] !== '' ? '<div class="pf-video-wrap"><iframe src="' . $this->e($entry['video_embed_url']) . '" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen loading="lazy" title="' . $this->e($entry['title']) . '"></iframe></div>' : '' ?>
+    <?= $entry['video_embed_url'] !== '' ? '<div class="pf-video-wrap"><iframe src="' . $this->e($entry['video_embed_url']) . '" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" loading="lazy" title="' . $this->e($entry['title']) . '"></iframe></div>' : '' ?><?php foreach (array_slice($entry['videos'] ?? [], 1) as $i => $video): ?><div class="pf-video-wrap pf-video-wrap--extra"><iframe src="<?= $this->e($video['embed_url']) ?>" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" loading="lazy" title="<?= $this->e($entry['title']) ?> &ndash; video <?= $i + 2 ?>"></iframe></div><?php endforeach; ?>
 
     <div class="pf-description"><?= $this->raw($entry['description']) ?></div>
     <div class="pf-gallery"><?php foreach ($gallery as $idx => $g): ?><button type="button" class="pf-photo" data-pf-full="<?= $this->e($g['full']) ?>" data-pf-idx="<?= $idx ?>" aria-label="Otevřít fotografii"><img src="<?= $this->e($g['thumb']) ?>" alt="<?= $this->e($g['alt']) ?>" loading="lazy"></button><?php endforeach; ?></div>

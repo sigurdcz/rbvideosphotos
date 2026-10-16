@@ -1,6 +1,6 @@
 <?php
 /**
- * Blog detail archetype — phase 4b of the templating refactor.
+ * Blog detail archetype - phase 4b of the templating refactor.
  * @var array $post    ['date','title','excerpt','content','image_url'] from BlogPostData::forPost()
  * @var array $gallery [['thumb','full','alt','label'], ...]
  */
@@ -8,6 +8,7 @@
 <section class="bp-hero">
   <div class="container">
     <div class="bp-date"><?= $this->e($post['date']) ?></div>
+    <div class="bp-author">Autor: <?= $this->e($post['author']) ?></div>
     <h1><?= $this->e($post['title']) ?></h1>
     <p class="bp-excerpt"><?= $this->e($post['excerpt']) ?></p>
   </div>
@@ -23,9 +24,9 @@
 </section>
 <?php if ($gallery !== []): ?><div class="bp-lightbox" id="bp-lightbox" role="dialog" aria-modal="true" aria-label="Galerie clanku">
   <button type="button" class="bp-lb-close" id="bp-lb-close" aria-label="Zavrit galerii">&times;</button>
-  <button type="button" class="bp-lb-prev" id="bp-lb-prev" aria-label="Predchozi fotka">&#8249;</button>
+  <button type="button" class="bp-lb-prev" id="bp-lb-prev" aria-label="Předchozí fotka">&#8249;</button>
   <img class="bp-lb-img" id="bp-lb-img" src="" alt="">
-  <button type="button" class="bp-lb-next" id="bp-lb-next" aria-label="Dalsi fotka">&#8250;</button>
+  <button type="button" class="bp-lb-next" id="bp-lb-next" aria-label="Další fotka">&#8250;</button>
 </div>
 <script>
 (function(){

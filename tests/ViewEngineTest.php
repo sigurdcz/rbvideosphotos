@@ -186,6 +186,14 @@ function register_view_engine_tests(callable $test, callable $assert): void
         $out = $engine()->render('pages/withlayout', ['title' => 'T']);
         $assert($out === '<html><nav>NAV-T</nav><main>BODY-T</main></html>', 'Layout/slot composition mismatch: ' . $out);
     });
+
+    $test('page renderer: SEO title replaces the layout fallback title', function () use ($assert): void {
+        $renderer = new PageRenderer();
+        $html = '<html><head><title>Site fallback</title></head><body></body></html>';
+        $out = $renderer->injectSeo($html, '<title>Page SEO title</title><meta name="description" content="D">', '');
+        $assert(substr_count($out, '<title>') === 1, 'SEO injection left duplicate title elements in the document head.');
+        $assert(str_contains($out, '<title>Page SEO title</title>'), 'SEO title did not replace the layout fallback title.');
+    });
 }
 
 // ---------------------------------------------------------------------------

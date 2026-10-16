@@ -24,7 +24,7 @@ class GtmManifestCompiler
             }
 
             if ($measurementId === '') {
-                throw new \RuntimeException('Chybí GA4 Measurement ID. Vyplň "Google Analytics ID" (G-XXXXXXXXXX) v Nastavení — GA4 event tagy ho potřebují.');
+                throw new \RuntimeException('Chybí GA4 Measurement ID. Vyplň "Google Analytics ID" (G-XXXXXXXXXX) v Nastavení - GA4 event tagy ho potřebují.');
             }
 
             $catalogRow = $this->catalog->find($eventKey) ?? [];

@@ -28,7 +28,7 @@ class ReviewContentService
 
         // Phase 5: the teaser grid markup now comes from a PHTML partial fed by
         // HomepageData::reviewCards() (data, not concatenated HTML). The inline
-        // <style> stays here byte-identically — moving it to a shared asset is a
+        // <style> stays here byte-identically - moving it to a shared asset is a
         // phase-6 cleanup. $themeKey (post-refactor) lets a theme override
         // partials/home-reviews via the same ViewResolver cascade every other
         // archetype/partial now uses.
@@ -49,7 +49,7 @@ class ReviewContentService
         // Phase 4 of the templating refactor: the /hodnoceni listing grid now
         // renders through the reviews archetype (App\ViewModels\ReviewsPageData
         // + app/Views/archetypes/reviews.phtml) instead of string concatenation
-        // here. The homepage teaser (buildHomepageHtml() below) is unchanged —
+        // here. The homepage teaser (buildHomepageHtml() below) is unchanged -
         // it belongs to the homepage archetype, phase 5.
         $data = \App\ViewModels\ReviewsPageData::forSite($siteId);
 
@@ -78,10 +78,10 @@ class ReviewContentService
 <section class="section section--dark hp-reviews-demo" id="hodnoceni">
   <div class="container">
     <p class="section-label">Co o nas rikaji</p>
-    <h2 data-block="reviews_title" class="section-title">Hodnoceni klientu</h2>
+    <h2 data-block="reviews_title" class="section-title">Hodnocení klientů</h2>
     <p data-block="reviews_intro" class="section-intro">Vybrane reference klientu, kterym jsme dodali foto nebo video.</p>
     <div data-block="reviews_demo"><!-- Recenze --></div>
-    <div data-block="reviews_cta" class="hp-section-cta"><a href="/hodnoceni" class="btn-secondary">Vsechny recenze</a></div>
+    <div data-block="reviews_cta" class="hp-section-cta"><a href="/hodnoceni" class="btn-secondary">Všechny recenze</a></div>
   </div>
 </section>
 HTML;

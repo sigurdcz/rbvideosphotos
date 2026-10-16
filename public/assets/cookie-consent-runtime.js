@@ -15,6 +15,7 @@
   var analyticsCategoryEnabled = settings.analyticsCategoryEnabled !== false;
   var marketingCategoryEnabled = settings.marketingCategoryEnabled !== false;
   var enableGtmTrackingLogs = settings.enableGtmTrackingLogs === true;
+  var trackingLoaderMode = settings.trackingLoaderMode || 'none';
   var version = '1.0';
 
   function defaultPreferences(){
@@ -128,8 +129,25 @@
     })(window,document,'clarity','script',id);
   }
 
+  function scheduleClarity(){
+    var id = (settings.clarityId || '').trim();
+    if (!id || window.__clarityLoaded || window.__clarityScheduled || !canLoadAnalytics()) return;
+    window.__clarityScheduled = true;
+    var activate = function(){
+      window.removeEventListener('pointerdown', activate);
+      window.removeEventListener('keydown', activate);
+      loadClarity();
+    };
+    window.addEventListener('pointerdown', activate, {once:true, passive:true});
+    window.addEventListener('keydown', activate, {once:true});
+  }
+
   function loadGoogleTagManager(){
     var id = (settings.googleTagManagerId || '').trim();
+    if (trackingLoaderMode !== 'gtm') {
+      if (id && window.cmsTrackingRuntime) window.cmsTrackingRuntime.suppressed.push('gtm');
+      return;
+    }
     if (!id || window.__gtmLoaded || !canLoadMarketing()) return;
     window.__gtmLoaded = true;
     window.dataLayer = window.dataLayer || [];
@@ -156,17 +174,43 @@
     window.fbq('track', 'PageView');
   }
 
-  function loadAnalyticsScripts(){
+  function schedulePrimaryTracking(loader, loadedFlag){
+    if (window[loadedFlag] || window.__primaryTrackingScheduled) return;
+    window.__primaryTrackingScheduled = true;
+    if (window.cmsTrackingRuntime) window.cmsTrackingRuntime.deferred = true;
+    var timer = 0;
+    var activate = function(){
+      window.removeEventListener('pointerdown', activate);
+      window.removeEventListener('keydown', activate);
+      window.removeEventListener('scroll', activate);
+      if (timer) window.clearTimeout(timer);
+      window.__primaryTrackingScheduled = false;
+      if (window.cmsTrackingRuntime) window.cmsTrackingRuntime.deferred = false;
+      loader();
+    };
+    window.addEventListener('pointerdown', activate, {once:true, passive:true});
+    window.addEventListener('keydown', activate, {once:true});
+    window.addEventListener('scroll', activate, {once:true, passive:true});
+    timer = window.setTimeout(activate, 8000);
+  }
+
+  function loadAnalyticsScripts(immediate){
     if (!canLoadAnalytics()) return;
-    loadGoogleAnalytics();
-    loadClarity();
+    if (trackingLoaderMode === 'direct-ga') {
+      if (immediate === true) loadGoogleAnalytics();
+      else schedulePrimaryTracking(loadGoogleAnalytics, '__analyticsLoaded');
+    }
+    scheduleClarity();
     appendHtml(settings.analyticsHeadScripts || '', 'head', '__analyticsHeadScriptsLoaded');
     appendHtml(settings.analyticsBodyScripts || '', 'body', '__analyticsBodyScriptsLoaded');
   }
 
-  function loadMarketingScripts(){
+  function loadMarketingScripts(immediate){
     if (!canLoadMarketing()) return;
-    loadGoogleTagManager();
+    if (trackingLoaderMode === 'gtm') {
+      if (immediate === true) loadGoogleTagManager();
+      else schedulePrimaryTracking(loadGoogleTagManager, '__gtmLoaded');
+    }
     loadMetaPixel();
     appendHtml(settings.marketingHeadScripts || '', 'head', '__marketingHeadScriptsLoaded');
     appendHtml(settings.marketingBodyScripts || '', 'body', '__marketingBodyScriptsLoaded');
@@ -190,6 +234,11 @@
     }
   }
 
+  window.cmsTrackingRuntime = {
+    mode: trackingLoaderMode,
+    suppressed: []
+  };
+
   window.cmsCookieConsent = {
     enabled: consentEnabled,
     getPreferences: getPreferences,
@@ -205,8 +254,8 @@
 
   document.addEventListener('cms-cookie-consent:updated', function(event){
     reloadIfTrackingWasDisabled(event.detail);
-    loadAnalyticsScripts();
-    loadMarketingScripts();
+    loadAnalyticsScripts(true);
+    loadMarketingScripts(true);
   });
 
   loadAnalyticsScripts();

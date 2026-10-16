@@ -24,8 +24,12 @@ final class SetupEnvironmentService
         $cleared = (new SetupFilesystemResetService($this->basePath))->reset();
         $this->ensurePublishedFallbackIndex();
         $this->resetDatabase();
-        $migrations = $this->runMigrations();
+        $migrationPlan = $this->runMigrations();
         $seedOutput = $this->runBaseSeed();
+        $migrations = $this->applyDeferredMigrations(
+            $migrationPlan['applied'],
+            $migrationPlan['deferred']
+        );
 
         return [
             'cleared' => $cleared,
@@ -75,7 +79,7 @@ final class SetupEnvironmentService
 
         $statement = $this->db->prepare(
             'SELECT TABLE_NAME FROM information_schema.tables
-             WHERE TABLE_SCHEMA = ? AND TABLE_TYPE = ? ORDER BY TABLE_NAME'
+             WHERE CONVERT(TABLE_SCHEMA USING utf8mb4) = ? AND CONVERT(TABLE_TYPE USING utf8mb4) = ? ORDER BY TABLE_NAME'
         );
         $statement->execute([$databaseName, 'BASE TABLE']);
         $tables = $statement->fetchAll(PDO::FETCH_COLUMN) ?: [];
@@ -107,6 +111,8 @@ final class SetupEnvironmentService
         );
 
         $appliedNow = [];
+        $deferred = [];
+        $applicationMigrations = new ApplicationCompatibleMigrationService();
         foreach ($files as $file) {
             $migrationName = basename($file);
             $applied = $this->db->query('SELECT migration FROM schema_migrations')->fetchAll(PDO::FETCH_COLUMN) ?: [];
@@ -120,13 +126,49 @@ final class SetupEnvironmentService
                 continue;
             }
 
+            if (
+                $applicationMigrations->supports($migrationName)
+                && !$applicationMigrations->requiresExistingDemoContent($migrationName)
+            ) {
+                $deferred[] = $migrationName;
+                continue;
+            }
+
             $sql = file_get_contents($file);
             if ($sql === false) {
                 throw new \RuntimeException('Nepodarilo se nacist migraci: ' . $migrationName);
             }
-            $this->db->exec($sql);
+            try {
+                $this->db->exec($sql);
+            } catch (\Throwable $e) {
+                throw new \RuntimeException(
+                    'Migrace ' . $migrationName . ' selhala: ' . $e->getMessage(),
+                    0,
+                    $e
+                );
+            }
             $this->markMigrationApplied($migrationName);
             $appliedNow[] = $migrationName;
+        }
+
+        return ['applied' => $appliedNow, 'deferred' => $deferred];
+    }
+
+    private function applyDeferredMigrations(array $appliedNow, array $deferred): array
+    {
+        $applicationMigrations = new ApplicationCompatibleMigrationService();
+        foreach ($deferred as $migrationName) {
+            try {
+                $result = $applicationMigrations->apply((string)$migrationName);
+                $this->markMigrationApplied((string)$migrationName);
+                $appliedNow[] = $migrationName . ':' . $result;
+            } catch (\Throwable $e) {
+                throw new \RuntimeException(
+                    'Odlozena migrace ' . $migrationName . ' selhala po zakladnim seedu: ' . $e->getMessage(),
+                    0,
+                    $e
+                );
+            }
         }
 
         return $appliedNow;
@@ -139,6 +181,10 @@ final class SetupEnvironmentService
             '004_create_service_items.sql' => $this->tableExists('service_items'),
             '005_add_active_theme_key_to_sites.sql' => $this->columnExists('sites', 'active_theme_key'),
             '006_expand_content_blocks_block_type_to_video.sql' => $this->columnEnumContains('content_blocks', 'block_type', 'video'),
+            '070_add_video_autoplay_setting.sql' => $this->columnExists('sites', 'video_autoplay_enabled'),
+            '072_add_blog_posts_sort_order.sql' => $this->columnExists('blog_posts', 'sort_order'),
+            '073_add_responsive_hero_video_urls.sql' => $this->columnExists('sites', 'default_hero_video_url_tablet')
+                && $this->columnExists('sites', 'default_hero_video_url_mobile'),
             default => false,
         };
     }
@@ -152,7 +198,7 @@ final class SetupEnvironmentService
     {
         $statement = $this->db->prepare(
             'SELECT COUNT(*) FROM information_schema.tables
-             WHERE table_schema = DATABASE() AND table_name = ?'
+             WHERE table_schema = DATABASE() AND CONVERT(table_name USING utf8mb4) = ?'
         );
         $statement->execute([$table]);
         return (int)$statement->fetchColumn() > 0;
@@ -162,7 +208,7 @@ final class SetupEnvironmentService
     {
         $statement = $this->db->prepare(
             'SELECT COUNT(*) FROM information_schema.columns
-             WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ?'
+             WHERE table_schema = DATABASE() AND CONVERT(table_name USING utf8mb4) = ? AND CONVERT(column_name USING utf8mb4) = ?'
         );
         $statement->execute([$table, $column]);
         return (int)$statement->fetchColumn() > 0;
@@ -172,7 +218,7 @@ final class SetupEnvironmentService
     {
         $statement = $this->db->prepare(
             'SELECT COLUMN_TYPE FROM information_schema.columns
-             WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ?'
+             WHERE table_schema = DATABASE() AND CONVERT(table_name USING utf8mb4) = ? AND CONVERT(column_name USING utf8mb4) = ?'
         );
         $statement->execute([$table, $column]);
         $columnType = (string)$statement->fetchColumn();

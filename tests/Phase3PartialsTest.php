@@ -43,9 +43,32 @@ function register_phase3_partials_tests(callable $test, callable $assert): void
     $test('phase3 partial: hero video markup matches builder', function () use ($assert, $engine): void {
         foreach ([['https://youtu.be/abcdef', ''], ['https://vimeo.com/12345', '/media/p.jpg'], ['', '']] as [$v, $p]) {
             $embed = HeroMediaRenderer::buildVideoEmbedUrl($v);
-            $act = $engine->render('partials/hero-video', ['embedUrl' => $embed, 'posterUrl' => $p]);
+            $act = $engine->render('partials/hero-video', ['embedUrl' => $embed, 'directUrl' => '', 'posterUrl' => $p]);
             $assert($act === HeroMediaRenderer::buildHeroVideoHtml($v, $p), 'hero-video partial diverged for video=' . $v);
         }
+
+        $youtube = HeroMediaRenderer::buildHeroVideoHtml('https://youtu.be/abcdef', '/media/p.webp');
+        $assert(!str_contains($youtube, '<iframe'), 'Initial hero markup must not load a third-party player.');
+        $assert(str_contains($youtube, 'data-hero-video-facade'));
+        $assert(str_contains($youtube, 'youtube-nocookie.com/embed/abcdef'));
+        $assert(str_contains($youtube, 'type="button"') && str_contains($youtube, 'aria-label="Přehrát úvodní video"'));
+        $assert(!preg_match('/<div[^>]*data-hero-video-facade[^>]*aria-hidden="true"/i', $youtube), 'Focusable facade control must not be inside aria-hidden content.');
+        $native = HeroMediaRenderer::buildHeroVideoHtml('/media/hero.mp4', '/media/p.webp');
+        foreach (['<video', 'autoplay', 'muted', 'playsinline', 'loop', 'poster="/media/p.webp"'] as $attribute) {
+            $assert(str_contains($native, $attribute), 'Native hero video is missing: ' . $attribute);
+        }
+    });
+
+    $test('hero video facade autoplays immediately, exempt from marketing consent', function () use ($assert): void {
+        $runtime = (string)file_get_contents(dirname(__DIR__) . '/public/assets/frontend-runtime.js');
+        $assert(str_contains($runtime, "querySelectorAll('[data-hero-video-facade]')"));
+        $assert(str_contains($runtime, "document.createElement('iframe')"));
+        $assert(!str_contains($runtime, 'canLoadMarketing()'), 'Hero video autoplay is a deliberate exemption from marketing cookie consent and must not gate on it.');
+        $assert(!str_contains($runtime, 'cms-cookie-consent:marketing'), 'Hero video must not wait for a deferred consent event - it always plays on load.');
+        $assert(str_contains($runtime, 'facades.forEach(function(facade) {') && str_contains($runtime, 'play(facade);'), 'Every hero video facade must call play() unconditionally on init.');
+        $css = (string)file_get_contents(dirname(__DIR__) . '/public/assets/frontend-runtime.css');
+        $assert(str_contains($css, '.hero-content{position:relative;z-index:3;pointer-events:none}'));
+        $assert(str_contains($css, '.hp-hero>.container a') && str_contains($css, '.hero-content button{pointer-events:auto}'));
     });
 
     // breadcrumb.phtml — last item is aria-current, others are links; escaping.

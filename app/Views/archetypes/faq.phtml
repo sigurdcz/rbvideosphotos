@@ -1,6 +1,6 @@
 <?php
 /**
- * FAQ archetype — phase 4 of the templating refactor.
+ * FAQ archetype - phase 4 of the templating refactor.
  * @var array $hero  ['title','sub','titleKey','titleType','subKey','subType']
  * @var array $items [['id','question','answer'], ...] from FaqPageData::forSite()
  */
@@ -13,18 +13,17 @@
 </section>
 <section class="fq-wrap">
   <div class="container">
-    <div class="faq-list"><?php if ($items === []): ?><p class="faq-empty">Zatím žádné otázky. Napište nám a rádi odpovíme.</p><?php else: foreach ($items as $item): ?><article class="faq-item"><h3 class="faq-q-wrap"><button type="button" class="faq-q" aria-expanded="false"<?= $this->inlineAttr('faq:' . $item['id'] . ':question') ?>><span><?= $this->e($item['question']) ?></span></button></h3><div class="faq-a" hidden<?= $this->inlineAttr('faq:' . $item['id'] . ':answer') ?>><?= nl2br($this->e($item['answer'])) ?></div></article><?php endforeach; endif; ?></div>
+    <div class="faq-list"><?php if ($items === []): ?><p class="faq-empty">Zatím žádné otázky. Napište nám a rádi odpovíme.</p><?php else: foreach ($items as $item): ?><details class="faq-item"<?= $this->isEditMode() ? ' open' : '' ?>><summary class="faq-q-wrap"><h3 class="faq-q"><span<?= $this->inlineAttr('faq:' . $item['id'] . ':question') ?>><?= $this->e($item['question']) ?></span></h3></summary><div class="faq-a"<?= $this->inlineAttr('faq:' . $item['id'] . ':answer') ?>><?= nl2br($this->e($item['answer'])) ?></div></details><?php endforeach; endif; ?></div>
   </div>
 </section>
-<script>
-document.querySelectorAll('.faq-q').forEach(function(button){
-  button.addEventListener('click',function(){
-    var item = button.closest('.faq-item');
-    var answer = item ? item.querySelector('.faq-a') : null;
-    if(!item || !answer) return;
-    var open = item.classList.toggle('open');
-    button.setAttribute('aria-expanded', open ? 'true' : 'false');
-    answer.hidden = !open;
-  });
-});
-</script><?php ?>
+<?php if ($items !== []): ?>
+<script type="application/ld+json"><?= json_encode([
+    '@context' => 'https://schema.org',
+    '@type' => 'FAQPage',
+    'mainEntity' => array_map(static fn (array $item): array => [
+        '@type' => 'Question',
+        'name' => $item['question'],
+        'acceptedAnswer' => ['@type' => 'Answer', 'text' => $item['answer']],
+    ], $items),
+], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?></script>
+<?php endif; ?><?php ?>

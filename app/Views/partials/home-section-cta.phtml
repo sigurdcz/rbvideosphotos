@@ -1,2 +1,12 @@
-<?php /** @var string $url @var string $label — see App\ViewModels\HomepageData::sectionCta() */ ?>
-<div class="hp-section-cta"><a href="<?= $this->e($url) ?>" class="btn-secondary"><?= $this->e($label) ?></a></div><?php ?>
+<?php
+/** @var string $url @var string $label - see App\ViewModels\HomepageData::sectionCta() */
+$secondaryUrl = trim((string)($secondaryUrl ?? ''));
+$secondaryLabel = trim((string)($secondaryLabel ?? ''));
+$hasSecondary = $secondaryUrl !== '' && $secondaryLabel !== '';
+?>
+<div class="hp-section-cta<?= $hasSecondary ? ' hp-section-cta--multiple' : '' ?>">
+    <a href="<?= $this->e($url) ?>" class="btn-secondary"><?= $this->e($label) ?></a>
+    <?php if ($hasSecondary): ?>
+        <a href="<?= $this->e($secondaryUrl) ?>" class="btn-secondary hp-section-cta__google" target="_blank" rel="noopener noreferrer external"><?= $this->e($secondaryLabel) ?></a>
+    <?php endif; ?>
+</div><?php ?>

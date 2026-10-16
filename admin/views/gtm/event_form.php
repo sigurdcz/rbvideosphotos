@@ -94,7 +94,7 @@ ob_start();
       </div>
     </div>
 
-    <button type="submit" class="btn btn-primary">Ulozit event</button>
+    <button type="submit" class="btn btn-primary">Uložit událost</button>
   </form>
 </div>
 
@@ -126,7 +126,7 @@ ob_start();
         <label>Notes JSON</label>
         <textarea class="code" name="notes_json" rows="8"><?= $h($pretty($definition['notes_json'] ?? [])) ?></textarea>
       </div>
-      <button type="submit" class="btn btn-secondary">Ulozit pokrocile parametry</button>
+      <button type="submit" class="btn btn-secondary">Uložit pokročilé parametry</button>
     </form>
   </details>
 </div>

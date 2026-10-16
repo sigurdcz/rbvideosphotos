@@ -1,0 +1,62 @@
+<?php
+/** @var array $packages */
+/**
+ * Inline-editable keys are built from each card's / question's `slot`, so the
+ * edited text is written back into exactly the block it was rendered from.
+ *
+ * Deliberately NOT inline-editable: the card summary and the feature bullets.
+ * Both are derived at render time from one `cenik_card_<slot>_desc` textarea
+ * (CenikPageData splits it on the first blank line), so editing a derived
+ * fragment would be silently discarded by the next render. That description is
+ * edited as a whole in the admin instead.
+ */
+?>
+<section class="section cenik-packages gb-cenik-packages">
+  <div class="container">
+    <span class="gb-list-kicker"<?= $this->inlineAttr('cenik_packages_kicker') ?>><?= $this->e($kickerPackages) ?></span>
+    <h2<?= $this->inlineAttr('pricing_weddings_heading') ?>><?= $this->e($headingPackages) ?></h2>
+    <?php if ($introPackages !== ''): ?><p class="cenik-intro"<?= $this->inlineAttr('pricing_weddings_sub') ?>><?= $this->e($introPackages) ?></p><?php endif; ?>
+    <div class="ckp-grid hp-cenik-grid"><?php foreach ($packages as $package): ?>
+      <article class="ckp-card hp-cenik-card<?= $package['featured'] ? ' ckp-card--featured hp-cenik-card--featured' : '' ?>" data-package-id="<?= $this->e($package['id']) ?>">
+        <?php if ($package['badge'] !== ''): ?><div class="ckp-badge"<?= $this->inlineAttr('cenik_card_' . $package['slot'] . '_badge') ?>><?= $this->e($package['badge']) ?></div><?php endif; ?>
+        <?php if ($package['category'] !== ''): ?><span class="ckp-category"<?= $this->inlineAttr('cenik_card_' . $package['slot'] . '_category') ?>><?= $this->e($package['category']) ?></span><?php endif; ?>
+        <h3 class="ckp-title hp-cenik-card-title"<?= $this->inlineAttr('cenik_card_' . $package['slot'] . '_title') ?>><?= $this->e($package['title']) ?></h3>
+        <?php if ($package['price'] !== ''): ?><div class="ckp-price hp-cenik-card-price"><?= $this->e($package['price']) ?><?php if ($package['unit'] !== ''): ?><small<?= $this->inlineAttr('cenik_card_' . $package['slot'] . '_unit') ?>><?= $this->e($package['unit']) ?></small><?php endif; ?></div><?php endif; ?>
+        <?php if ($package['summary'] !== ''): ?><p class="ckp-summary"><?= $this->e($package['summary']) ?></p><?php endif; ?>
+        <?php if ($package['features'] !== []): ?><ul class="ckp-feats"><?php foreach ($package['features'] as $feature): ?><li><?= $this->e($feature) ?></li><?php endforeach; ?></ul><?php endif; ?>
+        <a class="gb-button gb-price-button"<?= $this->inlineAttr('cenik_card_' . $package['slot'] . '_cta_label') ?> href="<?= $this->e($package['ctaUrl']) ?>"><?= $this->e($package['ctaLabel']) ?></a>
+      </article>
+    <?php endforeach; ?></div>
+  </div>
+</section>
+<?php if ($transportHeading !== '' || $transportText !== ''): ?>
+<section class="section gb-price-transport">
+  <div class="container">
+    <span class="gb-list-kicker"<?= $this->inlineAttr('cenik_transport_kicker') ?>><?= $this->e($kickerTransport) ?></span>
+    <?php if ($transportHeading !== ''): ?><h2<?= $this->inlineAttr('pricing_transport_heading') ?>><?= $this->e($transportHeading) ?></h2><?php endif; ?>
+    <?php if ($transportText !== ''): ?><p<?= $this->inlineAttr('pricing_transport_text') ?>><?= $this->e($transportText) ?></p><?php endif; ?>
+  </div>
+</section>
+<?php endif; ?>
+<?php if ($faqItems !== []): ?>
+<section class="section gb-price-faq">
+  <div class="container">
+    <span class="gb-list-kicker"<?= $this->inlineAttr('cenik_faq_kicker') ?>><?= $this->e($kickerFaq) ?></span>
+    <h2<?= $this->inlineAttr('cenik_faq_heading') ?>><?= $this->e($headingFaq) ?></h2>
+    <div class="gb-price-faq__list"><?php foreach ($faqItems as $item): ?>
+      <details class="gb-price-faq__item">
+        <summary<?= $this->inlineAttr('cenik_faq_' . $item['slot'] . '_question') ?>><?= $this->e($item['question']) ?></summary>
+        <p<?= $this->inlineAttr('cenik_faq_' . $item['slot'] . '_answer') ?>><?= $this->e($item['answer']) ?></p>
+      </details>
+    <?php endforeach; ?></div>
+  </div>
+</section>
+<?php endif; ?>
+<section class="section cenik-cta gb-route-cta">
+  <div class="container">
+    <span class="gb-page-kicker"<?= $this->inlineAttr('cenik_cta_kicker') ?>><?= $this->e($kickerCta) ?></span>
+    <h2<?= $this->inlineAttr('cta_heading') ?>><?= $this->e($ctaHeading) ?></h2>
+    <?= $ctaText !== '' ? '<p' . $this->inlineAttr($ctaTextKey) . '>' . $this->e($ctaText) . '</p>' : '' ?>
+    <div class="gb-route-cta__actions gb-cenik-cta-actions"<?= $ctaWrap !== '' ? $this->inlineAttr('cta_wrap', 'html') : '' ?>><?= $ctaWrap !== '' ? $this->raw($ctaWrap) : '<a href="/kontakt" class="gb-button"' . $this->inlineAttr('cenik_cta_button') . '>' . $this->e($ctaFallbackLabel) . '</a>' ?></div>
+  </div>
+</section>

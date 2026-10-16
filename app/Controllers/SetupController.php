@@ -5,10 +5,11 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Core\Database;
 use App\Core\Auth;
+use App\Core\Logger;
 use App\Core\Version;
 use App\Repositories\PageRepository;
 use App\Repositories\SiteRepository;
-use App\Services\DemoContentSeeder;
+use App\Services\DemoContentBatchService;
 use App\Services\DemoStateFingerprintService;
 use App\Services\SetupEnvironmentService;
 use PDO;
@@ -88,40 +89,69 @@ class SetupController extends Controller
             }
             $this->flash('success', $message);
         } catch (\Throwable $e) {
-            $this->flash('error', 'Armagedon selhal: ' . $e->getMessage());
+            Logger::error('setup', 'Armagedon selhal', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            $this->flash('error', sprintf(
+                'Armagedon selhal: %s (%s:%d)',
+                $e->getMessage(),
+                basename($e->getFile()),
+                $e->getLine()
+            ));
         }
 
         $this->redirect('/admin/setup');
     }
 
-    public function demoContent(array $params): void
+    public function demoContentStart(array $params): void
     {
         $this->requireAdmin();
         $this->csrfCheck();
-
         try {
-            $site = (new SiteRepository())->findFirst();
             $user = Auth::user();
-            $result = (new DemoContentSeeder())->run(
-                $site ? (int)$site['id'] : null,
-                $user ? (int)$user['id'] : null,
-                true
-            );
-
-            $message = 'Demo obsah byl načten: '
-                . (int)$result['blog_posts'] . ' článků, '
-                . (int)$result['portfolio_entries'] . ' prací, '
-                . (int)$result['reviews'] . ' recenzí.';
-            $message .= ' Aktivní motiv: ' . (string)($result['active_theme'] ?? 'nenastaveno') . '.';
-            if (!empty($result['published'])) {
-                $message .= ' Web byl znovu publikován.';
-            }
-            $this->flash('success', $message);
+            $this->json(['success' => true, 'job' => (new DemoContentBatchService())->start((int)$user['id'])]);
         } catch (\Throwable $e) {
-            $this->flash('error', 'Demo content seed selhal: ' . $e->getMessage());
+            $this->json(['success' => false, 'error' => $e->getMessage()], 500);
         }
+    }
 
-        $this->redirect('/admin/setup');
+    public function demoContentStep(array $params): void
+    {
+        $this->requireAdmin();
+        $this->csrfCheck();
+        try {
+            $user = Auth::user();
+            $job = (new DemoContentBatchService())->step((string)$this->input('job_token'), (int)$user['id']);
+            $this->json(['success' => true, 'job' => $job]);
+        } catch (\Throwable $e) {
+            $this->json(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function demoContentStatus(array $params): void
+    {
+        $this->requireAdmin();
+        try {
+            $this->json(['success' => true, 'job' => (new DemoContentBatchService())->status()]);
+        } catch (\Throwable $e) {
+            $this->json(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function demoContentRetry(array $params): void
+    {
+        $this->requireAdmin();
+        $this->csrfCheck();
+        try {
+            $user = Auth::user();
+            $job = (new DemoContentBatchService())->retry((string)$this->input('job_token'), (int)$user['id']);
+            $this->json(['success' => true, 'job' => $job]);
+        } catch (\Throwable $e) {
+            $this->json(['success' => false, 'error' => $e->getMessage()], 500);
+        }
     }
 
     private function resetDatabase(): void
@@ -133,7 +163,7 @@ class SetupController extends Controller
         }
 
         $stmt = $pdo->prepare(
-            'SELECT TABLE_NAME FROM information_schema.tables WHERE TABLE_SCHEMA = ? AND TABLE_TYPE = ? ORDER BY TABLE_NAME'
+            'SELECT TABLE_NAME FROM information_schema.tables WHERE CONVERT(TABLE_SCHEMA USING utf8mb4) = ? AND CONVERT(TABLE_TYPE USING utf8mb4) = ? ORDER BY TABLE_NAME'
         );
         $stmt->execute([$databaseName, 'BASE TABLE']);
         $tables = $stmt->fetchAll(PDO::FETCH_COLUMN) ?: [];
@@ -209,7 +239,7 @@ class SetupController extends Controller
         $stmt = $pdo->prepare(
             'SELECT COUNT(*)
              FROM information_schema.tables
-             WHERE table_schema = DATABASE() AND table_name = ?'
+             WHERE table_schema = DATABASE() AND CONVERT(table_name USING utf8mb4) = ?'
         );
         $stmt->execute([$table]);
 
@@ -221,7 +251,7 @@ class SetupController extends Controller
         $stmt = $pdo->prepare(
             'SELECT COUNT(*)
              FROM information_schema.columns
-             WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ?'
+             WHERE table_schema = DATABASE() AND CONVERT(table_name USING utf8mb4) = ? AND CONVERT(column_name USING utf8mb4) = ?'
         );
         $stmt->execute([$table, $column]);
 
@@ -233,7 +263,7 @@ class SetupController extends Controller
         $stmt = $pdo->prepare(
             'SELECT COLUMN_TYPE
              FROM information_schema.columns
-             WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ?'
+             WHERE table_schema = DATABASE() AND CONVERT(table_name USING utf8mb4) = ? AND CONVERT(column_name USING utf8mb4) = ?'
         );
         $stmt->execute([$table, $column]);
         $columnType = (string) $stmt->fetchColumn();

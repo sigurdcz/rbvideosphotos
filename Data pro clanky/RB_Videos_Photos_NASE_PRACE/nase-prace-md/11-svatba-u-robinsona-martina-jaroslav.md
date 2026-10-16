@@ -20,7 +20,7 @@ seo:
   robots: index,follow
   schema_type: Article
 event:
-  couple: Martina a Jaroslav Žáčkovi
+  couple: Martina a Jaroslav
   date_iso: '2025-09-02'
   date_display: 2. září 2025
   ceremony: U Robinsona, Hradečná 31
@@ -54,7 +54,7 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 ## Uzamčené údaje
 
-- Pár: **Martina a Jaroslav Žáčkovi**
+- Pár: **Martina a Jaroslav**
 - Datum: **2. září 2025**
 - Obřad: **U Robinsona, Hradečná 31**
 - Oslava: **U Robinsona, Hradečná 31**
@@ -78,7 +78,7 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 # Svatba Martiny a Jaroslava U Robinsona v Hradečné
 
-Martina a Jaroslav Žáčkovi měli obřad i svatební oslavu 2. září 2025 U Robinsona v Hradečné. Začátek září je pro venkovní svatbu často velmi příjemný: hlavní letní vedra mohou ustoupit, zeleň zůstává výrazná a slunce klesá dříve a odpolední světlo rychleji měkne.
+Martina a Jaroslav měli obřad i svatební oslavu 2. září 2025 U Robinsona v Hradečné. Začátek září je pro venkovní svatbu často velmi příjemný: hlavní letní vedra mohou ustoupit, zeleň zůstává výrazná a slunce klesá dříve a odpolední světlo rychleji měkne.
 
 ## U Robinsona podruhé, ale pokaždé jinak
 

@@ -15,7 +15,14 @@ class SettingsController extends Controller
         $this->requireAdmin();
         $sites = new SiteRepository();
         $site = $sites->findFirst();
-        $media = $site ? (new MediaRepository())->allBySiteWithVariants((int)$site['id']) : [];
+        $media = [];
+        if ($site) {
+            $repo = new MediaRepository();
+            foreach (['default_og_image_id','default_instagram_image_id','default_twitter_image_id'] as $field) {
+                $id = (int)($site[$field] ?? 0);
+                if ($id && ($item = $repo->findByIdWithThumb($id))) $media[] = $item;
+            }
+        }
         $contact = $site ? (new ContactRepository())->findBySiteSafe((int)$site['id']) : [];
         if (trim((string)($contact['form_email'] ?? '')) === '') {
             $contact['form_email'] = ContactRepository::DEFAULT_FORM_EMAIL;
@@ -46,13 +53,32 @@ class SettingsController extends Controller
         $mediaImageQuality = trim((string)($_POST['media_image_quality'] ?? ''));
         $mediaImageQuality = $mediaImageQuality === '' ? 90 : (int) $mediaImageQuality;
         $mediaImageQuality = max(1, min(100, $mediaImageQuality));
+        $defaultOgImageId = $this->validatedImageMediaId(
+            (int)($_POST['default_og_image_id'] ?? 0),
+            (int)($site['id'] ?? 0)
+        );
+        $defaultInstagramImageId = $this->validatedImageMediaId(
+            (int)($_POST['default_instagram_image_id'] ?? 0),
+            (int)($site['id'] ?? 0)
+        );
+        $defaultTwitterImageId = $this->validatedImageMediaId(
+            (int)($_POST['default_twitter_image_id'] ?? 0),
+            (int)($site['id'] ?? 0)
+        );
+        $companyRegistrationId = preg_replace('/\s+/', '', trim((string)($_POST['company_registration_id'] ?? '')));
+        if ($companyRegistrationId !== '' && preg_match('/^\d{8}$/', $companyRegistrationId) !== 1) {
+            $this->flash('error', 'IČO musí obsahovat přesně osm číslic.');
+            $this->redirect('/admin/settings');
+        }
 
         $data = [
             'name' => trim($_POST['name'] ?? ''),
             'domain' => rtrim(trim($_POST['domain'] ?? ''), '/'),
+            'company_registration_id' => $companyRegistrationId,
             'default_language' => $_POST['default_language'] ?? 'cs',
             'google_analytics_id' => trim($_POST['google_analytics_id'] ?? ''),
             'google_tag_manager_id' => trim($_POST['google_tag_manager_id'] ?? ''),
+            'video_autoplay_enabled' => isset($_POST['video_autoplay_enabled']) ? 1 : 0,
             'cookie_consent_enabled' => isset($_POST['cookie_consent_enabled']) ? 1 : 0,
             'cookie_consent_analytics_enabled' => isset($_POST['cookie_consent_analytics_enabled']) ? 1 : 0,
             'cookie_consent_marketing_enabled' => isset($_POST['cookie_consent_marketing_enabled']) ? 1 : 0,
@@ -71,7 +97,12 @@ class SettingsController extends Controller
             'favicon_ico_url' => trim($_POST['favicon_ico_url'] ?? ''),
             'favicon_png_url' => trim($_POST['favicon_png_url'] ?? ''),
             'apple_touch_icon_url' => trim($_POST['apple_touch_icon_url'] ?? ''),
+            'default_og_image_id' => $defaultOgImageId,
+            'default_instagram_image_id' => $defaultInstagramImageId,
+            'default_twitter_image_id' => $defaultTwitterImageId,
             'default_hero_video_url' => trim($_POST['default_hero_video_url'] ?? ''),
+            'default_hero_video_url_tablet' => trim($_POST['default_hero_video_url_tablet'] ?? ''),
+            'default_hero_video_url_mobile' => trim($_POST['default_hero_video_url_mobile'] ?? ''),
             'default_hero_poster_url' => trim($_POST['default_hero_poster_url'] ?? ''),
             'media_image_quality' => $mediaImageQuality,
             'video_overlay_opacity' => $videoOverlayOpacity,
@@ -97,8 +128,27 @@ class SettingsController extends Controller
             $contactRepo->upsert($siteId, $contactData);
         }
 
-        $this->flash('success', 'Nastaveni webu ulozeno.');
+        $this->flash('success', 'Nastavení webu ulozeno.');
         $this->redirect('/admin/settings');
+    }
+
+    private function validatedImageMediaId(int $mediaId, int $siteId): ?int
+    {
+        if ($mediaId <= 0) {
+            return null;
+        }
+
+        $media = (new MediaRepository())->findById($mediaId);
+        if (
+            !$media
+            || (int)($media['site_id'] ?? 0) !== $siteId
+            || !str_starts_with((string)($media['mime_type'] ?? ''), 'image/')
+        ) {
+            $this->flash('error', 'Vybrana fotografie pro socialni site neni platny obrazek tohoto webu.');
+            $this->redirect('/admin/settings');
+        }
+
+        return $mediaId;
     }
 
     private function buildTrackingEventsJson(): string

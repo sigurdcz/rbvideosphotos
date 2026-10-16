@@ -9,7 +9,7 @@ ob_start();
 
 <?php if (empty($items)): ?>
 <div class="card" style="text-align:center;padding:40px 0;color:var(--c-muted)">
-  Zatim zadne recenze. Kliknete na <strong>+ Nova recenze</strong>.
+  Zatím žádné recenze. Kliknete na <strong>+ Nova recenze</strong>.
 </div>
 <?php else: ?>
 <div class="card" style="padding:0">

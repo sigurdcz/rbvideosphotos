@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Core\SlugTrait;
 use App\Repositories\BlogRepository;
+use App\Repositories\PortfolioRepository;
 use App\Repositories\MediaRepository;
 use App\Repositories\SiteRepository;
 use App\Services\BlogSyncService;
@@ -29,7 +30,29 @@ class BlogController extends Controller
     public function create(array $params): void
     {
         $this->requireAuth();
-        $this->view('blog.form', ['post' => null, 'media' => $this->allMedia(), 'gallery' => []]);
+        $this->view('blog.form', ['post' => null, 'featuredMedia' => null, 'galleryMedia' => []]);
+    }
+
+    /**
+     * The per-photo order numbers posted as `<key>[<media id>]`. Keyed by id rather
+     * than by position, so a reordered selection can never shift the numbers onto the
+     * wrong photos; anything missing or unparsable counts as 0.
+     *
+     * @return array<int,int>
+     */
+    private function postedSortMap(string $key): array
+    {
+        $map = [];
+        foreach ((array)($_POST[$key] ?? []) as $mediaId => $sort) {
+            // Only a plain digit string is a media id; "5abc" would otherwise cast to
+            // 5 and silently renumber a different photo.
+            if (!is_scalar($sort) || !ctype_digit((string)$mediaId) || (int)$mediaId <= 0) {
+                continue;
+            }
+            $map[(int)$mediaId] = PortfolioRepository::clampSortOrder($sort);
+        }
+
+        return $map;
     }
 
     public function store(array $params): void
@@ -56,11 +79,12 @@ class BlogController extends Controller
             'featured_image_id' => $this->intOrNull($_POST['featured_image_id'] ?? ''),
             'status'            => $status,
             'published_at'      => $status === 'published' ? date('Y-m-d H:i:s') : null,
+            'sort_order'        => PortfolioRepository::clampSortOrder($_POST['sort_order'] ?? 0),
             'meta_title'        => trim($_POST['meta_title']       ?? '') ?: null,
             'meta_description'  => trim($_POST['meta_description'] ?? '') ?: null,
         ]);
 
-        $repo->setGallery($id, $_POST['gallery_ids'] ?? []);
+        $repo->setGallery($id, $_POST['gallery_ids'] ?? [], $this->postedSortMap('gallery_sort'));
         (new BlogSyncService())->syncHomepageBlocks($repo, $site['id']);
 
         $this->flash('success', 'Článek byl uložen.');
@@ -78,10 +102,11 @@ class BlogController extends Controller
             $this->redirect('/admin/blog');
         }
 
+        $featuredMedia = !empty($post['featured_image_id']) ? (new MediaRepository())->findByIdWithThumb((int)$post['featured_image_id']) : null;
         $this->view('blog.form', [
             'post'    => $post,
-            'media'   => $this->allMedia(),
-            'gallery' => array_column($repo->getGallery($id), 'id'),
+            'featuredMedia' => $featuredMedia,
+            'galleryMedia' => $repo->getGallery($id),
             'success' => $this->getFlash('success'),
             'error'   => $this->getFlash('error'),
         ]);
@@ -114,11 +139,12 @@ class BlogController extends Controller
             'featured_image_id' => $this->intOrNull($_POST['featured_image_id'] ?? ''),
             'status'            => $status,
             'published_at'      => $publishedAt,
+            'sort_order'        => PortfolioRepository::clampSortOrder($_POST['sort_order'] ?? 0),
             'meta_title'        => trim($_POST['meta_title']       ?? '') ?: null,
             'meta_description'  => trim($_POST['meta_description'] ?? '') ?: null,
         ]);
 
-        $repo->setGallery($id, $_POST['gallery_ids'] ?? []);
+        $repo->setGallery($id, $_POST['gallery_ids'] ?? [], $this->postedSortMap('gallery_sort'));
 
         $site = (new SiteRepository())->findFirst();
         if ($site) {
@@ -148,12 +174,6 @@ class BlogController extends Controller
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
-
-    private function allMedia(): array
-    {
-        $site = (new SiteRepository())->findFirst();
-        return $site ? (new MediaRepository())->allBySite($site['id']) : [];
-    }
 
     private function intOrNull(string $v): ?int
     {

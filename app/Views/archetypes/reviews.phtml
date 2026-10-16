@@ -1,8 +1,27 @@
 <?php
 /**
- * Reviews archetype — phase 4 of the templating refactor.
+ * Reviews archetype - phase 4 of the templating refactor.
  * Renders the /hodnoceni review grid (App\Services\ReviewContentService::buildListingHtml()).
  * @var array $items [['id','rating','review_text','author_name','context_label'], ...] from ReviewsPageData::forSite()
+ * @var string $reviewsUrl public Google Business / Maps reviews URL
  */
 ?>
-<?php if ($items === []): ?><p style="color:rgba(255,255,255,.45);text-align:center;padding:32px 0">Zatim zadne recenze.</p><?php else: ?><div class="reviews-page-grid"><?php foreach ($items as $item): ?><article class="reviews-page-card"><div class="reviews-page-stars"><?= $this->e(str_repeat('★', $item['rating']) . str_repeat('☆', 5 - $item['rating'])) ?></div><p><?= nl2br($this->e($item['review_text'])) ?></p><strong><?= $this->e($item['author_name']) ?></strong><?= $item['context_label'] !== '' ? '<span>' . $this->e($item['context_label']) . '</span>' : '' ?></article><?php endforeach; ?></div><?php endif; ?><?php ?>
+<?php if ($items === []): ?><p class="reviews-page-empty">Zatím žádné recenze.</p><?php else: ?><div class="reviews-page-list"><?php foreach ($items as $item): ?><article class="reviews-page-card"><div class="reviews-page-stars"><?= $this->e(str_repeat('★', $item['rating']) . str_repeat('☆', 5 - $item['rating'])) ?></div><p><?= nl2br($this->e($item['review_text'])) ?></p><strong><?= $this->e($item['author_name']) ?></strong><?= $item['context_label'] !== '' ? '<span>' . $this->e($item['context_label']) . '</span>' : '' ?></article><?php endforeach; ?></div><?php endif; ?>
+<?php if ($reviewsUrl !== ''): ?>
+<aside class="reviews-google-panel" aria-labelledby="reviews-google-title">
+  <div>
+    <span class="reviews-google-panel__eyebrow">Google Business Profile</span>
+    <h2 id="reviews-google-title">Další zkušenosti našich klientů</h2>
+    <p>Prohlédněte si všechny veřejné recenze přímo na našem firemním profilu Google.</p>
+  </div>
+  <a class="reviews-google-panel__button" href="<?= $this->e($reviewsUrl) ?>" target="_blank" rel="noopener noreferrer external">Zobrazit recenze na Google <span aria-hidden="true">→</span></a>
+</aside>
+<section class="reviews-google-panel reviews-google-panel--add" aria-labelledby="reviews-google-add-title">
+  <div>
+    <span class="reviews-google-panel__eyebrow">Vaše zkušenost</span>
+    <h2 id="reviews-google-add-title">Pomozte ostatním s výběrem</h2>
+    <p>Byli jste s naší prací spokojeni? Přidejte vlastní hodnocení na Google a podělte se o svou zkušenost.</p>
+  </div>
+  <a class="reviews-google-panel__button reviews-google-panel__button--primary" href="<?= $this->e($reviewsUrl) ?>" target="_blank" rel="noopener noreferrer external">Přidat recenzi <span aria-hidden="true">→</span></a>
+</section>
+<?php endif; ?><?php ?>

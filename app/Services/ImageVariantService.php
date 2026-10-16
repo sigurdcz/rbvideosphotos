@@ -11,14 +11,16 @@ class ImageVariantService
         if (!$info) return false;
         $src = $this->loadImage($sourcePath, $info[2]);
         if (!$src) return false;
+        $src = $this->toTrueColor($src);
         $result = imagewebp($src, $destPath, $quality);
         imagedestroy($src);
         return $result;
     }
 
     /**
-     * Create a resized variant, saved as WebP (falls back to JPEG).
-     * If source is smaller than maxW, the original is just converted/copied.
+     * Create a resized variant. The destination extension determines the real
+     * encoder; a .webp path is never populated with disguised JPEG data.
+     * If source is smaller than maxW, it is converted without upscaling.
      */
     public function createResized(string $sourcePath, string $destPath, int $maxW, int $quality = 90): bool
     {
@@ -53,19 +55,65 @@ class ImageVariantService
             default       => false,
         };
 
-        // If WebP not supported, fall back to JPEG
-        if (!$result && $ext === 'webp') {
-            $jpegPath = preg_replace('/\.webp$/i', '.jpg', $destPath);
-            $result   = imagejpeg($dst, $jpegPath, $quality);
-            if ($result) {
-                // Caller checks actual path via return value — signal with rename
-                @rename($jpegPath, $destPath); // best-effort; caller should use getDimensions to verify
-            }
-        }
-
         imagedestroy($src);
         imagedestroy($dst);
         return (bool)$result;
+    }
+
+    /**
+     * Encode a WebP derivative under an explicit byte budget. Quality is
+     * reduced in deterministic steps; failure remains visible to the caller.
+     *
+     * @return array{width:int,height:int,filesize:int,quality:int}
+     */
+    public function createResizedWithinBudget(
+        string $sourcePath,
+        string $destPath,
+        int $maxWidth,
+        int $maxBytes,
+        int $startQuality = 82,
+        int $minQuality = 52,
+        int $qualityStep = 5
+    ): array {
+        if (strtolower(pathinfo($destPath, PATHINFO_EXTENSION)) !== 'webp') {
+            throw new \InvalidArgumentException('Varianta s datovym limitem musi mit priponu .webp.');
+        }
+        if (!$this->supportsWebP()) {
+            throw new \RuntimeException('WebP encoder neni dostupny; variantu nelze vytvorit.');
+        }
+        if ($maxWidth <= 0 || $maxBytes <= 0 || $qualityStep <= 0) {
+            throw new \InvalidArgumentException('Rozmery, datovy limit a krok kvality musi byt kladne.');
+        }
+
+        $startQuality = max(1, min(100, $startQuality));
+        $minQuality = max(1, min($startQuality, $minQuality));
+        $lastSize = 0;
+
+        for ($quality = $startQuality; $quality >= $minQuality; $quality -= $qualityStep) {
+            if (!$this->createResized($sourcePath, $destPath, $maxWidth, $quality)) {
+                @unlink($destPath);
+                throw new \RuntimeException('WebP variantu se nepodarilo zakodovat.');
+            }
+
+            clearstatcache(true, $destPath);
+            $lastSize = (int)(filesize($destPath) ?: 0);
+            if ($lastSize > 0 && $lastSize <= $maxBytes) {
+                [$width, $height] = $this->getDimensions($destPath);
+                return [
+                    'width' => $width,
+                    'height' => $height,
+                    'filesize' => $lastSize,
+                    'quality' => $quality,
+                ];
+            }
+        }
+
+        @unlink($destPath);
+        throw new \RuntimeException(sprintf(
+            'WebP variantu nelze dostat pod limit %d B (posledni velikost %d B).',
+            $maxBytes,
+            $lastSize
+        ));
     }
 
     /**
@@ -158,5 +206,29 @@ class ImageVariantService
             IMAGETYPE_GIF  => @imagecreatefromgif($path),
             default        => null,
         };
+    }
+
+    /**
+     * GD cannot encode palette-backed PNG/GIF resources directly as WebP.
+     * Copying onto an alpha-enabled true-color canvas keeps transparent pixels
+     * and avoids leaking a PHP warning from imagewebp().
+     */
+    private function toTrueColor(\GdImage $source): \GdImage
+    {
+        if (imageistruecolor($source)) {
+            return $source;
+        }
+
+        $width = imagesx($source);
+        $height = imagesy($source);
+        $converted = imagecreatetruecolor($width, $height);
+        imagealphablending($converted, false);
+        imagesavealpha($converted, true);
+        $transparent = imagecolorallocatealpha($converted, 0, 0, 0, 127);
+        imagefill($converted, 0, 0, $transparent);
+        imagecopy($converted, $source, 0, 0, 0, 0, $width, $height);
+        imagedestroy($source);
+
+        return $converted;
     }
 }

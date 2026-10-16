@@ -9,10 +9,11 @@ class ContactRepository
 {
     private PDO $db;
     public const DEFAULT_FORM_EMAIL = 'sigurd.gnezdilov@gmail.com';
+    public const DEFAULT_REVIEWS_URL = 'https://maps.app.goo.gl/DN9Y1ohrSgAePg3n9';
 
     private const FIELDS = [
         'phone_1', 'phone_2', 'phone_3', 'email',
-        'address_1', 'address_2', 'maps_url',
+        'address_1', 'address_2', 'maps_url', 'reviews_url',
         'social_1_type', 'social_1_url',
         'social_2_type', 'social_2_url',
         'social_3_type', 'social_3_url',

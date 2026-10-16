@@ -33,6 +33,24 @@ $mediaThumb = function(array $m) use ($mediaUrl, $publicMediaUrl): string {
     }
     return $mediaUrl($m);
 };
+$renderMediaField = static function (string $fieldId, string $value, bool $disabled = false) use ($h): void {
+    $value = trim($value);
+    ?>
+    <div class="media-field" data-media-field>
+      <input type="hidden" id="<?= $h($fieldId) ?>" name="block_content[]" value="<?= $h($value) ?>" data-media-field-input<?= $disabled ? ' disabled' : '' ?>>
+      <div class="media-field__preview" data-media-field-preview>
+        <?php if ($value !== ''): ?><img src="<?= $h($value) ?>" alt=""><?php else: ?><span>Neni vybrano</span><?php endif; ?>
+      </div>
+      <div class="media-field__body">
+        <div class="media-field__actions">
+          <button type="button" class="btn btn-sm btn-secondary" data-page-media-open data-target-id="<?= $h($fieldId) ?>"<?= $disabled ? ' disabled' : '' ?>>Vybrat z medii</button>
+          <button type="button" class="btn btn-sm btn-secondary" data-media-field-clear<?= $disabled ? ' disabled' : '' ?><?= $value === '' ? ' hidden' : '' ?>>Odebrat</button>
+        </div>
+        <div class="media-field__path" data-media-field-path><?= $value !== '' ? $h($value) : 'Zadne medium neni vybrano' ?></div>
+      </div>
+    </div>
+    <?php
+};
 $blockMap = [];
 $homepageAutofillBlocks = $homepageAutofillBlocks ?? [];
 $serviceItems = $serviceItems ?? [];
@@ -58,14 +76,14 @@ foreach (($blocks ?? []) as $block) {
 }
 
 $renderedBlockKeys = [];
-$renderBlockField = function (string $key, string $label, string $type = 'text', string $hint = '') use ($blockMap, $h, &$renderedBlockKeys): void {
+$renderBlockField = function (string $key, string $label, string $type = 'text', string $hint = '') use ($blockMap, $h, &$renderedBlockKeys, $renderMediaField): void {
     if (isset($renderedBlockKeys[$key])) {
         return;
     }
     $renderedBlockKeys[$key] = true;
     $block = $blockMap[$key] ?? ['content' => '', 'block_type' => $type];
     $value = $block['content'] ?? '';
-    $inputType = $key === 'hero_video'
+    $inputType = in_array($key, ['hero_video', 'hero_video_tablet', 'hero_video_mobile'], true)
       ? 'video'
       : ($type === 'html' ? 'html' : ($block['block_type'] ?? $type));
     $fieldId = 'block-content-' . preg_replace('~[^a-z0-9_-]+~i', '-', $key);
@@ -76,10 +94,7 @@ $renderBlockField = function (string $key, string $label, string $type = 'text',
       <?php if (in_array($inputType, ['text', 'link'], true)): ?>
         <input type="text" name="block_content[]" value="<?= $h($value) ?>">
       <?php elseif ($inputType === 'image'): ?>
-        <div class="media-input-row">
-          <input id="<?= $h($fieldId) ?>" type="text" name="block_content[]" value="<?= $h($value) ?>" placeholder="/media/...">
-          <button type="button" class="btn btn-sm btn-secondary" data-page-media-open data-target-id="<?= $h($fieldId) ?>">Vybrat z medii</button>
-        </div>
+        <?php $renderMediaField($fieldId, (string)$value); ?>
       <?php elseif ($inputType === 'video'): ?>
         <input type="url" name="block_content[]" value="<?= $h($value) ?>" placeholder="https://... nebo /media/...">
       <?php elseif (in_array($inputType, ['html', 'richtext'], true)): ?>
@@ -205,15 +220,16 @@ ob_start();
         <button type="button" class="tab-btn" data-tab="contact-map">Mapa a formular</button>
       <?php elseif ($layoutType === 'pricing'): ?>
         <button type="button" class="tab-btn" data-tab="page-content">Obsah stranky</button>
-        <button type="button" class="tab-btn" data-tab="pricing-1">Karta 1</button>
-        <button type="button" class="tab-btn" data-tab="pricing-2">Karta 2</button>
-        <button type="button" class="tab-btn" data-tab="pricing-3">Karta 3</button>
+        <button type="button" class="tab-btn" data-tab="pricing-sections">Sekce ceniku</button>
+        <?php for ($pricingCard = 1; $pricingCard <= 8; $pricingCard++): ?>
+        <button type="button" class="tab-btn" data-tab="pricing-<?= $pricingCard ?>">Karta <?= $pricingCard ?></button>
+        <?php endfor; ?>
       <?php elseif ($layoutType === 'services'): ?>
         <button type="button" class="tab-btn" data-tab="page-content">Obsah stranky</button>
         <button type="button" class="tab-btn" data-tab="services-items">Polozky sluzeb</button>
         <button type="button" class="tab-btn" data-tab="services-grid">Sluzby</button>
         <?php if ($isHomepage): ?>
-          <button type="button" class="tab-btn" data-tab="homepage-services">Sluzby homepage</button>
+          <button type="button" class="tab-btn" data-tab="homepage-services">Služby na hlavní stránce</button>
         <?php endif; ?>
       <?php else: ?>
         <button type="button" class="tab-btn" data-tab="blocks">Bloky obsahu <?= !empty($visibleBlocks) ? '(' . count($visibleBlocks) . ')' : '' ?></button>
@@ -291,8 +307,10 @@ ob_start();
           Prednost ma video. Pokud hero video nechate prazdne a vyplnite hero foto, pouzije se foto.
           Kdyz necelate prazdne obe, stranka pouzije vychozi hero video ze sekce Nastaveni.
         </p>
-        <?php $renderBlockField('hero_video', 'Hero video — Vimeo / YouTube URL', 'link', 'Napr. https://vimeo.com/123456789, https://youtu.be/... nebo https://www.youtube.com/watch?v=...'); ?>
-        <?php $renderBlockField('hero_bg', 'Hero foto — URL nebo /media/...', 'image', 'Pouzije se jako pozadi hero sekce, kdyz neni vyplnene hero video.'); ?>
+        <?php $renderBlockField('hero_video', 'Hero video - Vimeo / YouTube URL', 'link', 'Napr. https://vimeo.com/123456789, https://youtu.be/... nebo https://www.youtube.com/watch?v=...'); ?>
+        <?php $renderBlockField('hero_video_tablet', 'Hero video - tablet (volitelne)', 'link', 'Prehraje se pri sirce okna do 1050 px. Prazdne = pouzije se desktopove video.'); ?>
+        <?php $renderBlockField('hero_video_mobile', 'Hero video - mobil (volitelne)', 'link', 'Prehraje se pri sirce okna do 700 px. Prazdne = pouzije se tabletove, jinak desktopove video.'); ?>
+        <?php $renderBlockField('hero_bg', 'Hero foto', 'image', 'Pouzije se jako pozadi hero sekce, kdyz neni vyplnene hero video.'); ?>
       </div>
       <?php endif; ?>
     </div>
@@ -327,6 +345,18 @@ ob_start();
           <div class="brand-asset-actions">
             <button type="button" class="btn btn-secondary" data-homepage-about-visual-open>Vybrat z medii</button>
             <button type="button" class="btn btn-secondary" data-homepage-about-visual-clear>Odebrat</button>
+          </div>
+          <div class="homepage-about-visual-upload">
+            <div class="form-group">
+              <label for="homepage-about-visual-file">Nahrat novou fotku</label>
+              <input type="file" id="homepage-about-visual-file" accept="image/jpeg,image/png,image/webp,image/gif" data-homepage-about-visual-file>
+            </div>
+            <div class="form-group">
+              <label for="homepage-about-visual-alt">ALT text *</label>
+              <input type="text" id="homepage-about-visual-alt" value="RB Videos &amp; Photos pri praci" data-homepage-about-visual-alt>
+            </div>
+            <button type="button" class="btn btn-primary" data-homepage-about-visual-upload>Nahrat a vybrat fotku</button>
+            <div class="help-text" role="status" data-homepage-about-visual-upload-status></div>
           </div>
           <div class="help-text brand-asset-path" data-homepage-about-visual-path><?= $h($aboutVisualUrl) ?></div>
         </div>
@@ -387,7 +417,7 @@ ob_start();
         </div>
 
         <?php if (empty($faqItems)): ?>
-        <p class="form-hint" id="faq-empty-state">Zatim tu nejsou zadne otazky. Pridate je tlacitkem nahore.</p>
+        <p class="form-hint" id="faq-empty-state">Zatím tu nejsou žádné otázky. Přidáte je tlačítkem nahoře.</p>
         <?php endif; ?>
       </div>
     </div>
@@ -469,7 +499,7 @@ ob_start();
       </div>
 
       <div class="card">
-        <div class="card-title">Kontaktni formular</div>
+        <div class="card-title">Kontaktní formulář</div>
         <div class="form-group">
           <label>E-mail pro prijem zprav</label>
           <input type="email" name="form_email" value="<?= $h($contact['form_email'] ?? '') ?>" placeholder="notifikace@firma.cz">
@@ -485,15 +515,61 @@ ob_start();
         <button type="submit" form="sync-form" class="btn btn-sm btn-secondary">&#8635; Synchronizovat bloky z layoutu</button>
       </div>
       <div class="card">
-        <?php $renderBlockField('hero_h1', 'Hero nadpis'); ?>
-        <?php $renderBlockField('hero_sub', 'Hero intro', 'textarea'); ?>
+        <?php
+        // The pricing page renders hero_heading/hero_intro; hero_h1/hero_sub are
+        // the older generic keys that some sites still store. Edit whichever pair
+        // this page actually has, so the field is never wired to a dead block.
+        $heroHeadingKey = isset($blockMap['hero_heading']) ? 'hero_heading' : 'hero_h1';
+        $heroIntroKey   = isset($blockMap['hero_intro']) ? 'hero_intro' : 'hero_sub';
+        ?>
+        <?php $renderBlockField($heroHeadingKey, 'Hero nadpis'); ?>
+        <?php $renderBlockField($heroIntroKey, 'Hero intro', 'textarea'); ?>
         <?php $renderBlockField('hero_bg', 'Hero obrazek / medium', 'image'); ?>
         <?php $renderBlockField('cta_wrap', 'Spodni CTA', 'html'); ?>
       </div>
     </div>
-    <div class="tab-pane" id="tab-pricing-1"><div class="card"><?php $renderBlockField('cenik_card_1_title', 'Nadpis karty'); ?><?php $renderBlockField('cenik_card_1_desc', 'Popis', 'textarea'); ?><?php $renderBlockField('cenik_card_1_price', 'Cena / paticka'); ?></div></div>
-    <div class="tab-pane" id="tab-pricing-2"><div class="card"><?php $renderBlockField('cenik_card_2_title', 'Nadpis karty'); ?><?php $renderBlockField('cenik_card_2_desc', 'Popis', 'textarea'); ?><?php $renderBlockField('cenik_card_2_price', 'Cena / paticka'); ?></div></div>
-    <div class="tab-pane" id="tab-pricing-3"><div class="card"><?php $renderBlockField('cenik_card_3_title', 'Nadpis karty'); ?><?php $renderBlockField('cenik_card_3_desc', 'Popis', 'textarea'); ?><?php $renderBlockField('cenik_card_3_price', 'Cena / paticka'); ?></div></div>
+    <div class="tab-pane" id="tab-pricing-sections">
+      <div class="card">
+        <div class="card-title">Balicky</div>
+        <?php $renderBlockField('cenik_packages_kicker', 'Stitek nad nadpisem'); ?>
+        <?php $renderBlockField('pricing_weddings_heading', 'Nadpis sekce'); ?>
+        <?php $renderBlockField('pricing_weddings_sub', 'Text pod nadpisem', 'textarea'); ?>
+      </div>
+      <div class="card">
+        <div class="card-title">Doprava</div>
+        <?php $renderBlockField('cenik_transport_kicker', 'Stitek nad nadpisem'); ?>
+        <?php $renderBlockField('pricing_transport_heading', 'Nadpis sekce'); ?>
+        <?php $renderBlockField('pricing_transport_text', 'Text sekce', 'textarea'); ?>
+      </div>
+      <div class="card">
+        <div class="card-title">Caste otazky</div>
+        <?php $renderBlockField('cenik_faq_kicker', 'Stitek nad nadpisem'); ?>
+        <?php $renderBlockField('cenik_faq_heading', 'Nadpis sekce'); ?>
+        <?php for ($faqSlot = 1; $faqSlot <= 5; $faqSlot++): ?>
+          <?php $renderBlockField('cenik_faq_' . $faqSlot . '_question', 'Otazka ' . $faqSlot); ?>
+          <?php $renderBlockField('cenik_faq_' . $faqSlot . '_answer', 'Odpoved ' . $faqSlot, 'textarea'); ?>
+        <?php endfor; ?>
+      </div>
+      <div class="card">
+        <div class="card-title">Spodni CTA</div>
+        <?php $renderBlockField('cenik_cta_kicker', 'Stitek nad nadpisem'); ?>
+        <?php $renderBlockField('cta_heading', 'Nadpis'); ?>
+        <?php $renderBlockField('cta_sub', 'Text pod nadpisem', 'textarea'); ?>
+        <?php $renderBlockField('cenik_cta_button', 'Zalozni tlacitko', 'text', 'Pouzije se jen kdyz je pole "Spodni CTA" v zalozce Obsah stranky prazdne.'); ?>
+      </div>
+    </div>
+    <?php for ($pricingCard = 1; $pricingCard <= 8; $pricingCard++): ?>
+    <div class="tab-pane" id="tab-pricing-<?= $pricingCard ?>"><div class="card">
+      <?php $renderBlockField('cenik_card_' . $pricingCard . '_title', 'Nadpis karty'); ?>
+      <?php $renderBlockField('cenik_card_' . $pricingCard . '_category', 'Kategorie (stitek nad nadpisem)'); ?>
+      <?php $renderBlockField('cenik_card_' . $pricingCard . '_badge', 'Odznak (napr. Nejzadanejsi)', 'text', 'Kdyz je vyplneno, karta se zvyrazni.'); ?>
+      <?php $renderBlockField('cenik_card_' . $pricingCard . '_price', 'Cena'); ?>
+      <?php $renderBlockField('cenik_card_' . $pricingCard . '_unit', 'Jednotka za cenou (napr. cely den)'); ?>
+      <?php $renderBlockField('cenik_card_' . $pricingCard . '_desc', 'Popis', 'textarea', 'Prvni odstavec je shrnuti karty, dalsi radky se vypisi jako odrazky.'); ?>
+      <?php $renderBlockField('cenik_card_' . $pricingCard . '_cta_label', 'Text tlacitka'); ?>
+      <?php $renderBlockField('cenik_card_' . $pricingCard . '_cta_url', 'Odkaz tlacitka'); ?>
+    </div></div>
+    <?php endfor; ?>
     <?php endif; ?>
 
     <?php if ($isEdit && $layoutType === 'services'): ?>
@@ -609,14 +685,10 @@ ob_start();
               <?php if (in_array($block['block_type'], ['text','link'], true)): ?>
                 <input type="text" name="block_content[]" value="<?= $h($block['content'] ?? '') ?>"<?= $autofillEnabled ? ' disabled' : '' ?>>
               <?php elseif ($block['block_type'] === 'image'): ?>
-                <div class="media-input-row">
-                  <input id="<?= $h($blockFieldId) ?>" type="text" name="block_content[]" value="<?= $h($block['content'] ?? '') ?>" placeholder="/media/..."<?= $autofillEnabled ? ' disabled' : '' ?>>
-                  <button type="button" class="btn btn-sm btn-secondary" data-page-media-open data-target-id="<?= $h($blockFieldId) ?>"<?= $autofillEnabled ? ' disabled' : '' ?>>Vybrat z medii</button>
-                </div>
-                <div class="form-hint">URL nebo cesta k obrazku</div>
+                <?php $renderMediaField($blockFieldId, (string)($block['content'] ?? ''), $autofillEnabled); ?>
               <?php elseif (($block['block_type'] === 'video') || $block['block_key'] === 'hero_video'): ?>
                 <input type="url" name="block_content[]" value="<?= $h($block['content'] ?? '') ?>" placeholder="https://... nebo /media/..."<?= $autofillEnabled ? ' disabled' : '' ?>>
-                <div class="form-hint">URL videa pro pozadí v hero sekci homepage.</div>
+                <div class="form-hint"><?= $block['block_key'] === 'hero_video' ? 'URL videa pro pozadí v hero sekci homepage.' : 'URL videa (YouTube nebo Vimeo). Pokud je vyplněno, přehraje se místo přiřazené fotografie.' ?></div>
               <?php elseif (in_array($block['block_type'], ['html','richtext'], true)): ?>
                 <div class="article-editor-wrap" data-richtext-editor>
                   <div class="article-editor-toolbar">
@@ -666,11 +738,11 @@ ob_start();
     <?php $frontUrl = '/' . ltrim($page['url_path'] ?? '', '/'); ?>
     <?php $previewUrl = $frontUrl . (strpos($frontUrl, '?') === false ? '?' : '&') . 'cms_preview=1'; ?>
     <div style="display:flex;gap:10px;margin-top:4px;flex-wrap:wrap">
-      <button type="submit" class="btn btn-primary">Ulozit zmeny</button>
+      <button type="submit" class="btn btn-primary">Uložit změny</button>
       <a href="/admin/seo/edit?page_id=<?= (int)$page['id'] ?>" class="btn btn-secondary">SEO nastaveni</a>
       <a href="<?= htmlspecialchars($previewUrl) ?>" target="_blank" class="btn btn-secondary">&#128065; Nahled stranky</a>
       <a href="<?= htmlspecialchars($frontUrl) ?>" target="_blank" class="btn btn-inline-edit">&#9998; Editovat inline</a>
-      <button type="submit" name="publish_after_save" value="1" class="btn btn-success" onclick="return confirm('Ulozit zmeny a publikovat stranku?')">Publikovat</button>
+      <button type="submit" name="publish_after_save" value="1" class="btn btn-success" onclick="return confirm('Uložit změny a publikovat stranku?')">Publikovat</button>
     </div>
     <?php endif; ?>
   </form>
@@ -721,6 +793,10 @@ ob_start();
   .service-media-name{padding:8px;font-size:11px;color:var(--c-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .homepage-about-visual-preview{width:min(360px,100%);height:220px;min-height:220px;align-items:center;justify-content:center;overflow:hidden}
   .homepage-about-visual-preview img{width:100%;height:100%;object-fit:cover;display:block}
+  .homepage-about-visual-upload{display:grid;grid-template-columns:minmax(220px,1fr) minmax(220px,1fr);gap:12px;align-items:end;padding:14px;border:1px solid var(--c-border);border-radius:8px;background:var(--c-bg)}
+  .homepage-about-visual-upload .form-group{margin:0}
+  .homepage-about-visual-upload [data-homepage-about-visual-upload-status]{grid-column:1/-1;min-height:17px}
+  @media(max-width:720px){.homepage-about-visual-upload{grid-template-columns:1fr}}
   </style>
   <div class="service-media-modal" id="service-media-modal" aria-hidden="true">
     <div class="service-media-dialog" role="dialog" aria-modal="true" aria-label="Vyber media">
@@ -732,7 +808,7 @@ ob_start();
         <button type="button" class="btn btn-secondary" data-service-media-close>Zavrit</button>
       </div>
       <?php if (empty($media)): ?>
-        <p class="form-hint">Zatim nejsou nahrana zadna media. Nejdrive je nahraj v sekci <a href="/admin/media">Media</a>.</p>
+        <p class="form-hint">Zatím nejsou nahrána žádná media. Nejdrive je nahraj v sekci <a href="/admin/media">Media</a>.</p>
       <?php else: ?>
         <div class="service-media-list">
           <?php foreach ($media as $m): ?>
@@ -769,10 +845,11 @@ ob_start();
       activeInput = null;
       activeSelectCallback = null;
     };
-    const openModal = () => {
-      modal.classList.add('is-open');
-      modal.setAttribute('aria-hidden', 'false');
-    };
+    const openModal = () => AdminMediaPicker.open({mode:'single', onConfirm:list => {
+      const media = list[0]; if (!media) return;
+      if (activeInput) { activeInput.value=media.url; activeInput.dispatchEvent(new Event('input',{bubbles:true})); activeInput.dispatchEvent(new Event('change',{bubbles:true})); }
+      if (activeSelectCallback) activeSelectCallback(media.url);
+    }});
     document.addEventListener('click', event => {
       const openBtn = event.target.closest('[data-service-media-open]');
       if (openBtn) {
@@ -808,6 +885,44 @@ ob_start();
       activeSelectCallback = event.detail.select;
       openModal();
     });
+    const renderMediaField = field => {
+      const input = field.querySelector('[data-media-field-input]');
+      const preview = field.querySelector('[data-media-field-preview]');
+      const path = field.querySelector('[data-media-field-path]');
+      const clearBtn = field.querySelector('[data-media-field-clear]');
+      if (!input || !preview || !path) return;
+      const value = (input.value || '').trim();
+      preview.innerHTML = '';
+      if (value) {
+        const img = document.createElement('img');
+        img.src = value;
+        img.alt = '';
+        preview.appendChild(img);
+      } else {
+        const span = document.createElement('span');
+        span.textContent = 'Neni vybrano';
+        preview.appendChild(span);
+      }
+      path.textContent = value || 'Zadne medium neni vybrano';
+      if (clearBtn) clearBtn.hidden = value === '';
+    };
+    document.addEventListener('input', event => {
+      const input = event.target.closest('[data-media-field-input]');
+      if (input) renderMediaField(input.closest('[data-media-field]'));
+    });
+    document.addEventListener('change', event => {
+      const input = event.target.closest('[data-media-field-input]');
+      if (input) renderMediaField(input.closest('[data-media-field]'));
+    });
+    document.addEventListener('click', event => {
+      const clearBtn = event.target.closest('[data-media-field-clear]');
+      if (!clearBtn || clearBtn.disabled) return;
+      const field = clearBtn.closest('[data-media-field]');
+      const input = field && field.querySelector('[data-media-field-input]');
+      if (!input) return;
+      input.value = '';
+      renderMediaField(field);
+    });
     document.addEventListener('keydown', event => {
       if (event.key === 'Escape' && modal.classList.contains('is-open')) close();
     });
@@ -821,7 +936,12 @@ ob_start();
     const path = document.querySelector('[data-homepage-about-visual-path]');
     const openBtn = document.querySelector('[data-homepage-about-visual-open]');
     const clearBtn = document.querySelector('[data-homepage-about-visual-clear]');
-    if (!input || !preview || !path || !openBtn || !clearBtn) return;
+    const fileInput = document.querySelector('[data-homepage-about-visual-file]');
+    const altInput = document.querySelector('[data-homepage-about-visual-alt]');
+    const uploadBtn = document.querySelector('[data-homepage-about-visual-upload]');
+    const uploadStatus = document.querySelector('[data-homepage-about-visual-upload-status]');
+    const csrfInput = document.querySelector('#page-form input[name="_csrf"]');
+    if (!input || !preview || !path || !openBtn || !clearBtn || !fileInput || !altInput || !uploadBtn || !uploadStatus || !csrfInput) return;
 
     const render = (url) => {
       const value = (url || '').trim();
@@ -853,6 +973,52 @@ ob_start();
     clearBtn.addEventListener('click', () => {
       input.value = '';
       render('');
+    });
+
+    uploadBtn.addEventListener('click', async () => {
+      const file = fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
+      const altText = altInput.value.trim();
+      if (!file) {
+        uploadStatus.textContent = 'Vyber fotku z pocitace.';
+        uploadStatus.style.color = '#dc2626';
+        return;
+      }
+      if (!altText) {
+        altInput.focus();
+        uploadStatus.textContent = 'ALT text je povinny.';
+        uploadStatus.style.color = '#dc2626';
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('_csrf', csrfInput.value);
+      formData.append('alt_text', altText);
+      formData.append('title', altText);
+      formData.append('images_only', '1');
+      formData.append('files[]', file);
+      uploadBtn.disabled = true;
+      uploadBtn.textContent = 'Nahravam...';
+      uploadStatus.textContent = '';
+
+      try {
+        const response = await fetch('/admin/media/upload', {method:'POST', body:formData});
+        const payload = await response.json();
+        const result = Array.isArray(payload.results) ? payload.results[0] : null;
+        if (!response.ok || !result || !result.success || !result.url) {
+          throw new Error((result && result.error) || payload.error || 'Upload selhal.');
+        }
+        input.value = result.url;
+        render(result.url);
+        fileInput.value = '';
+        uploadStatus.textContent = 'Fotka byla nahrana a vybrana. Pro pouziti na homepage uloz stranku.';
+        uploadStatus.style.color = '#16a34a';
+      } catch (error) {
+        uploadStatus.textContent = error && error.message ? error.message : 'Upload selhal.';
+        uploadStatus.style.color = '#dc2626';
+      } finally {
+        uploadBtn.disabled = false;
+        uploadBtn.textContent = 'Nahrat a vybrat fotku';
+      }
     });
   })();
   </script>

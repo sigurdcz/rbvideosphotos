@@ -7,11 +7,20 @@ use App\View\ViewFactory;
 
 class ThemeTemplateRegistry
 {
-    public const DEFAULT_THEME_KEY = 'elegant-white';
+    public const DEFAULT_THEME_KEY = 'golden-bash-diagonal';
     public const DEFAULT_THEME_VERSION = '1.0.0';
+    public const GOLDEN_BASH_THEME_KEYS = [
+        'golden-bash',
+        self::DEFAULT_THEME_KEY,
+    ];
 
     private string $rootPath;
     private string $stateFile;
+
+    public static function isGoldenBashFamily(?string $themeKey): bool
+    {
+        return in_array(trim((string)$themeKey), self::GOLDEN_BASH_THEME_KEYS, true);
+    }
 
     public function __construct(?string $rootPath = null, ?string $stateFile = null)
     {
@@ -167,7 +176,7 @@ class ThemeTemplateRegistry
 
         // Phase 6: the former jemna-bezova homepage hero override heredoc moved
         // out of core into Templates/jemna-bezova/assets/homepage-overrides.css,
-        // wired via the theme's overrides.homepage.assets.css — so it is now just
+        // wired via the theme's overrides.homepage.assets.css - so it is now just
         // another homepage asset collected below (no theme-specific branch here).
         return $this->collectAssets($theme, $pageKey, 'css');
     }
@@ -245,7 +254,7 @@ class ThemeTemplateRegistry
      * Resolve the theme content view a generic DB page should render through,
      * honoring manifest v2. Returns ['themeKey','view','viewsDir'] only when the
      * theme has opted into the views cascade (declares views_dir) AND ships a
-     * content view for $pageKey — either an explicit overrides.<pageKey>.view or a
+     * content view for $pageKey - either an explicit overrides.<pageKey>.view or a
      * <views_dir>/pages/<pageKey>.phtml file. Returns null otherwise, so callers
      * fall back to the core archetypes/page wrapper. Every theme that has not
      * adopted manifest v2 (including the active theme) resolves to null → no

@@ -1,6 +1,6 @@
-<?php /** @var list<array{href:string,title:string,thumbUrl:string,hasVideo:bool,photos:list<array{url:string,alt:string}>}> $tiles — see App\ViewModels\HomepageData::portfolioTile() */ ?>
-<div class="pt-grid"><?php foreach ($tiles as $tile): ?><a class="pt-tile" href="<?= $this->e($tile['href']) ?>">
+<?php /** @var list<array{href:string,title:string,thumbUrl:string,hasVideo:bool,photos:list<array{url:string,alt:string}>,videoEmbedUrl:string}> $tiles - see App\ViewModels\HomepageData::portfolioTile() */ ?>
+<div class="pt-grid"><?php foreach ($tiles as $tile): ?><a class="pt-tile" href="<?= $this->e($tile['href']) ?>" data-content-type="<?= $tile['hasVideo'] ? 'video' : 'photo' ?>"<?= $tile['videoEmbedUrl'] !== '' ? ' data-video-embed="' . $this->e($tile['videoEmbedUrl']) . '"' : '' ?> data-gallery-date="<?= $this->e($tile['date']) ?>" data-gallery-description="<?= $this->e($tile['description']) ?>" data-gallery-author="<?= $this->e($tile['author']) ?>">
   <div class="pt-caption"><?= $this->e($tile['title']) ?></div>
-  <div class="pt-thumb"><?= $tile['thumbUrl'] !== '' ? '<img src="' . $this->e($tile['thumbUrl']) . '" alt="' . $this->e($tile['title']) . '" loading="lazy">' : '<div class="pt-thumb-placeholder">&#9654;</div>' ?><?= $tile['hasVideo'] ? '<span class="pt-play">&#9654;</span>' : '' ?></div>
-  <div class="pt-photos"><?php foreach ($tile['photos'] as $photo): ?><img src="<?= $this->e($photo['url']) ?>" alt="<?= $this->e($photo['alt']) ?>" loading="lazy"><?php endforeach; ?></div>
+  <div class="pt-thumb"><?= $tile['thumbUrl'] !== '' ? '<img src="' . $this->e($tile['thumbUrl']) . '" alt="' . $this->e($tile['title']) . '" loading="lazy" data-responsive-profile="homepage-card">' : '<div class="pt-thumb-placeholder">&#9654;</div>' ?><?= $tile['hasVideo'] ? '<span class="pt-play">&#9654;</span>' : '' ?></div>
+  <div class="pt-photos"><?php foreach ($tile['photos'] as $photo): ?><img src="<?= $this->e($photo['url']) ?>" data-full="<?= $this->e($photo['fullUrl']) ?>" alt="<?= $this->e($photo['alt']) ?>" loading="lazy"><?php endforeach; ?></div>
 </a><?php endforeach; ?></div><?php ?>

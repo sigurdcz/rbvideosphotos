@@ -16,7 +16,7 @@ class SeoAuditService
         $this->check($results, 'Canonical URL',     !empty($seo['canonical_url']));
         $this->check($results, 'OG tagy',           !empty($seo['og_title']) && !empty($seo['og_description']));
         $this->check($results, 'Twitter Card tagy', !empty($seo['twitter_title']));
-        $this->check($results, 'Schema.org JSON-LD',!empty($seo['schema_json']));
+        $this->check($results, 'Schema.org JSON-LD', trim((string)($seo['schema_type'] ?? '')) !== '' && trim((string)($seo['schema_name'] ?? '')) !== '');
         $this->check($results, 'Stránka indexovatelná', !empty($seo['robots_index']));
         $this->check($results, 'Slug bez diakritiky', $this->slugOk($page['slug'] ?? ''));
 

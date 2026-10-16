@@ -48,6 +48,7 @@ function register_premium_photo_data_contract_tests(callable $test, callable $as
         $assert(!str_contains($pricing, "card['price']") && !str_contains($pricing, 'hp-cenik-card-price'), 'Homepage pricing teaser still renders package prices.');
         $assert(str_contains($pricing, 'hp-cenik-card-badge') && str_contains($pricing, 'Nejoblíbenější'), 'Featured homepage pricing badge is missing.');
         $assert(str_contains($cta, "\$url === '/cenik'") && str_contains($cta, 'Více o cenách'), 'Homepage pricing CTA does not use the requested label.');
+        $assert(str_contains($cta, 'hp-section-cta__google') && str_contains($cta, 'noopener noreferrer external'), 'Homepage Google reviews CTA is missing its safe external-link contract.');
         $assert(str_contains($css, 'background:#3a352f') && str_contains($css, 'background:#d7bc8b'), 'Featured homepage pricing colors are not using the muted palette.');
     });
 
@@ -138,7 +139,7 @@ function register_premium_photo_data_contract_tests(callable $test, callable $as
         $seeder = (string)file_get_contents(dirname($themeDir, 2) . '/app/Services/DemoContentSeeder.php');
         $migration = (string)file_get_contents(dirname($themeDir, 2) . '/database/migrations/023_balance_cenik_premium_features.sql');
 
-        $assert(str_contains($renderer, 'ViewFactory::forTheme($themeKey)'), 'Pricing renderer bypasses the active theme view cascade.');
+        $assert(str_contains($renderer, "ViewFactory::forTheme(\$themeKey, ['editMode' => \$editMode])"), 'Pricing renderer bypasses the active theme view cascade.');
         $assert(str_contains($view, 'premium-cenik-head') && str_contains($view, '$packages as $package'), 'Pricing theme archetype does not preserve DB-driven package rendering.');
         $assert(!str_contains($view, '14 900') && !str_contains($view, '24 900') && !str_contains($view, '34 900'), 'Static package prices leaked into the theme archetype.');
         $assert(str_contains($css, 'justify-items:start') && str_contains($css, '.ckp-card--featured { color:var(--ink)'), 'Reference hero alignment or light featured card styling is missing.');
@@ -327,5 +328,21 @@ function register_premium_photo_data_contract_tests(callable $test, callable $as
         $assert(str_contains($service, 'premium-service-card'), 'Theme service DOM was not rendered.');
         $assert(str_contains($service, 'DB SERVICE SENTINEL'), 'Theme service renderer lost database data.');
         $assert(str_contains($service, '/media/db-sentinel.webp'), 'Theme service renderer lost database media.');
+    });
+
+    $test('homepage service pipeline preserves the historical sixth service', function () use ($assert, $root): void {
+        $demoSeeder = (string)file_get_contents($root . '/app/Services/DemoContentSeeder.php');
+        $baseSeed = (string)file_get_contents($root . '/database/seeds/seed.php');
+        $pageController = (string)file_get_contents($root . '/app/Controllers/PageController.php');
+        $migration = (string)file_get_contents($root . '/database/migrations/052_restore_sixth_homepage_service.sql');
+
+        foreach ([$demoSeeder, $baseSeed] as $source) {
+            $assert(str_contains($source, 'Letecké záběry dronem'), 'A canonical seed path lost the approved sixth service title.');
+            $assert(str_contains($source, 'působivou perspektivu a atmosféru'), 'A canonical seed path lost the approved drone-only copy.');
+        }
+        $assert(str_contains($baseSeed, 'buildServicesHtml($siteId, 6)'), 'The base seed still truncates homepage services below six.');
+        $assert(str_contains($pageController, 'buildServicesHtml($siteId, 6)'), 'The homepage editor still truncates services below six.');
+        $assert(str_contains($demoSeeder, 'buildServicesHtml($siteId, 6)'), 'The production repair does not regenerate all six homepage cards.');
+        $assert(str_contains($migration, 'WHERE 1 = 0'), 'The append-only sixth-service marker is not application-compatible.');
     });
 }

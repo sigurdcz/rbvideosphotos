@@ -25,7 +25,7 @@ ob_start();
   </div>
 <?php elseif ((int)$pagesCount === 0): ?>
   <div class="alert alert-warning">
-    Databaze neobsahuje zadne stranky. <a href="/admin/setup"><strong>Spustit pocatecni seed -&gt;</strong></a>
+    Databáze neobsahuje žádné stránky. <a href="/admin/setup"><strong>Spustit pocatecni seed -&gt;</strong></a>
   </div>
 <?php else: ?>
 
@@ -43,7 +43,7 @@ ob_start();
 <div class="card">
   <div class="card-title">Posledni publikovani</div>
   <?php if (empty($history)): ?>
-    <p style="color:var(--c-muted)">Zatim zadne publikovani.</p>
+    <p style="color:var(--c-muted)">Zatím žádné publikování.</p>
   <?php else: ?>
     <table class="history-table">
       <thead><tr><th>#</th><th>Verze</th><th>Status</th><th>Autor</th><th>Datum</th></tr></thead>

@@ -5,8 +5,8 @@ page_type: wedding_case_study
 brand: RB Videos & Photos
 language: cs-CZ
 status: ready_for_ai
-target_path: /svatba-hrad-sternberk-paseka-marketa-petr/
-slug: svatba-hrad-sternberk-paseka-marketa-petr
+target_path: /svatba-hrad-sternberk-marketa-petr/
+slug: svatba-hrad-sternberk-marketa-petr
 title: Svatba Markéty a Petra na hradě Šternberk
 seo:
   meta_title: Svatba na hradě Šternberk | Markéta a Petr
@@ -20,7 +20,7 @@ seo:
   robots: index,follow
   schema_type: Article
 event:
-  couple: Markéta a Petr Pláškovi
+  couple: Markéta a Petr
   date_iso: '2023-06-17'
   date_display: 17. června 2023
   ceremony: Hrad Šternberk
@@ -42,7 +42,7 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 ## Povinná pravidla
 
-- Stránka patří do blogu a její adresa je `/svatba-hrad-sternberk-paseka-marketa-petr/`.
+- Stránka patří do blogu a její adresa je `/svatba-hrad-sternberk-marketa-petr/`.
 - Používej označení „blogový článek“; nepoužívej označení „portfolio“.
 - Piš přirozeně v první osobě množného čísla: „fotíme“, „natáčíme“, „pracujeme“.
 - Zachovej lidský, prémiový a konkrétní tón bez prázdných reklamních frází.
@@ -56,7 +56,7 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 ## Uzamčené údaje
 
-- Pár: **Markéta a Petr Pláškovi**
+- Pár: **Markéta a Petr**
 - Datum: **17. června 2023**
 - Obřad: **Hrad Šternberk**
 - Oslava: **Paseka – Obecní úřad**
@@ -80,7 +80,7 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 # Svatba Markéty a Petra na hradě Šternberk a v Pasece
 
-Markéta a Petr Pláškovi spojili 17. června 2023 slavnostní obřad na hradě Šternberk s následnou oslavou v Pasece. Dvě rozdílná místa dala svatebnímu dni přirozenou dramaturgii: historický a reprezentativní začátek, po němž následovala uvolněnější část s rodinou a přáteli.
+Markéta a Petr spojili 17. června 2023 slavnostní obřad na hradě Šternberk s následnou oslavou v Pasece. Dvě rozdílná místa dala svatebnímu dni přirozenou dramaturgii: historický a reprezentativní začátek, po němž následovala uvolněnější část s rodinou a přáteli.
 
 ## Hrad Šternberk jako místo svatebního obřadu
 

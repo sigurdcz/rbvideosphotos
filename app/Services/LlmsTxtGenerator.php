@@ -46,7 +46,7 @@ class LlmsTxtGenerator
         $lines[] = '## Kontakt';
         $lines[] = '';
         $lines[] = $this->isPublicRouteAvailable($pageMap, 'kontakt')
-            ? '- Kontaktni formular a kontaktni informace: ' . $this->buildUrl($domain, 'kontakt')
+            ? '- Kontaktní formulář a kontaktni informace: ' . $this->buildUrl($domain, 'kontakt')
             : '- TODO: doplnte samostatnou kontaktni stranku s formularem.';
         $lines[] = '';
         $lines[] = '## Pro AI agenty';
@@ -57,7 +57,7 @@ class LlmsTxtGenerator
             : '- Ceny nejsou v samostatnem ceniku; overte homepage a obsahove stranky.';
         $lines[] = $this->isPublicRouteAvailable($pageMap, 'kontakt')
             ? '- Poptavka se odesila pres formular na strance Kontakt.'
-            : '- Kontaktni formular neni dostupny na samostatne strance.';
+            : '- Kontaktní formulář neni dostupny na samostatne strance.';
         $lines[] = isset($pageMap['blog'])
             ? '- Blog obsahuje poradenske a informacni clanky: ' . $this->buildUrl($domain, 'blog')
             : '- Blogova sekce neni dostupna jako samostatna stranka.';

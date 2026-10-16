@@ -1,0 +1,24 @@
+<?php
+$items = $mixedEntries ?? [];
+$blockMap = [];
+foreach (($blocks ?? []) as $block) {
+    $blockMap[(string) ($block['block_key'] ?? '')] = (string) ($block['content'] ?? '');
+}
+/** Database block first, the former hardcoded literal as the fallback. */
+$t = static fn(string $key, string $default): string =>
+    trim((string) ($blockMap[$key] ?? '')) !== '' ? (string) $blockMap[$key] : $default;
+?>
+<section class="pf-hero gb-unified-hero"><div class="container"><span class="gb-page-kicker"<?= $this->inlineAttr('listing_kicker') ?>><?= $this->e($t('listing_kicker', 'Portfolio')) ?></span><h1<?= $this->inlineAttr($hero['titleKey'], $hero['titleType']) ?>><?= $this->e($hero['title']) ?></h1><p<?= $this->inlineAttr($hero['subKey'], $hero['subType']) ?>><?= $this->e($hero['sub']) ?></p></div></section>
+<nav class="gb-portfolio-tabs" aria-label="<?= $this->e($t('portfolio_filter_aria', 'Filtr portfolia')) ?>"><button type="button" class="gb-portfolio-tab" id="portfolio-filter-all" aria-pressed="true" data-portfolio-filter="all"<?= $this->inlineAttr('portfolio_filter_all') ?>><?= $this->e($t('portfolio_filter_all', 'Vše')) ?></button><span class="gb-portfolio-tabs__divider" aria-hidden="true"><i></i></span><button type="button" class="gb-portfolio-tab" id="portfolio-filter-photo" aria-pressed="false" data-portfolio-filter="photo"<?= $this->inlineAttr('portfolio_filter_photo') ?>><?= $this->e($t('portfolio_filter_photo', 'Fotky')) ?></button><span class="gb-portfolio-tabs__divider" aria-hidden="true"><i></i></span><button type="button" class="gb-portfolio-tab" id="portfolio-filter-video" aria-pressed="false" data-portfolio-filter="video"<?= $this->inlineAttr('portfolio_filter_video') ?>><?= $this->e($t('portfolio_filter_video', 'Videa')) ?></button></nav>
+<section class="grid-wrap gb-work-listing portfolio-media-group" id="nase-prace-grid"><div class="container"><span class="gb-list-kicker"<?= $this->inlineAttr('portfolio_list_kicker') ?>><?= $this->e($t('portfolio_list_kicker', 'Foto i video příběhy')) ?></span><h2 class="portfolio-media-group__title"<?= $this->inlineAttr('portfolio_list_heading') ?>><?= $this->e($t('portfolio_list_heading', 'Naše práce')) ?></h2><div class="pt-grid" data-portfolio-grid>
+<?php if ($items === []): ?><p class="pt-empty"<?= $this->inlineAttr('portfolio_empty_text') ?>><?= $this->e($t('portfolio_empty_text', 'V teto kategorii zatim neni publikovany obsah.')) ?></p><?php else: foreach ($items as $entry): ?>
+<a class="pt-card gb-work-tile" href="/<?= $this->e($entry['slug']) ?>" data-content-type="<?= $this->e($entry['content_type']) ?>"<?= $entry['video_embed_url'] !== '' ? ' data-video-embed="' . $this->e($entry['video_embed_url']) . '"' : '' ?> data-gallery-date="<?= $this->e($entry['date']) ?>" data-gallery-description="<?= $this->e($entry['gallery_description']) ?>" data-gallery-author="<?= $this->e($entry['gallery_author']) ?>"><div class="pt-card__media"><?php if ($entry['thumb'] !== ''): ?><img src="<?= $this->e($entry['thumb']) ?>" alt="<?= $this->e($entry['title']) ?>" loading="lazy"><?php endif; ?><?php if ($entry['has_video']): ?><span class="bl-play">&#9654;</span><?php endif; ?></div><div class="pt-card__body"><h3 class="pt-title"<?= $this->inlineAttr('portfolio:' . $entry['id'] . ':title') ?>><?= $this->e($entry['title']) ?></h3></div><div class="pt-photos"><?php foreach ($entry['photos'] as $photo): ?><img src="<?= $this->e($photo['url']) ?>" alt="<?= $this->e($photo['alt']) ?>" loading="lazy"><?php endforeach; ?></div></a>
+<?php endforeach; endif; ?></div></div></section>
+<section class="gb-route-cta">
+  <div class="container">
+    <span class="gb-page-kicker"<?= $this->inlineAttr('route_cta_kicker') ?>><?= $this->e($t('route_cta_kicker', 'Máte podobnou představu?')) ?></span>
+    <h2<?= $this->inlineAttr('route_cta_heading') ?>><?= $this->e($t('route_cta_heading', 'Proberme váš termín společně')) ?></h2>
+    <p<?= $this->inlineAttr('route_cta_text') ?>><?= $this->e($t('route_cta_text', 'Napište nám pár slov o tom, co plánujete. Nezávazně vám poradíme a domluvíme se na dalším postupu.')) ?></p>
+    <div class="gb-route-cta__actions"><a class="gb-button"<?= $this->inlineAttr('route_cta_button') ?> href="/kontakt"><?= $this->e($t('route_cta_button', 'Nezávazná konzultace')) ?></a></div>
+  </div>
+</section>

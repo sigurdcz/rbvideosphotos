@@ -4,17 +4,19 @@ declare(strict_types=1);
 
 namespace App\ViewModels;
 
+use App\Domain\PricingPackageCatalog;
 use App\Repositories\ContactRepository;
 use App\Repositories\FaqRepository;
+use App\Repositories\SiteRepository;
 use App\Services\Render\ContactNormalizer;
 
 /**
  * Pure data provider for the `kontakt` archetype (app/Views/archetypes/kontakt.phtml).
  *
  * Phase 4c of the templating refactor: replaces the ad-hoc HTML built inline in
- * public/index.php::tryServeKontaktPage(). Returns scalars/arrays only — no HTML
+ * public/index.php::tryServeKontaktPage(). Returns scalars/arrays only - no HTML
  * except the trusted, hardcoded social icon SVG (same trust level as
- * FooterViewData from phase 3). Never generates the CSRF token itself — it is
+ * FooterViewData from phase 3). Never generates the CSRF token itself - it is
  * generated once by the caller (Auth::csrfToken()) and only carried through here,
  * per the security contract in TEMPLATE_REFACTOR_PLAN.md section 6.
  */
@@ -29,7 +31,7 @@ final class KontaktPageData
      *   form: array{csrfToken:string, honeypotField:string, sentState:?string}
      * }
      */
-    public static function forSite(int $siteId, string $csrfToken, ?string $sentState): array
+    public static function forSite(int $siteId, string $csrfToken, ?string $sentState, ?string $packageId = null): array
     {
         $contact = ContactNormalizer::enrichContactWithLegacyBlocks($siteId, (new ContactRepository())->findBySite($siteId) ?: []);
 
@@ -67,6 +69,12 @@ final class KontaktPageData
             $contactCards[] = ['type' => 'location', 'addresses' => $addresses];
         }
 
+        $site = (new SiteRepository())->findById($siteId) ?: [];
+        $companyRegistrationId = trim((string)($site['company_registration_id'] ?? ''));
+        if ($companyRegistrationId !== '') {
+            $contactCards[] = ['type' => 'company', 'companyRegistrationId' => $companyRegistrationId];
+        }
+
         $contactCards[] = ['type' => 'note'];
 
         $faqItems = [];
@@ -85,6 +93,9 @@ final class KontaktPageData
             $faqItems = [];
         }
 
+        $selectedPackage = PricingPackageCatalog::resolve($packageId);
+        $packageSelectionInvalid = trim((string) $packageId) !== '' && $selectedPackage === null;
+
         return [
             'contactCards' => $contactCards,
             'mapsUrl' => trim((string)($contact['maps_url'] ?? '')),
@@ -97,6 +108,8 @@ final class KontaktPageData
                 'csrfToken' => $csrfToken,
                 'honeypotField' => 'website',
                 'sentState' => $sentState,
+                'selectedPackage' => $selectedPackage,
+                'packageSelectionInvalid' => $packageSelectionInvalid,
             ],
         ];
     }

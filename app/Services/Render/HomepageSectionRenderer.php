@@ -7,6 +7,7 @@ namespace App\Services\Render;
 use App\Core\Logger;
 use App\Repositories\BlockRepository;
 use App\Services\HomepageContentService;
+use App\Services\ThemeTemplateRegistry;
 
 /**
  * Canonical homepage section autofill / data-source injection.
@@ -17,6 +18,50 @@ use App\Services\HomepageContentService;
  */
 final class HomepageSectionRenderer
 {
+    public static function stabilizeGoldenBashHero(string $html, bool $isHome, ?string $themeKey): string
+    {
+        if (!$isHome || !ThemeTemplateRegistry::isGoldenBashFamily($themeKey) || !str_contains($html, 'hp-hero')) {
+            return $html;
+        }
+
+        return preg_replace_callback(
+            '~<section\b(?=[^>]*\bclass=(["\'])[^"\']*\bhp-hero\b[^"\']*\1)[^>]*>.*?</section>~is',
+            static function (array $sectionMatch): string {
+                $hero = (string)$sectionMatch[0];
+                if (!str_contains($hero, 'gb-hero-seo-title')) {
+                    $hero = preg_replace_callback(
+                        '~<h1\b([^>]*)>~i',
+                        static function (array $headingMatch): string {
+                            $attributes = (string)($headingMatch[1] ?? '');
+                            if (preg_match('~\bclass=(["\'])(.*?)\1~i', $attributes, $classMatch)) {
+                                $classes = trim((string)$classMatch[2] . ' gb-hero-seo-title');
+                                $attributes = preg_replace(
+                                    '~\bclass=(["\'])(.*?)\1~i',
+                                    'class="' . htmlspecialchars($classes, ENT_QUOTES, 'UTF-8') . '"',
+                                    $attributes,
+                                    1
+                                ) ?? $attributes;
+                            } else {
+                                $attributes .= ' class="gb-hero-seo-title"';
+                            }
+                            return '<h1' . $attributes . '>';
+                        },
+                        $hero,
+                        1
+                    ) ?? $hero;
+                }
+
+                if (!str_contains($hero, 'gb-hero-story-title')) {
+                    $storyTitle = '<h2 class="gb-hero-story-title">Zachytíme <em>váš příběh<br>navždy.</em></h2>';
+                    $hero = preg_replace('~(</h1>)~i', '$1' . $storyTitle, $hero, 1) ?? $hero;
+                }
+                return $hero;
+            },
+            $html,
+            1
+        ) ?? $html;
+    }
+
     public static function blockContent(array $blocks, string $key): string
 {
     foreach ($blocks as $block) {
@@ -34,8 +79,8 @@ final class HomepageSectionRenderer
      *
      * Extracted in phase 4 of the templating refactor from the global
      * firstBlockValue() in public/index.php (a live-only helper used by the
-     * faq/sluzby page-hero resolution) so App\Services\PublishService — which
-     * cannot call functions defined in public/index.php — can resolve the same
+     * faq/sluzby page-hero resolution) so App\Services\PublishService - which
+     * cannot call functions defined in public/index.php - can resolve the same
      * hero title/subtitle for the equivalent archetypes at publish time. The
      * global function now delegates here; behaviour is unchanged.
      *
@@ -194,18 +239,19 @@ final class HomepageSectionRenderer
     return preg_replace('~(<main\b[^>]*>)~i', '$1' . $source, $html, 1) ?? $html;
 }
 
-    public static function injectHomepageAboutVisualSource(string $html, int $pageId, int $siteId, bool $isHome): string
+public static function injectHomepageAboutVisualSource(string $html, int $pageId, int $siteId, bool $isHome): string
 {
     if (!$isHome) {
         return $html;
     }
 
     try {
-        $block = (new BlockRepository())->findByKey($pageId, 'jb-about-visual__media');
-        $url = $block ? (new HomepageContentService())->resolveOptimizedMediaUrl($siteId, (string)($block['content'] ?? ''), 102400) : '';
-        if ($url === '') {
-            $url = \App\Services\Render\MediaUrlResolver::resolveDemoMediaUrlByFilename($siteId, 'weare2.png');
-        }
+        $blocks = new BlockRepository();
+        $media = new HomepageContentService();
+        $visual = $blocks->findByKey($pageId, 'jb-about-visual__media');
+        $visualUrl = $visual
+            ? $media->resolveOptimizedMediaUrl($siteId, (string)($visual['content'] ?? ''))
+            : '';
     } catch (\Throwable $e) {
         Logger::infoTo('theme-debug', 'theme.about.visual.error', 'Failed to resolve homepage about visual', [
             'page_id' => $pageId,
@@ -215,11 +261,17 @@ final class HomepageSectionRenderer
     }
 
     $sourcePattern = '~<(?:img|span)\b[^>]*\bclass=(["\'])[^"\']*\bjb-about-visual__source\b[^"\']*\1[^>]*(?:>.*?</span>|>)~is';
-    if ($url === '') {
+    if ($visualUrl === '') {
         return preg_replace($sourcePattern, '', $html) ?? $html;
     }
 
-    $source = '<span class="jb-about-visual__source" data-src="' . htmlspecialchars($url, ENT_QUOTES) . '" hidden></span>';
+    $safeVisualUrl = htmlspecialchars($visualUrl, ENT_QUOTES);
+    $source = '<img class="jb-about-visual__source" src="' . $safeVisualUrl
+        . '" data-src="' . $safeVisualUrl
+        // Deliberately carries no explicit priority marker: this visual belongs to a section
+        // further down the page (below the fold on desktop), and marking it used to take the
+        // single priority slot away from the hero poster, the measured LCP element.
+        . '" data-responsive-profile="homepage-hero" alt="RB Videos &amp; Photos při práci" hidden>';
     $updated = preg_replace($sourcePattern, $source, $html, 1, $count);
     if ($count > 0 && is_string($updated)) {
         return $updated;
@@ -232,4 +284,14 @@ final class HomepageSectionRenderer
 
     return preg_replace('/(<body\b[^>]*>)/i', '$1' . $source, $html, 1) ?? $html;
 }
+
+public static function removeLegacyVideoWeddingTag(string $html): string
+{
+    return preg_replace(
+        '~<p\b[^>]*(?:data-cms-video-wedding-tag|class=(?:"[^"]*\bhp-video-wedding-tag\b[^"]*"|\'[^\']*\bhp-video-wedding-tag\b[^\']*\'))[^>]*>.*?</p>~is',
+        '',
+        $html
+    ) ?? $html;
+}
+
 }

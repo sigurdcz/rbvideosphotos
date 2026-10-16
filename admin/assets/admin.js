@@ -1,4 +1,4 @@
-/* SEO Mini CMS — Admin JS */
+/* SEO Mini CMS - Admin JS */
 
 // Tabs
 document.addEventListener('DOMContentLoaded', () => {
@@ -390,3 +390,206 @@ function slugify(str) {
     .trim().replace(/\s+/g, '-')
     .replace(/-+/g, '-');
 }
+
+// Shared renderer for a picked gallery: one card per photo with the order number
+// next to it. The picker itself only returns a list, so every form used to invent its
+// own markup; this keeps the numbers, the hidden ids and the visible order in sync in
+// one place. Cards are shown in the order the visitor will see them.
+(function () {
+  function normalize(items) {
+    return (items || []).map((item, index) => ({
+      id: parseInt(item.id, 10),
+      name: item.name || '',
+      thumb: item.thumb || item.url || '',
+      sort: Math.max(0, parseInt(item.sort, 10) || 0),
+      picked: index,
+    })).filter(item => item.id > 0);
+  }
+
+  // The card the editor just typed into wins a tie only when it moved up, otherwise
+  // typing "1" next to a photo that already has 1 would appear to do nothing - and
+  // typing a higher number would stop one position short of where it was aimed.
+  function effectiveOrder(items, justEdited, movedUp) {
+    const bias = item => (item.id === justEdited ? (movedUp ? 0 : 2) : 1);
+    return [...items].sort((a, b) => (a.sort - b.sort) || (bias(a) - bias(b)) || (a.picked - b.picked));
+  }
+
+  // Photos are always numbered 1..n, so the numbers read as positions and stay easy
+  // to retype. Renumbering after every change is what makes "1" mean "first".
+  function renumber(items, justEdited, movedUp) {
+    const ordered = effectiveOrder(items, justEdited, movedUp);
+    ordered.forEach((item, index) => {
+      item.sort = index + 1;
+      item.picked = index;
+    });
+    return ordered;
+  }
+
+  window.AdminMediaSelection = {
+    mount(options) {
+      const container = options.container;
+      if (!container) return null;
+      const idsName = options.idsName;
+      const sortName = options.sortName;
+      let items = normalize(options.items);
+
+      function render(justEdited, movedUp) {
+        items = renumber(items, justEdited, movedUp);
+        container.innerHTML = '';
+        if (!items.length) {
+          container.classList.remove('admin-media-selection');
+          if (options.onChange) options.onChange(items);
+          return;
+        }
+        container.classList.add('admin-media-selection');
+
+        items.forEach(item => {
+          const card = document.createElement('div');
+          card.className = 'admin-media-selection__item';
+          card.dataset.mediaId = String(item.id);
+
+          const img = document.createElement('img');
+          img.src = item.thumb;
+          img.alt = item.name;
+          img.loading = 'lazy';
+          card.appendChild(img);
+
+          const name = document.createElement('span');
+          name.textContent = item.name;
+          name.title = item.name;
+          card.appendChild(name);
+
+          const row = document.createElement('div');
+          row.className = 'admin-media-selection__order';
+
+          const number = document.createElement('input');
+          number.type = 'number';
+          number.min = '0';
+          number.step = '1';
+          number.value = String(item.sort);
+          number.setAttribute('value', String(item.sort));
+          number.name = sortName + '[' + item.id + ']';
+          number.title = 'Poradi (nizsi = driv)';
+          number.addEventListener('change', () => {
+            const typed = Math.min(Math.max(1, parseInt(number.value, 10) || 1), 1000000);
+            const movedUp = typed < item.sort;
+            item.sort = typed;
+            render(item.id, movedUp);
+          });
+          row.appendChild(number);
+
+          const remove = document.createElement('button');
+          remove.type = 'button';
+          remove.className = 'btn btn-secondary';
+          remove.textContent = '\u00d7';
+          remove.title = 'Odebrat';
+          remove.addEventListener('click', () => {
+            items = items.filter(other => other.id !== item.id);
+            render();
+          });
+          row.appendChild(remove);
+          card.appendChild(row);
+
+          const hidden = document.createElement('input');
+          hidden.type = 'hidden';
+          hidden.name = idsName + '[]';
+          hidden.value = String(item.id);
+          card.appendChild(hidden);
+
+          container.appendChild(card);
+        });
+
+        if (options.onChange) options.onChange(items);
+      }
+
+      render();
+
+      return {
+        // Merging by id keeps the numbers already typed for photos that stay picked.
+        setItems(list) {
+          const previous = new Map(items.map(item => [item.id, item.sort]));
+          // A freshly picked photo goes to the end, never in front of photos the
+          // editor already numbered - the same rule the listings use for 0.
+          let next = items.length;
+          items = normalize(list).map(item => ({
+            ...item,
+            sort: previous.has(item.id) ? previous.get(item.id) : ++next,
+          }));
+          render();
+        },
+        getItems() {
+          return items.map(item => ({id: item.id, name: item.name, thumb: item.thumb, sort: item.sort}));
+        },
+      };
+    },
+  };
+})();
+
+// Shared lazy media picker. No media records are embedded in edit-form HTML.
+(function () {
+  const modal = document.getElementById('admin-media-picker');
+  if (!modal) return;
+  const grid = modal.querySelector('[data-picker-grid]');
+  const status = modal.querySelector('[data-picker-status]');
+  const pageLabel = modal.querySelector('[data-picker-page]');
+  const search = modal.querySelector('[data-picker-search] input');
+  let options = null, items = [], selected = new Map(), page = 1, pages = 1, opener = null;
+
+  const close = () => {
+    modal.classList.remove('is-open'); modal.setAttribute('aria-hidden', 'true');
+    if (opener) opener.focus();
+  };
+  const render = () => {
+    grid.innerHTML = '';
+    items.forEach(item => {
+      const button = document.createElement('button');
+      button.type = 'button'; button.className = 'admin-media-picker__item';
+      button.classList.toggle('is-selected', selected.has(String(item.id)));
+      const image = document.createElement('img'); image.src = item.thumb; image.alt = item.alt || item.name; image.loading = 'lazy';
+      const name = document.createElement('span'); name.textContent = item.name;
+      button.append(image, name);
+      button.addEventListener('click', () => {
+        const key = String(item.id);
+        if (options.mode === 'single') selected.clear();
+        selected.has(key) ? selected.delete(key) : selected.set(key, item);
+        render();
+      });
+      grid.appendChild(button);
+    });
+    status.textContent = items.length ? `${selected.size} vybráno` : 'Nebyla nalezena žádná média.';
+    pageLabel.textContent = `Strana ${page} z ${pages}`;
+    modal.querySelector('[data-picker-prev]').disabled = page <= 1;
+    modal.querySelector('[data-picker-next]').disabled = page >= pages;
+  };
+  const load = async () => {
+    status.textContent = 'Načítám média…'; grid.innerHTML = '';
+    const qs = new URLSearchParams({page: String(page), q: search.value.trim(), images: options.imagesOnly ? '1' : '0'});
+    try {
+      const response = await fetch('/admin/media/picker?' + qs, {headers:{Accept:'application/json'}});
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json(); items = data.items || []; pages = data.pages || 1; render();
+    } catch (error) {
+      status.textContent = 'Média se nepodařilo načíst: ' + error.message;
+    }
+  };
+  window.AdminMediaPicker = {
+    open(config) {
+      options = Object.assign({mode:'single', imagesOnly:false, selected:[]}, config || {});
+      selected = new Map((options.selected || []).map(item => [String(item.id), item]));
+      opener = document.activeElement; page = 1; search.value = '';
+      modal.classList.add('is-open'); modal.setAttribute('aria-hidden', 'false'); load(); search.focus();
+    }
+  };
+  modal.querySelector('[data-picker-search]').addEventListener('submit', e => { e.preventDefault(); page = 1; load(); });
+  modal.querySelector('[data-picker-prev]').addEventListener('click', () => { if (page > 1) { page--; load(); } });
+  modal.querySelector('[data-picker-next]').addEventListener('click', () => { if (page < pages) { page++; load(); } });
+  modal.querySelector('[data-picker-confirm]').addEventListener('click', () => { if (options && options.onConfirm) options.onConfirm([...selected.values()]); close(); });
+  modal.querySelector('[data-picker-close]').addEventListener('click', close);
+  modal.addEventListener('click', e => { if (e.target === modal) close(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && modal.classList.contains('is-open')) close(); });
+  document.addEventListener('admin:media-picker:open', e => {
+    if (!e.detail || typeof e.detail.select !== 'function') return;
+    e.stopImmediatePropagation();
+    window.AdminMediaPicker.open({mode:'single', imagesOnly:!!e.detail.imagesOnly, onConfirm: list => { if (list[0]) e.detail.select(list[0].url, list[0]); }});
+  }, true);
+})();

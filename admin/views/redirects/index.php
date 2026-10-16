@@ -24,8 +24,8 @@ ob_start();
     <div class="form-group">
       <label>Typ přesměrování</label>
       <select name="status_code">
-        <option value="301">301 — Trvalý</option>
-        <option value="302">302 — Dočasný</option>
+        <option value="301">301 - Trvalý</option>
+        <option value="302">302 - Dočasný</option>
       </select>
     </div>
     <button type="submit" class="btn btn-primary">Přidat redirect</button>

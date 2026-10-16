@@ -432,7 +432,7 @@ body.theme-elegant-white3 #cenik .ew3-price-badge {
   border-radius: 0 0 10px 10px;
   color: #fff;
   background: var(--ew3-gold-strong);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -1364,7 +1364,7 @@ body.theme-elegant-white3 .theme-footer { padding-block: 64px 28px; color: rgba(
   html body.theme-elegant-white3 .site-nav .nav-links { position: static !important; width: auto !important; margin-left: auto; padding: 0 !important; flex-direction: row !important; gap: 14px; opacity: 1 !important; visibility: visible !important; transform: none !important; background: transparent !important; }
   body.theme-elegant-white3 .theme-nav-wrap .nav-links { display: flex !important; align-items: center; gap: 22px; }
   body.theme-elegant-white3 .site-nav .nav-links a,
-  body.theme-elegant-white3 .theme-nav-wrap a { min-height: 40px; font-size: 11px; letter-spacing: .08em; }
+  body.theme-elegant-white3 .theme-nav-wrap a { min-height: 40px; font-size: 12px; letter-spacing: .08em; }
   body.theme-elegant-white3 .site-nav .nav-toggle-label,
   body.theme-elegant-white3 .nav-toggle-label { display: none !important; }
   body.theme-elegant-white3 .site-nav .nav-links a[href="#kontakt"],
@@ -1378,7 +1378,7 @@ body.theme-elegant-white3 .theme-footer { padding-block: 64px 28px; color: rgba(
   body.theme-elegant-white3 .site-nav .nav-inner { gap: 12px; }
   body.theme-elegant-white3 .site-nav .brand { font-size: 12px; letter-spacing: .12em; }
   body.theme-elegant-white3 .site-nav .nav-links { gap: 8px; }
-  body.theme-elegant-white3 .site-nav .nav-links a { min-height: 34px; font-size: 8px; letter-spacing: .04em; }
+  body.theme-elegant-white3 .site-nav .nav-links a { min-height: 34px; font-size: 10px; letter-spacing: .04em; }
   body.theme-elegant-white3 .site-nav .nav-links a[href="#kontakt"] { margin-left: 4px; padding: 0 10px; }
   body.theme-elegant-white3 #uvod.hp-hero,
   body.theme-elegant-white3 #uvod > .container { min-height: 540px !important; }
@@ -1386,14 +1386,14 @@ body.theme-elegant-white3 .theme-footer { padding-block: 64px 28px; color: rgba(
   body.theme-elegant-white3 #uvod h1 { width: 420px !important; font-size: 56px !important; }
   body.theme-elegant-white3 #uvod .hero-sub { max-width: 390px !important; font-size: 15px !important; }
   body.theme-elegant-white3 #uvod .btn-primary,
-  body.theme-elegant-white3 #uvod .btn-secondary { min-height: 42px !important; padding: 10px 16px !important; font-size: 10px !important; }
+  body.theme-elegant-white3 #uvod .btn-secondary { min-height: 42px !important; padding: 10px 16px !important; font-size: 11px !important; }
   body.theme-elegant-white3 #sluzby .ew-about-grid { grid-template-columns: 250px minmax(0, 1fr) !important; gap: 28px !important; }
   body.theme-elegant-white3 #sluzby .ew-about-media,
   body.theme-elegant-white3 #sluzby .ew-about-media img { width: 250px; height: 250px; min-height: 250px !important; }
   body.theme-elegant-white3 #sluzby .section-title { margin-bottom: 12px; font-size: 38px !important; }
-  body.theme-elegant-white3 #sluzby .section-label { margin-bottom: 8px; font-size: 9px; }
+  body.theme-elegant-white3 #sluzby .section-label { margin-bottom: 8px; font-size: 10px; }
   body.theme-elegant-white3 #sluzby .ew-about-points { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px 12px; margin: 12px 0 18px; }
-  body.theme-elegant-white3 #sluzby .ew-about-point { min-height: 30px; padding: 4px 2px 4px 20px !important; font-size: 10px; }
+  body.theme-elegant-white3 #sluzby .ew-about-point { min-height: 30px; padding: 4px 2px 4px 20px !important; font-size: 11px; }
   body.theme-elegant-white3 #sluzby .ew-about-point::before { left: 1px; width: 10px; height: 10px; }
 }
 
@@ -1442,9 +1442,9 @@ body.theme-elegant-white3 .theme-footer { padding-block: 64px 28px; color: rgba(
   html body.theme-elegant-white3 .theme-header .theme-nav-wrap,
   html body.theme-elegant-white3 .theme-header .theme-nav-wrap .site-nav,
   html body.theme-elegant-white3 .site-nav .nav-inner { display: flex !important; width: 100% !important; align-items: center !important; }
-  html body.theme-elegant-white3 .site-nav .brand { display: block !important; font-size: 9px !important; letter-spacing: .16em !important; }
+  html body.theme-elegant-white3 .site-nav .brand { display: block !important; font-size: 10px !important; letter-spacing: .16em !important; }
   html body.theme-elegant-white3 .site-nav .nav-links { display: flex !important; gap: 9px !important; }
-  html body.theme-elegant-white3 .site-nav .nav-links a { min-height: 28px !important; font-size: 7px !important; }
+  html body.theme-elegant-white3 .site-nav .nav-links a { min-height: 28px !important; font-size: 10px !important; }
   html body.theme-elegant-white3 .site-nav .nav-links a[href="#kontakt"] { padding: 0 9px !important; }
   html body.theme-elegant-white.theme-elegant-white3 .theme-footer,
   html body.theme-elegant-white.theme-elegant-white3 .theme-footer .site-footer-rich { color: rgba(255, 253, 249, .82) !important; background: #211910 !important; }
@@ -1455,7 +1455,7 @@ body.theme-elegant-white3 .theme-footer { padding-block: 64px 28px; color: rgba(
   html body.theme-elegant-white.theme-elegant-white3 .theme-footer .site-footer-brand__mark { color: #d9bd80 !important; }
   html body.theme-elegant-white.theme-elegant-white3[data-cms-page-key="homepage"] .theme-nav-wrap .nav-inner { gap: 6px !important; overflow: visible !important; }
   html body.theme-elegant-white.theme-elegant-white3[data-cms-page-key="homepage"] .theme-nav-wrap .nav-links { flex: 1 1 auto !important; justify-content: flex-end !important; gap: 5px !important; overflow: visible !important; }
-  html body.theme-elegant-white.theme-elegant-white3[data-cms-page-key="homepage"] .theme-nav-wrap .nav-links a { min-width: auto !important; padding: 0 2px !important; font-size: 6px !important; letter-spacing: .03em !important; white-space: nowrap !important; }
+  html body.theme-elegant-white.theme-elegant-white3[data-cms-page-key="homepage"] .theme-nav-wrap .nav-links a { min-width: auto !important; padding: 0 2px !important; font-size: 10px !important; letter-spacing: .03em !important; white-space: nowrap !important; }
   html body.theme-elegant-white.theme-elegant-white3[data-cms-page-key="homepage"] .theme-nav-wrap .nav-links a[href="#kontakt"] { padding: 0 7px !important; }
 
   html body.theme-elegant-white3 #uvod.hp-hero { height: 266px !important; min-height: 266px !important; overflow: hidden !important; }
@@ -1464,11 +1464,11 @@ body.theme-elegant-white3 .theme-footer { padding-block: 64px 28px; color: rgba(
   html body.theme-elegant-white3 #uvod h1,
   html body.theme-elegant-white3 #uvod h1 .ew3-story-line,
   html body.theme-elegant-white3 #uvod h1 .ew3-story-line span { color: #fffdf9 !important; font-family: Georgia, 'Times New Roman', serif !important; font-style: normal !important; }
-  html body.theme-elegant-white3 #uvod .hero-sub { max-width: 280px !important; margin-bottom: 14px !important; font-size: 9px !important; line-height: 1.45 !important; }
+  html body.theme-elegant-white3 #uvod .hero-sub { max-width: 280px !important; margin-bottom: 14px !important; font-size: 10px !important; line-height: 1.45 !important; }
   html body.theme-elegant-white3 #uvod .ew3-seo-line { font-size: .16em !important; }
   html body.theme-elegant-white3 #uvod .hero-cta-wrap { gap: 7px !important; }
   html body.theme-elegant-white3 #uvod .btn-primary,
-  html body.theme-elegant-white3 #uvod .btn-secondary { min-height: 30px !important; padding: 7px 11px !important; font-size: 7px !important; }
+  html body.theme-elegant-white3 #uvod .btn-secondary { min-height: 30px !important; padding: 7px 11px !important; font-size: 10px !important; }
   html body.theme-elegant-white3 #uvod .hero-cta-wrap { display: flex !important; width: auto !important; margin-top: -16px !important; flex-direction: row !important; align-items: center !important; }
   html body.theme-elegant-white3 #uvod .hero-cta-wrap .btn-primary,
   html body.theme-elegant-white3 #uvod .hero-cta-wrap .ew3-secondary-cta { position: relative !important; z-index: 7 !important; display: inline-flex !important; width: auto !important; min-width: 112px !important; flex: 0 0 auto !important; justify-content: center !important; visibility: visible !important; opacity: 1 !important; transform: none !important; }
@@ -1481,17 +1481,17 @@ body.theme-elegant-white3 .theme-footer { padding-block: 64px 28px; color: rgba(
   html body.theme-elegant-white3 #blog,
   html body.theme-elegant-white3 #kontakt,
   html body.theme-elegant-white3 #faq { padding-block: 34px !important; }
-  html body.theme-elegant-white3 .section-label { margin-bottom: 7px !important; font-size: 7px !important; }
+  html body.theme-elegant-white3 .section-label { margin-bottom: 7px !important; font-size: 10px !important; }
   html body.theme-elegant-white3 .section-title { margin-bottom: 16px !important; font-size: 28px !important; }
   html body.theme-elegant-white3 .hp-section-cta { margin-top: 12px !important; }
-  html body.theme-elegant-white3 .hp-section-cta a { min-height: 26px !important; padding: 6px 12px !important; font-size: 7px !important; }
+  html body.theme-elegant-white3 .hp-section-cta a { min-height: 26px !important; padding: 6px 12px !important; font-size: 10px !important; }
 
   html body.theme-elegant-white3 #sluzby .ew-about-grid { grid-template-columns: 145px minmax(0, 1fr) !important; gap: 24px !important; }
   html body.theme-elegant-white3 #sluzby .ew-about-media,
   html body.theme-elegant-white3 #sluzby .ew-about-media img { width: 145px !important; height: 145px !important; min-height: 145px !important; }
   html body.theme-elegant-white3 #sluzby .section-title { margin-bottom: 8px !important; font-size: 27px !important; }
   html body.theme-elegant-white3 #sluzby .ew-about-points { gap: 2px 11px !important; margin: 7px 0 10px !important; }
-  html body.theme-elegant-white3 #sluzby .ew-about-point { min-height: 22px !important; padding: 2px 0 2px 16px !important; font-size: 8px !important; }
+  html body.theme-elegant-white3 #sluzby .ew-about-point { min-height: 22px !important; padding: 2px 0 2px 16px !important; font-size: 10px !important; }
   html body.theme-elegant-white3 #sluzby .ew-about-point::before { width: 8px !important; height: 8px !important; }
 
   html body.theme-elegant-white3 #nase-prace .pt-grid { grid-template-columns: repeat(6, minmax(0, 1fr)) !important; gap: 6px !important; margin-top: 13px !important; }
@@ -1501,41 +1501,41 @@ body.theme-elegant-white3 .theme-footer { padding-block: 64px 28px; color: rgba(
   html body.theme-elegant-white3 #nase-prace .pt-tile:nth-child(1),
   html body.theme-elegant-white3 #nase-prace .pt-tile:nth-child(2) { grid-column: span 3 !important; min-height: 118px !important; }
   html body.theme-elegant-white3 #nase-prace .pt-caption { padding: 9px !important; font-size: 12px !important; }
-  html body.theme-elegant-white3 #nase-prace .pt-caption { top: auto !important; right: 0 !important; bottom: 0 !important; left: 0 !important; padding-top: 24px !important; background: linear-gradient(transparent, rgba(26, 19, 14, .76)) !important; font-size: 9px !important; }
+  html body.theme-elegant-white3 #nase-prace .pt-caption { top: auto !important; right: 0 !important; bottom: 0 !important; left: 0 !important; padding-top: 24px !important; background: linear-gradient(transparent, rgba(26, 19, 14, .76)) !important; font-size: 10px !important; }
   html body.theme-elegant-white3 #nase-prace .pt-play { width: 20px !important; height: 20px !important; top: 7px !important; right: 7px !important; }
 
   html body.theme-elegant-white3 #hodnoceni .hp-reviews-grid { gap: 8px !important; margin-top: 12px !important; }
   html body.theme-elegant-white3 #hodnoceni .hp-review-card { height: 112px !important; min-height: 112px !important; padding: 11px !important; overflow: hidden !important; }
-  html body.theme-elegant-white3 #hodnoceni .hp-review-card p { margin: 8px 0 !important; font-size: 8px !important; }
+  html body.theme-elegant-white3 #hodnoceni .hp-review-card p { margin: 8px 0 !important; font-size: 10px !important; }
   html body.theme-elegant-white3 #hodnoceni .hp-review-card strong,
-  html body.theme-elegant-white3 #hodnoceni .hp-review-card span { font-size: 8px !important; }
+  html body.theme-elegant-white3 #hodnoceni .hp-review-card span { font-size: 10px !important; }
 
   html body.theme-elegant-white3 #cenik .hp-cenik-grid { margin-top: 15px !important; gap: 8px !important; }
   html body.theme-elegant-white3 #cenik .hp-cenik-card { min-height: 220px !important; padding: 16px 13px !important; }
   html body.theme-elegant-white3 #cenik .hp-cenik-card-price { font-size: 18px !important; }
-  html body.theme-elegant-white3 #cenik .hp-cenik-card-desc { font-size: 8px !important; line-height: 1.45 !important; }
-  html body.theme-elegant-white3 #cenik .ew3-price-cta { min-height: 24px !important; padding: 5px 8px !important; font-size: 7px !important; }
+  html body.theme-elegant-white3 #cenik .hp-cenik-card-desc { font-size: 10px !important; line-height: 1.45 !important; }
+  html body.theme-elegant-white3 #cenik .ew3-price-cta { min-height: 24px !important; padding: 5px 8px !important; font-size: 10px !important; }
 
   html body.theme-elegant-white3 #proces .ew-process-list { margin-top: 13px !important; }
   html body.theme-elegant-white3 #proces .ew-process-list { display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 8px !important; }
   html body.theme-elegant-white3 #proces .ew-process-list::before { top: 13px !important; right: 8% !important; bottom: auto !important; left: 8% !important; width: auto !important; height: 1px !important; }
   html body.theme-elegant-white3 #proces .ew-process-list > article,
   html body.theme-elegant-white3 #proces .ew-process-list > .kt-step { display: flex !important; min-height: 0 !important; padding: 0 3px !important; flex-direction: column !important; align-items: center !important; text-align: center !important; }
-  html body.theme-elegant-white3 #proces .kt-step__num { width: 26px !important; height: 26px !important; min-height: 26px !important; margin-bottom: 9px !important; font-size: 8px !important; }
-  html body.theme-elegant-white3 #proces .kt-step h3 { margin-bottom: 4px !important; font-size: 10px !important; }
-  html body.theme-elegant-white3 #proces .kt-step p { font-size: 7px !important; line-height: 1.4 !important; }
+  html body.theme-elegant-white3 #proces .kt-step__num { width: 26px !important; height: 26px !important; min-height: 26px !important; margin-bottom: 9px !important; font-size: 10px !important; }
+  html body.theme-elegant-white3 #proces .kt-step h3 { margin-bottom: 4px !important; font-size: 11px !important; }
+  html body.theme-elegant-white3 #proces .kt-step p { font-size: 10px !important; line-height: 1.4 !important; }
   html body.theme-elegant-white3 .theme-main #proces .ew-process-list { display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 8px !important; }
   html body.theme-elegant-white3 .theme-main #proces .ew-process-list > .kt-step { display: flex !important; min-height: 0 !important; padding: 0 3px !important; flex-direction: column !important; align-items: center !important; text-align: center !important; }
-  html body.theme-elegant-white3 .theme-main #proces .ew-process-list > .kt-step > .kt-step__num { position: relative !important; top: auto !important; left: auto !important; width: 26px !important; height: 26px !important; min-height: 26px !important; margin: 0 auto 9px !important; font-size: 8px !important; }
-  html body.theme-elegant-white3 .theme-main #proces .ew-process-list > .kt-step h3 { margin: 0 0 4px !important; font-size: 10px !important; line-height: 1.15 !important; }
-  html body.theme-elegant-white3 .theme-main #proces .ew-process-list > .kt-step p { margin: 0 !important; font-size: 7px !important; line-height: 1.35 !important; }
+  html body.theme-elegant-white3 .theme-main #proces .ew-process-list > .kt-step > .kt-step__num { position: relative !important; top: auto !important; left: auto !important; width: 26px !important; height: 26px !important; min-height: 26px !important; margin: 0 auto 9px !important; font-size: 10px !important; }
+  html body.theme-elegant-white3 .theme-main #proces .ew-process-list > .kt-step h3 { margin: 0 0 4px !important; font-size: 11px !important; line-height: 1.15 !important; }
+  html body.theme-elegant-white3 .theme-main #proces .ew-process-list > .kt-step p { margin: 0 !important; font-size: 10px !important; line-height: 1.35 !important; }
 
   html body.theme-elegant-white3 #blog .hp-blog-grid { gap: 8px !important; margin-top: 13px !important; }
   html body.theme-elegant-white3 #blog .hp-blog-thumb { height: 76px !important; }
   html body.theme-elegant-white3 #blog .hp-blog-body { padding: 10px !important; }
   html body.theme-elegant-white3 #blog .hp-blog-title { font-size: 12px !important; }
   html body.theme-elegant-white3 #blog .hp-blog-excerpt,
-  html body.theme-elegant-white3 #blog .hp-blog-link { font-size: 8px !important; }
+  html body.theme-elegant-white3 #blog .hp-blog-link { font-size: 10px !important; }
 
   html body.theme-elegant-white3 #kontakt .ew-contact-panel { grid-template-columns: 220px minmax(0, 1fr) !important; }
   html body.theme-elegant-white3 #kontakt .ew-contact-image { min-height: 210px !important; }
@@ -1544,12 +1544,12 @@ body.theme-elegant-white3 .theme-footer { padding-block: 64px 28px; color: rgba(
   html body.theme-elegant-white3 #kontakt .ew-field label,
   html body.theme-elegant-white3 #kontakt input,
   html body.theme-elegant-white3 #kontakt textarea,
-  html body.theme-elegant-white3 #kontakt select { font-size: 8px !important; }
+  html body.theme-elegant-white3 #kontakt select { font-size: 10px !important; }
 
   html body.theme-elegant-white3 #faq .hp-faq { margin-top: 13px !important; }
-  html body.theme-elegant-white3 #faq .ew-faq-question { min-height: 28px !important; padding: 5px 9px !important; font-size: 8px !important; }
+  html body.theme-elegant-white3 #faq .ew-faq-question { min-height: 28px !important; padding: 5px 9px !important; font-size: 10px !important; }
   html body.theme-elegant-white3 .theme-footer { padding-block: 20px 10px !important; }
-  html body.theme-elegant-white3 .site-footer-rich { min-height: 100px !important; font-size: 8px !important; }
+  html body.theme-elegant-white3 .site-footer-rich { min-height: 100px !important; font-size: 10px !important; }
 
   /* Final density pass for the supplied 724 px full-page reference. */
   html body.theme-elegant-white3 #sluzby,
@@ -1569,10 +1569,10 @@ body.theme-elegant-white3 .theme-footer { padding-block: 64px 28px; color: rgba(
   html body.theme-elegant-white3 #nase-prace .pt-tile:nth-child(1),
   html body.theme-elegant-white3 #nase-prace .pt-tile:nth-child(2) { min-height: 96px !important; }
   html body.theme-elegant-white3 #hodnoceni .hp-review-card { height: 108px !important; min-height: 108px !important; padding: 9px !important; }
-  html body.theme-elegant-white3 #hodnoceni .hp-review-card p { margin: 5px 0 !important; font-size: 7px !important; }
+  html body.theme-elegant-white3 #hodnoceni .hp-review-card p { margin: 5px 0 !important; font-size: 10px !important; }
   html body.theme-elegant-white3 #cenik .hp-cenik-card { height: 194px !important; min-height: 194px !important; padding: 12px 10px !important; overflow: hidden !important; }
   html body.theme-elegant-white3 #cenik .hp-cenik-card-price { font-size: 15px !important; }
-  html body.theme-elegant-white3 #cenik .hp-cenik-card-desc { font-size: 7px !important; }
+  html body.theme-elegant-white3 #cenik .hp-cenik-card-desc { font-size: 10px !important; }
   html body.theme-elegant-white3 #blog .hp-blog-thumb { height: 58px !important; }
   html body.theme-elegant-white3 #blog .hp-blog-body { padding: 7px !important; }
   html body.theme-elegant-white3 #kontakt .ew-contact-image { min-height: 160px !important; }

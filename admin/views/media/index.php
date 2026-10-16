@@ -38,13 +38,13 @@ ob_start();
         <input type="text" name="alt_text" id="upload-alt" required>
       </div>
       <div class="form-group" style="margin-bottom:0">
-        <label>Název <span style="font-weight:400;color:var(--c-muted)">(nepovinné — zkopíruje ALT)</span></label>
+        <label>Název <span style="font-weight:400;color:var(--c-muted)">(nepovinné - zkopíruje ALT)</span></label>
         <input type="text" name="title" id="upload-title">
       </div>
     </div>
     <div class="drop-zone" id="upload-drop" data-upload-input="#upload-file-input">
       <span id="drop-label">Přetáhněte soubory sem nebo klikněte pro výběr</span>
-      <br><small style="color:var(--c-muted)">Obrázky: JPG, PNG, WebP, GIF — max 10 MB &nbsp;|&nbsp; Video: MP4, MOV, WebM, AVI — max 512 MB</small>
+      <br><small style="color:var(--c-muted)">Obrázky: JPG, PNG, WebP, GIF - max 10 MB &nbsp;|&nbsp; Video: MP4, MOV, WebM, AVI - max 512 MB</small>
     </div>
     <input type="file" id="upload-file-input" name="files[]"
            accept=".jpg,.jpeg,.png,.webp,.gif,.mp4,.mov,.webm,.avi,.mkv" multiple style="display:none">
@@ -94,7 +94,7 @@ ob_start();
         <div class="media-card-variants">
           <span class="mv-badge mv-badge--orig" title="Originál">orig</span>
           <?php if ($isVideo): ?>
-            <span class="mv-badge mv-badge--gif" title="Video — náhledy se negenerují">video</span>
+            <span class="mv-badge mv-badge--gif" title="Video - náhledy se negenerují">video</span>
           <?php elseif (!$isGif): ?>
             <span class="mv-badge <?= isset($vmap['webp'])   ? 'mv-badge--ok' : 'mv-badge--miss' ?>"
                   title="<?= isset($vmap['webp']) ? 'WebP · ' . $vmap['webp']['width'] . '×' . $vmap['webp']['height'] . ' · ' . $fmtBytes((int)$vmap['webp']['filesize']) : 'WebP varianta chybí' ?>">webp</span>
@@ -105,7 +105,7 @@ ob_start();
                     title="<?= isset($vmap['medium']) ? 'Střední · ' . $vmap['medium']['width'] . '×' . $vmap['medium']['height'] . ' · ' . $fmtBytes((int)$vmap['medium']['filesize']) : 'Střední (900px) chybí' ?>">med</span>
             <?php endif; ?>
           <?php else: ?>
-            <span class="mv-badge mv-badge--gif" title="Animace — varianty se negenerují">anim</span>
+            <span class="mv-badge mv-badge--gif" title="Animace - varianty se negenerují">anim</span>
           <?php endif; ?>
         </div>
 
@@ -198,12 +198,12 @@ ob_start();
     try {
       const resp = await fetch('/admin/media/upload', { method: 'POST', body: fd });
 
-      // Server may return non-JSON (e.g. 413 from Apache) — handle gracefully
+      // Server may return non-JSON (e.g. 413 from Apache) - handle gracefully
       const text = await resp.text();
       let data;
       try { data = JSON.parse(text); } catch (_) {
         if (resp.status === 413) {
-          setStatus('Soubor je příliš velký — server odmítl požadavek (HTTP 413). Zkuste menší soubor nebo nahrajte přes FTP.', '#dc2626');
+          setStatus('Soubor je příliš velký - server odmítl požadavek (HTTP 413). Zkuste menší soubor nebo nahrajte přes FTP.', '#dc2626');
         } else {
           setStatus('Neočekávaná chyba serveru (HTTP ' + resp.status + ').', '#dc2626');
         }
@@ -245,7 +245,7 @@ ob_start();
         btn.textContent = 'Nahrát';
       }
     } catch (err) {
-      // Network error — most often server rejected oversized request and closed connection
+      // Network error - most often server rejected oversized request and closed connection
       setStatus('Chyba sítě: soubor je pravděpodobně příliš velký pro server. Zkuste menší soubor nebo nahrajte přes FTP.', '#dc2626');
       btn.disabled = false;
       btn.textContent = 'Nahrát';

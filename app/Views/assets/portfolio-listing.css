@@ -3,6 +3,9 @@ body{background:#111;color:#fff}
 .pf-hero h1{font-size:clamp(2.4rem,5vw,4rem);color:#fff;margin-bottom:10px}
 .pf-hero p{color:rgba(255,255,255,.7);font-size:1.1rem;max-width:720px;margin:0 auto}
 .grid-wrap{padding:48px 0 80px}
+.portfolio-media-group+.portfolio-media-group{padding-top:0}.portfolio-media-group__title{margin:0 0 24px;font-size:clamp(1.8rem,4vw,3rem)}
+.portfolio-media-group .pt-grid:has(.pt-empty){display:block!important;grid-template-rows:none!important;min-height:0!important;height:auto!important}.portfolio-media-group .pt-grid:has(.pt-empty) .pt-empty{text-align:left}
+.theme-golden-bash .portfolio-media-group .pt-empty{color:#5f554c!important;padding:12px 0 0!important}
 .pt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:28px}
 .bl-card.pt-card{display:flex;flex-direction:column;background:#1b1b1f;border-radius:14px;overflow:hidden;text-decoration:none;color:inherit;box-shadow:0 14px 30px rgba(0,0,0,.25);transition:transform .2s,box-shadow .2s}
 .bl-card.pt-card:hover{transform:translateY(-3px);box-shadow:0 20px 40px rgba(0,0,0,.4)}

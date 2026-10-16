@@ -9,6 +9,13 @@ use App\Repositories\SiteRepository;
 
 class MediaIngestionService
 {
+    private const RESPONSIVE_VARIANTS = [
+        'thumb' => ['width' => 240, 'bytes' => 50 * 1024, 'suffix' => '_th'],
+        'small' => ['width' => 480, 'bytes' => 90 * 1024, 'suffix' => '_sm'],
+        'medium' => ['width' => 720, 'bytes' => 72 * 1024, 'suffix' => '_md'],
+        'large' => ['width' => 1280, 'bytes' => 240 * 1024, 'suffix' => '_lg'],
+    ];
+
     private MediaRepository $media;
     private SiteRepository $sites;
     private ImageVariantService $variants;
@@ -175,6 +182,26 @@ class MediaIngestionService
         );
     }
 
+    public function regenerateImageVariantsByStoragePath(int $siteId, string $storagePath): int
+    {
+        $path = parse_url(trim($storagePath), PHP_URL_PATH);
+        if (!is_string($path) || $path === '') {
+            throw new \RuntimeException('Cesta média pro regeneraci je prázdná nebo neplatná.');
+        }
+        $normalized = str_replace('\\', '/', ltrim($path, '/'));
+        if (str_starts_with($normalized, 'media/')) {
+            $normalized = 'storage/media/' . substr($normalized, strlen('media/'));
+        }
+        if (!str_starts_with($normalized, 'storage/media/')) {
+            throw new \RuntimeException('Regenerovat lze pouze médium z Media Library: ' . $storagePath);
+        }
+        $media = $this->media->findByStoragePath($siteId, $normalized);
+        if (!$media) {
+            throw new \RuntimeException('Médium pro regeneraci nebylo nalezeno: ' . $normalized);
+        }
+        return $this->regenerateImageVariants($siteId, (int)$media['id']);
+    }
+
     private function createMediaRecord(
         int $siteId,
         string $originalFilename,
@@ -204,7 +231,17 @@ class MediaIngestionService
 
         $variantCount = 0;
         if (!$isVideo) {
-            $variantCount = $this->generateVariants($siteId, $mediaId, $absolutePath, dirname($relativePath), dirname($absolutePath), $w, $h, $ext);
+            try {
+                $variantCount = $this->generateVariants($siteId, $mediaId, $absolutePath, dirname($relativePath), dirname($absolutePath), $w, $h, $ext);
+            } catch (\Throwable $e) {
+                foreach ($this->media->variantsByMediaId($mediaId) as $variant) {
+                    $variantPath = dirname(__DIR__, 2) . '/' . ltrim((string)($variant['path'] ?? ''), '/');
+                    if (is_file($variantPath)) @unlink($variantPath);
+                }
+                $this->media->delete($mediaId);
+                if (is_file($absolutePath)) @unlink($absolutePath);
+                throw $e;
+            }
         }
 
         return [
@@ -226,8 +263,7 @@ class MediaIngestionService
         string $ext
     ): int {
         if (!extension_loaded('gd')) {
-            Logger::warning('media', 'GD extension not loaded - skipping variant generation', ['media_id' => $mediaId]);
-            return 0;
+            throw new \RuntimeException('PHP rozsireni GD neni nactene; povinne obrazove varianty nelze vytvorit.');
         }
 
         $isGif = $ext === 'gif';
@@ -238,7 +274,7 @@ class MediaIngestionService
             $webpName = uniqid('img_', true) . '.webp';
             $webpDest = $fullDir . '/' . $webpName;
             if ($this->variants->createWebP($dest, $webpDest, $quality)) {
-                $this->media->addVariant($mediaId, [
+                $this->replaceVariantFile($mediaId, [
                     'format' => 'webp',
                     'width' => $w,
                     'height' => $h,
@@ -250,43 +286,35 @@ class MediaIngestionService
         }
 
         if (!$isGif) {
-            $thumbName = uniqid('img_', true) . '_th.webp';
-            $thumbDest = $fullDir . '/' . $thumbName;
-            if ($this->variants->createResized($dest, $thumbDest, 240, $quality)) {
-                [$tw, $th] = $this->variants->getDimensions($thumbDest);
-                $this->media->addVariant($mediaId, [
-                    'format' => 'thumb',
-                    'width' => $tw,
-                    'height' => $th,
-                    'path' => $storagePath . '/' . $thumbName,
-                    'filesize' => @filesize($thumbDest) ?: null,
+            foreach (self::RESPONSIVE_VARIANTS as $format => $spec) {
+                $name = uniqid('img_', true) . $spec['suffix'] . '.webp';
+                $absolutePath = $fullDir . '/' . $name;
+                $meta = $this->variants->createResizedWithinBudget(
+                    $dest,
+                    $absolutePath,
+                    $spec['width'],
+                    $spec['bytes'],
+                    min(82, $quality),
+                    47,
+                    5
+                );
+                $this->replaceVariantFile($mediaId, [
+                    'format' => $format,
+                    'width' => $meta['width'],
+                    'height' => $meta['height'],
+                    'path' => $storagePath . '/' . $name,
+                    'filesize' => $meta['filesize'],
                 ]);
                 $created++;
             }
         }
 
-        if (!$isGif && $w > 720) {
-            $medName = uniqid('img_', true) . '_md.webp';
-            $medDest = $fullDir . '/' . $medName;
-            if ($this->variants->createResized($dest, $medDest, 720, $quality)) {
-                [$mw, $mh] = $this->variants->getDimensions($medDest);
-                $this->media->addVariant($mediaId, [
-                    'format' => 'medium',
-                    'width' => $mw,
-                    'height' => $mh,
-                    'path' => $storagePath . '/' . $medName,
-                    'filesize' => @filesize($medDest) ?: null,
-                ]);
-                $created++;
-            }
-        }
-
-        // OG/Twitter nahled — pevny pomer 1200x630 (cover crop).
+        // OG/Twitter nahled - pevny pomer 1200x630 (cover crop).
         if (!$isGif) {
             $ogName = uniqid('img_', true) . '_og.webp';
             $ogDest = $fullDir . '/' . $ogName;
             if ($this->variants->createCropped($dest, $ogDest, 1200, 630, $quality)) {
-                $this->media->addVariant($mediaId, [
+                $this->replaceVariantFile($mediaId, [
                     'format' => 'og',
                     'width' => 1200,
                     'height' => 630,
@@ -298,6 +326,22 @@ class MediaIngestionService
         }
 
         return $created;
+    }
+
+    private function replaceVariantFile(int $mediaId, array $data): void
+    {
+        $oldPath = $this->media->replaceVariant($mediaId, $data);
+        if ($oldPath === null || $oldPath === $data['path']) {
+            return;
+        }
+
+        $absoluteOldPath = dirname(__DIR__, 2) . '/' . ltrim($oldPath, '/');
+        if (is_file($absoluteOldPath) && !unlink($absoluteOldPath)) {
+            Logger::warning('media', 'Obsolete media variant could not be removed', [
+                'media_id' => $mediaId,
+                'path' => $oldPath,
+            ]);
+        }
     }
 
     private function assertAllowed(string $mime, string $ext, bool $isVideo): void

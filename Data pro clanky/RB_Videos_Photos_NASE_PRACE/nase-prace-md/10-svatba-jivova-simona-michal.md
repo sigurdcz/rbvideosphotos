@@ -19,7 +19,7 @@ seo:
   robots: index,follow
   schema_type: Article
 event:
-  couple: Simona a Michal Novákovi
+  couple: Simona a Michal
   date_iso: '2025-09-06'
   date_display: 6. září 2025
   ceremony: Sportovně střelecký areál Jívová
@@ -54,7 +54,7 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 ## Uzamčené údaje
 
-- Pár: **Simona a Michal Novákovi**
+- Pár: **Simona a Michal**
 - Datum: **6. září 2025**
 - Obřad: **Sportovně střelecký areál Jívová**
 - Oslava: **Sportovně střelecký areál Jívová**
@@ -78,7 +78,7 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 # Zářijová svatba Simony a Michala ve Sportovně střeleckém areálu Jívová
 
-Simona a Michal Novákovi uspořádali svatbu 6. září 2025 ve Sportovně střeleckém areálu Jívová. Stejné místo může v různých ročních obdobích působit úplně jinak. Červnová zeleň bývá svěží a den velmi dlouhý, zatímco začátek září přináší teplejší odstíny, nižší slunce a rychlejší přechod do večerní atmosféry.
+Simona a Michal uspořádali svatbu 6. září 2025 ve Sportovně střeleckém areálu Jívová. Stejné místo může v různých ročních obdobích působit úplně jinak. Červnová zeleň bývá svěží a den velmi dlouhý, zatímco začátek září přináší teplejší odstíny, nižší slunce a rychlejší přechod do večerní atmosféry.
 
 ## Jívová jako místo svatby v přírodě
 

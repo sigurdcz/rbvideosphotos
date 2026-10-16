@@ -84,7 +84,7 @@ class SecurityTxtController extends Controller
             $publish->generateSecurityTxt((int) $site['id']);
             $publish->generateHtaccess((int) $site['id']);
         } catch (\Throwable $e) {
-            $publishWarning = 'Nastaveni bylo ulozeno, ale staticky export se nepodarilo obnovit.';
+            $publishWarning = 'Nastavení bylo uloženo, ale statický export se nepodařilo obnovit.';
             Logger::warning('security_txt', $publishWarning, [
                 'site_id' => (int) $site['id'],
                 'error' => $e->getMessage(),

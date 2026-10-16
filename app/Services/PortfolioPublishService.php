@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Repositories\MediaRepository;
 use App\Repositories\PageRepository;
 use App\Repositories\PortfolioRepository;
 use App\Repositories\UserRepository;
@@ -11,17 +12,20 @@ class PortfolioPublishService
     /**
      * Write the standalone static export for a single portfolio entry
      * (storage/published/nase-prace/{slug}/index.html). The /nase-prace LISTING
-     * page is NOT written here anymore — see regenerateListing(), which delegates
+     * page is NOT written here anymore - see regenerateListing(), which delegates
      * to PublishService::publishPage() so live and publish share one themed
      * source of truth for the listing (TEMPLATE_REFACTOR_PLAN.md phase 6).
      */
     public function publishEntry(array $entry, PortfolioRepository $repo, array $site): void
     {
         $mediaItems = $repo->getMedia($entry['id']);
-        $embedUrl   = $entry['video_url'] ? PortfolioRepository::embedUrl($entry['video_url']) : null;
+        // Both the first and the extra videos come from one list, so the export can
+        // never disagree with itself if the video_url mirror ever drifts.
+        $videos     = $repo->getVideos((int)$entry['id']);
+        $embedUrl   = $videos[0]['embed_url'] ?? null;
 
         $h  = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
-        $sn = $h($site['name'] ?? 'RB Photos & Videos');
+        $sn = $h($site['name'] ?? 'RB Videos & Photos');
         $title = $h($entry['title']);
 
         $galleryHtml = '';
@@ -36,10 +40,36 @@ class PortfolioPublishService
         if ($embedUrl) {
             $eu = $h($embedUrl);
             $videoHtml = "<div class=\"pf-video-wrap\"><iframe src=\"{$eu}\" frameborder=\"0\" allow=\"autoplay; fullscreen; picture-in-picture\" allowfullscreen loading=\"lazy\" title=\"{$title}\"></iframe></div>";
+            // Further videos of the entry follow the first one; an entry with a single
+            // video keeps exporting the very same markup it did before.
+            foreach (array_slice($videos, 1) as $i => $video) {
+                $eu = $h($video['embed_url']);
+                $videoTitle = $title . ' &ndash; video ' . ($i + 2);
+                $videoHtml .= "<div class=\"pf-video-wrap pf-video-wrap--extra\"><iframe src=\"{$eu}\" frameborder=\"0\" allow=\"autoplay; fullscreen; picture-in-picture\" allowfullscreen loading=\"lazy\" title=\"{$videoTitle}\"></iframe></div>";
+            }
         }
 
         $description = $entry['description'] ?? '';
         $metaDesc    = $h($entry['meta_description'] ?? strip_tags(substr($description, 0, 160)));
+        $pageUrl = rtrim((string)($site['domain'] ?? ''), '/') . '/' . ltrim((string)$entry['slug'], '/');
+        $ogImageUrl = $this->absoluteMediaUrl((string)($mediaItems[0]['storage_path'] ?? ''), $site);
+        $twitterImageUrl = $this->resolveSiteSocialImage(
+            (int)($site['default_twitter_image_id'] ?? $site['default_og_image_id'] ?? 0),
+            $site
+        );
+        if ($twitterImageUrl === '') {
+            $twitterImageUrl = $ogImageUrl;
+        }
+        $metaTitle = trim((string)($entry['meta_title'] ?? '')) ?: (string)$entry['title'];
+        $metaTitleEsc = $h($metaTitle);
+        $socialHead = (new SeoRenderer())->renderHead([
+            'meta_title' => $metaTitle,
+            'meta_description' => html_entity_decode($metaDesc, ENT_QUOTES, 'UTF-8'),
+            'canonical_url' => $pageUrl,
+            'robots_index' => 1,
+            'robots_follow' => 1,
+            'og_type' => 'website',
+        ], $site, $pageUrl, $ogImageUrl !== '' ? $ogImageUrl : null, $twitterImageUrl !== '' ? $twitterImageUrl : null);
 
         $html = <<<HTML
 <!DOCTYPE html>
@@ -47,7 +77,7 @@ class PortfolioPublishService
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{$title} — {$sn}</title>
+  <title>{$metaTitleEsc}</title>
   <meta name="description" content="{$metaDesc}">
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
@@ -70,9 +100,9 @@ class PortfolioPublishService
     .pf-lightbox{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.92);align-items:center;justify-content:center}
     .pf-lightbox.active{display:flex}
     .pf-lb-img{max-width:92vw;max-height:88vh;object-fit:contain;border-radius:8px}
-    .pf-lb-close{position:absolute;top:20px;right:24px;font-size:2rem;color:#fff;cursor:pointer;line-height:1;opacity:.7}
+    .pf-lb-close{position:absolute;top:20px;right:24px;display:grid;width:50px!important;height:50px!important;min-width:50px!important;min-height:50px!important;aspect-ratio:1;padding:0!important;place-items:center;border:1px solid rgba(255,255,255,.55);border-radius:50%!important;background:transparent!important;box-shadow:none!important;font-size:2rem;color:#fff;cursor:pointer;line-height:1;opacity:.7}
     .pf-lb-close:hover{opacity:1}
-    .pf-lb-prev,.pf-lb-next{position:absolute;top:50%;transform:translateY(-50%);font-size:2.5rem;color:#fff;cursor:pointer;padding:12px;opacity:.6;user-select:none}
+    .pf-lb-prev,.pf-lb-next{position:absolute;top:50%;display:grid;width:52px!important;height:52px!important;min-width:52px!important;min-height:52px!important;aspect-ratio:1;padding:0!important;place-items:center;transform:translateY(-50%);border:1px solid rgba(255,255,255,.55);border-radius:50%!important;background:transparent!important;box-shadow:none!important;font-size:2.5rem;color:#fff;cursor:pointer;line-height:1;opacity:.6;user-select:none}
     .pf-lb-prev:hover,.pf-lb-next:hover{opacity:1}
     .pf-lb-prev{left:16px}
     .pf-lb-next{right:16px}
@@ -120,9 +150,13 @@ class PortfolioPublishService
 </html>
 HTML;
 
+        $html = preg_replace('~<title\b[^>]*>.*?</title>\s*~is', '', $html, 1) ?? $html;
+        $html = preg_replace('~<meta\s+name="description"[^>]*>\s*~i', '', $html, 1) ?? $html;
+        $html = str_replace('</head>', $socialHead . "\n</head>", $html);
+
         $dir = dirname(__DIR__, 2) . '/storage/published/nase-prace/' . $entry['slug'];
         if (!is_dir($dir)) mkdir($dir, 0755, true);
-        file_put_contents($dir . '/index.html', $this->sanitizeHtml($html));
+        file_put_contents($dir . '/index.html', \App\Services\Render\MarkupNormalizer::injectLightOnlyColorScheme($this->sanitizeHtml($html)));
     }
 
     /**
@@ -132,7 +166,7 @@ HTML;
      *
      * Phase 6 of the templating refactor: this replaces the former
      * regenerateListingPage() which wrote the same storage/published/nase-prace/
-     * index.html with bare, unthemed pl-grid/pl-tile markup — a dual writer that
+     * index.html with bare, unthemed pl-grid/pl-tile markup - a dual writer that
      * overwrote the themed listing on the first portfolio publish in the admin.
      * See UKOL.md "Fáze 6" BLOCKER.
      *
@@ -177,9 +211,56 @@ HTML;
         return \App\Services\Render\MediaUrlResolver::publicMediaUrl($storagePath);
     }
 
+    private function resolveSiteSocialImage(int $mediaId, array $site): string
+    {
+        if ($mediaId <= 0) {
+            return '';
+        }
+
+        $mediaRepository = new MediaRepository();
+        $media = $mediaRepository->findById($mediaId);
+        if (!$media) {
+            return '';
+        }
+
+        $path = (string)($media['storage_path'] ?? '');
+        foreach ($mediaRepository->variantsByMediaId($mediaId) as $variant) {
+            if (($variant['format'] ?? '') === 'og' && !empty($variant['path'])) {
+                $path = (string)$variant['path'];
+                break;
+            }
+        }
+
+        return $this->absoluteMediaUrl($path, $site);
+    }
+
+    private function absoluteMediaUrl(string $path, array $site): string
+    {
+        $path = trim($path);
+        if ($path === '') {
+            return '';
+        }
+        if (preg_match('~^https?://~i', $path)) {
+            return $path;
+        }
+
+        return rtrim((string)($site['domain'] ?? ''), '/') . '/' . ltrim($path, '/');
+    }
+
     private function sanitizeHtml(string $html): string
     {
+        $socialTags = [];
+        $html = preg_replace_callback(
+            '~<meta\s+(?:property="og:image"|name="twitter:image")[^>]*>~i',
+            static function (array $match) use (&$socialTags): string {
+                $token = '<!--cms-portfolio-social-' . count($socialTags) . '-->';
+                $socialTags[$token] = $match[0];
+                return $token;
+            },
+            $html
+        ) ?? $html;
         $html = preg_replace('~https?://localhost(?::\d+)?/storage/media/~i', '/media/', $html) ?? $html;
-        return str_replace('/storage/media/', '/media/', $html);
+        $html = str_replace('/storage/media/', '/media/', $html);
+        return $socialTags === [] ? $html : strtr($html, $socialTags);
     }
 }

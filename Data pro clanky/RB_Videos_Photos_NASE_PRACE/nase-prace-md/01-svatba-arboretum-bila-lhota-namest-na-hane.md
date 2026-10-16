@@ -5,8 +5,8 @@ page_type: wedding_case_study
 brand: RB Videos & Photos
 language: cs-CZ
 status: ready_for_ai
-target_path: /svatba-arboretum-bila-lhota-namest-na-hane-helena-tomas/
-slug: svatba-arboretum-bila-lhota-namest-na-hane-helena-tomas
+target_path: /svatba-arboretum-bila-lhota-helena-tomas/
+slug: svatba-arboretum-bila-lhota-helena-tomas
 title: Svatba Heleny a Tomáše v Arboretu Bílá Lhota
 seo:
   meta_title: Svatba v Arboretu Bílá Lhota | Helena a Tomáš
@@ -20,7 +20,7 @@ seo:
   robots: index,follow
   schema_type: Article
 event:
-  couple: Helena a Tomáš Hufovi
+  couple: Helena a Tomáš
   date_iso: '2022-09-17'
   date_display: 17. září 2022
   ceremony: Arboretum Bílá Lhota
@@ -42,7 +42,7 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 ## Povinná pravidla
 
-- Stránka patří do blogu a její adresa je `/svatba-arboretum-bila-lhota-namest-na-hane-helena-tomas/`.
+- Stránka patří do blogu a její adresa je `/svatba-arboretum-bila-lhota-helena-tomas/`.
 - Používej označení „blogový článek“; nepoužívej označení „portfolio“.
 - Piš přirozeně v první osobě množného čísla: „fotíme“, „natáčíme“, „pracujeme“.
 - Zachovej lidský, prémiový a konkrétní tón bez prázdných reklamních frází.
@@ -56,7 +56,7 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 ## Uzamčené údaje
 
-- Pár: **Helena a Tomáš Hufovi**
+- Pár: **Helena a Tomáš**
 - Datum: **17. září 2022**
 - Obřad: **Arboretum Bílá Lhota**
 - Oslava: **Náměšť na Hané**
@@ -80,7 +80,7 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 # Svatba Heleny a Tomáše v Arboretu Bílá Lhota a Náměšti na Hané
 
-Helena a Tomáš Hufovi si pro svůj svatební den 17. září 2022 vybrali kombinaci dvou míst, z nichž každé má úplně jiný charakter. Obřad proběhl v Arboretu Bílá Lhota, zatímco další část svatebního dne se přesunula do Náměště na Hané. Pro nás jako fotografa a kameramana je takové propojení zajímavé: v první části dne pracujeme s intimní zelení, strukturou stromů a klidným rytmem obřadu, později se obraz otevírá širšímu prostředí Hané a společné oslavě.
+Helena a Tomáš si pro svůj svatební den 17. září 2022 vybrali kombinaci dvou míst, z nichž každé má úplně jiný charakter. Obřad proběhl v Arboretu Bílá Lhota, zatímco další část svatebního dne se přesunula do Náměště na Hané. Pro nás jako fotografa a kameramana je takové propojení zajímavé: v první části dne pracujeme s intimní zelení, strukturou stromů a klidným rytmem obřadu, později se obraz otevírá širšímu prostředí Hané a společné oslavě.
 
 ## Arboretum Bílá Lhota jako přirozená kulisa obřadu
 

@@ -1,5 +1,5 @@
 <?php
-$pageTitle = 'Nase prace';
+$pageTitle = 'Naše práce';
 $h = fn($v) => htmlspecialchars((string)($v ?? ''));
 $publicMediaUrl = static function (?string $path): string {
     $normalized = str_replace('\\', '/', trim((string)$path));
@@ -15,7 +15,7 @@ $publicMediaUrl = static function (?string $path): string {
 ob_start();
 ?>
 <div class="page-header">
-  <h1>Nase prace</h1>
+  <h1>Naše práce</h1>
   <div class="actions">
     <a href="/admin/portfolio/create" class="btn btn-primary">+ Nova prace</a>
   </div>

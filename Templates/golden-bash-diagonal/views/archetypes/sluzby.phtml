@@ -1,0 +1,87 @@
+<?php
+/** @var array $hero */
+/** @var array $items */
+/** @var string $heroImage */
+$servicesHeroImage = $heroImage;
+?>
+<section class="services-hero gb-services-hero">
+  <?php if ($servicesHeroImage !== ''): ?><img class="hero-bg" src="<?= $this->e($servicesHeroImage) ?>" alt="" aria-hidden="true"><?php endif; ?>
+  <div class="container">
+    <span class="gb-page-kicker">Naše služby</span>
+    <h1<?= $this->inlineAttr($hero['titleKey'], $hero['titleType']) ?>><?= $this->e($hero['title']) ?></h1>
+    <p<?= $this->inlineAttr($hero['subKey'], $hero['subType']) ?>><?= $this->e($hero['sub']) ?></p>
+    <div class="gb-services-hero__actions">
+      <a class="gb-button" href="/kontakt">Nezávazná konzultace</a>
+      <a class="gb-button gb-button--secondary" href="/nase-prace">Ukázky práce</a>
+    </div>
+  </div>
+</section>
+<section class="services-wrap gb-services-list">
+  <div class="container">
+    <div class="gb-services-list__intro">
+      <span class="gb-list-kicker">Co nabízíme</span>
+      <h2>Přehled našich služeb</h2>
+    </div>
+    <div class="services-grid">
+      <?php if ($items === []): ?>
+        <p class="services-empty">Zatím nejsou publikované žádné služby.</p>
+      <?php else: foreach ($items as $index => $item): ?>
+        <?php
+        $sentences = preg_split('/(?<=[.!?])\s+/u', trim((string) $item['description']), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $summary = $sentences[0] ?? (string) $item['description'];
+        $details = array_slice($sentences, 1, 3);
+        ?>
+        <article class="service-card<?= $index === 0 ? ' service-card--hero-source' : '' ?>">
+          <?php if ($item['image_url'] !== ''): ?>
+            <div class="service-card__media"><img src="<?= $this->e($item['image_url']) ?>" alt="<?= $this->e($item['title']) ?>"></div>
+          <?php endif; ?>
+          <div class="service-card__body">
+            <span class="service-card__num"><?= $this->e(str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT)) ?></span>
+            <h3><?= $this->e($item['title']) ?></h3>
+            <p><?= $this->e($summary) ?></p>
+            <?php if ($details !== []): ?>
+              <ul class="service-card__facts">
+                <?php foreach ($details as $detail): ?><li><?= $this->e($detail) ?></li><?php endforeach; ?>
+              </ul>
+            <?php endif; ?>
+            <a href="<?= $this->e($item['button_url']) ?>"><?= $this->e($item['button_text']) ?> <span aria-hidden="true">→</span></a>
+          </div>
+        </article>
+      <?php endforeach; endif; ?>
+    </div>
+  </div>
+</section>
+<section class="gb-services-process" aria-labelledby="services-process-title">
+  <div class="container">
+    <div class="gb-services-process__intro">
+      <span class="gb-list-kicker">Náš proces</span>
+      <h2 id="services-process-title">Jak spolupráce probíhá</h2>
+    </div>
+    <ol class="gb-services-process__steps">
+      <li><span class="gb-services-process__icon" aria-hidden="true">01</span><div><strong>Konzultace</strong><p>Seznámíme se, probereme vaše představy a připravíme nabídku na míru.</p></div></li>
+      <li><span class="gb-services-process__icon" aria-hidden="true">02</span><div><strong>Focení / natáčení</strong><p>Váš den zachytíme přirozeně, nenuceně a s důrazem na emoce a detail.</p></div></li>
+      <li><span class="gb-services-process__icon" aria-hidden="true">03</span><div><strong>Výběr a úpravy</strong><p>Pečlivě vybereme a upravíme ty nejlepší záběry.</p></div></li>
+      <li><span class="gb-services-process__icon" aria-hidden="true">04</span><div><strong>Odevzdání materiálů</strong><p>Fotografie i video dostanete v online galerii v nejvyšší kvalitě.</p></div></li>
+    </ol>
+    <ul class="gb-services-benefits" aria-label="Výhody spolupráce">
+      <li>Osobní přístup</li>
+      <li>Rychlá komunikace</li>
+      <li>Profesionální úpravy</li>
+      <li>Video s emocí</li>
+      <li>Online galerie</li>
+      <li>Působíme po celé ČR</li>
+    </ul>
+  </div>
+</section>
+<section class="gb-route-cta gb-route-cta--services">
+  <?php if ($servicesHeroImage !== ''): ?><img class="gb-route-cta__media" src="<?= $this->e($servicesHeroImage) ?>" alt="" aria-hidden="true"><?php endif; ?>
+  <div class="container">
+    <span class="gb-page-kicker">Váš příběh si zaslouží to nejlepší</span>
+    <h2>Pojďme naplánovat vaše focení</h2>
+    <p>Rádi vám poradíme a připravíme nabídku na míru.</p>
+    <div class="gb-route-cta__actions">
+      <a class="gb-button" href="/kontakt">Nezávazná poptávka</a>
+      <a class="gb-button gb-button--secondary" href="/cenik">Prohlédnout ceník</a>
+    </div>
+  </div>
+</section>

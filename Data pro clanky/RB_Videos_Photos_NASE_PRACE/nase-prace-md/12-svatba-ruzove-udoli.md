@@ -19,7 +19,7 @@ seo:
   robots: index,follow
   schema_type: Article
 event:
-  couple: Ivanka a Lubomír Nevěřilovi
+  couple: Ivanka a Lubomír
   date_iso: '2026-06-06'
   date_display: 6. června 2026
   ceremony: Růžové údolí, Pivonín u Zábřehu
@@ -53,7 +53,7 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 ## Uzamčené údaje
 
-- Pár: **Ivanka a Lubomír Nevěřilovi**
+- Pár: **Ivanka a Lubomír**
 - Datum: **6. června 2026**
 - Obřad: **Růžové údolí, Pivonín u Zábřehu**
 - Oslava: **Růžové údolí, Pivonín u Zábřehu**
@@ -77,7 +77,7 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 # Svatba Ivanky a Lubomíra v Růžovém údolí u Zábřehu
 
-Ivanka a Lubomír Nevěřilovi si pro 6. června 2026 vybrali Růžové údolí v Pivoníně u Zábřehu. Obřad i oslava na jednom místě umožňují zachytit den souvisle — od příprav přes slavnostní část až po večerní program — bez dlouhého přesunu hostů a techniky.
+Ivanka a Lubomír si pro 6. června 2026 vybrali Růžové údolí v Pivoníně u Zábřehu. Obřad i oslava na jednom místě umožňují zachytit den souvisle — od příprav přes slavnostní část až po večerní program — bez dlouhého přesunu hostů a techniky.
 
 ## Růžové údolí jako svatební místo
 

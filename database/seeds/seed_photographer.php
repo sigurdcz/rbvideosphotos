@@ -17,7 +17,7 @@ if (in_array('--fresh', $argv ?? [], true)) {
     echo "Tables cleared.\n";
 }
 
-// Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬ Helpers Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 if (!function_exists('upsertUser')) {
 
@@ -80,7 +80,7 @@ function block(PDO $pdo, int $pid, string $key, string $type, string $label, str
 
 function seo(PDO $pdo, int $pid, array $d): void
 {
-    $pdo->prepare('REPLACE INTO seo_settings (page_id,meta_title,meta_description,meta_keywords,canonical_url,robots_index,robots_follow,og_title,og_description,twitter_title,twitter_description,schema_type,schema_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)')
+    $pdo->prepare('REPLACE INTO seo_settings (page_id,meta_title,meta_description,meta_keywords,canonical_url,robots_index,robots_follow,og_title,og_description,twitter_title,twitter_description,schema_type,schema_name,schema_description) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
         ->execute([
             $pid,
             $d['title']      ?? null,
@@ -93,7 +93,8 @@ function seo(PDO $pdo, int $pid, array $d): void
             $d['tw_title']   ?? $d['title']  ?? null,
             $d['tw_desc']    ?? $d['desc']   ?? null,
             $d['schema_type']?? null,
-            $d['schema_json']?? null,
+            $d['schema_name'] ?? $d['title'] ?? null,
+            $d['schema_description'] ?? $d['desc'] ?? null,
         ]);
 }
 
@@ -170,8 +171,8 @@ function linkPortfolioMedia(PDO $pdo, int $portfolioId, array $mediaIds): void
 
 } // end if (!function_exists('upsertUser'))
 
-// Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬ Site Layout Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬
-// Sdileny layout Ă˘â‚¬â€ť nav + paticka + HTML obal pro vsechny stranky.
+// ─── Site Layout ──────────────────────────────────────────────────────────────
+// Sdileny layout - nav + paticka + HTML obal pro vsechny stranky.
 // Sablony stranek obsahuji jen obsah (zadny <html>/<head>/<body>/nav/footer).
 // Placeholdery: {page_content} = obsah, {site_name} = nazev webu, {nav} = varianta navu.
 
@@ -197,7 +198,7 @@ $layoutHtml = <<<'HTML'
 </html>
 HTML;
 
-// Nav Ă˘â‚¬â€ť homepage: hash anchory pro One Page smooth scroll
+// Nav - homepage: hash anchory pro One Page smooth scroll
 $layoutNavHome = <<<'HTML'
 <nav class="nav" id="sitenav">
   <div class="container nav-inner">
@@ -206,7 +207,7 @@ $layoutNavHome = <<<'HTML'
       <a href="#sluzby">Slu&#382;by</a>
       <a href="#nase-prace">Na&#353;e pr&#225;ce</a>
       <a href="#cenik">Cen&#237;k</a>
-      <a href="#faq">FAQ</a>
+      <a href="/faq">FAQ</a>
       <a href="#blog">Blog</a>
       <a href="#kontakt" class="nav-cta">Kontakt</a>
     </div>
@@ -214,7 +215,7 @@ $layoutNavHome = <<<'HTML'
 </nav>
 HTML;
 
-// Nav Ă˘â‚¬â€ť subpages: prime URL na jednotlive stranky
+// Nav - subpages: prime URL na jednotlive stranky
 $layoutNavSub = <<<'HTML'
 <nav class="nav" id="sitenav">
   <div class="container nav-inner">
@@ -264,7 +265,7 @@ $layoutJs = <<<'JS'
 })();
 JS;
 
-// Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬ Subpage base CSS (CenÄ‚Â­k, FAQ, Blog, clanky) Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬
+// ─── Subpage base CSS (Ceník, FAQ, Blog, clanky) ─────────────────────────────
 // Nav, paticka a zakladni reset jsou v layoutu.
 // Tento CSS definuje jen styly obsahu podstranek.
 
@@ -291,16 +292,16 @@ $subpageJs = <<<'JS'
 })();
 JS;
 
-// Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬ Site + User Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬
+// ─── Site + User ──────────────────────────────────────────────────────────────
 
 $gtmNoscript = '<noscript><iframe class="gtm-noscript" src="https://www.googletagmanager.com/ns.html?id=GTM-542MMSL" height="0" width="0"></iframe></noscript>';
 
 $userId = upsertUser($pdo, 'admin@rbphotos.cz', 'admin123');
-$siteId = upsertSite($pdo, 'RB Photos & Videos', 'https://rbvideosphotos.kvalitne.cz', 'G-BD4BS9R4JZ', 'GTM-542MMSL', $gtmNoscript, $layoutHtml, $layoutCss, $layoutJs, $layoutNavHome, $layoutNavSub);
+$siteId = upsertSite($pdo, 'RB Videos & Photos', 'https://rbvideosphotos.kvalitne.cz', 'G-BD4BS9R4JZ', 'GTM-542MMSL', $gtmNoscript, $layoutHtml, $layoutCss, $layoutJs, $layoutNavHome, $layoutNavSub);
 
-// Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬ Template: Homepage Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬
-// Pouze obsah stranky Ă˘â‚¬â€ť bez <html>/<head>/<body>/nav/footer (ty jsou v layoutu).
-// body{padding-top:0} potlaci 60px odsazeni z layoutu Ă˘â‚¬â€ť hero se roztahne pres cely viewport.
+// ─── Template: Homepage ───────────────────────────────────────────────────────
+// Pouze obsah stranky - bez <html>/<head>/<body>/nav/footer (ty jsou v layoutu).
+// body{padding-top:0} potlaci 60px odsazeni z layoutu - hero se roztahne pres cely viewport.
 
 $htmlHomeFull = <<<'HTML'
 <header class="hero" id="hero">
@@ -423,7 +424,7 @@ $htmlHomeFull = <<<'HTML'
 HTML;
 
 $cssHomeFull = <<<'CSS'
-/* Hero plres cely viewport Ă˘â‚¬â€ť potlaci padding-top:60px z layoutu */
+/* Hero plres cely viewport - potlaci padding-top:60px z layoutu */
 body{padding-top:0}
 .hero{position:relative;min-height:100vh;display:flex;align-items:center;overflow:hidden;background:#0f0f0f}
 .hero-bg{position:absolute;inset:-15% 0;width:100%;height:130%;object-fit:cover;will-change:transform;opacity:.6;z-index:0;pointer-events:none}
@@ -541,7 +542,7 @@ JS;
 
 $tplHomeFull = tpl($pdo, $siteId, 'Homepage', $htmlHomeFull, $cssHomeFull, $jsHomeFull);
 
-// Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬ Template: CenÄ‚Â­k Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬
+// ─── Template: Ceník ──────────────────────────────────────────────────────────
 
 $htmlCenik = <<<'HTML'
 <section class="page-hero">
@@ -568,9 +569,9 @@ $htmlCenik = <<<'HTML'
 </section>
 HTML;
 
-$tplCenik = tpl($pdo, $siteId, 'CenÄ‚Â­k', $htmlCenik, $subpageCss, $subpageJs);
+$tplCenik = tpl($pdo, $siteId, 'Ceník', $htmlCenik, $subpageCss, $subpageJs);
 
-// Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬ Template: FAQ Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬
+// ─── Template: FAQ ────────────────────────────────────────────────────────────
 
 $htmlFaq = <<<'HTML'
 <header class="hero">
@@ -590,7 +591,7 @@ HTML;
 
 $tplFaq = tpl($pdo, $siteId, 'FAQ', $htmlFaq, $subpageCss, $subpageJs);
 
-// Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬ Template: Blog listing Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬
+// ─── Template: Blog listing ───────────────────────────────────────────────────
 
 $htmlBlog = <<<'HTML'
 <header class="hero">
@@ -609,7 +610,7 @@ HTML;
 
 $tplBlog = tpl($pdo, $siteId, 'Blog listing', $htmlBlog, $subpageCss, $subpageJs);
 
-// Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬ Template: Blog article Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬
+// ─── Template: Blog article ───────────────────────────────────────────────────
 
 $articleCss = $subpageCss . <<<'CSS'
 
@@ -660,7 +661,7 @@ HTML;
 
 $tplArticle = tpl($pdo, $siteId, 'Blog article', $htmlArticle, $articleCss, $subpageJs);
 
-// Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬ Template: SluÄąÄľby Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬
+// ─── Template: Služby ─────────────────────────────────────────────────────────
 
 $serviceCss = $subpageCss . <<<'CSS'
 
@@ -701,9 +702,9 @@ $htmlSluzby = <<<'HTML'
 </section>
 HTML;
 
-$tplSluzby = tpl($pdo, $siteId, 'SluÄąÄľby', $htmlSluzby, $serviceCss, $subpageJs);
+$tplSluzby = tpl($pdo, $siteId, 'Služby', $htmlSluzby, $serviceCss, $subpageJs);
 
-// Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬ Template: Kontakt Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬
+// ─── Template: Kontakt ────────────────────────────────────────────────────────
 
 $kontaktCss = $subpageCss . <<<'CSS'
 
@@ -747,41 +748,41 @@ HTML;
 
 $tplKontakt = tpl($pdo, $siteId, 'Kontakt', $htmlKontakt, $kontaktCss, $subpageJs);
 
-// Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬ Pages Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬
+// ─── Pages ────────────────────────────────────────────────────────────────────
 
 $pidHome    = addPage($pdo, $siteId, $tplHomeFull, 'Svatební foto a video Olomouc, Morava | RB Videos Photos',                         '',                               '/');
-$pidSluzby  = addPage($pdo, $siteId, $tplSluzby,  'Fotograf & Videograf Olomouc Ă˘â‚¬â€ť naÄąË‡e sluÄąÄľby | RB Photos & Videos',            'sluzby',                         '/sluzby');
-$pidCenik   = addPage($pdo, $siteId, $tplCenik,   'CenÄ‚Â­k fotografa Olomouc | RB Photos & Videos',                              'cenik',                          '/cenik');
-$pidFaq     = addPage($pdo, $siteId, $tplFaq,     'Ă„ĹšastÄ‚Â© otÄ‚Ë‡zky | Fotograf Olomouc Ă˘â‚¬â€ť RB Photos & Videos',                      'faq',                            '/faq');
+$pidSluzby  = addPage($pdo, $siteId, $tplSluzby,  'Fotograf & Videograf Olomouc - naše služby | RB Photos & Videos',            'sluzby',                         '/sluzby');
+$pidCenik   = addPage($pdo, $siteId, $tplCenik,   'Ceník fotografa Olomouc | RB Photos & Videos',                              'cenik',                          '/cenik');
+$pidFaq     = addPage($pdo, $siteId, $tplFaq,     'Časté otázky | Fotograf Olomouc - RB Photos & Videos',                      'faq',                            '/faq');
 $pidBlog    = addPage($pdo, $siteId, $tplBlog,    'Blog | RB Videos Photos',                                                 'blog',                           '/blog');
-$pidKontakt = addPage($pdo, $siteId, $tplKontakt, 'Kontakt | Fotograf Olomouc Ă˘â‚¬â€ť RB Photos & Videos',                           'kontakt',                        '/kontakt');
-// Remove old CMS article pages Ă˘â‚¬â€ť now served as blog_posts
+$pidKontakt = addPage($pdo, $siteId, $tplKontakt, 'Kontakt | Fotograf Olomouc - RB Photos & Videos',                           'kontakt',                        '/kontakt');
+// Remove old CMS article pages - now served as blog_posts
 $pdo->prepare("DELETE FROM pages WHERE site_id=? AND slug IN ('priprava-na-svatebni-foceni','rodinne-foceni-s-detmi')")
     ->execute([$siteId]);
 
-// Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬ Placeholder media Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬
+// ─── Placeholder media ────────────────────────────────────────────────────────
 echo "Fetching placeholder images...\n";
-$imgBlog1 = fetchMedia($pdo, $siteId, 'https://placehold.co/800x500/1a1a2e/c4963c.png', 'blog-1', 'PÄąâ„˘Ä‚Â­prava na svatebnÄ‚Â­ focenÄ‚Â­');
-$imgBlog2 = fetchMedia($pdo, $siteId, 'https://placehold.co/800x500/0e1a0e/c4963c.png', 'blog-2', 'RodinnÄ‚Â© focenÄ‚Â­ s dĂ„â€ştmi');
+$imgBlog1 = fetchMedia($pdo, $siteId, 'https://placehold.co/800x500/1a1a2e/c4963c.png', 'blog-1', 'Příprava na svatební focení');
+$imgBlog2 = fetchMedia($pdo, $siteId, 'https://placehold.co/800x500/0e1a0e/c4963c.png', 'blog-2', 'Rodinné focení s dětmi');
 $imgBlog3 = fetchMedia($pdo, $siteId, 'https://placehold.co/800x500/1a0e0e/c4963c.png', 'blog-3', 'Jak vybrat fotografa');
-$imgPf1   = fetchMedia($pdo, $siteId, 'https://placehold.co/900x600/0a0a1a/c4963c.png', 'pf-1',   'Svatba Ă˘â‚¬â€ť obÄąâ„˘ad');
-$imgPf2   = fetchMedia($pdo, $siteId, 'https://placehold.co/900x600/111827/e5c07b.png', 'pf-2',   'Svatba Ă˘â‚¬â€ť pÄ‚Ë‡r');
-$imgPf3   = fetchMedia($pdo, $siteId, 'https://placehold.co/900x600/1a1008/c4963c.png', 'pf-3',   'Svatba Ă˘â‚¬â€ť detail');
+$imgPf1   = fetchMedia($pdo, $siteId, 'https://placehold.co/900x600/0a0a1a/c4963c.png', 'pf-1',   'Svatba - obřad');
+$imgPf2   = fetchMedia($pdo, $siteId, 'https://placehold.co/900x600/111827/e5c07b.png', 'pf-2',   'Svatba - pár');
+$imgPf3   = fetchMedia($pdo, $siteId, 'https://placehold.co/900x600/1a1008/c4963c.png', 'pf-3',   'Svatba - detail');
 echo "Done.\n";
 
-// Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬ Blog posts Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬
-$art1Content = '<h2>1. Konzultace s fotografem Ă˘â‚¬â€ť co nejdÄąâ„˘Ä‚Â­ve</h2><p>OsobnÄ‚Â­ schÄąĹ»zka jeÄąË‡tĂ„â€ş pÄąâ„˘ed svatbou je zÄ‚Ë‡klad. Promluvte si o mÄ‚Â­stĂ„â€ş obÄąâ„˘adu, harmonogramu a vaÄąË‡ich pÄąâ„˘Ä‚Ë‡nÄ‚Â­ch. DobrÄ‚Ëť fotograf vÄ‚Ë‡m pomÄąĹ»ÄąÄľe sestavit realistickÄ‚Ëť Ă„Ĺ¤asovÄ‚Ëť plÄ‚Ë‡n a doporuĂ„Ĺ¤Ä‚Â­ nejlepÄąË‡Ä‚Â­ mÄ‚Â­sta pro pÄ‚Ë‡rovÄ‚Â© fotografie.</p><h2>2. NaplÄ‚Ë‡nujte harmonogram s rezervou</h2><p>PodceÄąÂovÄ‚Ë‡nÄ‚Â­ Ă„Ĺ¤asu je nejĂ„Ĺ¤astĂ„â€şjÄąË‡Ä‚Â­ chyba. Vlasy a make-up trvajÄ‚Â­ dÄ‚Â©le, hostÄ‚Â© pÄąâ„˘ichÄ‚Ë‡zejÄ‚Â­ postupnĂ„â€ş a skupinovÄ‚Â© fotografie s celou rodinou zaberou 20Ă˘â‚¬â€ś30 minut. VÄąÄľdy poĂ„Ĺ¤Ä‚Â­tejte se zÄ‚Ë‡lohou.</p><h2>3. PÄąâ„˘ipravte detaily s lÄ‚Ë‡skou</h2><p>Prsteny, kytice, pozvÄ‚Ë‡nky, ÄąË‡perky, parfÄ‚Â©m Ă˘â‚¬â€ť tyto detaily dĂ„â€şlajÄ‚Â­ snÄ‚Â­mky vÄ‚ËťjimeĂ„Ĺ¤nÄ‚Ëťmi. PÄąâ„˘ipravte je rÄ‚Ë‡no na neutrÄ‚Ë‡lnÄ‚Â­ povrch dÄąâ„˘Ä‚Â­v, neÄąÄľ zaĂ„Ĺ¤ne chaos pÄąâ„˘Ä‚Â­prav.</p><h2>4. VyuÄąÄľijte zlatou hodinu</h2><p>Hodina pÄąâ„˘ed zÄ‚Ë‡padem slunce je Ă„Ĺ¤as nejkrÄ‚Ë‡snĂ„â€şjÄąË‡Ä‚Â­ho svĂ„â€ştla Ă˘â‚¬â€ť teplÄ‚Â©ho, mĂ„â€şkkÄ‚Â©ho, kinematografickÄ‚Â©ho. V Olomouci mÄ‚Ë‡me nÄ‚Ë‡dhernÄ‚Ë‡ mÄ‚Â­sta pro zlatou hodinu Ă˘â‚¬â€ť naplÄ‚Ë‡nujte pÄ‚Ë‡rovÄ‚Â© focenÄ‚Â­ prÄ‚Ë‡vĂ„â€ş na tento Ă„Ĺ¤as.</p><h2>5. ZÄąĹ»staÄąÂte sami sebou</h2><p>Nehledejte do objektivu, hÄ‚Ëťbejte se, smĂ„â€şjte se, ÄąË‡eptejte si. ZkuÄąË‡enÄ‚Ëť fotograf zachytÄ‚Â­ skuteĂ„Ĺ¤nÄ‚Â© emoce Ă˘â‚¬â€ť ty se nedajÄ‚Â­ naplÄ‚Ë‡novat ani zreÄąÄľÄ‚Â­rovat.</p>';
+// ─── Blog posts ───────────────────────────────────────────────────────────────
+$art1Content = '<h2>1. Konzultace s fotografem - co nejdříve</h2><p>Osobní schůzka ještě před svatbou je základ. Promluvte si o místě obřadu, harmonogramu a vašich přáních. Dobrý fotograf vám pomůže sestavit realistický časový plán a doporučí nejlepší místa pro párové fotografie.</p><h2>2. Naplánujte harmonogram s rezervou</h2><p>Podce?ov?n? času je nejčastější chyba. Vlasy a make-up trvají déle, hosté přicházejí postupně a skupinové fotografie s celou rodinou zaberou 20-30 minut. Vždy počítejte se zálohou.</p><h2>3. Připravte detaily s láskou</h2><p>Prsteny, kytice, pozvánky, šperky, parfém - tyto detaily dělají snímky výjimečnými. Připravte je ráno na neutrální povrch dřív, než začne chaos příprav.</p><h2>4. Využijte zlatou hodinu</h2><p>Hodina před západem slunce je čas nejkrásnějšího světla - teplého, měkkého, kinematografického. V Olomouci máme nádherná místa pro zlatou hodinu - naplánujte párové focení právě na tento čas.</p><h2>5. ZůZůstaňte sami sebou</h2><p>Nehledejte do objektivu, hýbejte se, smějte se, šeptejte si. Zkušený fotograf zachytí skutečné emoce - ty se nedají naplánovat ani zrežírovat.</p>';
 
-$art2Content = '<h2>1. SprÄ‚Ë‡vnÄ‚Ëť Ă„Ĺ¤as je zÄ‚Ë‡klad</h2><p>S malÄ‚Ëťmi dĂ„â€ştmi je naĂ„Ĺ¤asovÄ‚Ë‡nÄ‚Â­ vÄąË‡e. FocenÄ‚Â­ plÄ‚Ë‡nujte na dobu, kdy jsou dĂ„â€şti nejvÄ‚Â­ce odpoĂ„Ĺ¤atÄ‚Â© Ă˘â‚¬â€ť typicky dopoledne po snÄ‚Â­dani nebo krÄ‚Ë‡tce po odpolednÄ‚Â­m spÄ‚Ë‡nku. Nikdy ne tĂ„â€şsnĂ„â€ş pÄąâ„˘ed jÄ‚Â­dlem nebo spanÄ‚Â­m.</p><h2>2. ObleĂ„Ĺ¤enÄ‚Â­ v harmonickÄ‚Ëťch barvÄ‚Ë‡ch</h2><p>NemusÄ‚Â­te mÄ‚Â­t vÄąË‡ichni stejnÄ‚Â© triĂ„Ĺ¤ko. StaĂ„Ĺ¤Ä‚Â­ dvaĂ˘â‚¬â€śtÄąâ„˘i harmonickÄ‚Â© tÄ‚Ĺ‚ny a kombinovat je volnĂ„â€ş. NeutrÄ‚Ë‡lnÄ‚Â­ barvy Ă˘â‚¬â€ť bÄ‚Â©ÄąÄľovÄ‚Ë‡, terakota, modrÄ‚Ë‡ Ă˘â‚¬â€ť ve spojenÄ‚Â­ s pÄąâ„˘Ä‚Â­rodnÄ‚Â­m prostÄąâ„˘edÄ‚Â­m fungujÄ‚Â­ vÄąÄľdy skvĂ„â€şle.</p><h2>3. Hrajte si, ignorujte fotoaparÄ‚Ë‡t</h2><p>ÄąÂÄ‚Â­kat dĂ„â€ştem Ă˘â‚¬Ĺľkoukej a usmĂ„â€şj se" zpÄąĹ»sobÄ‚Â­ nucenÄ‚Â© Ä‚ĹźsmĂ„â€şvy a strnulÄ‚Â© pÄ‚Ĺ‚zy. MÄ‚Â­sto toho se jim pÄąâ„˘irozenĂ„â€ş vĂ„â€şnujte Ă˘â‚¬â€ť ÄąË‡imrejte, Ă„Ĺ¤tĂ„â€şte pohÄ‚Ë‡dku. ZkuÄąË‡enÄ‚Ëť fotograf zachytÄ‚Â­ opravdovÄ‚Â© momenty.</p><h2>4. PÄąâ„˘Ä‚Â­roda je nejlepÄąË‡Ä‚Â­ kulisa</h2><p>Parky, lesy, louky nebo zahrada Ă˘â‚¬â€ť pÄąâ„˘Ä‚Â­roda je ideÄ‚Ë‡lnÄ‚Â­ prostÄąâ„˘edÄ‚Â­. DĂ„â€şti majÄ‚Â­ prostor, svĂ„â€ştlo je pÄąâ„˘irozenÄ‚Â©. V Olomouci: Smetanovy sady, TabulovÄ‚Ëť vrch nebo les u BystÄąâ„˘ice jsou skvĂ„â€şlÄ‚Â© lokace.</p><h2>5. KrÄ‚Ë‡tkÄ‚Ë‡ session Ă˘â‚¬â€ť mÄ‚Â©nĂ„â€ş je vÄ‚Â­ce</h2><p>45Ă˘â‚¬â€ś60 minut je optimum pro rodinnÄ‚Â© focenÄ‚Â­ s malÄ‚Ëťmi dĂ„â€ştmi. KratÄąË‡Ä‚Â­ Ă„Ĺ¤as znamenÄ‚Ë‡ svĂ„â€şÄąÄľÄ‚Â­, spolupracujÄ‚Â­cÄ‚Â­ dĂ„â€şti. ZaĂ„Ĺ¤nĂ„â€şte s nejmenÄąË‡Ä‚Â­mi Ă˘â‚¬â€ť majÄ‚Â­ nejkratÄąË‡Ä‚Â­ vÄ‚ËťdrÄąÄľ.</p>';
+$art2Content = '<h2>1. Správný čas je základ</h2><p>S malými dětmi je načasování vše. Focení plánujte na dobu, kdy jsou děti nejvíce odpočaté - typicky dopoledne po snídani nebo krátce po odpoledním spánku. Nikdy ne těsně před jídlem nebo spaním.</p><h2>2. Oblečení v harmonických barvách</h2><p>Nemusíte mít všichni stejné tričko. Stačí dva-tři harmonické tóny a kombinovat je volně. Neutrální barvy - béžová, terakota, modrá - ve spojení s přírodním prostředím fungují vždy skvěle.</p><h2>3. Hrajte si, ignorujte fotoaparát</h2><p>??kat dětem „koukej a usměj se" způsobí nucené úsměvy a strnulé pózy. Místo toho se jim přirozeně věnujte - šimrejte, čtěte pohádku. Zkušený fotograf zachytí opravdové momenty.</p><h2>4. Příroda je nejlepší kulisa</h2><p>Parky, lesy, louky nebo zahrada - příroda je ideální prostředí. Děti mají prostor, světlo je přirozené. V Olomouci: Smetanovy sady, Tabulový vrch nebo les u Bystřice jsou skvělé lokace.</p><h2>5. Krátká session - méně je více</h2><p>45-60 minut je optimum pro rodinné focení s malými dětmi. Kratší čas znamená svěží, spolupracující děti. Začněte s nejmenšími - mají nejkratší výdrž.</p>';
 
-$art3Content = '<h2>1. ProhlÄ‚Â©dnĂ„â€şte si portfolio</h2><p>Portfolio je nejdÄąĹ»leÄąÄľitĂ„â€şjÄąË‡Ä‚Â­ kritÄ‚Â©rium. PodÄ‚Â­vejte se, zda mÄ‚Ë‡ fotograf zkuÄąË‡enosti s vaÄąË‡Ä‚Â­m typem akce a zda se vÄ‚Ë‡m lÄ‚Â­bÄ‚Â­ jeho styl. VelkÄ‚Ëť rozdÄ‚Â­l je mezi reportÄ‚Ë‡ÄąÄľnÄ‚Â­m a pÄ‚Ĺ‚zenÄ‚Ëťm stylem fotografie.</p><h2>2. PÄąâ„˘eĂ„Ĺ¤tĂ„â€şte si recenze</h2><p>Recenze na Googlu, Facebooku nebo doporuĂ„Ĺ¤enÄ‚Â­ od pÄąâ„˘Ä‚Ë‡tel odhalÄ‚Â­, jak fotograf skuteĂ„Ĺ¤nĂ„â€ş pracuje Ă˘â‚¬â€ť dochvilnost, komunikace, dodÄ‚Ë‡nÄ‚Â­ materiÄ‚Ë‡lu a profesionalita na mÄ‚Â­stĂ„â€ş.</p><h2>3. Proberte podmÄ‚Â­nky pÄąâ„˘edem</h2><p>Cena, termÄ‚Â­n dodÄ‚Ë‡nÄ‚Â­, forma vÄ‚Ëťstupu (online galerie, tisk, USB), prÄ‚Ë‡va na fotografie Ă˘â‚¬â€ť to vÄąË‡e by mĂ„â€şlo bÄ‚Ëťt jasnĂ„â€ş domluveno pÄąâ„˘ed podpisem smlouvy. Vyvarujte se pÄąâ„˘ekvapenÄ‚Â­m.</p><h2>4. OsobnÄ‚Â­ chemistry je dÄąĹ»leÄąÄľitÄ‚Ë‡</h2><p>StrÄ‚Ë‡vÄ‚Â­te s fotografem celÄ‚Ëť den nebo pÄąâ„˘i focenÄ‚Â­ hodiny. MusÄ‚Â­ vÄ‚Ë‡m bÄ‚Ëťt pÄąâ„˘Ä‚Â­jemnÄ‚Ëť. DobrÄ‚Ëť fotograf vÄ‚Ë‡s uvolnÄ‚Â­, nezÄ‚Â­skÄ‚Ë‡ strnulÄ‚Â© zÄ‚Ë‡bĂ„â€şry. SchÄąĹ»zka nebo telefonÄ‚Ë‡t pÄąâ„˘edem hodnĂ„â€ş napovÄ‚Â­.</p><h2>5. Rezervujte vĂ„Ĺ¤as</h2><p>OblÄ‚Â­benÄ‚Â­ fotografovÄ‚Â© majÄ‚Â­ termÄ‚Â­ny obsazenÄ‚Â© mĂ„â€şsÄ‚Â­ce dopÄąâ„˘edu. Pro letnÄ‚Â­ svatby a akce se doporuĂ„Ĺ¤uje rezervace rok napÄąâ„˘ed. Ă„ĹšÄ‚Â­m dÄąâ„˘Ä‚Â­ve, tÄ‚Â­m vĂ„â€ştÄąË‡Ä‚Â­ vÄ‚ËťbĂ„â€şr termÄ‚Â­nÄąĹ».</p>';
+$art3Content = '<h2>1. Prohlédněte si portfolio</h2><p>Portfolio je nejdůležitější kritérium. Podívejte se, zda má fotograf zkušenosti s vaším typem akce a zda se vám líbí jeho styl. Velký rozdíl je mezi reportážním a pózeným stylem fotografie.</p><h2>2. Přečtěte si recenze</h2><p>Recenze na Googlu, Facebooku nebo doporučení od přátel odhalí, jak fotograf skutečně pracuje - dochvilnost, komunikace, dodání materiálu a profesionalita na místě.</p><h2>3. Proberte podmínky předem</h2><p>Cena, termín dodání, forma výstupu (online galerie, tisk, USB), práva na fotografie - to vše by mělo být jasně domluveno před podpisem smlouvy. Vyvarujte se překvapením.</p><h2>4. Osobní chemistry je důležitá</h2><p>Strávíte s fotografem celý den nebo při focení hodiny. Musí vám být příjemný. Dobrý fotograf vás uvolní, nezíská strnulé záběry. Schůzka nebo telefonát předem hodně napoví.</p><h2>5. Rezervujte včas</h2><p>Oblíbení fotografové mají termíny obsazené měsíce dopředu. Pro letní svatby a akce se doporučuje rezervace rok napřed. Čím dříve, tím větší výběr termínů.</p>';
 
-upsertBlogPost($pdo, $siteId, 'priprava-na-svatebni-foceni', '10 tipÄąĹ», jak se pÄąâ„˘ipravit na dokonalÄ‚Â© svatebnÄ‚Â­ focenÄ‚Â­', 'VÄ‚Ë‡ÄąË‡ svatebnÄ‚Â­ den si zaslouÄąÄľÄ‚Â­ dokonalou pÄąâ„˘Ä‚Â­pravu. PÄąâ„˘eĂ„Ĺ¤tĂ„â€şte si, co udĂ„â€şlat jinak neÄąÄľ ostatnÄ‚Â­, a zajistĂ„â€şte si snÄ‚Â­mky, na kterÄ‚Â© budete hrdÄ‚Â­ celÄ‚Ëť ÄąÄľivot.', $art1Content, $imgBlog1, '2025-04-12 10:00:00');
-upsertBlogPost($pdo, $siteId, 'rodinne-foceni-s-detmi', 'RodinnÄ‚Â© focenÄ‚Â­: jak dostat pÄąâ„˘irozenÄ‚Â© snÄ‚Â­mky i s malÄ‚Ëťmi dĂ„â€ştmi', 'MalÄ‚Â© dĂ„â€şti a fotoaparÄ‚Ë‡t? PÄąâ„˘esnĂ„â€ş v tom chaosu se skrÄ‚ËťvajÄ‚Â­ ty nejkrÄ‚Ë‡snĂ„â€şjÄąË‡Ä‚Â­ momenty. Zde je nÄ‚Ë‡vod, jak z rodinnÄ‚Â©ho focenÄ‚Â­ udĂ„â€şlat zÄ‚Ë‡bavnÄ‚Ëť zÄ‚Ë‡ÄąÄľitek.', $art2Content, $imgBlog2, '2025-03-28 10:00:00');
-upsertBlogPost($pdo, $siteId, 'jak-vybrat-fotografa', 'Jak vybrat sprÄ‚Ë‡vnÄ‚Â©ho fotografa pro vaÄąË‡i akci?', 'Na co se zamĂ„â€şÄąâ„˘it pÄąâ„˘i vÄ‚ËťbĂ„â€şru fotografa Ă˘â‚¬â€ť portfolio, styl, komunikace a podmÄ‚Â­nky spoluprÄ‚Ë‡ce. PoradÄ‚Â­me, na co se neptat zapomenout.', $art3Content, $imgBlog3, '2025-05-01 10:00:00');
+upsertBlogPost($pdo, $siteId, 'priprava-na-svatebni-foceni', '10 tipů, jak se připravit na dokonalé svatební focení', 'Váš svatební den si zaslouží dokonalou přípravu. Přečtěte si, co udělat jinak než ostatní, a zajistěte si snímky, na které budete hrdí celý život.', $art1Content, $imgBlog1, '2025-04-12 10:00:00');
+upsertBlogPost($pdo, $siteId, 'rodinne-foceni-s-detmi', 'Rodinné focení: jak dostat přirozené snímky i s malými dětmi', 'Malé děti a fotoaparát? Přesně v tom chaosu se skrývají ty nejkrásnější momenty. Zde je návod, jak z rodinného focení udělat zábavný zážitek.', $art2Content, $imgBlog2, '2025-03-28 10:00:00');
+upsertBlogPost($pdo, $siteId, 'jak-vybrat-fotografa', 'Jak vybrat správného fotografa pro vaši akci?', 'Na co se zaměřit při výběru fotografa - portfolio, styl, komunikace a podmínky spolupráce. Poradíme, na co nezapomenout.', $art3Content, $imgBlog3, '2025-05-01 10:00:00');
 
-// Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬ Portfolio entry Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬
-$pfId = upsertPortfolioEntry($pdo, $siteId, 'svatba-martin-helena', 'Svatba Martin & Helena Ă˘â‚¬â€ť Olomouc 2025', 'PÄąâ„˘irozenÄ‚Â© zÄ‚Ë‡bĂ„â€şry z krÄ‚Ë‡snÄ‚Â©ho svatebnÄ‚Â­ho dne v Olomouci. ZlatÄ‚Ë‡ hodina v SmetanovÄ‚Ëťch sadech, veĂ„Ĺ¤ernÄ‚Â­ obÄąâ„˘ad a nezapomenutelnÄ‚Â© detaily.', null, '2025-05-03 10:00:00', 0);
+// ─── Portfolio entry ──────────────────────────────────────────────────────────
+$pfId = upsertPortfolioEntry($pdo, $siteId, 'svatba-martin-helena', 'Svatba Martin & Helena - Olomouc 2025', 'Přirozené záběry z krásného svatebního dne v Olomouci. Zlatá hodina v Smetanových sadech, večerní obřad a nezapomenutelné detaily.', null, '2025-05-03 10:00:00', 0);
 if ($pfId && $imgPf1 && $imgPf2 && $imgPf3) {
     linkPortfolioMedia($pdo, $pfId, [$imgPf1, $imgPf2, $imgPf3]);
 }
@@ -797,77 +798,77 @@ if ($pfId) {
         $tileHtml = '<div class="pt-grid"><a class="pt-tile" href="/svatba-martin-helena">'
             . '<div class="pt-thumb"><img src="' . $p1 . '" alt="Svatba Martin &amp; Helena" loading="lazy"></div>'
             . '<div class="pt-photos"><img src="' . $p2 . '" alt="" loading="lazy"><img src="/storage/media/' . $ym . '/seed-pf-3.png" alt="" loading="lazy"></div>'
-            . '<div class="pt-caption">Svatba Martin &amp; Helena Ă˘â‚¬â€ť Olomouc 2025</div>'
+            . '<div class="pt-caption">Svatba Martin &amp; Helena - Olomouc 2025</div>'
             . '</a></div>';
         $pdo->prepare('REPLACE INTO content_blocks (page_id,block_key,block_type,label,content,sort_order) VALUES (?,?,?,?,?,?)')
-            ->execute([$pfPage['id'], 'portfolio-tiles', 'html', 'NaÄąË‡e prÄ‚Ë‡ce Ă˘â‚¬â€ť dlaÄąÄľdice', $tileHtml, 38]);
+            ->execute([$pfPage['id'], 'portfolio-tiles', 'html', 'Naše práce - dlaždice', $tileHtml, 38]);
     }
 }
 
-// Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬ Content blocks: Homepage Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬
+// ─── Content blocks: Homepage ─────────────────────────────────────────────────
 
-block($pdo, $pidHome, 'hero_bg',         'image',    'Hero Ă˘â‚¬â€ť pozadÄ‚Â­ (foto)',    '', 1);
-block($pdo, $pidHome, 'hero_video',      'video',    'Hero Ă˘â‚¬â€ť video (URL)',      '', 2);
-block($pdo, $pidHome, 'hero_tag',        'text',     'Hero Ă˘â‚¬â€ť tag',              'Fotograf & Videograf Ă˘â‚¬â€ť Olomouc', 3);
-block($pdo, $pidHome, 'hero_h1',         'text',     'Hero Ă˘â‚¬â€ť nadpis',           'ZachytÄ‚Â­me vÄ‚Ë‡ÄąË‡ pÄąâ„˘Ä‚Â­bĂ„â€şh. Na vÄąÄľdy....', 4);
-block($pdo, $pidHome, 'hero_sub',        'textarea', 'Hero Ă˘â‚¬â€ť podnadpis',        'ProfesionÄ‚Ë‡lnÄ‚Â­ svatebnÄ‚Â­ fotografie a videografie v Olomouci a celÄ‚Â© Ă„ĹšeskÄ‚Â© republice. KaÄąÄľdÄ‚Ëť okamÄąÄľik si zaslouÄąÄľÄ‚Â­ bÄ‚Ëťt nezapomenutelnÄ‚Ëť.', 5);
+block($pdo, $pidHome, 'hero_bg',         'image',    'Hero - pozadí (foto)',    '', 1);
+block($pdo, $pidHome, 'hero_video',      'video',    'Hero - video (URL)',      '', 2);
+block($pdo, $pidHome, 'hero_tag',        'text',     'Hero - tag',              'Fotograf & Videograf - Olomouc', 3);
+block($pdo, $pidHome, 'hero_h1',         'text',     'Hero - nadpis',           'Zachytíme váš příběh. Na vždy....', 4);
+block($pdo, $pidHome, 'hero_sub',        'textarea', 'Hero - podnadpis',        'Profesionální svatební fotografie a videografie v Olomouci a celé České republice. Každý okamžik si zaslouží být nezapomenutelný.', 5);
 
-block($pdo, $pidHome, 'stat_1', 'html', 'Statistika 1', '<span class="stat-num">150+</span><span class="stat-lbl">SpokojenÄ‚Ëťch klientÄąĹ»</span>', 10);
-block($pdo, $pidHome, 'stat_2', 'html', 'Statistika 2', '<span class="stat-num">8+</span><span class="stat-lbl">Let zkuÄąË‡enostÄ‚Â­</span>', 11);
-block($pdo, $pidHome, 'stat_3', 'html', 'Statistika 3', '<span class="stat-num">5 let</span><span class="stat-lbl">ZÄ‚Ë‡lohy fotek zdarma</span>', 12);
-block($pdo, $pidHome, 'stat_4', 'html', 'Statistika 4', '<span class="stat-num">2 fotografovÄ‚Â©</span><span class="stat-lbl">TÄ‚Ëťm profesionÄ‚Ë‡lÄąĹ»</span>', 13);
+block($pdo, $pidHome, 'stat_1', 'html', 'Statistika 1', '<span class="stat-num">150+</span><span class="stat-lbl">Spokojených klientů</span>', 10);
+block($pdo, $pidHome, 'stat_2', 'html', 'Statistika 2', '<span class="stat-num">8+</span><span class="stat-lbl">Let zkušeností</span>', 11);
+block($pdo, $pidHome, 'stat_3', 'html', 'Statistika 3', '<span class="stat-num">5 let</span><span class="stat-lbl">Zálohy fotek zdarma</span>', 12);
+block($pdo, $pidHome, 'stat_4', 'html', 'Statistika 4', '<span class="stat-num">2 fotografové</span><span class="stat-lbl">Tým profesionálů</span>', 13);
 
-block($pdo, $pidHome, 'services_title', 'text',     'SluÄąÄľby Ă˘â‚¬â€ť nadpis', 'Co pro vÄ‚Ë‡s udĂ„â€şlÄ‚Ë‡me', 20);
-block($pdo, $pidHome, 'services_intro', 'textarea', 'SluÄąÄľby Ă˘â‚¬â€ť intro',  'AÄąÄ„ jde o svatbu, portrÄ‚Â©t nebo firemnÄ‚Â­ projekt Ă˘â‚¬â€ť jsme tu pro vÄ‚Ë‡s.', 21);
-block($pdo, $pidHome, 'service_1', 'html', 'SluÄąÄľba 1 Ă˘â‚¬â€ť Svatby', '<span class="svc-num">01</span><h3>SvatebnÄ‚Â­ foto &amp; video</h3><p>ZachytÄ‚Â­me kaÄąÄľdÄ‚Ëť dotek, kaÄąÄľdÄ‚Ëť pohled, kaÄąÄľdou slzu ÄąË‡tĂ„â€şstÄ‚Â­. PÄąâ„˘irozenÄ‚Â© reportÄ‚Ë‡ÄąÄľnÄ‚Â­ fotografie a filmovÄ‚Â© video, kterÄ‚Â© vÄ‚Ë‡m budou vyprÄ‚Ë‡vĂ„â€şt pÄąâ„˘Ä‚Â­bĂ„â€şh vaÄąË‡eho dne po celÄ‚Ëť ÄąÄľivot.</p>', 22);
-block($pdo, $pidHome, 'service_2', 'html', 'SluÄąÄľba 2 Ă˘â‚¬â€ť Rodiny', '<span class="svc-num">02</span><h3>RodinnÄ‚Â© &amp; portrÄ‚Â©tnÄ‚Â­ focenÄ‚Â­</h3><p>RodinnÄ‚Â© vzpomÄ‚Â­nky, tĂ„â€şhotenskÄ‚Â© focenÄ‚Â­, kÄąâ„˘tiny nebo portrÄ‚Â©ty. PÄąâ„˘irozenÄ‚Â©, nenucenÄ‚Â© a krÄ‚Ë‡snÄ‚Â© snÄ‚Â­mky, na kterÄ‚Â© budete hrdÄ‚Â­.</p>', 23);
-block($pdo, $pidHome, 'service_3', 'html', 'SluÄąÄľba 3 Ă˘â‚¬â€ť Reklama', '<span class="svc-num">03</span><h3>ReklamnÄ‚Â­ foto &amp; video</h3><p>ProfesionÄ‚Ë‡lnÄ‚Â­ vizuÄ‚Ë‡lnÄ‚Â­ obsah pro firmy, kapely, produkty nebo brand. Videoklipy, firemnÄ‚Â­ prezentace a obsah, kterÄ‚Ëť prodÄ‚Ë‡vÄ‚Ë‡.</p>', 24);
-block($pdo, $pidHome, 'service_4', 'html', 'SluÄąÄľba 4 Ă˘â‚¬â€ť Akce', '<span class="svc-num">04</span><h3>Akce &amp; udÄ‚Ë‡losti</h3><p>Konference, kulturnÄ‚Â­ akce, plesy, narozeniny. KaÄąÄľdÄ‚Ë‡ udÄ‚Ë‡lost si zaslouÄąÄľÄ‚Â­ bÄ‚Ëťt profesionÄ‚Ë‡lnĂ„â€ş zdokumentovÄ‚Ë‡na.</p>', 25);
+block($pdo, $pidHome, 'services_title', 'text',     'Služby - nadpis', 'Co pro vás uděláme', 20);
+block($pdo, $pidHome, 'services_intro', 'textarea', 'Služby - intro',  'Ať jde o svatbu, portrét nebo firemní projekt - jsme tu pro vás.', 21);
+block($pdo, $pidHome, 'service_1', 'html', 'Služba 1 - Svatby', '<span class="svc-num">01</span><h3>Svatební foto &amp; video</h3><p>Zachytíme každý dotek, každý pohled, každou slzu štěstí. Přirozené reportážní fotografie a filmové video, které vám budou vyprávět příběh vašeho dne po celý život.</p>', 22);
+block($pdo, $pidHome, 'service_2', 'html', 'Služba 2 - Rodiny', '<span class="svc-num">02</span><h3>Rodinné &amp; portrétní focení</h3><p>Rodinné vzpomínky, těhotenské focení, křtiny nebo portréty. Přirozené, nenucené a krásné snímky, na které budete hrdí.</p>', 23);
+block($pdo, $pidHome, 'service_3', 'html', 'Služba 3 - Reklama', '<span class="svc-num">03</span><h3>Reklamní foto &amp; video</h3><p>Profesionální vizuální obsah pro firmy, kapely, produkty nebo brand. Videoklipy, firemní prezentace a obsah, který prodává.</p>', 24);
+block($pdo, $pidHome, 'service_4', 'html', 'Služba 4 - Akce', '<span class="svc-num">04</span><h3>Akce &amp; události</h3><p>Konference, kulturní akce, plesy, narozeniny. Každá událost si zaslouží být profesionálně zdokumentována.</p>', 25);
 
-block($pdo, $pidHome, 'why_title', 'text',     'ProĂ„Ĺ¤ my Ă˘â‚¬â€ť nadpis', 'ProĂ„Ĺ¤ si vybrat RB Photos & Videos?', 30);
-block($pdo, $pidHome, 'why_intro', 'textarea', 'ProĂ„Ĺ¤ my Ă˘â‚¬â€ť intro',  'Nejsme jen fotografovÄ‚Â©. Jsme vypravĂ„â€şĂ„Ĺ¤i pÄąâ„˘Ä‚Â­bĂ„â€şhÄąĹ».', 31);
-block($pdo, $pidHome, 'why_1', 'html', 'DÄąĹ»vod 1', '<span class="feat-num">01</span><h3>OsobnÄ‚Â­ pÄąâ„˘Ä‚Â­stup</h3><p>KaÄąÄľdÄ‚Ëť klient je pro nÄ‚Ë‡s jedineĂ„Ĺ¤nÄ‚Ëť. PÄąâ„˘Ä‚Ë‡telskÄ‚Ëť tÄ‚Ëťm, kterÄ‚Ëť naslouchÄ‚Ë‡ vaÄąË‡im pÄąâ„˘Ä‚Ë‡nÄ‚Â­m a pomÄąĹ»ÄąÄľe i s kompozicÄ‚Â­.</p>', 32);
-block($pdo, $pidHome, 'why_2', 'html', 'DÄąĹ»vod 2', '<span class="feat-num">02</span><h3>ZkuÄąË‡enÄ‚Ëť tÄ‚Ëťm</h3><p>VÄ‚Â­ce neÄąÄľ 8 let zkuÄąË‡enostÄ‚Â­, profesionÄ‚Ë‡lnÄ‚Â­ vybavenÄ‚Â­ a neustÄ‚Ë‡lÄ‚Â© vzdĂ„â€şlÄ‚Ë‡vÄ‚Ë‡nÄ‚Â­. Investujeme do kvality pro vÄ‚Ë‡s.</p>', 33);
-block($pdo, $pidHome, 'why_3', 'html', 'DÄąĹ»vod 3', '<span class="feat-num">03</span><h3>5 let zÄ‚Ë‡lohy zdarma</h3><p>VaÄąË‡e fotografie a videa bezpeĂ„Ĺ¤nĂ„â€ş zÄ‚Ë‡lohujeme po dobu 5 let. Nikdy o vzpomÄ‚Â­nky nepÄąâ„˘ijdete.</p>', 34);
-block($pdo, $pidHome, 'why_4', 'html', 'DÄąĹ»vod 4', '<span class="feat-num">04</span><h3>CelÄ‚Ë‡ Ă„ĹšR i zahraniĂ„Ĺ¤Ä‚Â­</h3><p>SÄ‚Â­dlÄ‚Â­me v Olomouci, ale fotografujeme po celÄ‚Â© Ă„ĹšeskÄ‚Â© republice i v zahraniĂ„Ĺ¤Ä‚Â­. PÄąâ„˘ijedeme za vÄ‚Ë‡mi.</p>', 35);
+block($pdo, $pidHome, 'why_title', 'text',     'Proč my - nadpis', 'Proč si vybrat RB Photos & Videos?', 30);
+block($pdo, $pidHome, 'why_intro', 'textarea', 'Proč my - intro',  'Nejsme jen fotografové. Jsme vypravěči příběhů.', 31);
+block($pdo, $pidHome, 'why_1', 'html', 'Důvod 1', '<span class="feat-num">01</span><h3>Osobní přístup</h3><p>Každý klient je pro nás jedinečný. Přátelský tým, který naslouchá vašim přáním a pomůže i s kompozicí.</p>', 32);
+block($pdo, $pidHome, 'why_2', 'html', 'Důvod 2', '<span class="feat-num">02</span><h3>Zkušený tým</h3><p>Více než 8 let zkušeností, profesionální vybavení a neustálé vzdělávání. Investujeme do kvality pro vás.</p>', 33);
+block($pdo, $pidHome, 'why_3', 'html', 'Důvod 3', '<span class="feat-num">03</span><h3>5 let zálohy zdarma</h3><p>Vaše fotografie a videa bezpečně zálohujeme po dobu 5 let. Nikdy o vzpomínky nepřijdete.</p>', 34);
+block($pdo, $pidHome, 'why_4', 'html', 'Důvod 4', '<span class="feat-num">04</span><h3>Celá ČR i zahraničí</h3><p>Sídlíme v Olomouci, ale fotografujeme po celé České republice i v zahraničí. Přijedeme za vámi.</p>', 35);
 
-block($pdo, $pidHome, 'portfolio_title', 'text',     'PrÄ‚Ë‡ce Ă˘â‚¬â€ť nadpis',    'To nejlepÄąË‡Ä‚Â­ od nÄ‚Ë‡s', 40);
-block($pdo, $pidHome, 'portfolio_intro', 'textarea', 'PrÄ‚Ë‡ce Ă˘â‚¬â€ť intro',     'SvatebnÄ‚Â­ filmy, klipy a reportÄ‚Ë‡ÄąÄľe Ă˘â‚¬â€ť podÄ‚Â­vejte se jak pracujeme.', 41);
-block($pdo, $pidHome, 'portfolio_btns',  'html',     'PrÄ‚Ë‡ce Ă˘â‚¬â€ť tlaĂ„Ĺ¤Ä‚Â­tka',  '<a href="/nase-prace" class="btn-g">V&#353;echny pr&#225;ce</a>', 46);
-block($pdo, $pidHome, 'portfolio-tiles', 'html', 'NaÄąË‡e prÄ‚Ë‡ce Ă˘â‚¬â€ť dlaÄąÄľdice', '', 38);
+block($pdo, $pidHome, 'portfolio_title', 'text',     'Práce - nadpis',    'To nejlepší od nás', 40);
+block($pdo, $pidHome, 'portfolio_intro', 'textarea', 'Práce - intro',     'Svatební filmy, klipy a reportáže - podívejte se jak pracujeme.', 41);
+block($pdo, $pidHome, 'portfolio_btns',  'html',     'Práce - tlačítka',  '<a href="/nase-prace" class="btn-g">V&#353;echny pr&#225;ce</a>', 46);
+block($pdo, $pidHome, 'portfolio-tiles', 'html', 'Naše práce - dlaždice', '', 38);
 
-block($pdo, $pidHome, 'reviews_title', 'text',     'Recenze Ă˘â‚¬â€ť nadpis', 'Co Äąâ„˘Ä‚Â­kajÄ‚Â­ naÄąË‡i klienti', 50);
-block($pdo, $pidHome, 'reviews_intro', 'textarea', 'Recenze Ă˘â‚¬â€ť intro',  'PÄąâ„˘es 150 spokojenÄ‚Ëťch klientÄąĹ» Ă˘â‚¬â€ť jejich slova mluvÄ‚Â­ za nÄ‚Ë‡s.', 51);
-block($pdo, $pidHome, 'review_1', 'html', 'Recenze 1', '<div class="rev-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><blockquote>"Kluci jsou naprostÄ‚Â­ profesionÄ‚Ë‡lovÄ‚Â©. Jsou to opravdu pÄąâ„˘Ä‚Ë‡telÄąË‡tÄ‚Â­ borci, kteÄąâ„˘Ä‚Â­ vÄ‚Ë‡m udĂ„â€şlajÄ‚Â­ fotky a videa podle vaÄąË‡ich pÄąâ„˘edstav a jeÄąË‡tĂ„â€ş lÄ‚Â­p. Za mĂ„â€ş TOP ve svÄ‚Â©m oboru. DĂ„â€şkujeme, ÄąÄľe jste mohli bÄ‚Ëťt na naÄąË‡Ä‚Â­ svatbĂ„â€ş!"</blockquote><div class="rev-name">Jan JÄ‚Ä˝ngling</div><div class="rev-type">Svatba M+H</div>', 52);
-block($pdo, $pidHome, 'review_2', 'html', 'Recenze 2', '<div class="rev-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><blockquote>"Super domluva, milÄ‚Ëť a profesionÄ‚Ë‡lnÄ‚Â­ pÄąâ„˘Ä‚Â­stup k focenÄ‚Â­. Zdena nÄ‚Ë‡m nafotil svatebnÄ‚Â­ obÄąâ„˘ad s poobÄąâ„˘adnÄ‚Â­m focenÄ‚Â­m v zÄ‚Ë‡meckÄ‚Â©m parku. Z kvality fotek jsme nadÄąË‡enÄ‚Â­ a byly dodÄ‚Ë‡ny dÄąâ„˘Ä‚Â­ve neÄąÄľ jsme byli domluveni. VelkÄ‚Ë‡ spokojenost. DoporuĂ„Ĺ¤uji."</blockquote><div class="rev-name">VÄ‚Ë‡clav Konopka</div><div class="rev-type">SvatebnÄ‚Â­ focenÄ‚Â­</div>', 53);
-block($pdo, $pidHome, 'review_3', 'html', 'Recenze 3', '<div class="rev-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><blockquote>"Moc doporuĂ„Ĺ¤uji, pan fotograf nÄ‚Ë‡m vyĂ„Ĺ¤aroval ty nejkrÄ‚Ë‡snĂ„â€şjÄąË‡Ä‚Â­ rodinnÄ‚Â© fotky i s dĂ„â€ştmi, co nemĂ„â€şly zrovna fotÄ‚Â­cÄ‚Â­ nÄ‚Ë‡ladu. ProfesionÄ‚Ë‡lnÄ‚Â­ pÄąâ„˘Ä‚Â­stup a ÄąË‡piĂ„Ĺ¤kovÄ‚Ë‡ kvalita. UÄąÄľ se tĂ„â€şÄąË‡Ä‚Â­m na dalÄąË‡Ä‚Â­ focenÄ‚Â­!"</blockquote><div class="rev-name">Jana DudkovÄ‚Ë‡</div><div class="rev-type">RodinnÄ‚Â© focenÄ‚Â­</div>', 54);
-block($pdo, $pidHome, 'reviews_cta', 'html', 'Recenze Ă˘â‚¬â€ť tlaĂ„Ĺ¤Ä‚Â­tko', '<a href="https://www.facebook.com/rbvideosandphotos/reviews" target="_blank" rel="noopener" class="btn-od">VÄąË‡echny recenze na Facebooku</a>', 55);
+block($pdo, $pidHome, 'reviews_title', 'text',     'Recenze - nadpis', 'Co říkají naši klienti', 50);
+block($pdo, $pidHome, 'reviews_intro', 'textarea', 'Recenze - intro',  'Přes 150 spokojených klientů - jejich slova mluví za nás.', 51);
+block($pdo, $pidHome, 'review_1', 'html', 'Recenze 1', '<div class="rev-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><blockquote>"Kluci jsou naprostí profesionálové. Jsou to opravdu přátelští borci, kteří vám udělají fotky a videa podle vašich představ a ještě líp. Za mě TOP ve svém oboru. Děkujeme, že jste mohli být na naší svatbě!"</blockquote><div class="rev-name">Jan Jüngling</div><div class="rev-type">Svatba M+H</div>', 52);
+block($pdo, $pidHome, 'review_2', 'html', 'Recenze 2', '<div class="rev-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><blockquote>"Super domluva, milý a profesionální přístup k focení. Zdena nám nafotil svatební obřad s poobřadním focením v zámeckém parku. Z kvality fotek jsme nadšení a byly dodány dříve než jsme byli domluveni. Velká spokojenost. Doporučuji."</blockquote><div class="rev-name">Václav Konopka</div><div class="rev-type">Svatební focení</div>', 53);
+block($pdo, $pidHome, 'review_3', 'html', 'Recenze 3', '<div class="rev-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><blockquote>"Moc doporučuji, pan fotograf nám vyčaroval ty nejkrásnější rodinné fotky i s dětmi, co neměly zrovna fotící náladu. Profesionální přístup a špičková kvalita. Už se těším na další focení!"</blockquote><div class="rev-name">Jana Dudková</div><div class="rev-type">Rodinné focení</div>', 54);
+block($pdo, $pidHome, 'reviews_cta', 'html', 'Recenze - tlačítko', '<a href="https://www.facebook.com/rbvideosandphotos/reviews" target="_blank" rel="noopener" class="btn-od">Všechny recenze na Facebooku</a>', 55);
 
-block($pdo, $pidHome, 'pricing_title', 'text',     'CenÄ‚Â­k Ă˘â‚¬â€ť nadpis',   'TransparentnÄ‚Â­ cenÄ‚Â­k bez pÄąâ„˘ekvapenÄ‚Â­', 70);
-block($pdo, $pidHome, 'pricing_intro', 'textarea', 'CenÄ‚Â­k Ă˘â‚¬â€ť intro',   'KaÄąÄľdÄ‚Ë‡ zakÄ‚Ë‡zka je individuÄ‚Ë‡lnÄ‚Â­. NÄ‚Â­ÄąÄľe najdete orientaĂ„Ĺ¤nÄ‚Â­ ceny Ă˘â‚¬â€ť pÄąâ„˘esnou nabÄ‚Â­dku pÄąâ„˘ipravÄ‚Â­me vÄąÄľdy na mÄ‚Â­ru.', 71);
-block($pdo, $pidHome, 'pricing_body',  'html',     'CenÄ‚Â­k Ă˘â‚¬â€ť obsah',   '', 72);
-block($pdo, $pidHome, 'pricing_cta',   'html',     'CenÄ‚Â­k Ă˘â‚¬â€ť tlaĂ„Ĺ¤Ä‚Â­tko', '<a href="/cenik" class="btn-g">Cel&#253; cen&#237;k</a>', 73);
+block($pdo, $pidHome, 'pricing_title', 'text',     'Ceník - nadpis',   'Transparentní ceník bez překvapení', 70);
+block($pdo, $pidHome, 'pricing_intro', 'textarea', 'Ceník - intro',   'Každá zakázka je individuální. Níže najdete orientační ceny - přesnou nabídku připravíme vždy na míru.', 71);
+block($pdo, $pidHome, 'pricing_body',  'html',     'Ceník - obsah',   '', 72);
+block($pdo, $pidHome, 'pricing_cta',   'html',     'Ceník - tlačítko', '<a href="/cenik" class="btn-g">Cel&#253; cen&#237;k</a>', 73);
 
-block($pdo, $pidHome, 'blog_title', 'text',     'Blog Ă˘â‚¬â€ť nadpis', 'Tipy a inspirace', 80);
-block($pdo, $pidHome, 'blog_intro', 'textarea', 'Blog Ă˘â‚¬â€ť intro',  'Rady od profesionÄ‚Ë‡lnÄ‚Â­ho fotografa Ă˘â‚¬â€ť jak se pÄąâ„˘ipravit, co oĂ„Ĺ¤ekÄ‚Ë‡vat a jak dostat ty nejkrÄ‚Ë‡snĂ„â€şjÄąË‡Ä‚Â­ snÄ‚Â­mky.', 81);
-block($pdo, $pidHome, 'blog_1',     'html',     'Ă„ĹšlÄ‚Ë‡nek 1',      '', 82);
-block($pdo, $pidHome, 'blog_2',     'html',     'Ă„ĹšlÄ‚Ë‡nek 2',      '', 83);
-block($pdo, $pidHome, 'blog_3',     'html',     'Ă„ĹšlÄ‚Ë‡nek 3',      '', 84);
-block($pdo, $pidHome, 'blog_cta',   'html',     'Blog Ă˘â‚¬â€ť tlaĂ„Ĺ¤Ä‚Â­tko', '<a href="/blog" class="btn-od">V&#353;echny &#269;l&#225;nky</a>', 85);
+block($pdo, $pidHome, 'blog_title', 'text',     'Blog - nadpis', 'Tipy a inspirace', 80);
+block($pdo, $pidHome, 'blog_intro', 'textarea', 'Blog - intro',  'Rady od profesionálního fotografa - jak se připravit, co očekávat a jak dostat ty nejkrásnější snímky.', 81);
+block($pdo, $pidHome, 'blog_1',     'html',     'Článek 1',      '', 82);
+block($pdo, $pidHome, 'blog_2',     'html',     'Článek 2',      '', 83);
+block($pdo, $pidHome, 'blog_3',     'html',     'Článek 3',      '', 84);
+block($pdo, $pidHome, 'blog_cta',   'html',     'Blog - tlačítko', '<a href="/blog" class="btn-od">V&#353;echny &#269;l&#225;nky</a>', 85);
 
-block($pdo, $pidHome, 'faq_title', 'text',     'FAQ Ă˘â‚¬â€ť nadpis', 'NejĂ„Ĺ¤astĂ„â€şjÄąË‡Ä‚Â­ otÄ‚Ë‡zky', 90);
-block($pdo, $pidHome, 'faq_intro', 'textarea', 'FAQ Ă˘â‚¬â€ť intro',  'VÄąË‡e, co potÄąâ„˘ebujete vĂ„â€şdĂ„â€şt pÄąâ„˘ed rezervacÄ‚Â­.', 91);
-block($pdo, $pidHome, 'faq_1',     'html',     'FAQ 1',        '<div class="faq-q">Kdy je nejlepÄąË‡Ä‚Â­ rezervovat termÄ‚Â­n svatby?</div><div class="faq-a">IdeÄ‚Ë‡lnĂ„â€ş co nejdÄąâ„˘Ä‚Â­ve po potvrzenÄ‚Â­ data a mÄ‚Â­sta svatby. U vÄ‚Â­kendovÄ‚Ëťch termÄ‚Â­nÄąĹ» ve svatebnÄ‚Â­ sezÄ‚Ĺ‚nĂ„â€ş doporuĂ„Ĺ¤uji rezervaci nĂ„â€şkolik mĂ„â€şsÄ‚Â­cÄąĹ» dopÄąâ„˘edu.</div>', 92);
-block($pdo, $pidHome, 'faq_2',     'html',     'FAQ 2',        '<div class="faq-q">Kolik fotografiÄ‚Â­ dostaneme?</div><div class="faq-a">ZÄ‚Ë‡leÄąÄľÄ‚Â­ na dÄ‚Â©lce focenÄ‚Â­ a zvolenÄ‚Â©m balÄ‚Â­Ă„Ĺ¤ku. U menÄąË‡Ä‚Â­ch svateb obvykle pÄąâ„˘edÄ‚Ë‡vÄ‚Ë‡m niÄąÄľÄąË‡Ä‚Â­ stovky fotografiÄ‚Â­, u celodennÄ‚Â­ch svateb nĂ„â€şkolik stovek upravenÄ‚Ëťch snÄ‚Â­mkÄąĹ».</div>', 93);
-block($pdo, $pidHome, 'faq_3',     'html',     'FAQ 3',        '<div class="faq-q">Za jak dlouho dostaneme hotovÄ‚Â© fotografie?</div><div class="faq-a">ObvyklÄ‚Ë‡ doba dodÄ‚Ë‡nÄ‚Â­ je podle rozsahu zakÄ‚Ë‡zky. MenÄąË‡Ä‚Â­ focenÄ‚Â­ bÄ‚ËťvÄ‚Ë‡ hotovÄ‚Â© rychleji, u vĂ„â€ştÄąË‡Ä‚Â­ch svateb a kombinace foto + video je potÄąâ„˘eba poĂ„Ĺ¤Ä‚Â­tat s delÄąË‡Ä‚Â­ postprodukcÄ‚Â­.</div>', 94);
-block($pdo, $pidHome, 'faq_cta',   'html',     'FAQ Ă˘â‚¬â€ť tlaĂ„Ĺ¤Ä‚Â­tko', '<a href="/faq" class="btn-od">V&#353;echny ot&#225;zky</a>', 95);
+block($pdo, $pidHome, 'faq_title', 'text',     'FAQ - nadpis', 'Nejčastější otázky', 90);
+block($pdo, $pidHome, 'faq_intro', 'textarea', 'FAQ - intro',  'Vše, co potřebujete vědět před rezervací.', 91);
+block($pdo, $pidHome, 'faq_1',     'html',     'FAQ 1',        '<div class="faq-q">Kdy je nejlepší rezervovat termín svatby?</div><div class="faq-a">Ideálně co nejdříve po potvrzení data a místa svatby. U víkendových termínů ve svatební sezóně doporučuji rezervaci několik měsíců dopředu.</div>', 92);
+block($pdo, $pidHome, 'faq_2',     'html',     'FAQ 2',        '<div class="faq-q">Kolik fotografií dostaneme?</div><div class="faq-a">Záleží na délce focení a zvoleném balíčku. U menších svateb obvykle předávám nižší stovky fotografií, u celodenních svateb několik stovek upravených snímků.</div>', 93);
+block($pdo, $pidHome, 'faq_3',     'html',     'FAQ 3',        '<div class="faq-q">Za jak dlouho dostaneme hotové fotografie?</div><div class="faq-a">Obvyklá doba dodání je podle rozsahu zakázky. Menší focení bývá hotové rychleji, u větších svateb a kombinace foto + video je potřeba počítat s delší postprodukcí.</div>', 94);
+block($pdo, $pidHome, 'faq_cta',   'html',     'FAQ - tlačítko', '<a href="/faq" class="btn-od">V&#353;echny ot&#225;zky</a>', 95);
 
-block($pdo, $pidHome, 'cta_title',    'text',     'CTA Ă˘â‚¬â€ť nadpis',     'PojĂ„Ĺąme vytvoÄąâ„˘it nĂ„â€şco krÄ‚Ë‡snÄ‚Â©ho', 60);
-block($pdo, $pidHome, 'cta_sub',      'textarea', 'CTA Ă˘â‚¬â€ť podnadpis',  'NezÄ‚Ë‡vaznĂ„â€ş se nÄ‚Ë‡m ozvĂ„â€şte Ă˘â‚¬â€ť rÄ‚Ë‡di odpovÄ‚Â­me na vaÄąË‡e otÄ‚Ë‡zky a pÄąâ„˘ipravÄ‚Â­me nabÄ‚Â­dku na mÄ‚Â­ru pro vÄ‚Ë‡ÄąË‡ den.', 61);
-block($pdo, $pidHome, 'contact_info', 'html',     'Kontakt Ă˘â‚¬â€ť info',   '', 62);
-block($pdo, $pidHome, 'contact_card', 'html',     'Kontakt Ă˘â‚¬â€ť karta',  '<h3>OzvĂ„â€şte se nÄ‚Ë‡m</h3><p class="cta-r-sub">Zavolejte nebo napiÄąË‡te na sociÄ‚Ë‡lnÄ‚Â­ sÄ‚Â­tĂ„â€ş. OdpovÄ‚Â­dÄ‚Ë‡me rychle!</p><a href="tel:792483583" class="cta-btn cta-btn--gold">Zavolat: 792&nbsp;483&nbsp;583</a><a href="tel:604225032" class="cta-btn cta-btn--dark">Zavolat: 604&nbsp;225&nbsp;032</a><a href="https://www.instagram.com/rb_videos_photos/" target="_blank" rel="noopener" class="cta-btn cta-btn--dark">Instagram</a><a href="https://www.facebook.com/rbvideosandphotos" target="_blank" rel="noopener" class="cta-btn cta-btn--dark">Facebook</a>', 63);
+block($pdo, $pidHome, 'cta_title',    'text',     'CTA - nadpis',     'Pojďme vytvořit něco krásného', 60);
+block($pdo, $pidHome, 'cta_sub',      'textarea', 'CTA - podnadpis',  'Nezávazně se nám ozvěte - rádi odpovíme na vaše otázky a připravíme nabídku na míru pro váš den.', 61);
+block($pdo, $pidHome, 'contact_info', 'html',     'Kontakt - info',   '', 62);
+block($pdo, $pidHome, 'contact_card', 'html',     'Kontakt - karta',  '<h3>Ozvěte se nám</h3><p class="cta-r-sub">Zavolejte nebo napište na sociální sítě. Odpovídáme rychle!</p><a href="tel:792483583" class="cta-btn cta-btn--gold">Zavolat: 792&nbsp;483&nbsp;583</a><a href="tel:604225032" class="cta-btn cta-btn--dark">Zavolat: 604&nbsp;225&nbsp;032</a><a href="https://www.instagram.com/rb_videos_photos/" target="_blank" rel="noopener" class="cta-btn cta-btn--dark">Instagram</a><a href="https://www.facebook.com/rbvideosandphotos" target="_blank" rel="noopener" class="cta-btn cta-btn--dark">Facebook</a>', 63);
 
-// Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬ Content blocks: CenÄ‚Â­k Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬
+// ─── Content blocks: Ceník ───────────────────────────────────────────────────
 
 // Detailni svatebni balicky (self-contained styl, robustni napric tematy).
 $pricingPackages = <<<'HTML'
@@ -886,206 +887,214 @@ $pricingPackages = <<<'HTML'
 </style>
 <div class="ckp-grid">
   <div class="ckp-card">
-    <h3 class="ckp-title">ZÄ‚Ë‡kladnÄ‚Â­ svatba</h3>
-    <div class="ckp-price">od 14 900 KĂ„Ĺ¤</div>
-    <p class="ckp-desc">Pro menÄąË‡Ä‚Â­ svatby, obÄąâ„˘ad, gratulace, skupinovÄ‚Â© fotografie a krÄ‚Ë‡tkÄ‚Â© focenÄ‚Â­ novomanÄąÄľelÄąĹ».</p>
+    <h3 class="ckp-title">Základní svatba</h3>
+    <div class="ckp-price">od 14 900 Kč</div>
+    <p class="ckp-desc">Pro menší svatby, obřad, gratulace, skupinové fotografie a krátké focení novomanželů.</p>
     <ul class="ckp-feats">
-      <li>focenÄ‚Â­ cca 3 hodiny</li>
-      <li>obÄąâ„˘ad, gratulace, skupinovÄ‚Â© fotografie</li>
-      <li>krÄ‚Ë‡tkÄ‚Â© pÄ‚Ë‡rovÄ‚Â© focenÄ‚Â­ novomanÄąÄľelÄąĹ»</li>
-      <li>minimÄ‚Ë‡lnĂ„â€ş 100 upravenÄ‚Ëťch fotografiÄ‚Â­</li>
+      <li>focení cca 3 hodiny</li>
+      <li>obřad, gratulace, skupinové fotografie</li>
+      <li>krátké párové focení novomanželů</li>
+      <li>minimálně 100 upravených fotografií</li>
       <li>online galerie</li>
-      <li>pÄąâ„˘edÄ‚Ë‡nÄ‚Â­ fotek ke staÄąÄľenÄ‚Â­</li>
-      <li>archivace hotovÄ‚Ëťch vÄ‚ËťstupÄąĹ» na 2 roky</li>
+      <li>předání fotek ke stažení</li>
+      <li>archivace hotových výstupů na 2 roky</li>
     </ul>
   </div>
   <div class="ckp-card ckp-card--featured">
-    <span class="ckp-badge">NejoblÄ‚Â­benĂ„â€şjÄąË‡Ä‚Â­</span>
-    <h3 class="ckp-title">StandardnÄ‚Â­ svatba</h3>
-    <div class="ckp-price">od 24 900 KĂ„Ĺ¤</div>
-    <p class="ckp-desc">NejoblÄ‚Â­benĂ„â€şjÄąË‡Ä‚Â­ volba pro vĂ„â€ştÄąË‡inu pÄ‚Ë‡rÄąĹ». Pokryje hlavnÄ‚Â­ Ă„Ĺ¤Ä‚Ë‡st svatebnÄ‚Â­ho dne od pÄąâ„˘Ä‚Â­prav po prvnÄ‚Â­ tanec nebo veĂ„Ĺ¤ernÄ‚Â­ program.</p>
+    <span class="ckp-badge">Nejoblíbenější</span>
+    <h3 class="ckp-title">Standardní svatba</h3>
+    <div class="ckp-price">od 24 900 Kč</div>
+    <p class="ckp-desc">Nejoblíbenější volba pro většinu párů. Pokryje hlavní část svatebního dne od příprav po první tanec nebo večerní program.</p>
     <ul class="ckp-feats">
-      <li>focenÄ‚Â­ cca 8 hodin</li>
-      <li>pÄąâ„˘Ä‚Â­pravy, obÄąâ„˘ad, gratulace, skupinky</li>
-      <li>pÄ‚Ë‡rovÄ‚Â© focenÄ‚Â­ novomanÄąÄľelÄąĹ»</li>
-      <li>hostina, detaily a atmosfÄ‚Â©ra dne</li>
-      <li>minimÄ‚Ë‡lnĂ„â€ş 300Ă˘â‚¬â€ś500 upravenÄ‚Ëťch fotografiÄ‚Â­</li>
-      <li>svatebnÄ‚Â­ video / sestÄąâ„˘ih dne</li>
+      <li>focení cca 8 hodin</li>
+      <li>přípravy, obřad, gratulace, skupinky</li>
+      <li>párové focení novomanželů</li>
+      <li>hostina, detaily a atmosféra dne</li>
+      <li>minimálně 300-500 upravených fotografií</li>
+      <li>svatební video / sestřih dne</li>
       <li>online galerie</li>
-      <li>konzultace pÄąâ„˘ed svatbou</li>
-      <li>archivace hotovÄ‚Ëťch vÄ‚ËťstupÄąĹ» na 2 roky</li>
+      <li>konzultace před svatbou</li>
+      <li>archivace hotových výstupů na 2 roky</li>
     </ul>
   </div>
   <div class="ckp-card">
-    <h3 class="ckp-title">PrÄ‚Â©miovÄ‚Ë‡ svatba</h3>
-    <div class="ckp-price">od 34 900 KĂ„Ĺ¤</div>
-    <p class="ckp-desc">KompletnÄ‚Â­ zachycenÄ‚Â­ celÄ‚Â©ho svatebnÄ‚Â­ho dne bez spĂ„â€şchu a kompromisÄąĹ».</p>
+    <h3 class="ckp-title">Prémiová svatba</h3>
+    <div class="ckp-price">od 34 900 Kč</div>
+    <p class="ckp-desc">Kompletní zachycení celého svatebního dne bez spěchu a kompromisů.</p>
     <ul class="ckp-feats">
-      <li>focenÄ‚Â­ cca 10Ă˘â‚¬â€ś12 hodin</li>
-      <li>celÄ‚Ëť den od pÄąâ„˘Ä‚Â­prav aÄąÄľ po veĂ„Ĺ¤ernÄ‚Â­ zÄ‚Ë‡bavu</li>
-      <li>vĂ„â€ştÄąË‡Ä‚Â­ poĂ„Ĺ¤et upravenÄ‚Ëťch fotografiÄ‚Â­</li>
-      <li>detailnÄ‚Â­ zachycenÄ‚Â­ atmosfÄ‚Â©ry, hostÄąĹ» a momentÄąĹ»</li>
-      <li>svatebnÄ‚Â­ video + krÄ‚Ë‡tkÄ‚Ëť sestÄąâ„˘ih / reels v cenĂ„â€ş</li>
-      <li>online galerie a video ke staÄąÄľenÄ‚Â­</li>
-      <li>konzultace pÄąâ„˘ed svatbou</li>
-      <li>prioritnÄ‚Â­ zpracovÄ‚Ë‡nÄ‚Â­</li>
-      <li>archivace hotovÄ‚Ëťch vÄ‚ËťstupÄąĹ» na 5 let</li>
+      <li>focení cca 10-12 hodin</li>
+      <li>celý den od příprav až po večerní zábavu</li>
+      <li>větší počet upravených fotografií</li>
+      <li>detailní zachycení atmosféry, hostů a momentů</li>
+      <li>svatební video + krátký sestřih / reels v ceně</li>
+      <li>online galerie a video ke stažení</li>
+      <li>konzultace před svatbou</li>
+      <li>prioritní zpracování</li>
+      <li>archivace hotových výstupů na 5 let</li>
     </ul>
   </div>
 </div>
 HTML;
 
 block($pdo, $pidCenik, 'hero_heading',            'text',     'Hero Nadpis',       'Ceník', 1);
-block($pdo, $pidCenik, 'hero_intro',              'textarea', 'Hero Intro',        'TransparentnÄ‚Â­ ceny bez pÄąâ„˘ekvapenÄ‚Â­. KaÄąÄľdÄ‚Ë‡ zakÄ‚Ë‡zka je individuÄ‚Ë‡lnÄ‚Â­ Ă˘â‚¬â€ť vÄąÄľdy se domluvÄ‚Â­me na balÄ‚Â­Ă„Ĺ¤ku pÄąâ„˘esnĂ„â€ş pro vÄ‚Ë‡s. PÄąâ„˘es 150 spokojenÄ‚Ëťch klientÄąĹ», 8 let praxe.', 2);
-block($pdo, $pidCenik, 'pricing_weddings_heading','text',     'CenÄ‚Â­k Svatby',      'SvatebnÄ‚Â­ balÄ‚Â­Ă„Ĺ¤ky', 3);
-block($pdo, $pidCenik, 'pricing_weddings_sub',    'textarea', 'CenÄ‚Â­k Svatby Info', 'Vyberte si balÄ‚Â­Ă„Ĺ¤ek podle rozsahu svatebnÄ‚Â­ho dne. KaÄąÄľdÄ‚Ë‡ zakÄ‚Ë‡zka je individuÄ‚Ë‡lnÄ‚Â­ Ă˘â‚¬â€ť finÄ‚Ë‡lnÄ‚Â­ nabÄ‚Â­dku pÄąâ„˘ipravÄ‚Â­me vÄąÄľdy na mÄ‚Â­ru. Ceny jsou orientaĂ„Ĺ¤nÄ‚Â­, Ă˘â‚¬Ĺľod".', 4);
-block($pdo, $pidCenik, 'pricing_packages',        'html',     'SvatebnÄ‚Â­ balÄ‚Â­Ă„Ĺ¤ky',  $pricingPackages, 5);
-block($pdo, $pidCenik, 'pricing_other_heading',   'text',     'CenÄ‚Â­k OstatnÄ‚Â­',     'RodinnÄ‚Â©, portrÄ‚Â©tnÄ‚Â­ a firemnÄ‚Â­ focenÄ‚Â­', 5);
-block($pdo, $pidCenik, 'pricing_other_sub',       'textarea', 'CenÄ‚Â­k OstatnÄ‚Â­ Info','RodinnÄ‚Â© focenÄ‚Â­ od 4 500 KĂ„Ĺ¤ Ă‚Â· PortrÄ‚Â©tnÄ‚Â­ focenÄ‚Â­ od 3 000 KĂ„Ĺ¤ Ă‚Â· FiremnÄ‚Â­ focenÄ‚Â­ od 6 000 KĂ„Ĺ¤ Ă‚Â· ZÄ‚Ë‡snuby & Maternity od 3 500 KĂ„Ĺ¤ Ă‚Â· Videografie od 8 000 KĂ„Ĺ¤.', 6);
+block($pdo, $pidCenik, 'hero_intro',              'textarea', 'Hero Intro',        'Transparentní ceny bez překvapení. Každá zakázka je individuální - vždy se domluvíme na balíčku přesně pro vás. Přes 150 spokojených klientů, 8 let praxe.', 2);
+block($pdo, $pidCenik, 'pricing_weddings_heading','text',     'Ceník Svatby',      'Svatební balíčky', 3);
+block($pdo, $pidCenik, 'pricing_weddings_sub',    'textarea', 'Ceník Svatby Info', 'Vyberte si balíček podle rozsahu svatebního dne. Každá zakázka je individuální - finální nabídku připravíme vždy na míru. Ceny jsou orientační, „od".', 4);
+block($pdo, $pidCenik, 'pricing_packages',        'html',     'Svatební balíčky',  $pricingPackages, 5);
+block($pdo, $pidCenik, 'pricing_other_heading',   'text',     'Ceník Ostatní',     'Rodinné, portrétní a firemní focení', 5);
+block($pdo, $pidCenik, 'pricing_other_sub',       'textarea', 'Ceník Ostatní Info','Rodinné focení od 4 500 Kč · Portrétní focení od 3 000 Kč · Firemní focení od 6 000 Kč · Zásnuby & Maternity od 3 500 Kč · Videografie od 8 000 Kč.', 6);
 block($pdo, $pidCenik, 'cta_heading',             'text',     'CTA Nadpis',        'Domluvme termín', 7);
-block($pdo, $pidCenik, 'cta_sub',                 'textarea', 'CTA Sub',           'OblÄ‚Â­benÄ‚Â© soboty se obsazujÄ‚Â­ rok dopÄąâ„˘edu Ă˘â‚¬â€ť Ă„Ĺ¤Ä‚Â­m dÄąâ„˘Ä‚Â­ve, tÄ‚Â­m vĂ„â€ştÄąË‡Ä‚Â­ vÄ‚ËťbĂ„â€şr. Zavolejte nebo napiÄąË‡te, odpovÄ‚Â­me do 24 hodin.', 8);
+block($pdo, $pidCenik, 'cta_sub',                 'textarea', 'CTA Sub',           'Oblíbené soboty se obsazují rok dopředu - čím dříve, tím větší výběr. Zavolejte nebo napište, odpovíme do 24 hodin.', 8);
 
-// BalÄ‚Â­Ă„Ĺ¤ky Ă˘â‚¬â€ť renderuje buildPricingHtml() na homepage a cenik strÄ‚Ë‡nce
-block($pdo, $pidCenik, 'cenik_card_1_title', 'text',     'Karta 1 Ă˘â‚¬â€ť nadpis', 'ZÄ‚Ë‡kladnÄ‚Â­', 11);
-block($pdo, $pidCenik, 'cenik_card_1_desc',  'textarea', 'Karta 1 Ă˘â‚¬â€ť popis',
-'MenÄąË‡Ä‚Â­ svatba, obÄąâ„˘ad, skupinky a krÄ‚Ë‡tkÄ‚Â© focenÄ‚Â­ novomanÄąÄľelÄąĹ».
+// Balíčky - renderuje buildPricingHtml() na homepage a cenik stránce
+block($pdo, $pidCenik, 'cenik_card_1_title', 'text',     'Karta 1 - nadpis', 'Základní', 11);
+block($pdo, $pidCenik, 'cenik_card_1_desc',  'textarea', 'Karta 1 - popis',
+'Menší svatba, obřad, skupinky a krátké focení novomanželů.
 
 Archivace: 2 roky', 12);
-block($pdo, $pidCenik, 'cenik_card_1_price', 'text',     'Karta 1 Ă˘â‚¬â€ť cena',  'od 14 900 KĂ„Ĺ¤', 13);
+block($pdo, $pidCenik, 'cenik_card_1_price', 'text',     'Karta 1 - cena',  'od 14 900 Kč', 13);
 
-block($pdo, $pidCenik, 'cenik_card_2_title', 'text',     'Karta 2 Ă˘â‚¬â€ť nadpis', 'StandardnÄ‚Â­', 14);
-block($pdo, $pidCenik, 'cenik_card_2_desc',  'textarea', 'Karta 2 Ă˘â‚¬â€ť popis',
-'NejoblÄ‚Â­benĂ„â€şjÄąË‡Ä‚Â­ balÄ‚Â­Ă„Ĺ¤ek pro hlavnÄ‚Â­ Ă„Ĺ¤Ä‚Ë‡st svatebnÄ‚Â­ho dne.
+block($pdo, $pidCenik, 'cenik_card_2_title', 'text',     'Karta 2 - nadpis', 'Standardní', 14);
+block($pdo, $pidCenik, 'cenik_card_2_desc',  'textarea', 'Karta 2 - popis',
+'Nejoblíbenější balíček pro hlavní část svatebního dne.
 
 Archivace: 2 roky', 15);
-block($pdo, $pidCenik, 'cenik_card_2_price', 'text',     'Karta 2 Ă˘â‚¬â€ť cena',  'od 24 900 KĂ„Ĺ¤', 16);
+block($pdo, $pidCenik, 'cenik_card_2_price', 'text',     'Karta 2 - cena',  'od 24 900 Kč', 16);
 
-block($pdo, $pidCenik, 'cenik_card_3_title', 'text',     'Karta 3 Ă˘â‚¬â€ť nadpis', 'PrÄ‚Â©miovÄ‚Ëť', 17);
-block($pdo, $pidCenik, 'cenik_card_3_desc',  'textarea', 'Karta 3 Ă˘â‚¬â€ť popis',
-'CelodennÄ‚Â­ zachycenÄ‚Â­ svatby s rozÄąË‡Ä‚Â­Äąâ„˘enou pÄ‚Â©Ă„Ĺ¤Ä‚Â­ a delÄąË‡Ä‚Â­ archivacÄ‚Â­.
+block($pdo, $pidCenik, 'cenik_card_3_title', 'text',     'Karta 3 - nadpis', 'Prémiový', 17);
+block($pdo, $pidCenik, 'cenik_card_3_desc',  'textarea', 'Karta 3 - popis',
+'Celodenní zachycení svatby s rozšířenou péčí a delší archivací.
 
 Archivace: 5 let', 18);
-block($pdo, $pidCenik, 'cenik_card_3_price', 'text',     'Karta 3 Ă˘â‚¬â€ť cena',  'od 34 900 KĂ„Ĺ¤', 19);
+block($pdo, $pidCenik, 'cenik_card_3_price', 'text',     'Karta 3 - cena',  'od 34 900 Kč', 19);
 
-// Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬ Content blocks: FAQ Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬
+// ─── Content blocks: FAQ ─────────────────────────────────────────────────────
 
 $faqBody = <<<'HTML'
-<div class="faq-item"><div class="faq-q">Kdy je nejlepÄąË‡Ä‚Â­ rezervovat termÄ‚Â­n svatby?</div><div class="faq-a">IdeÄ‚Ë‡lnĂ„â€ş co nejdÄąâ„˘Ä‚Â­ve po potvrzenÄ‚Â­ data a mÄ‚Â­sta svatby. U vÄ‚Â­kendovÄ‚Ëťch termÄ‚Â­nÄąĹ» ve svatebnÄ‚Â­ sezÄ‚Ĺ‚nĂ„â€ş doporuĂ„Ĺ¤uji rezervaci nĂ„â€şkolik mĂ„â€şsÄ‚Â­cÄąĹ» dopÄąâ„˘edu.</div></div>
-<div class="faq-item"><div class="faq-q">Je moÄąÄľnÄ‚Â© nafotit jen obÄąâ„˘ad?</div><div class="faq-a">Ano. Pro menÄąË‡Ä‚Â­ svatby nebo pouze obÄąâ„˘ad je vhodnÄ‚Ëť zÄ‚Ë‡kladnÄ‚Â­ balÄ‚Â­Ă„Ĺ¤ek. Zahrnuje obÄąâ„˘ad, gratulace, skupinovÄ‚Â© fotografie a krÄ‚Ë‡tkÄ‚Â© focenÄ‚Â­ novomanÄąÄľelÄąĹ».</div></div>
-<div class="faq-item"><div class="faq-q">Kolik fotografiÄ‚Â­ dostaneme?</div><div class="faq-a">ZÄ‚Ë‡leÄąÄľÄ‚Â­ na dÄ‚Â©lce focenÄ‚Â­ a zvolenÄ‚Â©m balÄ‚Â­Ă„Ĺ¤ku. U menÄąË‡Ä‚Â­ch svateb obvykle pÄąâ„˘edÄ‚Ë‡vÄ‚Ë‡m niÄąÄľÄąË‡Ä‚Â­ stovky fotografiÄ‚Â­, u celodennÄ‚Â­ch svateb nĂ„â€şkolik stovek upravenÄ‚Ëťch snÄ‚Â­mkÄąĹ».</div></div>
-<div class="faq-item"><div class="faq-q">Za jak dlouho dostaneme hotovÄ‚Â© fotografie?</div><div class="faq-a">ObvyklÄ‚Ë‡ doba dodÄ‚Ë‡nÄ‚Â­ je podle rozsahu zakÄ‚Ë‡zky. MenÄąË‡Ä‚Â­ focenÄ‚Â­ bÄ‚ËťvÄ‚Ë‡ hotovÄ‚Â© rychleji, u vĂ„â€ştÄąË‡Ä‚Â­ch svateb a kombinace foto + video je potÄąâ„˘eba poĂ„Ĺ¤Ä‚Â­tat s delÄąË‡Ä‚Â­ postprodukcÄ‚Â­.</div></div>
-<div class="faq-item"><div class="faq-q">Jak nÄ‚Ë‡m budou fotografie pÄąâ„˘edÄ‚Ë‡ny?</div><div class="faq-a">HotovÄ‚Â© fotografie pÄąâ„˘edÄ‚Ë‡vÄ‚Ë‡m online formou galerie nebo odkazu ke staÄąÄľenÄ‚Â­. DÄ‚Â­ky tomu si je mÄąĹ»ÄąÄľete jednoduÄąË‡e stÄ‚Ë‡hnout a sdÄ‚Â­let s rodinou nebo hosty.</div></div>
-<div class="faq-item"><div class="faq-q">Jak dlouho archivujete hotovÄ‚Â© vÄ‚Ëťstupy?</div><div class="faq-a">Podle zvolenÄ‚Â©ho balÄ‚Â­Ă„Ĺ¤ku archivuji finÄ‚Ë‡lnĂ„â€ş pÄąâ„˘edanÄ‚Â© vÄ‚Ëťstupy po dobu 2 nebo 5 let. Archivace se vztahuje na hotovÄ‚Â© pÄąâ„˘edanÄ‚Â© fotografie a videa, ne na vÄąË‡echny surovÄ‚Â© zÄ‚Ë‡znamy.</div></div>
-<div class="faq-item"><div class="faq-q">Dostaneme i neupravenÄ‚Â© fotografie nebo RAW soubory?</div><div class="faq-a">StandardnĂ„â€ş pÄąâ„˘edÄ‚Ë‡vÄ‚Ë‡m pouze vybranÄ‚Â© a upravenÄ‚Â© fotografie. NeupravenÄ‚Â© fotografie ani RAW soubory nejsou bĂ„â€şÄąÄľnou souĂ„Ĺ¤Ä‚Ë‡stÄ‚Â­ pÄąâ„˘edÄ‚Ë‡nÄ‚Â­.</div></div>
-<div class="faq-item"><div class="faq-q">FotÄ‚Â­te i video?</div><div class="faq-a">Ano. KromĂ„â€ş fotografovÄ‚Ë‡nÄ‚Â­ je moÄąÄľnÄ‚Â© domluvit takÄ‚Â© video vÄ‚Ëťstup, krÄ‚Ë‡tkÄ‚Ëť sestÄąâ„˘ih nebo reels/shorts verze pro sociÄ‚Ë‡lnÄ‚Â­ sÄ‚Â­tĂ„â€ş.</div></div>
-<div class="faq-item"><div class="faq-q">Je doprava v cenĂ„â€ş?</div><div class="faq-a">Doprava zÄ‚Ë‡leÄąÄľÄ‚Â­ na mÄ‚Â­stĂ„â€ş konÄ‚Ë‡nÄ‚Â­ svatby nebo akce. U kaÄąÄľdÄ‚Â© poptÄ‚Ë‡vky ji Äąâ„˘eÄąË‡Ä‚Â­m individuÄ‚Ë‡lnĂ„â€ş podle lokality.</div></div>
-<div class="faq-item"><div class="faq-q">Jak probÄ‚Â­hÄ‚Ë‡ rezervace termÄ‚Â­nu?</div><div class="faq-a">Po odeslÄ‚Ë‡nÄ‚Â­ poptÄ‚Ë‡vky si spoleĂ„Ĺ¤nĂ„â€ş upÄąâ„˘esnÄ‚Â­me datum, mÄ‚Â­sto, rozsah focenÄ‚Â­ nebo natÄ‚Ë‡Ă„Ĺ¤enÄ‚Â­ a poÄąÄľadovanÄ‚Â© vÄ‚Ëťstupy. PotÄ‚Â© pÄąâ„˘ipravÄ‚Â­m konkrÄ‚Â©tnÄ‚Â­ nabÄ‚Â­dku.</div></div>
-<div class="faq-item"><div class="faq-q">MusÄ‚Â­me umĂ„â€şt pÄ‚Ĺ‚zovat?</div><div class="faq-a">Ne. VĂ„â€ştÄąË‡inu dne fotÄ‚Â­m pÄąâ„˘irozenĂ„â€ş a reportÄ‚Ë‡ÄąÄľnĂ„â€ş. PÄąâ„˘i pÄ‚Ë‡rovÄ‚Â©m focenÄ‚Â­ vÄ‚Ë‡s navedu tak, aby fotky pÄąĹ»sobily pÄąâ„˘irozenĂ„â€ş a nebyly strojenÄ‚Â©.</div></div>
-<div class="faq-item"><div class="faq-q">Je moÄąÄľnÄ‚Â© upravit balÄ‚Â­Ă„Ĺ¤ek na mÄ‚Â­ru?</div><div class="faq-a">Ano. KaÄąÄľdÄ‚Ë‡ svatba nebo akce je jinÄ‚Ë‡, proto je moÄąÄľnÄ‚Â© rozsah focenÄ‚Â­, videa, poĂ„Ĺ¤et hodin i typ vÄ‚ËťstupÄąĹ» upravit individuÄ‚Ë‡lnĂ„â€ş.</div></div>
+<div class="faq-item"><div class="faq-q">Kdy je nejlepší rezervovat termín svatby?</div><div class="faq-a">Ideálně co nejdříve po potvrzení data a místa svatby. U víkendových termínů ve svatební sezóně doporučuji rezervaci několik měsíců dopředu.</div></div>
+<div class="faq-item"><div class="faq-q">Je možné nafotit jen obřad?</div><div class="faq-a">Ano. Pro menší svatby nebo pouze obřad je vhodný základní balíček. Zahrnuje obřad, gratulace, skupinové fotografie a krátké focení novomanželů.</div></div>
+<div class="faq-item"><div class="faq-q">Kolik fotografií dostaneme?</div><div class="faq-a">Záleží na délce focení a zvoleném balíčku. U menších svateb obvykle předávám nižší stovky fotografií, u celodenních svateb několik stovek upravených snímků.</div></div>
+<div class="faq-item"><div class="faq-q">Za jak dlouho dostaneme hotové fotografie?</div><div class="faq-a">Obvyklá doba dodání je podle rozsahu zakázky. Menší focení bývá hotové rychleji, u větších svateb a kombinace foto + video je potřeba počítat s delší postprodukcí.</div></div>
+<div class="faq-item"><div class="faq-q">Jak nám budou fotografie předány?</div><div class="faq-a">Hotové fotografie předávám online formou galerie nebo odkazu ke stažení. Díky tomu si je můžete jednoduše stáhnout a sdílet s rodinou nebo hosty.</div></div>
+<div class="faq-item"><div class="faq-q">Jak dlouho archivujete hotové výstupy?</div><div class="faq-a">Podle zvoleného balíčku archivuji finálně předané výstupy po dobu 2 nebo 5 let. Archivace se vztahuje na hotové předané fotografie a videa, ne na všechny surové záznamy.</div></div>
+<div class="faq-item"><div class="faq-q">Dostaneme i neupravené fotografie nebo RAW soubory?</div><div class="faq-a">Standardně předávám pouze vybrané a upravené fotografie. Neupravené fotografie ani RAW soubory nejsou běžnou součástí předání.</div></div>
+<div class="faq-item"><div class="faq-q">Fotíte i video?</div><div class="faq-a">Ano. Kromě fotografování je možné domluvit také video výstup, krátký sestřih nebo reels/shorts verze pro sociální sítě.</div></div>
+<div class="faq-item"><div class="faq-q">Je doprava v ceně?</div><div class="faq-a">Doprava záleží na místě konání svatby nebo akce. U každé poptávky ji řeším individuálně podle lokality.</div></div>
+<div class="faq-item"><div class="faq-q">Jak probíhá rezervace termínu?</div><div class="faq-a">Po odeslání poptávky si společně upřesníme datum, místo, rozsah focení nebo natáčení a požadované výstupy. Poté připravím konkrétní nabídku.</div></div>
+<div class="faq-item"><div class="faq-q">Musíme umět pózovat?</div><div class="faq-a">Ne. Většinu dne fotím přirozeně a reportážně. Při párovém focení vás navedu tak, aby fotky působily přirozeně a nebyly strojené.</div></div>
+<div class="faq-item"><div class="faq-q">Je možné upravit balíček na míru?</div><div class="faq-a">Ano. Každá svatba nebo akce je jiná, proto je možné rozsah focení, videa, počet hodin i typ výstupů upravit individuálně.</div></div>
 HTML;
 
-block($pdo, $pidFaq, 'hero_heading', 'text',     'Hero Nadpis', 'Ă„Ĺšasto kladenÄ‚Â© otÄ‚Ë‡zky', 1);
-block($pdo, $pidFaq, 'hero_sub',     'textarea', 'Hero Sub',    'VÄąË‡e, co potÄąâ„˘ebujete vĂ„â€şdĂ„â€şt pÄąâ„˘ed rezervacÄ‚Â­ Ă˘â‚¬â€ť termÄ‚Â­ny, fotografie, video, pÄąâ„˘edÄ‚Ë‡nÄ‚Â­ i archivace.', 2);
-block($pdo, $pidFaq, 'faq_body',     'html',     'FAQ Ă˘â‚¬â€ť otÄ‚Ë‡zky', $faqBody, 3);
-block($pdo, $pidFaq, 'faq_footer',   'textarea', 'FAQ Ă˘â‚¬â€ť patiĂ„Ĺ¤ka', 'NenaÄąË‡li jste odpovĂ„â€şĂ„Ĺą na svou otÄ‚Ë‡zku? NapiÄąË‡te mi a pÄąâ„˘ipravÄ‚Â­m vÄ‚Ë‡m konkrÄ‚Â©tnÄ‚Â­ nabÄ‚Â­dku podle termÄ‚Â­nu, mÄ‚Â­sta, rozsahu focenÄ‚Â­ nebo natÄ‚Ë‡Ă„Ĺ¤enÄ‚Â­ a poÄąÄľadovanÄ‚Ëťch vÄ‚ËťstupÄąĹ».', 4);
+block($pdo, $pidFaq, 'hero_heading', 'text',     'Hero Nadpis', 'Často kladené otázky', 1);
+block($pdo, $pidFaq, 'hero_sub',     'textarea', 'Hero Sub',    'Vše, co potřebujete vědět před rezervací - termíny, fotografie, video, předání i archivace.', 2);
+block($pdo, $pidFaq, 'faq_body',     'html',     'FAQ - otázky', $faqBody, 3);
+block($pdo, $pidFaq, 'faq_footer',   'textarea', 'FAQ - patička', 'Nenašli jste odpověď na svou otázku? Napište mi a připravím vám konkrétní nabídku podle termínu, místa, rozsahu focení nebo natáčení a požadovaných výstupů.', 4);
 
-// Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬ Content blocks: Blog Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬
+// ─── Content blocks: Blog ────────────────────────────────────────────────────
 
 block($pdo, $pidBlog, 'hero_heading', 'text',     'Hero Nadpis', 'Tipy a inspirace', 1);
-block($pdo, $pidBlog, 'hero_sub',     'textarea', 'Hero Sub',    'Rady od profesionÄ‚Ë‡lnÄ‚Â­ho fotografa Ă˘â‚¬â€ť pÄąâ„˘Ä‚Â­prava na focenÄ‚Â­, tipy pro klienty a pohled do naÄąË‡Ä‚Â­ prÄ‚Ë‡ce.', 2);
+block($pdo, $pidBlog, 'hero_sub',     'textarea', 'Hero Sub',    'Rady od profesionálního fotografa - příprava na focení, tipy pro klienty a pohled do naší práce.', 2);
 
 
-// Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬ Content blocks: SluÄąÄľby Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬
+// ─── Content blocks: Služby ───────────────────────────────────────────────────
 
-block($pdo, $pidSluzby, 'hero_heading', 'text',     'Hero Nadpis', 'Fotografie a videografie na mÄ‚Â­ru', 1);
-block($pdo, $pidSluzby, 'hero_sub',     'textarea', 'Hero Sub',    'AÄąÄ„ jde o svatbu, portrÄ‚Â©t nebo firemnÄ‚Â­ projekt Ă˘â‚¬â€ť jsme tu pro vÄ‚Ë‡s. ProfesionÄ‚Ë‡lnÄ‚Â­ vÄ‚Ëťsledky, pÄąâ„˘Ä‚Ë‡telskÄ‚Ëť pÄąâ„˘Ä‚Â­stup.', 2);
-block($pdo, $pidSluzby, 'service_1', 'html', 'SluÄąÄľba 1', '<span class="svc-num">01</span><h3>SvatebnÄ‚Â­ foto &amp; video</h3><p>ZachytÄ‚Â­me kaÄąÄľdÄ‚Ëť dotek, kaÄąÄľdÄ‚Ëť pohled, kaÄąÄľdou slzu ÄąË‡tĂ„â€şstÄ‚Â­. PÄąâ„˘irozenÄ‚Â© reportÄ‚Ë‡ÄąÄľnÄ‚Â­ fotografie a filmovÄ‚Â© video, kterÄ‚Â© vÄ‚Ë‡m budou vyprÄ‚Ë‡vĂ„â€şt pÄąâ„˘Ä‚Â­bĂ„â€şh vaÄąË‡eho dne po celÄ‚Ëť ÄąÄľivot.</p>', 10);
-block($pdo, $pidSluzby, 'service_2', 'html', 'SluÄąÄľba 2', '<span class="svc-num">02</span><h3>RodinnÄ‚Â© &amp; portrÄ‚Â©tnÄ‚Â­ focenÄ‚Â­</h3><p>RodinnÄ‚Â© vzpomÄ‚Â­nky, tĂ„â€şhotenskÄ‚Â© focenÄ‚Â­, kÄąâ„˘tiny nebo portrÄ‚Â©ty. PÄąâ„˘irozenÄ‚Â©, nenucenÄ‚Â© a krÄ‚Ë‡snÄ‚Â© snÄ‚Â­mky, na kterÄ‚Â© budete hrdÄ‚Â­.</p>', 11);
-block($pdo, $pidSluzby, 'service_3', 'html', 'SluÄąÄľba 3', '<span class="svc-num">03</span><h3>ReklamnÄ‚Â­ foto &amp; video</h3><p>ProfesionÄ‚Ë‡lnÄ‚Â­ vizuÄ‚Ë‡lnÄ‚Â­ obsah pro firmy, kapely, produkty nebo brand. Videoklipy, firemnÄ‚Â­ prezentace a obsah, kterÄ‚Ëť prodÄ‚Ë‡vÄ‚Ë‡.</p>', 12);
-block($pdo, $pidSluzby, 'service_4', 'html', 'SluÄąÄľba 4', '<span class="svc-num">04</span><h3>Akce &amp; udÄ‚Ë‡losti</h3><p>Konference, kulturnÄ‚Â­ akce, plesy, narozeniny. KaÄąÄľdÄ‚Ë‡ udÄ‚Ë‡lost si zaslouÄąÄľÄ‚Â­ bÄ‚Ëťt profesionÄ‚Ë‡lnĂ„â€ş zdokumentovÄ‚Ë‡na.</p>', 13);
-block($pdo, $pidSluzby, 'cta_heading', 'text',     'CTA Nadpis', 'PÄąâ„˘ipravme nezapomenutelnÄ‚Ëť den', 20);
-block($pdo, $pidSluzby, 'cta_sub',     'textarea', 'CTA Sub',    'Zavolejte nebo napiÄąË‡te Ă˘â‚¬â€ť rÄ‚Ë‡di odpovÄ‚Â­me na vaÄąË‡e otÄ‚Ë‡zky a pÄąâ„˘ipravÄ‚Â­me nabÄ‚Â­dku na mÄ‚Â­ru.', 21);
+block($pdo, $pidSluzby, 'hero_heading', 'text',     'Hero Nadpis', 'Fotografie a videografie na míru', 1);
+block($pdo, $pidSluzby, 'hero_sub',     'textarea', 'Hero Sub',    'Ať jde o svatbu, portrét nebo firemní projekt - jsme tu pro vás. Profesionální výsledky, přátelský přístup.', 2);
+block($pdo, $pidSluzby, 'service_1', 'html', 'Služba 1', '<span class="svc-num">01</span><h3>Svatební foto &amp; video</h3><p>Zachytíme každý dotek, každý pohled, každou slzu štěstí. Přirozené reportážní fotografie a filmové video, které vám budou vyprávět příběh vašeho dne po celý život.</p>', 10);
+block($pdo, $pidSluzby, 'service_2', 'html', 'Služba 2', '<span class="svc-num">02</span><h3>Rodinné &amp; portrétní focení</h3><p>Rodinné vzpomínky, těhotenské focení, křtiny nebo portréty. Přirozené, nenucené a krásné snímky, na které budete hrdí.</p>', 11);
+block($pdo, $pidSluzby, 'service_3', 'html', 'Služba 3', '<span class="svc-num">03</span><h3>Reklamní foto &amp; video</h3><p>Profesionální vizuální obsah pro firmy, kapely, produkty nebo brand. Videoklipy, firemní prezentace a obsah, který prodává.</p>', 12);
+block($pdo, $pidSluzby, 'service_4', 'html', 'Služba 4', '<span class="svc-num">04</span><h3>Akce &amp; události</h3><p>Konference, kulturní akce, plesy, narozeniny. Každá událost si zaslouží být profesionálně zdokumentována.</p>', 13);
+block($pdo, $pidSluzby, 'cta_heading', 'text',     'CTA Nadpis', 'Připravme nezapomenutelný den', 20);
+block($pdo, $pidSluzby, 'cta_sub',     'textarea', 'CTA Sub',    'Zavolejte nebo napište - rádi odpovíme na vaše otázky a připravíme nabídku na míru.', 21);
 
-// Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬ Content blocks: Kontakt Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬
+// ─── Content blocks: Kontakt ──────────────────────────────────────────────────
 
-block($pdo, $pidKontakt, 'hero_heading',   'text',     'Hero Nadpis',        'Kontaktujte nÄ‚Ë‡s', 1);
-block($pdo, $pidKontakt, 'hero_sub',       'textarea', 'Hero Sub',           'Zavolejte nebo napiÄąË‡te na sociÄ‚Ë‡lnÄ‚Â­ sÄ‚Â­tĂ„â€ş. OdpovÄ‚Â­dÄ‚Ë‡me rychle Ă˘â‚¬â€ť oblÄ‚Â­benÄ‚Â© termÄ‚Â­ny se obsazujÄ‚Â­ rok dopÄąâ„˘edu.', 2);
-block($pdo, $pidKontakt, 'contact_heading','text',     'Kontakt Ă˘â‚¬â€ť nadpis',   'OzvĂ„â€şte se nÄ‚Ë‡m', 3);
-block($pdo, $pidKontakt, 'contact_info',   'html',     'Kontakt Ă˘â‚¬â€ť info',     '<div class="cta-info"><p><strong>792&nbsp;483&nbsp;583</strong></p><p><strong>604&nbsp;225&nbsp;032</strong></p><p>Horní náměstí 583/1<br>779 00 Olomouc</p><p><a href="https://www.facebook.com/rbvideosandphotos" target="_blank" rel="noopener">Facebook: RB Videos &amp; Photos</a></p><p><a href="https://www.instagram.com/rb_videos_photos/" target="_blank" rel="noopener">Instagram: @rb_videos_photos</a></p><p><a href="https://www.youtube.com/@rbvideosandphotos" target="_blank" rel="noopener">YouTube kanÄ‚Ë‡l</a></p></div>', 4);
-block($pdo, $pidKontakt, 'contact_card',   'html',     'Kontakt Ă˘â‚¬â€ť karta',    '<h3>OzvĂ„â€şte se nÄ‚Ë‡m</h3><p class="cta-r-sub">Zavolejte nebo napiÄąË‡te na sociÄ‚Ë‡lnÄ‚Â­ sÄ‚Â­tĂ„â€ş. OdpovÄ‚Â­dÄ‚Ë‡me rychle!</p><a href="tel:792483583" class="cta-btn cta-btn--gold">Zavolat: 792&nbsp;483&nbsp;583</a><a href="tel:604225032" class="cta-btn cta-btn--dark">Zavolat: 604&nbsp;225&nbsp;032</a><a href="https://www.instagram.com/rb_videos_photos/" target="_blank" rel="noopener" class="cta-btn cta-btn--dark">Instagram</a><a href="https://www.facebook.com/rbvideosandphotos" target="_blank" rel="noopener" class="cta-btn cta-btn--dark">Facebook</a>', 5);
+block($pdo, $pidKontakt, 'hero_heading',   'text',     'Hero Nadpis',        'Kontaktujte nás', 1);
+block($pdo, $pidKontakt, 'hero_sub',       'textarea', 'Hero Sub',           'Zavolejte nebo napište na sociální sítě. Odpovídáme rychle - oblíbené termíny se obsazují rok dopředu.', 2);
+block($pdo, $pidKontakt, 'contact_heading','text',     'Kontakt - nadpis',   'Ozvěte se nám', 3);
+block($pdo, $pidKontakt, 'contact_info',   'html',     'Kontakt - info',     '<div class="cta-info"><p><strong>792&nbsp;483&nbsp;583</strong></p><p><strong>604&nbsp;225&nbsp;032</strong></p><p>Mozartova 1113/65<br>779 00 Olomouc, Nová Ulice</p><p><a href="https://www.facebook.com/rbvideosandphotos" target="_blank" rel="noopener">Facebook: RB Videos &amp; Photos</a></p><p><a href="https://www.instagram.com/rb_videos_photos/" target="_blank" rel="noopener">Instagram: @rb_videos_photos</a></p><p><a href="https://www.youtube.com/@rbvideosandphotos" target="_blank" rel="noopener">YouTube kanál</a></p></div>', 4);
+block($pdo, $pidKontakt, 'contact_card',   'html',     'Kontakt - karta',    '<h3>Ozvěte se nám</h3><p class="cta-r-sub">Zavolejte nebo napište na sociální sítě. Odpovídáme rychle!</p><a href="tel:792483583" class="cta-btn cta-btn--gold">Zavolat: 792&nbsp;483&nbsp;583</a><a href="tel:604225032" class="cta-btn cta-btn--dark">Zavolat: 604&nbsp;225&nbsp;032</a><a href="https://www.instagram.com/rb_videos_photos/" target="_blank" rel="noopener" class="cta-btn cta-btn--dark">Instagram</a><a href="https://www.facebook.com/rbvideosandphotos" target="_blank" rel="noopener" class="cta-btn cta-btn--dark">Facebook</a>', 5);
 
-// Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬ SEO settings Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬
+// ─── SEO settings ─────────────────────────────────────────────────────────────
 
 $pdo->exec("DELETE FROM reviews WHERE site_id = {$siteId}");
 $reviewStmt = $pdo->prepare('INSERT INTO reviews (site_id, author_name, context_label, rating, review_text, sort_order, is_active) VALUES (?, ?, ?, ?, ?, ?, ?)');
-$reviewStmt->execute([$siteId, 'Jan Jungling', 'Svatba M+H', 5, 'Kluci jsou naprosti profesionalove. Jsou to pratelski borci, kteri umi zachytit emoce a dodat fotky i video na vysoke urovni.', 1, 1]);
-$reviewStmt->execute([$siteId, 'Vaclav Konopka', 'Svatebni foceni', 5, 'Super domluva, mily a profesionalni pristup k foceni. Velka spokojenost.', 2, 1]);
-$reviewStmt->execute([$siteId, 'Jana Dudkova', 'Rodinne foceni', 5, 'Moc doporucuji. Profesionalni pristup a spickova kvalita. Uz se tesime na dalsi foceni.', 3, 1]);
+foreach (\App\Content\CustomerReviewDataset::all() as $review) {
+    $reviewStmt->execute([
+        $siteId,
+        $review['author_name'],
+        $review['context_label'],
+        $review['rating'],
+        $review['review_text'],
+        $review['sort_order'],
+        $review['is_active'],
+    ]);
+}
 
 $d = 'https://rbvideosphotos.kvalitne.cz';
 
 seo($pdo, $pidHome, [
-    'title'       => 'SvatebnĂ­ foto a video Olomouc, Morava | RB Videos Photos',
-    'desc'        => 'SvatebnĂ­ fotografie a video z Olomouce pro pĂˇry z celĂ© Moravy. PĹ™irozenĂ© focenĂ­, filmovĂ© svatebnĂ­ video, rychlĂ© dodĂˇnĂ­ a balĂ­ÄŤky od 21 000 KÄŤ.',
-    'kw'          => 'svatebnĂ­ foto a video Olomouc, svatebnĂ­ fotograf Olomouc, svatebnĂ­ video Olomouc, Morava',
+    'title'       => 'Svatební foto a video Olomouc, Morava | RB Videos Photos',
+    'desc'        => 'Svatební fotografie a video z Olomouce pro páry z celé Moravy. Přirozené focení, filmové svatební video, rychlé dodání a balíčky od 21 000 Kč.',
+    'kw'          => 'svatební foto a video Olomouc, svatební fotograf Olomouc, svatební video Olomouc, Morava',
     'canonical'   => '/',
-    'og_title'    => 'SvatebnĂ­ foto a video Olomouc, Morava | RB Videos Photos',
-    'og_desc'     => 'SvatebnĂ­ fotografie a video z Olomouce pro pĂˇry z celĂ© Moravy. PĹ™irozenĂ© focenĂ­ a filmovĂ© svatebnĂ­ video.',
+    'og_title'    => 'Svatební foto a video Olomouc, Morava | RB Videos Photos',
+    'og_desc'     => 'Svatební fotografie a video z Olomouce pro páry z celé Moravy. Přirozené focení a filmové svatební video.',
     'schema_type' => 'LocalBusiness',
-    'schema_json' => '{"@context":"https://schema.org","@graph":[{"@type":"LocalBusiness","name":"RB Videos Photos","url":"' . $d . '/","telephone":"+420604225032","address":{"@type":"PostalAddress","streetAddress":"Horní náměstí 583/1","postalCode":"779 00","addressLocality":"Olomouc","addressCountry":"CZ"},"areaServed":["Olomouc","Olomoucký kraj","Morava","Česká republika"],"priceRange":"$$","sameAs":["https://www.facebook.com/rbvideosandphotos","https://www.instagram.com/rb_videos_photos/"]},{"@type":"WebSite","name":"RB Videos Photos","url":"' . $d . '/"}]}' ,
+    'schema_name' => 'RB Videos & Photos',
 ]);
 
 seo($pdo, $pidCenik, [
-    'title'     => 'CenĂ­k svatebnĂ­ho foto a videa | RB Videos Photos',
-    'desc'      => 'OrientaÄŤnĂ­ cenĂ­k svatebnĂ­ho focenĂ­ a videa. NejoblĂ­benÄ›jĹˇĂ­ foto + video balĂ­ÄŤek od 21 000 KÄŤ, archivace a rychlĂ© dodĂˇnĂ­.',
-    'kw'        => 'cenĂ­k svatebnĂ­ho foto a videa, foto video balĂ­ÄŤek, svatebnĂ­ cenĂ­k',
+    'title'     => 'Ceník svatebního foto a videa | RB Videos Photos',
+    'desc'      => 'Orientační ceník svatebního focení a videa. Nejoblíbenější foto + video balíček od 21 000 Kč, archivace a rychlé dodání.',
+    'kw'        => 'ceník svatebního foto a videa, foto video balíček, svatební ceník',
     'canonical' => '/cenik',
 ]);
 
 seo($pdo, $pidFaq, [
-    'title'     => 'ÄŚastĂ© otĂˇzky | RB Videos Photos',
-    'desc'      => 'OdpovÄ›di na nejÄŤastÄ›jĹˇĂ­ otĂˇzky o svatebnĂ­m focenĂ­ a videu. Ceny, dodĂˇnĂ­ fotek, pĹ™Ă­prava a prĹŻbÄ›h spoluprĂˇce.',
-    'kw'        => 'ÄŤastĂ© otĂˇzky svatebnĂ­ foto video, dodĂˇnĂ­ fotek, pĹ™Ă­prava na focenĂ­',
+    'title'     => 'Časté otázky | RB Videos Photos',
+    'desc'      => 'Odpovědi na nejčastější otázky o svatebním focení a videu. Ceny, dodání fotek, příprava a průběh spolupráce.',
+    'kw'        => 'časté otázky svatební foto video, dodání fotek, příprava na focení',
     'canonical' => '/faq',
 ]);
 
 seo($pdo, $pidBlog, [
     'title'     => 'Blog | RB Videos Photos',
-    'desc'      => 'Tipy a inspirace od svatebnĂ­ho fotografa a kameramana. PĹ™Ă­prava na focenĂ­, vĂ˝bÄ›r mĂ­sta a praktickĂ© rady pro klienty.',
+    'desc'      => 'Tipy a inspirace od svatebního fotografa a kameramana. Příprava na focení, výběr místa a praktické rady pro klienty.',
     'canonical' => '/blog',
 ]);
 
 seo($pdo, $pidSluzby, [
-    'title'     => 'SvatebnĂ­ foto a video | RB Videos Photos',
-    'desc'      => 'SvatebnĂ­ focenĂ­ a video od jednoho tĂ˝mu. PĹ™irozenĂ© momenty, filmovĂ˝ vĂ˝stup, rychlĂ© dodĂˇnĂ­ a pĹŻsobnost Olomouc, Morava i celĂˇ ÄŚR.',
-    'kw'        => 'svatebnĂ­ foto a video, svatebnĂ­ fotograf Olomouc, svatebnĂ­ kameraman Olomouc',
+    'title'     => 'Svatební foto a video | RB Videos Photos',
+    'desc'      => 'Svatební focení a video od jednoho týmu. Přirozené momenty, filmový výstup, rychlé dodání a působnost Olomouc, Morava i celá ČR.',
+    'kw'        => 'svatební foto a video, svatební fotograf Olomouc, svatební kameraman Olomouc',
     'canonical' => '/sluzby',
 ]);
 
 seo($pdo, $pidKontakt, [
     'title'     => 'Kontakt | RB Videos Photos',
-    'desc'      => 'NapiĹˇte nĂˇm poptĂˇvku na svatebnĂ­ foto nebo video. PĹŻsobĂ­me v Olomouci, na MoravÄ› i po celĂ© ÄŚeskĂ© republice.',
-    'kw'        => 'kontakt svatebnĂ­ foto video, poptĂˇvka termĂ­nu, fotograf telefon',
+    'desc'      => 'Napište nám poptávku na svatební foto nebo video. Působíme v Olomouci, na Moravě i po celé České republice.',
+    'kw'        => 'kontakt svatební foto video, poptávka termínu, fotograf telefon',
     'canonical' => '/kontakt',
 ]);
 
 
-// Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬ FAQ items (tabulka faq_items Ă˘â‚¬â€ť zdroj pro /faq stranku) Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬
+// ─── FAQ items (tabulka faq_items - zdroj pro /faq stranku) ───────────────────
 
 $pdo->prepare('DELETE FROM faq_items WHERE site_id = ?')->execute([$siteId]);
 $faqItems = [
-    ['Kdy je nejlepÄąË‡Ä‚Â­ rezervovat termÄ‚Â­n svatby?', 'IdeÄ‚Ë‡lnĂ„â€ş co nejdÄąâ„˘Ä‚Â­ve po potvrzenÄ‚Â­ data a mÄ‚Â­sta svatby. U vÄ‚Â­kendovÄ‚Ëťch termÄ‚Â­nÄąĹ» ve svatebnÄ‚Â­ sezÄ‚Ĺ‚nĂ„â€ş doporuĂ„Ĺ¤uji rezervaci nĂ„â€şkolik mĂ„â€şsÄ‚Â­cÄąĹ» dopÄąâ„˘edu.'],
-    ['Je moÄąÄľnÄ‚Â© nafotit jen obÄąâ„˘ad?', 'Ano. Pro menÄąË‡Ä‚Â­ svatby nebo pouze obÄąâ„˘ad je vhodnÄ‚Ëť zÄ‚Ë‡kladnÄ‚Â­ balÄ‚Â­Ă„Ĺ¤ek. Zahrnuje obÄąâ„˘ad, gratulace, skupinovÄ‚Â© fotografie a krÄ‚Ë‡tkÄ‚Â© focenÄ‚Â­ novomanÄąÄľelÄąĹ».'],
-    ['Kolik fotografiÄ‚Â­ dostaneme?', 'ZÄ‚Ë‡leÄąÄľÄ‚Â­ na dÄ‚Â©lce focenÄ‚Â­ a zvolenÄ‚Â©m balÄ‚Â­Ă„Ĺ¤ku. U menÄąË‡Ä‚Â­ch svateb obvykle pÄąâ„˘edÄ‚Ë‡vÄ‚Ë‡m niÄąÄľÄąË‡Ä‚Â­ stovky fotografiÄ‚Â­, u celodennÄ‚Â­ch svateb nĂ„â€şkolik stovek upravenÄ‚Ëťch snÄ‚Â­mkÄąĹ».'],
-    ['Za jak dlouho dostaneme hotovÄ‚Â© fotografie?', 'ObvyklÄ‚Ë‡ doba dodÄ‚Ë‡nÄ‚Â­ je podle rozsahu zakÄ‚Ë‡zky. MenÄąË‡Ä‚Â­ focenÄ‚Â­ bÄ‚ËťvÄ‚Ë‡ hotovÄ‚Â© rychleji, u vĂ„â€ştÄąË‡Ä‚Â­ch svateb a kombinace foto + video je potÄąâ„˘eba poĂ„Ĺ¤Ä‚Â­tat s delÄąË‡Ä‚Â­ postprodukcÄ‚Â­.'],
-    ['Jak nÄ‚Ë‡m budou fotografie pÄąâ„˘edÄ‚Ë‡ny?', 'HotovÄ‚Â© fotografie pÄąâ„˘edÄ‚Ë‡vÄ‚Ë‡m online formou galerie nebo odkazu ke staÄąÄľenÄ‚Â­. DÄ‚Â­ky tomu si je mÄąĹ»ÄąÄľete jednoduÄąË‡e stÄ‚Ë‡hnout a sdÄ‚Â­let s rodinou nebo hosty.'],
-    ['Jak dlouho archivujete hotovÄ‚Â© vÄ‚Ëťstupy?', 'Podle zvolenÄ‚Â©ho balÄ‚Â­Ă„Ĺ¤ku archivuji finÄ‚Ë‡lnĂ„â€ş pÄąâ„˘edanÄ‚Â© vÄ‚Ëťstupy po dobu 2 nebo 5 let. Archivace se vztahuje na hotovÄ‚Â© pÄąâ„˘edanÄ‚Â© fotografie a videa, ne na vÄąË‡echny surovÄ‚Â© zÄ‚Ë‡znamy.'],
-    ['Dostaneme i neupravenÄ‚Â© fotografie nebo RAW soubory?', 'StandardnĂ„â€ş pÄąâ„˘edÄ‚Ë‡vÄ‚Ë‡m pouze vybranÄ‚Â© a upravenÄ‚Â© fotografie. NeupravenÄ‚Â© fotografie ani RAW soubory nejsou bĂ„â€şÄąÄľnou souĂ„Ĺ¤Ä‚Ë‡stÄ‚Â­ pÄąâ„˘edÄ‚Ë‡nÄ‚Â­.'],
-    ['FotÄ‚Â­te i video?', 'Ano. KromĂ„â€ş fotografovÄ‚Ë‡nÄ‚Â­ je moÄąÄľnÄ‚Â© domluvit takÄ‚Â© video vÄ‚Ëťstup, krÄ‚Ë‡tkÄ‚Ëť sestÄąâ„˘ih nebo reels/shorts verze pro sociÄ‚Ë‡lnÄ‚Â­ sÄ‚Â­tĂ„â€ş.'],
-    ['Je doprava v cenĂ„â€ş?', 'Doprava zÄ‚Ë‡leÄąÄľÄ‚Â­ na mÄ‚Â­stĂ„â€ş konÄ‚Ë‡nÄ‚Â­ svatby nebo akce. U kaÄąÄľdÄ‚Â© poptÄ‚Ë‡vky ji Äąâ„˘eÄąË‡Ä‚Â­m individuÄ‚Ë‡lnĂ„â€ş podle lokality.'],
-    ['Jak probÄ‚Â­hÄ‚Ë‡ rezervace termÄ‚Â­nu?', 'Po odeslÄ‚Ë‡nÄ‚Â­ poptÄ‚Ë‡vky si spoleĂ„Ĺ¤nĂ„â€ş upÄąâ„˘esnÄ‚Â­me datum, mÄ‚Â­sto, rozsah focenÄ‚Â­ nebo natÄ‚Ë‡Ă„Ĺ¤enÄ‚Â­ a poÄąÄľadovanÄ‚Â© vÄ‚Ëťstupy. PotÄ‚Â© pÄąâ„˘ipravÄ‚Â­m konkrÄ‚Â©tnÄ‚Â­ nabÄ‚Â­dku.'],
-    ['MusÄ‚Â­me umĂ„â€şt pÄ‚Ĺ‚zovat?', 'Ne. VĂ„â€ştÄąË‡inu dne fotÄ‚Â­m pÄąâ„˘irozenĂ„â€ş a reportÄ‚Ë‡ÄąÄľnĂ„â€ş. PÄąâ„˘i pÄ‚Ë‡rovÄ‚Â©m focenÄ‚Â­ vÄ‚Ë‡s navedu tak, aby fotky pÄąĹ»sobily pÄąâ„˘irozenĂ„â€ş a nebyly strojenÄ‚Â©.'],
-    ['Je moÄąÄľnÄ‚Â© upravit balÄ‚Â­Ă„Ĺ¤ek na mÄ‚Â­ru?', 'Ano. KaÄąÄľdÄ‚Ë‡ svatba nebo akce je jinÄ‚Ë‡, proto je moÄąÄľnÄ‚Â© rozsah focenÄ‚Â­, videa, poĂ„Ĺ¤et hodin i typ vÄ‚ËťstupÄąĹ» upravit individuÄ‚Ë‡lnĂ„â€ş.'],
+    ['Kdy je nejlepší rezervovat termín svatby?', 'Ideálně co nejdříve po potvrzení data a místa svatby. U víkendových termínů ve svatební sezóně doporučuji rezervaci několik měsíců dopředu.'],
+    ['Je možné nafotit jen obřad?', 'Ano. Pro menší svatby nebo pouze obřad je vhodný základní balíček. Zahrnuje obřad, gratulace, skupinové fotografie a krátké focení novomanželů.'],
+    ['Kolik fotografií dostaneme?', 'Záleží na délce focení a zvoleném balíčku. U menších svateb obvykle předávám nižší stovky fotografií, u celodenních svateb několik stovek upravených snímků.'],
+    ['Za jak dlouho dostaneme hotové fotografie?', 'Obvyklá doba dodání je podle rozsahu zakázky. Menší focení bývá hotové rychleji, u větších svateb a kombinace foto + video je potřeba počítat s delší postprodukcí.'],
+    ['Jak nám budou fotografie předány?', 'Hotové fotografie předávám online formou galerie nebo odkazu ke stažení. Díky tomu si je můžete jednoduše stáhnout a sdílet s rodinou nebo hosty.'],
+    ['Jak dlouho archivujete hotové výstupy?', 'Podle zvoleného balíčku archivuji finálně předané výstupy po dobu 2 nebo 5 let. Archivace se vztahuje na hotové předané fotografie a videa, ne na všechny surové záznamy.'],
+    ['Dostaneme i neupravené fotografie nebo RAW soubory?', 'Standardně předávám pouze vybrané a upravené fotografie. Neupravené fotografie ani RAW soubory nejsou běžnou součástí předání.'],
+    ['Fotíte i video?', 'Ano. Kromě fotografování je možné domluvit také video výstup, krátký sestřih nebo reels/shorts verze pro sociální sítě.'],
+    ['Je doprava v ceně?', 'Doprava záleží na místě konání svatby nebo akce. U každé poptávky ji řeším individuálně podle lokality.'],
+    ['Jak probíhá rezervace termínu?', 'Po odeslání poptávky si společně upřesníme datum, místo, rozsah focení nebo natáčení a požadované výstupy. Poté připravím konkrétní nabídku.'],
+    ['Musíme umět pózovat?', 'Ne. Většinu dne fotím přirozeně a reportážně. Při párovém focení vás navedu tak, aby fotky působily přirozeně a nebyly strojené.'],
+    ['Je možné upravit balíček na míru?', 'Ano. Každá svatba nebo akce je jiná, proto je možné rozsah focení, videa, počet hodin i typ výstupů upravit individuálně.'],
 ];
 $faqStmt = $pdo->prepare('INSERT INTO faq_items (site_id, question, answer, sort_order, is_active) VALUES (?, ?, ?, ?, 1)');
 $faqOrder = 0;
@@ -1095,12 +1104,12 @@ foreach ($faqItems as [$faqQ, $faqA]) {
 echo 'FAQ items seeded: ' . count($faqItems) . "\n";
 
 
-// Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬ Publish Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬
+// ─── Publish ──────────────────────────────────────────────────────────────────
 
 // Runtime repair overrides for RB frontend. Keep these after legacy block inserts
 // so publish uses the corrected DB source of truth.
-block($pdo, $pidHome, 'contact_info', 'html', 'Kontakt - info', '<div class="cta-info"><p><strong>+420&nbsp;792&nbsp;483&nbsp;583</strong></p><p><strong>+420&nbsp;604&nbsp;225&nbsp;032</strong></p><p>Horní náměstí 583/1<br>779 00 Olomouc</p><p><a href="mailto:rb_vp@volny.cz">rb_vp@volny.cz</a></p><p><a href="https://www.facebook.com/rbvideosandphotos" target="_blank" rel="noopener noreferrer">Facebook: RB Videos &amp; Photos</a></p><p><a href="https://www.instagram.com/rb_videos_photos/" target="_blank" rel="noopener noreferrer">Instagram: @rb_videos_photos</a></p><p><a href="https://www.youtube.com/@rbvideosandphotos" target="_blank" rel="noopener noreferrer">YouTube kanál</a></p></div>', 62);
-block($pdo, $pidKontakt, 'contact_info', 'html', 'Kontakt - info', '<div class="cta-info"><p><strong>+420&nbsp;792&nbsp;483&nbsp;583</strong></p><p><strong>+420&nbsp;604&nbsp;225&nbsp;032</strong></p><p>Horní náměstí 583/1<br>779 00 Olomouc</p><p><a href="mailto:rb_vp@volny.cz">rb_vp@volny.cz</a></p><p><a href="https://www.facebook.com/rbvideosandphotos" target="_blank" rel="noopener noreferrer">Facebook: RB Videos &amp; Photos</a></p><p><a href="https://www.instagram.com/rb_videos_photos/" target="_blank" rel="noopener noreferrer">Instagram: @rb_videos_photos</a></p><p><a href="https://www.youtube.com/@rbvideosandphotos" target="_blank" rel="noopener noreferrer">YouTube kanál</a></p></div>', 4);
+block($pdo, $pidHome, 'contact_info', 'html', 'Kontakt - info', '<div class="cta-info"><p><strong>+420&nbsp;792&nbsp;483&nbsp;583</strong></p><p><strong>+420&nbsp;604&nbsp;225&nbsp;032</strong></p><p>Mozartova 1113/65<br>779 00 Olomouc, Nová Ulice</p><p><a href="mailto:rb_vp@volny.cz">rb_vp@volny.cz</a></p><p><a href="https://www.facebook.com/rbvideosandphotos" target="_blank" rel="noopener noreferrer">Facebook: RB Videos &amp; Photos</a></p><p><a href="https://www.instagram.com/rb_videos_photos/" target="_blank" rel="noopener noreferrer">Instagram: @rb_videos_photos</a></p><p><a href="https://www.youtube.com/@rbvideosandphotos" target="_blank" rel="noopener noreferrer">YouTube kanál</a></p></div>', 62);
+block($pdo, $pidKontakt, 'contact_info', 'html', 'Kontakt - info', '<div class="cta-info"><p><strong>+420&nbsp;792&nbsp;483&nbsp;583</strong></p><p><strong>+420&nbsp;604&nbsp;225&nbsp;032</strong></p><p>Mozartova 1113/65<br>779 00 Olomouc, Nová Ulice</p><p><a href="mailto:rb_vp@volny.cz">rb_vp@volny.cz</a></p><p><a href="https://www.facebook.com/rbvideosandphotos" target="_blank" rel="noopener noreferrer">Facebook: RB Videos &amp; Photos</a></p><p><a href="https://www.instagram.com/rb_videos_photos/" target="_blank" rel="noopener noreferrer">Instagram: @rb_videos_photos</a></p><p><a href="https://www.youtube.com/@rbvideosandphotos" target="_blank" rel="noopener noreferrer">YouTube kanál</a></p></div>', 4);
 block($pdo, $pidCenik, 'hero_heading', 'text', 'Hero Nadpis', 'Ceník', 1);
 block($pdo, $pidCenik, 'pricing_weddings_heading', 'text', 'Ceník Svatby', 'Svatební balíčky', 3);
 block($pdo, $pidCenik, 'cta_heading', 'text', 'CTA Nadpis', 'Domluvme termín', 7);
@@ -1118,8 +1127,8 @@ $pdo->prepare('
     '+420 792 483 583',
     '+420 604 225 032',
     'rb_vp@volny.cz',
-    'Horní náměstí 583/1',
-    '779 00 Olomouc',
+    'Mozartova 1113/65',
+    '779 00 Olomouc, Nová Ulice',
     'rb_vp@volny.cz',
     'instagram',
     'https://www.instagram.com/rb_videos_photos/',

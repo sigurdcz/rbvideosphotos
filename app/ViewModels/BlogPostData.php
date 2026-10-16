@@ -13,19 +13,19 @@ use App\Services\Render\MediaUrlResolver;
  * (app/Views/archetypes/blog-detail.phtml).
  *
  * Phase 4b of the templating refactor: replaces the ad-hoc HTML built inline in
- * public/index.php::tryServeBlogPostPage(). Returns scalars/arrays only — no
+ * public/index.php::tryServeBlogPostPage(). Returns scalars/arrays only - no
  * HTML, no escaping (the view calls ViewContext::e()/raw()).
  *
  * `post.content` is the raw stored article HTML (the view emits it via raw();
  * the live pipeline sanitizes it downstream, exactly as the old heredoc did).
- * Media URLs use MediaUrlResolver::publicMediaUrl() — the same function the live
- * heredoc used — so the render stays byte-identical.
+ * Media URLs use MediaUrlResolver::publicMediaUrl() - the same function the live
+ * heredoc used - so the render stays byte-identical.
  */
 final class BlogPostData
 {
     /**
      * @param array $post a blog_posts row (already fetched by the caller)
-     * @return array{post: array{date:string,title:string,excerpt:string,content:string,image_url:string}, gallery: list<array{thumb:string,full:string,alt:string,label:string}>}
+     * @return array{post: array{date:string,author:string,title:string,excerpt:string,content:string,image_url:string}, gallery: list<array{thumb:string,full:string,alt:string,label:string}>}
      */
     public static function forPost(array $post): array
     {
@@ -86,6 +86,7 @@ final class BlogPostData
                 'date' => !empty($post['published_at'])
                     ? date('j. n. Y', (int)strtotime((string)$post['published_at']))
                     : '',
+                'author' => 'RB Videos & Photos - Zdeněk a Tomáš',
                 'title' => (string)($post['title'] ?? ''),
                 'excerpt' => (string)($post['excerpt'] ?? ''),
                 'content' => (string)($post['content'] ?? ''),

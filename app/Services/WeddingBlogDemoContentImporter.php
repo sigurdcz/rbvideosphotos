@@ -15,24 +15,33 @@ final class WeddingBlogDemoContentImporter
 {
     private const CONTENT_MARKER = '# Schválený redakční text';
 
+    /** @var array<string,string> */
+    private const LEGACY_SLUG_REDIRECTS = [
+        'svatba-best-hospudka-ve-stodole-paja-marek' => 'svatba-hospudka-ve-stodole-best',
+        'svatba-sportovne-strelecky-areal-jivova-lucie-miroslav' => 'svatba-jivova-lucie-miroslav',
+        'svatba-hrad-sternberk-paseka-marketa-petr' => 'svatba-hrad-sternberk-marketa-petr',
+        'svatba-penzion-fojtstvi-olomouc-nikola-jirka' => 'svatba-penzion-fojtstvi-nikola-jirka',
+        'svatba-arboretum-bila-lhota-namest-na-hane-helena-tomas' => 'svatba-arboretum-bila-lhota-helena-tomas',
+    ];
+
     /** @var list<array{article:string,directory:string,date_exception?:string}> */
     private const MANIFEST = [
-        ['article' => '01-svatba-arboretum-bila-lhota-namest-na-hane.md', 'directory' => 'Helena a Tomáš Hufovi 17.9.22'],
-        ['article' => '02-svatba-penzion-fojtstvi-olomouc.md', 'directory' => 'Nikola a Jirka Kaňkovští  20.5.2023'],
-        ['article' => '03-svatba-hrad-sternberk-paseka.md', 'directory' => 'Markéta a Petr Pláškovi 17.6.23'],
-        ['article' => '04-podzimni-svatba-u-robinsona.md', 'directory' => 'Ester a Tomáš Krůpovi 14.10.23'],
+        ['article' => '01-svatba-arboretum-bila-lhota-namest-na-hane.md', 'directory' => 'Helena a Tomáš 17.9.22'],
+        ['article' => '02-svatba-penzion-fojtstvi-olomouc.md', 'directory' => 'Nikola a Jirka 20.5.2023'],
+        ['article' => '03-svatba-hrad-sternberk-paseka.md', 'directory' => 'Markéta a Petr 17.6.23'],
+        ['article' => '04-podzimni-svatba-u-robinsona.md', 'directory' => 'Ester a Tomáš 14.10.23'],
         ['article' => '05-svatba-troubelice.md', 'directory' => 'Marie a Miroslav 1.6.2024'],
-        ['article' => '06-svatba-rybnik-sobacov.md', 'directory' => 'Michaela a Jan Jungligovi  27.7.2024'],
-        ['article' => '07-svatba-la-futerra.md', 'directory' => 'Iveta a René Gruntovi  17.8.2024'],
-        ['article' => '08-svatba-strelnice-jivova-lucie-miroslav.md', 'directory' => 'Lucie a Miroslav Provazovi 7.6.25'],
-        ['article' => '09-svatba-best-hospudka-ve-stodole.md', 'directory' => 'Pája a Marek Krylovi 26.9.2025'],
-        ['article' => '10-svatba-jivova-simona-michal.md', 'directory' => 'Simona a Michal Novákovi 6.9.25'],
+        ['article' => '06-svatba-rybnik-sobacov.md', 'directory' => 'Michaela a Jan 27.7.2024'],
+        ['article' => '07-svatba-la-futerra.md', 'directory' => 'Iveta a René 17.8.2024'],
+        ['article' => '08-svatba-strelnice-jivova-lucie-miroslav.md', 'directory' => 'Lucie a Miroslav 7.6.25'],
+        ['article' => '09-svatba-best-hospudka-ve-stodole.md', 'directory' => 'Pája a Marek 26.9.2025'],
+        ['article' => '10-svatba-jivova-simona-michal.md', 'directory' => 'Simona a Michal 6.9.25'],
         [
             'article' => '11-svatba-u-robinsona-martina-jaroslav.md',
-            'directory' => 'Martina a Jaroslav Žáčkovi 2.8.2025',
-            'date_exception' => 'YAML uvádí 2025-09-02, adresář 2.8.2025; vazba je schválena podle unikátních jmen Martina a Jaroslav Žáčkovi.',
+            'directory' => 'Martina a Jaroslav 2.8.2025',
+            'date_exception' => 'YAML uvádí 2025-09-02, adresář 2.8.2025; vazba je schválena podle unikátních jmen Martina a Jaroslav.',
         ],
-        ['article' => '12-svatba-ruzove-udoli.md', 'directory' => 'Ivanka a Lubomír Nevěřilovi 6.6.2026'],
+        ['article' => '12-svatba-ruzove-udoli.md', 'directory' => 'Ivanka a Lubomír 6.6.2026'],
     ];
 
     private PDO $db;
@@ -53,48 +62,114 @@ final class WeddingBlogDemoContentImporter
     /** @return array{articles:int,media:int,warnings:list<string>} */
     public function import(int $siteId): array
     {
-        if (!extension_loaded('gd')) {
-            throw new RuntimeException('PHP rozšíření GD není načtené; Demo obsah vyžaduje tvorbu thumbnail variant. Restartujte lokální PHP server po zapnutí extension=gd.');
+        $this->prepareBatch($siteId);
+        $warnings = [];
+        $mediaCount = 0;
+        for ($index = 0; $index < $this->batchCount(); $index++) {
+            $result = $this->importBatchItem($siteId, $index);
+            $mediaCount += $result['media'];
+            array_push($warnings, ...$result['warnings']);
         }
+        return ['articles' => $this->batchCount(), 'media' => $mediaCount, 'warnings' => $warnings];
+    }
 
+    public function batchCount(): int
+    {
+        return count(self::MANIFEST);
+    }
+
+    /** Validate every source before the first content-changing batch. */
+    public function prepareBatch(int $siteId): void
+    {
+        $this->preflight();
+        $this->removeIncorrectPortfolioEntries($siteId);
+        $this->migrateLegacySlugs($siteId);
+    }
+
+    public function preflight(): void
+    {
+        if (!extension_loaded('gd')) {
+            throw new RuntimeException('PHP rozšíření GD není načtené; Demo obsah vyžaduje tvorbu thumbnail variant.');
+        }
+        for ($index = 0; $index < $this->batchCount(); $index++) {
+            $this->recordAt($index);
+        }
+    }
+
+    /** @return array{media:int,warnings:list<string>,label:string} */
+    public function importBatchItem(int $siteId, int $index): array
+    {
+        $record = $this->recordAt($index);
+        $mediaIds = [];
+        $images = glob($record['image_directory'] . '/*.{jpg,jpeg,png,webp}', GLOB_BRACE) ?: [];
+        sort($images, SORT_NATURAL | SORT_FLAG_CASE);
+        if ($images === []) {
+            throw new RuntimeException('Ke článku nejsou přiřazeny fotografie: ' . $record['slug']);
+        }
+        foreach ($images as $imageIndex => $imagePath) {
+            $mediaIds[] = $this->ingestImage($siteId, $record, $imagePath, $imageIndex + 1);
+        }
+        $blogPostId = $this->upsertEntry($siteId, $record, $mediaIds[0]);
+        $this->blog->setGallery($blogPostId, array_slice($mediaIds, 1));
+        $warnings = $record['date_exception']
+            ? [$record['source'] . ': ' . $record['date_exception']]
+            : [];
+        return ['media' => count($mediaIds), 'warnings' => $warnings, 'label' => $record['title']];
+    }
+
+    /** @return array<string,mixed> */
+    private function recordAt(int $index): array
+    {
+        if (!isset(self::MANIFEST[$index])) {
+            throw new RuntimeException('Neplatný index dávky svatebního blogu: ' . $index);
+        }
         $root = dirname(__DIR__, 2) . '/Data pro clanky/RB_Videos_Photos_NASE_PRACE/nase-prace-md';
         if (!is_dir($root)) {
             throw new RuntimeException('Chybí zdroj demo obsahu Naše práce: ' . $root);
         }
+        $item = self::MANIFEST[$index];
+        $record = $this->parseArticle($root . '/' . $item['article']);
+        $record['image_directory'] = $root . '/' . $item['directory'];
+        $record['date_exception'] = $item['date_exception'] ?? null;
+        $this->validateRecord($record);
+        return $record;
+    }
 
-        $this->removeIncorrectPortfolioEntries($siteId);
+    /** Rename legacy wedding article slugs and preserve every old URL with a 301 redirect. */
+    public function migrateLegacySlugs(int $siteId): void
+    {
+        $find = $this->db->prepare('SELECT id FROM blog_posts WHERE site_id = ? AND slug = ? LIMIT 1');
+        $rename = $this->db->prepare('UPDATE blog_posts SET slug = ?, updated_at = NOW() WHERE id = ?');
+        $findRedirect = $this->db->prepare('SELECT id FROM redirects WHERE site_id = ? AND from_path = ? LIMIT 1');
+        $insertRedirect = $this->db->prepare(
+            'INSERT INTO redirects (site_id, from_path, to_path, status_code) VALUES (?, ?, ?, 301)'
+        );
+        $updateRedirect = $this->db->prepare(
+            'UPDATE redirects SET to_path = ?, status_code = 301 WHERE id = ?'
+        );
 
-        $records = [];
-        $warnings = [];
-        foreach (self::MANIFEST as $item) {
-            $record = $this->parseArticle($root . '/' . $item['article']);
-            $record['image_directory'] = $root . '/' . $item['directory'];
-            $record['date_exception'] = $item['date_exception'] ?? null;
-            $this->validateRecord($record);
-            if ($record['date_exception']) {
-                $warnings[] = $item['article'] . ': ' . $record['date_exception'];
+        foreach (self::LEGACY_SLUG_REDIRECTS as $oldSlug => $newSlug) {
+            $find->execute([$siteId, $oldSlug]);
+            $oldId = (int)($find->fetchColumn() ?: 0);
+            $find->execute([$siteId, $newSlug]);
+            $newId = (int)($find->fetchColumn() ?: 0);
+            if ($oldId > 0 && $newId > 0 && $oldId !== $newId) {
+                throw new RuntimeException('Nelze sloučit dvě různé blogové URL: ' . $oldSlug . ' a ' . $newSlug);
             }
-            $records[] = $record;
+            if ($oldId > 0 && $newId === 0) {
+                $rename->execute([$newSlug, $oldId]);
+            }
+
+            $fromPath = '/' . $oldSlug;
+            $toPath = '/' . $newSlug;
+            $findRedirect->execute([$siteId, $fromPath]);
+            $redirectId = (int)($findRedirect->fetchColumn() ?: 0);
+            if ($redirectId > 0) {
+                $updateRedirect->execute([$toPath, $redirectId]);
+            } else {
+                $insertRedirect->execute([$siteId, $fromPath, $toPath]);
+            }
         }
-
-        usort($records, static fn(array $a, array $b): int => strcmp($b['date'], $a['date']));
-        $mediaCount = 0;
-        foreach ($records as $record) {
-            $mediaIds = [];
-            $images = glob($record['image_directory'] . '/*.{jpg,jpeg,png,webp}', GLOB_BRACE) ?: [];
-            sort($images, SORT_NATURAL | SORT_FLAG_CASE);
-            if ($images === []) {
-                throw new RuntimeException('Ke článku nejsou přiřazeny fotografie: ' . $record['slug']);
-            }
-            foreach ($images as $imageIndex => $imagePath) {
-                $mediaIds[] = $this->ingestImage($siteId, $record, $imagePath, $imageIndex + 1);
-                $mediaCount++;
-            }
-            $blogPostId = $this->upsertEntry($siteId, $record, $mediaIds[0]);
-            $this->blog->setGallery($blogPostId, array_slice($mediaIds, 1));
-        }
-
-        return ['articles' => count($records), 'media' => $mediaCount, 'warnings' => $warnings];
     }
 
     private function removeIncorrectPortfolioEntries(int $siteId): void
@@ -227,8 +302,8 @@ final class WeddingBlogDemoContentImporter
         }
 
         $alt = $position === 1
-            ? $record['title'] . ' – svatební fotografie RB Videos & Photos'
-            : $record['title'] . ' – fotografie ' . $position;
+            ? $record['title'] . ' - svatební fotografie RB Videos & Photos'
+            : $record['title'] . ' - fotografie ' . $position;
         $result = $this->ingestion->ingestUploadedFile($siteId, $sourcePath, $originalFilename, $alt, $record['title'], false);
         $mediaId = (int)($result['media_id'] ?? 0);
         if ($mediaId <= 0) {

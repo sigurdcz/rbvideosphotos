@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Render;
 
+use App\Support\AssetMinifier;
 use App\Support\FrontendAssetManager;
 
 /**
@@ -15,6 +16,41 @@ use App\Support\FrontendAssetManager;
  */
 final class MarkupNormalizer
 {
+    /** Marks the inlined @font-face block so it is neither hoisted nor injected twice. */
+    private const FONT_FACE_MARKER = 'data-cms-fonts-css';
+
+    /**
+     * The public site is light-only. "light only" opts out of browser-forced dark themes
+     * (Chrome Android Auto Dark Mode for Web Contents, Samsung Internet / Opera force dark
+     * where they honour it); supported-color-schemes is the older Safari/Apple Mail name.
+     */
+    public const LIGHT_ONLY_META = '<meta name="color-scheme" content="light only">'
+        . "\n" . '<meta name="supported-color-schemes" content="light">';
+
+    /**
+     * Declares the light-only colour scheme in <head>, right after the charset meta so it
+     * is known before any stylesheet. Idempotent: a page that already declares a
+     * color-scheme meta is left alone, so the tag never appears twice.
+     */
+    public static function injectLightOnlyColorScheme(string $html): string
+    {
+        if (preg_match('~<meta\b[^>]*\bname=(["\']?)color-scheme\1[\s>/]~i', $html)) {
+            return $html;
+        }
+
+        $tags = self::LIGHT_ONLY_META;
+        $withCharset = preg_replace('~(<meta\b[^>]*\bcharset=[^>]*>)~i', "$1\n" . $tags, $html, 1, $count);
+        if ($withCharset !== null && $count === 1) {
+            return $withCharset;
+        }
+        $withHead = preg_replace('~(<head\b[^>]*>)~i', "$1\n" . $tags, $html, 1, $count);
+        if ($withHead !== null && $count === 1) {
+            return $withHead;
+        }
+
+        return $html;
+    }
+
     public static function normalizeLegacyTemplateSource(string $html): string
 {
     return preg_replace(
@@ -54,33 +90,36 @@ final class MarkupNormalizer
         return $html;
     }
 
-    return FrontendAssetManager::injectGeneratedCss($html, 'body{' . implode(';', $cssParts) . ';}', 'body-vars', 'data-cms-body-vars');
+    return FrontendAssetManager::injectInlineStyle($html, 'body{' . implode(';', $cssParts) . ';}', 'data-cms-body-vars');
 }
 
     public static function extractInlineStyleBlocks(string $html): string
 {
-    if (!preg_match_all('~<style\b[^>]*>(.*?)</style>~is', $html, $matches, PREG_SET_ORDER)) {
+    if (!preg_match('~<style\b[^>]*>.*?</style>~is', $html)) {
         return $html;
     }
 
     $styles = [];
-    foreach ($matches as $match) {
-        $css = trim($match[1]);
-        if ($css === '') {
-            continue;
-        }
-        if (
-            str_contains($css, '.site-logo-img') ||
-            str_contains($css, '.site-footer-rich') ||
-            str_contains($css, '.theme-hero-video') ||
-            str_contains($css, '.cookie-consent')
-        ) {
-            continue;
-        }
-        $styles[] = $css;
-    }
-
-    $html = preg_replace('~<style\b[^>]*>.*?</style>~is', '', $html) ?? $html;
+    $html = preg_replace_callback(
+        '~<style\b([^>]*)>(.*?)</style>~is',
+        static function (array $match) use (&$styles): string {
+            $attrs = (string)$match[1];
+            $css = trim((string)$match[2]);
+            if ($css === '') return '';
+            // Any marked block stays inline. The previous explicit list meant the critical
+            // CSS survived only because its text happened to mention .theme-hero-video -
+            // editing that file could silently have re-deferred it and brought back the
+            // layout shift it exists to prevent.
+            $keepInline = preg_match('~\bdata-cms-[a-z0-9-]+\b~i', $attrs) === 1 || str_contains($css, '.site-logo-img')
+                || str_contains($css, '.site-footer-rich')
+                || str_contains($css, '.theme-hero-video')
+                || str_contains($css, '.cookie-consent');
+            if ($keepInline) return $match[0];
+            $styles[] = $css;
+            return '';
+        },
+        $html
+    ) ?? $html;
     $styles = array_values(array_filter($styles, static fn(string $css): bool => $css !== ''));
     if ($styles === []) {
         return $html;
@@ -168,12 +207,97 @@ final class MarkupNormalizer
     return preg_replace('/<body([^>]*)>/i', '<body' . $attrs . '>', $html, 1) ?? $html;
 }
 
+    /**
+     * The Material Symbols stylesheet used to sit in every layout and blocked the first
+     * render on every route (~900 ms on throttled mobile), even though only the about and
+     * contact pages actually use the icons. It is now requested per page, and never
+     * render-blocking: the print/onload swap lets the page paint first, and the noscript
+     * copy keeps the icons for clients without JavaScript.
+     */
+    private const ICON_FONT_HREF = 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,300,0,0&icon_names=assignment,call,check_circle,description,event,event_available,expand_more,location_on,mail,photo_camera,play_circle,receipt_long,schedule,sell,verified_user,warning&display=block';
+
+    public static function injectIconFontWhenUsed(string $html): string
+    {
+        if (!str_contains($html, 'material-symbols-outlined')) {
+            return $html;
+        }
+
+        return FrontendAssetManager::injectDeferredStylesheet($html, self::ICON_FONT_HREF, 'data-cms-icon-font');
+    }
+
     public static function injectSharedFrontendAssets(string $html): string
 {
-    $html = FrontendAssetManager::injectStylesheet($html, '/assets/frontend-runtime.css', 'data-cms-frontend-runtime-css');
-    $html = FrontendAssetManager::injectStylesheet($html, '/assets/cookie-consent.css', 'data-cookie-consent-css');
-    $html = FrontendAssetManager::injectScript($html, '/assets/frontend-runtime.js', 'data-cms-frontend-runtime-js');
-    return FrontendAssetManager::injectScript($html, '/assets/cookie-consent.js', 'data-cookie-consent-js');
+    $html = self::injectLightOnlyColorScheme($html);
+    $runtimeCssPath = dirname(__DIR__, 3) . '/public/assets/frontend-runtime.css';
+    $runtimeCss = file_get_contents($runtimeCssPath);
+    if ($runtimeCss === false) {
+        throw new \RuntimeException('Chybi povinny frontend runtime stylesheet: ' . $runtimeCssPath);
+    }
+    $criticalPath = dirname(__DIR__, 3) . '/public/assets/critical-above-fold.css';
+    $criticalCss = is_file($criticalPath) ? (string) file_get_contents($criticalPath) : '';
+    if ($criticalCss !== '') {
+        $html = FrontendAssetManager::injectInlineStyle($html, $criticalCss, 'data-cms-critical-css');
+    }
+    $html = FrontendAssetManager::injectInlineStyle($html, $runtimeCss, 'data-cms-frontend-runtime-css');
+    $html = self::inlineFontFaces($html);
+    $html = self::injectIconFontWhenUsed($html);
+    $html = FrontendAssetManager::injectDeferredStylesheet($html, '/assets/cookie-consent.css', 'data-cookie-consent-css');
+    // Served under a content-hashed name so they can be cached for a year. Under their
+    // plain paths they were revalidated hourly, which for a file that only changes on
+    // deploy means every returning visitor re-fetched the whole runtime.
+    $html = self::injectRuntimeScript($html, 'frontend-runtime.js', 'frontend-runtime', 'data-cms-frontend-runtime-js');
+
+    return self::injectRuntimeScript($html, 'cookie-consent.js', 'cookie-consent', 'data-cookie-consent-js');
+}
+
+    /**
+     * Replaces the blocking <link> to fonts.css with the rules themselves.
+     *
+     * The file is only a few hundred bytes gzipped but costs a whole render-blocking
+     * round trip, which on a throttled mobile connection is worth far more than the
+     * bytes. It is swapped in place rather than appended, so it keeps its position:
+     * after the font preloads and before the page stylesheet.
+     */
+    private static function inlineFontFaces(string $html): string
+{
+    if (str_contains($html, self::FONT_FACE_MARKER)) {
+        return $html;
+    }
+
+    $path = dirname(__DIR__, 3) . '/public/assets/fonts/fonts.css';
+    $css = is_file($path) ? (string) file_get_contents($path) : '';
+    if ($css === '') {
+        // Leave the link in place; a missing file here must not cost the page its fonts.
+        return $html;
+    }
+
+    $style = '<style ' . self::FONT_FACE_MARKER . '>' . AssetMinifier::minify($css, 'css') . '</style>';
+
+    return preg_replace(
+        '~<link\s+rel="stylesheet"\s+href="/assets/fonts/fonts\.css"\s*>~i',
+        $style,
+        $html,
+        1
+    ) ?? $html;
+}
+
+    /**
+     * Adds a runtime script, content-hashed when the source can be read.
+     *
+     * Deliberately degrades to the plain path instead of throwing. A thrown exception here
+     * does not surface: tryServeDatabasePage() catches every Throwable and returns false,
+     * so the request falls through to the 404 page. A file missing mid-deploy would take
+     * the whole site down rather than cost one script its year of caching.
+     */
+    private static function injectRuntimeScript(string $html, string $name, string $prefix, string $marker): string
+{
+    $path = dirname(__DIR__, 3) . '/public/assets/' . $name;
+    $contents = is_file($path) ? file_get_contents($path) : false;
+    if ($contents === false || $contents === '') {
+        return FrontendAssetManager::injectScript($html, '/assets/' . $name, $marker);
+    }
+
+    return FrontendAssetManager::injectGeneratedJs($html, $contents, $prefix, $marker);
 }
 
     /**

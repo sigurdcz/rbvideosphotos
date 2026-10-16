@@ -13,10 +13,10 @@ use App\Services\Render\MediaUrlResolver;
  * (app/Views/archetypes/blog-listing.phtml).
  *
  * Phase 4b of the templating refactor: replaces the ad-hoc HTML built inline in
- * public/index.php::tryServeBlogListingPage(). Returns scalars/arrays only — no
+ * public/index.php::tryServeBlogListingPage(). Returns scalars/arrays only - no
  * HTML, no escaping (the view calls ViewContext::e()/inlineAttr()).
  *
- * Media URLs are resolved through MediaUrlResolver::publicMediaUrl() — byte for
+ * Media URLs are resolved through MediaUrlResolver::publicMediaUrl() - byte for
  * byte the same function the live heredoc used (public/index.php::publicMediaUrl
  * delegates to it), so the live render stays identical and the publish render
  * gains the same cover thumbnails.

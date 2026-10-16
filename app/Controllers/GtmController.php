@@ -325,7 +325,7 @@ class GtmController extends Controller
                 'error' => $e->getMessage(),
             ]);
             if ($e->getStatusCode() === 429) {
-                $this->flash('error', 'GTM API kvota byla vycerpana. Hotove operace zustaly ulozene — pockej cca minutu a klikni Aplikovat plan znovu, dokonci se zbyvajici operace.');
+                $this->flash('error', 'GTM API kvota byla vycerpana. Hotove operace zustaly ulozene - pockej cca minutu a klikni Aplikovat plan znovu, dokonci se zbyvajici operace.');
             } else {
                 $this->flash('error', $e->getMessage());
             }

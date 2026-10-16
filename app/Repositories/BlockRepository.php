@@ -81,11 +81,28 @@ class BlockRepository
         return in_array($blockType, self::ALLOWED_BLOCK_TYPES, true) ? $blockType : 'text';
     }
 
-    public function updateContent(int $pageId, string $key, string $content): void
+    /**
+     * Write new content into an existing block row.
+     *
+     * Returns FALSE when the page has no row for $key yet - the UPDATE then
+     * touches nothing and the caller (inline editor) must decide whether to
+     * create the row instead. Before this returned a bool, a missing row made
+     * every inline save silently succeed while discarding the text.
+     */
+    public function updateContent(int $pageId, string $key, string $content): bool
     {
-        $this->db->prepare(
+        $stmt = $this->db->prepare(
             'UPDATE content_blocks SET content = ? WHERE page_id = ? AND block_key = ?'
-        )->execute([$content, $pageId, $key]);
+        );
+        $stmt->execute([$content, $pageId, $key]);
+
+        if ($stmt->rowCount() > 0) {
+            return true;
+        }
+
+        // rowCount() is 0 both for "no such row" and for "same value written
+        // again", so an existing row must still count as a successful update.
+        return $this->findByKey($pageId, $key) !== null;
     }
 
     public function deleteByPage(int $pageId): void

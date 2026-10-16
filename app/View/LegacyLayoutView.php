@@ -12,7 +12,7 @@ namespace App\View;
  * can be rendered through the new view pipeline without behaviour change.
  *
  * IMPORTANT: the substitution order and escaping MUST stay byte-identical to
- * PageRenderer::applyLayout() — content first, then nav, then the escaped site
+ * PageRenderer::applyLayout() - content first, then nav, then the escaped site
  * name (htmlspecialchars ENT_QUOTES, UTF-8). This parity is asserted in
  * tests/ViewEngineTest.php.
  */

@@ -69,8 +69,10 @@ Telo:
 | `excerpt` | `string` | ne | kratky plain-text popis |
 | `content` | `string` | ne | telo clanku, muze obsahovat HTML |
 | `status` | `"draft"` / `"published"` | ne | vychozi `draft` |
+| `sort_order` | `integer` | ne | rucni poradi ve vypisu; `1` = prvni, `0` = bez rucniho poradi (radi se podle data, za ocislovanymi) |
 | `featured_image_id` | `integer` / `null` | ne | medium ID |
 | `gallery_ids` | `integer[]` | ne | ID medii do galerie |
+| `gallery_sort` | `object` | ne | poradi fotek v galerii jako `{"<media id>": n}`; bez nej plati poradi `gallery_ids` |
 | `meta_title` | `string` / `null` | ne | SEO title |
 | `meta_description` | `string` / `null` | ne | SEO popis |
 
@@ -133,10 +135,12 @@ Telo:
 | `title` | `string` | ano | nazev polozky |
 | `slug` | `string` | ne | kdyz chybi, generuje se z `title` |
 | `description` | `string` | ne | HTML popis |
-| `video_url` | `string` / `null` | ne | Vimeo nebo YouTube URL |
+| `video_url` | `string` / `null` | ne | jedno video; zkratka za `video_urls` s jednim prvkem |
+| `video_urls` | `string[]` / `object[]` | ne | vsechna videa polozky; prvek je bud URL, nebo `{"url": "...", "sort_order": n}`. Hlavni video (dlazdice, lightbox, JSON-LD) je to s nejnizsim cislem. Nepodporovane adresy se zahodi. Kdyz pole neposlete, videa se nemeni |
 | `status` | `"draft"` / `"published"` | ne | vychozi `draft` |
-| `sort_order` | `integer` | ne | poradi v listingu |
+| `sort_order` | `integer` | ne | rucni poradi ve vypisu; `1` = prvni, `0` = bez rucniho poradi (zaradi se za ocislovane) |
 | `media_ids` | `integer[]` | ne | galerie media ID |
+| `media_sort` | `object` | ne | poradi fotek jako `{"<media id>": n}`; bez nej plati poradi `media_ids` |
 | `meta_title` | `string` / `null` | ne | SEO title |
 | `meta_description` | `string` / `null` | ne | SEO popis |
 
@@ -167,6 +171,14 @@ Vraci:
   "video_url": "https://vimeo.com/123456789",
   "video_embed_url": "https://player.vimeo.com/video/123456789",
   "video_thumbnail": "https://img.youtube.com/vi/xxx/hqdefault.jpg",
+  "videos": [
+    {
+      "url": "https://vimeo.com/123456789",
+      "embed_url": "https://player.vimeo.com/video/123456789",
+      "thumbnail": "",
+      "sort_order": 1
+    }
+  ],
   "photos": [
     {
       "url": "https://example.cz/media/2026/05/foto.webp",

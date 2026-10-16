@@ -151,7 +151,7 @@ ob_start();
           </select>
         </div>
         <div class="form-group" style="display:flex;align-items:end">
-          <button type="submit" class="btn btn-primary">Ulozit vyber</button>
+          <button type="submit" class="btn btn-primary">Uložit výběr</button>
         </div>
       </div>
     </form>

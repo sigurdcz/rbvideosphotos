@@ -3,7 +3,7 @@ $h = fn($v) => htmlspecialchars((string)($v ?? ''));
 ob_start();
 ?>
 <div class="page-header">
-  <h1>FAQ — Časté otázky</h1>
+  <h1>FAQ - Časté otázky</h1>
   <a href="/admin/faq/create" class="btn btn-primary">+ Přidat otázku</a>
 </div>
 
@@ -40,7 +40,7 @@ ob_start();
           <?php if ($item['is_active']): ?>
             <span style="color:#16a34a;font-weight:700">✓</span>
           <?php else: ?>
-            <span style="color:var(--c-muted)">–</span>
+            <span style="color:var(--c-muted)">-</span>
           <?php endif; ?>
         </td>
         <td>

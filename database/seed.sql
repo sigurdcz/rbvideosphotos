@@ -7,7 +7,7 @@ INSERT INTO `users` (`email`, `password_hash`, `role`) VALUES
 -- To generate your own: php -r "echo password_hash('yourpassword', PASSWORD_BCRYPT, ['cost'=>12]);"
 
 INSERT INTO `sites` (`name`, `domain`, `default_language`, `active_theme_key`) VALUES
-('Můj web', 'https://example.cz', 'cs', 'elegant-white');
+('Můj web', 'https://example.cz', 'cs', 'golden-bash-diagonal');
 
 INSERT INTO `templates` (`site_id`, `name`, `html_source`) VALUES
 (1, 'Testovací šablona', '<!DOCTYPE html>

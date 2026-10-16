@@ -20,7 +20,7 @@ seo:
   robots: index,follow
   schema_type: Article
 event:
-  couple: Ester a Tomáš Krůpovi
+  couple: Ester a Tomáš
   date_iso: '2023-10-14'
   date_display: 14. října 2023
   ceremony: U Robinsona, Hradečná 31
@@ -54,7 +54,7 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 ## Uzamčené údaje
 
-- Pár: **Ester a Tomáš Krůpovi**
+- Pár: **Ester a Tomáš**
 - Datum: **14. října 2023**
 - Obřad: **U Robinsona, Hradečná 31**
 - Oslava: **U Robinsona, Hradečná 31**
@@ -78,7 +78,7 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 # Podzimní svatba Ester a Tomáše U Robinsona
 
-Ester a Tomáš Krůpovi uspořádali obřad i svatební oslavu 14. října 2023 v areálu U Robinsona v Hradečné u Bílé Lhoty. Podzimní termín dává svatebnímu dni jinou atmosféru než hlavní letní sezona. Světlo bývá měkčí, barvy tlumenější a večer přichází dříve. Při fotografování a natáčení je proto potřeba pracovat s harmonogramem přesněji, ale výsledkem může být velmi osobní a vizuálně soudržný příběh.
+Ester a Tomáš uspořádali obřad i svatební oslavu 14. října 2023 v areálu U Robinsona v Hradečné u Bílé Lhoty. Podzimní termín dává svatebnímu dni jinou atmosféru než hlavní letní sezona. Světlo bývá měkčí, barvy tlumenější a večer přichází dříve. Při fotografování a natáčení je proto potřeba pracovat s harmonogramem přesněji, ale výsledkem může být velmi osobní a vizuálně soudržný příběh.
 
 ## Místo s vlastním příběhem
 

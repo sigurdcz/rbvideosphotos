@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Generický seed — SEO Editor CMS
+ * Generický seed - SEO Editor CMS
  *
  * Vytvoří:
  *   - admin uživatele
@@ -16,6 +16,11 @@
  */
 
 declare(strict_types=1);
+
+$seedOwnOutputBuffer = php_sapi_name() === 'cli' && ob_get_level() === 0;
+if ($seedOwnOutputBuffer) {
+    ob_start();
+}
 
 if (php_sapi_name() === 'cli') {
     defined('BASE_PATH') || define('BASE_PATH', dirname(__DIR__, 2));
@@ -58,13 +63,13 @@ if (!function_exists('seedUpsertSite')) {
         $stmt->execute([$domain]);
         $row = $stmt->fetch();
         if ($row) {
-            $pdo->prepare('UPDATE sites SET name=?, active_theme_key=?, cookie_consent_enabled=0 WHERE id=?')
+            $pdo->prepare('UPDATE sites SET name=?, active_theme_key=?, cookie_consent_enabled=1 WHERE id=?')
                 ->execute([$name, ThemeTemplateRegistry::DEFAULT_THEME_KEY, $row['id']]);
             return (int) $row['id'];
         }
         $pdo->prepare(
             'INSERT INTO sites (name, domain, active_theme_key, cookie_consent_enabled) VALUES (?, ?, ?, ?)'
-        )->execute([$name, $domain, ThemeTemplateRegistry::DEFAULT_THEME_KEY, 0]);
+        )->execute([$name, $domain, ThemeTemplateRegistry::DEFAULT_THEME_KEY, 1]);
         return (int) $pdo->lastInsertId();
     }
 }
@@ -145,9 +150,24 @@ if (!function_exists('seedMediaAsset')) {
         $stmt->execute([$siteId, $filename]);
         $row = $stmt->fetch();
         if ($row) {
+            $mediaId = (int)$row['id'];
+            $variant = $pdo->prepare(
+                'SELECT path FROM media_variants WHERE media_id = ? AND format = ? ORDER BY id DESC LIMIT 1'
+            );
+            $variant->execute([$mediaId, 'medium']);
+            $mediumPath = (string)($variant->fetchColumn() ?: '');
+            if ($mediumPath === '') {
+                (new MediaIngestionService())->regenerateImageVariants($siteId, $mediaId);
+                $variant->execute([$mediaId, 'medium']);
+                $mediumPath = (string)($variant->fetchColumn() ?: '');
+            }
+            if ($mediumPath === '') {
+                throw new RuntimeException('Chybi povinna medium varianta demo media: ' . $filename);
+            }
             return [
-                'id' => (int) $row['id'],
+                'id' => $mediaId,
                 'url' => '/' . ltrim((string) $row['storage_path'], '/'),
+                'medium_url' => '/' . ltrim($mediumPath, '/'),
             ];
         }
 
@@ -159,10 +179,20 @@ if (!function_exists('seedMediaAsset')) {
         $alt = seedAltFromFilename($filename);
         $result = (new MediaIngestionService())->ingestUploadedFile($siteId, $path, $filename, $alt, $alt, false);
         $storagePath = (string) ($result['storage_path'] ?? '');
+        $mediaId = (int)($result['media_id'] ?? 0);
+        $variant = $pdo->prepare(
+            'SELECT path FROM media_variants WHERE media_id = ? AND format = ? ORDER BY id DESC LIMIT 1'
+        );
+        $variant->execute([$mediaId, 'medium']);
+        $mediumPath = (string)($variant->fetchColumn() ?: '');
+        if ($mediumPath === '') {
+            throw new RuntimeException('Chybi povinna medium varianta noveho demo media: ' . $filename);
+        }
 
         return [
-            'id' => (int) ($result['media_id'] ?? 0),
+            'id' => $mediaId,
             'url' => $storagePath !== '' ? '/' . ltrim($storagePath, '/') : '',
+            'medium_url' => '/' . ltrim($mediumPath, '/'),
         ];
     }
 }
@@ -171,7 +201,7 @@ if (!function_exists('seedMediaAsset')) {
 
 foreach ([
     'publish_history', 'seo_settings', 'content_blocks', 'media_variants',
-    'blog_media', 'portfolio_media', 'blog_posts', 'media', 'portfolio_entries',
+    'blog_media', 'portfolio_media', 'portfolio_videos', 'blog_posts', 'media', 'portfolio_entries',
     'faq_items', 'reviews', 'contact_info', 'service_items',
     'pages', 'templates', 'redirects', 'sites', 'users',
 ] as $table) {
@@ -198,12 +228,13 @@ $layoutNavHome = <<<'NAV'
     <input type="checkbox" id="nav-toggle" class="nav-toggle-input">
     <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu"><span></span></label>
     <div class="nav-links">
-      <a href="#sluzby">Služby</a>
-      <a href="#nase-prace">Naše práce</a>
-      <a href="#blog">Blog</a>
-      <a href="#cenik">Ceník</a>
-      <a href="#faq">FAQ</a>
-      <a href="#kontakt" class="nav-cta">Kontakt</a>
+      <a href="/sluzby">Služby</a>
+      <a href="/nase-prace">Naše práce</a>
+      <a href="/blog">Blog</a>
+      <a href="/cenik">Ceník</a>
+      <a href="/o-nas">O nás</a>
+      <a href="/hodnoceni">Hodnocení</a>
+      <a href="/kontakt" class="nav-cta">Kontakt</a>
     </div>
   </div>
 </nav>
@@ -220,7 +251,8 @@ $layoutNavSub = <<<'NAV'
       <a href="/nase-prace">Naše práce</a>
       <a href="/blog">Blog</a>
       <a href="/cenik">Ceník</a>
-      <a href="/faq">FAQ</a>
+      <a href="/o-nas">O nás</a>
+      <a href="/hodnoceni">Hodnocení</a>
       <a href="/kontakt" class="nav-cta">Kontakt</a>
     </div>
   </div>
@@ -308,6 +340,12 @@ document.querySelectorAll('a[href^="#"]').forEach(function(a){
     if(el){e.preventDefault();el.scrollIntoView({behavior:'smooth',block:'start'});}
   });
 });
+document.querySelectorAll('.nav-links a').forEach(function(a){
+  a.addEventListener('click', function(){
+    var toggle = document.getElementById('nav-toggle');
+    if (toggle) toggle.checked = false;
+  });
+});
 JS;
 
 seedUpdateSiteLayout($pdo, $siteId, $layoutHtml, $layoutCss, $layoutJs, $layoutNavHome, $layoutNavSub);
@@ -320,10 +358,9 @@ echo "Layout webu nastaven.\n";
 $tplHomepageHtml = <<<'HTML'
 <section class="hp-hero" id="uvod">
   <div class="container">
-    <p data-block="hero_label" class="section-label">Fotograf a kameraman - Olomouc, Praha</p>
     <video data-block="hero_video" class="hero-video" autoplay muted loop playsinline preload="metadata"></video>
-    <h1 data-block="hero_h1">Zachytíme váš příběh <span>navždy</span>.</h1>
-    <p data-block="hero_sub" class="hero-sub">Profesionální svatební fotografie a videografie v Olomouci a po celé České republice. Každý okamžik si zaslouží být nezapomenutelný.</p>
+    <h1 data-block="hero_h1">Svatební fotograf a kameraman v Olomouci</h1>
+    <p data-block="hero_sub" class="hero-sub">Zachytíme váš příběh navždy. Profesionální svatební fotografie a video v Olomouci a po celé České republice.</p>
     <div data-block="hero_cta" class="hero-cta-wrap"><a href="#kontakt" class="btn-primary">Kontaktujte nás</a></div>
   </div>
 </section>
@@ -346,7 +383,7 @@ $tplHomepageHtml = <<<'HTML'
     <h2 data-block="portfolio_title" class="section-title">Naše práce</h2>
     <p data-block="portfolio_intro" class="section-intro">Ukázka projektů a realizací. Přidejte první práci v sekci Naše práce.</p>
     <div data-block="portfolio-tiles" class="hp-portfolio-placeholder">
-      <p style="color:rgba(255,255,255,.4);text-align:center;padding:48px 0">Přidejte první práci v administraci — dlaždice se zobrazí automaticky.</p>
+      <p style="color:rgba(255,255,255,.4);text-align:center;padding:48px 0">Přidejte první práci v administraci - dlaždice se zobrazí automaticky.</p>
     </div>
     <div data-block="portfolio_cta"><a href="/nase-prace" class="btn-secondary">Všechny práce</a></div>
   </div>
@@ -392,10 +429,10 @@ $tplHomepageHtml = <<<'HTML'
 <section class="section section--dark hp-reviews-demo" id="hodnoceni">
   <div class="container">
     <p class="section-label">Co o nas rikaji</p>
-    <h2 data-block="reviews_title" class="section-title">Hodnoceni klientu</h2>
+    <h2 data-block="reviews_title" class="section-title">Hodnocení klientů</h2>
     <p data-block="reviews_intro" class="section-intro">Vybrane reference klientu, kterym jsme dodali fotografie nebo video.</p>
     <div data-block="reviews_demo"><!-- Recenze --></div>
-    <div data-block="reviews_cta"><a href="/hodnoceni" class="btn-secondary">Vsechny recenze</a></div>
+    <div data-block="reviews_cta"><a href="/hodnoceni" class="btn-secondary">Všechny recenze</a></div>
   </div>
 </section>
 
@@ -590,7 +627,7 @@ $tplKontakt = seedUpsertTemplate($pdo, $siteId, 'Kontakt', $tplKontaktHtml, $tpl
 
 // ── Blog listing ──────────────────────────────────────────────────────────────
 // Dynamický seznam článků renderuje public/index.php (tryServeBlogListingPage).
-// Tato šablona slouží jako CMS stránka /blog — hero a intro text.
+// Tato šablona slouží jako CMS stránka /blog - hero a intro text.
 
 $tplBlogHtml = <<<'HTML'
 <section class="page-hero">
@@ -601,11 +638,11 @@ $tplBlogHtml = <<<'HTML'
 </section>
 HTML;
 
-$tplBlogListing = seedUpsertTemplate($pdo, $siteId, 'Blog — přehled', $tplBlogHtml, '', '');
+$tplBlogListing = seedUpsertTemplate($pdo, $siteId, 'Blog - přehled', $tplBlogHtml, '', '');
 
 // ── Portfolio listing (Naše práce) ────────────────────────────────────────────
 // Dynamický grid renderuje public/index.php (tryServePortfolioPage).
-// Tato šablona slouží jako CMS stránka /nase-prace — hero a intro text.
+// Tato šablona slouží jako CMS stránka /nase-prace - hero a intro text.
 
 $tplPortfolioHtml = <<<'HTML'
 <section class="page-hero">
@@ -616,19 +653,19 @@ $tplPortfolioHtml = <<<'HTML'
 </section>
 HTML;
 
-$tplPortfolioListing = seedUpsertTemplate($pdo, $siteId, 'Naše práce — přehled', $tplPortfolioHtml, '', '');
+$tplPortfolioListing = seedUpsertTemplate($pdo, $siteId, 'Naše práce - přehled', $tplPortfolioHtml, '', '');
 
 $tplRulesHtml = <<<'HTML'
 <section class="page-hero">
   <div class="container">
     <h1 data-block="hero_h1">Podmínky užití</h1>
-    <p data-block="hero_sub" class="hero-sub">Pravidla provozu webu, pouzivani obsahu a informace o cookies.</p>
+    <p data-block="hero_sub" class="hero-sub">Pravidla provozu webu, používání obsahu a informace o cookies.</p>
   </div>
 </section>
 <section class="section">
   <div class="container">
     <p class="section-label">Pravidla provozu</p>
-    <h2 data-block="rules_title" class="section-title">Co plati pri pouzivani tohoto webu</h2>
+    <h2 data-block="rules_title" class="section-title">Co platí při používání tohoto webu</h2>
     <p data-block="rules_intro" class="section-intro">Stranka shrnuje zakladni podminky pouzivani, pravidla pro cookies a zpusob kontaktu.</p>
     <div class="legal-grid">
       <article data-block="rule_1" class="legal-card"></article>
@@ -651,6 +688,32 @@ CSS;
 
 $tplRules = seedUpsertTemplate($pdo, $siteId, 'Podmínky užití', $tplRulesHtml, $tplRulesCss, '');
 
+$tplAboutHtml = <<<'HTML'
+<section class="page-hero">
+  <div class="container">
+    <p class="section-label">Poznejte nás</p>
+    <h1 data-block="hero_h1">O nás</h1>
+    <p data-block="hero_sub" class="hero-sub"></p>
+  </div>
+</section>
+<section class="section">
+  <div class="container svc-detail" data-block="body"></div>
+</section>
+HTML;
+
+$tplAboutCss = <<<'CSS'
+.svc-detail{max-width:900px}
+.svc-detail h2{margin:2rem 0 .75rem}
+.svc-detail p{line-height:1.75}
+.svc-detail ul{padding-left:1.25rem;line-height:1.8}
+.svc-detail .about-roles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;margin:2rem 0}
+.svc-detail .about-role{border:1px solid rgba(184,122,32,.3);padding:1.5rem;background:#fff}
+.svc-detail .about-links{display:flex;flex-wrap:wrap;gap:1rem;margin-top:2rem}
+@media(max-width:700px){.svc-detail .about-roles{grid-template-columns:1fr}}
+CSS;
+
+$tplAbout = seedUpsertTemplate($pdo, $siteId, 'O nás', $tplAboutHtml, $tplAboutCss, '');
+
 echo "Šablony vytvořeny.\n";
 
 // ─── Stránky ──────────────────────────────────────────────────────────────────
@@ -663,98 +726,192 @@ $pidKontakt   = seedUpsertPage($pdo, $siteId, $tplKontakt,         'Kontakt',   
 $pidBlog      = seedUpsertPage($pdo, $siteId, $tplBlogListing,     'Blog',          'blog',       'blog');
 $pidPortfolio = seedUpsertPage($pdo, $siteId, $tplPortfolioListing,'Naše práce',    'nase-prace', 'nase-prace');
 $pidRules     = seedUpsertPage($pdo, $siteId, $tplRules,           'Podmínky užití',   'podminky-uziti','podminky-uziti');
+$pidAbout     = seedUpsertPage($pdo, $siteId, $tplAbout,           'O nás',             'o-nas',          'o-nas');
 
 echo "Stránky vytvořeny.\n";
 
 $seedMedia = [];
 foreach ([
-    'sluzby.png',
-    'cenik.png',
-    'faq.png',
-    'kontakt.png',
-    'nase-prace.png',
-    'blog.png',
-    'podminky-uziti.png',
     'weare2.png',
+    'weare4.jpg',
+    'weare5.jpg',
+    'aboutuszdenek.jpg',
+    'fallback tomáš.png',
+    'Snímek obrazovky 2026-10-06 132148.png',
+    'tomas-sincl-kameraman.png',
+    'zdenek-cernohlavek-fotograf.png',
     'svatba-nevesta-zenich-polibek-kamenna-zed.webp',
+    'snubni-prsteny-listy-zapad-slunce-detail.webp',
+    'svatba-nevesta-kytice-zapad-slunce-u-vody.webp',
+    'zamilovany-par-objeti-zapad-slunce-podzim.webp',
+    'par-v-prirode-romanticky-portret-zapad-slunce.webp',
+    'koncert-zpevak-mikrofon-cernobila-fotografie.webp',
+    'rodinne-foceni-rodina-dite-louka.webp',
+    'hero-blog-cream.png',
+    'hero-cenik-cream.png',
+    'hero-faq-cream.png',
+    'hero-kontakt-cream.png',
+    'hero-o-nas-cream.png',
+    'hero-reference-cream.png',
+    'hero-sluzby-cream.png',
+    'android-chrome-192x192.png',
+    'android-chrome-512x512.png',
+    'apple-touch-icon.png',
+    'favicon-16x16.png',
+    'favicon-32x32.png',
+    'rb-logo-beige.png',
+    'og-share-landscape.png',
+    'og-share-portrait.png',
+    'black.png',
+    'rb-logo-black.png',
+    'rb-logo-orange.png',
 ] as $seedAsset) {
     $seedMedia[$seedAsset] = seedMediaAsset($pdo, $siteId, $seedAsset);
 }
 
-$defaultHeroPosterUrl = (string)($seedMedia['svatba-nevesta-zenich-polibek-kamenna-zed.webp']['url'] ?? '');
+$defaultHeroPosterUrl = (string)($seedMedia['svatba-nevesta-zenich-polibek-kamenna-zed.webp']['medium_url'] ?? '');
 if ($defaultHeroPosterUrl === '') {
     throw new RuntimeException('Chybi povinna demo fotografie pro vychozi hero pozadi.');
 }
-$pdo->prepare('UPDATE sites SET default_hero_poster_url = ? WHERE id = ?')
-    ->execute([$defaultHeroPosterUrl, $siteId]);
+$pdo->prepare(
+    'UPDATE sites
+     SET default_hero_poster_url = ?, favicon_ico_url = ?, favicon_png_url = ?, apple_touch_icon_url = ?,
+         default_hero_video_url = ?, default_hero_video_url_tablet = ?, default_hero_video_url_mobile = ?,
+         logo_url = ?, company_registration_id = ?,
+         default_og_image_id = ?, default_twitter_image_id = ?, default_instagram_image_id = ?
+     WHERE id = ?'
+)->execute([
+    $defaultHeroPosterUrl,
+    '/assets/favicons/favicon.ico',
+    '/assets/favicons/favicon-32x32.png',
+    '/assets/favicons/apple-touch-icon.png',
+    // Site-wide hero video fallback; the poster above covers the load so visitors
+    // never see a black frame. PublishService applies it on the homepage only.
+    'https://vimeo.com/1229273025',
+    // Tablet has no own variant: an empty value falls back to the desktop video (migration 100).
+    null,
+    'https://vimeo.com/1228952734',
+    (string)($seedMedia['rb-logo-beige.png']['url'] ?? ''),
+    '29719194',
+    // Landscape banner for Facebook/LinkedIn previews, square one for Instagram.
+    (int)($seedMedia['og-share-landscape.png']['id'] ?? 0) ?: null,
+    (int)($seedMedia['og-share-landscape.png']['id'] ?? 0) ?: null,
+    (int)($seedMedia['og-share-portrait.png']['id'] ?? 0) ?: null,
+    $siteId,
+]);
 echo "Demo obrazky nahrany.\n";
 
-// ─── Obsahové bloky — Homepage ────────────────────────────────────────────────
+// Shared "how it works" section. Migration 065 creates this row, but a full re-seed
+// replaces the site and the FK cascade takes the row with it, so the seed has to put
+// it back - otherwise SharedProcessRenderer silently skips the section on every route.
+$processCooperation = [
+    'kicker' => 'Jak to probíhá',
+    'title' => 'Jak probíhá spolupráce',
+    'intro' => 'Od první zprávy až po předání vašich vzpomínek. Jasný postup, který vám zajistí klid a jistotu v každém kroku.',
+    'steps' => [
+        ['title' => 'Nezávazná poptávka', 'text' => 'Napište nám základní představu, termín a místo. Ozveme se co nejdříve zpět.', 'icon' => 'mail'],
+        ['title' => 'Konzultace a plán', 'text' => 'Probereme vaše focení, harmonogram dne, důležité momenty a vaše přání.', 'icon' => 'assignment'],
+        ['title' => 'Focení / natáčení', 'text' => 'V den svatby pracujeme nenápadně a zachytíme emoce, atmosféru i klíčové okamžiky.', 'icon' => 'photo_camera'],
+        ['title' => 'Výběr a dodání', 'text' => 'Pečlivě upravíme fotografie a video a předáme vše v domluveném termínu.', 'icon' => 'video_library'],
+    ],
+    'benefits' => [
+        ['title' => 'Rychlá komunikace', 'text' => 'Odpovídáme rychle a jsme vždy k dispozici.', 'icon' => 'chat'],
+        ['title' => 'Jasný postup', 'text' => 'Víte, co se děje a co vás čeká v každé fázi.', 'icon' => 'event_available'],
+        ['title' => 'Dodání v termínu', 'text' => 'Termíny dodržujeme, abyste měli klid.', 'icon' => 'schedule'],
+        ['title' => 'Osobní přístup', 'text' => 'Každou svatbu bereme jako jedinečný příběh.', 'icon' => 'favorite'],
+    ],
+];
+$pdo->prepare(
+    'INSERT INTO shared_sections (site_id, section_key, title, content_json, is_active)
+     VALUES (?, ?, ?, ?, 1)
+     ON DUPLICATE KEY UPDATE title = VALUES(title), content_json = VALUES(content_json), is_active = 1'
+)->execute([
+    $siteId,
+    'process_cooperation',
+    'Jak to probíhá',
+    json_encode($processCooperation, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+]);
+echo "Sdilena sekce procesu nastavena.\n";
 
-seedBlock($pdo, $pidHome, 'hero_label',     'text',     'Hero — štítek',       'Fotograf a kameraman - Olomouc, Praha',                            1);
-seedBlock($pdo, $pidHome, 'hero_video',     'video',    'Hero — video (URL)',  '', 2);
-seedBlock($pdo, $pidHome, 'hero_h1',        'text',     'Hero — nadpis',       'Zachytíme váš příběh <span>navždy</span>.',                        3);
-seedBlock($pdo, $pidHome, 'hero_sub',       'textarea', 'Hero — podnadpis',    'Profesionální svatební fotografie a videografie v Olomouci a po celé České republice. Každý okamžik si zaslouží být nezapomenutelný.', 4);
-seedBlock($pdo, $pidHome, 'hero_cta',       'html',     'Hero — CTA',          '<a href="#kontakt" class="btn-primary">Kontaktujte nás</a>', 5);
+// ─── Obsahové bloky - Homepage ────────────────────────────────────────────────
 
-seedBlock($pdo, $pidHome, 'sluzby_title',   'text',     'Služby — nadpis',     'Naše služby',                                                     10);
-seedBlock($pdo, $pidHome, 'sluzby_intro',   'textarea', 'Služby — intro',      'Každý příběh je jedinečný. Naše služby přizpůsobíme přesně vám.', 11);
-seedBlock($pdo, $pidHome, 'sluzby_items',   'html',     'Služby — karty',      '', 12);
-seedBlock($pdo, $pidHome, 'sluzby_cta',     'html',     'Služby — tlačítko',   '<a href="/sluzby" class="btn-secondary">V&#353;echny slu&#382;by</a>', 13);
+seedBlock($pdo, $pidHome, 'hero_label',     'text',     'Hero - štítek',       'Fotograf a kameraman - Olomouc, Praha',                            1);
+seedBlock($pdo, $pidHome, 'hero_video',     'video',    'Hero - video (URL)',  '', 2);
+seedBlock($pdo, $pidHome, 'hero_h1',        'text',     'Hero - nadpis',       'Svatební fotograf Olomouc a svatební kameraman Olomouc',           3);
+seedBlock($pdo, $pidHome, 'hero_sub',       'textarea', 'Hero - podnadpis',    'Zachytíme váš příběh navždy. Profesionální svatební fotografie a video v Olomouci a po celé České republice.', 4);
+seedBlock($pdo, $pidHome, 'hero_cta',       'html',     'Hero - CTA',          '<a href="#kontakt" class="btn-primary">Kontaktujte nás</a>', 5);
 
-seedBlock($pdo, $pidHome, 'portfolio_title','text',     'Portfolio — nadpis',  'Naše práce',                                                      20);
-seedBlock($pdo, $pidHome, 'portfolio_intro','textarea', 'Portfolio — intro',   'Ukázka projektů a realizací.',                                    21);
-seedBlock($pdo, $pidHome, 'portfolio-tiles','html',     'Portfolio — dlaždice','', 22);
-seedBlock($pdo, $pidHome, 'portfolio_cta',  'html',     'Portfolio — tlačítko','<a href="/nase-prace" class="btn-secondary">V&#353;echny pr&#225;ce</a>', 23);
+seedBlock($pdo, $pidHome, 'sluzby_title',   'text',     'Služby - nadpis',     'Naše služby',                                                     10);
+seedBlock($pdo, $pidHome, 'sluzby_intro',   'textarea', 'Služby - intro',      'Každý příběh je jedinečný. Naše služby přizpůsobíme přesně vám.', 11);
+seedBlock($pdo, $pidHome, 'sluzby_items',   'html',     'Služby - karty',      '', 12);
+seedBlock($pdo, $pidHome, 'sluzby_cta',     'html',     'Služby - tlačítko',   '<a href="/sluzby" class="btn-secondary">V&#353;echny slu&#382;by</a>', 13);
 
-seedBlock($pdo, $pidHome, 'blog_title',     'text',     'Blog — nadpis',       'Nejnovější články',                                               30);
-seedBlock($pdo, $pidHome, 'blog_intro',     'textarea', 'Blog — intro',        'Rady a novinky z naší praxe.',                                    31);
+seedBlock($pdo, $pidHome, 'portfolio_title','text',     'Portfolio - nadpis',  'Naše práce',                                                      20);
+seedBlock($pdo, $pidHome, 'portfolio_intro','textarea', 'Portfolio - intro',   'Ukázka projektů a realizací.',                                    21);
+seedBlock($pdo, $pidHome, 'portfolio-tiles','html',     'Portfolio - dlaždice','', 22);
+seedBlock($pdo, $pidHome, 'portfolio_cta',  'html',     'Portfolio - tlačítko','<a href="/nase-prace" class="btn-secondary">V&#353;echny pr&#225;ce</a>', 23);
+
+seedBlock($pdo, $pidHome, 'blog_title',     'text',     'Blog - nadpis',       'Nejnovější články',                                               30);
+seedBlock($pdo, $pidHome, 'blog_intro',     'textarea', 'Blog - intro',        'Rady a novinky z naší praxe.',                                    31);
 seedBlock($pdo, $pidHome, 'blog_1',         'html',     'Článek 1',            '', 32);
 seedBlock($pdo, $pidHome, 'blog_2',         'html',     'Článek 2',            '', 33);
 seedBlock($pdo, $pidHome, 'blog_3',         'html',     'Článek 3',            '', 34);
-seedBlock($pdo, $pidHome, 'blog_cta',       'html',     'Blog — tlačítko',     '<a href="/blog" class="btn-secondary">V&#353;echny &#269;l&#225;nky</a>', 35);
+seedBlock($pdo, $pidHome, 'blog_cta',       'html',     'Blog - tlačítko',     '<a href="/blog" class="btn-secondary">V&#353;echny &#269;l&#225;nky</a>', 35);
 
-seedBlock($pdo, $pidHome, 'cenik_title',    'text',     'Ceník — nadpis',      'Ceník',                                                           40);
-seedBlock($pdo, $pidHome, 'cenik_intro',    'textarea', 'Ceník — intro',       'Orientační přehled cen. Každá zakázka je individuální.',           41);
-seedBlock($pdo, $pidHome, 'cenik_body',     'html',     'Ceník — obsah',       '', 42);
-seedBlock($pdo, $pidHome, 'cenik_cta',      'html',     'Ceník — tlačítko',    '<a href="/cenik" class="btn-secondary">Cel&#253; cen&#237;k</a>', 43);
+seedBlock($pdo, $pidHome, 'cenik_title',    'text',     'Ceník - nadpis',      'Ceník',                                                           40);
+seedBlock($pdo, $pidHome, 'cenik_intro',    'textarea', 'Ceník - intro',       'Orientační přehled cen. Každá zakázka je individuální.',           41);
+seedBlock($pdo, $pidHome, 'cenik_body',     'html',     'Ceník - obsah',       '', 42);
+seedBlock($pdo, $pidHome, 'cenik_cta',      'html',     'Ceník - tlačítko',    '<a href="/cenik" class="btn-secondary">Cel&#253; cen&#237;k</a>', 43);
 
-seedBlock($pdo, $pidHome, 'faq_title',      'text',     'FAQ — nadpis',        'Časté dotazy',                                                    50);
+seedBlock($pdo, $pidHome, 'faq_title',      'text',     'FAQ - nadpis',        'Časté dotazy',                                                    50);
 seedBlock($pdo, $pidHome, 'faq_1',          'html',     'FAQ 1',               '', 51);
 seedBlock($pdo, $pidHome, 'faq_2',          'html',     'FAQ 2',               '', 52);
 seedBlock($pdo, $pidHome, 'faq_3',          'html',     'FAQ 3',               '', 53);
-seedBlock($pdo, $pidHome, 'faq_cta',        'html',     'FAQ — tlačítko',      '<a href="/faq" class="btn-secondary">V&#353;echny ot&#225;zky</a>',54);
+seedBlock($pdo, $pidHome, 'faq_cta',        'html',     'FAQ - tlačítko',      '<a href="/faq" class="btn-secondary">V&#353;echny ot&#225;zky</a>',54);
 
-seedBlock($pdo, $pidHome, 'kontakt_title',  'text',     'Kontakt — nadpis',    'Ozvěte se nám',                                                   60);
-seedBlock($pdo, $pidHome, 'kontakt_sub',    'textarea', 'Kontakt — podnadpis', 'Rádi odpovíme na vaše otázky.',                                   61);
-seedBlock($pdo, $pidHome, 'kontakt_info',   'html',     'Kontakt — info',      '', 62);
+seedBlock($pdo, $pidHome, 'kontakt_title',  'text',     'Kontakt - nadpis',    'Ozvěte se nám',                                                   60);
+seedBlock($pdo, $pidHome, 'kontakt_sub',    'textarea', 'Kontakt - podnadpis', 'Rádi odpovíme na vaše otázky.',                                   61);
+seedBlock($pdo, $pidHome, 'kontakt_info',   'html',     'Kontakt - info',      '', 62);
 
-// ─── Obsahové bloky — Služby ──────────────────────────────────────────────────
+// ─── Obsahové bloky - Služby ──────────────────────────────────────────────────
 
-seedBlock($pdo, $pidSluzby, 'hero_h1',   'text',     'Hero — nadpis',  'Naše služby',                                             1);
-seedBlock($pdo, $pidSluzby, 'hero_sub',  'textarea', 'Hero — intro',   'Od svateb přes portréty až po firemní vizuál. Každou zakázku stavíme na emocích, detailu a profesionálním výsledku.', 2);
-seedBlock($pdo, $pidSluzby, 'sluzby_grid','html',    'Služby — karty', '<p style="color:rgba(255,255,255,.45)">Doplňte karty služeb.</p>', 3);
+seedBlock($pdo, $pidSluzby, 'hero_h1',   'text',     'Hero - nadpis',  'Naše služby',                                             1);
+seedBlock($pdo, $pidSluzby, 'hero_sub',  'textarea', 'Hero - intro',   'Od svateb přes portréty až po firemní vizuál. Každou zakázku stavíme na emocích, detailu a profesionálním výsledku.', 2);
+seedBlock($pdo, $pidSluzby, 'sluzby_grid','html',    'Služby - karty', '<p style="color:rgba(255,255,255,.45)">Doplňte karty služeb.</p>', 3);
 seedBlock($pdo, $pidSluzby, 'cta_wrap',  'html',     'CTA',            '<a href="/kontakt" class="btn-primary">Kontaktujte n&#225;s</a>', 4);
 
-// ─── Obsahové bloky — Ceník ───────────────────────────────────────────────────
+// ─── Obsahové bloky - Ceník ───────────────────────────────────────────────────
 
-seedBlock($pdo, $pidCenik, 'hero_h1',           'text',     'Hero — nadpis',             'Ceník',                                      1);
-seedBlock($pdo, $pidCenik, 'hero_sub',          'textarea', 'Hero — intro',              'Transparentní přehled cen bez překvapení.',   2);
-seedBlock($pdo, $pidCenik, 'cenik_card_1_title','text',     'Karta 1 — nadpis',          'Základní',                                   3);
-seedBlock($pdo, $pidCenik, 'cenik_card_1_desc', 'textarea', 'Karta 1 — popis',           'Ideální pro menší projekty a začínající klienty.',  4);
-seedBlock($pdo, $pidCenik, 'cenik_card_1_price','text',     'Karta 1 — cena / patička',  'od 5 000 Kč',                                5);
-seedBlock($pdo, $pidCenik, 'cenik_card_2_title','text',     'Karta 2 — nadpis',          'Standardní',                                 6);
-seedBlock($pdo, $pidCenik, 'cenik_card_2_desc', 'textarea', 'Karta 2 — popis',           'Nejoblíbenější volba pro většinu klientů.',  7);
-seedBlock($pdo, $pidCenik, 'cenik_card_2_price','text',     'Karta 2 — cena / patička',  'od 10 000 Kč',                               8);
-seedBlock($pdo, $pidCenik, 'cenik_card_3_title','text',     'Karta 3 — nadpis',          'Prémiový',                                   9);
-seedBlock($pdo, $pidCenik, 'cenik_card_3_desc', 'textarea', 'Karta 3 — popis',           "Komplexní řešení na míru bez kompromisů.\n\nObsahuje:\n• vše ze Standardního balíčku\n• prioritní zpracování\n• delší archivace výstupů",  10);
-seedBlock($pdo, $pidCenik, 'cenik_card_3_price','text',     'Karta 3 — cena / patička',  'od 20 000 Kč',                              11);
+seedBlock($pdo, $pidCenik, 'hero_h1',           'text',     'Hero - nadpis',             'Ceník',                                      1);
+seedBlock($pdo, $pidCenik, 'hero_sub',          'textarea', 'Hero - intro',              'Transparentní přehled cen bez překvapení.',   2);
+seedBlock($pdo, $pidCenik, 'cenik_card_1_title','text',     'Karta 1 - nadpis',          'Základní',                                   3);
+seedBlock($pdo, $pidCenik, 'cenik_card_1_desc', 'textarea', 'Karta 1 - popis',           'Ideální pro menší projekty a začínající klienty.',  4);
+seedBlock($pdo, $pidCenik, 'cenik_card_1_price','text',     'Karta 1 - cena / patička',  'od 5 000 Kč',                                5);
+seedBlock($pdo, $pidCenik, 'cenik_card_2_title','text',     'Karta 2 - nadpis',          'Standardní',                                 6);
+seedBlock($pdo, $pidCenik, 'cenik_card_2_desc', 'textarea', 'Karta 2 - popis',           'Nejoblíbenější volba pro většinu klientů.',  7);
+seedBlock($pdo, $pidCenik, 'cenik_card_2_price','text',     'Karta 2 - cena / patička',  'od 10 000 Kč',                               8);
+seedBlock($pdo, $pidCenik, 'cenik_card_3_title','text',     'Karta 3 - nadpis',          'Prémiový',                                   9);
+seedBlock($pdo, $pidCenik, 'cenik_card_3_desc', 'textarea', 'Karta 3 - popis',           "Komplexní řešení na míru bez kompromisů.\n\nObsahuje:\n• vše ze Standardního balíčku\n• prioritní zpracování\n• delší archivace výstupů",  10);
+seedBlock($pdo, $pidCenik, 'cenik_card_3_price','text',     'Karta 3 - cena / patička',  'od 20 000 Kč',                              11);
 seedBlock($pdo, $pidCenik, 'cta_wrap',          'html',     'CTA',                       '<a href="/kontakt" class="btn-primary">Nez&#225;vazn&#225; popt&#225;vka</a>', 12);
 
-// ─── Obsahové bloky — FAQ ─────────────────────────────────────────────────────
+// Popisky sekci ceniku - musi zustat v souladu s
+// database/migrations/077_add_cenik_copy_blocks.sql.
+foreach ([
+    ['cenik_packages_kicker', 'text', 'Balíčky - štítek nad nadpisem', 'Ceník služeb', 100],
+    ['cenik_transport_kicker', 'text', 'Doprava - štítek nad nadpisem', 'Doprava', 101],
+    ['cenik_faq_kicker', 'text', 'Časté otázky - štítek nad nadpisem', 'Časté otázky', 102],
+    ['cenik_faq_heading', 'text', 'Časté otázky - nadpis', 'Nejčastější dotazy k cenám', 103],
+    ['cenik_cta_kicker', 'text', 'Závěrečné CTA - štítek', 'Rezervace termínu', 104],
+    ['cenik_cta_button', 'text', 'Závěrečné CTA - záložní tlačítko', 'Nezávazná poptávka', 105],
+] as [$cenikKey, $cenikType, $cenikLabel, $cenikContent, $cenikOrder]) {
+    seedBlock($pdo, $pidCenik, $cenikKey, $cenikType, $cenikLabel, $cenikContent, $cenikOrder);
+}
 
-seedBlock($pdo, $pidFaq, 'hero_h1',  'text',     'Hero — nadpis', 'Časté otázky',                                                           1);
-seedBlock($pdo, $pidFaq, 'hero_sub', 'textarea', 'Hero — intro',  'Odpovědi na nejčastější dotazy.',                                        2);
+// ─── Obsahové bloky - FAQ ─────────────────────────────────────────────────────
+
+seedBlock($pdo, $pidFaq, 'hero_h1',  'text',     'Hero - nadpis', 'Časté otázky',                                                           1);
+seedBlock($pdo, $pidFaq, 'hero_sub', 'textarea', 'Hero - intro',  'Odpovědi na nejčastější dotazy.',                                        2);
 seedBlock($pdo, $pidFaq, 'faq_1',   'html',     'Otázka 1',      '<p style="color:rgba(255,255,255,.45)">Doplňte první otázku a odpověď.</p>', 3);
 seedBlock($pdo, $pidFaq, 'faq_2',   'html',     'Otázka 2',      '',                                                                        4);
 seedBlock($pdo, $pidFaq, 'faq_3',   'html',     'Otázka 3',      '',                                                                        5);
@@ -762,41 +919,150 @@ seedBlock($pdo, $pidFaq, 'faq_4',   'html',     'Otázka 4',      '',           
 seedBlock($pdo, $pidFaq, 'faq_5',   'html',     'Otázka 5',      '',                                                                        7);
 seedBlock($pdo, $pidFaq, 'cta_wrap','html',     'CTA',           '<a href="/kontakt" class="btn-primary">M&#225;te dal&#353;&#237; ot&#225;zku?</a>', 8);
 
-// ─── Obsahové bloky — Kontakt ─────────────────────────────────────────────────
+// ─── Obsahové bloky - Kontakt ─────────────────────────────────────────────────
 
-seedBlock($pdo, $pidKontakt, 'hero_h1',      'text',     'Hero — nadpis',   'Kontakt',                                                           1);
-seedBlock($pdo, $pidKontakt, 'hero_sub',     'textarea', 'Hero — intro',    'Ozvěte se nám. Odpovídáme rychle.',                                 2);
-seedBlock($pdo, $pidKontakt, 'kontakt_info', 'html',     'Kontakt — info',  '<p style="color:rgba(255,255,255,.45)">Doplňte kontaktní informace.</p>', 3);
-seedBlock($pdo, $pidKontakt, 'kontakt_card', 'html',     'Kontakt — karta', '',                                                                  4);
+seedBlock($pdo, $pidKontakt, 'hero_h1',      'text',     'Hero - nadpis',   'Kontakt',                                                           1);
+seedBlock($pdo, $pidKontakt, 'hero_sub',     'textarea', 'Hero - intro',    'Ozvěte se nám. Odpovídáme rychle.',                                 2);
+seedBlock($pdo, $pidKontakt, 'kontakt_info', 'html',     'Kontakt - info',  '<p style="color:rgba(255,255,255,.45)">Doplňte kontaktní informace.</p>', 3);
+seedBlock($pdo, $pidKontakt, 'kontakt_card', 'html',     'Kontakt - karta', '',                                                                  4);
 
-// ─── Obsahové bloky — Blog ────────────────────────────────────────────────────
+// ─── Obsahové bloky - Blog ────────────────────────────────────────────────────
 
-seedBlock($pdo, $pidBlog, 'hero_h1',  'text',     'Hero — nadpis', 'Blog',                                      1);
-seedBlock($pdo, $pidBlog, 'hero_sub', 'textarea', 'Hero — intro',  'Tipy, inspirace a novinky z naší praxe.',   2);
+seedBlock($pdo, $pidBlog, 'hero_h1',  'text',     'Hero - nadpis', 'Blog',                                      1);
+seedBlock($pdo, $pidBlog, 'hero_sub', 'textarea', 'Hero - intro',  'Tipy, inspirace a novinky z naší praxe.',   2);
 
-// ─── Obsahové bloky — Naše práce ─────────────────────────────────────────────
+// Texty vypisu blogu - musi zustat v souladu s
+// database/migrations/076_add_listing_copy_blocks.sql.
+foreach ([
+    ['listing_kicker', 'text', 'Hero - štítek nad nadpisem', 'Blog', 10],
+    ['blog_list_kicker', 'text', 'Výpis - štítek nad články', 'Nejnovější články', 11],
+    ['blog_empty_text', 'text', 'Výpis - text při prázdném blogu', 'Zatím žádné články.', 12],
+    ['blog_more_label', 'text', 'Karta článku - text odkazu', 'Číst článek', 13],
+    ['route_cta_kicker', 'text', 'Závěrečné CTA - štítek', 'Váš den, váš příběh', 14],
+    ['route_cta_heading', 'text', 'Závěrečné CTA - nadpis', 'Chcete podobné vzpomínky?', 15],
+    ['route_cta_text', 'textarea', 'Závěrečné CTA - text', 'Řekněte nám o svém termínu a představě. Společně vybereme focení nebo video, které vám bude sedět.', 16],
+    ['route_cta_button', 'text', 'Závěrečné CTA - tlačítko', 'Nezávazná poptávka', 17],
+] as [$listKey, $listType, $listLabel, $listContent, $listOrder]) {
+    seedBlock($pdo, $pidBlog, $listKey, $listType, $listLabel, $listContent, $listOrder);
+}
 
-seedBlock($pdo, $pidPortfolio, 'hero_h1',  'text',     'Hero — nadpis', 'Naše práce',                           1);
-seedBlock($pdo, $pidPortfolio, 'hero_sub', 'textarea', 'Hero — intro',  'Ukázka projektů a realizací.',          2);
+// ─── Obsahové bloky - Naše práce ─────────────────────────────────────────────
+
+seedBlock($pdo, $pidPortfolio, 'hero_h1',  'text',     'Hero - nadpis', 'Naše práce',                           1);
+seedBlock($pdo, $pidPortfolio, 'hero_sub', 'textarea', 'Hero - intro',  'Ukázka projektů a realizací.',          2);
+
+// Texty vypisu portfolia - musi zustat v souladu s
+// database/migrations/076_add_listing_copy_blocks.sql.
+foreach ([
+    ['listing_kicker', 'text', 'Hero - štítek nad nadpisem', 'Portfolio', 10],
+    ['portfolio_filter_aria', 'text', 'Filtr - popis pro čtečky', 'Filtr portfolia', 11],
+    ['portfolio_filter_all', 'text', 'Filtr - tlačítko 1', 'Vše', 12],
+    ['portfolio_filter_photo', 'text', 'Filtr - tlačítko 2', 'Fotky', 13],
+    ['portfolio_filter_video', 'text', 'Filtr - tlačítko 3', 'Videa', 14],
+    ['portfolio_list_kicker', 'text', 'Výpis - štítek nad nadpisem', 'Foto i video příběhy', 15],
+    ['portfolio_list_heading', 'text', 'Výpis - nadpis', 'Naše práce', 16],
+    ['portfolio_empty_text', 'text', 'Výpis - text při prázdné kategorii', 'V teto kategorii zatim neni publikovany obsah.', 17],
+    ['route_cta_kicker', 'text', 'Závěrečné CTA - štítek', 'Máte podobnou představu?', 18],
+    ['route_cta_heading', 'text', 'Závěrečné CTA - nadpis', 'Proberme váš termín společně', 19],
+    ['route_cta_text', 'textarea', 'Závěrečné CTA - text', 'Napište nám pár slov o tom, co plánujete. Nezávazně vám poradíme a domluvíme se na dalším postupu.', 20],
+    ['route_cta_button', 'text', 'Závěrečné CTA - tlačítko', 'Nezávazná konzultace', 21],
+] as [$listKey, $listType, $listLabel, $listContent, $listOrder]) {
+    seedBlock($pdo, $pidPortfolio, $listKey, $listType, $listLabel, $listContent, $listOrder);
+}
 
 seedBlock($pdo, $pidRules, 'hero_h1', 'text', 'Hero - nadpis', 'Podmínky užití', 1);
-seedBlock($pdo, $pidRules, 'hero_sub', 'textarea', 'Hero - intro', 'Pravidla provozu webu, pouzivani obsahu a informace o cookies.', 2);
-seedBlock($pdo, $pidRules, 'rules_title', 'text', 'Pravidla - nadpis', 'Co plati pri pouzivani tohoto webu', 3);
-seedBlock($pdo, $pidRules, 'rules_intro', 'textarea', 'Pravidla - intro', 'Pouzivanim tohoto webu potvrzujete, ze jste si precetli tato pravidla. Pokud s nimi nesouhlasite, web nepouzivejte.', 4);
-seedBlock($pdo, $pidRules, 'rule_1', 'html', 'Pravidlo 1', '<h3>Pouzivani webu</h3><p>Web pouzivejte pouze zakonnym a bezpecnym zpusobem. Nesmite se pokouset o naruseni provozu, zneuziti formularu ani o zasahy do zabezpeceni.</p>', 5);
-seedBlock($pdo, $pidRules, 'rule_2', 'html', 'Pravidlo 2', '<h3>Cookies a souhlasy</h3><p>Nezbytne cookies pouzivame pro fungovani webu. Analyticke a marketingove cookies se aktivuji az po vasem jasnem souhlasu v cookie liste. Sve volby muzete kdykoli zmenit pres nastaveni cookies.</p>', 6);
-seedBlock($pdo, $pidRules, 'rule_3', 'html', 'Pravidlo 3', '<h3>Obsah a autorska prava</h3><p>Fotografie, videa, texty a znacka webu zustavaji chranenym obsahem provozovatele nebo jeho klientu. Bez souhlasu je nepouzivejte dale, nekopirujte a nevydavejte za vlastni.</p>', 7);
-seedBlock($pdo, $pidRules, 'rule_4', 'html', 'Pravidlo 4', '<h3>Zmeny a kontakt</h3><p>Obsah webu i tato pravidla se mohou prubezne menit. Pokud mate dotaz k provozu webu, soukromi nebo souhlasu s cookies, napiste nam pres kontaktni stranku.</p>', 8);
-seedBlock($pdo, $pidRules, 'cta_wrap', 'html', 'CTA', '<a href="/kontakt" class="btn-secondary">Kontaktovat nas</a>', 9);
+seedBlock($pdo, $pidRules, 'hero_sub', 'textarea', 'Hero - intro', 'Pravidla provozu webu, používání obsahu a informace o cookies.', 2);
+seedBlock($pdo, $pidRules, 'rules_title', 'text', 'Pravidla - nadpis', 'Co platí při používání tohoto webu', 3);
+seedBlock($pdo, $pidRules, 'rules_intro', 'textarea', 'Pravidla - intro', 'Používáním tohoto webu potvrzujete, že jste si přečetli tato pravidla. Pokud s nimi nesouhlasíte, web nepoužívejte.', 4);
+seedBlock($pdo, $pidRules, 'rule_1', 'html', 'Pravidlo 1', '<h3>Používání webu</h3><p>Web používejte pouze zákonným a bezpečným způsobem. Nesmíte se pokoušet o narušení provozu, zneužití formulářů ani o zásahy do zabezpečení.</p>', 5);
+seedBlock($pdo, $pidRules, 'rule_2', 'html', 'Pravidlo 2', '<h3>Cookies a souhlasy</h3><p>Nezbytné cookies používáme pro fungování webu. Analytické a marketingové cookies se aktivují až po vašem jasném souhlasu v cookie liště. Své volby můžete kdykoli změnit přes nastavení cookies.</p>', 6);
+seedBlock($pdo, $pidRules, 'rule_3', 'html', 'Pravidlo 3', '<h3>Obsah a autorská práva</h3><p>Fotografie, videa, texty a značka webu zůstávají chráněným obsahem provozovatele nebo jeho klientů. Bez souhlasu je nepoužívejte dále, nekopírujte a nevydávejte za vlastní.</p>', 7);
+seedBlock($pdo, $pidRules, 'rule_4', 'html', 'Pravidlo 4', '<h3>Změny a kontakt</h3><p>Obsah webu i tato pravidla se mohou průběžně měnit. Pokud máte dotaz k provozu webu, soukromí nebo souhlasu s cookies, napište nám přes kontaktní stránku.</p>', 8);
+seedBlock($pdo, $pidRules, 'cta_wrap', 'html', 'CTA', '<a href="/kontakt" class="btn-secondary">Kontaktovat nás</a>', 9);
+
+seedBlock($pdo, $pidAbout, 'hero_h1', 'text', 'Hlavní nadpis', 'Fotograf a kameraman z Olomouce.', 1);
+seedBlock($pdo, $pidAbout, 'hero_bg', 'image', 'Hero fotografie', (string)($seedMedia['hero-o-nas-cream.png']['url'] ?? ''), 2);
+seedBlock($pdo, $pidAbout, 'about_cameraman_image', 'image', 'Tomáš Šincl - kameraman', (string)($seedMedia['fallback tomáš.png']['url'] ?? ''), 3);
+seedBlock($pdo, $pidAbout, 'about_photographer_image', 'image', 'Zdeněk Černohlávek - fotograf', (string)($seedMedia['aboutuszdenek.jpg']['url'] ?? ''), 4);
+seedBlock($pdo, $pidAbout, 'about_photographer_video', 'video', 'Zdeněk Černohlávek - video místo fotky (nepovinné)', '', 5);
+seedBlock($pdo, $pidAbout, 'about_cameraman_video', 'video', 'Tomáš Šincl - video místo fotky (nepovinné)', 'https://vimeo.com/1228181473', 6);
+seedBlock(
+    $pdo,
+    $pidAbout,
+    'hero_sub',
+    'textarea',
+    'Úvod',
+    'Jsme Zdeněk a Tomáš - fotograf a kameraman. Zachycujeme pravé emoce, krásu okamžiku a příběhy, které vydrží navždy.',
+    3
+);
+seedBlock(
+    $pdo,
+    $pidAbout,
+    'body',
+    'html',
+    'Obsah',
+    '<h2>Dva pohledy, jeden příběh</h2><p>RB Videos &amp; Photos tvoří fotograf Banny a kameraman Tomáš. Při společných zakázkách pracujeme jako jeden tým: předem si rozdělíme role, respektujeme harmonogram a během dne se pohybujeme tak, abychom zachytili důležité okamžiky bez zbytečného narušování.</p><div class="about-roles"><article class="about-role"><h3>Banny - fotografie</h3><p>Vede fotografickou část, pomáhá s přirozeným postojem, světlem a kompozicí. Cílem nejsou nucené pózy, ale fotografie, na kterých se poznáte.</p></article><article class="about-role"><h3>Tomáš - video</h3><p>Zachycuje pohyb, zvuk a atmosféru dne. Při natáčení spolupracuje s fotografem, aby oba výstupy vznikaly plynule a bez opakování důležitých momentů.</p></article></div><h2>Jak pracujeme</h2><ul><li>před zakázkou si ujasníme termín, místo, rozsah a očekávané výstupy,</li><li>během focení a natáčení citlivě vedeme, ale necháváme prostor přirozeným situacím,</li><li>hotové materiály pečlivě vybíráme, upravujeme a předáváme v domluveném termínu,</li><li>působíme v Olomouci, na Moravě i po celé České republice.</li></ul><p>Konkrétní ukázky najdete v <a href="/nase-prace">portfoliu</a>, zkušenosti zákazníků na stránce <a href="/hodnoceni">Reference</a> a rozsah služeb v <a href="/sluzby">přehledu služeb</a>.</p><div class="about-links"><a class="btn btn-primary" href="/kontakt">Nezávazná konzultace</a><a class="btn btn-secondary" href="/nase-prace">Prohlédnout práci</a></div>',
+    4
+);
+
+// O nas - hero a tymova sekce: kazdy viditelny text ma vlastni blok, aby sel
+// upravit v adminu i inline (sablona drzi stejny text jako zaloznu).
+// Musi zustat v souladu s database/migrations/074_add_about_team_copy_blocks.sql.
+foreach ([
+    ['about_hero_cta_primary', 'text', 'Hero - hlavní tlačítko', 'Získat nabídku', 10],
+    ['about_hero_cta_secondary', 'text', 'Hero - druhé tlačítko', 'Podívat se na ukázky', 11],
+    ['about_team_heading', 'text', 'Tým - nadpis sekce', 'Kdo stojí za RB Videos & Photos', 12],
+    ['about_photographer_name', 'text', 'Fotograf - jméno', 'Zdeněk Černohlávek', 13],
+    ['about_photographer_role', 'text', 'Fotograf - role', 'Fotograf', 14],
+    ['about_photographer_quote', 'textarea', 'Fotograf - citát', 'Zachycuji emoce a přirozenost tak, abyste se k nim mohli vracet i po letech a znovu je prožívat. Věnuji se focení od roku 2015.', 15],
+    ['about_photographer_point_1', 'text', 'Fotograf - odrážka 1', 'Stovky spokojených klientů', 16],
+    ['about_photographer_point_2', 'text', 'Fotograf - odrážka 2', 'Cit pro detail a světlo', 17],
+    ['about_photographer_point_3', 'text', 'Fotograf - odrážka 3', 'Individuální přístup ke každému páru', 18],
+    ['about_photographer_cta_primary', 'text', 'Fotograf - tlačítko 1', 'Ukázky práce', 19],
+    ['about_photographer_cta_secondary', 'text', 'Fotograf - tlačítko 2', 'Spojit se', 20],
+    ['about_photographer_photo_alt', 'text', 'Fotograf - popis fotky (alt)', 'Zdeněk Černohlávek, fotograf', 21],
+    ['about_photographer_video_label', 'text', 'Fotograf - popis tlačítka přehrát video', 'Přehrát video se Zdeňkem Černohlávkem', 22],
+    ['about_cameraman_name', 'text', 'Kameraman - jméno', 'Tomáš Šincl', 23],
+    ['about_cameraman_role', 'text', 'Kameraman - role', 'Kameraman a editor', 24],
+    ['about_cameraman_quote', 'textarea', 'Kameraman - citát', 'Vyprávím vaše příběhy pohyblivým obrazem, který dojme a zůstane navždy.', 25],
+    ['about_cameraman_point_1', 'text', 'Kameraman - odrážka 1', 'Filmové svatební video', 26],
+    ['about_cameraman_point_2', 'text', 'Kameraman - odrážka 2', 'Dynamické střihy a emoce', 27],
+    ['about_cameraman_point_3', 'text', 'Kameraman - odrážka 3', 'Příběh, který má začátek i konec', 28],
+    ['about_cameraman_cta_primary', 'text', 'Kameraman - tlačítko 1', 'Ukázky práce', 29],
+    ['about_cameraman_cta_secondary', 'text', 'Kameraman - tlačítko 2', 'Spojit se', 30],
+    ['about_cameraman_photo_alt', 'text', 'Kameraman - popis fotky (alt)', 'Tomáš Šincl, kameraman', 31],
+    ['about_cameraman_video_label', 'text', 'Kameraman - popis tlačítka přehrát video', 'Přehrát video s Tomášem Šinclem', 32],
+    ['about_values_heading', 'text', 'Hodnoty - nadpis sekce', 'Naše zkušenosti a přístup', 33],
+    ['about_value_1_title', 'text', 'Hodnota 1 - nadpis', 'Profesionální technika', 34],
+    ['about_value_2_title', 'text', 'Hodnota 2 - nadpis', 'Individuální přístup', 35],
+    ['about_value_3_title', 'text', 'Hodnota 3 - nadpis', 'Důvěra a diskrétnost', 36],
+    ['about_value_4_title', 'text', 'Hodnota 4 - nadpis', 'Vkus a cit pro detail', 37],
+    ['about_reviews_heading', 'text', 'Reference - nadpis sekce', 'Reference klientů', 38],
+    ['about_trust_heading', 'text', 'Důvěra - nadpis sekce', 'Důvěra a transparentnost', 39],
+    ['about_trust_link_1', 'text', 'Důvěra - odkaz 1', 'IČO a fakturační údaje', 40],
+    ['about_trust_link_2', 'text', 'Důvěra - odkaz 2', 'Obchodní podmínky', 41],
+    ['about_trust_link_3', 'text', 'Důvěra - odkaz 3', 'GDPR ochrana', 42],
+    ['about_trust_link_4', 'text', 'Důvěra - odkaz 4', 'Orientační ceník', 43],
+    ['about_trust_link_5', 'text', 'Důvěra - odkaz 5', 'Dodací termíny', 44],
+    ['about_trust_link_6', 'text', 'Důvěra - odkaz 6', 'Rezervační postup', 45],
+    ['about_stories_heading', 'text', 'Příběhy - nadpis sekce', 'Příběhy z praxe / případové studie', 46],
+    ['about_stories_kicker', 'text', 'Příběhy - štítek karty', 'Blog', 47],
+    ['about_stories_link_label', 'text', 'Příběhy - text odkazu', 'Zobrazit příběh ›', 48],
+    ['about_cta_heading', 'text', 'Závěrečné CTA - nadpis', 'Pojďme si vytvořit vzpomínky na celý život', 49],
+    ['about_cta_primary', 'text', 'Závěrečné CTA - tlačítko 1', 'Získat nabídku', 50],
+    ['about_cta_secondary', 'text', 'Závěrečné CTA - tlačítko 2', 'Napište nám', 51],
+] as [$aboutKey, $aboutType, $aboutLabel, $aboutContent, $aboutOrder]) {
+    seedBlock($pdo, $pidAbout, $aboutKey, $aboutType, $aboutLabel, $aboutContent, $aboutOrder);
+}
 
 foreach ([
-    $pidSluzby => 'sluzby.png',
-    $pidCenik => 'cenik.png',
-    $pidFaq => 'faq.png',
-    $pidKontakt => 'kontakt.png',
-    $pidBlog => 'blog.png',
-    $pidPortfolio => 'nase-prace.png',
-    $pidRules => 'podminky-uziti.png',
+    $pidSluzby => 'hero-sluzby-cream.png',
+    $pidCenik => 'hero-cenik-cream.png',
+    $pidFaq => 'hero-faq-cream.png',
+    $pidKontakt => 'hero-kontakt-cream.png',
+    $pidBlog => 'hero-blog-cream.png',
+    $pidPortfolio => 'Snímek obrazovky 2026-10-06 132148.png',
+    $pidRules => 'rodinne-foceni-rodina-dite-louka.webp',
 ] as $heroPageId => $heroFile) {
     $heroUrl = (string)($seedMedia[$heroFile]['url'] ?? '');
     if ($heroUrl !== '') {
@@ -805,6 +1071,69 @@ foreach ([
 }
 
 echo "Obsahové bloky vytvořeny.\n";
+
+$aboutMetaTitle = 'O nás - fotograf a kameraman Olomouc | RB Videos & Photos';
+$aboutMetaDescription = 'Poznejte fotografa Zdeňka Černohlávka a kameramana Tomáše Šincla z RB Videos & Photos. Sehraná dvojice pro přirozené fotografie a filmové video.';
+$pdo->prepare(
+    'INSERT INTO seo_settings
+       (page_id, meta_title, meta_description, canonical_url, robots_index, robots_follow,
+        og_title, og_description, og_image_id, twitter_title, twitter_description,
+        twitter_image_id, schema_type, schema_name, schema_description)
+     VALUES (?, ?, ?, ?, 1, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     ON DUPLICATE KEY UPDATE
+       meta_title=VALUES(meta_title), meta_description=VALUES(meta_description),
+       canonical_url=VALUES(canonical_url), robots_index=1, robots_follow=1,
+       og_title=VALUES(og_title), og_description=VALUES(og_description), og_image_id=VALUES(og_image_id),
+       twitter_title=VALUES(twitter_title), twitter_description=VALUES(twitter_description),
+       twitter_image_id=VALUES(twitter_image_id),
+       schema_type=VALUES(schema_type), schema_name=VALUES(schema_name), schema_description=VALUES(schema_description)'
+)->execute([
+    $pidAbout,
+    $aboutMetaTitle,
+    $aboutMetaDescription,
+    '/o-nas',
+    'O nás | RB Videos & Photos',
+    'Zdeněk Černohlávek a Tomáš Šincl - fotograf a kameraman z Olomouce pro fotografie a video.',
+    (int)($seedMedia['weare2.png']['id'] ?? 0) ?: null,
+    'O nás | RB Videos & Photos',
+    'Zdeněk Černohlávek a Tomáš Šincl - fotograf a kameraman z Olomouce pro fotografie a video.',
+    (int)($seedMedia['weare2.png']['id'] ?? 0) ?: null,
+    'AboutPage',
+    $aboutMetaTitle,
+    $aboutMetaDescription,
+]);
+
+$rulesTitle = 'Podmínky užití a ochrana obsahu | RB Videos & Photos';
+$rulesDescription = 'Pravidla používání webu RB Videos & Photos, informace o cookies, autorských právech, ochraně fotografií a možnostech kontaktu.';
+$pdo->prepare(
+    'INSERT INTO seo_settings
+       (page_id, meta_title, meta_description, meta_keywords, canonical_url, robots_index, robots_follow,
+        og_title, og_description, og_image_id, twitter_title, twitter_description,
+        twitter_image_id, schema_type, schema_name, schema_description)
+     VALUES (?, ?, ?, ?, ?, 1, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     ON DUPLICATE KEY UPDATE
+       meta_title=VALUES(meta_title), meta_description=VALUES(meta_description), meta_keywords=VALUES(meta_keywords),
+       canonical_url=VALUES(canonical_url), robots_index=1, robots_follow=1,
+       og_title=VALUES(og_title), og_description=VALUES(og_description), og_image_id=VALUES(og_image_id),
+       twitter_title=VALUES(twitter_title), twitter_description=VALUES(twitter_description),
+       twitter_image_id=VALUES(twitter_image_id), schema_type=VALUES(schema_type),
+       schema_name=VALUES(schema_name), schema_description=VALUES(schema_description)'
+)->execute([
+    $pidRules,
+    $rulesTitle,
+    $rulesDescription,
+    'podmínky užití, cookies, autorská práva, ochrana fotografií',
+    '/podminky-uziti',
+    $rulesTitle,
+    $rulesDescription,
+    (int)($seedMedia['rodinne-foceni-rodina-dite-louka.webp']['id'] ?? 0) ?: null,
+    $rulesTitle,
+    $rulesDescription,
+    (int)($seedMedia['rodinne-foceni-rodina-dite-louka.webp']['id'] ?? 0) ?: null,
+    'WebPage',
+    $rulesTitle,
+    $rulesDescription,
+]);
 
 // ─── FAQ položky ──────────────────────────────────────────────────────────────
 
@@ -820,20 +1149,21 @@ $serviceStmt->execute([$siteId, 'Rodinné & portrétní focení', 'Rodinné vzpo
 $serviceStmt->execute([$siteId, 'Reklamní foto & video', 'Profesionální vizuální obsah pro firmy, produkty, kapely i značky. Obsah, který buduje důvěru, odlišuje a prodává.', '', '', 'Více informací', '/kontakt', 3]);
 $serviceStmt->execute([$siteId, 'Rande & zásnuby', 'Přirozené párové focení, žádost o ruku i malé příběhy ve dvou. Jemné vedení a dost prostoru pro skutečné emoce.', '', '', 'Více informací', '/kontakt', 4]);
 $serviceStmt->execute([$siteId, 'Další projekty', 'Individuální foto a video projekty, které se nevejdou do běžných kategorií. Rozsah i výstupy připravíme na míru.', '', '', 'Více informací', '/kontakt', 5]);
+$serviceStmt->execute([$siteId, 'Letecké záběry dronem', 'Letecké záběry místa, příjezdu novomanželů i okolní krajiny dodají svatebnímu filmu působivou perspektivu a atmosféru.', '', '', 'Chci vědět víc', '/kontakt', 6]);
 echo "Služby vytvořeny.\n";
 
 $serviceContent = new \App\Services\HomepageContentService();
-$homeServicesHtml = $serviceContent->buildServicesHtml($siteId, 5);
+$homeServicesHtml = $serviceContent->buildServicesHtml($siteId, 6);
 $allServicesHtml = $serviceContent->buildServicesHtml($siteId, 0);
 
-seedBlock($pdo, $pidHome, 'sluzby_items', 'html', 'Služby — karty', $homeServicesHtml, 12);
-seedBlock($pdo, $pidSluzby, 'sluzby_grid', 'html', 'Služby — karty', $allServicesHtml, 3);
+seedBlock($pdo, $pidHome, 'sluzby_items', 'html', 'Služby - karty', $homeServicesHtml, 12);
+seedBlock($pdo, $pidSluzby, 'sluzby_grid', 'html', 'Služby - karty', $allServicesHtml, 3);
 echo "Výpisy služeb synchronizovány.\n";
 
 $pdo->exec("DELETE FROM faq_items WHERE site_id = {$siteId}");
 $faqStmt = $pdo->prepare('INSERT INTO faq_items (site_id, question, answer, sort_order, is_active) VALUES (?, ?, ?, ?, 1)');
 $faqStmt->execute([$siteId, 'Jak probíhá první konzultace?',      'První konzultace probíhá zdarma a trvá přibližně 30 minut. Probereme vaše potřeby a navrhneme optimální řešení.', 1]);
-$faqStmt->execute([$siteId, 'Jaká je typická doba realizace?',    'Záleží na rozsahu projektu. Jednodušší zakázky zvládáme do 1–2 týdnů, komplexní projekty do 4–6 týdnů.', 2]);
+$faqStmt->execute([$siteId, 'Jaká je typická doba realizace?',    'Záleží na rozsahu projektu. Jednodušší zakázky zvládáme do 1-2 týdnů, komplexní projekty do 4-6 týdnů.', 2]);
 $faqStmt->execute([$siteId, 'Jak mohu uhradit objednávku?',       'Přijímáme platby bankovním převodem nebo hotově. Po dohodě je možná i platba na splátky.', 3]);
 $faqStmt->execute([$siteId, 'Poskytujete záruku na práci?',       'Ano, na všechny naše práce poskytujeme záruku. Podmínky záruky upřesníme při konzultaci.', 4]);
 $faqStmt->execute([$siteId, 'Kde vás mohu kontaktovat?',          'Nejrychlejší odpověď dostanete přes kontaktní formulář nebo telefonicky. Odpovídáme obvykle do 24 hodin.', 5]);
@@ -854,8 +1184,8 @@ $pdo->prepare('
     '+420 792 483 583',
     '+420 604 225 032',
     'rb_vp@volny.cz',
-    'Horní náměstí 583/1',
-    '779 00 Olomouc',
+    'Mozartova 1113/65',
+    '779 00 Olomouc, Nová Ulice',
     'rb_vp@volny.cz',
     'instagram',
     'https://www.instagram.com/rb_videos_photos/',
@@ -871,8 +1201,8 @@ echo "Kontaktní informace vytvořeny.\n";
 $tplReviewsHtml = <<<'HTML'
 <section class="page-hero">
   <div class="container">
-    <h1 data-block="hero_h1">Hodnoceni klientu</h1>
-    <p data-block="hero_sub" class="hero-sub">Slova paru, rodin a firem, se kterymi jsme tvorili fotografie a video.</p>
+    <h1 data-block="hero_h1">Hodnocení klientů</h1>
+    <p data-block="hero_sub" class="hero-sub">Slova párů, rodin a firem, se kterými jsme tvořili fotografie a video.</p>
   </div>
 </section>
 <section class="section">
@@ -891,50 +1221,32 @@ $tplReviewsCss = <<<'CSS'
 .reviews-page-card span{display:block;color:rgba(255,255,255,.5);font-size:12px}
 CSS;
 
-$tplReviews = seedUpsertTemplate($pdo, $siteId, 'Hodnoceni', $tplReviewsHtml, $tplReviewsCss, '');
-$pidReviews = seedUpsertPage($pdo, $siteId, $tplReviews, 'Hodnoceni', 'hodnoceni', 'hodnoceni');
+$tplReviews = seedUpsertTemplate($pdo, $siteId, 'Hodnocení', $tplReviewsHtml, $tplReviewsCss, '');
+$pidReviews = seedUpsertPage($pdo, $siteId, $tplReviews, 'Hodnocení', 'hodnoceni', 'hodnoceni');
 
 seedBlock($pdo, $pidHome, 'reviews_title', 'text', 'Recenze - nadpis', 'Co o nas rikaji klienti', 55);
 seedBlock($pdo, $pidHome, 'reviews_intro', 'textarea', 'Recenze - intro', 'Vybrane reference klientu, kterym jsme dodali fotografie nebo video.', 56);
 seedBlock($pdo, $pidHome, 'reviews_demo', 'html', 'Recenze - grid', '', 57);
-seedBlock($pdo, $pidHome, 'reviews_cta', 'html', 'Recenze - tlacitko', '<a href="/hodnoceni" class="btn-secondary">Vsechny recenze</a>', 58);
+seedBlock($pdo, $pidHome, 'reviews_cta', 'html', 'Recenze - tlacitko', '<a href="/hodnoceni" class="btn-secondary">Všechny recenze</a>', 58);
 
-seedBlock($pdo, $pidReviews, 'hero_h1', 'text', 'Hero - nadpis', 'Hodnoceni klientu', 1);
-seedBlock($pdo, $pidReviews, 'hero_sub', 'textarea', 'Hero - intro', 'Slova paru, rodin a firem, se kterymi jsme tvorili fotografie a video.', 2);
+seedBlock($pdo, $pidReviews, 'hero_h1', 'text', 'Hero - nadpis', 'Hodnocení klientů', 1);
+seedBlock($pdo, $pidReviews, 'hero_sub', 'textarea', 'Hero - intro', 'Slova párů, rodin a firem, se kterými jsme tvořili fotografie a video.', 2);
+seedBlock($pdo, $pidReviews, 'hero_bg', 'image', 'Hero foto', (string)($seedMedia['hero-reference-cream.png']['url'] ?? ''), 5);
 seedBlock($pdo, $pidReviews, 'reviews_body', 'html', 'Recenze - grid', '', 3);
 
 $pdo->exec("DELETE FROM reviews WHERE site_id = {$siteId}");
 $reviewStmt = $pdo->prepare('INSERT INTO reviews (site_id, author_name, context_label, rating, review_text, sort_order, is_active) VALUES (?, ?, ?, ?, ?, ?, ?)');
-$reviewStmt->execute([$siteId, 'Jan Jungling', 'Svatba M+H', 5, 'Kluci jsou naprosti profesionalove. Jsou pecivi a dokazou zachytit skutecne emoce.', 1, 1]);
-$reviewStmt->execute([$siteId, 'Vaclav Konopka', 'Svatebni foceni', 5, 'Super domluva, mily a profesionalni pristup k foceni. Velka spokojenost.', 2, 1]);
-$reviewStmt->execute([$siteId, 'Jana Dudkova', 'Rodinne foceni', 5, 'Moc doporucuji. Vse profesionalne nafocene, krasne barvy a skvela domluva.', 3, 1]);
-$reviewStmt->execute([$siteId, 'Marketa a Tomas', 'Svatebni video', 5, 'Video vystihlo atmosferu dne do posledniho detailu. Vracime se k nemu porad dokola.', 4, 1]);
-$reviewStmt->execute([$siteId, 'Lucie Novakova', 'Portretni foceni', 5, 'Foceni bylo uvolnene a bez stresu. Vysledek pusobi prirozene a profesionalne.', 5, 1]);
-$reviewStmt->execute([$siteId, 'Petr Maly', 'Firemni akce', 5, 'Rychla domluva, jistota na miste a vystupy pouzitelne rovnou na web i socialni site.', 6, 1]);
-
-$reviewStmt->execute([$siteId, 'Ellie Lachnitova', 'Foceni s Bannym', 5, 'Foceni s Bannym me moc bavilo. Super pristup, atmosfera i fotky. Rozhodne doporucuji! :)', 7, 1]);
-$reviewStmt->execute([$siteId, 'Michael Latal', 'Foceni', 5, 'Velmi super pristup i fotky.', 8, 1]);
-$reviewStmt->execute([$siteId, 'Roman Vrana', 'Svatebni foceni', 5, 'Rychlost, super provedeni, nadherne fotky, ktere rychle dodal upravene. 11/10, jeste jednou moc dekujeme <3', 9, 1]);
-$reviewStmt->execute([$siteId, 'Tomas Pavlat', 'Portretni foceni', 5, 'Profesionalita, ochota, vstricnost a hlavne poradi i se scenou. Chces mit profi foto a nevis komu rict a poradit s kompozici? Tak ted uz vis.', 10, 1]);
-$reviewStmt->execute([$siteId, 'Lucie Fedorova', 'Foceni', 5, 'Lepsiho fotografa neznam. :) Uzasny pristup, nadherny fotky. Doporucuji.', 11, 1]);
-$reviewStmt->execute([$siteId, 'Zuzana Horakova', 'Rodinne foceni', 5, 'Perfektni. Foceni velmi prijemne a fotky krasne. Doporucuji vsemi deseti.', 12, 1]);
-$reviewStmt->execute([$siteId, 'Martina Bobkova', 'Foceni', 5, 'Super fotky a super pokec :) doporucuji moc moc.', 13, 1]);
-$reviewStmt->execute([$siteId, 'Darca Polaskova', 'Svatebni foceni', 5, 'Super domluva, zabava a vtipky pri samotnem foceni, fotky skvele a je jich hodne :3 Rozhodne doporucuji :)', 14, 1]);
-$reviewStmt->execute([$siteId, 'Dana Kneblova', 'Foceni', 5, 'Bylo to zabavne a uplne pohodove foceni ;)', 15, 1]);
-$reviewStmt->execute([$siteId, 'Veronika Bokova', 'Rodinne foceni', 5, 'Domluva skvela, foceni zabavne, takze z cloveka hned odpadne nervozita a fotky paradni...Doporucuji! :)', 16, 1]);
-$reviewStmt->execute([$siteId, 'Michal Kucera', 'Foceni', 5, 'Skvela komunikace, super fotky jen doporucuji.', 17, 1]);
-$reviewStmt->execute([$siteId, 'Dominika Jecminkova', 'Foceni', 5, 'Skvela komunikace, skvele fotky ^^ Kdykoliv se jde domluvit, aby to vyhovovalo obema stranam :) Muzu jen doporucit.', 18, 1]);
-$reviewStmt->execute([$siteId, 'Rose De Clermont', 'Foceni', 5, 'Velka spokojenost! Dvakrat nam foceni zrusilo spatne pocasi, ale diky dobre komunikaci s fotografem se foceni fakt uskutecnilo :) I po foceni je paradni domluva, kdyz chci jeste nejakou dalsi z fotek upravit. Doporucuji :)', 19, 1]);
-$reviewStmt->execute([$siteId, 'Aneta Jenesova', 'Foceni', 5, 'Super fotky a skvela domluva s panem fotografem doporucuji :)', 20, 1]);
-$reviewStmt->execute([$siteId, 'Jenny Molatova', 'Foceni', 5, 'Super fotky ^^', 21, 1]);
-$reviewStmt->execute([$siteId, 'Martin Jenes', 'Foceni', 5, 'Vrele doporucuji. Perfektni prace pana fotografa.', 22, 1]);
-$reviewStmt->execute([$siteId, 'Vojtech Vrana', 'Hudebni klip', 5, 'Cerstvy klip z nove desky WE ARE HERE. Jsme nataceli s RB - Videos & Photos, jsou to sikovni panove.', 23, 1]);
-$reviewStmt->execute([$siteId, 'Veronika Saskova', 'Celodenni foceni', 5, 'Diky klukum z rbvideosphotos jsem mela moznost vyzkouset si celodenni foceni v pronajatem apartmanu, kde se vystridalo nekolik modelek. Byla to fajn zkusenost :)', 24, 1]);
-$reviewStmt->execute([$siteId, 'Diana Smidova', 'Foceni', 5, 'Dekujeme za nejkrasnejsi vzpominku! Super prace.', 25, 1]);
-$reviewStmt->execute([$siteId, 'Clarissa cosplayer', 'Photo shoot', 5, 'Today is nice day. I already have photos from the photo shoot. Thank you so much to the photographer for the photos and video.', 26, 1]);
-$reviewStmt->execute([$siteId, 'Tomas Fyfty Fiala', 'Hudebni klip', 5, 'A je to venku. Klip k novemu songu SVETLO. Velke diky klukum z RB - Videos & Photos.', 27, 1]);
-$reviewStmt->execute([$siteId, 'Katerina Vaclavkova', 'Foceni', 5, 'Super :) :)', 28, 1]);
-$reviewStmt->execute([$siteId, 'Radka Polynkova', 'Foceni', 5, 'Moc dekujeme za uzasne fotky <3', 29, 1]);
+foreach (\App\Content\CustomerReviewDataset::all() as $review) {
+    $reviewStmt->execute([
+        $siteId,
+        $review['author_name'],
+        $review['context_label'],
+        $review['rating'],
+        $review['review_text'],
+        $review['sort_order'],
+        $review['is_active'],
+    ]);
+}
 (new \App\Services\ReviewContentService())->ensureHomepageSection($siteId);
 echo "Recenze vytvoreny.\n";
 
@@ -949,3 +1261,7 @@ try {
 echo "\n✓ Seed dokončen.\n";
 echo "  Přihlášení: admin@example.com / admin123\n";
 echo "  Změňte heslo po prvním přihlášení!\n";
+
+if ($seedOwnOutputBuffer) {
+    ob_end_flush();
+}

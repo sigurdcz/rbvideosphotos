@@ -1,133 +1,63 @@
-# Screenshotovani webu v Google Chrome
+# Screenshot workflow
 
-## Primarni pravidlo
+Aktualni vizualni QA se provadi nad skutecnym lokalnim runtime v explicitne instalovanem Google Chrome. Stare screenshoty, snimek cele plochy ani obraz z jineho browseru se nesmi vydavat za cerstvy Chrome dukaz.
 
-**Google Chrome je primarni a pozadovana cesta pro vsechny nove screenshoty
-webu.** Screenshot se porizuje z Chrome DevTools nad skutecne otevrenou URL;
-neni dovoleno jej bez viditelneho hlaseni nahradit VS Code Integrated Browserem,
-OS snimkem plochy ani starym obrazovym souborem. VS Code Integrated Browser je
-nize ponechan pouze jako historicka diagnostika drivejsiho problemu.
+## Standardni capture
 
-## Primarni postup pro vizualni iterace
+1. Spustit web na kanonickem `http://127.0.0.1:8766` prikazem z `qa-testing.md`.
+2. Pro audit celeho verejneho webu spustit:
 
-1. Spustit projekt na `http://127.0.0.1:8766/` a otevrit stejnou URL v
-   **Google Chrome**.
-2. Otevrit Chrome DevTools (`F12`), zapnout Device Toolbar (`Ctrl+Shift+M`) a
-   nastavit presnou sirku, vysku a DPR ciloveho testu. Pro mobilni target je to
-   `941 x 1672`, DPR `1`.
-3. Po reloadu pockat na dokonceni vykresleni. V DevTools otevrit Command Menu
-   (`Ctrl+Shift+P`) a spustit `Capture screenshot` pro viewport nebo
-   `Capture full size screenshot` pro cely dokument.
-4. Ulozit novy PNG artefakt do rootu projektu jako
-   `visual-progress-mobile-00-YYYYMMDD-HHMMSS.png`,
-   `visual-progress-mobile-01-YYYYMMDD-HHMMSS.png`, atd. Cilovy
-   `preview-mobile-reviews.png` se nikdy neprepisuje.
-5. Do `UKOL.md` zapsat viewport, DPR, nazev screenshotu, skore, odecty a dalsi
-   planovanou zmenu.
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File .\scripts\qa_full_site_visual_audit.ps1
+   ```
 
-Pokud Chrome nebo jeho DevTools nejdou otevrit, screenshot se oznaci jako
-neprovedeny. Nesmí se potichu vydavat snimek z jineho povrchu za Chrome QA.
+3. Skript vezme URL z aktualniho `sitemap.xml`, pouzije instalovany `chrome.exe`, proscrolluje stranku kvuli lazy-load obsahu a ulozi full-page PNG i `audit-data.json`.
+4. Podezrelou route znovu zachytit izolovane pomoci `-RoutePattern`, protoze lokalni PHP development server muze pri soubeznych asset requestech jednorazove resetovat spojeni:
 
-## Historie: co bylo rozbite ve VS Code Integrated Browseru
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File .\scripts\qa_full_site_visual_audit.ps1 `
+     -OutputDir storage/qa/visual-audit-recheck `
+     -RoutePattern '^/nase-prace$' `
+     -WaitMilliseconds 3000
+   ```
 
-VS Code Integrated Browser dokazal otevrit `http://127.0.0.1:8766/`, ale pri
-predani obrazu agentovi padal nativni Electron `capturePage()` na
-`UnknownVizError`. HTTP 200 proto nebyl dukaz funkcniho screenshotovani.
-Predchozi nouzove snimky cele plochy nebo celeho VS Code se nesmeji pouzivat
-jako vizualni dukaz webu.
+5. `-MaxAttempts 5` povoli omezeny recapture pri nedodanem stylesheetu, nedokoncenem obrazku nebo abnormalni geometrii. Po vycerpani limitu skript viditelne selze.
+6. URL ze sitemap poskytuje pouze cestu a query. Origin zustava vzdy z explicitniho `-BaseUrl`, aby audit omylem nepresel na jiny lokalni server.
 
-## Provedena oprava hostitele
+### Izolovany homepage capture
 
-Opraven je hostitelsky soubor VS Code:
+Pro iteracni homepage QA pouzit `scripts/qa_chrome_cdp_capture.ps1`. Skript uzamkne DPR 1 a zadany viewport, proscrolluje lazy media, ceka na fonty a viditelne obrazky, opakovane meri full-page vysku a pri nestabilni vysce explicitne selze.
 
-`C:\Program Files\Microsoft VS Code\4fe60c8b1c\resources\app\out\main.js`
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\qa_chrome_cdp_capture.ps1 `
+  -Url http://127.0.0.1:8766/ `
+  -Output storage/qa/homepage-1920.png `
+  -Width 1920 `
+  -Height 1080 `
+  -Port 9333
+```
 
-Aktualni overeny SHA-256 upraveneho souboru:
+`Runtime.visualQa` obsahuje prvky mimo viewport, primy i zdedeny clipping, kontrolni plochy, podezrele prekryvy, fixed/sticky zakryti a geometrii klicovych homepage sekci. `LazyLoad.failedVisibleImages` musi byt prazdne a `HeightStable` musi byt `true`.
 
-`78BEF3D6D78022E7702822D4739C1A7C56B4EF93A2496E92EAB22ABA0E4A8C71`
+Full-page PNG je pouze celkovy dukaz poradi a kompozice. Kazda uzivatelem oznacena nebo rizikova oblast musi mit take samostatny 100% viewportovy detail pres `-ScrollSelector` a `-ScrolledOutput`, pripadne po realne interakci pres `-ClickedOutput`. Pozadovany detailni soubor se po behu explicitne overi; kombinace `-CaptureViewportOnly` s pozdejsim scroll capture se nepouziva, protoze viewport-only vetev konci driv.
 
-Capture cesta nejprve ponecha pet nativnich pokusu `capturePage()`. Kdyz
-vsechny skonci na `UnknownVizError`, zapise viditelnou chybu do logu a pouzije
-CDP `Page.captureScreenshot` na stejnem BrowserView. Nevznika snimek plochy;
-zdrojem je stale vykreslovaci proces otevrene webove stranky. Posledni
-page-only JPEG se uklada do:
+`-OpenNavigation` podporuje obecny `.nav-toggle` i Golden Bash `.gb-menu`. Pokud ovladac nenajde nebo menu po kliku neni otevrene, capture skonci chybou; nevytvori tichy screenshot zavreneho stavu. Dalsi stav lze overit pres `-ScrollSelector`, `-ClickSelector` a `-ClickedOutput`.
 
-`%TEMP%\codex-integrated-browser-latest.jpg`
+Cookie summary nejprve zachytit jako skutecny fixed stav. Pro nasledny neruseny layout screenshot lze v cistem profilu pouzit `-ClickSelector '[data-cookie-reject-all]'`; v reportu musi byt tento stav vyznamove oznacen, nesmi se vydavat za vypnutou konfiguraci.
 
-Oprava byla overena novym obrazem pouze stranky a logem
-`Saved Integrated Browser screenshot for Codex`.
+## Povinne kontroly
 
-## Historicky postup ve VS Code Integrated Browseru
+- Screenshot je novejsi nez posledni zmena kodu a obsahuje pouze web.
+- Desktop ma viewport `1920 x 1080`, mobil `390 x 844`, DPR 1 a zoom 100 %.
+- `scrollWidth` se rovna `clientWidth`; kazdy rozdil je horizontalni overflow.
+- Neni prekryty text, tlacitko, formular ani panel; obsah neni orezany.
+- Nejsou pritomne nevysvetlene velke prazdne plochy, cerne bloky, bile bloky ani sede media placeholdery.
+- CSS/JS/media requesty a konzole jsou bez chyb.
+- Izolovany recapture musi potvrdit kazdou vadu, ktera muze byt zpusobena chybejicim assetem. Pokud recapture projde, prvni selhani zustane v reportu jako problem spolehlivosti lokalniho runtime, nikoli jako potvrzena layoutova vada.
+- `HeightStable` je `true`, vsechna viditelna deklarovana media jsou nactena a zadny zkraceny startovni timeout se nepouziva jako finalni dukaz.
+- Obe strany kazde zmenene media-query hranice maji vlastni capture; k nim je reprezentativni desktop a mobil.
+- Pokud novy uzivatelsky screenshot nebo anotace odporuje PASS, PASS i posledni skore se okamzite odvolaji a `UKOL.md` se znovu otevre.
 
-Tento postup uz neni primarni. Pouziva se jen pri cilenem overeni opravy
-VS Code hostitele nebo kdyz zadani vyslovne vyzaduje tento konkretni povrch.
+## Vystup auditu
 
-1. Spustit projekt na `http://127.0.0.1:8766/` a overit, ze je otevreny ve
-   VS Code Integrated Browseru.
-2. Zapnout `Share with Agent`.
-3. Pres Command Palette spustit `Browser: Toggle Device Emulation`.
-4. Zadat presnou sirku, vysku a DPR z ciloveho screenshotu. Pro mobilni target
-   je to `941 x 1672`, DPR `1`.
-5. Pro presnou nativni sirku maximalizovat editorovou skupinu Browseru a
-   docasne skryt bocni chat. Auto-scale maly editor fyzicky zmensuje capture a
-   takovy obraz je pouze diagnosticky.
-6. Pro cely dokument pouzit `Add to Chat` ->
-   `Add Full Page Screenshot to Chat (Experimental)`. Tato polozka vyzaduje
-   nastaveni `workbench.browser.experimentalUserTools.enabled: true`.
-7. DevTools muze ulozit PNG nejprve jako soubor `*.tmp` v `Downloads`. Platny
-   soubor ma PNG hlavicku `89 50 4E 47 0D 0A 1A 0A`; po overeni rozmeru se
-   zkopiruje do rootu projektu s priponou `.png`.
-8. Po kazde CSS iteraci se ulozi novy root artefakt:
-   `visual-progress-mobile-00-YYYYMMDD-HHMMSS.png`,
-   `visual-progress-mobile-01-YYYYMMDD-HHMMSS.png`, atd. Cilovy `preview-mobile-reviews.png`
-   se nikdy neprepisuje.
-9. Do `UKOL.md` se u kazde iterace zapise viewport, nazev screenshotu, skore,
-   odecty a dalsi zmena.
-
-Opakovatelny root skript pro kroky 3 az 8:
-
-`powershell -ExecutionPolicy Bypass -File .\qa_integrated_browser_capture.ps1`
-
-Bez parametru skript automaticky zvoli dalsi volne poradove cislo a prida
-timestamp `YYYYMMDD-HHMMSS`. Po kazdem behu se uzivateli potvrdi presna cesta,
-rozmery a cas ulozeni.
-
-Skript po reloadu ceka pet sekund. Kratsi cekani muze zachytit nedokoncene
-rendererove surfaces jako cerne bloky; takovy soubor se ulozi jako diagnostika,
-ale neboduje se a stejny stav se zachyti znovu.
-
-Skript umi znovu pouzit uz otevrene samostatne DevTools okno. V uzkem toolbaru
-akceptuje `Hard Reload` stejne jako `Reload`; pokud je tlacitko DevTools schovane,
-pouzije jeho inzerovany ekvivalent F12. DevTools prikazovou paletu otevira pres
-`Customize and control DevTools` -> `Run command`, protoze aktivni Console prompt
-muze zachytit klavesovou zkratku. Screenshot command je zavisly na hostitelskem
-nastaveni `workbench.browser.experimentalUserTools.enabled`; pokud se po cistem
-otevreni DevTools nezobrazi, capture musi viditelne selhat a vyzadat reload hostitele,
-nikoli ulozit nahradni obraz.
-
-## Kontroly platnosti Chrome screenshotu
-
-- Cas souboru musi byt novejsi nez reload nebo posledni uprava CSS.
-- Rozmery a DPR musi odpovidat zamknutemu testu.
-- Obraz musi obsahovat jen web; browserovy chrome, DevTools ani cela plocha
-  nejsou soucasti vizualniho dukazu.
-- Screenshot pri auto-scale `377x669`, `377x752` nebo podobne maly snimek se
-  nesmi vydavat za nativni baseline 941x1672.
-- Standardni dukaz pochazi z Google Chrome. Screenshot z jineho prohlizece
-  nesmi byt bez viditelneho oznaceni vydavan za Chrome capture.
-- Pokud `agent.browsers.list()` vraci prazdny seznam, jde o nezavisly problem
-  registrace `iab`; tyka se pouze historicke VS Code cesty a nema blokovat
-  primarni Chrome capture.
-
-## Aktualni stav mobilniho QA
-
-Autoritativni predlohy jsou verzovane jako `preview-mobile-reviews.png`
-(`941 x 1672`) a `preview-tablet-reviews.png` (`1086 x 1448`). Lokalni
-diagnosticke JPEGy a `visual-progress-mobile-*.png` jsou zamerne ignorovane
-Gitem: slouzi k prubezne kontrole, ale nejsou zdrojem pravdy ani dukazem, ze
-produkci odpovida prave commitnuty CSS stav.
-
-Novy progress screenshot se uklada s timestampem podle kroku 8 a zustava v
-rootu projektu pro okamzitou vizualni kontrolu uzivatelem. Commitne se jen
-tehdy, kdyz je vyslovne vybran jako stabilni referencni artefakt a soucasne
-odpovida commitnutemu kodu.
+Screenshoty patri do `storage/qa/<audit>/`. Report musi u kazdeho nalezu uvest URL, zavaznost, full-page i detailni screenshot a zda byl nalez potvrzen opakovanym capture. Samotne HTTP 200, nulovy overflow, prazdny clipping seznam ani uspesne nacteni medii nenahrazuji vizualni kontrolu PNG v puvodnim meritku.

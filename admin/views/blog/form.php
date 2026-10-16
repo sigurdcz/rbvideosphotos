@@ -14,7 +14,8 @@ $publicMediaUrl = static function (?string $path): string {
     return '/' . ltrim($normalized, '/');
 };
 $selectedFeaturedId = (int)($post['featured_image_id'] ?? 0);
-$selectedGallery    = array_map('intval', $gallery ?? []);
+$galleryMedia       = $galleryMedia ?? [];
+$selectedGallery    = array_map('intval', array_column($galleryMedia, 'id'));
 ob_start();
 ?>
 <div class="page-header">
@@ -52,6 +53,11 @@ ob_start();
               <option value="published" <?= ($post['status'] ?? '') === 'published' ? 'selected' : '' ?>>Publikovano</option>
             </select>
           </div>
+          <div class="form-group">
+            <label for="blog-sort">Poradi</label>
+            <input type="number" id="blog-sort" name="sort_order" value="<?= (int)($post['sort_order'] ?? 0) ?>" min="0" max="1000000" step="1" style="max-width:90px">
+            <div class="form-hint">1 = prvni. 0 znamena bez rucniho poradi - takovy clanek zustane razeny podle data, za ocislovanymi.</div>
+          </div>
         </div>
 
         <div class="form-group">
@@ -88,7 +94,7 @@ ob_start();
     </div>
 
     <div class="tab-pane" id="tab-media">
-      <?php if (!empty($media)): ?>
+      <?php if (true): ?>
       <!-- ── Hlavní obrázek ─────────────────────────────── -->
       <div class="card">
         <div class="card-title">Hlavni obrazek</div>
@@ -99,8 +105,9 @@ ob_start();
           </span>
         </p>
         <input type="hidden" name="featured_image_id" id="fi-input" value="<?= $selectedFeaturedId > 0 ? $selectedFeaturedId : '' ?>">
-        <div class="media-grid" id="fi-grid">
-          <?php foreach ($media as $m): ?>
+        <button type="button" class="btn btn-secondary" id="fi-modal-open"><?= $selectedFeaturedId ? 'Změnit obrázek' : 'Vybrat obrázek' ?></button>
+        <div class="media-grid" id="fi-grid" hidden>
+          <?php foreach (array_filter([$featuredMedia ?? null]) as $m): ?>
           <?php $mediaId = (int)$m['id']; ?>
           <div class="media-card fi-item <?= $selectedFeaturedId === $mediaId ? 'fi-selected' : '' ?>"
                data-media-id="<?= $mediaId ?>"
@@ -128,26 +135,13 @@ ob_start();
       <div class="card">
         <div class="card-title">Galerie</div>
         <p style="font-size:13px;color:var(--c-muted);margin-bottom:12px">
-          Vyberte dalsi obrazky pro galerii clanku. Kliknete pro vybrani/odebrání.
+          Cislo u fotky urcuje poradi v galerii (nizsi = driv); pri stejnem cisle rozhodne poradi vyberu.
           <span id="gl-status" style="font-weight:600;color:var(--c-primary)">
             <?= count($selectedGallery) > 0 ? count($selectedGallery) . ' vybrano' : 'zadne' ?>
           </span>
         </p>
         <div id="gallery-ids-wrap"></div>
-        <div class="media-grid" id="gl-grid">
-          <?php foreach ($media as $m): ?>
-          <?php $mediaId = (int)$m['id']; ?>
-          <div class="media-card gl-item <?= in_array($mediaId, $selectedGallery, true) ? 'gl-selected' : '' ?>"
-               data-media-id="<?= $mediaId ?>"
-               style="cursor:pointer">
-            <img src="<?= $h($publicMediaUrl((string)($m['storage_path'] ?? ''))) ?>" alt="<?= $h($m['alt_text']) ?>" loading="lazy" style="height:90px;object-fit:cover;display:block;width:100%">
-            <div class="media-card-info" style="display:flex;justify-content:space-between;padding:5px 8px">
-              <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><?= $h($m['original_filename']) ?></span>
-              <span class="gl-check" style="flex-shrink:0;font-size:14px;color:#16a34a">&#10003;</span>
-            </div>
-          </div>
-          <?php endforeach; ?>
-        </div>
+        <button type="button" class="btn btn-secondary" id="gl-modal-open"><?= $selectedGallery ? 'Změnit obrázky' : 'Vybrat obrázky' ?></button>
       </div>
       <?php else: ?>
       <div class="card">
@@ -185,6 +179,37 @@ ob_start();
 </style>
 
 <script>
+let blogGallerySelection = null;
+// admin.js is loaded at the end of the layout, after this script, so the shared
+// renderer only exists once the document is parsed.
+document.addEventListener('DOMContentLoaded', () => {
+blogGallerySelection = window.AdminMediaSelection.mount({
+  container: document.getElementById('gallery-ids-wrap'),
+  idsName: 'gallery_ids',
+  sortName: 'gallery_sort',
+  items: <?= json_encode(array_map(static fn($m) => [
+      'id' => (int)$m['id'],
+      'name' => (string)($m['original_filename'] ?? ''),
+      'thumb' => $publicMediaUrl((string)($m['thumb_path'] ?? $m['storage_path'] ?? '')),
+      'sort' => (int)($m['bm_sort'] ?? 0),
+  ], $galleryMedia)) ?>,
+  onChange: items => {
+    const status = document.getElementById('gl-status');
+    if (status) status.textContent = items.length ? items.length + ' vybrano' : 'zadne';
+    document.getElementById('gl-modal-open').textContent = items.length ? 'Změnit obrázky' : 'Vybrat obrázky';
+  },
+});
+});
+const blogPickerInitial = {
+  featured: <?= json_encode($featuredMedia ? [['id'=>(int)$featuredMedia['id'],'name'=>(string)($featuredMedia['original_filename']??''),'thumb'=>$publicMediaUrl((string)($featuredMedia['thumb_path']??$featuredMedia['storage_path']??''))]] : []) ?>,
+};
+document.getElementById('fi-modal-open').addEventListener('click', function(){
+  AdminMediaPicker.open({mode:'single',imagesOnly:true,selected:blogPickerInitial.featured,onConfirm:list=>{const item=list[0];document.getElementById('fi-input').value=item?item.id:'';blogPickerInitial.featured=list;this.textContent=item?'Změnit obrázek':'Vybrat obrázek';}});
+});
+document.getElementById('gl-modal-open').addEventListener('click', function(){
+  if (!blogGallerySelection) return;
+  AdminMediaPicker.open({mode:'multiple',imagesOnly:true,selected:blogGallerySelection.getItems(),onConfirm:list=>blogGallerySelection.setItems(list)});
+});
 // ── Hlavni obrazek ────────────────────────────────────────────────────────────
 (function() {
   const grid = document.getElementById('fi-grid');
@@ -228,48 +253,18 @@ ob_start();
   render();
 })();
 
-// ── Galerie (multi-select) ────────────────────────────────────────────────────
-(function() {
-  const grid   = document.getElementById('gl-grid');
-  const wrap   = document.getElementById('gallery-ids-wrap');
-  const status = document.getElementById('gl-status');
-  if (!grid || !wrap) return;
-
-  const initial = <?= json_encode($selectedGallery) ?>;
-  let selected  = [...initial];
-
-  function syncInputs() {
-    wrap.innerHTML = '';
-    selected.forEach(id => {
-      const inp = document.createElement('input');
-      inp.type = 'hidden'; inp.name = 'gallery_ids[]'; inp.value = id;
-      wrap.appendChild(inp);
-    });
-    if (status) status.textContent = selected.length ? selected.length + ' vybrano' : 'zadne';
-  }
-
-  grid.querySelectorAll('.gl-item').forEach(item => {
-    item.addEventListener('click', () => {
-      const id = parseInt(item.dataset.mediaId, 10);
-      const idx = selected.indexOf(id);
-      if (idx === -1) { selected.push(id); item.classList.add('gl-selected'); }
-      else            { selected.splice(idx, 1); item.classList.remove('gl-selected'); }
-      syncInputs();
-    });
-  });
-
-  syncInputs();
-})();
-
-// ── Slug z nazvu ──────────────────────────────────────────────────────────────
-(function() {
+// Slug z nazvu (jen dokud ho uzivatel sam nevyplnil)
+(function () {
   const title = document.getElementById('blog-title');
   const slug  = document.getElementById('blog-slug');
   if (!title || !slug || slug.value) return;
-  title.addEventListener('input', () => { slug.value = slugify(title.value); });
-  function slugify(str) {
-    return str.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9\s-]/g,'').trim().replace(/\s+/g,'-').replace(/-+/g,'-');
-  }
+  title.addEventListener('input', () => {
+    const map = {'á':'a','č':'c','ď':'d','é':'e','ě':'e','í':'i','ň':'n','ó':'o','ř':'r','š':'s','ť':'t','ú':'u','ů':'u','ý':'y','ž':'z'};
+    slug.value = title.value.toLowerCase()
+      .replace(/[áčďéěíňóřšťúůýž]/g, c => map[c] || c)
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  });
 })();
 </script>
 <?php

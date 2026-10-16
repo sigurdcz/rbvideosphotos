@@ -5,8 +5,8 @@ page_type: wedding_case_study
 brand: RB Videos & Photos
 language: cs-CZ
 status: ready_for_ai
-target_path: /svatba-best-hospudka-ve-stodole-paja-marek/
-slug: svatba-best-hospudka-ve-stodole-paja-marek
+target_path: /svatba-hospudka-ve-stodole-best/
+slug: svatba-hospudka-ve-stodole-best
 title: Svatba Páji a Marka v Hospůdce ve stodole Bešť
 seo:
   meta_title: Svatba v Hospůdce ve stodole Bešť | Pája a Marek
@@ -19,7 +19,7 @@ seo:
   robots: index,follow
   schema_type: Article
 event:
-  couple: Pája a Marek Krylovi
+  couple: Pája a Marek
   date_iso: '2025-09-26'
   date_display: 26. září 2025
   ceremony: Bešť – Hospůdka ve stodole, Zábeštní Lhota
@@ -40,7 +40,7 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 ## Povinná pravidla
 
-- Stránka patří do blogu a její adresa je `/svatba-best-hospudka-ve-stodole-paja-marek/`.
+- Stránka patří do blogu a její adresa je `/svatba-hospudka-ve-stodole-best/`.
 - Používej označení „blogový článek“; nepoužívej označení „portfolio“.
 - Piš přirozeně v první osobě množného čísla: „fotíme“, „natáčíme“, „pracujeme“.
 - Zachovej lidský, prémiový a konkrétní tón bez prázdných reklamních frází.
@@ -54,7 +54,7 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 ## Uzamčené údaje
 
-- Pár: **Pája a Marek Krylovi**
+- Pár: **Pája a Marek**
 - Datum: **26. září 2025**
 - Obřad: **Bešť – Hospůdka ve stodole, Zábeštní Lhota**
 - Oslava: **Bešť – Hospůdka ve stodole, Zábeštní Lhota**
@@ -78,7 +78,7 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 # Zářijová svatba Páji a Marka v Hospůdce ve stodole Bešť
 
-Pája a Marek Krylovi si pro 26. září 2025 vybrali Hospůdku ve stodole Bešť v Zábeštní Lhotě. Svatby ve stodole jsou oblíbené kvůli neformální atmosféře, možnosti propojit interiér se zahradou a větší svobodě v programu. Zářijový termín navíc přidává měkčí světlo a klidnější barevnost než vrchol léta.
+Pája a Marek si pro 26. září 2025 vybrali Hospůdku ve stodole Bešť v Zábeštní Lhotě. Svatby ve stodole jsou oblíbené kvůli neformální atmosféře, možnosti propojit interiér se zahradou a větší svobodě v programu. Zářijový termín navíc přidává měkčí světlo a klidnější barevnost než vrchol léta.
 
 ## Zábeštní Lhota a jméno Bešť
 

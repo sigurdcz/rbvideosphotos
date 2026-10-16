@@ -35,6 +35,7 @@ foreach ($imageMedia as $media) {
 
 $selectedOg = $mediaById[(int)($seo['og_image_id'] ?? 0)] ?? null;
 $selectedTwitter = $mediaById[(int)($seo['twitter_image_id'] ?? 0)] ?? null;
+$selectedSchema = $mediaById[(int)($seo['schema_image_id'] ?? 0)] ?? null;
 
 $renderSocialPicker = function(string $label, string $fieldName, string $inputId, ?array $selectedMedia, string $emptyLabel) use ($h, $mediaUrl, $mediaThumb): void {
     $selectedId = (int)($selectedMedia['id'] ?? 0);
@@ -44,8 +45,8 @@ $renderSocialPicker = function(string $label, string $fieldName, string $inputId
     ?>
     <div class="form-group">
       <label><?= $h($label) ?></label>
-      <input type="hidden" name="<?= $h($fieldName) ?>" id="<?= $h($inputId) ?>" value="<?= $selectedId > 0 ? $selectedId : '' ?>">
       <div class="seo-media-picker" data-seo-picker data-input-id="<?= $h($inputId) ?>">
+        <input type="hidden" name="<?= $h($fieldName) ?>" id="<?= $h($inputId) ?>" value="<?= $selectedId > 0 ? $selectedId : '' ?>">
         <div class="seo-media-preview" data-seo-preview>
           <?php if ($selectedMedia): ?>
             <img src="<?= $h($previewUrl) ?>" alt="<?= $h($fileName) ?>">
@@ -55,7 +56,7 @@ $renderSocialPicker = function(string $label, string $fieldName, string $inputId
         </div>
         <div class="seo-media-meta">
           <div class="seo-media-name" data-seo-name><?= $selectedMedia ? $h($fileName) : $h($emptyLabel) ?></div>
-          <div class="seo-media-id" data-seo-id><?= $selectedId > 0 ? 'Media ID: ' . $selectedId : 'Zatim neni vybran obrazek' ?></div>
+          <div class="seo-media-id" data-seo-id><?= $selectedId > 0 ? 'Media ID: ' . $selectedId : 'Zatím není vybrán obrázek' ?></div>
           <div class="seo-media-path" data-seo-path><?= $selectedMedia ? $h($fullUrl) : '' ?></div>
           <div class="seo-media-actions">
             <button type="button" class="btn btn-secondary" data-open-seo-media data-target="<?= $h($inputId) ?>">Vybrat z medii</button>
@@ -121,7 +122,7 @@ ob_start();
         </div>
         <div class="form-group">
           <label>Canonical URL</label>
-          <input type="url" name="canonical_url" value="<?= $h($seo['canonical_url'] ?? '') ?>">
+          <input type="text" name="canonical_url" value="<?= $h($seo['canonical_url'] ?? '') ?>" placeholder="/sluzby">
         </div>
         <div class="form-row">
           <div class="form-group">
@@ -150,7 +151,7 @@ ob_start();
           <label>OG Description</label>
           <textarea name="og_description" rows="3"><?= $h($seo['og_description'] ?? '') ?></textarea>
         </div>
-        <?php $renderSocialPicker('OG Image', 'og_image_id', 'og_image_id', $selectedOg, 'Neni vybran zadny OG obrazek'); ?>
+        <?php $renderSocialPicker('OG Image', 'og_image_id', 'og_image_id', $selectedOg, 'Není vybrán žádný OG obrazek'); ?>
       </div>
     </div>
 
@@ -164,7 +165,7 @@ ob_start();
           <label>Twitter Description</label>
           <textarea name="twitter_description" rows="3"><?= $h($seo['twitter_description'] ?? '') ?></textarea>
         </div>
-        <?php $renderSocialPicker('Twitter Image', 'twitter_image_id', 'twitter_image_id', $selectedTwitter, 'Neni vybran zadny Twitter obrazek'); ?>
+        <?php $renderSocialPicker('Twitter Image', 'twitter_image_id', 'twitter_image_id', $selectedTwitter, 'Není vybrán žádný Twitter obrazek'); ?>
       </div>
     </div>
 
@@ -172,25 +173,57 @@ ob_start();
       <div class="card">
         <div class="form-group">
           <label>Schema type</label>
-          <select name="schema_type">
+          <select name="schema_type" id="schema_type">
             <option value="">- nevyplneno -</option>
             <option value="LocalBusiness" <?= ($seo['schema_type'] ?? '') === 'LocalBusiness' ? 'selected' : '' ?>>LocalBusiness</option>
             <option value="Person" <?= ($seo['schema_type'] ?? '') === 'Person' ? 'selected' : '' ?>>Person</option>
             <option value="Article" <?= ($seo['schema_type'] ?? '') === 'Article' ? 'selected' : '' ?>>Article</option>
             <option value="WebPage" <?= ($seo['schema_type'] ?? '') === 'WebPage' ? 'selected' : '' ?>>WebPage</option>
+            <?php $st = (string)($seo['schema_type'] ?? ''); if ($st !== '' && !in_array($st, ['LocalBusiness','Person','Article','WebPage'], true)): ?><option value="<?= $h($st) ?>" selected><?= $h($st) ?></option><?php endif; ?>
           </select>
         </div>
         <div class="form-group">
-          <label>Schema JSON-LD</label>
-          <textarea class="code" name="schema_json" rows="12"><?= $h($seo['schema_json'] ?? '') ?></textarea>
-          <div class="form-hint">Cely objekt vcetne &lt;script type="application/ld+json"&gt; nebo jen JSON</div>
+          <label>Název</label>
+          <input type="text" name="schema_name" maxlength="255" value="<?= $h($seo['schema_name'] ?? '') ?>">
+          <div class="form-hint">Název firmy / osoby / stránky tak, jak ho má vidět Google.</div>
+        </div>
+        <div class="form-group">
+          <label>Popis</label>
+          <textarea name="schema_description" rows="3"><?= $h($seo['schema_description'] ?? '') ?></textarea>
+        </div>
+        <?php $renderSocialPicker('Obrázek pro Schema.org', 'schema_image_id', 'schema_image_id', $selectedSchema, 'Není vybrán žádný obrázek (použije se OG obrázek)'); ?>
+        <div id="schema-contact-group" data-schema-contact>
+          <div class="form-group">
+            <div class="checkbox-row">
+              <input type="checkbox" id="schema_contact_auto" name="schema_contact_auto" value="1" <?= (int)($seo['schema_contact_auto'] ?? 1) === 1 ? 'checked' : '' ?>>
+              <label for="schema_contact_auto" style="margin-bottom:0">Vyplnit automaticky z Kontaktů (telefon, e-mail, adresa)</label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Telefon</label>
+            <input type="text" name="schema_telephone" data-schema-contact-field value="<?= $h($seo['schema_telephone'] ?? '') ?>">
+          </div>
+          <div class="form-group">
+            <label>E-mail</label>
+            <input type="text" name="schema_email" data-schema-contact-field value="<?= $h($seo['schema_email'] ?? '') ?>">
+          </div>
+          <div class="form-group">
+            <label>Ulice a číslo popisné</label>
+            <input type="text" name="schema_address_street" data-schema-contact-field placeholder="Mozartova 1113/65" value="<?= $h($seo['schema_address_street'] ?? '') ?>">
+          </div>
+          <div class="form-group">
+            <label>PSČ a město</label>
+            <input type="text" name="schema_address_locality" data-schema-contact-field placeholder="779 00 Olomouc" value="<?= $h($seo['schema_address_locality'] ?? '') ?>">
+            <div class="form-hint">PSČ a město, stejně jako v Kontaktech</div>
+          </div>
+          <div class="form-hint">Kontaktní údaje se vypisují jen u typu LocalBusiness a Person.</div>
         </div>
       </div>
     </div>
   </div>
 
   <div style="display:flex;gap:10px;margin-top:4px">
-    <button type="submit" class="btn btn-primary">Ulozit SEO</button>
+    <button type="submit" class="btn btn-primary">Uložit SEO</button>
   </div>
 </form>
 
@@ -224,7 +257,7 @@ ob_start();
       <div class="seo-media-upload-actions">
         <input type="file" id="seo-media-file" accept=".jpg,.jpeg,.png,.webp,.gif" hidden>
         <button type="button" class="btn btn-secondary" id="seo-media-browse">Vybrat fotku z pocitace</button>
-        <span class="help-text" id="seo-media-file-name">Zatim neni vybran zadny soubor.</span>
+        <span class="help-text" id="seo-media-file-name">Zatím není vybrán žádný soubor.</span>
       </div>
       <div class="seo-media-upload-actions" style="margin-top:10px">
         <button type="button" class="btn btn-primary" id="seo-media-upload-btn">Nahrat a vybrat</button>
@@ -233,7 +266,7 @@ ob_start();
     </div>
 
     <div class="seo-media-library">
-      <p class="help-text" id="seo-media-empty"<?= empty($imageMedia) ? '' : ' hidden' ?>>Zatim nejsou nahrana zadna obrazkova media. Muzes je nahrat primo zde nebo v sekci <a href="/admin/media">Media</a>.</p>
+      <p class="help-text" id="seo-media-empty"<?= empty($imageMedia) ? '' : ' hidden' ?>>Zatím nejsou nahrána žádná obrazkova media. Muzes je nahrat primo zde nebo v sekci <a href="/admin/media">Media</a>.</p>
       <div class="seo-media-list" id="seo-media-list"<?= empty($imageMedia) ? ' hidden' : '' ?>>
         <?php foreach ($imageMedia as $m): ?>
           <?php
@@ -294,6 +327,7 @@ ob_start();
   .seo-media-picker{grid-template-columns:1fr}
   .seo-media-preview img{height:180px}
 }
+#schema-contact-group input[disabled]{opacity:.55;background:var(--c-bg)}
 </style>
 
 <script>
@@ -330,9 +364,9 @@ ob_start();
 
     if (!media) {
       input.value = '';
-      if (preview) preview.innerHTML = '<span>Neni vybran zadny obrazek</span>';
-      if (name) name.textContent = 'Neni vybran zadny obrazek';
-      if (idLabel) idLabel.textContent = 'Zatim neni vybran obrazek';
+      if (preview) preview.innerHTML = '<span>Není vybrán žádný obrazek</span>';
+      if (name) name.textContent = 'Není vybrán žádný obrazek';
+      if (idLabel) idLabel.textContent = 'Zatím není vybrán obrázek';
       if (path) path.textContent = '';
       return;
     }
@@ -427,7 +461,10 @@ ob_start();
   }
 
   document.querySelectorAll('[data-open-seo-media]').forEach(btn => {
-    btn.addEventListener('click', () => openModal(btn.dataset.target || '', false));
+    btn.addEventListener('click', () => {
+      activeTarget = btn.dataset.target || '';
+      AdminMediaPicker.open({mode:'single',imagesOnly:true,onConfirm:list=>{if(list[0]) renderPicker(activeTarget,list[0]);}});
+    });
   });
 
   document.querySelectorAll('[data-upload-seo-media]').forEach(btn => {
@@ -442,7 +479,7 @@ ob_start();
     browseBtn.addEventListener('click', () => fileInput.click());
     fileInput.addEventListener('change', () => {
       const file = fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
-      fileName.textContent = file ? file.name : 'Zatim neni vybran zadny soubor.';
+      fileName.textContent = file ? file.name : 'Zatím není vybrán žádný soubor.';
       uploadStatus.textContent = '';
     });
   }
@@ -513,7 +550,7 @@ ob_start();
         fileInput.value = '';
         altInput.value = '';
         titleInput.value = '';
-        fileName.textContent = 'Zatim neni vybran zadny soubor.';
+        fileName.textContent = 'Zatím není vybrán žádný soubor.';
         uploadStatus.textContent = result.warning || 'Fotka byla nahrana a vybrana.';
         uploadStatus.style.color = result.warning ? '#d97706' : '#16a34a';
         closeModal();
@@ -544,6 +581,22 @@ ob_start();
   document.addEventListener('keydown', event => {
     if (event.key === 'Escape' && modal.classList.contains('is-open')) closeModal();
   });
+})();
+
+(function () {
+  const type = document.getElementById('schema_type');
+  const auto = document.getElementById('schema_contact_auto');
+  const group = document.getElementById('schema-contact-group');
+  if (!type || !auto || !group) return;
+  const fields = group.querySelectorAll('[data-schema-contact-field]');
+  function sync() {
+    const capable = type.value === 'LocalBusiness' || type.value === 'Person';
+    group.hidden = !capable;
+    fields.forEach(f => { f.disabled = auto.checked; });
+  }
+  type.addEventListener('change', sync);
+  auto.addEventListener('change', sync);
+  sync();
 })();
 </script>
 <?php

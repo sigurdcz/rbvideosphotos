@@ -1,5 +1,10 @@
 <?php
 /** @var string $url @var string $label */
 $displayLabel = $url === '/cenik' ? 'Více o cenách' : $label;
+$secondaryUrl = trim((string)($secondaryUrl ?? ''));
+$secondaryLabel = trim((string)($secondaryLabel ?? ''));
 ?>
-<a href="<?= $this->e($url) ?>" class="btn btn-ghost"><?= $this->e($displayLabel) ?></a><?php ?>
+<a href="<?= $this->e($url) ?>" class="btn btn-ghost"><?= $this->e($displayLabel) ?></a>
+<?php if ($secondaryUrl !== '' && $secondaryLabel !== ''): ?>
+    <a href="<?= $this->e($secondaryUrl) ?>" class="btn btn-ghost hp-section-cta__google" target="_blank" rel="noopener noreferrer external"><?= $this->e($secondaryLabel) ?></a>
+<?php endif; ?><?php ?>

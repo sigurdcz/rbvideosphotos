@@ -99,8 +99,8 @@ class ServiceRepository
             $stmt = $this->db->prepare(
                 'SELECT COUNT(*) FROM information_schema.columns
                  WHERE table_schema = DATABASE()
-                   AND table_name = ?
-                   AND column_name = ?'
+                   AND CONVERT(table_name USING utf8mb4) = ?
+                   AND CONVERT(column_name USING utf8mb4) = ?'
             );
             $stmt->execute(['service_items', $column]);
             return $this->columnSupport[$column] = ((int)$stmt->fetchColumn()) > 0;

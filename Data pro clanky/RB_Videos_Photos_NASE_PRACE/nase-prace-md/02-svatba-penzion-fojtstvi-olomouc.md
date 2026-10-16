@@ -5,8 +5,8 @@ page_type: wedding_case_study
 brand: RB Videos & Photos
 language: cs-CZ
 status: ready_for_ai
-target_path: /svatba-penzion-fojtstvi-olomouc-nikola-jirka/
-slug: svatba-penzion-fojtstvi-olomouc-nikola-jirka
+target_path: /svatba-penzion-fojtstvi-nikola-jirka/
+slug: svatba-penzion-fojtstvi-nikola-jirka
 title: Svatba Nikoly a Jirky v Penzionu Fojtství
 seo:
   meta_title: Svatba v Penzionu Fojtství | Nikola a Jirka
@@ -20,7 +20,7 @@ seo:
   robots: index,follow
   schema_type: Article
 event:
-  couple: Nikola a Jirka Kaňkovští
+  couple: Nikola a Jirka
   date_iso: '2023-05-20'
   date_display: 20. května 2023
   ceremony: Penzion Fojtství, Svatý Kopeček u Olomouce
@@ -41,7 +41,7 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 ## Povinná pravidla
 
-- Stránka patří do blogu a její adresa je `/svatba-penzion-fojtstvi-olomouc-nikola-jirka/`.
+- Stránka patří do blogu a její adresa je `/svatba-penzion-fojtstvi-nikola-jirka/`.
 - Používej označení „blogový článek“; nepoužívej označení „portfolio“.
 - Piš přirozeně v první osobě množného čísla: „fotíme“, „natáčíme“, „pracujeme“.
 - Zachovej lidský, prémiový a konkrétní tón bez prázdných reklamních frází.
@@ -55,7 +55,7 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 ## Uzamčené údaje
 
-- Pár: **Nikola a Jirka Kaňkovští**
+- Pár: **Nikola a Jirka**
 - Datum: **20. května 2023**
 - Obřad: **Penzion Fojtství, Svatý Kopeček u Olomouce**
 - Oslava: **Penzion Fojtství, Svatý Kopeček u Olomouce**
@@ -79,7 +79,7 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 # Svatba Nikoly a Jirky v Penzionu Fojtství u Olomouce
 
-Nikola a Jirka Kaňkovští měli obřad i svatební oslavu 20. května 2023 v Penzionu Fojtství na Svatém Kopečku. Když se celý den odehrává v jednom areálu, odpadá stres z dlouhých přejezdů a vzniká více prostoru pro hosty, portréty i skutečně přirozené momenty. Pro nás je výhodou, že můžeme sledovat příběh od příprav až po večerní zábavu bez zbytečného přerušení.
+Nikola a Jirka měli obřad i svatební oslavu 20. května 2023 v Penzionu Fojtství na Svatém Kopečku. Když se celý den odehrává v jednom areálu, odpadá stres z dlouhých přejezdů a vzniká více prostoru pro hosty, portréty i skutečně přirozené momenty. Pro nás je výhodou, že můžeme sledovat příběh od příprav až po večerní zábavu bez zbytečného přerušení.
 
 ## Historický areál na Svatém Kopečku
 

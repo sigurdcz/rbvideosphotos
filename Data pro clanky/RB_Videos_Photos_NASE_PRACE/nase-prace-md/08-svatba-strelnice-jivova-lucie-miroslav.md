@@ -5,8 +5,8 @@ page_type: wedding_case_study
 brand: RB Videos & Photos
 language: cs-CZ
 status: ready_for_ai
-target_path: /svatba-sportovne-strelecky-areal-jivova-lucie-miroslav/
-slug: svatba-sportovne-strelecky-areal-jivova-lucie-miroslav
+target_path: /svatba-jivova-lucie-miroslav/
+slug: svatba-jivova-lucie-miroslav
 title: Svatba Lucie a Miroslava v areálu Jívová
 seo:
   meta_title: Svatba v areálu Jívová | Lucie a Miroslav
@@ -19,7 +19,7 @@ seo:
   robots: index,follow
   schema_type: Article
 event:
-  couple: Lucie a Miroslav Provazovi
+  couple: Lucie a Miroslav
   date_iso: '2025-06-07'
   date_display: 7. června 2025
   ceremony: Sportovně střelecký areál Jívová
@@ -40,7 +40,7 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 ## Povinná pravidla
 
-- Stránka patří do blogu a její adresa je `/svatba-sportovne-strelecky-areal-jivova-lucie-miroslav/`.
+- Stránka patří do blogu a její adresa je `/svatba-jivova-lucie-miroslav/`.
 - Používej označení „blogový článek“; nepoužívej označení „portfolio“.
 - Piš přirozeně v první osobě množného čísla: „fotíme“, „natáčíme“, „pracujeme“.
 - Zachovej lidský, prémiový a konkrétní tón bez prázdných reklamních frází.
@@ -54,7 +54,7 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 ## Uzamčené údaje
 
-- Pár: **Lucie a Miroslav Provazovi**
+- Pár: **Lucie a Miroslav**
 - Datum: **7. června 2025**
 - Obřad: **Sportovně střelecký areál Jívová**
 - Oslava: **Sportovně střelecký areál Jívová**
@@ -78,7 +78,7 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 # Červnová svatba Lucie a Miroslava ve Sportovně střeleckém areálu Jívová
 
-Lucie a Miroslav Provazovi uspořádali 7. června 2025 obřad i svatební oslavu ve Sportovně střeleckém areálu Jívová. Název může na první pohled působit netradičně, ale areál se oficiálně prezentuje také jako místo pro svatby, oslavy a pobyty v přírodě.
+Lucie a Miroslav uspořádali 7. června 2025 obřad i svatební oslavu ve Sportovně střeleckém areálu Jívová. Název může na první pohled působit netradičně, ale areál se oficiálně prezentuje také jako místo pro svatby, oslavy a pobyty v přírodě.
 
 ## Svatební areál v krajině Nízkého Jeseníku
 

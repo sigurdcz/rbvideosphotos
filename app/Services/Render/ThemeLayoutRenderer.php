@@ -14,7 +14,7 @@ use App\View\ViewFactory;
  * Templates/<key>/views/layout.phtml renders its shell through the ViewEngine
  * (PHTML partials for nav / logo / footer placeholder); every other theme keeps
  * the legacy PageRenderer::applyLayout() str_replace over layout.html. This is a
- * per-theme opt-in, not a big-bang switch — the two paths are byte-equivalent so
+ * per-theme opt-in, not a big-bang switch - the two paths are byte-equivalent so
  * golden output is unchanged.
  *
  * Only the layout SHELL moves here. The post-render inject cascade

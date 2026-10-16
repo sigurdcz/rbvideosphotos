@@ -1,0 +1,30 @@
+{
+  "key": "golden-bash-diagonal",
+  "name": "Golden Bash Diagonal",
+  "description": "Plny duplikat Golden Bash s jedinou diagonalni hranou hero videa pro vetsi viditelnou plochu media.",
+  "version": "1.0.0",
+  "author": "SEO CMS",
+  "sort_order": 60,
+  "layout_html": "layout.html",
+  "layout_css": "assets/theme.css",
+  "layout_js": "assets/theme.js",
+  "views_dir": "views",
+  "pages": [
+    "homepage",
+    "sluzby",
+    "portfolio",
+    "portfolio-detail",
+    "blog",
+    "blog-post",
+    "cenik",
+    "faq",
+    "kontakt",
+    "reviews",
+    "o-nas",
+    "podminky-uziti"
+  ],
+  "assets": {
+    "css": [],
+    "js": []
+  }
+}

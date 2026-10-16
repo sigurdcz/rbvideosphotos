@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fffdf9">
+  <title>{site_name}</title>
+  <!-- A Czech page needs both files of a family: latin holds ASCII and a-e-i-o-u-y with
+       acutes, latin-ext holds c-r-s-z-e-u with carons and rings. Preloading only one of a
+       pair would let the other miss the font-display:optional window, which never repairs
+       itself - the page would then mix the brand face with the system one mid-word. -->
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/fonts/montserrat-latin.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/fonts/montserrat-latin-ext.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/fonts/cormorantgaramond-latin.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/fonts/cormorantgaramond-latin-ext.woff2">
+  <!-- Italic carries the emphasis inside section titles across pricing, portfolio,
+       reviews and blog, but every one of those sits below the fold - only the hero
+       em is above it - and a missing italic degrades to a synthesised oblique of the
+       upright face rather than to another family. So it must not compete for
+       bandwidth with the LCP poster. -->
+  <link rel="preload" as="font" type="font/woff2" crossorigin fetchpriority="low" href="/assets/fonts/cormorantgaramond-italic-latin.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin fetchpriority="low" href="/assets/fonts/cormorantgaramond-italic-latin-ext.woff2">
+  <link rel="stylesheet" href="/assets/fonts/fonts.css">
+</head>
+<body class="theme-golden-bash">
+  <div class="gb-welcome-layer" role="status" aria-label="Načítáme web">
+    <div class="gb-welcome-layer__content">
+      <div class="gb-welcome-brand">
+        <strong class="gb-welcome-brand__mark">RB</strong>
+        <span class="gb-welcome-brand__name">RB Videos &amp; Photos</span>
+        <span class="gb-welcome-brand__rule" aria-hidden="true"><i></i><b>♥</b><i></i></span>
+        <em>Autentické momenty. Emoce. Příběhy.</em>
+      </div>
+      <div class="gb-welcome-progress" aria-hidden="true">
+        <div class="gb-welcome-progress__inside"><strong data-welcome-progress>0%</strong><span>Načítáme</span></div>
+      </div>
+      <span class="gb-welcome-preparing">Připravujeme váš zážitek</span>
+    </div>
+    <div class="gb-welcome-services" aria-hidden="true">
+      <span><svg viewBox="0 0 24 24"><path d="M4 7h4l2-2h4l2 2h4v12H4z"/><circle cx="12" cy="13" r="4"/></svg><small>Svatební foto</small></span>
+      <span><svg viewBox="0 0 24 24"><rect x="3" y="6" width="14" height="12" rx="2"/><path d="m17 10 4-2v8l-4-2M8 6l1-3h2"/></svg><small>Svatební video</small></span>
+      <span><svg viewBox="0 0 24 24"><path d="M8 9h8l2 3-3 2H9l-3-2zM10 14l-2 5m6-5 2 5M7 8 3 5m14 3 4-3M8 6h8"/></svg><small>Dron záběry</small></span>
+      <span><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><rect x="8" y="7" width="8" height="8"/><path d="M9 18h6"/></svg><small>Polaroid &amp; alba</small></span>
+      <span><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/></svg><small>Celý den s vámi</small></span>
+    </div>
+    <span class="gb-welcome-thanks">Děkujeme za trpělivost <b>♥</b></span>
+  </div>
+  <div class="gb-shell">
+    <header class="gb-header">
+      <a class="gb-brand" href="/" aria-label="{site_name}">
+        <span class="gb-brand__mark">RB</span>
+        <span class="gb-brand__copy"><strong>{site_name}</strong></span>
+      </a>
+      <div class="gb-nav">{nav}</div>
+      <a class="gb-header-cta" href="/kontakt">Konzultace zdarma</a>
+      <button class="gb-menu" type="button" aria-label="Otevřít menu" aria-expanded="false"><span></span><span></span></button>
+    </header>
+    <main class="gb-main">{page_content}</main>
+    <footer class="gb-footer">
+      <a class="gb-brand" href="/"><span class="gb-brand__mark">RB</span><span class="gb-brand__copy"><strong>{site_name}</strong></span></a>
+      <span class="gb-footer__meta">© 2026 {site_name}</span>
+    </footer>
+  </div>
+</body>
+</html>
