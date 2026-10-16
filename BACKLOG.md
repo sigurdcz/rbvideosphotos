@@ -20,3 +20,10 @@ Odložená práce. Před zahájením vybereme prioritu; rozpracovaný úkol se v
 - Pod videem prosvítá fallback obrázek; video nepokrývá celou výšku hero.
 - Změřit skutečné rozměry a computed CSS ve vybrané šabloně včetně generovaných assetů; prověřit `height`, `min-height`, `object-fit` a přepnutí poster/video.
 - Hotovo: video pokrývá celou hero bez pruhu obrázku na desktopu i mobilu. Před načtením a při nedostupném videu zůstává záměrný fallback správně viditelný.
+
+## 4. Burger tlačítko navigace — P2, čeká
+
+- Po otevření menu se burger přestal animovat do křížku.
+- Při hoveru se pod tlačítkem zobrazuje nechtěné tmavé pozadí.
+- Ověřit stav otevřeného menu, vazbu na `aria-expanded`, animační CSS a pravidla pro hover/focus v aktivní šabloně i generovaných assetech.
+- Hotovo: otevření plynule změní burger na křížek, zavření vrátí burger; hover nemá rušivé tmavé pozadí. Ověřit myš, dotyk i klávesnici a zachovat viditelný focus pro ovládání klávesnicí.
