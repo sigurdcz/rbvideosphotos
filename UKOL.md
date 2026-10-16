@@ -25,6 +25,29 @@ Runtime overeni: blog detail vraci hero original `/media/...jpg`, stejna URL je 
 Dokonceno. Hero fotografie nebo video zustava prvni polozkou kompletni galerie u detailu blogu, Nase prace i sluzeb; shodne URL se zobrazi pouze jednou. Blogovy hero pouziva originalni ulozeny soubor, zatimco zmensene varianty zustavaji jen pro nahledy. Aktualizovan je datovy kontrakt, oba detailni archetypy, regresni testy, ARCHITECTURE a projektova wiki. README ani INSTRUCTIONS se nemenily, protoze instalacni postup ani repozitarova pravidla zustala beze zmeny.
 
 ---
+# UKOL: Vypnuti hero background overlayu
+
+Datum: 2026-07-22
+Zadani: Kompletne zakazat kresleni backgroundu na sdilenych hero overlay vrstvach a pseudo-elementech.
+
+## Kroky
+
+- [x] Dohledat globalni runtime pravidlo, ktere gradient hero overlaye vynucuje.
+- [x] Nahradit gradient explicitnim `background: none !important` pro vsechny sdilene hero selektory.
+- [x] Doplnit regresni kontrolu a overit generovany/runtime CSS.
+- [x] Posoudit dokumentaci a wiki reflexi, uzavrit ukol.
+
+## Poznamky
+
+Zdroj problemu je `public/assets/frontend-runtime.css`, kde sdilene pravidlo vynucuje dva gradienty pres `!important`. Hotovo znamena, ze stejny seznam overlay selektoru zustane zachovan kvuli vrstveni, ale computed background nebude obsahovat obraz, barvu ani gradient.
+
+Gradient byl nahrazen trojici explicitnich zakazu: `background:none`, `background-image:none` a `background-color:transparent`, vse s `!important`. To odstranuje jak obrazovy gradient, tak pripadnou plnou barvu ve stejnem runtime pravidle.
+
+## Vysledek
+
+Dokonceno. Globalni frontend runtime pro vsechny vyjmenovane hero overlay selektory vynucuje `background:none`, `background-image:none` a pruhlednou barvu. HTTP smoke test potvrdil novy kontrakt a absenci puvodniho gradientu. Zakladni testy prosly 65/65. README, ARCHITECTURE ani INSTRUCTIONS nevyzaduji zmenu, protoze jde o izolovanou prezentacni opravu existujici runtime vrstvy. Wiki reflexe: SKIP; architecture ma coverage `ok` a dossier uz explicitne popisuje prioritu `frontend-runtime.css`, `!important` i kontrolu hero pseudo-elementu.
+
+---
 # UKOL: Vetsi fotografie a predstaveni v O nas
 
 Datum: 2026-07-22

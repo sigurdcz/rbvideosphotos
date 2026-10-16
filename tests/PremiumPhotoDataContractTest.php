@@ -148,6 +148,8 @@ function register_premium_photo_data_contract_tests(callable $test, callable $as
         $assert(str_contains($css, 'grid-column:1 / -1') && str_contains($css, 'justify-self:stretch'), 'Supplementary pricing copy does not span the full pricing grid.');
         $assert(str_contains($css, 'max-width:none !important; margin:64px auto 0 !important'), 'Supplementary pricing copy cannot override the global 860px runtime constraint.');
         $assert(str_contains($runtimeCss, 'body:not(.theme-premium-photo)[data-cms-page-key="cenik"] .cenik-other'), 'Global runtime pricing width constraint still targets Premium Photo.');
+        $assert(str_contains($runtimeCss, '.hero-overlay,.hero::before,.hp-hero::before') && str_contains($runtimeCss, 'background:none!important;background-image:none!important;background-color:transparent!important'), 'Global hero overlays still paint a background or gradient.');
+        $assert(!str_contains($runtimeCss, 'background:linear-gradient(90deg,rgba(16,10,7,.66)'), 'Legacy global hero gradient is still present.');
         $assert(str_contains($themeCss, '.site-header{') && str_contains($themeCss, 'backdrop-filter:blur(12px);') && str_contains($themeCss, 'border:0;'), 'Premium Photo header still exposes a separator border.');
         $assert(str_contains($themeCss, 'transition:transform .65s,opacity .65s'), 'Burger-to-close transition does not use the required 0.65 second duration.');
         $assert(str_contains($themeCss, '.nav-toggle{display:grid;place-items:center;width:44px;height:44px;padding:0;border:0'), 'Navigation toggle base state is not explicitly borderless.');
