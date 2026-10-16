@@ -104,16 +104,11 @@ try {
             continue;
         }
 
-        if ($applicationMigrations->supports($name) && !(new SiteRepository())->findFirst()) {
-            $deferred[] = $name;
-            continue;
-        }
-
+        // Current PHP handlers may use columns introduced by later SQL files
+        // (e.g. handler 050 uses schema_name introduced by 079).
+        // Finish the entire SQL schema upgrade before calling any handler.
         if ($applicationMigrations->supports($name)) {
-            $result = $applicationMigrations->apply($name);
-            $pdo->prepare('INSERT INTO schema_migrations (migration) VALUES (?)')
-                ->execute([$name]);
-            $executed[] = $name . ':' . $result;
+            $deferred[] = $name;
             continue;
         }
 
@@ -126,6 +121,19 @@ try {
         $pdo->prepare('INSERT INTO schema_migrations (migration) VALUES (?)')
             ->execute([$name]);
         $executed[] = $name;
+    }
+
+    if ($deferred !== [] && (new SiteRepository())->findFirst()) {
+        foreach ($deferred as $deferredIndex => $name) {
+            try {
+                $result = $applicationMigrations->apply($name);
+            } catch (Throwable $e) {
+                throw new RuntimeException('Obsahová migrace ' . $name . ' selhala: ' . $e->getMessage(), 0, $e);
+            }
+            $pdo->prepare('INSERT INTO schema_migrations (migration) VALUES (?)')->execute([$name]);
+            $executed[] = $name . ':' . $result;
+            unset($deferred[$deferredIndex]);
+        }
     }
 
     Logger::info('migration', 'Migration utility completed', [

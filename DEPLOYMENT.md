@@ -34,3 +34,5 @@ Po prihlaseni na `/admin/login` pouzij `/admin/setup`. Na opravdu prazdne instal
 - `php tests/InitialAdminTest.php`: autorizace, jednorazovost, heslo a zamek bootstrapu s PDO double.
 - `php bin/seo-smoke.php https://rbvideosphotos.cz`: produkcni kontrola po migraci a publishi; dokud web nema inicializovany obsah, HTTP 404/500 je nezavrena brana.
 - `.gitattributes` sjednocuje LF zdroju, aby textove kontrakty fungovaly i na Windows.
+
+Obsahove PHP handlery se vzdy provadeji az po dokonceni vsech SQL migraci, i kdyz web uz existuje. Aktualni handler starsi migrace muze pouzivat schema_name z 079; jednopruschodove poradi proto neni bezpecne. Regresni overeni: php tests/MigrationUpgradeOrderIntegrationTest.php vytvori vlastni nahodnou DB, spusti skutecne SQL a nahradi pouze obsahove efekty kontrolou schema zavislosti.

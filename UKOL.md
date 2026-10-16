@@ -1768,3 +1768,17 @@ Do commitu pripravena cela aktualizace (601 souboru pred odstranenim dvou zastar
 
 ## Vysledek prenosu aktualniho CMS
 Preneseno a nasazeno d7edef4; Actions 38919482148 success. Produkcni manifest golden-bash-diagonal 1.0.0, font CSS, admin login i bootstrap HTTP 200; DNS 37.9.175.211. Homepage HTTP 500 ma konkretni chybu chybejiciho blog_posts.sort_order, ktery pridava dosud nespustena migrace 072. Operator musi provest nove migrace serverovym tokenem, pak publish a zvolit motiv; zadny automaticky Armagedon nebyl proveden. 216+7 testu proslo, 27/28 goldenu; jeden dolozeny lokalni datovy rozdil posteru O nas zustal neprepsan. Testovaci DB po overeni bezpecne odstranena. Aktualizovany README, DEPLOYMENT, .env.example a wiki pipelines/data-model (wiki commit 27a7c10). .agents zustava nesledovana.
+
+---
+# UKOL: Schema pred obsahovymi migracemi
+Datum: 2026-10-16
+Zadani: Opravit upgrade existujici DB selhavajici na schema_name bez resetu dat.
+Doporuceny model: Sol - Poradi DB upgradu a aktualnich PHP handleru musi zachovat opakovatelnost a data.
+## Kroky
+- [x] Dohledat schema_name v migraci 079 a drivejsich aktualnich PHP handlerech.
+- [-] Odlozit vsechny PHP obsahove handlery az za SQL fazi.
+- [ ] Overit poradi, syntax, regrese a nasazeni.
+## Poznamky
+Prvni implementace odkladala obsah jen pri absenci webu. Existujici web spoustel handler 050 pred pridanim schema_name v 079. Novy beh nejdriv SQL, potom obsah; evidence obsahu az po uspechu. Zadna stara SQL migrace se nemeni.
+
+Dvoufazovy web migrator implementovan. Integracni test nad realnou oddelenou MariaDB overil 104/104 zaznamu a 15 handleru az po schema_name, sort_order a shared_sections. Prvni beh testu odhalil spatnou cestu fixture a ukonceni pred cleanupem; test opraven, jeden prvni testovaci DB zustal k explicitnimu cleanupu.
