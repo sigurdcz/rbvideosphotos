@@ -35,7 +35,7 @@ class ContactController extends Controller
             $this->redirect('/admin/contact');
         }
 
-        (new ContactRepository())->upsert((int)$site['id'], $_POST);
+        (new ContactRepository())->upsert((int)$site['id'], $_POST, $this->mayChangeRecoveryRecipient((int)$site['id'], $_POST));
         (new HomepageContentService())->ensureHomepageSection((int)$site['id']);
         $user = \App\Core\Auth::user();
         (new PublishService())->publishSite((int)$site['id'], (int)($user['id'] ?? 0));

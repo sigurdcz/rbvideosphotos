@@ -1669,7 +1669,7 @@ CSS;
             'social_4_url' => '',
             'social_5_type' => '',
             'social_5_url' => '',
-        ]);
+        ], true);
 
         $keys = ['kontakt_info', 'contact_info', 'contact_card'];
         $placeholders = implode(',', array_fill(0, count($keys), '?'));

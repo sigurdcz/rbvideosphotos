@@ -1874,3 +1874,24 @@ Pridan AccountAdminIntegrationTest pro chybne/stare/nove heslo, cizi ucet, reset
 
 ## Vysledek
 Hotovy filtrovatelny prehled emailovych pokusu /admin/messages a vlastni zmena hesla /admin/account/password. Auth, CSRF, tokeny, rollback a stare relace overeny. DEPLOYMENT/ARCHITECTURE a globalni wiki aktualizovany; README/INSTRUCTIONS bez nutne zmeny. Bez nove SQL migrace, vyzaduje dosavadni 103/104. Push ani produkcni nasazeni nebyly pro tento ukol vyzadany.
+
+---
+# UKOL: Recovery recipient from admin settings
+Datum: 2026-10-16
+Zadani: Login jen identifikuje ucet; reset hesla posilat na email pro prijem formularu v nastaveni administrace, nikoli users.email.
+Doporuceny model: Sol - Zmena obnovy pristupu a ochrana centralni cilove adresy.
+## Kroky
+- [x] Implementovat centralni prijemce a overit ochranu jeho nastaveni.
+- [x] Otestovat login, prijemce, vazbu tokenu a chybejici nastaveni bez skryteho fallbacku.
+- [x] Aktualizovat dokumentaci/wiki a commitnout.
+## Poznamky
+Cil je Nastaveni > email pro prijem formularu (contact_info.form_email). Zadna nahrada users.email ani hardcoded gmail pri chybejicim nastaveni. Identifikator z formulare neovlivnuje prijemce; token stale resetuje konkretni ucet.
+
+Reset pouziva striktne ulozene form_email pro prvni web, bez fallbacku na users.email/kontaktni verejny email/default. Zmena chraneneho pole povolena jen adminovi v settings/contact/page, repository defaultne zapis form_email zakazuje a pri bezne editaci ho nemeni. Demosystem explicitne povoluje inicializaci. Inline editor nema pole povolene a repository ho neprepise. Formular obnovy oznacuje identifikator jako login.
+
+Test obnovy rozsiren o centralni recipient, chybejici/neplatne nastaveni bez fallbacku a login bez emailove syntaxe s vazbou tokenu na spravny ucet. Login/recovery formular nyni oznacuji identifikator jako prihlasovaci jmeno. Settings UI uz nepredstira hardcoded prijemce, pokud pole nebylo ulozeno.
+
+HTTP overil editor403 pri pokusu menit form_email z contact page pred zapisy. Test repository potrebuje i historickou migraci 028 pro reviews_url, fixture doplnena (zadna zmena stare SQL). Hlavni regrese 219/219, goldens 27/28 znamy About poster. DEPLOYMENT a ARCHITECTURE vysvetluji novou centralni obnovu a admin-only pole.
+
+## Vysledek
+Reset odesila na ulozene form_email z Nastaveni prvniho webu, login zustava identifikatorem. 17 recovery assertions + rejection cases, 7 permission assertions, HTTP plain-login/central recipient a editor403, 219 regresi proslo; goldens27/28 znamy About poster. DEPLOYMENT/ARCHITECTURE a wiki aktualizovany, README/INSTRUCTIONS bez nutne zmeny. Bez nove migrace. Push ani produkcni nasazeni nebyly vyzadany.

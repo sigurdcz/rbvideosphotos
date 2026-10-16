@@ -116,8 +116,8 @@ ob_start();
         <div class="card-title">Kontaktní formulář</div>
         <div class="form-group">
           <label>E-mail pro prijem zprav z formulare</label>
-          <input type="email" name="form_email" value="<?= $v('form_email') ?>" placeholder="notifikace@firma.cz">
-          <div class="form-hint">Na tuto adresu budou chodit zpravy odeslane pres kontaktni formular.</div>
+          <input type="email" name="form_email" value="<?= $v('form_email') ?>" placeholder="notifikace@firma.cz" <?= ($_user['role'] ?? '') !== 'admin' ? 'readonly' : '' ?>>
+          <div class="form-hint">Na tuto adresu chodí kontaktní zprávy i odkazy pro obnovu hesla. Měnit ji smí pouze administrátor.</div>
         </div>
       </div>
     </div>

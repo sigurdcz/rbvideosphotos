@@ -193,11 +193,11 @@ ob_start();
     </div>
     <?php endif; ?>
     <div class="form-group">
-      <label>E-mail pro prijem zprav z formularu</label>
-      <input type="email" name="form_email" value="<?= $h($contact['form_email'] ?? '') ?>" placeholder="sigurd.gnezdilov@gmail.com">
+      <label>E-mail pro příjem formulářů a obnovu přístupu</label>
+      <input type="email" name="form_email" aria-label="E-mail pro příjem formulářů a obnovu přístupu" value="<?= $h($contact['form_email'] ?? '') ?>" placeholder="spravce@vase-domena.cz">
       <p class="help-text" style="margin-top:6px">
-        Na tuto adresu budou chodit zpravy odeslane pres kontaktni formulare. Pokud pole nechate prazdne,
-        system pouzije vychozi adresu <code>sigurd.gnezdilov@gmail.com</code>.
+        Na tuto uloženou adresu chodí kontaktní zprávy a odkazy pro obnovu hesla účtů.
+        Pro obnovu přístupu musí být pole vyplněné platnou adresou a uložené.
       </p>
     </div>
   </div>

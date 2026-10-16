@@ -13,8 +13,8 @@
 <div class="form-group"><label for="password">Nové heslo</label><input id="password" name="password" type="password" minlength="12" required autocomplete="new-password"></div>
 <div class="form-group"><label for="confirmation">Heslo znovu</label><input id="confirmation" name="password_confirmation" type="password" minlength="12" required autocomplete="new-password"></div>
 <?php else: ?>
-<p>Odkaz pošleme na e-mail vašeho přihlašovacího účtu.</p>
-<div class="form-group"><label for="email">E-mail účtu</label><input id="email" name="email" type="email" required autocomplete="email"></div>
+<p>Odkaz pošleme na e-mail pro příjem formulářů nastavený v administraci. Přihlašovací jméno pouze určuje účet.</p>
+<div class="form-group"><label for="email">Přihlašovací jméno</label><input id="email" name="email" type="text" maxlength="255" required autocomplete="username"></div>
 <?php endif; ?>
 <button class="btn btn-primary" type="submit"><?= $reset ? 'Uložit nové heslo' : 'Poslat odkaz' ?></button>
 </form><p><a href="/admin/login">Zpět na přihlášení</a></p>

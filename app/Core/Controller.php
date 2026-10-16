@@ -46,6 +46,18 @@ abstract class Controller
         }
     }
 
+    protected function mayChangeRecoveryRecipient(int $siteId, array $data): bool
+    {
+        $admin = (Auth::user()['role'] ?? '') === 'admin';
+        if (!$admin && array_key_exists('form_email', $data)) {
+            $current = (new \App\Repositories\ContactRepository())->findBySite($siteId);
+            if (trim((string) $data['form_email']) !== trim((string) ($current['form_email'] ?? ''))) {
+                $this->requireAdmin();
+            }
+        }
+        return $admin;
+    }
+
     protected function csrfCheck(): void
     {
         $token = $_POST['_csrf'] ?? '';

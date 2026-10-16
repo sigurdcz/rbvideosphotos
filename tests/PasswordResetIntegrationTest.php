@@ -16,6 +16,9 @@ try {
     $db->exec("CREATE TABLE users (id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT, email VARCHAR(255) UNIQUE, password_hash VARCHAR(255)) ENGINE=InnoDB");
     $db->exec(file_get_contents(dirname(__DIR__) . '/database/migrations/103_add_password_resets.sql'));
     $db->exec(file_get_contents(dirname(__DIR__) . '/database/migrations/104_add_mail_archive.sql'));
+    $db->exec("CREATE TABLE sites (id INT UNSIGNED PRIMARY KEY) ENGINE=InnoDB");
+    $db->exec("CREATE TABLE contact_info (site_id INT UNSIGNED PRIMARY KEY, form_email VARCHAR(255), email VARCHAR(255)) ENGINE=InnoDB");
+    $db->exec("INSERT INTO sites VALUES (1); INSERT INTO contact_info VALUES (1, 'recovery@example.test', 'public@example.test')");
     $oldHash = password_hash('old-password-123', PASSWORD_BCRYPT);
     $db->prepare('INSERT INTO users (email, password_hash) VALUES (?, ?)')->execute(['admin@example.test', $oldHash]);
     $_ENV['APP_URL'] = 'https://example.test';
@@ -25,7 +28,9 @@ try {
     $service->request('unknown@example.test');
     check(count($messages) === 0, 'Unknown account sends no mail');
     $service->request('admin@example.test');
-    check($messages[0][0] === 'admin@example.test', 'Mail goes to account');
+    check($messages[0][0] === 'recovery@example.test', 'Mail goes to configured recovery address, not login or public email');
+    check(str_contains($messages[0][2], 'admin@example.test'), 'Recovery email identifies target account');
+    check($db->query('SELECT recipient FROM mail_archive ORDER BY id DESC LIMIT 1')->fetchColumn() === 'recovery@example.test', 'Archive records actual central recipient');
     preg_match('/token=([a-f0-9]{64})/', $messages[0][2], $m); $token = $m[1];
     check($db->query('SELECT token_hash FROM password_resets')->fetchColumn() === hash('sha256', $token), 'Only hash stored');
     check(!str_contains($messages[0][2], $oldHash), 'No password hash mailed');
@@ -51,6 +56,22 @@ try {
     $_ENV['APP_URL'] = 'http://untrusted.test';
     rejected(fn() => $service->request('admin@example.test'));
     $_ENV['APP_URL'] = 'https://example.test';
+    $before = count($messages);
+    foreach (['', 'invalid'] as $badRecipient) {
+        $db->prepare('UPDATE contact_info SET form_email = ?')->execute([$badRecipient]);
+        rejected(fn() => $service->request('admin@example.test'));
+        check(count($messages) === $before && (int) $db->query('SELECT COUNT(*) FROM password_resets')->fetchColumn() === 0, 'Missing or invalid recipient creates no token, sends no fallback mail');
+    }
+    $db->exec("UPDATE contact_info SET form_email = 'recovery@example.test'");
+    $db->prepare('INSERT INTO users (email,password_hash) VALUES (?,?)')->execute(['plain-admin-login', $oldHash]);
+    $accountOneHash = $db->query('SELECT password_hash FROM users WHERE id=1')->fetchColumn();
+    $service->request('plain-admin-login');
+    $last = $messages[array_key_last($messages)];
+    check($last[0] === 'recovery@example.test' && str_contains($last[2], 'plain-admin-login'), 'Plain login still routes to configured mailbox');
+    preg_match('/token=([a-f0-9]{64})/', $last[2], $m);
+    $service->reset($m[1], 'second-new-password-123');
+    check($db->query('SELECT password_hash FROM users WHERE id=1')->fetchColumn() === $accountOneHash, 'Central link never resets another account');
+    check(password_verify('second-new-password-123', $db->query('SELECT password_hash FROM users WHERE id=2')->fetchColumn()), 'Token is bound to requested login');
     // Verify existing authenticated sessions become invalid after a password change.
     $property = new ReflectionProperty(App\Core\Database::class, 'instance'); $property->setValue(null, $db);
     App\Core\Auth::login(['id' => 1, 'email' => 'admin@example.test', 'role' => 'admin', 'password_hash' => $oldHash]);

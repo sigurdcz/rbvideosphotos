@@ -17,8 +17,8 @@
     <form method="POST" action="/admin/login">
       <input type="hidden" name="_csrf" value="<?= htmlspecialchars($_csrfToken) ?>">
       <div class="form-group">
-        <label for="email">E-mail</label>
-        <input type="email" id="email" name="email" required autofocus autocomplete="email">
+        <label for="email">Přihlašovací jméno</label>
+        <input type="text" id="email" name="email" maxlength="255" required autofocus autocomplete="username">
       </div>
       <div class="form-group">
         <label for="password">Heslo</label>

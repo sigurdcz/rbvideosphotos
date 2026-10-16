@@ -701,3 +701,9 @@ SMTP konfigurace je v serverovém `.env` (`SMTP_HOST`, `SMTP_PORT`, `SMTP_ENCRYP
 `AccountController` používá Auth, CSRF a RequestThrottle; identitu bere pouze ze session. `AccountPasswordService` transakčně zamkne users řádek, ověří současný bcrypt hash, uloží nové heslo a odstraní reset tokeny účtu. Selhání odstranění tokenů vrací celou transakci zpět. Controller po úspěchu odhlašuje aktuální relaci, stávající Auth fingerprint odmítne ostatní staré relace při příštím požadavku.
 
 `MessagesController` vyžaduje roli admin a deleguje SQL na `MailArchiveRepository`. Parametrizované filtry mají allowlist status/kind, stránka je kladné číslo nejvýše 1 000 000, limit je 50. Počty za celý archiv jsou oddělené od filtrovaného výsledku. Zobrazení HTML escapuje a nesmí obsahovat resetovací tokeny.
+
+## Centrální recovery příjemce
+
+`PasswordResetService` používá users.email jen jako login. Pro existující účet načte form_email z contact_info prvního sites řádku, vyžaduje platnou explicitně uloženou adresu a pošle na ni odkaz vázaný na dané user_id. Neexistuje fallback na login ani veřejný kontaktní e-mail.
+
+`ContactRepository::upsert` má chráněné pole form_email a opt-in `$allowRecoveryRecipientChange=false`. Běžné aktualizace chráněný sloupec v SQL vynechávají; změněná hodnota bez oprávnění selže. Controller gate `mayChangeRecoveryRecipient` odmítne editora HTTP403 před zápisem. Settings a trusted seed mají explicitní opt-in. Tím editor veřejných kontaktů nemůže přesměrovat obnovu administrátorského účtu.

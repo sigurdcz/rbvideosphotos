@@ -231,6 +231,7 @@ class PageController extends Controller
         $templateId = (int)($_POST['template_id'] ?? 0) ?: null;
         $template   = $templateId ? (new TemplateRepository())->findById($templateId) : null;
         $layoutType = $this->resolveLayoutType($template['name'] ?? '');
+        $allowRecoveryRecipientChange = $layoutType === 'contact' ? $this->mayChangeRecoveryRecipient((int)$page['site_id'], $_POST) : false;
 
         if ($repo->slugExists($page['site_id'], $slug, $id)) {
             $this->flash('error', 'Slug již existuje.');
@@ -269,7 +270,7 @@ class PageController extends Controller
         }
 
         if ($layoutType === 'contact') {
-            (new ContactRepository())->upsert((int)$page['site_id'], $_POST);
+            (new ContactRepository())->upsert((int)$page['site_id'], $_POST, $allowRecoveryRecipientChange);
             $this->syncHomepageContactBlocks((int)$page['site_id']);
         }
 

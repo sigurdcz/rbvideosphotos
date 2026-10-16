@@ -26,17 +26,22 @@ final class PasswordResetService
         $stmt = $this->db->prepare('SELECT id, email FROM users WHERE email = ? LIMIT 1');
         $stmt->execute([$email]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
-        if (!$user) { return; } // Same confirmation for unknown addresses.
+        if (!$user) { return; } // Same confirmation for unknown logins.
+        $recipientQuery = $this->db->query('SELECT c.form_email FROM sites s LEFT JOIN contact_info c ON c.site_id = s.id ORDER BY s.id ASC LIMIT 1');
+        $recipient = trim((string) $recipientQuery->fetchColumn());
+        if (!filter_var($recipient, FILTER_VALIDATE_EMAIL) || preg_match('/[\r\n]/', $recipient)) {
+            throw new RuntimeException('Obnova není dostupná: správce musí v Nastavení uložit platný e-mail pro příjem formulářů a obnovu přístupu.');
+        }
         $token = bin2hex(random_bytes(32));
         $hash = hash('sha256', $token);
         $stmt = $this->db->prepare('INSERT INTO password_resets (user_id, token_hash, expires_at) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE token_hash = VALUES(token_hash), expires_at = VALUES(expires_at)');
         $stmt->execute([$user['id'], $hash, gmdate('Y-m-d H:i:s', time() + 1800)]);
         $url = $base . '/admin/reset-password?token=' . $token;
-        $body = "Pro nastavení nového hesla otevřete tento odkaz (platnost 30 minut):\n\n" . $url
+        $body = "Žádost pro účet: " . $user['email'] . "\n\nPro nastavení nového hesla otevřete tento odkaz (platnost 30 minut):\n\n" . $url
             . "\n\nPokud jste o změnu nežádali, tento e-mail ignorujte.\n";
         $headers = 'From: ' . $from . "\r\nContent-Type: text/plain; charset=UTF-8";
         try {
-            $result = (new MailArchiveService($this->db, $this->sender))->send('password_reset', $user['email'], 'Obnova hesla - CMS', $body, $headers);
+            $result = (new MailArchiveService($this->db, $this->sender))->send('password_reset', $recipient, 'Obnova hesla - CMS', $body, $headers);
             if ($result['status'] !== 'accepted') { throw new RuntimeException('Mail transport acceptance not confirmed'); }
         } catch (\Throwable $e) {
             $this->db->prepare('DELETE FROM password_resets WHERE user_id = ? AND token_hash = ?')->execute([$user['id'], $hash]);

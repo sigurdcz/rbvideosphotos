@@ -24,9 +24,6 @@ class SettingsController extends Controller
             }
         }
         $contact = $site ? (new ContactRepository())->findBySiteSafe((int)$site['id']) : [];
-        if (trim((string)($contact['form_email'] ?? '')) === '') {
-            $contact['form_email'] = ContactRepository::DEFAULT_FORM_EMAIL;
-        }
 
         $apiKey = Env::get('API_KEY') ?: null;
 
@@ -125,7 +122,7 @@ class SettingsController extends Controller
         if ($siteId > 0) {
             $contactData = $contactRepo->findBySiteSafe($siteId);
             $contactData['form_email'] = trim((string)($_POST['form_email'] ?? ''));
-            $contactRepo->upsert($siteId, $contactData);
+            $contactRepo->upsert($siteId, $contactData, true);
         }
 
         $this->flash('success', 'Nastavení webu ulozeno.');
