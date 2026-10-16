@@ -1782,3 +1782,17 @@ Doporuceny model: Sol - Poradi DB upgradu a aktualnich PHP handleru musi zachova
 Prvni implementace odkladala obsah jen pri absenci webu. Existujici web spoustel handler 050 pred pridanim schema_name v 079. Novy beh nejdriv SQL, potom obsah; evidence obsahu az po uspechu. Zadna stara SQL migrace se nemeni.
 
 Dvoufazovy web migrator implementovan. Integracni test nad realnou oddelenou MariaDB overil 104/104 zaznamu a 15 handleru az po schema_name, sort_order a shared_sections. Prvni beh testu odhalil spatnou cestu fixture a ukonceni pred cleanupem; test opraven, jeden prvni testovaci DB zustal k explicitnimu cleanupu.
+
+---
+# UKOL: PHP 8.5 GD a JSON demo seedu
+Datum: 2026-10-16
+Zadani: Opravit demo davku zastavujici s HTTP 200 kvuli varovani imagedestroy v JSON odpovedi.
+Doporuceny model: Terra - Konkretni PHP 8.5 kompatibilita a diagnostika JSON odpovedi.
+## Kroky
+- [x] Potvrdit pricinu v aktualnim php_error logu a oficialnim PHP manualu.
+- [-] Nahradit no-op imagedestroy uvolnenim referenci a opravit klientskou diagnostiku.
+- [ ] Overit obrazkove testy, JSON response testy, regrese a deployment.
+## Poznamky
+Hosting PHP 8.5 vypisuje E_DEPRECATED do HTTP 200 JSON odpovedi pri APP_DEBUG=true. PHP manual: imagedestroy nema ucinek od 8.0, deprecated od 8.5. Varovani se nebudou potichu potlacovat; zastarala volani se odstrani.
+
+ImageVariantService a obrazkove testy nahradily vsechna imagedestroy za unset referenci. Setup UI pouziva explicitni JSON parser bez ticheho null fallbacku; rozlisuje HTML login, znecistenou HTTP 200 odpoved a aplikacni chybu. Node test 4 scenaru a PHP lint prosly; DEPLOYMENT popisuje PHP 8.5 kompatibilitu.

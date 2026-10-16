@@ -31,7 +31,7 @@ function register_image_variant_service_tests(callable $test, callable $assert):
             $gold = imagecolorallocate($palette, 201, 145, 48);
             imagefilledrectangle($palette, 4, 3, 27, 14, $gold);
             imagepng($palette, $source);
-            imagedestroy($palette);
+            unset($palette);
 
             set_error_handler(static function (int $severity, string $message): never {
                 throw new ErrorException($message, 0, $severity);
@@ -49,7 +49,7 @@ function register_image_variant_service_tests(callable $test, callable $assert):
             $decoded = imagecreatefromwebp($dest);
             $assert($decoded instanceof GdImage && imageistruecolor($decoded));
             if ($decoded instanceof GdImage) {
-                imagedestroy($decoded);
+                unset($decoded);
             }
         } finally {
             foreach ([$source, $dest] as $path) {
@@ -83,7 +83,7 @@ function register_image_variant_service_tests(callable $test, callable $assert):
                 imagefilledrectangle($image, 0, $y, 1439, min(899, $y + 9), $color);
             }
             imagepng($image, $source);
-            imagedestroy($image);
+            unset($image);
 
             $service = new ImageVariantService();
             $meta = $service->createResizedWithinBudget($source, $dest, 720, 80 * 1024, 82, 47, 5);

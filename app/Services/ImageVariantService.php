@@ -13,7 +13,7 @@ class ImageVariantService
         if (!$src) return false;
         $src = $this->toTrueColor($src);
         $result = imagewebp($src, $destPath, $quality);
-        imagedestroy($src);
+        unset($src);
         return $result;
     }
 
@@ -55,8 +55,8 @@ class ImageVariantService
             default       => false,
         };
 
-        imagedestroy($src);
-        imagedestroy($dst);
+        unset($src);
+        unset($dst);
         return (bool)$result;
     }
 
@@ -168,8 +168,8 @@ class ImageVariantService
             }
         }
 
-        imagedestroy($src);
-        imagedestroy($dst);
+        unset($src);
+        unset($dst);
         return (bool) $result;
     }
 
@@ -227,7 +227,7 @@ class ImageVariantService
         $transparent = imagecolorallocatealpha($converted, 0, 0, 0, 127);
         imagefill($converted, 0, 0, $transparent);
         imagecopy($converted, $source, 0, 0, 0, 0, $width, $height);
-        imagedestroy($source);
+        unset($source);
 
         return $converted;
     }

@@ -89,15 +89,28 @@ $d = $diag ?? [];
   let active = false;
   let requestRunning = false;
 
+  const readPayload = async response => {
+    if (response.redirected && new URL(response.url, window.location.href).pathname === '/admin/login') {
+      throw new Error('Přihlášení vypršelo. Přihlas se znovu a obnov stav dávky.');
+    }
+    let payload;
+    try {
+      payload = JSON.parse(await response.text());
+    } catch (problem) {
+      throw new Error(`Server nevrátil platný JSON (HTTP ${response.status}). Zkontroluj aktuální PHP chybu v serverovém logu.`);
+    }
+    if (!payload || !response.ok || payload.success !== true) {
+      throw new Error(payload?.error || `Server vrátil HTTP ${response.status}.`);
+    }
+    return payload;
+  };
+
   const post = async (url, values = {}) => {
     const body = new FormData();
     body.append('_csrf', csrf);
     Object.entries(values).forEach(([key, value]) => body.append(key, value));
     const response = await fetch(url, {method: 'POST', body, credentials: 'same-origin'});
-    const payload = await response.json().catch(() => null);
-    if (!payload || !response.ok || payload.success !== true) {
-      throw new Error(payload?.error || `Server vrátil HTTP ${response.status}.`);
-    }
+    const payload = await readPayload(response);
     return payload.job;
   };
 
@@ -120,7 +133,7 @@ $d = $diag ?? [];
   const showConnectionError = problem => {
     active = false;
     error.hidden = false;
-    error.textContent = `Spojení se serverem selhalo: ${problem.message}`;
+    error.textContent = `Dávka byla pozastavena: ${problem.message}`;
     resume.hidden = false;
   };
 
@@ -141,8 +154,7 @@ $d = $diag ?? [];
 
   const loadStatus = async autoRun => {
     const response = await fetch('/admin/setup/demo-content/status', {credentials: 'same-origin'});
-    const payload = await response.json().catch(() => null);
-    if (!payload || !response.ok || payload.success !== true) throw new Error(payload?.error || `Server vrátil HTTP ${response.status}.`);
+    const payload = await readPayload(response);
     render(payload.job);
     if (payload.job?.status === 'running' && autoRun) {
       modal.hidden = false;

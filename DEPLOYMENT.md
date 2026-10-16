@@ -36,3 +36,7 @@ Po prihlaseni na `/admin/login` pouzij `/admin/setup`. Na opravdu prazdne instal
 - `.gitattributes` sjednocuje LF zdroju, aby textove kontrakty fungovaly i na Windows.
 
 Obsahove PHP handlery se vzdy provadeji az po dokonceni vsech SQL migraci, i kdyz web uz existuje. Aktualni handler starsi migrace muze pouzivat schema_name z 079; jednopruschodove poradi proto neni bezpecne. Regresni overeni: php tests/MigrationUpgradeOrderIntegrationTest.php vytvori vlastni nahodnou DB, spusti skutecne SQL a nahradi pouze obsahove efekty kontrolou schema zavislosti.
+
+## PHP 8.5 a davkove JSON odpovedi
+
+`ImageVariantService` uvolnuje reference na `GdImage` pres `unset`. `imagedestroy()` je od PHP 8.0 bez ucinku a od PHP 8.5 deprecated; pri debug vypisu by varovani porusilo JSON odpoved davky. Zastarala volani se odstranuji, chyby se nepotlacuji. Formular rozlisuje neplatny JSON, chybu aplikace a vyprsene prihlaseni; nedohledava JSON uvnitr poskozene odpovedi. Test klienta: `node tests/DemoSeedResponseTest.js`. Oficialni reference: https://www.php.net/manual/en/function.imagedestroy.php.
