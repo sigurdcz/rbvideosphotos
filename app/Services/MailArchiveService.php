@@ -27,15 +27,15 @@ final class MailArchiveService
             } elseif (preg_match('/[\r\n]/', $subject)) {
                 $error = 'invalid_subject';
             } else {
-                // PHP mail acceptance cannot prove mailbox delivery.
+                // SMTP acceptance cannot prove mailbox delivery.
                 $sent = $this->sender ? ($this->sender)($recipient, $subject, $body, $headers)
-                    : $this->nativeSend($recipient, $subject, $body, $headers);
+                    : (new SmtpMailer())->send($recipient, $subject, $body);
                 $status = $sent ? 'accepted' : 'failed';
                 $error = $sent ? null : 'transport_rejected';
             }
         } catch (\Throwable $e) {
             // Exceptions may contain credentials or message bodies; persist only a safe code.
-            $error = 'transport_exception';
+            $error = $e instanceof SmtpTransportException ? $e->errorCode : 'transport_exception';
         }
         try {
             $this->db->prepare('UPDATE mail_archive SET status = ?, error_code = ?, attempted_at = ? WHERE id = ?')
@@ -51,22 +51,12 @@ final class MailArchiveService
         return ['id' => $id, 'status' => $status];
     }
 
-    private function nativeSend(string $recipient, string $subject, string $body, string $headers): bool
-    {
-        // Capture mail() warnings without exposing transport internals to visitors.
-        set_error_handler(static function (int $severity, string $message): never {
-            throw new RuntimeException('Mail transport warning');
-        });
-        try { return mail($recipient, mb_encode_mimeheader($subject, 'UTF-8', 'B', "\r\n"), $body, $headers); }
-        finally { restore_error_handler(); }
-    }
-
     public static function headers(string $appUrl): string
     {
         $host = parse_url($appUrl, PHP_URL_HOST);
-        $from = (string) Env::get('MAIL_FROM', 'noreply@' . (string) $host);
+        $from = (string) Env::get('MAIL_FROM', (string) Env::get('SMTP_USERNAME', ''));
         if (!is_string($host) || !filter_var($from, FILTER_VALIDATE_EMAIL) || preg_match('/[\r\n]/', $from)) {
-            throw new RuntimeException('Invalid MAIL_FROM configuration');
+            throw new SmtpTransportException('smtp_configuration');
         }
         return 'From: ' . $from . "\r\nContent-Type: text/plain; charset=UTF-8";
     }

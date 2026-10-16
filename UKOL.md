@@ -1834,3 +1834,20 @@ Pri testovani byla prvni cesta noveho testu nedostupna i mimo sandbox; pricina n
 Dokumentace: DEPLOYMENT.md, ARCHITECTURE.md, .env.example a globalni wiki mail-archive.html + obnova hesla/data-model/pipelines/hub/katalog. README onboarding a INSTRUCTIONS nevyzadovaly zmenu.
 ## Vysledek
 Archiv zprav hotov a lokalne overen. Produkcni aktivace vyzaduje nasazeni a migraci 104. Dorucovani do produkcni schranky neovereno, automaticke opakovani se neprovadi. Push nebyl pro tento ukol vyzadan.
+
+---
+# UKOL: SMTP odesilani pres team schranku
+Datum: 2026-10-16
+Zadani: Prepnout kontakt a obnovu hesla na autentizovane SMTP team@rbvideosphotos.cz, zachovat prijemce z administrace a DB archiv a dodat .env konfiguraci.
+Doporuceny model: Sol - SMTP autentizace, TLS, citlive udaje a konzistence archivu.
+## Kroky
+- [x] Overit dostupnou SMTP knihovnu a dokumentaci, implementovat transport bez mail fallbacku.
+- [x] Otestovat SMTP konfiguraci, protokol a chyby s archivem bez realneho odesilani.
+- [x] Aktualizovat .env.example, dokumentaci a wiki; commitnout.
+## Poznamky
+PHPMailer 7.1.1 pres Composer ^7.0, novy composer.lock. CI uz provadi composer install; workflow ani serverovy .env se nemeni. Host potvrzuje oficialni Websupport dokumentace smtp.websupport.cz:465 SSL/TLS nebo 587 STARTTLS; konkretni schranku overit v administraci. Heslo ke schrance neni k dispozici a nezapisuje se do kodu/logu/wiki.
+SmtpMailer vyzaduje autentizaci a ssl/tls, overuje certifikat a hostname, From musi odpovidat uctu. Prijemce kontaktu stale pochazi z administrace, reset z users.email. Archiv INSERT zustava pred transportem, chyby maji bezpecne kody bez raw SMTP odpovedi, zadny PHP mail fallback ani retry. Chybne MAIL_FROM je rovnez smtp_configuration.
+Testy: 3 SMTP scenare pres fake kanal skutecne knihovny (SMTPS/STARTTLS, AUTH, MIME, prijemce, chyby config/auth/DATA); 17 archivnich assertions, 10 reset assertions plus rejection cases. Hlavni sada 219/219, goldens 27/28 (drive znamy About poster). Skutecna posta se neposilala. Composer validate/platform checks prosly; validate hlasi puvodni chybejici license metadata.
+Lokalni instalace Composer potrebovala CA z Windows root store, TLS kontrola nebyla vypnuta. Prvni test odhalil Timelimit na spatnem objektu (opraveno na SMTP instanci), registrace testu presunuta pred vykonavaci smycku. Dokumentace: .env.example, DEPLOYMENT.md, ARCHITECTURE.md; wiki smtp-mail.html a souvisejici dossier aktualizovany, odkazy a limity overeny. README onboarding/INSTRUCTIONS zmenu nevyzadovaly.
+## Vysledek
+SMTP implementovano a lokalne overeno, bez nove SQL migrace. Vyuziti archivu stale vyzaduje migraci 104 z minuleho ukolu. Aktivace vyzaduje nasazeni a doplneni SMTP_PASSWORD do serveroveho .env. Produkcni doruceni neovereno. Push nebyl vyzadan.

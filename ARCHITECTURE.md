@@ -154,7 +154,7 @@ request -> admin/index.php -> Core\Router -> Controller -> Repository/Service ->
 8. /blog                -> tryServeBlogListingPage()
 9. /faq                 -> tryServeFaqPage() z `faq_items`
 10. /kontakt            -> tryServeKontaktPage() z `contact_info`
-11. POST /kontakt/odeslat -> CSRF, honeypot, throttling a `mail()`; veřejný kontrakt přijímá jméno, kontakt, typ focení, místo, zprávu a volitelný enum-like `selected_package_id`, nikoli název, cenu ani datum akce. `PricingPackageCatalog` identifikátor ověří proti serverovému whitelistu a teprve z interní definice získá název a cenu pro e-mail. Neznámé ID blokuje odeslání se stavem `invalid-package`; redirect zachovává pouze ověřené ID v query `balicek`.
+11. POST /kontakt/odeslat -> CSRF, honeypot, throttling, archiv v DB a SMTP; veřejný kontrakt přijímá jméno, kontakt, typ focení, místo, zprávu a volitelný enum-like `selected_package_id`, nikoli název, cenu ani datum akce. `PricingPackageCatalog` identifikátor ověří proti serverovému whitelistu a teprve z interní definice získá název a cenu pro e-mail. Neznámé ID blokuje odeslání se stavem `invalid-package`; redirect zachovává pouze ověřené ID v query `balicek`.
 12. CMS stranka z DB    -> tryServeDatabasePage()
 13. Blog detail         -> tryServeBlogPostPage()
 14. Portfolio detail    -> tryServePortfolioPage(..., true)
@@ -690,6 +690,8 @@ Hero obsahovy container je ve vyssi vizualni vrstve nez video, ale jeho neintera
 
 ## Archiv pošty
 
-Kontaktní POST nejdříve validuje CSRF, honeypot, limit a vstup. `MailArchiveService` pak uloží obsah do `mail_archive` (migrace 104) a až poté zavolá transport. Stav `accepted` znamená předání transportu, ne doručení; `failed` ponechává obsah pro administrátora, `stored` značí nepotvrzený pokus. Při chybě INSERT se mail neodesílá. `MessagesController` zpřístupňuje stránkovaný archiv na `/admin/messages` pouze roli admin.
+Kontaktní POST nejdříve validuje CSRF, honeypot, limit a vstup. `MailArchiveService` pak uloží obsah do `mail_archive` (migrace 104) a až poté zavolá `SmtpMailer` (PHPMailer 7.1.1, povinná autentizace a SSL/TLS nebo STARTTLS). PHP `mail()` se nepoužívá. Stav `accepted` znamená předání transportu, ne doručení; `failed` ponechává obsah pro administrátora, `stored` značí nepotvrzený pokus. Při chybě INSERT se mail neodesílá. `MessagesController` zpřístupňuje stránkovaný archiv na `/admin/messages` pouze roli admin.
 
 Obnova hesla používá stejnou službu, ale ukládá pouze metadata bez těla a tajného tokenu. Automatický retry není zaveden. Nastavení, limity a ověřovací příkazy jsou v `DEPLOYMENT.md`.
+
+SMTP konfigurace je v serverovém `.env` (`SMTP_HOST`, `SMTP_PORT`, `SMTP_ENCRYPTION`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `MAIL_FROM`). From odpovídá účtu, příjemce pochází z CMS. Výjimky se převádějí na bezpečné kódy bez uchování SMTP textu nebo tajných údajů.

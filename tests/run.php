@@ -482,6 +482,9 @@ register_frontend_asset_delivery_tests($test, $assert);
 require __DIR__ . '/SchemaOrgStructuredFieldsTest.php';
 register_schema_org_structured_fields_tests($test, $assert);
 
+require __DIR__ . '/SmtpMailerTest.php';
+register_smtp_mailer_tests($test, $assert);
+
 $failures = 0;
 foreach ($tests as [$name, $callback]) {
     try {

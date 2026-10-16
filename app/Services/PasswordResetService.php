@@ -19,7 +19,7 @@ final class PasswordResetService
             || parse_url($base, PHP_URL_FRAGMENT) !== null) {
             throw new RuntimeException('Obnova hesla vyžaduje správné HTTPS APP_URL v .env.');
         }
-        $from = (string) Env::get('MAIL_FROM', 'noreply@' . $host);
+        $from = (string) Env::get('MAIL_FROM', (string) Env::get('SMTP_USERNAME', ''));
         if (!filter_var($from, FILTER_VALIDATE_EMAIL) || preg_match('/[\r\n]/', $from)) {
             throw new RuntimeException('Není správně nastaven odesílatel MAIL_FROM.');
         }

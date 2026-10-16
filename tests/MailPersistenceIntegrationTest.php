@@ -52,6 +52,10 @@ try {
  $db->exec("ALTER TABLE mail_archive CHANGE status_unavailable status VARCHAR(32) NOT NULL DEFAULT 'stored'");
  $row = $db->query('SELECT body, status FROM mail_archive ORDER BY id DESC LIMIT 1')->fetch();
  check($row['body'] === $body && $row['status'] === 'stored', 'Ambiguous delivery retains body');
+ $_ENV['SMTP_PASSWORD'] = '';
+ (new MailArchiveService($db))->send('contact', 'team@example.test', 'Poptávka', $body);
+ $row = $db->query('SELECT body, status, error_code FROM mail_archive ORDER BY id DESC LIMIT 1')->fetch();
+ check($row['body'] === $body && $row['status'] === 'failed' && $row['error_code'] === 'smtp_configuration', 'Missing SMTP credentials preserve message with explicit safe code');
  $db->exec('DROP TABLE mail_archive');
  try { $service->send('contact', 'team@example.test', 'Poptávka', $body); throw new Exception('Expected DB failure'); }
  catch (PDOException $e) { check($calls === 1, 'DB failure prevents send'); }
