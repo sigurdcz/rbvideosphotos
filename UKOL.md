@@ -1668,3 +1668,5 @@ Prvni push f91d842 probehl. Run 38905677599 selhal na chybejicim server inputu: 
 Push master dokoncen (d320f31). Run 38906062291 sestavil artefakt a nacetl Secrets, ale FTPS skoncil ENOTFOUND pro FTP_SERVER. Nasazeni neni dokoncene; uzivatel musi opravit hostname v production Secret. Staging environment chybi. Wiki reflexe: pipelines coverage partial; aktualizace dlouhodobeho zaznamu odlozena do dokonceni deploymentu.
 
 Uzivatel opravil FTP_SERVER odstranenenim portu. Produkcni cil opraven z /web/ na /rbvideosphotos.cz/web/ podle Total Commander pripojeni main uctu. Stary rerun zrusen; nasleduje novy push a overeni.
+
+Upresneni uzivatele: produkcni FTP ucet uz je omezen na cilovou slozku hostingu. Workflow musi pouzit server-dir: /; absolutni hostingovou cestu nepridavat. Predchozi beh zrusen.
