@@ -215,3 +215,13 @@ Prikaz reset tvrde odmita databazi, jejiz `DB_HOST` neni `127.0.0.1`, `localhost
 - Chces request flow, tabulky a interni sluzby: otevri `ARCHITECTURE.md`
 - Chces obsluhu GTM adminu: otevri `GTM_ADMIN.md`
 - Chces contribution guardrails: otevri `INSTRUCTIONS.md`
+
+## GitHub Actions deployment
+
+Repozitar: `https://github.com/sigurdcz/rbvideosphotos`.
+Push vetve `master` spousti produkcni FTPS nasazeni do `/web/` s GitHub Environment `production`.
+Push vetve `dev` spousti staging FTPS nasazeni do `/web/dev/` s GitHub Environment `staging`.
+V kazdem environment nastav Secrets `FTP_HOST`, `FTP_USER`, `FTP_PASS` (nikoli pouze Variables).
+Workflow lze spustit i rucne. Pouziva FTPS na portu 21.
+Deployment prenasi aplikacni kod a Composer zavislosti; databazi, media, publikovany obsah ani `.env` neprenasi.
+Na novem hostingu je potreba samostatne pripravit `.env`, databazi a obsah.

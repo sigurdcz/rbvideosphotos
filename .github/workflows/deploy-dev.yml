@@ -12,6 +12,7 @@ concurrency:
 
 jobs:
   deploy:
+    environment: staging
     runs-on: ubuntu-latest
 
     steps:
@@ -34,6 +35,8 @@ jobs:
             --exclude='.github/' \
             --exclude='.env' \
             --exclude='.env.*' \
+            --exclude='.agents/' \
+            --exclude='.codex/' \
             --exclude='.claude/' \
             --exclude='_deploy/' \
             --exclude='*.bat' \

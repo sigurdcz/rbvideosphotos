@@ -1643,3 +1643,21 @@ Datovy kontrakt byl zmenen v `BlogListingData`, `PortfolioListingData` a homepag
 Dokonceno. Runtime `/blog?theme_preview=premium-photo` predava 18 originalnich media URL, 0 thumb a 0 medium derivatu. Fresh Chrome CDP capture v 1525 px i 390 px nema horizontalni overflow; caption doseda na pravy dolni roh obrazove plochy. Vizualni skore po iteraci: 98/100 (kvalita 40/40, roh 30/30, transparentni overlay 14/15, konzistence 9/10, runtime 5/5). Zakladni testy prosly 65/65; 25 golden snapshotu zustava viditelne odlisnych po drivejsim demo reseedu a nebyly potichu prepsany. Wiki reflexe: SKIP, protoze existujici SEO Editor dossier uz pokryva media varianty i Chrome vizualni overeni a tato drobna implementace nepridava novy rekonstrukcni postup.
 
 ---
+
+---
+# UKOL: Prvni push RB Videos Photos
+
+Datum: 2026-10-16
+Zadani: Nastavit novy GitHub remote a pushnout projekt s automatickym FTPS deploymentem.
+Doporuceny model: Terra - Ohranicena uprava workflow a overeni nasazeni.
+
+## Kroky
+
+- [x] Overit prazdny cilovy repozitar a nastavit origin na sigurdcz/rbvideosphotos.
+- [x] Ulozit predchozi hotovou zmenu hero do samostatneho commitu.
+- [-] Priradit workflow k environment production a staging a aktualizovat dokumentaci.
+- [ ] Pushnout master a overit GitHub Actions deployment.
+
+## Poznamky
+
+65 testu proslo; golden kontroly nelze overit kvuli nedostupne databazi. FTP adresare zustavaji /web/ a /web/dev/. Databaze, media a .env nejsou soucasti deploymentu. Lokalni .agents neni soucasti push.
