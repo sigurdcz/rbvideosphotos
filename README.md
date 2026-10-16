@@ -227,3 +227,9 @@ Deployment prenasi aplikacni kod a Composer zavislosti; databazi, media, publiko
 Na novem hostingu je potreba samostatne pripravit `.env`, databazi a obsah.
 
 CLI i URL migrator sdileji explicitni kontrolu znamych historickych prekryvu v database/migration-schema-state.php. Pokud schema uz splnuje znamou migraci, zaznamenaji ji bez opakovaneho DDL a vypisou schema already matches. Ostatni SQL chyby beh zastavi; historicke SQL soubory se neprepisuji.
+
+### Prvni administrator v prazdne instalaci
+
+Po migracich otevri `/bootstrap-admin.php`. Zadej serverovy `MIGRATE_TOKEN` do formulare (nikoli do URL), e-mail a nove heslo o delce 12 az 72 bajtu. Formular pouziva POST, session CSRF a MySQL/MariaDB advisory lock; vytvori admina pouze pri prazdne tabulce `users`. Pri existujicim uzivateli se explicitne uzavre a nikdy nemeni hesla. Pak se prihlas na `/admin/login` a otevri `/admin/setup`. Test: `php tests/InitialAdminTest.php` (PDO test double; nezastupuje integracni overeni na hostingu).
+
+Armagedon nasledne resetuje databazi a spousti zakladni seed, ktery obnovuje vychozi ucet `admin@example.com` / `admin123`. Po resetu se prihlas temito udaji a zmen vychozi heslo. Bootstrap ani migrace nekopiruji lokalni obsah.

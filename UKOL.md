@@ -1694,3 +1694,20 @@ Pripojeni DB funguje. Web utilita nema kontrolu schema-state existujici v CLI mi
 Kontrola schema-state vyclenena z CLI do database/migration-schema-state.php; oba migratory ji sdileji. Web vypisuje i loguje migrace splnene existujicim schematem. README dokumentuje tento kontrakt.
 
 Overeni: PHP lint vsech tri PHP souboru uspesny; 65 testu proslo, golden kontroly neprovedeny kvuli nedostupne lokalni DB. Historicke SQL nezmeneny. Novy bootstrap proti MariaDB nebyl lokalne proveden; produkcni migraci opakuje uzivatel po nasazeni.
+
+---
+# UKOL: Prvni administrator po migraci
+Datum: 2026-10-16
+Zadani: Umoznit prihlaseni do prazdne instalace pro nasledne spusteni Armagedonu.
+Doporuceny model: Sol - Bezpecnostni bootstrap administrace vyzaduje overeni autorizace a jednorazovosti.
+
+## Kroky
+- [x] Potvrdit, ze migrace netvori uzivatele a setup vyzaduje admina.
+- [-] Pridat explicitni bootstrap prvniho admina chraneny MIGRATE_TOKEN, CSRF a prazdnou tabulkou users.
+- [ ] Overit odmítnuti neplatneho tokenu, existujicich uzivatelu a soubeznych pozadavku.
+- [ ] Dokumentovat, commitnout, pushnout a overit deployment.
+
+## Poznamky
+Predchozi oprava migraci d9a0aa6 je nasazena a uzivatel potvrdil uspech migraci. Bootstrap nebude menit existujici ucty ani seedovat obsah.
+
+Pridany bootstrap-admin.php, InitialAdminService a sedm cilenych testu s PDO double. Overeno odmítnuti tokenu/kratkeho hesla, zamek, hash, admin role, jednorazovost a uvolneni zamku. README vysvetluje inicializaci i reset hesla zakladnim seedem po Armagedonu.
