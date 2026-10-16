@@ -219,7 +219,7 @@ Prikaz reset tvrde odmita databazi, jejiz `DB_HOST` neni `127.0.0.1`, `localhost
 ## GitHub Actions deployment
 
 Repozitar: `https://github.com/sigurdcz/rbvideosphotos`.
-Push vetve `master` spousti produkcni FTPS nasazeni do `/web/` s GitHub Environment `production`.
+Push vetve `master` spousti produkcni FTPS nasazeni do `/rbvideosphotos.cz/web/` s GitHub Environment `production`.
 Push vetve `dev` spousti staging FTPS nasazeni do `/web/dev/` s GitHub Environment `staging`.
 V kazdem environment nastav Secrets `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD` (nikoli pouze Variables).
 Workflow lze spustit i rucne. Pouziva FTPS na portu 21.

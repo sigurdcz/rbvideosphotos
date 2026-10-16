@@ -1655,11 +1655,16 @@ Doporuceny model: Terra - Ohranicena uprava workflow a overeni nasazeni.
 
 - [x] Overit prazdny cilovy repozitar a nastavit origin na sigurdcz/rbvideosphotos.
 - [x] Ulozit predchozi hotovou zmenu hero do samostatneho commitu.
-- [-] Priradit workflow k environment production a staging a aktualizovat dokumentaci.
-- [ ] Pushnout master a overit GitHub Actions deployment.
+- [x] Priradit workflow k environment production a staging a aktualizovat dokumentaci.
+- [x] Pushnout master a overit GitHub Actions deployment.
 
 ## Poznamky
 
 65 testu proslo; golden kontroly nelze overit kvuli nedostupne databazi. FTP adresare zustavaji /web/ a /web/dev/. Databaze, media a .env nejsou soucasti deploymentu. Lokalni .agents neni soucasti push.
 
 Prvni push f91d842 probehl. Run 38905677599 selhal na chybejicim server inputu: skutecne production Secrets jsou FTP_SERVER, FTP_USERNAME, FTP_PASSWORD; workflow a README upraveny podle overenych nazvu. Staging environment v cilovem repozitari neexistuje.
+
+## Stav nasazeni 2026-10-16
+Push master dokoncen (d320f31). Run 38906062291 sestavil artefakt a nacetl Secrets, ale FTPS skoncil ENOTFOUND pro FTP_SERVER. Nasazeni neni dokoncene; uzivatel musi opravit hostname v production Secret. Staging environment chybi. Wiki reflexe: pipelines coverage partial; aktualizace dlouhodobeho zaznamu odlozena do dokonceni deploymentu.
+
+Uzivatel opravil FTP_SERVER odstranenenim portu. Produkcni cil opraven z /web/ na /rbvideosphotos.cz/web/ podle Total Commander pripojeni main uctu. Stary rerun zrusen; nasleduje novy push a overeni.

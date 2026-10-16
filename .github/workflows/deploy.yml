@@ -68,7 +68,7 @@ jobs:
           security: loose
           timeout: 120000
           local-dir: ./_deploy/
-          server-dir: /web/
+          server-dir: /rbvideosphotos.cz/web/
           state-name: .ftp-deploy-sync-state.json
           exclude: |
             **/.git*
