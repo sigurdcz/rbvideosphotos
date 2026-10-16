@@ -687,3 +687,9 @@ Specialni live route handlery (`Sluzby`, portfolio listing/detail, FAQ, Kontakt 
 Popisky portfolio lightboxu normalizuje `PortfolioCaptionFormatter`. HTML popisu z CMS zachova hranice odstavcu jako nove radky v plain textu, zatimco samostatny odstavec `<strong>Autor: ...</strong>` prevede do oddeleneho `gallery_author`. Homepage i listing portfolia predavaji popis a autora sdilenemu Golden Bash lightboxu zvlast, aby `strip_tags()` neslepoval sousedni odstavce.
 
 Hero obsahovy container je ve vyssi vizualni vrstve nez video, ale jeho neinteraktivni plocha musi mit `pointer-events: none`; odkazy, tlacitka a formularove prvky uvnitr explicitne pouzivaji `pointer-events: auto`. Jinak container zachyti klik urceny consent-aware play tlacitku video fasady a iframe se nikdy nevytvori.
+
+## Archiv pošty
+
+Kontaktní POST nejdříve validuje CSRF, honeypot, limit a vstup. `MailArchiveService` pak uloží obsah do `mail_archive` (migrace 104) a až poté zavolá transport. Stav `accepted` znamená předání transportu, ne doručení; `failed` ponechává obsah pro administrátora, `stored` značí nepotvrzený pokus. Při chybě INSERT se mail neodesílá. `MessagesController` zpřístupňuje stránkovaný archiv na `/admin/messages` pouze roli admin.
+
+Obnova hesla používá stejnou službu, ale ukládá pouze metadata bez těla a tajného tokenu. Automatický retry není zaveden. Nastavení, limity a ověřovací příkazy jsou v `DEPLOYMENT.md`.

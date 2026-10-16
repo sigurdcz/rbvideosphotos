@@ -15,6 +15,7 @@ try {
     $db->exec('USE `' . $name . '`');
     $db->exec("CREATE TABLE users (id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT, email VARCHAR(255) UNIQUE, password_hash VARCHAR(255)) ENGINE=InnoDB");
     $db->exec(file_get_contents(dirname(__DIR__) . '/database/migrations/103_add_password_resets.sql'));
+    $db->exec(file_get_contents(dirname(__DIR__) . '/database/migrations/104_add_mail_archive.sql'));
     $oldHash = password_hash('old-password-123', PASSWORD_BCRYPT);
     $db->prepare('INSERT INTO users (email, password_hash) VALUES (?, ?)')->execute(['admin@example.test', $oldHash]);
     $_ENV['APP_URL'] = 'https://example.test';

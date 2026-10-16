@@ -36,9 +36,8 @@ final class PasswordResetService
             . "\n\nPokud jste o změnu nežádali, tento e-mail ignorujte.\n";
         $headers = 'From: ' . $from . "\r\nContent-Type: text/plain; charset=UTF-8";
         try {
-            $sent = $this->sender ? ($this->sender)($user['email'], 'Obnova hesla - CMS', $body, $headers)
-                : mail($user['email'], 'Obnova hesla - CMS', $body, $headers);
-            if (!$sent) { throw new RuntimeException('Mail transport rejected message'); }
+            $result = (new MailArchiveService($this->db, $this->sender))->send('password_reset', $user['email'], 'Obnova hesla - CMS', $body, $headers);
+            if ($result['status'] !== 'accepted') { throw new RuntimeException('Mail transport acceptance not confirmed'); }
         } catch (\Throwable $e) {
             $this->db->prepare('DELETE FROM password_resets WHERE user_id = ? AND token_hash = ?')->execute([$user['id'], $hash]);
             throw new RuntimeException('E-mail se nepodařilo předat k odeslání. Kontaktujte správce hostingu.', 0, $e);

@@ -1,0 +1,17 @@
+<?php
+$state = (string) ($form['sentState'] ?? '');
+$notices = [
+ '1' => 'Zpráva je bezpečně uložena. E-mail byl předán poštovní službě; doručení do schránky zatím není potvrzené.',
+ 'saved' => 'Zpráva je bezpečně uložena. Předání e-mailu se nepodařilo potvrdit, správce ji najde v administraci.',
+ 'error' => 'Zprávu se nepodařilo uložit. Nebyla odeslána. Zkuste to prosím znovu nebo nás kontaktujte přímo.',
+ 'invalid' => 'Vyplňte prosím všechna povinná pole a souhlas se zpracováním údajů.',
+ 'invalid-package' => 'Vybraný balíček není platný. Vyberte jej prosím znovu.',
+ 'csrf' => 'Platnost formuláře vypršela. Obnovte stránku a odešlete zprávu znovu.',
+ 'rate-limit' => 'Příliš mnoho pokusů. Zkuste to prosím za pár minut.',
+];
+if (isset($notices[$state])) {
+    echo '<div class="kt-success" role="status"><span class="kt-status-icon material-symbols-outlined" aria-hidden="true">';
+    if ($state === '1') { echo 'check_circle</span>'; }
+    else { echo 'warning</span>'; }
+    echo '<span>' . $this->e($notices[$state]) . '</span></div>';
+}

@@ -2594,6 +2594,7 @@ try {
         }
         $site = (new SiteRepository())->findFirst();
         $formEmail = null;
+        $recipientLookupFailed = false;
         if ($site) {
             try {
                 $ci = (new ContactRepository())->findBySite((int)$site['id']);
@@ -2601,9 +2602,12 @@ try {
                 if ($formEmail === '') {
                     $formEmail = trim((string)($ci['email'] ?? ''));
                 }
-            } catch (\Throwable $e) {}
+            } catch (\Throwable $e) {
+                $recipientLookupFailed = true;
+                Logger::error('contact_form', 'Recipient lookup failed', ['type' => get_class($e)]);
+            }
         }
-        if ($formEmail === null || $formEmail === '') {
+        if (!$recipientLookupFailed && ($formEmail === null || $formEmail === '')) {
             $formEmail = defaultContactFormEmail();
         }
         $cleanHeaderValue = static fn (string $value): string => trim(str_ireplace(["\r", "\n", "%0a", "%0d"], '', $value));
@@ -2617,22 +2621,21 @@ try {
         $message = trim($_POST['message']       ?? '');
         $privacyConsent = !empty($_POST['privacy_consent']);
         $contactMailSent = false;
-        if (!$invalidPackageSelection && $name && $contact && $shootingType && $message && $privacyConsent && $formEmail && filter_var($formEmail, FILTER_VALIDATE_EMAIL)) {
+        $contactSaved = false;
+        if (!$invalidPackageSelection && $name && $contact && $shootingType && $message && $privacyConsent) {
             $subject = 'Nová zpráva z webu - ' . $name;
             $body    = "Jméno: {$name}\nKontakt: {$contact}\nTyp focení: {$shootingType}\nMísto akce: {$eventPlace}\n\nZpráva:\n{$message}";
             if ($selectedPackage !== null) {
                 $body .= "\n\nVybraný balíček: {$selectedPackage['name']} ({$selectedPackage['price']})";
             }
             RequestThrottle::hit('contact_form', $contactThrottleKey, 3, 10 * 60, 10 * 60);
-            $appHost = parse_url((string) Config::get('app', 'url', ''), PHP_URL_HOST);
-            $mailHost = is_string($appHost) && $appHost !== '' ? $appHost : 'localhost';
-            $headers = "From: noreply@{$mailHost}\r\nContent-Type: text/plain; charset=UTF-8";
-            $contactMailSent = @mail($formEmail, $subject, $body, $headers);
-            if (!$contactMailSent) {
-                Logger::warning('contact_form', 'Contact form mail() returned false', [
-                    'ip' => RequestThrottle::currentIp(),
-                    'recipient' => $formEmail,
-                ]);
+            try {
+                $delivery = (new \App\Services\MailArchiveService(\App\Core\Database::getInstance()))
+                    ->send('contact', (string) $formEmail, mb_substr($subject, 0, 255), $body);
+                $contactSaved = true;
+                $contactMailSent = $delivery['status'] === 'accepted';
+            } catch (\Throwable $e) {
+                Logger::error('contact_form', 'Contact message could not be archived; mail not sent', ['type' => get_class($e)]);
             }
         } else {
             Logger::warning('contact_form', 'Contact form submission rejected before mail send', [
@@ -2648,7 +2651,7 @@ try {
         }
         $redirectStatus = $invalidPackageSelection
             ? 'invalid-package'
-            : ($contactMailSent ? '1' : (($name && $contact && $shootingType && $message && $privacyConsent) ? 'error' : 'invalid'));
+            : ($contactMailSent ? '1' : ($contactSaved ? 'saved' : (($name && $contact && $shootingType && $message && $privacyConsent) ? 'error' : 'invalid')));
         $redirectQuery = ['sent' => $redirectStatus];
         if ($selectedPackage !== null) {
             $redirectQuery['balicek'] = $selectedPackage['id'];

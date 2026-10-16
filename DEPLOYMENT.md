@@ -50,3 +50,23 @@ Serverové `.env` musí mít správné `APP_URL=https://vase-domena.cz`. Volitel
 Odkaz platí 30 minut, nové vyžádání ruší předchozí a použití je atomické a jednorázové. Nové heslo má 12–72 bajtů. Po změně jsou staré přihlášené relace odmítnuty při dalším požadavku; první nasazení této ochrany také odhlásí starší relace. Žádosti mají CSRF a limit 3/15 minut podle IP i e-mailu. Neexistující účet dostane stejnou obecnou odpověď; chybu transportu zobrazujeme explicitně. Tokeny se ukládají pouze jako SHA-256; hesla jako bcrypt. Odkaz v e-mailu obsahuje tajný token, proto nesdílejte e-mail ani syrové serverové access logy (aplikace token v URI maskuje).
 
 Ověření vývoje: `php tests/PasswordResetIntegrationTest.php` vytváří a v finally odstraňuje pouze vlastní náhodnou testovací databázi, vyžaduje lokální DB účet s CREATE/DROP DATABASE. Produkční doručení ověřte vlastní e-mailovou schránkou; testy reálné e-maily neposílají.
+
+## Archiv kontaktních zpráv a stav pošty
+
+Po nasazení spusťte migrace včetně **104_add_mail_archive.sql**. V administraci přibyla stránka **Zprávy** (`/admin/messages`, pouze role admin). Obsah poptávky (jméno, kontakt, typ služby, místo, zpráva a balíček) se ukládá do `mail_archive.body` **před pokusem o odeslání**. Příjemce zůstává v nastavení Kontakt/Nastavení (`form_email`, případně kontaktní e-mail). Vytvoření schránky team@rbvideosphotos.cz samo toto nastavení nemění.
+
+Stavy: `stored` = uloženo, výsledek pokusu nepotvrzen (např. přerušení procesu); `accepted` = PHP mail přijal zprávu k doručení, nikoli důkaz doručení do schránky; `failed` = transport odmítl, konfigurace je neplatná nebo nastala chyba. Časové údaje jsou UTC. Přehled zobrazuje příjemce a bezpečný chybový kód. Automatické opakování se neprovádí, aby při nejasném výsledku nevznikaly duplicitní zprávy. Obsah lze v administraci přečíst a požadavek vyřídit přímo.
+
+Pokud odeslání selže, návštěvník dostane potvrzení uložení a informaci o nepotvrzeném e-mailu. Při selhání zápisu do databáze se nic neodesílá a formulář ukáže chybu. Mail log obsahuje ID záznamu a kód chyby, nikoli obsah zprávy. Archiv je provozní záloha proti výpadku pošty; pro ztrátu databáze je nutná běžná externí záloha DB. Armagedon/reset databáze může archiv odstranit. Historické zprávy před nasazením nelze zpětně obnovit.
+
+Obnova hesla zapisuje pouze metadata pokusu do stejné tabulky, **nikdy resetovací URL, token ani tělo e-mailu**. Neúspěšné/nepotvrzené předání zneplatní reset token a zobrazí chybu.
+
+Kontaktní formulář nově také respektuje volitelné serverové `MAIL_FROM`, stejně jako obnova hesla:
+
+```dotenv
+MAIL_FROM=team@rbvideosphotos.cz
+```
+
+Toto nastavuje adresu v hlavičce From, **nepřihlašuje web k SMTP schránce**. Doručování při mail(true) je třeba dohledat v poštovním systému hostingu (spam, bounce, konfigurace odesílatele a domény). Příčina současného produkčního nedoručování zatím není potvrzená.
+
+Ověření: `php tests/MailPersistenceIntegrationTest.php`, `php tests/PasswordResetIntegrationTest.php`, `php tests/MigrationUpgradeOrderIntegrationTest.php`. Izolované lokální databáze se po testech odstraní; reálná pošta se v testech neposílá.

@@ -1816,3 +1816,21 @@ Overeni: 10 assertions plus rejection cases na oddelene MariaDB; HTTP smoke form
 
 ## Vysledek
 Obnova hesla e-mailem hotova a lokalne overena. Dokumentace: DEPLOYMENT.md, .env.example, globalni wiki. Pripraveno k nasazeni; vyzaduje migraci 103 a skutecny e-mail uctu. Push pro tento novy ukol nebyl vyzadan.
+
+---
+# UKOL: Trvala zaloha kontaktnich zprav
+Datum: 2026-10-16
+Zadani: Ulozit zpravy pred odeslanim do databaze a pravdive evidovat vysledek mail transportu, aby se obsah pri selhani neztratil.
+Doporuceny model: Sol - Konzistence ukladani, selhani posty a citlivych reset tokenu.
+## Kroky
+- [x] Overit kontaktni tok a pridat append-only migraci a sluzbu pro DB zalohu.
+- [x] Zapojit ulozeni, stavy a admin prehled; opravit potvrzeni a evidenci obnovy hesla bez tokenu.
+- [x] Otestovat selhani DB i mailu, aktualizovat dokumentaci/wiki a commitnout.
+## Poznamky
+Uzivatel zvolil zachovat prijemce z administrace. Pouziva se puvodni PHP mail, nova schranka sama nepotvrzuje SMTP konfiguraci. Produkcni pricina nedorucovani nezjistena.
+Migrace 104 je nova, stare SQL beze zmen. Kontaktni obsah se uklada pred mail; reset jen metadata bez tela/tokenu. Admin Zpravy vyzaduje roli admin, escapuje obsah a strankuje po 50 zaznamech. Stav accepted neni doruceni; pri selhani DB neni odeslani ani potvrzeni uspechu. Osobni udaje zustavaji pouze v chranene DB, log nese ID/kod. Pole datum se dle existujiciho kontraktu nezpracovava.
+Overeno: MailPersistenceIntegrationTest 16 assertions, PasswordResetIntegrationTest 10 assertions plus rejection cases, migrace 106/106 a 15 handleru. HTTP POST s vypnutou postou zachoval obsah i prijemce, vratil sent=saved a anonym nema pristup k archivu. Regrese 216/216; kontakt golden po zachovani id/for beze zmen. Znamy About poster z lokalniho obsahu zustava odlisny (27/28 goldens).
+Pri testovani byla prvni cesta noveho testu nedostupna i mimo sandbox; pricina neoverena. Finalni MailPersistenceIntegrationTest existuje a prosel, zadna ochrana OS se nemenila.
+Dokumentace: DEPLOYMENT.md, ARCHITECTURE.md, .env.example a globalni wiki mail-archive.html + obnova hesla/data-model/pipelines/hub/katalog. README onboarding a INSTRUCTIONS nevyzadovaly zmenu.
+## Vysledek
+Archiv zprav hotov a lokalne overen. Produkcni aktivace vyzaduje nasazeni a migraci 104. Dorucovani do produkcni schranky neovereno, automaticke opakovani se neprovadi. Push nebyl pro tento ukol vyzadan.
