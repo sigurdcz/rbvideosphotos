@@ -225,3 +225,5 @@ V kazdem environment nastav Secrets `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`
 Workflow lze spustit i rucne. Pouziva FTPS na portu 21.
 Deployment prenasi aplikacni kod a Composer zavislosti; databazi, media, publikovany obsah ani `.env` neprenasi.
 Na novem hostingu je potreba samostatne pripravit `.env`, databazi a obsah.
+
+CLI i URL migrator sdileji explicitni kontrolu znamych historickych prekryvu v database/migration-schema-state.php. Pokud schema uz splnuje znamou migraci, zaznamenaji ji bez opakovaneho DDL a vypisou schema already matches. Ostatni SQL chyby beh zastavi; historicke SQL soubory se neprepisuji.

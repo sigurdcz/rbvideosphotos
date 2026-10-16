@@ -1672,3 +1672,25 @@ Uzivatel opravil FTP_SERVER odstranenenim portu. Produkcni cil opraven z /web/ n
 Upresneni uzivatele: produkcni FTP ucet uz je omezen na cilovou slozku hostingu. Workflow musi pouzit server-dir: /; absolutni hostingovou cestu nepridavat. Predchozi beh zrusen.
 
 Nazvy obou workflow opraveny z puvodniho Webzdarma na Active24; jde pouze o zobrazovany nazev, cil urcuje FTP_SERVER.
+
+---
+# UKOL: Sjednotit webove a CLI migrace
+
+Datum: 2026-10-16
+Zadani: Opravit prvni webovou migraci koncici duplicitnim autofill_disabled bez prepisovani historickych SQL.
+Doporuceny model: Terra - Ohranicena oprava rozdilneho chovani dvou migratoru.
+
+## Kroky
+
+- [x] Dohledat prekryv migraci 001/002 a rozdil mezi CLI a URL utilitou.
+- [x] Sdilet kontrolu jiz splnenych historickych migraci a viditelne je oznacit.
+- [x] Overit PHP syntax, regrese a nemennost historickych SQL.
+- [ ] Commitnout, pushnout opravu a predat opakovani migrace.
+
+## Poznamky
+
+Pripojeni DB funguje. Web utilita nema kontrolu schema-state existujici v CLI migratoru. Zadna produkcni data se nemazou.
+
+Kontrola schema-state vyclenena z CLI do database/migration-schema-state.php; oba migratory ji sdileji. Web vypisuje i loguje migrace splnene existujicim schematem. README dokumentuje tento kontrakt.
+
+Overeni: PHP lint vsech tri PHP souboru uspesny; 65 testu proslo, golden kontroly neprovedeny kvuli nedostupne lokalni DB. Historicke SQL nezmeneny. Novy bootstrap proti MariaDB nebyl lokalne proveden; produkcni migraci opakuje uzivatel po nasazeni.

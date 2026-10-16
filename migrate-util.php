@@ -97,11 +97,21 @@ try {
         );
     }
 
+    $migrationAlreadySatisfied = require BASE_PATH . '/database/migration-schema-state.php';
     $executed = [];
+    $schemaSatisfied = [];
     foreach ($files as $filePath) {
         $name = basename($filePath);
         $applied = $pdo->query('SELECT migration FROM schema_migrations')->fetchAll(PDO::FETCH_COLUMN) ?: [];
         if (in_array($name, $applied, true)) {
+            continue;
+        }
+
+        if ($migrationAlreadySatisfied($pdo, $name)) {
+            $pdo->prepare('INSERT INTO schema_migrations (migration) VALUES (?)')
+                ->execute([$name]);
+            $schemaSatisfied[] = $name;
+            $executed[] = $name . ' (schema already matches; recorded without reapplying)';
             continue;
         }
 
@@ -120,6 +130,7 @@ try {
         'driver' => 'mysql',
         'database' => $db,
         'applied' => $executed,
+        'schema_already_satisfied' => $schemaSatisfied,
     ]);
 
     renderPage(
