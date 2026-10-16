@@ -52,7 +52,9 @@ class PortfolioPublishService
         $description = $entry['description'] ?? '';
         $metaDesc    = $h($entry['meta_description'] ?? strip_tags(substr($description, 0, 160)));
         $pageUrl = rtrim((string)($site['domain'] ?? ''), '/') . '/' . ltrim((string)$entry['slug'], '/');
-        $ogImageUrl = $this->absoluteMediaUrl((string)($mediaItems[0]['storage_path'] ?? ''), $site);
+        $ogImageUrl = !empty($site['default_og_image_id'])
+            ? $this->resolveSiteSocialImage((int)$site['default_og_image_id'], $site)
+            : $this->absoluteMediaUrl((string)($mediaItems[0]['storage_path'] ?? ''), $site);
         $twitterImageUrl = $this->resolveSiteSocialImage(
             (int)($site['default_twitter_image_id'] ?? $site['default_og_image_id'] ?? 0),
             $site
@@ -231,7 +233,7 @@ HTML;
             }
         }
 
-        return $this->absoluteMediaUrl($path, $site);
+        return \App\Services\Render\MediaUrlResolver::absolutePublicMediaUrl($path, (string)($site['domain'] ?? ''));
     }
 
     private function absoluteMediaUrl(string $path, array $site): string

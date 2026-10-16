@@ -664,22 +664,18 @@ function injectPageHeadMetadata(string $html, array $site, array $meta): string
     $ogImage = trim((string)($meta['og_image'] ?? ''));
     $twitterImage = trim((string)($meta['twitter_image'] ?? ''));
     $mediaRepo = new MediaRepository();
+    // An explicitly selected page image wins; otherwise prefer site settings
+    // over route-supplied photos (e.g. portfolio or blog hero images).
     if (!empty($pageSeo['og_image_id'])) {
         $ogImage = (string)(resolveSocialImageUrl($mediaRepo, $pageSeo['og_image_id'], $site) ?? '');
+    } elseif (!empty($site['default_og_image_id'])) {
+        $ogImage = (string)(resolveSocialImageUrl($mediaRepo, $site['default_og_image_id'], $site) ?? '');
     }
     if (!empty($pageSeo['twitter_image_id'])) {
         $twitterImage = (string)(resolveSocialImageUrl($mediaRepo, $pageSeo['twitter_image_id'], $site) ?? '');
-    }
-    if ($twitterImage === '' && !empty($site['default_twitter_image_id'])) {
+    } elseif (!empty($site['default_twitter_image_id'])) {
         $twitterImage = (string)(resolveSocialImageUrl($mediaRepo, $site['default_twitter_image_id'], $site) ?? '');
-    }
-    if ($ogImage === '' && !empty($site['default_og_image_id'])) {
-        $ogImage = (string)(resolveSocialImageUrl($mediaRepo, $site['default_og_image_id'], $site) ?? '');
-    }
-    if ($twitterImage === '' && $ogImage !== '') {
-        $twitterImage = $ogImage;
-    }
-    if ($twitterImage === '') {
+    } elseif (!empty($pageSeo['og_image_id']) || !empty($site['default_og_image_id']) || $twitterImage === '') {
         $twitterImage = $ogImage;
     }
     if ($ogImage !== '') {

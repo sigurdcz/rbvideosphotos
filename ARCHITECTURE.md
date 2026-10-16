@@ -707,3 +707,9 @@ SMTP konfigurace je v serverovém `.env` (`SMTP_HOST`, `SMTP_PORT`, `SMTP_ENCRYP
 `PasswordResetService` používá users.email jen jako login. Pro existující účet načte form_email z contact_info prvního sites řádku, vyžaduje platnou explicitně uloženou adresu a pošle na ni odkaz vázaný na dané user_id. Neexistuje fallback na login ani veřejný kontaktní e-mail.
 
 `ContactRepository::upsert` má chráněné pole form_email a opt-in `$allowRecoveryRecipientChange=false`. Běžné aktualizace chráněný sloupec v SQL vynechávají; změněná hodnota bez oprávnění selže. Controller gate `mayChangeRecoveryRecipient` odmítne editora HTTP403 před zápisem. Settings a trusted seed mají explicitní opt-in. Tím editor veřejných kontaktů nemůže přesměrovat obnovu administrátorského účtu.
+
+## Dědění globálních social obrázků
+
+Po datové migraci 105 mají všechny dosavadní stránky NULL `og_image_id`/`twitter_image_id`. Obvyklý renderer i publish používají globální Nastavení. `injectPageHeadMetadata` dodržuje prioritu explicitní SEO stránky > globální platformní obrázek > obsahová fotografie při absenci globálu. Twitter bez vlastního globálu dědí vybraný OG obrázek. `PortfolioPublishService` také upřednostňuje globální OG a pro globální obrázky používá společný MediaUrlResolver, aby export neodkazoval na interní storage cestu.
+
+Aktuální demo/base seedy vkládají page sharing image ID jako NULL. Schema.org explicitní obrázek je jiná vlastnost a migrace jej nemění; automatický Organization image nadále sleduje vybraný OG obrázek.

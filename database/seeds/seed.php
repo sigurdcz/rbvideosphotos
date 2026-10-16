@@ -1094,10 +1094,10 @@ $pdo->prepare(
     '/o-nas',
     'O nás | RB Videos & Photos',
     'Zdeněk Černohlávek a Tomáš Šincl - fotograf a kameraman z Olomouce pro fotografie a video.',
-    (int)($seedMedia['weare2.png']['id'] ?? 0) ?: null,
+    null, // Inherit the global sharing image.
     'O nás | RB Videos & Photos',
     'Zdeněk Černohlávek a Tomáš Šincl - fotograf a kameraman z Olomouce pro fotografie a video.',
-    (int)($seedMedia['weare2.png']['id'] ?? 0) ?: null,
+    null, // Inherit the global sharing image.
     'AboutPage',
     $aboutMetaTitle,
     $aboutMetaDescription,
@@ -1126,10 +1126,10 @@ $pdo->prepare(
     '/podminky-uziti',
     $rulesTitle,
     $rulesDescription,
-    (int)($seedMedia['rodinne-foceni-rodina-dite-louka.webp']['id'] ?? 0) ?: null,
+    null, // Inherit the global sharing image.
     $rulesTitle,
     $rulesDescription,
-    (int)($seedMedia['rodinne-foceni-rodina-dite-louka.webp']['id'] ?? 0) ?: null,
+    null, // Inherit the global sharing image.
     'WebPage',
     $rulesTitle,
     $rulesDescription,

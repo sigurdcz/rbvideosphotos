@@ -16,7 +16,7 @@ function register_about_page_seed_persistence_tests(callable $test, callable $as
         $assert(str_contains($seed, "'Fotograf a kameraman z Olomouce.'"));
         $assert(str_contains($seed, "'AboutPage'"));
         $assert(str_contains($seed, "'/o-nas'"));
-        $assert(str_contains($seed, "\$seedMedia['weare2.png']['id']"));
+        $assert(str_contains($seed, "\$seedMedia['weare2.png']['url']"));
         $assert(str_contains($seed, "seedBlock(\$pdo, \$pidAbout, 'hero_bg'"));
         $assert(str_contains($seed, "seedBlock(\$pdo, \$pidAbout, 'about_photographer_image'"));
         $assert(str_contains($seed, "seedBlock(\$pdo, \$pidAbout, 'about_cameraman_image'"));

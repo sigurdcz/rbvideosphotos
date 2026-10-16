@@ -951,8 +951,8 @@ class DemoContentSeeder
 
             $seoStmt->execute([
                 $pageId, $svc['seo_title'], $svc['seo_desc'], $svc['seo_kw'], $urlPath,
-                $svc['seo_title'], $svc['seo_desc'], $imageId ?: null,
-                $svc['seo_title'], $svc['seo_desc'], $imageId ?: null,
+                $svc['seo_title'], $svc['seo_desc'], null,
+                $svc['seo_title'], $svc['seo_desc'], null,
                 'Service', $svc['seo_title'], $svc['seo_desc'],
             ]);
 
@@ -1127,23 +1127,23 @@ CSS;
     /**
      * Doplni kompletni SEO (seo_settings) pro hlavni stranky webu:
      * meta (title/description/keywords/canonical), Open Graph, Twitter Card
-     * (vc. og/twitter image ID z media) a Schema.org (type + JSON-LD).
+     * (obrazky se dedi z globalniho Nastaveni) a Schema.org (type + JSON-LD).
      */
     private function seedPageSeo(int $siteId, array $site): void
     {
         $brand = 'RB Videos & Photos';
-        // [title, desc, canonical, keywords, hero foto (pro OG/Twitter image), schema_type]
+        // [title, desc, canonical, keywords, schema_type]; sharing images inherit site defaults.
         $seo = [
-            '' => ['Svatební fotograf a kameraman Olomouc | ' . $brand, 'Svatební fotografie a video v Olomouci a po celé ČR. Přirozené záběry, filmové video a profesionální přístup pro váš den.', '/', 'svatební fotograf Olomouc, svatební video Olomouc, svatební kameraman Olomouc', 'svatba-nevesta-zenich-polibek-kamenna-zed.webp', 'LocalBusiness'],
-            'sluzby' => ['Služby - foto a video na míru | ' . $brand, 'Svatební, rodinné, portrétní i reklamní focení a video v Olomouci a po celé ČR. Vyberte si službu a domluvte si nezávaznou konzultaci.', '/sluzby', 'svatební focení, rodinné focení, portrétní focení, reklamní video, fotograf Olomouc', 'svatba-nevesta-zavoj-cernobily-portret.webp', 'WebPage'],
-            'cenik' => ['Ceník svatebního focení a videa - Olomouc | ' . $brand, 'Transparentní ceník svatebních balíčků od 14 900 Kč. Foto i video, online galerie a archivace výstupů. Nabídka na míru.', '/cenik', 'ceník svatebního focení, cena svatební fotograf, svatební balíčky, fotograf Olomouc cena', 'svatba-nevesta-kytice-zapad-slunce-u-vody.webp', 'WebPage'],
-            'faq' => ['Časté otázky ke svatebnímu focení a videu | ' . $brand, 'Odpovědi na nejčastější dotazy o rezervaci termínu, dodání fotografií, videu, archivaci i průběhu svatebního focení.', '/faq', 'svatební focení otázky, rezervace fotografa, dodání fotografií, svatební video, archivace', 'svatba-nevesta-zenich-objeti-kytice-les.webp', 'WebPage'],
-            'nase-prace' => ['Svatební portfolio - fotografie a video | ' . $brand, 'Prohlédněte si skutečné svatební, párové a portrétní galerie z Olomouce i celé ČR. Fotografie a videa ukazují náš přirozený styl práce.', '/nase-prace', 'svatební portfolio, svatební fotografie, svatební video ukázky', 'svatba-nevesta-zenich-zavoj-tanec-priroda.webp', 'WebPage'],
-            'blog' => ['Tipy pro svatební a rodinné focení | ' . $brand, 'Praktické rady k přípravě na svatební, párové i rodinné focení, výběru místa a videu. Inspirace od fotografa a kameramana z Olomouce.', '/blog', 'tipy pro focení, příprava na focení, svatební video, rodinné focení', 'par-v-prirode-romanticky-portret-zapad-slunce.webp', 'WebPage'],
-            'hodnoceni' => ['Reference na focení a video | ' . $brand, 'Přečtěte si zkušenosti párů, rodin a firem s focením a videem od RB Videos & Photos. Skutečné reference klientů z Olomouce i celé ČR.', '/hodnoceni', 'reference fotograf Olomouc, hodnocení focení, zkušenosti klientů', 'svatba-nevesta-zenich-objeti-kytice-les.webp', 'WebPage'],
-            'kontakt' => ['Kontakt - svatební fotograf Olomouc | ' . $brand, 'Rezervujte si svatební focení nebo video v Olomouci a po celé ČR. Zavolejte, napište e-mail nebo pošlete nezávaznou poptávku přes formulář.', '/kontakt', 'kontakt svatební fotograf Olomouc, rezervace termínu, fotograf telefon', 'zamilovany-par-objeti-zapad-slunce-podzim.webp', 'LocalBusiness'],
-            'o-nas' => ['O nás - fotograf a kameraman Olomouc | ' . $brand, 'Poznejte fotografa Zdeňka Černohlávka a kameramana Tomáše Šincla z RB Videos & Photos. Sehraná dvojice pro přirozené fotografie a filmové video.', '/o-nas', 'fotograf a kameraman Olomouc, RB Videos & Photos, Zdeněk Černohlávek, Tomáš Šincl', 'hero-o-nas-cream.png', 'AboutPage'],
-            'podminky-uziti' => ['Podmínky užití a ochrana obsahu | ' . $brand, 'Pravidla používání webu RB Videos & Photos, informace o cookies, autorských právech, ochraně fotografií a možnostech kontaktu.', '/podminky-uziti', 'podmínky užití, cookies, autorská práva, ochrana fotografií', 'rodinne-foceni-rodina-dite-louka.webp', 'WebPage'],
+            '' => ['Svatební fotograf a kameraman Olomouc | ' . $brand, 'Svatební fotografie a video v Olomouci a po celé ČR. Přirozené záběry, filmové video a profesionální přístup pro váš den.', '/', 'svatební fotograf Olomouc, svatební video Olomouc, svatební kameraman Olomouc', 'LocalBusiness'],
+            'sluzby' => ['Služby - foto a video na míru | ' . $brand, 'Svatební, rodinné, portrétní i reklamní focení a video v Olomouci a po celé ČR. Vyberte si službu a domluvte si nezávaznou konzultaci.', '/sluzby', 'svatební focení, rodinné focení, portrétní focení, reklamní video, fotograf Olomouc', 'WebPage'],
+            'cenik' => ['Ceník svatebního focení a videa - Olomouc | ' . $brand, 'Transparentní ceník svatebních balíčků od 14 900 Kč. Foto i video, online galerie a archivace výstupů. Nabídka na míru.', '/cenik', 'ceník svatebního focení, cena svatební fotograf, svatební balíčky, fotograf Olomouc cena', 'WebPage'],
+            'faq' => ['Časté otázky ke svatebnímu focení a videu | ' . $brand, 'Odpovědi na nejčastější dotazy o rezervaci termínu, dodání fotografií, videu, archivaci i průběhu svatebního focení.', '/faq', 'svatební focení otázky, rezervace fotografa, dodání fotografií, svatební video, archivace', 'WebPage'],
+            'nase-prace' => ['Svatební portfolio - fotografie a video | ' . $brand, 'Prohlédněte si skutečné svatební, párové a portrétní galerie z Olomouce i celé ČR. Fotografie a videa ukazují náš přirozený styl práce.', '/nase-prace', 'svatební portfolio, svatební fotografie, svatební video ukázky', 'WebPage'],
+            'blog' => ['Tipy pro svatební a rodinné focení | ' . $brand, 'Praktické rady k přípravě na svatební, párové i rodinné focení, výběru místa a videu. Inspirace od fotografa a kameramana z Olomouce.', '/blog', 'tipy pro focení, příprava na focení, svatební video, rodinné focení', 'WebPage'],
+            'hodnoceni' => ['Reference na focení a video | ' . $brand, 'Přečtěte si zkušenosti párů, rodin a firem s focením a videem od RB Videos & Photos. Skutečné reference klientů z Olomouce i celé ČR.', '/hodnoceni', 'reference fotograf Olomouc, hodnocení focení, zkušenosti klientů', 'WebPage'],
+            'kontakt' => ['Kontakt - svatební fotograf Olomouc | ' . $brand, 'Rezervujte si svatební focení nebo video v Olomouci a po celé ČR. Zavolejte, napište e-mail nebo pošlete nezávaznou poptávku přes formulář.', '/kontakt', 'kontakt svatební fotograf Olomouc, rezervace termínu, fotograf telefon', 'LocalBusiness'],
+            'o-nas' => ['O nás - fotograf a kameraman Olomouc | ' . $brand, 'Poznejte fotografa Zdeňka Černohlávka a kameramana Tomáše Šincla z RB Videos & Photos. Sehraná dvojice pro přirozené fotografie a filmové video.', '/o-nas', 'fotograf a kameraman Olomouc, RB Videos & Photos, Zdeněk Černohlávek, Tomáš Šincl', 'AboutPage'],
+            'podminky-uziti' => ['Podmínky užití a ochrana obsahu | ' . $brand, 'Pravidla používání webu RB Videos & Photos, informace o cookies, autorských právech, ochraně fotografií a možnostech kontaktu.', '/podminky-uziti', 'podmínky užití, cookies, autorská práva, ochrana fotografií', 'WebPage'],
         ];
 
         $stmt = $this->db->prepare(
@@ -1158,32 +1158,18 @@ CSS;
             'Přehledný ceník svatebního focení, celodenního videa, portrétního, rodinného a ateliérového focení. Vyberte si foto, video nebo společný balíček.',
             '/cenik',
             'ceník focení, ceník svatebního focení, svatební fotograf, svatební video, foto a video na svatbu, portrétní focení, rodinné focení, ateliérové focení',
-            'svatba-nevesta-kytice-zapad-slunce-u-vody.webp',
             'WebPage',
         ];
 
-        $seoImageOverrides = [
-            'sluzby' => 'svatba-nevesta-zenich-polibek-kamenna-zed.webp',
-            'cenik' => 'snubni-prsteny-listy-zapad-slunce-detail.webp',
-            'faq' => 'svatba-nevesta-kytice-zapad-slunce-u-vody.webp',
-            'nase-prace' => 'par-v-prirode-romanticky-portret-zapad-slunce.webp',
-            'blog' => 'koncert-zpevak-mikrofon-cernobila-fotografie.webp',
-            'hodnoceni' => 'svatba-nevesta-zenich-objeti-kytice-les.webp',
-            'kontakt' => 'zamilovany-par-objeti-zapad-slunce-podzim.webp',
-            'podminky-uziti' => 'rodinne-foceni-rodina-dite-louka.webp',
-        ];
-
-        foreach ($seo as $urlPath => [$title, $desc, $canonical, $keywords, $imageFile, $schemaType]) {
-            $imageFile = $seoImageOverrides[$urlPath] ?? $imageFile;
+        foreach ($seo as $urlPath => [$title, $desc, $canonical, $keywords, $schemaType]) {
             $page = $this->pages->findByUrlPath($urlPath);
             if (!$page) {
                 continue;
             }
-            $imageId = !empty($this->demoMedia[$imageFile]) ? (int) $this->demoMedia[$imageFile] : null;
 
             $stmt->execute([
                 (int) $page['id'], $title, $desc, $keywords, $canonical,
-                $title, $desc, $imageId,
+                $title, $desc, null,
                 $title, $desc, null,
                 $schemaType, $title, $desc,
             ]);

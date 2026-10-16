@@ -1895,3 +1895,28 @@ HTTP overil editor403 pri pokusu menit form_email z contact page pred zapisy. Te
 
 ## Vysledek
 Reset odesila na ulozene form_email z Nastaveni prvniho webu, login zustava identifikatorem. 17 recovery assertions + rejection cases, 7 permission assertions, HTTP plain-login/central recipient a editor403, 219 regresi proslo; goldens27/28 znamy About poster. DEPLOYMENT/ARCHITECTURE a wiki aktualizovany, README/INSTRUCTIONS bez nutne zmeny. Bez nove migrace. Push ani produkcni nasazeni nebyly vyzadany.
+
+---
+# UKOL: Clear page social image overrides
+Datum: 2026-10-16
+Zadani: Novou migraci smazat vlastni socialni obrazky vsech stranek, aby pouzivaly globalni Nastaveni.
+Doporuceny model: Terra - Cilena datova migrace a overeni dedeni globalnich obrazku.
+## Kroky
+- [x] Overit vsechna socialni image override pole a live/publish dedeni.
+- [x] Pridat dalsi append-only migraci a overit izolovany beh/opakovani.
+- [x] Aktualizovat dokumentaci/wiki a commitnout.
+## Poznamky
+Strom cisty. Posledni migrace 104; nova bude 105. Uzivatel vyzaduje smazani vlastnich obrazku, nikoli globalnich nastaveni/media souboru/ostatnich SEO poli.
+
+Nova105 nuluje jen seo_settings og_image_id/twitter_image_id vsech stranek vcetne draftu. Specialni live routy a staticky portfolio export uprednostnuji globalni obrazek pred hero. Aktualni PHP base/demo seedy nevraceji nahodne page overrides; historicke SQL beze zmen. Schema obrazky a globalni platform IDs zachovany.
+
+Pridan SocialImageResetIntegrationTest: puvodni override, vsechny weby/drafty, zachovani schema/SEO textu/globalu/media, idempotence, realny live head s hero fallbackem a staticky export portfolia do vlastniho nahodneho souboru. Cleanup jen vlastni DB a jediny vlastni soubor/jeho prazdny adresar.
+
+Izolovany test odhalil stary exportni resolver s /storage/media URL misto verejneho /media. Globalni exportni social obrazky nyni pouzivaji sdileny MediaUrlResolver. Test po bootstrapu obnovuje PHP handlery, aby Runtime nezakryl testovou vyjimku jako HTML s exit0. Fixture doplnena o 007 zavislost pred024.
+
+Odstranena konkretni demo mapa seoImageOverrides (vcetne kontakt fotky) a nepouzivane image hinty v SEO seedu. Test About misto stareho social ID kontroluje zachovanou obsahovou URL. Integrace navic skutecne vola seedPageSeo na fixture kontaktu a overuje NULL obrazky.
+
+Dva social goldens po kontrole upraveny pouze v og:image a navazane Organization image URL; hero/obsah beze zmen, znamy About golden neaktualizovan. DEPLOYMENT/ARCHITECTURE dokumentuji beh105, zachovana data a republish statickeho exportu.
+
+## Vysledek
+Nova105 odstrani OG/Twitter overrides vsech stranek, ostatni SEO/global/media zustanou. Live specialni routy a portfolio export preferuji globaly, seedy nevraceji testovaci fotografie. Overeno16 assertions +107 migraci/15 handleru +219 regresi. Dva ocekavane goldens aktualizovany jen social URL;27/28 zbyva znamy About poster. DEPLOYMENT/ARCHITECTURE a wiki aktualizovany, README/INSTRUCTIONS nevyzadovaly zmenu. Produkcni migrace ani push neprovedeny.

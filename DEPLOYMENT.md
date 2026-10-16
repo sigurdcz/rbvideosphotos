@@ -105,3 +105,13 @@ Odkaz je stále jednorázový, 30 minut a vázaný na konkrétní user_id. Tělo
 Proto je `form_email` chráněné pole: admin smí adresu měnit, editor může upravovat ostatní veřejné kontakty. Contact/Page kontrolují roli před zápisem a ContactRepository při běžném upsertu chráněný sloupec vůbec neaktualizuje. Settings (requireAdmin) a důvěryhodný demo seed změnu povolují výslovně. Změna veřejného contact_info.email nemění recovery adresu.
 
 Bez nové migrace. Ověření: `php tests/PasswordResetIntegrationTest.php` a `php tests/RecoveryRecipientPolicyIntegrationTest.php`, izolované DB, žádné reálné e-maily.
+
+## Sjednocení obrázků pro sdílení stránek
+
+Migrace **105_clear_page_social_image_overrides.sql** vymaže `seo_settings.og_image_id` a `twitter_image_id` u všech stránek (včetně draftů a všech webů). Zůstávají globální `sites.default_og_image_id`, `default_twitter_image_id`, `default_instagram_image_id`, média, obrázky v obsahu, `schema_image_id` i textové SEO údaje. Po úspěšném běhu běžný migrátor zapíše provedení; samotný SQL UPDATE je opakovatelný. Starší migrace nejsou upraveny.
+
+Po nasazení spusťte migrace a ověřte `/kontakt` i další stránky: `og:image` má používat obrázek z Nastavení; `twitter:image` globální Twitter obrázek, případně globální OG. Když globální obrázek není nastavený, migrace žádný nevytváří. U speciálních blogových/portfolio detailů má nově globální obrázek přednost před obsahovým hero obrázkem. Samostatný statický export portfolia používá stejnou prioritu i veřejné `/media/` URL. Pro již vytvořený statický export znovu spusťte publikování; sociální sítě mohou držet vlastní cache náhledů.
+
+Aktuální base/demo PHP seedy už nevracejí původní testovací per-page fotografie. Ručně nastavený nový page override v SEO může i v budoucnu přepsat globální obrázek; migrace čistí současná data, nejde o zákaz této funkce. Globální Instagram obrázek zůstává uložený v Nastavení, stránkový Instagram override v modelu není.
+
+Ověření: `php tests/SocialImageResetIntegrationTest.php` (izolovaná DB, všechny stránky, zachování ostatních dat, opakování migrace, live head, portfolio export, demo SEO seed). Test odstraní pouze vlastní náhodnou DB a náhodný exportní soubor. Neprovádí migraci nad produkčními daty.
