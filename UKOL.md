@@ -1796,3 +1796,23 @@ Doporuceny model: Terra - Konkretni PHP 8.5 kompatibilita a diagnostika JSON odp
 Hosting PHP 8.5 vypisuje E_DEPRECATED do HTTP 200 JSON odpovedi pri APP_DEBUG=true. PHP manual: imagedestroy nema ucinek od 8.0, deprecated od 8.5. Varovani se nebudou potichu potlacovat; zastarala volani se odstrani.
 
 ImageVariantService a obrazkove testy nahradily vsechna imagedestroy za unset referenci. Setup UI pouziva explicitni JSON parser bez ticheho null fallbacku; rozlisuje HTML login, znecistenou HTTP 200 odpoved a aplikacni chybu. Node test 4 scenaru a PHP lint prosly; DEPLOYMENT popisuje PHP 8.5 kompatibilitu.
+
+
+---
+# UKOL: Obnova hesla e-mailem
+Datum: 2026-10-16
+Zadani: Pridat odkaz zapomenute heslo, e-mail s jednorazovym odkazem a formular noveho hesla.
+Doporuceny model: Sol - Bezpecnost prihlaseni, tokeny, databaze a dorucovani e-mailu.
+## Kroky
+- [x] Overit mail transport a implementovat obnovu s novou migraci.
+- [x] Overit expiraci, jednorazovost, chyby doruceni a formulare.
+- [x] Aktualizovat dokumentaci a wiki, ulozit commit.
+## Poznamky
+Predchozi PHP 8.5 oprava dokoncena; uzivatel potvrdil funkcni instalaci. Nezasahovat do uzivatelske .agents/.
+
+Implementovany formular, PHP mail, atomicky jednorazovy token SHA-256 a session fingerprint. Novy SQL 103, historicke migrace beze zmen. DEPLOYMENT a .env.example popisuji konfiguraci a nutnost skutecne adresy uctu.
+
+Overeni: 10 assertions plus rejection cases na oddelene MariaDB; HTTP smoke formulare/CSRF/redirect/headers; 105 migraci a 15 handleru; 216 regresi bez chyby, goldens 27/28 (znamy About poster). Produkcni migrace a doruceni neprovedeny. Wiki password-recovery.html obsahuje kod a konfiguraci, hub/data-model/pipelines aktualizovany. Zmena odhlasi stare relace bez fingerprintu.
+
+## Vysledek
+Obnova hesla e-mailem hotova a lokalne overena. Dokumentace: DEPLOYMENT.md, .env.example, globalni wiki. Pripraveno k nasazeni; vyzaduje migraci 103 a skutecny e-mail uctu. Push pro tento novy ukol nebyl vyzadan.

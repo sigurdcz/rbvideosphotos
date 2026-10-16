@@ -134,7 +134,7 @@ class Runtime
             'uri' => self::sanitizeUri((string) ($_SERVER['REQUEST_URI'] ?? '')),
             'ip' => $_SERVER['REMOTE_ADDR'] ?? '',
             'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? '',
-            'referer' => $_SERVER['HTTP_REFERER'] ?? '',
+            'referer' => self::sanitizeUri((string) ($_SERVER['HTTP_REFERER'] ?? '')),
         ];
 
         if (!empty($_SESSION['user_email'])) {

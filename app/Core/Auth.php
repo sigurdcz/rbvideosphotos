@@ -4,6 +4,7 @@ namespace App\Core;
 
 class Auth
 {
+    private static bool $passwordChecked = false;
     private const IDLE_TIMEOUT_SECONDS = 2 * 60 * 60;
     private const ABSOLUTE_TIMEOUT_SECONDS = 12 * 60 * 60;
     private const ROTATE_INTERVAL_SECONDS = 30 * 60;
@@ -27,12 +28,23 @@ class Auth
         }
 
         self::enforceSessionTimeouts();
+        if (!self::$passwordChecked && !empty($_SESSION['user_id'])) {
+            self::$passwordChecked = true;
+            $stmt = Database::getInstance()->prepare('SELECT password_hash FROM users WHERE id = ?');
+            $stmt->execute([$_SESSION['user_id']]);
+            $hash = $stmt->fetchColumn();
+            if (!$hash || !hash_equals(hash('sha256', $hash), (string) ($_SESSION['password_fingerprint'] ?? ''))) {
+                $_SESSION = [];
+                session_regenerate_id(true);
+            }
+        }
     }
 
     public static function login(array $user): void
     {
         self::start();
         session_regenerate_id(true);
+        $_SESSION['password_fingerprint'] = hash('sha256', $user['password_hash']);
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['user_email'] = $user['email'];
         $_SESSION['user_role'] = $user['role'];

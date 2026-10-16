@@ -29,6 +29,11 @@ try {
     // Auth
     $router->get('/admin/login',  'AuthController', 'loginForm');
     $router->post('/admin/login', 'AuthController', 'login');
+    $router->get('/admin/forgot-password', 'PasswordResetController', 'requestForm');
+    $router->post('/admin/forgot-password', 'PasswordResetController', 'requestLink');
+    $router->get('/admin/new-password', 'PasswordResetController', 'newPasswordForm');
+    $router->get('/admin/reset-password', 'PasswordResetController', 'resetForm');
+    $router->post('/admin/reset-password', 'PasswordResetController', 'resetPassword');
     $router->post('/admin/logout','AuthController', 'logout');
 
     // Dashboard

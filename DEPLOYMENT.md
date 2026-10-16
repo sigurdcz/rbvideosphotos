@@ -40,3 +40,13 @@ Obsahove PHP handlery se vzdy provadeji az po dokonceni vsech SQL migraci, i kdy
 ## PHP 8.5 a davkove JSON odpovedi
 
 `ImageVariantService` uvolnuje reference na `GdImage` pres `unset`. `imagedestroy()` je od PHP 8.0 bez ucinku a od PHP 8.5 deprecated; pri debug vypisu by varovani porusilo JSON odpoved davky. Zastarala volani se odstranuji, chyby se nepotlacuji. Formular rozlisuje neplatny JSON, chybu aplikace a vyprsene prihlaseni; nedohledava JSON uvnitr poskozene odpovedi. Test klienta: `node tests/DemoSeedResponseTest.js`. Oficialni reference: https://www.php.net/manual/en/function.imagedestroy.php.
+
+## Obnova hesla administrace
+
+Po nasazení spusťte migrace (`103_add_password_resets.sql` přidává tabulku jednorázových tokenů). Na `/admin/login` je odkaz **Zapomenuté heslo**. Uživatel zadá skutečný e-mail svého CMS účtu; odkaz se posílá právě na tento e-mail, nikoli na kontaktní adresu webu. Účet se tím nevytváří a jiné účty se nemění.
+
+Serverové `.env` musí mít správné `APP_URL=https://vase-domena.cz`. Volitelné `MAIL_FROM=noreply@vase-domena.cz` určuje odesílatele; výchozí je `noreply@` + doména APP_URL. PHP `mail()` používá stejnou službu hostingu jako kontaktní formulář. Návrat true potvrzuje předání poště, nikoli doručení do schránky. Při false/selhání se zobrazí chyba a token se odstraní; ověřte poštu na hostingu a spam. Účet `admin@example.com` nemůže přijmout skutečný reset e-mail: jeho adresu nejprve změňte v tabulce users na svou skutečnou adresu.
+
+Odkaz platí 30 minut, nové vyžádání ruší předchozí a použití je atomické a jednorázové. Nové heslo má 12–72 bajtů. Po změně jsou staré přihlášené relace odmítnuty při dalším požadavku; první nasazení této ochrany také odhlásí starší relace. Žádosti mají CSRF a limit 3/15 minut podle IP i e-mailu. Neexistující účet dostane stejnou obecnou odpověď; chybu transportu zobrazujeme explicitně. Tokeny se ukládají pouze jako SHA-256; hesla jako bcrypt. Odkaz v e-mailu obsahuje tajný token, proto nesdílejte e-mail ani syrové serverové access logy (aplikace token v URI maskuje).
+
+Ověření vývoje: `php tests/PasswordResetIntegrationTest.php` vytváří a v finally odstraňuje pouze vlastní náhodnou testovací databázi, vyžaduje lokální DB účet s CREATE/DROP DATABASE. Produkční doručení ověřte vlastní e-mailovou schránkou; testy reálné e-maily neposílají.
