@@ -1711,3 +1711,20 @@ Doporuceny model: Sol - Bezpecnostni bootstrap administrace vyzaduje overeni aut
 Predchozi oprava migraci d9a0aa6 je nasazena a uzivatel potvrdil uspech migraci. Bootstrap nebude menit existujici ucty ani seedovat obsah.
 
 Pridany bootstrap-admin.php, InitialAdminService a sedm cilenych testu s PDO double. Overeno odmítnuti tokenu/kratkeho hesla, zamek, hash, admin role, jednorazovost a uvolneni zamku. README vysvetluje inicializaci i reset hesla zakladnim seedem po Armagedonu.
+
+## Vysledek prvniho administratora
+Nasazeno 33a8730, Actions 38914525591 success; bootstrap-admin.php HTTP 200 a formular pritomen. 7 cilenych testu + 65 regresi proslo; golden kontroly nedostupne bez lokalni DB. Uzivatel vytvori ucet vlastnim tokenem a heslem. Zadny ucet nebyl agentem vytvoren.
+
+---
+# UKOL: 404 po Armagedonu a demo seedu
+Datum: 2026-10-16
+Zadani: Zjistit a opravit 404 homepage po uzivatelem provedenem resetu a seedu.
+Doporuceny model: Terra - Ohranicena diagnostika produkcniho renderovani.
+## Kroky
+- [x] Overit produkcni 404 a cestu vyberu DB homepage.
+- [-] Odstranit maskovani render vyjimky jako 404 a vyzadat konkretni log.
+- [ ] Podle produkcniho dukazu opravit pricinu a overit HTTP 200.
+## Poznamky
+tryServeDatabasePage zachyti libovolnou Throwable, zaloguje frontend-render a vrati false; caller pak vraci 404. Oprava zachova log a preda vyjimku existujicimu globalnimu handleru (HTTP 500, detail jen pri APP_DEBUG). Skutecna pricina zatim neni znama.
+
+public/index.php po zalogovani render vyjimku znovu vyhodi; README popisuje rozdil 404/500. PHP lint a diff check prosly. Pricina produkcniho render selhani stale ceka na log.

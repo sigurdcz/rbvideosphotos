@@ -210,7 +210,7 @@ function tryServeDatabasePage(string $uri, bool $authenticated = false, bool $pr
             'file' => $e->getFile(),
             'line' => $e->getLine(),
         ]);
-        return false;
+        throw $e;
     }
 }
 

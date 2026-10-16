@@ -233,3 +233,5 @@ CLI i URL migrator sdileji explicitni kontrolu znamych historickych prekryvu v d
 Po migracich otevri `/bootstrap-admin.php`. Zadej serverovy `MIGRATE_TOKEN` do formulare (nikoli do URL), e-mail a nove heslo o delce 12 az 72 bajtu. Formular pouziva POST, session CSRF a MySQL/MariaDB advisory lock; vytvori admina pouze pri prazdne tabulce `users`. Pri existujicim uzivateli se explicitne uzavre a nikdy nemeni hesla. Pak se prihlas na `/admin/login` a otevri `/admin/setup`. Test: `php tests/InitialAdminTest.php` (PDO test double; nezastupuje integracni overeni na hostingu).
 
 Armagedon nasledne resetuje databazi a spousti zakladni seed, ktery obnovuje vychozi ucet `admin@example.com` / `admin123`. Po resetu se prihlas temito udaji a zmen vychozi heslo. Bootstrap ani migrace nekopiruji lokalni obsah.
+
+Chyby vykresleni DB stranky se loguji jako frontend-render a predavaji globalnimu Runtime handleru jako HTTP 500. Nesmeji se maskovat odpovedi 404; 404 znamena nenalezenou routu/stranku. APP_DEBUG=false zachova obecnou chybovou stranku.
