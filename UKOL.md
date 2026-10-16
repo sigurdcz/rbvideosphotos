@@ -1661,3 +1661,5 @@ Doporuceny model: Terra - Ohranicena uprava workflow a overeni nasazeni.
 ## Poznamky
 
 65 testu proslo; golden kontroly nelze overit kvuli nedostupne databazi. FTP adresare zustavaji /web/ a /web/dev/. Databaze, media a .env nejsou soucasti deploymentu. Lokalni .agents neni soucasti push.
+
+Prvni push f91d842 probehl. Run 38905677599 selhal na chybejicim server inputu: skutecne production Secrets jsou FTP_SERVER, FTP_USERNAME, FTP_PASSWORD; workflow a README upraveny podle overenych nazvu. Staging environment v cilovem repozitari neexistuje.

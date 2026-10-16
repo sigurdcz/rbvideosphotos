@@ -128,7 +128,7 @@ Nejdulesitejsi promenne:
 | `API_KEY` | Klic pro `/api/v1/*` endpointy |
 | `GTM_CLIENT_ID`, `GTM_CLIENT_SECRET`, `GTM_ENCRYPTION_KEY` | OAuth a sifrovani GTM adminu |
 | `GTM_REDIRECT_URI`, `GTM_AUTH_URI`, `GTM_TOKEN_URI`, `GTM_API_BASE_URI` | Volitelne GTM/OAuth override |
-| `FTP_HOST`, `FTP_USER`, `FTP_PASS` | Nasazeni pres FTP/FTPS |
+| `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD` | Nasazeni pres FTP/FTPS |
 
 GA4, Clarity a Meta Pixel ID se bezne nastavuji v admin sekci `Nastaveni` a ukladaji se do tabulky `sites`, ne do `.env`.
 
@@ -221,7 +221,7 @@ Prikaz reset tvrde odmita databazi, jejiz `DB_HOST` neni `127.0.0.1`, `localhost
 Repozitar: `https://github.com/sigurdcz/rbvideosphotos`.
 Push vetve `master` spousti produkcni FTPS nasazeni do `/web/` s GitHub Environment `production`.
 Push vetve `dev` spousti staging FTPS nasazeni do `/web/dev/` s GitHub Environment `staging`.
-V kazdem environment nastav Secrets `FTP_HOST`, `FTP_USER`, `FTP_PASS` (nikoli pouze Variables).
+V kazdem environment nastav Secrets `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD` (nikoli pouze Variables).
 Workflow lze spustit i rucne. Pouziva FTPS na portu 21.
 Deployment prenasi aplikacni kod a Composer zavislosti; databazi, media, publikovany obsah ani `.env` neprenasi.
 Na novem hostingu je potreba samostatne pripravit `.env`, databazi a obsah.
