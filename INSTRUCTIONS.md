@@ -74,6 +74,12 @@ Tento soubor je obecny pracovni navod pro vsechny AI asistenty i lidske vyvojare
 
 ## Git a commit zpravy
 
+- Dalsi vyvoj a opravy provadejte na `dev` (nebo pracovni `codex/*` vetvi sloucene do `dev`). Push `dev` nasazuje pouze staging; samostatna vetev `staging` se nepouziva.
+- `master` je produkce. Merge, cherry-pick ani primy push nove prace do `master` neprovadejte bez vyslovneho souhlasu uzivatele pro konkretni zmeny. Souhlas se staging pushem neni souhlas s produkcnim nasazenim; automaticky merge je zakazany.
+- Pred zadosti o produkcni nasazeni overte staging, migrace a relevantni testy; uvedte revizi, vysledek kontrol a pripadne mezery. Vyjimky musi uzivatel vyslovne schvalit.
+- Odlozene zavady a navazujici praci zapisujte do `BACKLOG.md` s kriterii dokonceni. Neopravujte je potichu v nesouvisejicim ukolu.
+- Podrobnosti prostredi, povinne secrets a postup prvni instalace stagingu jsou v `STAGING.md`. Tato pravidla jsou projektova politika; GitHub branch protection je samostatne nastaveni a nenahrazuje souhlas uzivatele.
+
 - Pred commitem zkontrolujte `git status --short` a commitujte jen souvisejici zmeny.
 - Rebuild/regenerovane zmeny (napr. `tests/goldens/**` po `--update-goldens`, prekompilovane assety, katalogy generovane skriptem) commitujte **oddelene** od zdrojove zmeny, ktera je vyvolala. Duvod: recenzent (clovek i AI) potrebuje v jednom commitu videt bud logiku/obsah, nebo jeji mechanicky odvozeny vystup - ne oboje smichane, protoze pak nejde poznat, jestli se zmenila jen forma, nebo i chovani.
 - Commit zpravy piste tak, aby je AI i clovek pochopili bez dohledavani kontextu.

@@ -1920,3 +1920,17 @@ Dva social goldens po kontrole upraveny pouze v og:image a navazane Organization
 
 ## Vysledek
 Nova105 odstrani OG/Twitter overrides vsech stranek, ostatni SEO/global/media zustanou. Live specialni routy a portfolio export preferuji globaly, seedy nevraceji testovaci fotografie. Overeno16 assertions +107 migraci/15 handleru +219 regresi. Dva ocekavane goldens aktualizovany jen social URL;27/28 zbyva znamy About poster. DEPLOYMENT/ARCHITECTURE a wiki aktualizovany, README/INSTRUCTIONS nevyzadovaly zmenu. Produkcni migrace ani push neprovedeny.
+
+---
+# UKOL: Activate staging and document deployment
+Datum: 2026-10-16
+Zadani: Push OG opravy na produkci, aktivovat dev/staging, pripravit uplny instalacni navod a backlog.
+Doporuceny model: Sol - Konfigurace dvou prostredi, GitHub Actions a provozni dokumentace.
+## Kroky
+- [x] Push master fe561ed a overit production Actions (38959519402 success).
+- [x] Vytvorit environment staging omezeny na dev; doplnit kontrolu secrets a branch guard workflow.
+- [x] Pripravit STAGING.md, BACKLOG.md a pravidla souhlasu pred master v INSTRUCTIONS.md.
+- [-] Overit konfiguraci a push dev; zjistit vysledek staging Actions.
+- [ ] Aktualizovat wiki a zaznamenat skutecny stav prvniho staging nasazeni.
+## Poznamky
+Pri kontrole existoval jen environment production. Staging vytvoren pres GitHub API; FTP secrets musi uzivatel vlozit do GitHubu (nikoli do chatu). Zadost o doplneni odeslana. Serverovy .env/DB/SMTP zustavaji oddelene a nejsou generovany z GitHub secrets. Migrace105 na produkci nespustena.

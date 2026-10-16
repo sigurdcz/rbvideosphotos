@@ -1,4 +1,4 @@
-name: Deploy to Active24 (dev)
+name: Deploy to Active24 (staging)
 
 on:
   push:
@@ -7,15 +7,36 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: dev-deploy
+  group: staging-deploy
   cancel-in-progress: false
+
+permissions:
+  contents: read
 
 jobs:
   deploy:
-    environment: staging
+    if: github.ref == 'refs/heads/dev'
+    environment:
+      name: staging
+      url: https://staging.rbvideosphotos.cz
     runs-on: ubuntu-latest
 
     steps:
+      - name: Check required staging secrets
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          missing=0
+          for name in FTP_SERVER FTP_USERNAME FTP_PASSWORD; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Missing environment staging secret: $name"
+              missing=1
+            fi
+          done
+          test "$missing" -eq 0
+
       - name: Checkout repo
         uses: actions/checkout@v5
 
@@ -61,7 +82,7 @@ jobs:
           mkdir -p _deploy/storage/published
           mkdir -p _deploy/storage/templates
 
-      - name: Deploy via FTPS (dev)
+      - name: Deploy via FTPS (staging)
         uses: SamKirkland/FTP-Deploy-Action@v4.4.0
         with:
           server: ${{ secrets.FTP_SERVER }}

@@ -1,5 +1,7 @@
 # Active24 deployment
 
+Kompletní první instalace testovacího prostředí: [STAGING.md](STAGING.md). Odložená práce: [BACKLOG.md](BACKLOG.md). Další vývoj patří na `dev`; produkční merge/push vyžaduje výslovný souhlas uživatele podle `INSTRUCTIONS.md`.
+
 Aktualni aplikacni zdroje pochazeji ze `sigurdcz/seo-cms`, commit `b8da8da02878735ef10c506fb75c43cf41984542`. Hosting tohoto repozitare je Active24. Postupy a adresy puvodniho Webzdarma workflow se zde nepouzivaji.
 
 ## GitHub Actions
@@ -17,7 +19,7 @@ Aktualni aplikacni zdroje pochazeji ze `sigurdcz/seo-cms`, commit `b8da8da028787
 
 1. Over, ze serverovy `.env` odkazuje na databazi spravneho prostredi.
 2. Pro novou verzi spust `/migrate-util.php?token=<MIGRATE_TOKEN>` z vlastniho prohlizece.
-3. Utility aplikuji append-only migrace. Existujici 001–023 jsou beze zmen; pribyvaji 024–102.
+3. Utility aplikuji append-only migrace. Existujici 001–023 jsou beze zmen; aktualni verze obsahuje dalsi migrace az po 105.
 4. Sdileny `database/migration-schema-state.php` rozpozna zname historicke prekryvy a viditelne je zapise do evidence. Jine SQL chyby se neignoruji.
 5. Obsahove application-compatible migrace bez existujiciho webu zustanou nezapsane a utility je explicitne uvede jako odlozene. Po zakladnim seedu spust migrace znovu.
 6. Pro existujici web lze po uspesnych migracich pouzit `&publish=1` k uplnemu publishi. Nespoustej Armagedon pro beznou aktualizaci.
