@@ -87,3 +87,5 @@ Všechny zástupné hodnoty nahraď. Tokeny generuj jednotlivě např. `php -r "
 ## Stav při aktivaci 16. 10. 2026
 
 Produkční push OG opravy `fe561ed` má úspěšné Actions [38959519402](https://github.com/sigurdcz/rbvideosphotos/actions/runs/38959519402). Produkční migrace 105 se deploymentem automaticky nespouští. Environment staging byl vytvořen; při první kontrole neměl žádné vlastní FTP secrets. Přenos, inicializace DB a ověření funkčního stagingu jsou samostatné kroky — zelená kontrola přenosu je nenahrazuje.
+
+První dev push `bd097d3` spustil [38959853911](https://github.com/sigurdcz/rbvideosphotos/actions/runs/38959853911): kontrola secrets selhala před checkoutem, žádné soubory se nepřenesly. Po doplnění všech tří secrets použij Re-run all jobs u tohoto běhu. Staging adresa zatím vrací HTTP 200 s titulkem „Brzy jsme zpět“; nový CMS tím není ověřený.

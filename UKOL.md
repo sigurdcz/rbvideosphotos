@@ -1930,7 +1930,11 @@ Doporuceny model: Sol - Konfigurace dvou prostredi, GitHub Actions a provozni do
 - [x] Push master fe561ed a overit production Actions (38959519402 success).
 - [x] Vytvorit environment staging omezeny na dev; doplnit kontrolu secrets a branch guard workflow.
 - [x] Pripravit STAGING.md, BACKLOG.md a pravidla souhlasu pred master v INSTRUCTIONS.md.
-- [-] Overit konfiguraci a push dev; zjistit vysledek staging Actions.
-- [ ] Aktualizovat wiki a zaznamenat skutecny stav prvniho staging nasazeni.
+- [x] Overit YAML konfiguraci a push dev bd097d3; staging Actions38959853911 ukonceny kontrolou chybejicich secrets.
+- [x] Aktualizovat wiki a zaznamenat skutecny stav prvniho staging nasazeni (wiki2e86b39).
+- [ ] Po doplneni tri staging FTP secrets zopakovat Actions a overit prenos. Blokovano chybejicimi hodnotami od uzivatele.
 ## Poznamky
 Pri kontrole existoval jen environment production. Staging vytvoren pres GitHub API; FTP secrets musi uzivatel vlozit do GitHubu (nikoli do chatu). Zadost o doplneni odeslana. Serverovy .env/DB/SMTP zustavaji oddelene a nejsou generovany z GitHub secrets. Migrace105 na produkci nespustena.
+
+## Vysledek
+OG zdroje nasazeny na produkci uspesne. Dev push a staging environment aktivni, ale zadny staging soubor zatim neprenesen: vsechny FTP secrets chybi a preflight zastavil workflow pred checkoutem. Staging URL vraci200 s titulem Brzy jsme zpet, nikoli overeny novy CMS. STAGING.md obsahuje povinne nastaveni hostingu, secrets, DB, .env, migraci, admina, obsahu a SMTP; BACKLOG.md zachycuje tri pozadavky; INSTRUCTIONS.md zakazuje dalsi master merge/push bez konkretniho souhlasu. YAML/FTPS/branch guard kontroly a diff check prosly. Wiki524 stranek, nova stranka staging-deployment608 slov; pipeline coverage zustava partial. Prvni prenos a funkcni instalace zustavaji otevrene.
