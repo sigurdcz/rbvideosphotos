@@ -1963,7 +1963,7 @@ Regular italic4.001 s kompletnimi ceskymi glyfy a font-display:swap; nova verze 
 
 - [x] Overit kod PasswordResetService/InitialAdminService a dostupnost bootstrapu. Bootstrap/login200, homepage404; GET neprokazuje existenci/neexistenci uctu.
 - [x] Doplnit STAGING.md o bootstrap pred seedem, obecne potvrzeni pro neexistujici login a samostatne APP_URL/tokeny.
-- [ ] Uzivatel vytvori prvniho admina pres bootstrap s vlastnim staging MIGRATE_TOKEN a heslem (asynchronni dotaz odeslan); pri existujicich users zjistit skutecny login.
+- [x] Uzivatel vytvoril prvniho admina pres bootstrap a potvrdil funkcni pristup odpovedi "uz to jede" dne17.10.2026. Potvrzeni se vztahuje k dotazu na vytvoreni/prihlaseni, nikoli automaticky ke seedu, SMTP nebo frontend QA.
 - [ ] Po prihlaseni dokonci seed/demo, ulozeni form_email, opakovani migraci a publish; pak overit skutecne SMTP i obsah.
 
 Pri nove DB migrace nevytvareji kopii produkcnich users ani contact_info. Obnova neni nastroj vytvoreni prvniho admina; pro neznamy login vraci obecne potvrzeni bez odeslani. Existujici ucet bez form_email dostane explicitni chybu. Kopie produkcniho .env s pouhou zmenou DB navic ponechava reset APP_URL na produkci. Zadny reset, SQL zapis, odeslani emailu ani bootstrap na serveru agent nespustil; vyzaduje uzivatelovo soukrome zadani prvnich credentials.
