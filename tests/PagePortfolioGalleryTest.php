@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+require dirname(__DIR__) . '/vendor/autoload.php';
 
 // No database writes: render the real gallery panel with mixed content fixtures.
 $h = static fn($value): string => htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
@@ -30,3 +31,31 @@ require dirname(__DIR__) . '/admin/views/pages/portfolio-gallery.php';
 $empty = ob_get_clean();
 $check(substr_count($empty, 'Zatím nejsou') === 2, 'Empty groups must remain actionable.');
 echo "PASS page gallery panel: grouping, escaping, edit/create links, empty states and no nested forms\n";
+
+$renderPage = static function (string $path): string {
+    $page = ['id' => 16, 'url_path' => $path, 'template_id' => 1, 'title' => 'Work', 'slug' => 'work'];
+    $templates = $blocks = $portfolioEntries = [];
+    $_csrfToken = 'test-only';
+    $_user = ['role' => 'admin'];
+    ob_start();
+    require dirname(__DIR__) . '/admin/views/pages/form.php';
+    return ob_get_clean();
+};
+$full = $renderPage('nase-prace');
+@$dom->loadHTML('<?xml encoding="UTF-8">' . $full);
+$xpath = new DOMXPath($dom);
+$check($xpath->query('//button[@data-tab="portfolio-gallery"]')->length === 1, 'Portfolio page tab missing.');
+$check($xpath->query('//*[@id="tab-portfolio-gallery"]/ancestor::*[@data-tabs-container]')->length === 1, 'Panel must share the tab container.');
+$check($xpath->query('//*[@id="tab-portfolio-gallery"]/ancestor::form')->length === 0, 'Gallery panel must be outside page save form.');
+$check(!str_contains($renderPage('kontakt'), 'id="tab-portfolio-gallery"'), 'Other pages must not show portfolio management.');
+$entry = null;
+$initialContentType = 'video';
+$selectedMedia = $videos = [];
+$_csrfToken = 'test-only';
+ob_start();
+require dirname(__DIR__) . '/admin/views/portfolio/form.php';
+$create = ob_get_clean();
+@$dom->loadHTML('<?xml encoding="UTF-8">' . $create);
+$xpath = new DOMXPath($dom);
+$check($xpath->query('//select[@name="content_type"]/option[@value="video" and @selected]')->length === 1, 'Create video preset must select video.');
+echo "PASS full page integration: tab scope, form boundary, unrelated page and typed video creation\n";
