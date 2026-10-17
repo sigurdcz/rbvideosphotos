@@ -721,3 +721,14 @@ Golden Bash Diagonal pocita cover Vimeo iframe ze skutecnych metadat getVideoWid
 Font CSS pouziva swap a same-origin preloady. Kurziva Cormorant Garamond v4.001 je kompletni Regular400, nikoli stary Light outline deklarovany jako400. Novy immutable filename a licence/provenance jsou v public/assets/fonts/README.md; reprodukce scripts/build_cormorant_italic.py vyzaduje presny upstream SHA256. Runtime nema Python/FontTools zavislost. Pozdni swap muze zpusobit layout shift, ktery je treba overovat pri pomale siti.
 
 Burger animace obou Golden Bash motivu plati do1050px a zachovava aria-expanded, Escape/focus, transparentni hover a reduced-motion. Overeni a otevrene brany: QA-BACKLOG-2026-10-16.md; konecna QA videa vyzaduje skutecne prehravani, metadata fixture dokazuje pouze geometrii.
+# Galerie v editaci stránky Naše práce
+
+Editace stránky s URL cestou `nase-prace` obsahuje záložku „Foto a video galerie“.
+PageController načítá portfolio jen pro web této stránky. Přehled rozlišuje
+fotografie a videa podle `content_type`, nikoli podle přítomnosti video odkazu.
+Přidání a úprava otevírají existující editor portfolia v nové kartě, takže
+rozepsané bloky stránky zůstávají zachované. Odkaz přidání předvolí typ galerie;
+ukládání, CSRF, média, pořadí a publikování zůstávají v PortfolioController.
+Panel je mimo formulář stránky a sám neprovádí zápisy. Mazání je dostupné
+přes odkaz Kompletní správa galerií. Po uložení galerie obnovte přehled stránky.
+Ověření: `php tests/PagePortfolioGalleryTest.php`. Nová migrace není potřeba.

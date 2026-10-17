@@ -109,6 +109,7 @@ class PortfolioController extends Controller
         $this->requireAuth();
         $this->view('portfolio.form', [
             'entry'    => null,
+            'initialContentType' => ($_GET['content_type'] ?? '') === 'video' ? 'video' : 'photo',
             'selectedMedia' => [],
             'videos' => [],
         ]);

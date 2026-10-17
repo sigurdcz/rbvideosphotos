@@ -1,3 +1,28 @@
+# UKOL: Galerie v editaci stránky
+
+Datum: 2026-10-17
+Zadani: Zpřístupnit foto a video galerie přímo z editace stránky Naše práce.
+Doporuceny model: Terra - Rozšíření existující administrace.
+
+## Kroky
+
+- [x] Prověřit editaci stránek a portfolia.
+- [x] Doplnit správu galerií bez duplikace dat.
+- [x] Ověřit ovládání a zachování ukládání.
+- [x] Aktualizovat dokumentaci a wiki, commit na dev.
+
+## Poznamky
+
+Pouze dev/staging. Produkce vyžaduje samostatný explicitní souhlas. Schválené pořadí videí zůstává zachováno.
+
+Přidána záložka s přehledem podle content_type a odkazy do existujícího editoru, který ukládá média, videa i pořadí. Nová galerie přebírá zvolený typ. Záložka je mimo formulář stránky, bez vnořených formulářů.
+
+## Výsledek
+
+Nová záložka a předvolba typu galerie jsou implementované; cílený render test a PHP lint všech pěti změněných PHP souborů prošly. ARCHITECTURE.md popisuje ovládání. Živé přihlášené UI zatím neověřeno.
+
+## Předchozí záznamy
+
 # UKOL: Hero media zachovat v galerii a zvysit kvalitu
 
 Datum: 2026-07-22
@@ -1737,7 +1762,7 @@ Doporuceny model: Sol - Motiv pochazi z novejsiho zdrojoveho projektu a vyzaduje
 ## Kroky
 - [x] Potvrdit absenci motivu v checkoutu a historii.
 - [-] Nacist original z puvodniho seo-cms a zkontrolovat zavislosti.
-- [ ] Doplnit motiv a potrebnou integraci bez nahrazovani vzhledu jinou sablonou.
+- [x] Doplnit motiv a potrebnou integraci bez nahrazovani vzhledu jinou sablonou.
 - [ ] Overit registraci, testy a nasazeni.
 ## Poznamky
 Verejne API vracelo 404; autentizovany dotaz originalni slozku nalezl. Nacita se zdrojova historie bez prepnuti aktualni vetve. Predchozi homepage 404 neni zatim vysvetlena: uzivatel predtim spoustel seed na starem hostingu, nikoli na nove produkci.

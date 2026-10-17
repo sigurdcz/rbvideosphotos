@@ -52,8 +52,8 @@ ob_start();
       <div class="form-group">
         <label>Typ obsahu</label>
         <select name="content_type">
-          <option value="photo" <?= ($entry['content_type'] ?? 'photo') === 'photo' ? 'selected' : '' ?>>Fotogalerie</option>
-          <option value="video" <?= ($entry['content_type'] ?? '') === 'video' ? 'selected' : '' ?>>Videogalerie</option>
+          <option value="photo" <?= ($entry['content_type'] ?? $initialContentType ?? 'photo') === 'photo' ? 'selected' : '' ?>>Fotogalerie</option>
+          <option value="video" <?= ($entry['content_type'] ?? $initialContentType ?? 'photo') === 'video' ? 'selected' : '' ?>>Videogalerie</option>
         </select>
       </div>
     </div>
