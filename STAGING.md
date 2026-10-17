@@ -1,6 +1,6 @@
 # Staging na Active24
 
-Staging je samostatný web [staging.rbvideosphotos.cz](https://staging.rbvideosphotos.cz). Push větve `dev` spouští `Deploy to Active24 (staging)`. Produkci nasazuje pouze `master`. Nový merge/push do `master` vyžaduje výslovný souhlas uživatele s konkrétní změnou. Nepoužíváme druhou větev pojmenovanou `staging`.
+Staging je samostatný web [staging.rbvideosphotos.cz](https://staging.rbvideosphotos.cz). Push větve `dev` spouští `Deploy to Active24 (staging)`. **Všechny změny musí nejprve projít stagingem. Do `master` patří pouze uživatelem výslovně schválený konkrétní merge z ověřeného `dev`; přímý vývoj, commity, cherry-picky a přímý push změn do `master` jsou zakázané.** Automatický merge ani ruční obcházení produkčního deploymentu nejsou povolené. Nepoužíváme druhou větev pojmenovanou `staging`. Závazná pravidla: [AGENTS.md](AGENTS.md) a [INSTRUCTIONS.md](INSTRUCTIONS.md).
 
 ## 1. Povinné nastavení hostingu
 

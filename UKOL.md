@@ -1967,3 +1967,15 @@ Regular italic4.001 s kompletnimi ceskymi glyfy a font-display:swap; nova verze 
 - [ ] Po prihlaseni dokonci seed/demo, ulozeni form_email, opakovani migraci a publish; pak overit skutecne SMTP i obsah.
 
 Pri nove DB migrace nevytvareji kopii produkcnich users ani contact_info. Obnova neni nastroj vytvoreni prvniho admina; pro neznamy login vraci obecne potvrzeni bez odeslani. Existujici ucet bez form_email dostane explicitni chybu. Kopie produkcniho .env s pouhou zmenou DB navic ponechava reset APP_URL na produkci. Zadny reset, SQL zapis, odeslani emailu ani bootstrap na serveru agent nespustil; vyzaduje uzivatelovo soukrome zadani prvnich credentials.
+
+---
+# UKOL: Strict staging-first release policy
+Datum: 2026-10-17
+Zadani: Vsechny zmeny nejprve staging, zadny primy vyvoj/push do master; merge jen po konkretnim vyslovnem souhlasu uzivatele.
+Doporuceny model: Terra - Omezena dokumentacni zmena pravidel repozitare.
+## Kroky
+- [x] Pridat korenovy AGENTS.md, zprisnit INSTRUCTIONS.md a sjednotit STAGING.md.
+- [x] Vymezit konkretni schvaleny obsah, zakaz auto-merge/obchazeni a odlisit obecne OK/push od souhlasu s master merge.
+- [x] Overit diff a ulozit na dev bez push/merge; GitHub branch protection zustava samostatna otevrena cast backlogu.
+## Vysledek
+Zavazna politika pro vsechny typy zmen. Jedina release cesta je overene dev/staging -> vyslovny souhlas uzivatele s konkretnim merge -> master. Korenovy AGENTS.md zajisti viditelnost pro dalsi agenty. Zadny deployment ani GitHub branch protection nemenena.
