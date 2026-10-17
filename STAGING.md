@@ -76,6 +76,19 @@ Všechny zástupné hodnoty nahraď. Tokeny generuj jednotlivě např. `php -r "
 
 ## 6. Ověření a další aktualizace
 
+### Po migracích se nelze přihlásit a obnova neposílá e-mail
+
+Samotné SQL migrace nepřenášejí produkční účty ani uloženého příjemce obnovy. Hlášení o odložených obsahových migracích je na prázdné instalaci očekávané: nejprve musí vzniknout web a jeho obsah.
+
+Obnova pro neexistující login záměrně vrací obecné potvrzení a **žádný e-mail neposílá**. Není to důkaz závady SMTP. Pokud účet existuje, vyžaduje navíc uložený `contact_info.form_email` prvního webu; adresa SMTP odesílatele příjemce nenahrazuje.
+
+1. Ve staging `.env` oprav také `APP_URL=https://staging.rbvideosphotos.cz`; pouhá změna DB údajů v kopii produkčního `.env` nestačí. Jinak by resetovací odkazy vedly na produkci. Pro staging použij samostatné `MIGRATE_TOKEN` a `API_KEY` a odpovídající token v migračním/bootstrap formuláři.
+2. Otevři [vytvoření prvního admina](https://staging.rbvideosphotos.cz/bootstrap-admin.php). Vlož stagingový MIGRATE_TOKEN a zvol login a nové heslo alespoň 12 znaků, nejvýše 72 bajtů. E-mail k tomu není potřeba.
+3. Přihlas se zvolenými údaji na `/admin/login`, v `/admin/setup` inicializuj základní/demo obsah. Ulož v Nastavení skutečný e-mail pro příjem formulářů a obnovu přístupu. Potom zopakuj odložené migrace a publish.
+4. Pokud bootstrap hlásí existující uživatele, **žádný účet nemění**. Zjisti skutečný staging login např. čtecím SQL `SELECT id,email,role FROM users;`; při chybějícím příjemci nejprve dořeš přístup, nepřepínej aplikaci na produkční DB a nemaž tabulky.
+
+Ověření 17. 10. 2026: staging bootstrap i login HTTP 200, veřejná homepage HTTP 404. Z veřejného GET nelze zjistit, zda je tabulka users prázdná; potvrdí to až autorizované vytvoření účtu nebo čtecí kontrola DB. Tajné hodnoty do chatu neposílej.
+
 - Ověř správnou doménu v adresním řádku, homepage a `/kontakt`, admin login, motiv a načtení médií. HTTP 404 před seedem není důkaz chyby FTP.
 - Zkontroluj sdílecí metadata: stránky bez vlastního override mají globální OG/Twitter obrázek. Migrace 105 odstraňuje stará jednotlivá nastavení; po ní obnov statický publish.
 - Odešli vlastní testovací kontakt, ověř `/admin/messages` a skutečné doručení. `accepted` potvrzuje pouze přijetí SMTP serverem. Při selhání je kontakt uložen v DB; neúspěšná obnova hesla vyžaduje nový pokus po opravě SMTP.

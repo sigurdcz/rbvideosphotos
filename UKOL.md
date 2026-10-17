@@ -1958,3 +1958,12 @@ Pozadavek screenshotu: fallback obrazek nesmi prosvitat nad ani pod prehravanym 
 
 ## Vysledek
 Regular italic4.001 s kompletnimi ceskymi glyfy a font-display:swap; nova verze souboru zachova immutable cache. Burger opraven i do1050px, transparentni hover a keyboard focus/reduced-motion zachovany v obou Golden Bash motivech. Hero cte rozmery426x206/240x240 z konkretniho Vimeo iframe, resizeprepocita cover; metadata timeout ma explicitni diagnostiku. Test odhalil regex rozbity minifikatorem, nahrazen prefixem a overen skutecny generated JS. Metadata fixture v Chrome prokazuje pouze geometrii, nikoli zive prehravani. QA-BACKLOG-2026-10-16.md zachycuje dukazy a omezeni; wiki470cb86. Pozdejsi 700px capture bez dokonceneho CSS odmitnut, samostatny recapture nav/font prosel; neplatne dukazy se nepovazuji za PASS.
+
+### Priorita 17. 10. 2026: odblokovani prvniho admina stagingu
+
+- [x] Overit kod PasswordResetService/InitialAdminService a dostupnost bootstrapu. Bootstrap/login200, homepage404; GET neprokazuje existenci/neexistenci uctu.
+- [x] Doplnit STAGING.md o bootstrap pred seedem, obecne potvrzeni pro neexistujici login a samostatne APP_URL/tokeny.
+- [ ] Uzivatel vytvori prvniho admina pres bootstrap s vlastnim staging MIGRATE_TOKEN a heslem (asynchronni dotaz odeslan); pri existujicich users zjistit skutecny login.
+- [ ] Po prihlaseni dokonci seed/demo, ulozeni form_email, opakovani migraci a publish; pak overit skutecne SMTP i obsah.
+
+Pri nove DB migrace nevytvareji kopii produkcnich users ani contact_info. Obnova neni nastroj vytvoreni prvniho admina; pro neznamy login vraci obecne potvrzeni bez odeslani. Existujici ucet bez form_email dostane explicitni chybu. Kopie produkcniho .env s pouhou zmenou DB navic ponechava reset APP_URL na produkci. Zadny reset, SQL zapis, odeslani emailu ani bootstrap na serveru agent nespustil; vyzaduje uzivatelovo soukrome zadani prvnich credentials.
