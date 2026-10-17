@@ -8,9 +8,9 @@
   <meta name="theme-color" content="#fffdf9">
   <title>Časté otázky ke svatebnímu focení a videu | RB Videos &amp; Photos</title>
   <!-- A Czech page needs both files of a family: latin holds ASCII and a-e-i-o-u-y with
-       acutes, latin-ext holds c-r-s-z-e-u with carons and rings. Preloading only one of a
-       pair would let the other miss the font-display:optional window, which never repairs
-       itself - the page would then mix the brand face with the system one mid-word. -->
+       acutes, latin-ext holds c-r-s-z-e-u with carons and rings. Both upright subsets are preloaded to minimize mixed-font paint.
+       font-display:swap repairs late loads instead of leaving system glyphs in place.
+       Italic is one complete Unicode Regular face, including Czech accents. -->
   <link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/fonts/montserrat-latin.woff2">
   <link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/fonts/montserrat-latin-ext.woff2">
   <link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/fonts/cormorantgaramond-latin.woff2">
@@ -20,8 +20,7 @@
        em is above it - and a missing italic degrades to a synthesised oblique of the
        upright face rather than to another family. So it must not compete for
        bandwidth with the LCP poster. -->
-  <link rel="preload" as="font" type="font/woff2" crossorigin fetchpriority="low" href="/assets/fonts/cormorantgaramond-italic-latin.woff2">
-  <link rel="preload" as="font" type="font/woff2" crossorigin fetchpriority="low" href="/assets/fonts/cormorantgaramond-italic-latin-ext.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin fetchpriority="low" href="/assets/fonts/cormorantgaramond-italic-v4.001.woff2">
   <style data-cms-fonts-css>FONT_FACES</style>
 
 <link rel="stylesheet" href="/assets/generated/page-css-HASH.css" data-generated-page-css>
