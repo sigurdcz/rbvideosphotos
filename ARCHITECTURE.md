@@ -713,3 +713,11 @@ SMTP konfigurace je v serverovém `.env` (`SMTP_HOST`, `SMTP_PORT`, `SMTP_ENCRYP
 Po datové migraci 105 mají všechny dosavadní stránky NULL `og_image_id`/`twitter_image_id`. Obvyklý renderer i publish používají globální Nastavení. `injectPageHeadMetadata` dodržuje prioritu explicitní SEO stránky > globální platformní obrázek > obsahová fotografie při absenci globálu. Twitter bez vlastního globálu dědí vybraný OG obrázek. `PortfolioPublishService` také upřednostňuje globální OG a pro globální obrázky používá společný MediaUrlResolver, aby export neodkazoval na interní storage cestu.
 
 Aktuální demo/base seedy vkládají page sharing image ID jako NULL. Schema.org explicitní obrázek je jiná vlastnost a migrace jej nemění; automatický Organization image nadále sleduje vybraný OG obrázek.
+
+## Hero cover a nacitani brand fontu
+
+Golden Bash Diagonal pocita cover Vimeo iframe ze skutecnych metadat getVideoWidth/getVideoHeight. frontend-runtime.initHeroVideoCover prijima zpravy jen z https://player.vimeo.com a konkretniho contentWindow; ResizeObserver prepocita CSS promenne --hero-video-cover-width/height. Provizorni pomer16:9 je vyznamove oznacen, pri nedostupnych metadatech po15s vznikne console warning a data-video-cover-error. Neni to potvrzeni prehravani. Poster pokryva panel pomoci object-fit:cover; tema nesmi maskovat pruhy skrytim vadneho videa.
+
+Font CSS pouziva swap a same-origin preloady. Kurziva Cormorant Garamond v4.001 je kompletni Regular400, nikoli stary Light outline deklarovany jako400. Novy immutable filename a licence/provenance jsou v public/assets/fonts/README.md; reprodukce scripts/build_cormorant_italic.py vyzaduje presny upstream SHA256. Runtime nema Python/FontTools zavislost. Pozdni swap muze zpusobit layout shift, ktery je treba overovat pri pomale siti.
+
+Burger animace obou Golden Bash motivu plati do1050px a zachovava aria-expanded, Escape/focus, transparentni hover a reduced-motion. Overeni a otevrene brany: QA-BACKLOG-2026-10-16.md; konecna QA videa vyzaduje skutecne prehravani, metadata fixture dokazuje pouze geometrii.

@@ -162,8 +162,19 @@ body.theme-golden-bash:not([data-cms-page-key="homepage"]) .page-hero,body.theme
 body.theme-golden-bash:not([data-cms-page-key="homepage"]) h1{color:var(--gb-ink);font-family:"Cormorant Garamond",serif}
 .gb-header-cta,.gb-shell .gb-main a.gb-button,.gb-contact button[type="submit"],.gb-contact input[type="submit"]{border:1px solid transparent!important;outline:0!important;background:linear-gradient(rgba(255,253,249,.97),rgba(248,240,229,.97)) padding-box,linear-gradient(108deg,#8b5b18 0%,#ead59b 27%,#a36b18 50%,#f2dfab 72%,#84530f 100%) border-box!important;color:#694713!important;box-shadow:0 6px 18px rgba(101,68,27,.06)!important;transition:color .3s ease,transform .3s ease,box-shadow .3s ease,background-position .45s ease!important}
 .gb-header-cta:hover,.gb-shell .gb-main a.gb-button:hover,.gb-contact button[type="submit"]:hover,.gb-contact input[type="submit"]:hover{background:linear-gradient(110deg,#8b5b18 0%,#d8a745 24%,#f0d994 48%,#a36b18 72%,#7b4d0d 100%) padding-box,linear-gradient(108deg,#8b5b18,#f2dfab,#84530f) border-box!important;background-size:180% 100%!important;background-position:100% 0!important;color:#fffdf9!important;box-shadow:0 12px 28px rgba(117,77,21,.2)!important;transform:translateY(-2px)}
-.gb-menu{transition:background-color .25s ease,transform .25s ease}
-@media (hover:hover){.gb-menu:hover{background:rgba(183,122,32,.08);transform:translateY(-1px)}}
+.gb-menu{transition:color .25s ease}
+body.theme-golden-bash .gb-menu:hover,
+body.theme-golden-bash .gb-menu:active{background:transparent!important;transform:none}
+body.theme-golden-bash .gb-menu:focus-visible{outline:2px solid var(--gb-gold);outline-offset:3px}
+@media(max-width:1050px){
+  body.theme-golden-bash .gb-menu{position:relative!important;width:52px;height:44px;min-height:44px;background:transparent!important}
+  body.theme-golden-bash .gb-menu span{position:absolute!important;top:50%!important;left:50%!important;margin:0!important;transform-origin:center!important;transition:transform .3s ease}
+  body.theme-golden-bash .gb-menu span:first-child{transform:translate(-50%,calc(-50% - 3px))!important}
+  body.theme-golden-bash .gb-menu span:last-child{transform:translate(-50%,calc(-50% + 3px))!important}
+  body.theme-golden-bash.gb-nav-open .gb-menu span:first-child{transform:translate(-50%,-50%) rotate(45deg)!important}
+  body.theme-golden-bash.gb-nav-open .gb-menu span:last-child{transform:translate(-50%,-50%) rotate(-45deg)!important}
+}
+@media(prefers-reduced-motion:reduce){body.theme-golden-bash .gb-menu span{transition:none!important}}
 .gb-mobile-contact{display:none}
 
 /* Active homepage uses the canonical DB-first generic markup. */
@@ -2185,6 +2196,25 @@ body.theme-golden-bash.theme-golden-bash-diagonal .hp-hero>.hero-bg{
    center-crop would needlessly cut content off the visible right side whenever the
    source photo's aspect ratio differs from the forced 16:9 hero box. */
 body.theme-golden-bash.theme-golden-bash-diagonal .hp-hero>.theme-hero-video .theme-hero-video__poster{object-position:right center!important}
+/* Vimeo metadata drives a true cover frame, including uploads wider than 16:9.
+   Keep the poster covering the same panel before playback; never hide the gap. */
+body.theme-golden-bash.theme-golden-bash-diagonal .hp-hero>.theme-hero-video iframe{
+  top:50%!important;right:0!important;bottom:auto!important;left:auto!important;
+  width:var(--hero-video-cover-width,100%)!important;
+  height:var(--hero-video-cover-height,100%)!important;
+  min-width:0!important;min-height:0!important;max-width:none!important;
+  aspect-ratio:auto!important;transform:translateY(-50%)!important;
+}
+body.theme-golden-bash.theme-golden-bash-diagonal .hp-hero>.theme-hero-video .theme-hero-video__poster{
+  inset:0!important;width:100%!important;height:100%!important;max-width:none!important;
+  aspect-ratio:auto!important;object-fit:cover!important;transform:none!important;
+}
+@media(max-width:700px){
+  body.theme-golden-bash.theme-golden-bash-diagonal .hp-hero>.theme-hero-video iframe{
+    left:50%!important;right:auto!important;transform:translate(-50%,-50%)!important;
+  }
+}
+
 /* End Golden Bash Diagonal hero override. */
 
 /* Mobilni hero je zamerne full-bleed, takze se frame drzi na vysku, ale centrovany -

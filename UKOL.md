@@ -1940,3 +1940,21 @@ Pri kontrole existoval jen environment production. Staging vytvoren pres GitHub 
 OG zdroje nasazeny na produkci uspesne. Dev push a staging environment aktivni, ale zadny staging soubor zatim neprenesen: vsechny FTP secrets chybi a preflight zastavil workflow pred checkoutem. Staging URL vraci200 s titulem Brzy jsme zpet, nikoli overeny novy CMS. STAGING.md obsahuje povinne nastaveni hostingu, secrets, DB, .env, migraci, admina, obsahu a SMTP; BACKLOG.md zachycuje tri pozadavky; INSTRUCTIONS.md zakazuje dalsi master merge/push bez konkretniho souhlasu. YAML/FTPS/branch guard kontroly a diff check prosly. Wiki524 stranek, nova stranka staging-deployment608 slov; pipeline coverage zustava partial. Prvni prenos a funkcni instalace zustavaji otevrene.
 
 Aktualizace po doplneni secrets: pokusy2-4 vracely530 Login incorrect, pokus5 uspesne dokoncil FTPS nasazeni. Predchozi blokace secrets je vyresena; funkcni DB/.env a obsah je nutne overit samostatne. BACKLOG bod4 doplnen na zadost uzivatele: burger animace do krizku a rusive tmave hover pozadi (commit67f2311), oprava odlozena.
+
+---
+# UKOL: Backlog — fonts, hero video and burger
+Datum: 2026-10-16
+Zadani: Zacit resit backlog: overit staging workflow, opravit ceske fonty, plne pokryti hero videem a burger animaci/hover.
+Doporuceny model: Sol - Interakce CSS, fontu, media a navigace vyzaduje skutecne renderovaci QA.
+## Kroky
+- [x] Overit runtime, motiv, lokalni spousteni a staging; najit skutecne priciny tri UI vad.
+- [x] Zachytit diagnostiku Chrome CDP a zapsat rubriku; celkove skore nepridelovat kvuli chybejicim lokalnim mediim.
+- [x] Implementovat spravny font, metadata-driven hero cover a burger animaci/hover pri zachovani focusu.
+- [x] Overit skutecne generovane assety, font a nav interakce;219 regresi +27/28 goldens, znamy About poster neprepsan.
+- [x] Aktualizovat backlog, technickou dokumentaci/wiki a pripravit oddelene commity zdroju/snapshotu na dev. Bez noveho push.
+- [ ] Na inicializovanem stagingu overit skutecne prehravani, poster pri selhani, dotyk a pomalou sit. Bez teto brany video neoznacovat kompletne overene.
+## Poznamky
+Pozadavek screenshotu: fallback obrazek nesmi prosvitat nad ani pod prehravanym videem; ma zustat funkcni pred nactenim nebo pri chybe videa. Fonty musi vykreslit ceske znaky. Burger se otevrenim meni na krizek a hover nema tmavou plochu. Bod1 potrebuje vlastni DB/.env a opravneni schvalovatele; nepredstirat dokonceny staging jen podle FTP success.
+
+## Vysledek
+Regular italic4.001 s kompletnimi ceskymi glyfy a font-display:swap; nova verze souboru zachova immutable cache. Burger opraven i do1050px, transparentni hover a keyboard focus/reduced-motion zachovany v obou Golden Bash motivech. Hero cte rozmery426x206/240x240 z konkretniho Vimeo iframe, resizeprepocita cover; metadata timeout ma explicitni diagnostiku. Test odhalil regex rozbity minifikatorem, nahrazen prefixem a overen skutecny generated JS. Metadata fixture v Chrome prokazuje pouze geometrii, nikoli zive prehravani. QA-BACKLOG-2026-10-16.md zachycuje dukazy a omezeni; wiki470cb86. Pozdejsi 700px capture bez dokonceneho CSS odmitnut, samostatny recapture nav/font prosel; neplatne dukazy se nepovazuji za PASS.

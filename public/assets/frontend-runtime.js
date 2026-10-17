@@ -411,6 +411,56 @@
     sync();
   }
 
+  // Vimeo contains its video inside the iframe. Match the real video ratio first,
+  // then cover the facade; a guessed 16:9 frame leaves bands for wider uploads.
+  function initHeroVideoCover(facade, iframe) {
+    if (!facade.closest('.hp-hero') || iframe.src.indexOf('https://player.vimeo.com/') !== 0) return;
+    var videoWidth = 0;
+    var videoHeight = 0;
+    var ratio = 16 / 9; // Explicit provisional size until Vimeo reports metadata.
+    var timer;
+    function resize() {
+      var width = facade.clientWidth;
+      var height = facade.clientHeight;
+      facade.style.setProperty('--hero-video-cover-width', Math.max(width, height * ratio) + 'px');
+      facade.style.setProperty('--hero-video-cover-height', Math.max(height, width / ratio) + 'px');
+    }
+    function requestDimensions() {
+      ['getVideoWidth', 'getVideoHeight'].forEach(function (method) {
+        iframe.contentWindow.postMessage(JSON.stringify({ method: method }), 'https://player.vimeo.com');
+      });
+    }
+    window.addEventListener('message', function (event) {
+      if (event.origin !== 'https://player.vimeo.com' || event.source !== iframe.contentWindow) return;
+      var data = event.data;
+      if (typeof data === 'string') {
+        try { data = JSON.parse(data); } catch (_) { return; }
+      }
+      if (!data || typeof data !== 'object') return;
+      if (data.event === 'ready') requestDimensions();
+      if (typeof data.value !== 'number' || !Number.isFinite(data.value) || data.value <= 0) return;
+      if (data.method === 'getVideoWidth') videoWidth = data.value;
+      if (data.method === 'getVideoHeight') videoHeight = data.value;
+      if (videoWidth && videoHeight) {
+        ratio = videoWidth / videoHeight;
+        facade.dataset.videoCoverRatio = String(ratio);
+        delete facade.dataset.videoCoverError;
+        window.clearTimeout(timer);
+        resize();
+      }
+    });
+    iframe.addEventListener('load', requestDimensions);
+    window.addEventListener('resize', resize);
+    if ('ResizeObserver' in window) new window.ResizeObserver(resize).observe(facade);
+    resize();
+    if (iframe.contentWindow) requestDimensions();
+    timer = window.setTimeout(function () {
+      if (videoWidth && videoHeight) return;
+      facade.dataset.videoCoverError = 'metadata-unavailable';
+      console.warn('Hero video: Vimeo dimensions unavailable; provisional 16:9 cover remains active.');
+    }, 15000);
+  }
+
   function initHeroVideoFacades() {
     var facades = Array.prototype.slice.call(document.querySelectorAll('[data-hero-video-facade]'));
     if (!facades.length) return;
@@ -463,6 +513,7 @@
       iframe.allow = 'autoplay; fullscreen; picture-in-picture';
       iframe.loading = 'eager';
       iframe.tabIndex = -1;
+      initHeroVideoCover(facade, iframe);
       facade.appendChild(iframe);
       facade.dataset.videoLoaded = '1';
       facade.classList.add('is-playing');
