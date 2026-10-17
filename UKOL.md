@@ -1,3 +1,20 @@
+# UKOL: Větší fotografie v homepage O nás
+
+Datum: 2026-10-17
+Zadani: Zvětšit fotografii v homepage sekci O nás tak, aby na desktopu vyplnila výšku vedle textu a služeb; zachovat čitelné zobrazení na mobilu.
+Doporuceny model: Terra - Cílená oprava CSS s vizuálním ověřením.
+
+## Kroky
+
+- [x] Zjistit aktivní šablonu a příčinu omezené velikosti.
+- [-] Upravit rozměry a ověřit desktop i mobil screenshotem.
+- [ ] Zapsat výsledek, uložit commit a nasadit na staging; master bez změny.
+
+## Poznamky
+
+Cíl: větší fotografie bez deformace a přetékání. Přiložené screenshoty ukazují krátký portrét proti výrazně vyššímu sloupci služeb.
+
+---
 # UKOL: Galerie v editaci stránky
 
 Datum: 2026-10-17
@@ -2026,3 +2043,10 @@ Na stagingu je schvalena dvanactka ve spravnem poradi.8puvodnichURL se prekryva 
 Stagingprokazatelne APIverejneHTML12/12,24fotoidentickych,4oldURL404,12thumbnail200; Chrome1920x1080/390x844 stabilnivyska a zadnechybejicividitelneobrazky. Vsech12karet otevre spravnyiframe. Kontrolniodkaz https://staging.rbvideosphotos.cz/nase-prace#videogalerie. Staging push obsahuje i drive pripravene front-endopravy, uzivateli vyslovne oznameno; zadne implicitni schvaleni produkce.
 
 Dodatečné ověření celých views: karta i panel sdílejí tabs kontejner, panel je mimo page-form, kontakt panel nezobrazuje a vytvoření videogalerie předvolí video. Oba cílené testy prošly. První staging push c4be6a6 spuštěn.
+
+
+O nás: desktop >=951px dostal 40% sloupec, menší mezeru48px a natažení fotografie na výšku copy bloku, image cover bez deformace. Obě Golden Bash šablony; <=950px původní layout. Rubrika: velikost/vyrovnání45, ořez25, responzivita20, runtime10. Předchozí detail potvrzuje krátkou fotografii, hodnocení72/100 (−28 velikost/vyrovnání). Hero přehrávač ve screenshotu nehraje; mimo rozsah opravy.
+
+Iterace1: 88/100 (velikost45/45, ořez13/25, responzivita20/20, runtime10/10 v cílové sekci). Při951px příliš úzký vysoký portrét ořezával okraje obličejů. Hranice změny posunuta na1200px; menší layout zůstává původní. Nutné nové snímky1199/1200/1920/390.
+
+Iterace2 náhled:96/100 (45/45 velikost,21/25 ořez — u1200px těsnější boky,20/20 responzivita,10/10 runtime cílové sekce). Oba obličeje plně viditelné; 1920px portrét552x698 proti původním430x473, výška shodná s copy. Mobil354x389 beze změny. QA-BACKLOG aktualizován. Zbývá ověřit skutečné nasazené generované CSS.

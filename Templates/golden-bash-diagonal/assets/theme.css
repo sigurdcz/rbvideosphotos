@@ -749,6 +749,12 @@ body.theme-golden-bash .gb-main .kt-hero h1{font-size:64px!important}
 .gb-services-visual>img{position:absolute;right:0;bottom:0;left:0;width:100%;height:auto;min-height:100%;object-fit:cover;object-position:55% bottom}
 .gb-services-visual::before{content:none}
 .gb-services-visual::after{content:none}
+/* Match the portrait to the full copy/services column instead of a short fixed ratio. */
+@media(min-width:1200px){
+  .gb-services-profile>.container{grid-template-columns:minmax(330px,40%) minmax(0,1fr)!important;gap:48px!important;align-items:stretch!important}
+  .gb-services-visual{align-self:stretch;aspect-ratio:auto}
+  .gb-services-visual>img{top:0;height:100%;object-position:55% center}
+}
 .gb-services-copy{min-width:0}
 .gb-services-profile .section-label{display:block!important;margin:0 0 18px!important;color:#9a620f!important;font:700 11px/1.2 Montserrat,sans-serif!important;letter-spacing:.22em!important;text-transform:uppercase!important}
 .gb-services-profile .section-title{display:block!important;margin:0!important;color:var(--gb-ink)!important;font:500 clamp(58px,5.4vw,78px)/.9 "Cormorant Garamond",serif!important;letter-spacing:-.025em!important}

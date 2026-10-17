@@ -23,3 +23,17 @@ Rubrika pro nahlášené vady: navigace a stavy 35 bodů, skutečně použitý �
 ## Otevřené brány
 
 Staging po uživatelském potvrzení DB/.env: homepage HTTP 404, login HTTP 200. Dokončit setup/demo/publish, ověřit skutečně hrající video bez pruhů, poster před načtením/při výpadku, pozdní font load, dotykové ovládání a SMTP. Master branch protection ani produkční merge nejsou součástí dokončených kontrol. Změny připravené na dev; tento úkol neobsahuje nový push ani produkční nasazení.
+# Homepage O nás: větší portrét (2026-10-17)
+
+Golden Bash i Diagonal od šířky 1200 CSS px používají pro fotografii 40 %
+obsahové mřížky a mezeru 48 px. Portrét se natahuje na výšku sousedního
+sloupce; absolutní obrázek má 100% výšku a `object-fit: cover`, bez deformace.
+Původní poměr 10:11 pod 1200 px zůstává zachován. Natažení od 951 px bylo
+zamítnuto po vizuálním ověření: ořezávalo obličeje.
+
+Chrome CDP náhled nad staging daty, DPR 1, šířky 1920/1199/1200/390:
+fotografie načtena, nulové horizontální přetékání. Na 1920 px fotografie
+552 × 698 px místo 430 × 473 px, výška shodná se sloupcem obsahu.
+Rubrika cílové sekce: velikost a vyrovnání 45, ořez 25, responzivita 20,
+runtime 10; finální ověření nasazeného CSS zaznamená UKOL.md.
+
