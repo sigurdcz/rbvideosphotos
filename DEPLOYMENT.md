@@ -17,9 +17,11 @@ Aktualni aplikacni zdroje pochazeji ze `sigurdcz/seo-cms`, commit `b8da8da028787
 
 ## Aktualizace databaze
 
+Video galerie: nová obsahová migrace `106_replace_approved_video_portfolio.sql` používá sdílený manifest `ApprovedVideoPortfolioService::MANIFEST` s přesnými 12 YouTube videi schválenými 17. 10. 2026. Nejprve `dev`/staging, potom migrace s `&publish=1` a kontrola `/nase-prace`. Obměňuje pouze video položky prvního veřejného webu; fotografie, jejich vzájemné pořadí, hero zdroje i fyzická média zachovává. Odstraní také staré exporty vyřazených video položek a stará vedlejší videa u zachovaných položek. Osm URL se překrývá s původní galerií; kontrola nepřítomnosti se vztahuje na čtyři vyřazená ID. Přesný seznam a výsledky ověření jsou v `VIDEO-GALLERY-2026-10-17.md`. Aktuální demo seed používá stejný manifest, takže reset nevrátí původní videa.
+
 1. Over, ze serverovy `.env` odkazuje na databazi spravneho prostredi.
 2. Pro novou verzi spust `/migrate-util.php?token=<MIGRATE_TOKEN>` z vlastniho prohlizece.
-3. Utility aplikuji append-only migrace. Existujici 001–023 jsou beze zmen; aktualni verze obsahuje dalsi migrace az po 105.
+3. Utility aplikuji append-only migrace. Existujici 001–023 jsou beze zmen; aktualni verze obsahuje dalsi migrace az po 106.
 4. Sdileny `database/migration-schema-state.php` rozpozna zname historicke prekryvy a viditelne je zapise do evidence. Jine SQL chyby se neignoruji.
 5. Obsahove application-compatible migrace bez existujiciho webu zustanou nezapsane a utility je explicitne uvede jako odlozene. Po zakladnim seedu spust migrace znovu.
 6. Pro existujici web lze po uspesnych migracich pouzit `&publish=1` k uplnemu publishi. Nespoustej Armagedon pro beznou aktualizaci.

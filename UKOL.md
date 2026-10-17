@@ -1979,3 +1979,17 @@ Doporuceny model: Terra - Omezena dokumentacni zmena pravidel repozitare.
 - [x] Overit diff a ulozit na dev bez push/merge; GitHub branch protection zustava samostatna otevrena cast backlogu.
 ## Vysledek
 Zavazna politika pro vsechny typy zmen. Jedina release cesta je overene dev/staging -> vyslovny souhlas uzivatele s konkretnim merge -> master. Korenovy AGENTS.md zajisti viditelnost pro dalsi agenty. Zadny deployment ani GitHub branch protection nemenena.
+
+---
+# UKOL: Replace video portfolio with ordered YouTube selection
+Datum: 2026-10-17
+Zadani: Nahradit dosavadni video galerii presne12 zadanymi videi v poradi1-12, nejprve staging; fotografie/hero zachovat, master bez souhlasu nemenit.
+Doporuceny model: Sol - Datova nahrada, migrace a overeni poradi napric DB, listingem a homepage.
+## Kroky
+- [x] Overit video model a aktualni stagingAPI/listing; oficialni oEmbed metadata vsech12URL dostupna.
+- [x] Pripravit append-only106 a sdileny manifest demo importeru; fotografie/hero/media soubory zachovany.
+- [x] Izolovane overit48 assertions vcetne starych exportu, presnychURL/poradi a idempotence;108 migraci/16handleru;219regresi a27/28goldens (znamy About poster).
+- [-] Commit/push dev a overit staging nasazeni/migraci, dostupnost a poradi12 novych videi; master bez merge.
+- [ ] Aktualizovat dokumentaci/wiki a zaznamenat konkretni overene vysledky/meze.
+## Poznamky
+Zadana ID v poradi: L-zaa5hj-aU,cXU7Ty-kjyA,hYj2w3P5rK8,5ZlVVcIu10U,O5i9TzCms5c,b9WhNN8VYhc,C1wL3QFZhn0,DBWKJ46eM4c,su0hKnBnCKw,1z-qckQn5UU,o-1xGllIShY,GBKJ_VB_Nmw. Predchozi UI opravy jsou commitnute na dev, dosud nepushnute; staging push bude obsahovat i tyto revize, transparentne uvest.
