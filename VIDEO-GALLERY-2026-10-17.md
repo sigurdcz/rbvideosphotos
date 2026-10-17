@@ -30,4 +30,15 @@ Osm URL se překrývá s původní staging galerií a zůstává podle zadání.
 
 ## Staging a produkce
 
-Před změnou byl bezpečně načten staging API seznam a veřejný listing; lokální záloha bez tajemství je v ignorovaném `.codex-qa/staging-portfolio-before.json`. Nasazení, spuštění migrace a výsledná veřejná kontrola zatím čekají. Staging push zahrne také dříve připravené frontend opravy; produkce se tím nemění. Merge do masteru vyžaduje nové konkrétní schválení uživatele po staging kontrole.
+Před změnou byl bezpečně načten staging API seznam a veřejný listing; lokální záloha bez tajemství je v ignorovaném `.codex-qa/staging-portfolio-before.json`.
+
+- Nasazení revize `4ab1ff1`: [Actions 39061862591](https://github.com/sigurdcz/rbvideosphotos/actions/runs/39061862591), **success**. Zahrnuje také dříve připravené frontend opravy fontů, hero a burgeru.
+- Staging migrační utility s `publish=1`: HTTP 200, „Údržba dokončena“, migrace 106 provedena bez hlášení chyby.
+- API i veřejné HTML: přesně 12 video položek ve výše uvedeném pořadí, každá má právě jedno odpovídající video. Všech 24 fotografických položek v API je shodných s předchozím stavem; hero embed atributy listingu nezměněny.
+- Čtyři vyřazená ID nejsou v listingu ani homepage. Všechny čtyři jejich původní veřejné adresy vracejí HTTP 404; nový listing i homepage HTTP 200.
+- Všech 12 YouTube náhledů HTTP 200. Chrome: filtr Videa ukáže přesně 12 načtených video karet v pořadí, všech 12 karet otevře správný přehrávač, bez JS výjimek a horizontálního přetékání. Nebylo ověřováno přehrání celých filmů do konce ani dostupnost ve všech regionech.
+- Chrome desktop 1920×1080 a mobil 390×844, DPR 1: stabilní full-page výška, žádné chybějící viditelné obrázky. Screenshoty a JSON důkazy `.codex-qa/video-gallery-staging-{desktop,mobile}*`, `.codex-qa/video-gallery-browser-verification.json`. Capture zahrnuje viditelný cookie panel; pro jednotlivé hráče byl panel odmítnut skutečným ovládacím prvkem, pokud byl dostupný.
+
+Kontrolní adresa: [staging / Naše práce / Videa](https://staging.rbvideosphotos.cz/nase-prace#videogalerie).
+
+Produkční master zůstává `fe561ed5d73f761179a8636419228a2526b8a82e`; nebyl merge ani produkční deploy. Merge do masteru vyžaduje nové konkrétní schválení uživatele po staging kontrole.

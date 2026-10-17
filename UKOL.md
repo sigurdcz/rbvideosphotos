@@ -1989,7 +1989,13 @@ Doporuceny model: Sol - Datova nahrada, migrace a overeni poradi napric DB, list
 - [x] Overit video model a aktualni stagingAPI/listing; oficialni oEmbed metadata vsech12URL dostupna.
 - [x] Pripravit append-only106 a sdileny manifest demo importeru; fotografie/hero/media soubory zachovany.
 - [x] Izolovane overit48 assertions vcetne starych exportu, presnychURL/poradi a idempotence;108 migraci/16handleru;219regresi a27/28goldens (znamy About poster).
-- [-] Commit/push dev a overit staging nasazeni/migraci, dostupnost a poradi12 novych videi; master bez merge.
-- [ ] Aktualizovat dokumentaci/wiki a zaznamenat konkretni overene vysledky/meze.
+- [x] Commit4ab1ff1/push dev, Actions39061862591 success; staging106 a publish uspesne.
+- [x] API/HTML/Chrome overily presne12 videi v zadane posloupnosti,24fotografii nezmenenych,4vyrazenaID mimo listing/homepage a stareadresy404. Vsechny12nahledy200, vsechny12karty oteviraji odpovidajici iframe; desktop/mobil bez horizontalniho overflow/JSvyjimek.
+- [x] Aktualizovat VIDEO-GALLERY/DEPLOYMENT a wiki5eb8df9; read-only wiki lint po prekroceni kadence de8da68, bez hromadnych oprav znalosti.
 ## Poznamky
 Zadana ID v poradi: L-zaa5hj-aU,cXU7Ty-kjyA,hYj2w3P5rK8,5ZlVVcIu10U,O5i9TzCms5c,b9WhNN8VYhc,C1wL3QFZhn0,DBWKJ46eM4c,su0hKnBnCKw,1z-qckQn5UU,o-1xGllIShY,GBKJ_VB_Nmw. Predchozi UI opravy jsou commitnute na dev, dosud nepushnute; staging push bude obsahovat i tyto revize, transparentne uvest.
+
+## Vysledek
+Na stagingu je schvalena dvanactka ve spravnem poradi.8puvodnichURL se prekryva se zadanim a zustalo,4vyrazeneodstraneny a4novepridany. Fotografie/hero a fyzickamedia zachovany.48izolovanych assertions,108migraci/16handleru,219regresi a27/28goldens (znamy About poster). Browser overil filtr/nahledy/otevirani iframe, ne prehrani celych filmu. Zapis dukazu VIDEO-GALLERY-2026-10-17.md. Master stalefe561ed, zadny produkcni merge/deploy. Produkce ceka na konkretni souhlas uzivatele.
+
+Stagingprokazatelne APIverejneHTML12/12,24fotoidentickych,4oldURL404,12thumbnail200; Chrome1920x1080/390x844 stabilnivyska a zadnechybejicividitelneobrazky. Vsech12karet otevre spravnyiframe. Kontrolniodkaz https://staging.rbvideosphotos.cz/nase-prace#videogalerie. Staging push obsahuje i drive pripravene front-endopravy, uzivateli vyslovne oznameno; zadne implicitni schvaleni produkce.
