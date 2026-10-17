@@ -7,8 +7,8 @@ Doporuceny model: Terra - Cílená oprava CSS s vizuálním ověřením.
 ## Kroky
 
 - [x] Zjistit aktivní šablonu a příčinu omezené velikosti.
-- [-] Upravit rozměry a ověřit desktop i mobil screenshotem.
-- [ ] Zapsat výsledek, uložit commit a nasadit na staging; master bez změny.
+- [x] Upravit rozměry a ověřit desktop i mobil screenshotem.
+- [x] Zapsat výsledek, uložit commit a nasadit na staging; master bez změny.
 
 ## Poznamky
 
@@ -2050,3 +2050,9 @@ O nás: desktop >=951px dostal 40% sloupec, menší mezeru48px a natažení foto
 Iterace1: 88/100 (velikost45/45, ořez13/25, responzivita20/20, runtime10/10 v cílové sekci). Při951px příliš úzký vysoký portrét ořezával okraje obličejů. Hranice změny posunuta na1200px; menší layout zůstává původní. Nutné nové snímky1199/1200/1920/390.
 
 Iterace2 náhled:96/100 (45/45 velikost,21/25 ořez — u1200px těsnější boky,20/20 responzivita,10/10 runtime cílové sekce). Oba obličeje plně viditelné; 1920px portrét552x698 proti původním430x473, výška shodná s copy. Mobil354x389 beze změny. QA-BACKLOG aktualizován. Zbývá ověřit skutečné nasazené generované CSS.
+
+## Výsledek O nás 2026-10-17
+
+Nasazeno f24e00b na staging, Actions39065542463 success. Skutečné generované CSS (bez injekce) ověřeno1920/1199/1200/390px, DPR1 Chrome, consent odmítnut skutečným tlačítkem. Cílová sekce96/100:45/45 velikost,21/25 ořez,20/20 responzivita,10/10 runtime portrétu. Detail .codex-qa/about-final-1920.png, -1199.png, -1200.png, -390.png. Celé stránky .codex-qa/about-final-full-desktop.png (1920x5593), -mobile.png (390x12565), stabilní výšky,0 failedVisibleImages. Fotografie552x698.25, mobil354x389.39, bez horizontálního overflow. QA-BACKLOG a wiki frontend-backlog-fixes aktualizovány. Produkce neřešena.
+
+Samostatný nalezený problém: staging hero Vimeo hlásí This video does not exist. Přehrávání není součástí opravy fotografie; uživatel informován.

@@ -36,4 +36,3 @@ fotografie načtena, nulové horizontální přetékání. Na 1920 px fotografie
 552 × 698 px místo 430 × 473 px, výška shodná se sloupcem obsahu.
 Rubrika cílové sekce: velikost a vyrovnání 45, ořez 25, responzivita 20,
 runtime 10; finální ověření nasazeného CSS zaznamená UKOL.md.
-
