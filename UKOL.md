@@ -1,3 +1,20 @@
+# UKOL: Plynulý přechod hero videa
+
+Datum: 2026-10-18
+Zadani: Opravit viditelný svislý zlom gradientu po posunu hero videa, zachovat jeho posun doprava.
+Doporuceny model: Terra - Cílená oprava maskovacího CSS.
+
+## Kroky
+
+- [x] Prohlédnout uživatelský screenshot a finální masku.
+- [-] Nahradit nerovnoměrné opacity body plynulým eased náběhem ve stejné oblasti.
+- [ ] Ověřit staging a zapsat skutečné limity ověření.
+
+## Poznamky
+
+Předchozí geometrický PASS nedokazoval plynulost živého videa. Uživatelský screenshot tento vizuální problém znovu otevírá. Maskování má být stejné pro poster i iframe přes společný panel; mobil bez změny.
+
+---
 # UKOL: Posun hero videa doprava
 
 Datum: 2026-10-18
@@ -2077,3 +2094,5 @@ Samostatný nalezený problém: staging hero Vimeo hlásí This video does not e
 ## Výsledek hero posunu2026-10-18
 
 Nasazeno ba2d867, Actions39129260883 success. Chrome CDP bez lokálního CSS1920/701/700/390, DPR1, odmítnuté cookies: gradient shodný s uloženým stavem před změnou na všech4 šířkách; iframe i poster posun48/24/0/0px. Nulový horizontal overflow, poster načten. Důkazy .codex-qa/hero-shift-final.json a hero-shift-final-{1920,701,700,390}.png. Kompozice přehrávaného záběru není ověřena: Vimeo stále hlásí This video does not exist; neposkytnuto falešné vizuální skóre. Wiki frontend-backlog-fixes aktualizována. Produkční master beze změny.
+
+Úprava: původní nepravidelné mask stops nahrazeny11 vzorky smoothstep3t²−2t³ přes30–80% šířky, zachovaný offset24–48px a mobil bez masky. Chrome načítá nové body a bez overflow při1920/701/700/390. Alpha kvantizuje na8bit (např .028 -> .027), test nesmí vyžadovat totožný desetinný řetězec. Náhled nad produkcí blokuje Vimeo zabezpečení připojení; nesmí být označen jako vizuální PASS nad přehrávaným záběrem.
