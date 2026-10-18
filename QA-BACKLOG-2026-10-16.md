@@ -36,3 +36,13 @@ fotografie načtena, nulové horizontální přetékání. Na 1920 px fotografie
 552 × 698 px místo 430 × 473 px, výška shodná se sloupcem obsahu.
 Rubrika cílové sekce: velikost a vyrovnání 45, ořez 25, responzivita 20,
 runtime 10; finální ověření nasazeného CSS zaznamená UKOL.md.
+# Hero video: posun doprava, původní gradient (2026-10-18)
+
+Golden Bash Diagonal posouvá pouze iframe a poster v homepage o
+`clamp(24px,3vw,48px)` doprava při šířce od 701 px. Gradient, rozměry panelu,
+cover výpočet a mobilní pozice zůstávají původní. Transformace iframe zachovává
+vertikální centrování; poster používá stejný horizontální posun.
+Chrome CDP porovnání před/po při 1920/701/700/390 px potvrdilo identický
+computed mask-image, pozici panelu, očekávaný posun obou médií a žádný overflow.
+Vimeo na stagingu vrací „This video does not exist“: skutečné přehrávání a
+kompozice záběru zůstávají neověřené, geometrie je ověřena odděleně.

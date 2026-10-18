@@ -1,3 +1,20 @@
+# UKOL: Posun hero videa doprava
+
+Datum: 2026-10-18
+Zadani: Posunout hlavní homepage video mírně doprava a ponechat přesně původní gradient.
+Doporuceny model: Terra - Cílená úprava pozice média.
+
+## Kroky
+
+- [x] Prověřit finální CSS pro video, poster a gradient.
+- [x] Posunout desktopové video i poster stejným posunem, mobil zachovat.
+- [ ] Ověřit generované CSS na stagingu, dokumentovat a commitnout na dev.
+
+## Poznamky
+
+Posun24–48px od701px; gradientový panel zůstává na původní pozici. Přehrávání Vimeo v předchozí kontrole selhávalo, geometrii lze ověřit odděleně; bez tvrzení úspěšného přehrávání.
+
+---
 # UKOL: Větší fotografie v homepage O nás
 
 Datum: 2026-10-17
