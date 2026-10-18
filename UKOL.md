@@ -8,7 +8,7 @@ Doporuceny model: Terra - Cílená úprava pozice média.
 
 - [x] Prověřit finální CSS pro video, poster a gradient.
 - [x] Posunout desktopové video i poster stejným posunem, mobil zachovat.
-- [ ] Ověřit generované CSS na stagingu, dokumentovat a commitnout na dev.
+- [x] Ověřit generované CSS na stagingu, dokumentovat a commitnout na dev.
 
 ## Poznamky
 
@@ -2073,3 +2073,7 @@ Iterace2 náhled:96/100 (45/45 velikost,21/25 ořez — u1200px těsnější bok
 Nasazeno f24e00b na staging, Actions39065542463 success. Skutečné generované CSS (bez injekce) ověřeno1920/1199/1200/390px, DPR1 Chrome, consent odmítnut skutečným tlačítkem. Cílová sekce96/100:45/45 velikost,21/25 ořez,20/20 responzivita,10/10 runtime portrétu. Detail .codex-qa/about-final-1920.png, -1199.png, -1200.png, -390.png. Celé stránky .codex-qa/about-final-full-desktop.png (1920x5593), -mobile.png (390x12565), stabilní výšky,0 failedVisibleImages. Fotografie552x698.25, mobil354x389.39, bez horizontálního overflow. QA-BACKLOG a wiki frontend-backlog-fixes aktualizovány. Produkce neřešena.
 
 Samostatný nalezený problém: staging hero Vimeo hlásí This video does not exist. Přehrávání není součástí opravy fotografie; uživatel informován.
+
+## Výsledek hero posunu2026-10-18
+
+Nasazeno ba2d867, Actions39129260883 success. Chrome CDP bez lokálního CSS1920/701/700/390, DPR1, odmítnuté cookies: gradient shodný s uloženým stavem před změnou na všech4 šířkách; iframe i poster posun48/24/0/0px. Nulový horizontal overflow, poster načten. Důkazy .codex-qa/hero-shift-final.json a hero-shift-final-{1920,701,700,390}.png. Kompozice přehrávaného záběru není ověřena: Vimeo stále hlásí This video does not exist; neposkytnuto falešné vizuální skóre. Wiki frontend-backlog-fixes aktualizována. Produkční master beze změny.
