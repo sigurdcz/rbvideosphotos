@@ -2189,9 +2189,9 @@ body.theme-golden-bash.theme-golden-bash-diagonal .hp-hero>.hero-bg{
   width:100%!important;
   /* Misto diagonalniho orezu plynuly prechod: video je u leveho okraje pruhledne
      a od poloviny sirky plne viditelne, takze vlevo prosvita papirove pozadi. */
-  /* Smoothstep samples: zero-slope entry/exit, without a sudden opacity ramp. */
-  -webkit-mask-image:linear-gradient(to right,transparent 30%,rgba(0,0,0,.028) 35%,rgba(0,0,0,.104) 40%,rgba(0,0,0,.216) 45%,rgba(0,0,0,.352) 50%,rgba(0,0,0,.5) 55%,rgba(0,0,0,.648) 60%,rgba(0,0,0,.784) 65%,rgba(0,0,0,.896) 70%,rgba(0,0,0,.972) 75%,#000 80%)!important;
-  mask-image:linear-gradient(to right,transparent 30%,rgba(0,0,0,.028) 35%,rgba(0,0,0,.104) 40%,rgba(0,0,0,.216) 45%,rgba(0,0,0,.352) 50%,rgba(0,0,0,.5) 55%,rgba(0,0,0,.648) 60%,rgba(0,0,0,.784) 65%,rgba(0,0,0,.896) 70%,rgba(0,0,0,.972) 75%,#000 80%)!important;
+  /* Smoothstep fade ends at the client's blue marker (58%); video stays opaque beyond it. */
+  -webkit-mask-image:linear-gradient(to right,transparent 30%,rgba(0,0,0,.028) 32.8%,rgba(0,0,0,.104) 35.6%,rgba(0,0,0,.216) 38.4%,rgba(0,0,0,.352) 41.2%,rgba(0,0,0,.5) 44%,rgba(0,0,0,.648) 46.8%,rgba(0,0,0,.784) 49.6%,rgba(0,0,0,.896) 52.4%,rgba(0,0,0,.972) 55.2%,#000 58%)!important;
+  mask-image:linear-gradient(to right,transparent 30%,rgba(0,0,0,.028) 32.8%,rgba(0,0,0,.104) 35.6%,rgba(0,0,0,.216) 38.4%,rgba(0,0,0,.352) 41.2%,rgba(0,0,0,.5) 44%,rgba(0,0,0,.648) 46.8%,rgba(0,0,0,.784) 49.6%,rgba(0,0,0,.896) 52.4%,rgba(0,0,0,.972) 55.2%,#000 58%)!important;
   clip-path:none!important;
 }
 @media(max-width:700px){

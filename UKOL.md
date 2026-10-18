@@ -1,3 +1,20 @@
+# UKOL: Kratší hero gradient podle modré značky
+
+Datum: 2026-10-18
+Zadani: Ukončit gradient přibližně u pravé hrany modrého označení, aby pravá část videa nebyla vybledlá.
+Doporuceny model: Terra - Cílená CSS změna.
+
+## Kroky
+
+- [x] Vyhodnotit značku: konec přibližně58% šířky hero.
+- [-] Zkrátit smoothstep přechod30–80% na30–58%, posun a mobil zachovat.
+- [ ] Nasadit dev na staging a ověřit skutečné CSS/screenshot.
+
+## Poznamky
+
+Uživatelský screenshot přímo obsahuje chybový přehrávač; tento obraz lze použít pro vyhodnocení přechodu, nikoli jako doklad funkčního videa. Saturaci ani zdroj videa neměnit.
+
+---
 # UKOL: Plynulý přechod hero videa
 
 Datum: 2026-10-18
