@@ -7,8 +7,8 @@ Doporuceny model: Terra - Cílená CSS změna.
 ## Kroky
 
 - [x] Vyhodnotit značku: konec přibližně58% šířky hero.
-- [-] Zkrátit smoothstep přechod30–80% na30–58%, posun a mobil zachovat.
-- [ ] Nasadit dev na staging a ověřit skutečné CSS/screenshot.
+- [x] Zkrátit smoothstep přechod30–80% na30–58%, posun a mobil zachovat.
+- [x] Nasadit dev na staging a ověřit skutečné CSS/screenshot.
 
 ## Poznamky
 
@@ -2117,3 +2117,7 @@ Nasazeno ba2d867, Actions39129260883 success. Chrome CDP bez lokálního CSS1920
 ## Výsledek plynulé masky2026-10-18
 
 3d1f037 nasazen na staging, Actions39130163101 success. Skutečné computed CSS bez injekce ověřeno1920/701/700/390: nové smoothstep mask stops na desktopu, mobil none, zachován posun, nulový horizontální overflow. Důkazy .codex-qa/hero-smooth-final.json a hero-smooth-final-{width}.png. Wiki aktualizována. Vizuální potvrzení živého záběru zůstává otevřené kvůli Vimeo blokaci; žádné nové vizuální PASS skóre. Produkce beze změny.
+
+## Výsledek kratšího gradientu2026-10-18
+
+a502a3f nasazen na staging, Actions39140469546 success. Skutečné CSS v Chrome1920/701/700/390: neprůhledný konec58%, mobil none, offset zachován, žádný overflow. .codex-qa/hero-short-final.json a hero-short-final-{width}.png. Desktop screenshot vizuálně potvrzuje kratší pozvolný přechod proti chybovému přehrávači stejně jako uživatelská reference. Přehrávání blokuje ověření Vimeo připojení, žádný claim o živém záběru. Wiki aktualizována, produkce nezměněna.
