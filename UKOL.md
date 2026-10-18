@@ -1,3 +1,21 @@
+# UKOL: Hero video podle výšky a pravého okraje
+
+Datum: 2026-10-18
+Zadani: Video vždy na výšku hero při skutečném poměru, zarovnat doprava, zdroje mobil<=700, tablet701–1050, desktop>=1051.
+Doporuceny model: Sol - Společná oprava JS metadat, source lifecycle a CSS.
+
+## Kroky
+
+- [x] Najít kolize cover výpočtu a mobilního centrování.
+- [-] Doplnit height-fit a pravý okraj, přepínání zdroje při změně breakpointu.
+- [ ] Regresní testy skutečných poměrů a breakpointů, staging screenshoty.
+- [ ] Dokumentace/wiki, commit a push dev. Master bez změny.
+
+## Poznamky
+
+Nové zadání nahrazuje předchozí offset24–48px přesným zarovnáním doprava. Gradient30–58% zachovat. Bez dostupných Vimeo metadat nelze tvrdit živou vizuální správnost; metadata fixture musí být výslovně označena.
+
+---
 # UKOL: Kratší hero gradient podle modré značky
 
 Datum: 2026-10-18
@@ -2121,3 +2139,7 @@ Nasazeno ba2d867, Actions39129260883 success. Chrome CDP bez lokálního CSS1920
 ## Výsledek kratšího gradientu2026-10-18
 
 a502a3f nasazen na staging, Actions39140469546 success. Skutečné CSS v Chrome1920/701/700/390: neprůhledný konec58%, mobil none, offset zachován, žádný overflow. .codex-qa/hero-short-final.json a hero-short-final-{width}.png. Desktop screenshot vizuálně potvrzuje kratší pozvolný přechod proti chybovému přehrávači stejně jako uživatelská reference. Přehrávání blokuje ověření Vimeo připojení, žádný claim o živém záběru. Wiki aktualizována, produkce nezměněna.
+
+JS nyní nastavuje šířku=heroHeight*realRatio a výšku=heroHeight, lifecycle vrací cleanup pro eventy/ResizeObserver a mediaquery sourcechange. CSS na konci Diagonal ruší všechny mobilní centrovací/posunové transformace a ukotví vpravo. Transparentní mezera vlevo při užším videu neukazuje starý poster ani černé pozadí; poster skryt jen po vložení přehrávače, chybový iframe není skrýván. Prošly Node testy metadat, poměrů, resize a breakpointů.
+
+ARCHITECTURE a QA-BACKLOG aktualizovány: starý covermax výpočet a jednorázový výběr zdroje už neplatí. PHP ResponsiveHeroVideo8/8; Node metadata/bezpečnost/cleanup a breakpointy prošly. Skutečný AssetMinifier výstup prošel node --check. Konfigurace tabletURL je historicky prázdná a sdílí desktop; samostatný tablet zdroj lze vyplnit v administraci, nesmí se vymyslet jiný klip.

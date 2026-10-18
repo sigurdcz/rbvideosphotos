@@ -411,8 +411,7 @@
     sync();
   }
 
-  // Vimeo contains its video inside the iframe. Match the real video ratio first,
-  // then cover the facade; a guessed 16:9 frame leaves bands for wider uploads.
+  // Fit the real Vimeo aspect ratio to hero height; horizontal gaps/cropping are allowed.
   function initHeroVideoCover(facade, iframe) {
     if (!facade.closest('.hp-hero') || iframe.src.indexOf('https://player.vimeo.com/') !== 0) return;
     var videoWidth = 0;
@@ -420,17 +419,16 @@
     var ratio = 16 / 9; // Explicit provisional size until Vimeo reports metadata.
     var timer;
     function resize() {
-      var width = facade.clientWidth;
       var height = facade.clientHeight;
-      facade.style.setProperty('--hero-video-cover-width', Math.max(width, height * ratio) + 'px');
-      facade.style.setProperty('--hero-video-cover-height', Math.max(height, width / ratio) + 'px');
+      facade.style.setProperty('--hero-video-cover-width', height * ratio + 'px');
+      facade.style.setProperty('--hero-video-cover-height', height + 'px');
     }
     function requestDimensions() {
       ['getVideoWidth', 'getVideoHeight'].forEach(function (method) {
         iframe.contentWindow.postMessage(JSON.stringify({ method: method }), 'https://player.vimeo.com');
       });
     }
-    window.addEventListener('message', function (event) {
+    function onMessage(event) {
       if (event.origin !== 'https://player.vimeo.com' || event.source !== iframe.contentWindow) return;
       var data = event.data;
       if (typeof data === 'string') {
@@ -448,22 +446,32 @@
         window.clearTimeout(timer);
         resize();
       }
-    });
+    }
+    window.addEventListener('message', onMessage);
     iframe.addEventListener('load', requestDimensions);
     window.addEventListener('resize', resize);
-    if ('ResizeObserver' in window) new window.ResizeObserver(resize).observe(facade);
+    var observer = 'ResizeObserver' in window ? new window.ResizeObserver(resize) : null;
+    if (observer) observer.observe(facade);
     resize();
     if (iframe.contentWindow) requestDimensions();
     timer = window.setTimeout(function () {
       if (videoWidth && videoHeight) return;
       facade.dataset.videoCoverError = 'metadata-unavailable';
-      console.warn('Hero video: Vimeo dimensions unavailable; provisional 16:9 cover remains active.');
+      console.warn('Hero video: Vimeo dimensions unavailable; provisional 16:9 height-fit remains active.');
     }, 15000);
+    return function () {
+      window.clearTimeout(timer);
+      window.removeEventListener('message', onMessage);
+      window.removeEventListener('resize', resize);
+      iframe.removeEventListener('load', requestDimensions);
+      if (observer) observer.disconnect();
+    };
   }
 
   function initHeroVideoFacades() {
     var facades = Array.prototype.slice.call(document.querySelectorAll('[data-hero-video-facade]'));
     if (!facades.length) return;
+    var coverCleanup = new WeakMap();
 
     function status(facade, message) {
       var node = facade.querySelector('.theme-hero-video__status');
@@ -478,9 +486,7 @@
     var HERO_VIDEO_MOBILE_MAX = 700;
     var HERO_VIDEO_TABLET_MAX = 1050;
 
-    // Picked once, when the player is inserted - re-picking on resize would mean a second
-    // multi-megabyte player, a flash and a restart of playback. A phone held sideways is a
-    // tablet here, exactly as the theme's CSS treats that width.
+    // Only change players when the selected source changes across a device breakpoint.
     function pickEmbedUrl(facade) {
       var desktop = facade.getAttribute('data-embed-url') || '';
       if (!window.matchMedia) return desktop;
@@ -499,22 +505,26 @@
     // consent - the client wants the background video playing immediately
     // and permanently for every visitor, gated or not.
     function play(facade) {
-      if (facade.dataset.videoLoaded === '1') return;
-
       var embedUrl = pickEmbedUrl(facade);
+      var previous = facade.querySelector('iframe');
+      if (previous && previous.getAttribute('src') === embedUrl) return;
       if (!/^https:\/\/(?:www\.youtube(?:-nocookie)?\.com\/embed\/|player\.vimeo\.com\/video\/)/i.test(embedUrl)) {
         status(facade, 'Video nelze načíst: neplatná adresa přehrávače.');
         return;
       }
 
+      if (coverCleanup.has(facade)) coverCleanup.get(facade)();
+      if (previous) previous.remove();
+      delete facade.dataset.videoCoverRatio;
+      delete facade.dataset.videoCoverError;
       var iframe = document.createElement('iframe');
       iframe.src = embedUrl;
       iframe.title = 'Úvodní video';
       iframe.allow = 'autoplay; fullscreen; picture-in-picture';
       iframe.loading = 'eager';
       iframe.tabIndex = -1;
-      initHeroVideoCover(facade, iframe);
       facade.appendChild(iframe);
+      coverCleanup.set(facade, initHeroVideoCover(facade, iframe) || function () {});
       facade.dataset.videoLoaded = '1';
       facade.classList.add('is-playing');
       facade.setAttribute('aria-hidden', 'true');
@@ -556,6 +566,14 @@
       var button = facade.querySelector('.theme-hero-video__play');
       if (button) button.addEventListener('click', function(){ play(facade); });
       scheduleAutoplay(facade);
+      if (window.matchMedia) {
+        [HERO_VIDEO_MOBILE_MAX, HERO_VIDEO_TABLET_MAX].forEach(function (max) {
+          var query = window.matchMedia('(max-width: ' + max + 'px)');
+          var change = function () { if (facade.dataset.videoLoaded === '1') play(facade); };
+          if (query.addEventListener) query.addEventListener('change', change);
+          else query.addListener(change);
+        });
+      }
     });
   }
 

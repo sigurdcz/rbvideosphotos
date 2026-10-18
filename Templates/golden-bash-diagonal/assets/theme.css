@@ -2223,18 +2223,6 @@ body.theme-golden-bash.theme-golden-bash-diagonal .hp-hero>.theme-hero-video .th
 }
 
 /* End Golden Bash Diagonal hero override. */
-/* Move only the media, keeping the original gradient panel and mobile crop fixed. */
-@media(min-width:701px){
-  body.theme-golden-bash.theme-golden-bash-diagonal[data-cms-page-key="homepage"] .hp-hero>.theme-hero-video{
-    --hero-video-horizontal-offset:clamp(24px,3vw,48px);
-  }
-  body.theme-golden-bash.theme-golden-bash-diagonal[data-cms-page-key="homepage"] .hp-hero>.theme-hero-video iframe{
-    transform:translate(var(--hero-video-horizontal-offset),-50%)!important;
-  }
-  body.theme-golden-bash.theme-golden-bash-diagonal[data-cms-page-key="homepage"] .hp-hero>.theme-hero-video .theme-hero-video__poster{
-    transform:translateX(var(--hero-video-horizontal-offset))!important;
-  }
-}
 
 /* Mobilni hero je zamerne full-bleed, takze se frame drzi na vysku, ale centrovany -
    zarovnani doprava z desktopu by na uzkem panelu utnulo subjekt. */
@@ -3148,3 +3136,24 @@ body.theme-golden-bash .gb-faq-listing .faq-q-wrap::-webkit-details-marker{displ
 body.theme-golden-bash .gb-faq-listing .faq-q{display:block!important}
 body.theme-golden-bash .gb-faq-listing .gb-faq-item__label{display:inline-block}
 body.theme-golden-bash .gb-faq-listing .faq-item[open] .faq-q::after{transform:rotate(45deg)}
+
+/* Homepage video contract: height-fit at every breakpoint, anchored to the right edge.
+   Keep this after legacy mobile centering rules. Vimeo dimensions come from metadata. */
+body.theme-golden-bash.theme-golden-bash-diagonal[data-cms-page-key="homepage"] .hp-hero>.theme-hero-video{
+  background:transparent!important;
+}
+body.theme-golden-bash.theme-golden-bash-diagonal[data-cms-page-key="homepage"] .hp-hero>.theme-hero-video.is-playing .theme-hero-video__poster{
+  visibility:hidden;
+}
+body.theme-golden-bash.theme-golden-bash-diagonal[data-cms-page-key="homepage"] .hp-hero>.theme-hero-video iframe{
+  top:0!important;right:0!important;bottom:auto!important;left:auto!important;
+  width:var(--hero-video-cover-width,100%)!important;height:100%!important;
+  min-width:0!important;min-height:0!important;max-width:none!important;
+  aspect-ratio:auto!important;transform:none!important;
+}
+body.theme-golden-bash.theme-golden-bash-diagonal[data-cms-page-key="homepage"] .hp-hero>.theme-hero-video .theme-hero-video__poster{
+  object-position:right center!important;transform:none!important;
+}
+body.theme-golden-bash.theme-golden-bash-diagonal[data-cms-page-key="homepage"] .hp-hero>video.theme-hero-video{
+  left:auto!important;right:0!important;width:auto!important;height:100%!important;max-width:none!important;object-position:right center!important;
+}

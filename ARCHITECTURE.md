@@ -99,7 +99,8 @@ admin editaci, viz `074`-`077`) + stejny zaznam v `database/seeds/seed.php`; u o
   `hero_video[_tablet|_mobile]`). Desktop je povinny a je fallbackem; varianta se do HTML zapise,
   jen kdyz je stejneho typu jako desktopova (embed k embedu, soubor k souboru). Vyber dela az
   prohlizec - staticky publish je jedna HTML pro vsechny, takze server o zarizeni rozhodovat nesmi.
-  Varianta se vybira jednou pri vlozeni prehravace, pri zmene sirky okna se uz neprepina.
+  Varianta se vybere pri vlozeni prehravace a znovu pri prekroceni700/1050px.
+  Stejna URL prehravac nerestartuje; nova URL odstrani stary iframe i metadata listenery/observer.
   Produkcni konfigurace pouziva tablet = desktop: tabletova varianta je prazdna (NULL), do HTML se
   `data-embed-url-tablet` nezapise a `pickEmbedUrl()` vrati desktopovou URL; vlastni video ma jen mobil.
   Migrace 100 tablet vycistila i na existujicich DB, seedy ho nenastavuji - nevyplnovat ho zpet stejnou URL.
@@ -716,7 +717,7 @@ Aktuální demo/base seedy vkládají page sharing image ID jako NULL. Schema.or
 
 ## Hero cover a nacitani brand fontu
 
-Golden Bash Diagonal pocita cover Vimeo iframe ze skutecnych metadat getVideoWidth/getVideoHeight. frontend-runtime.initHeroVideoCover prijima zpravy jen z https://player.vimeo.com a konkretniho contentWindow; ResizeObserver prepocita CSS promenne --hero-video-cover-width/height. Provizorni pomer16:9 je vyznamove oznacen, pri nedostupnych metadatech po15s vznikne console warning a data-video-cover-error. Neni to potvrzeni prehravani. Poster pokryva panel pomoci object-fit:cover; tema nesmi maskovat pruhy skrytim vadneho videa.
+Golden Bash Diagonal pouziva height-fit Vimeo iframe ze skutecnych metadat getVideoWidth/getVideoHeight: vyska=heroHeight, sirka=heroHeight*(videoWidth/videoHeight), pravý okraj0 bez transformace. Sirsi video presahuje vlevo, uzsi muze nechat vlevo prazdne misto. frontend-runtime.initHeroVideoCover prijima zpravy jen z https://player.vimeo.com a konkretniho contentWindow; ResizeObserver prepocita CSS promenne --hero-video-cover-width/height. Provizorni pomer16:9 je vyznamove oznacen, pri nedostupnych metadatech po15s vznikne console warning a data-video-cover-error. Neni to potvrzeni prehravani. Poster se po vlozeni iframe skryje, aby neprosvital vedle uzsiho videa; vadny iframe zustava viditelny. Mobil<=700, tablet701–1050, desktop>=1051. Gradient30–58% zustava, starsi horizontalni offset je nahrazen presnym pravym zarovnanim.
 
 Font CSS pouziva swap a same-origin preloady. Kurziva Cormorant Garamond v4.001 je kompletni Regular400, nikoli stary Light outline deklarovany jako400. Novy immutable filename a licence/provenance jsou v public/assets/fonts/README.md; reprodukce scripts/build_cormorant_italic.py vyzaduje presny upstream SHA256. Runtime nema Python/FontTools zavislost. Pozdni swap muze zpusobit layout shift, ktery je treba overovat pri pomale siti.
 
