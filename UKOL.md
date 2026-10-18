@@ -7,9 +7,9 @@ Doporuceny model: Sol - Společná oprava JS metadat, source lifecycle a CSS.
 ## Kroky
 
 - [x] Najít kolize cover výpočtu a mobilního centrování.
-- [-] Doplnit height-fit a pravý okraj, přepínání zdroje při změně breakpointu.
-- [ ] Regresní testy skutečných poměrů a breakpointů, staging screenshoty.
-- [ ] Dokumentace/wiki, commit a push dev. Master bez změny.
+- [x] Doplnit height-fit a pravý okraj, přepínání zdroje při změně breakpointu.
+- [x] Regresní testy poměrů a breakpointů, staging screenshoty s explicitní metadata fixture.
+- [x] Dokumentace/wiki, commit a push dev. Master bez změny.
 
 ## Poznamky
 
@@ -2143,3 +2143,7 @@ a502a3f nasazen na staging, Actions39140469546 success. Skutečné CSS v Chrome1
 JS nyní nastavuje šířku=heroHeight*realRatio a výšku=heroHeight, lifecycle vrací cleanup pro eventy/ResizeObserver a mediaquery sourcechange. CSS na konci Diagonal ruší všechny mobilní centrovací/posunové transformace a ukotví vpravo. Transparentní mezera vlevo při užším videu neukazuje starý poster ani černé pozadí; poster skryt jen po vložení přehrávače, chybový iframe není skrýván. Prošly Node testy metadat, poměrů, resize a breakpointů.
 
 ARCHITECTURE a QA-BACKLOG aktualizovány: starý covermax výpočet a jednorázový výběr zdroje už neplatí. PHP ResponsiveHeroVideo8/8; Node metadata/bezpečnost/cleanup a breakpointy prošly. Skutečný AssetMinifier výstup prošel node --check. Konfigurace tabletURL je historicky prázdná a sdílí desktop; samostatný tablet zdroj lze vyplnit v administraci, nesmí se vymyslet jiný klip.
+
+## Výsledek height-fit2026-10-18
+
+8d59d30 na dev/staging, Actions39141510796 success. PHP8 responsivních testů, Node2 testy a minifikovaný bundle parse prošly. Živý Chrome nad nasazeným CSS/JS:390/700/701/1050/1051/1920, výška600px mobil a620px ostatní přesně odpovídá panelu, rightDelta0, poměry fixture1:1/4:3/426:206 zachovány, skutečná nakonfigurovaná sourceURL podle breakpointu a žádný overflow. Testovací zprávy metadat jsou výslovně označené; Vimeo skutečné přehrávání nadále neověřeno. .codex-qa/hero-height-fixture-results.json a hero-height-fixture-{width}.png. Gradient30–58% zachován, předchozí offset nahrazen right0. Tablet bez vlastníURL vědomě sdílí desktop, uživatel informován. ARCHITECTURE, QA-BACKLOG a wiki aktualizovány. Master beze změny.
