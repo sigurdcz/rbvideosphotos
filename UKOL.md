@@ -9,7 +9,7 @@ Doporuceny model: Terra - Rozšíření nastavení, SMTP a archivu.
 - [x] Zmapovat nastavení, SMTP, databázový archiv a práva.
 - [x] Nová migrace107, admin pole s validací a SMTP CC včetně archivu.
 - [x] Ověřit prázdnou/platnou/neplatnou kopii, oprávnění a obnovu hesla bez CC.
-- [ ] Dokumentace/wiki, commit a staging ověření. Master bez změny.
+- [x] Dokumentace/wiki, commit a staging ověření. Master bez změny.
 
 ## Poznamky
 
@@ -2169,3 +2169,7 @@ ARCHITECTURE a QA-BACKLOG aktualizovány: starý covermax výpočet a jednorázo
 Implementováno107: contact_info.form_email_cc a mail_archive.cc_recipient. CC validuje admin i transport; nepovolená změna odmítnuta repository, vynechané pole zachová hodnotu. MailArchive ukládá tělo aCC předSMTP. Duplicita s hlavním příjemcem potlačena, prázdná hodnota vypíná CC, reset sCC je výslovně odmítnut. Přehled zpráv kopii zobrazuje. SMTP testy aPHP lint prošly.
 
 Integrační výsledky: SMTP3 testy, mail archive27 assertions, recipient policy13 assertions, password reset19 assertions plus negativní scénáře, upgrade109 migrací a16 contenthandlerů prošel. Testy používají náhodné lokální DB, ne produkční/staging data. DokumentaceDEPLOYMENT aARCHITECTURE aktualizována. K provozu nutná migrace107, žádné nové.env ani GitHubsecrets.
+
+## Výsledek kopie kontaktu2026-10-19
+
+6246ef4 nasazen na dev/staging, Actions39261191994 success. Staging migrate-util HTTP200,107 přítomna, Údržba dokončena a bez SQLSTATE. Settings view test ověřil prázdné/vyplněné/escapované CC, nepovinnost a odděleného hlavního příjemce. SMTP3 testy včetně skutečného RCPT proCC a očištění po další zprávě; mail archive28 assertions včetně zálohy po SMTP odmítnutí; policy13; reset19; upgrade109/16 prošly. Skutečná pošta se při testech neodesílala. Pole nepovinné, resetbezCC, žádné nové.env/secrets. DEPLOYMENT, ARCHITECTURE a wiki aktualizovány. Produkce beze změny.

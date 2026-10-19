@@ -39,6 +39,9 @@ try {
  });
  $withCopy->send('contact', 'team@example.test', 'Copy', $body, '', 'copy@example.test');
  check($copyCalls === ['copy@example.test'], 'Copy forwarded to sender');
+ $copyFailure = (new MailArchiveService($db, fn() => false))->send('contact', 'team@example.test', 'Failed copy', $body, '', 'copy@example.test');
+ $copyRow = $db->query('SELECT body,cc_recipient FROM mail_archive ORDER BY id DESC LIMIT 1')->fetch();
+ check($copyFailure['status'] === 'failed' && $copyRow['body'] === $body && $copyRow['cc_recipient'] === 'copy@example.test', 'SMTP rejection retains body and copy recipient');
  $withCopy->send('contact', 'team@example.test', 'No copy', $body);
  check($copyCalls === ['copy@example.test', ''], 'Empty copy sends only primary');
  $withCopy->send('contact', 'team@example.test', 'Duplicate', $body, '', 'TEAM@example.test');

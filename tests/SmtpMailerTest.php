@@ -52,6 +52,7 @@ function register_smtp_mailer_tests(callable $test, callable $assert): void
             $assert($phpMailer->getToAddresses() === [['another@example.test','']], 'Recipient must not leak between messages');
             $assert($service->send('primary@example.test', 'Copy', 'Body', 'copy@example.test'));
             $assert($phpMailer->getCcAddresses() === [['copy@example.test','']], 'Configured CC must reach the SMTP envelope');
+            $assert($smtp->events['recipient'] === 'copy@example.test', 'SMTP RCPT must include the copy recipient');
             $assert(str_contains($smtp->events['data'], 'Cc: copy@example.test'), 'CC must appear in message headers');
             $assert($service->send('primary@example.test', 'No copy', 'Body'));
             $assert($phpMailer->getCcAddresses() === [], 'Empty CC must clear previous recipients');
