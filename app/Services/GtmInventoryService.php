@@ -31,7 +31,7 @@ class GtmInventoryService
 
         if ($accountId === '') {
             $accounts = $this->client->listAccounts($accessToken);
-            return [
+            $inventory = [
                 'connection' => $connection,
                 'accounts' => $accounts,
                 'containers' => [],
@@ -42,6 +42,11 @@ class GtmInventoryService
                 'versions' => [],
                 'workspace_status' => [],
             ];
+
+            // Bez snapshotu by vyber accountu/containeru/workspace nemel z ceho vybirat.
+            $this->connections->storeInventorySnapshot($siteId, $this->encodeSnapshot($inventory));
+
+            return $inventory;
         }
 
         $accountPath = 'accounts/' . $accountId;
