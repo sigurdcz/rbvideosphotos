@@ -67,6 +67,19 @@ Obnova hesla zapisuje pouze metadata pokusu do stejné tabulky, **nikdy resetova
 
 ## SMTP pro Active24 / Websupport
 
+### Nepovinná kopie kontaktních zpráv
+
+Po nasazení spusťte migraci **107_add_contact_email_copy.sql**. V **Nastavení →
+Kontaktní komunikace** lze uložit jednu adresu do pole **Kopie kontaktních zpráv**.
+Prázdné pole kopii vypne; hlavní příjemce zůstává zachovaný. Používá se běžná CC
+kopie (adresu vidí hlavní příjemce), stejná adresa jako hlavní příjemce se neduplikuje.
+Kopie se neposílá u obnovy hesla. Nastavení smí měnit jen administrátor.
+
+Adresu eviduje databázový archiv v `cc_recipient` ještě před SMTP pokusem a přehled
+**E-maily a zprávy** ji zobrazuje. Chyba SMTP zachová tělo i příjemce v databázi.
+Neplatná kopie se neignoruje: nastavení ji odmítne, transport zprávu označí jako
+selhanou a zachová zálohu. `.env` ani GitHub Secrets pro tuto funkci nepřibývají.
+
 Na serveru do stávajícího `.env` doplňte:
 
 ```dotenv

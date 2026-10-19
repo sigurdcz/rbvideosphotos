@@ -18,6 +18,7 @@ ob_start(); ?>
 <summary>#<?= $h($row['id']) ?> · <?= $h($row['created_at']) ?> UTC · <?= $h($row['subject']) ?> · <?= $h($labels[$row['status']] ?? $row['status']) ?></summary>
 <p>Typ: <?= $h(['contact' => 'Kontaktní formulář', 'password_reset' => 'Obnova hesla'][$row['kind']] ?? $row['kind']) ?> · Příjemce: <?= $h($row['recipient']) ?> · Chyba: <?= $h($row['error_code'] ?? '-') ?></p>
 <p>Poslední pokus: <?= $h($row['attempted_at'] ?? 'Nepotvrzen') ?> UTC</p>
+<p>Kopie (CC): <?= $h($row['cc_recipient'] ?? 'Bez kopie') ?></p>
 <pre style="white-space:pre-wrap;overflow-wrap:anywhere"><?= $h($row['body'] ?? 'Citlivý obsah obnovy hesla se nearchivuje.') ?></pre>
 </details>
 <?php endforeach; ?>

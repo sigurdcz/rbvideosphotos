@@ -13,6 +13,8 @@ function check(bool $ok, string $message): void { global $checks; if (!$ok) { th
 try {
  $db->exec('USE `' . $name . '`');
  $db->exec(file_get_contents(dirname(__DIR__) . '/database/migrations/104_add_mail_archive.sql'));
+ $db->exec('CREATE TABLE contact_info (site_id INT PRIMARY KEY)');
+ $db->exec(file_get_contents(dirname(__DIR__) . '/database/migrations/107_add_contact_email_copy.sql'));
  $_ENV['APP_URL'] = 'https://example.test'; $_ENV['MAIL_FROM'] = 'team@example.test';
  $calls = 0;
  $body = "Jméno: Test\nKontakt: test@example.test\nZpráva: <b>client & content</b>";
@@ -29,6 +31,23 @@ try {
  $ok = new MailArchiveService($db, fn() => true);
  $result = $ok->send('contact', 'team@example.test', 'Poptávka', $body);
  check($result['status'] === 'accepted', 'Acceptance is not delivery');
+ $copyCalls = [];
+ $withCopy = new MailArchiveService($db, function($to, $subject, $text, $headers, $cc) use ($db, &$copyCalls): bool {
+   $copyCalls[] = $cc;
+   check($db->query('SELECT cc_recipient FROM mail_archive ORDER BY id DESC LIMIT 1')->fetchColumn() === ($cc !== '' ? $cc : null), 'Copy archived before transport');
+   return true;
+ });
+ $withCopy->send('contact', 'team@example.test', 'Copy', $body, '', 'copy@example.test');
+ check($copyCalls === ['copy@example.test'], 'Copy forwarded to sender');
+ $withCopy->send('contact', 'team@example.test', 'No copy', $body);
+ check($copyCalls === ['copy@example.test', ''], 'Empty copy sends only primary');
+ $withCopy->send('contact', 'team@example.test', 'Duplicate', $body, '', 'TEAM@example.test');
+ check(end($copyCalls) === '', 'Duplicate primary copy suppressed');
+ $result = $withCopy->send('contact', 'team@example.test', 'Invalid', $body, '', 'bad');
+ check($result['status'] === 'failed' && count($copyCalls) === 3, 'Invalid copy archived and never sent');
+ check($db->query('SELECT body FROM mail_archive ORDER BY id DESC LIMIT 1')->fetchColumn() === $body, 'Invalid copy keeps backup');
+ try { $withCopy->send('password_reset', 'team@example.test', 'Reset', 'secret', '', 'copy@example.test'); throw new LogicException('Expected reset copy rejection'); }
+ catch (RuntimeException $e) { check(count($copyCalls) === 3, 'Reset copy explicitly forbidden'); }
  $exception = new MailArchiveService($db, fn() => throw new RuntimeException('SECRET transport credentials'));
  $exception->send('contact', 'team@example.test', 'Poptávka', $body);
  check($db->query('SELECT error_code FROM mail_archive ORDER BY id DESC LIMIT 1')->fetchColumn() === 'transport_exception', 'Safe exception code');
@@ -36,6 +55,7 @@ try {
  $ok->send('password_reset', 'team@example.test', 'Obnova hesla - CMS', $secret);
  $row = $db->query('SELECT * FROM mail_archive ORDER BY id DESC LIMIT 1')->fetch();
  check($row['body'] === null && !str_contains(json_encode($row), $secret), 'Reset secret never archived');
+ check($row['cc_recipient'] === null, 'Reset has no copy recipient');
  $service->send('contact', 'invalid', 'Poptávka', $body);
  check($calls === 1, 'Invalid recipient never reaches sender');
  check($db->query('SELECT error_code FROM mail_archive ORDER BY id DESC LIMIT 1')->fetchColumn() === 'invalid_recipient', 'Invalid recipient recorded');

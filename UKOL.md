@@ -1,3 +1,21 @@
+# UKOL: Nepovinná kopie kontaktních e-mailů
+
+Datum: 2026-10-19
+Zadani: Druhé e-mailové pole v Nastavení pro nepovinnou kopii kontaktních zpráv; prázdné pole nic nepřidá.
+Doporuceny model: Terra - Rozšíření nastavení, SMTP a archivu.
+
+## Kroky
+
+- [x] Zmapovat nastavení, SMTP, databázový archiv a práva.
+- [x] Nová migrace107, admin pole s validací a SMTP CC včetně archivu.
+- [x] Ověřit prázdnou/platnou/neplatnou kopii, oprávnění a obnovu hesla bez CC.
+- [ ] Dokumentace/wiki, commit a staging ověření. Master bez změny.
+
+## Poznamky
+
+Kopie pouze kontaktních zpráv. Reset hesla se nekopíruje. Archiv se ukládá před SMTP a eviduje skutečnou CC adresu. Změna CC jen admin, jiné editory ji nesmí zrušit. Historické migrace jsou neměnné.
+
+---
 # UKOL: Hero video podle výšky a pravého okraje
 
 Datum: 2026-10-18
@@ -2147,3 +2165,7 @@ ARCHITECTURE a QA-BACKLOG aktualizovány: starý covermax výpočet a jednorázo
 ## Výsledek height-fit2026-10-18
 
 8d59d30 na dev/staging, Actions39141510796 success. PHP8 responsivních testů, Node2 testy a minifikovaný bundle parse prošly. Živý Chrome nad nasazeným CSS/JS:390/700/701/1050/1051/1920, výška600px mobil a620px ostatní přesně odpovídá panelu, rightDelta0, poměry fixture1:1/4:3/426:206 zachovány, skutečná nakonfigurovaná sourceURL podle breakpointu a žádný overflow. Testovací zprávy metadat jsou výslovně označené; Vimeo skutečné přehrávání nadále neověřeno. .codex-qa/hero-height-fixture-results.json a hero-height-fixture-{width}.png. Gradient30–58% zachován, předchozí offset nahrazen right0. Tablet bez vlastníURL vědomě sdílí desktop, uživatel informován. ARCHITECTURE, QA-BACKLOG a wiki aktualizovány. Master beze změny.
+
+Implementováno107: contact_info.form_email_cc a mail_archive.cc_recipient. CC validuje admin i transport; nepovolená změna odmítnuta repository, vynechané pole zachová hodnotu. MailArchive ukládá tělo aCC předSMTP. Duplicita s hlavním příjemcem potlačena, prázdná hodnota vypíná CC, reset sCC je výslovně odmítnut. Přehled zpráv kopii zobrazuje. SMTP testy aPHP lint prošly.
+
+Integrační výsledky: SMTP3 testy, mail archive27 assertions, recipient policy13 assertions, password reset19 assertions plus negativní scénáře, upgrade109 migrací a16 contenthandlerů prošel. Testy používají náhodné lokální DB, ne produkční/staging data. DokumentaceDEPLOYMENT aARCHITECTURE aktualizována. K provozu nutná migrace107, žádné nové.env ani GitHubsecrets.

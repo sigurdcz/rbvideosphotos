@@ -733,3 +733,14 @@ ukládání, CSRF, média, pořadí a publikování zůstávají v PortfolioCont
 Panel je mimo formulář stránky a sám neprovádí zápisy. Mazání je dostupné
 přes odkaz Kompletní správa galerií. Po uložení galerie obnovte přehled stránky.
 Ověření: `php tests/PagePortfolioGalleryTest.php`. Nová migrace není potřeba.
+# Nepovinná kopie kontaktních zpráv
+
+Migrace107 přidává nullable `contact_info.form_email_cc` a `mail_archive.cc_recipient`.
+SettingsController validuje jednu nepovinnou adresu před zápisy. ContactRepository
+chrání hlavního příjemce i CC proti změnám mimo admin cestu a zachovává vynechané
+pole při jiných úpravách kontaktu. Prázdná hodnota se uloží jako NULL.
+Kontaktní POST načte uložené CC a předá je šestým argumentem MailArchiveService::send
+(pátý zůstává kompatibilní headers). Archiv uloží CC a tělo před odesláním.
+SmtpMailer přidává CC přes PHPMailer::addCC, každou zprávu začíná clearAllRecipients.
+CC shodné s hlavním příjemcem se potlačí. Password reset kopii nepoužívá a archivní
+služba explicitní CC u resetu odmítá. SMTP přijetí stále neznamená prokázané doručení.

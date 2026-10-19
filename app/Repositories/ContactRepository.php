@@ -19,7 +19,7 @@ class ContactRepository
         'social_3_type', 'social_3_url',
         'social_4_type', 'social_4_url',
         'social_5_type', 'social_5_url',
-        'form_email',
+        'form_email', 'form_email_cc',
     ];
 
     public function __construct()
@@ -37,12 +37,18 @@ class ContactRepository
     public function upsert(int $siteId, array $d, bool $allowRecoveryRecipientChange = false): void
     {
         $existing = $this->findBySite($siteId);
-        if (!$allowRecoveryRecipientChange && array_key_exists('form_email', $d)
-            && trim((string) $d['form_email']) !== trim((string) ($existing['form_email'] ?? ''))) {
-            throw new \RuntimeException('Adresu pro obnovu přístupu smí měnit pouze administrátor.');
+        foreach (['form_email', 'form_email_cc'] as $field) {
+            if (!$allowRecoveryRecipientChange && array_key_exists($field, $d)
+                && trim((string)$d[$field]) !== trim((string)($existing[$field] ?? ''))) {
+                throw new \RuntimeException('Příjemce a kopii kontaktních zpráv smí měnit pouze administrátor.');
+            }
+            if (!array_key_exists($field, $d)) { $d[$field] = $existing[$field] ?? null; }
         }
-        $fields = $allowRecoveryRecipientChange ? self::FIELDS : array_values(array_diff(self::FIELDS, ['form_email']));
-        if (!array_key_exists('form_email', $d)) { $d['form_email'] = $existing['form_email'] ?? null; }
+        $copy = trim((string)$d['form_email_cc']);
+        if ($copy !== '' && (strlen($copy) > 254 || !filter_var($copy, FILTER_VALIDATE_EMAIL) || preg_match('/[\r\n]/', $copy))) {
+            throw new \InvalidArgumentException('E-mail pro kopii není platná adresa.');
+        }
+        $fields = $allowRecoveryRecipientChange ? self::FIELDS : array_values(array_diff(self::FIELDS, ['form_email', 'form_email_cc']));
         $vals = [];
         foreach ($fields as $f) {
             $v = trim((string)($d[$f] ?? ''));
