@@ -32,3 +32,9 @@ Odložená práce. Před zahájením vybereme prioritu; rozpracovaný úkol se v
 - Ověřit stav otevřeného menu, vazbu na `aria-expanded`, animační CSS a pravidla pro hover/focus v aktivní šabloně i generovaných assetech.
 - Hotovo: otevření plynule změní burger na křížek, zavření vrátí burger; hover nemá rušivé tmavé pozadí. Ověřit myš, dotyk i klávesnici a zachovat viditelný focus pro ovládání klávesnicí.
 - Implementováno pro oba Golden Bash motivy: animace platí do 1050 px, transparentní hover/active, přístupný focus a omezení animace při reduced motion. Chrome ověřil klik/hover, otevřený křížek, zavření přes Escape a vrácení focusu. Finální ověření dotyku a stagingu zůstává otevřené.
+
+## 5. Zásady o vlastním měření návštěvnosti — P2, čeká text
+
+- Doplnit zásady o vlastní měření návštěvnosti (cookieless hash + cookie `cms_vid` po souhlasu) do právního textu „Cookies a souhlasy“ na `/podminky-uziti`. Text vede uživatel; změna obsahu jde přes novou migraci.
+- Popsat: bez souhlasu se ukládá jen serverový záznam (cesta, doména odkazující stránky, UTM, typ zařízení, denně rotující anonymní otisk z IP a prohlížeče; IP adresa se neukládá); po souhlasu s analytickými cookies cookie `cms_vid` (náhodný identifikátor, platnost cca 13 měsíců); retence 14 měsíců; správce dat; měření lze vypnout v Nastavení.
+- Hotovo bude, když `/podminky-uziti` na stagingu obsahuje uvedené body včetně názvu cookie `cms_vid`, její doby platnosti a retence, text odpovídá chování `public/assets/visit-analytics.js` a uživatel text schválí.

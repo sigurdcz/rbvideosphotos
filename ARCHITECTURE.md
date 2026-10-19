@@ -146,9 +146,10 @@ request -> admin/index.php -> Core\Router -> Controller -> Repository/Service ->
 
 ```text
 1. /.well-known/security.txt a /security.txt -> SecurityTxtHttpResponder
-2. /api/v1/*            -> ApiController::dispatch()
-3. /assets/*            -> readfile s realpath ochranou
-4. /storage/media/*     -> readfile s realpath ochranou
+2. /assets/*, /media/*  -> tryServePublicAssetWithoutSession(), readfile s realpath ochranou
+3. POST /api/visit      -> tryRecordVisitBeacon(), vlastni mereni navstevnosti (pred Auth::start)
+   -- Auth::start() --
+4. /api/v1/*            -> ApiController::dispatch()
 5. legacy /blog/* nebo /nase-prace/* -> 301 redirect na prime slugy
 6. /sluzby              -> tryServeServicesPage() z `service_items`
 7. /nase-prace          -> tryServePortfolioPage() listing
@@ -164,6 +165,7 @@ request -> admin/index.php -> Core\Router -> Controller -> Repository/Service ->
 ```
 
 Security endpointy jsou zamerne pred `Auth::start()`: verejny strojovy soubor nesmi zakladat PHP session ani posilat session cookie.
+Totez plati pro `POST /api/visit`: beacon nesmi zakladat session a lezi mimo `/api/v1/*`, takze nevyzaduje API klic.
 
 ## Obsahovy model
 
@@ -406,6 +408,19 @@ Inline editor umi i procedualni klice jako `faq:ID:question`, `blog:ID:title`, `
 
 Zapnuti/vypnuti jednotlivych eventu se ridi `sites.tracking_events_json`.
 
+### Vlastni mereni navstevnosti (zaloha k GA4)
+
+Nezavisle na GA4/GTM a `tracking.js`; jejich chovani nemeni (ani v rezimu `direct-ga`).
+
+- `SeoRenderer::renderConsentRuntime()` pripoji za consent runtime `<script ... defer data-cms-visit-analytics-js>` s hashovanym `public/assets/visit-analytics.js`, pokud `sites.visit_analytics_enabled` = 1 (vychozi; prepinac v Nastaveni, karta Cookies, consent a analytics).
+- Skript posle pri nacteni stranky jeden beacon (`navigator.sendBeacon`, fallback `fetch` keepalive) s `{p, r, s, m, c, w, v, a}`. Preskoci `navigator.webdriver`, prihlaseneho editora (`#cms-adminbar`) a bfcache obnovu; prerender pocita az po zobrazeni.
+- Bez vyslovneho souhlasu nic neuklada v prohlizeci (zadna cookie ani web storage) a pripadnou starou `cms_vid` smaze. Cookie `cms_vid` (32 hex, `Max-Age=34128000`, `SameSite=Lax`, `Secure` na https) vznika jen kdyz `cmsCookieConsent.enabled && canLoadAnalytics()` - pri vypnute liste `canLoadAnalytics()` vraci true bez volby uzivatele, proto je nutne i `enabled`. Udalost `cms-cookie-consent:updated` cookie nastavi/smaze bez dalsiho beaconu.
+- `tryRecordVisitBeacon()` v `public/index.php`: jen POST (jinak 405), same-origin (Origin/Referer host = HTTP_HOST, `Sec-Fetch-Site` nesmi byt cross-site), telo max 4 KB JSON, `RequestThrottle` 60/min na IP (429). Odpoved je vzdy bez tela, `204`, `Cache-Control: no-store`; neplatny beacon se tise zahodi.
+- Logika (validace, hash, bot/zarizeni, sanitizace) je v `App\Services\VisitAnalyticsService`, SQL v `App\Repositories\VisitAnalyticsRepository`.
+- `visitor_hash` = prvnich 32 hex z `HMAC-SHA256(IP|UA|den, VISIT_ANALYTICS_SALT || API_KEY)`. Den je soucasti vstupu, proto se otisk denne meni a navstevy nejdou spojit mezi dny. IP adresa se nikam neuklada. Boti (UA vzor nebo prazdny UA) se ukladaji s `is_bot=1` a v prehledu se pocitaji zvlast.
+- Retence 14 mesicu: zhruba 1 % beaconu smaze starsi radky, rucne/cron `php bin/purge-visits.php`.
+- Prehled `/admin/analytics` (jen role admin): navstevy, unikatni (soucet dennich otisku), unikatni se souhlasem (`visitor_id`), podil se souhlasem, denni rada, top stranky, referrery, utm_source a zarizeni; obdobi `?days=7|30|90|365`.
+
 ### GTM hranice
 
 `/admin/gtm` slouzi ke sprave GTM entit, inventare, plan/apply workflow a verzovani kontejneru. Neresi samotne emitovani runtime eventu na webu. Operacni workflow a env setup jsou samostatne v `GTM_ADMIN.md`.
@@ -510,6 +525,7 @@ JSON escape sekvence.
 | `redirects` | URL presmerovani |
 | `publish_history` | historie publishu |
 | `security_txt_configs`, `security_txt_contacts` | RFC 9116 konfigurace a serazene kontaktni URI |
+| `site_visits` | vlastni mereni navstevnosti (migrace 109), bez IP, bez FK |
 
 Klicove skupiny sloupcu v `sites`:
 

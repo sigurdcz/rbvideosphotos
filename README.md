@@ -119,6 +119,9 @@ MIGRATE_TOKEN=
 # Vygeneruj: php -r "echo bin2hex(random_bytes(32));"
 API_KEY=
 
+# Volitelne; tajny klic pro anonymni otisk navstevnika (jinak se pouzije API_KEY)
+VISIT_ANALYTICS_SALT=
+
 DB_DRIVER=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
@@ -135,6 +138,7 @@ Nejdulesitejsi promenne:
 | `APP_DEBUG` | `true` v lokalu, `false` na produkci |
 | `MIGRATE_TOKEN` | Token pro `migrate-util.php` |
 | `API_KEY` | Klic pro `/api/v1/*` endpointy |
+| `VISIT_ANALYTICS_SALT` | Volitelny HMAC klic pro denni anonymni otisk vlastniho mereni navstevnosti (`/api/visit`); prazdny = pouzije se `API_KEY`. Zmena klice jen prerusi navaznost otisku v aktualnim dni. |
 | `GTM_CLIENT_ID`, `GTM_CLIENT_SECRET`, `GTM_ENCRYPTION_KEY` | OAuth a sifrovani GTM adminu |
 | `GTM_REDIRECT_URI`, `GTM_AUTH_URI`, `GTM_TOKEN_URI`, `GTM_API_BASE_URI` | Volitelne GTM/OAuth override |
 | `FTP_HOST`, `FTP_USER`, `FTP_PASS` | Nasazeni pres FTP/FTPS |
