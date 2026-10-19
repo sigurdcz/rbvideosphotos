@@ -10,7 +10,7 @@ Doporuceny model: Terra - Ohraničené rozšíření administrace, validace, dat
 - [x] Přidat novou append-only migraci bez změny historické migrace107.
 - [x] Upravit administraci, repository, archiv a SMTP pro více CC adres.
 - [x] Doplnit testy oddělovačů, duplicit, neplatných adres, prázdné hodnoty a zálohy.
-- [-] Aktualizovat dokumentaci, commitnout a ověřit staging. Master bez nového souhlasu neměnit.
+- [x] Aktualizovat dokumentaci, commitnout a ověřit staging. Master bez nového souhlasu neměnit.
 
 ## Poznamky
 
@@ -23,6 +23,10 @@ Testovací databáze používají migraci108 i pro archiv, repository a reset he
 První běh repository integračního testu odhalil chybnou fixture: očekávala potlačení staré hlavní adresy po její dřívější změně. Fixture nyní používá skutečně aktuálního hlavního příjemce; produkční kód se kvůli tomuto selhání neměnil.
 
 Ověření: parser5 kontrol, SMTP mock3 scénáře, view3 varianty, archiv28 kontrol, oprávnění13 kontrol, reset19 kontrol a kompletní pořadí110 migrací. Žádný test neposílá skutečný e-mail.
+
+## Vysledek
+
+Commit `38bcd81` byl úspěšně nasazen workflow39272912777 na staging. Stagingový migrátor aplikoval migraci108 a potvrdil úspěšnou databázovou údržbu bez SQL chyby. Aktualizovány byly `DEPLOYMENT.md` a `ARCHITECTURE.md`; produkční master zůstává beze změny.
 
 ---
 # UKOL: Obnova kontaktních formulářů po ruční úpravě serveru
