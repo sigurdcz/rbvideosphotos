@@ -55,7 +55,11 @@ class GtmController extends Controller
             return;
         }
         $connection = $this->connections->loadForSite((int) $site['id']);
-        $inventory = $this->safeInventory((int) $site['id']);
+        // Po odpojeni zustava radek se status=disconnected a prazdnymi tokeny; pro UI je to stav bez pripojeni.
+        if ($connection && ($connection['status'] ?? '') === 'disconnected') {
+            $connection = null;
+        }
+        $inventory = $connection ? $this->safeInventory((int) $site['id']) : [];
         $definitions = (new GtmEventDefinitionRepository())->allBySite((int) $site['id']);
         $entities = (new GtmManagedEntityRepository())->allBySite((int) $site['id']);
         $runs = (new GtmSyncRunRepository())->allBySite((int) $site['id'], 8);
