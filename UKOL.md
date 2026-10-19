@@ -1,3 +1,29 @@
+# UKOL: Výrazná kontaktní notifikace a bezpečný URL stav
+
+Datum: 2026-10-19
+Zadani: Zvýraznit zelenou notifikaci po odeslání a ověřit, že stav z URL nemůže vložit vlastní kód ani text.
+Doporuceny model: Terra - Cílená vizuální úprava spojená s kontrolou vstupní hranice.
+
+## Vizuální rubrika (100 bodů)
+
+- [ ] 45 b: úspěšná notifikace je na světlém formuláři okamžitě rozpoznatelná jako zelená.
+- [ ] 20 b: ikona a text mají dobrou čitelnost a kontrast.
+- [ ] 15 b: upozornění a chyby mají odlišnou oranžovou/červenou podobu.
+- [ ] 10 b: desktop i mobil bez přetečení nebo rozbití formuláře.
+- [ ] 10 b: parametr `sent` je enum/allowlist a cizí text ani HTML se nevyrenderují.
+
+## Kroky
+
+- [ ] Zachytit a ohodnotit výchozí staging podle rubriky.
+- [ ] Normalizovat `sent` na enum a přidat regresní bezpečnostní testy.
+- [ ] Upravit barevné varianty notifikace a ověřit responzivní vzhled.
+- [ ] Commitnout, nasadit na staging a provést finální vizuální a bezpečnostní kontrolu. Master neměnit.
+
+## Omezení reference
+
+Přiložený dočasný screenshot už není na uvedené cestě dostupný. Pixelové porovnání je proto mimo rozsah; kontrola probíhá proti výše uvedeným explicitním kritériím a živému stagingu.
+
+---
 # UKOL: Více příjemců kopií kontaktních zpráv
 
 Datum: 2026-10-19
