@@ -27,8 +27,14 @@ final class VisitAnalyticsService
     public const MAX_REFERRER_LENGTH = 2048;
     public const MAX_UTM_LENGTH = 100;
     public const BOT_PATTERN = '~bot|crawl|spider|slurp|headless|lighthouse|preview|python|curl|wget|facebookexternalhit~i';
-    public const PATH_PATTERN = '~^/[A-Za-z0-9/_.\-%]{0,254}$~';
+    /** Stored path: "/" followed by RFC 3986 pchar / "/" (unreserved, pct-encoded, sub-delims, ":", "@"). */
+    public const PATH_PATTERN = '~^/[A-Za-z0-9\-._\~%!$&\'()*+,;=:@/]{0,254}$~';
+    public const MAX_PATH_LENGTH = 255;
     public const VISITOR_ID_PATTERN = '~^[a-f0-9]{32}$~';
+    public const THROTTLE_SCOPE = 'visit_beacon';
+    /** Throttle files older than this are stale: window 60 s + lock 300 s, with a wide margin. */
+    public const THROTTLE_STALE_SECONDS = 3600;
+    public const REJECTION_REASONS = ['foreign_origin', 'invalid_payload', 'missing_secret', 'other'];
 
     /** Salted, daily rotating visitor hash; the raw IP never leaves this function. */
     public static function visitorHash(string $ip, string $userAgent, string $day, string $secret): string
@@ -38,10 +44,12 @@ final class VisitAnalyticsService
 
     /**
      * HMAC key for visitorHash(). VISIT_ANALYTICS_SALT is preferred; API_KEY is an
-     * existing server-only secret, so it is a safe fallback. The final constant only
-     * keeps the feature working on an unconfigured install (hashes still rotate daily).
+     * existing server-only secret, so it is a safe fallback. Without either the
+     * measurement is off (null): a public key would let anyone recompute the hash
+     * and recover an IPv4 address by brute force, so there is deliberately no
+     * built-in default.
      */
-    public static function secret(): string
+    public static function secret(): ?string
     {
         foreach (['VISIT_ANALYTICS_SALT', 'API_KEY'] as $name) {
             $value = trim((string) Env::get($name, ''));
@@ -50,7 +58,66 @@ final class VisitAnalyticsService
             }
         }
 
-        return 'seo-cms-visit-analytics';
+        return null;
+    }
+
+    /**
+     * Throttle bucket for the beacon: the IPv4 /24 or IPv6 /48 network instead of
+     * the single address, so one network (notably an IPv6 /64 with endless host
+     * addresses) can neither bypass the limit nor create one state file per address.
+     */
+    public static function throttleKey(string $ip): string
+    {
+        $packed = @inet_pton(trim($ip));
+        if ($packed === false) {
+            return 'unknown';
+        }
+        if (strlen($packed) === 4) {
+            return 'v4:' . (string) inet_ntop(substr($packed, 0, 3) . "\0") . '/24';
+        }
+
+        return 'v6:' . (string) inet_ntop(substr($packed, 0, 6) . str_repeat("\0", 10)) . '/48';
+    }
+
+    /**
+     * Aggregated, rate-limited logging of dropped beacons. Each call counts one
+     * rejection of $reason in a small per-reason state file (a fixed set of files,
+     * no per-client data, no IP). At most once per $intervalSeconds the accumulated
+     * count is returned so the caller logs one line; otherwise null.
+     */
+    public static function countRejection(string $reason, string $stateDirectory, int $now, int $intervalSeconds = 3600): ?int
+    {
+        if (!in_array($reason, self::REJECTION_REASONS, true)) {
+            $reason = 'other';
+        }
+        if (!is_dir($stateDirectory) && !@mkdir($stateDirectory, 0775, true) && !is_dir($stateDirectory)) {
+            return null;
+        }
+        $handle = @fopen($stateDirectory . '/visit_reject-' . $reason . '.json', 'c+');
+        if ($handle === false) {
+            return null;
+        }
+
+        try {
+            if (!flock($handle, LOCK_EX)) {
+                return null;
+            }
+            $state = json_decode((string) stream_get_contents($handle), true);
+            $count = (int) (is_array($state) ? ($state['count'] ?? 0) : 0) + 1;
+            $since = (int) (is_array($state) ? ($state['since'] ?? 0) : 0);
+            // The first rejection (no state yet) is logged at once, then at most once per interval.
+            $flush = $now - $since >= $intervalSeconds;
+            $next = $flush ? ['count' => 0, 'since' => $now] : ['count' => $count, 'since' => $since];
+            ftruncate($handle, 0);
+            rewind($handle);
+            fwrite($handle, (string) json_encode($next));
+            fflush($handle);
+            flock($handle, LOCK_UN);
+
+            return $flush ? $count : null;
+        } finally {
+            fclose($handle);
+        }
     }
 
     public static function isBot(string $userAgent): bool
@@ -81,17 +148,38 @@ final class VisitAnalyticsService
         return 'unknown';
     }
 
-    /** Accepts only a plain public path; admin paths are never recorded. */
+    /**
+     * Normalizes the beacon path instead of dropping the whole visit: query and
+     * fragment are cut off, every byte outside RFC 3986 pchar (and a "%" that does
+     * not start a %XX escape) is percent-encoded, which is lossless, and the result
+     * is cut to 255 bytes without splitting an escape. A string that is not an
+     * absolute path is stored as "/". Returns null only for a non-string value and
+     * for the admin area ("/admin" and "/admin/..."; "/administrativa" is public).
+     */
     public static function sanitizePath(mixed $path): ?string
     {
-        if (!is_string($path) || preg_match(self::PATH_PATTERN, $path) !== 1) {
+        if (!is_string($path)) {
             return null;
         }
-        if (stripos($path, '/admin') === 0) {
+        $path = (string) preg_replace('~[?#].*$~s', '', $path);
+        if (!str_starts_with($path, '/')) {
+            return '/';
+        }
+        $path = (string) preg_replace_callback(
+            '~%(?![0-9A-Fa-f]{2})|[^A-Za-z0-9\-._\~%!$&\'()*+,;=:@/]~',
+            static fn(array $match): string => sprintf('%%%02X', ord($match[0])),
+            $path
+        );
+        if (strlen($path) > self::MAX_PATH_LENGTH) {
+            $path = (string) preg_replace('~%[0-9A-Fa-f]?$~', '', substr($path, 0, self::MAX_PATH_LENGTH));
+        }
+
+        $decoded = strtolower(rawurldecode($path));
+        if ($decoded === '/admin' || str_starts_with($decoded, '/admin/')) {
             return null;
         }
 
-        return $path;
+        return preg_match(self::PATH_PATTERN, $path) === 1 ? $path : '/';
     }
 
     /**
@@ -138,14 +226,21 @@ final class VisitAnalyticsService
     }
 
     /**
-     * Same-origin guard against cross-site beacons. A cross-site Sec-Fetch-Site always
-     * rejects; otherwise Origin (or, without it, Referer) must name the requested host,
-     * and a bare "Sec-Fetch-Site: same-origin" is accepted when neither header is sent.
+     * Same-origin guard against cross-site beacons, deliberately conservative:
+     * - any Sec-Fetch-Site other than "same-origin" rejects ("same-site" is a sibling
+     *   subdomain such as staging, "cross-site"/"none" never come from our script);
+     * - Origin (or, without it, Referer) must name exactly the requested authority.
+     *   Default ports are ignored on both sides (Host "example.com:443" equals Origin
+     *   "https://example.com"), any other port must match, and www / bare host are
+     *   different origins (the www redirect makes only one of them serve pages);
+     * - "Origin: null" (opaque origin: sandboxed frame, no-referrer policy) is not a
+     *   proof of anything, so it is accepted only with "Sec-Fetch-Site: same-origin";
+     * - without Origin and Referer a bare "Sec-Fetch-Site: same-origin" is accepted.
      */
     public static function isSameOrigin(array $server): bool
     {
-        $requestHost = strtolower(trim((string) ($server['HTTP_HOST'] ?? '')));
-        if ($requestHost === '') {
+        $request = self::splitAuthority((string) ($server['HTTP_HOST'] ?? ''));
+        if ($request === null) {
             return false;
         }
         $fetchSite = strtolower(trim((string) ($server['HTTP_SEC_FETCH_SITE'] ?? '')));
@@ -153,19 +248,49 @@ final class VisitAnalyticsService
             return false;
         }
 
-        foreach (['HTTP_ORIGIN', 'HTTP_REFERER'] as $header) {
-            $value = trim((string) ($server[$header] ?? ''));
-            if ($value === '' || $value === 'null') {
+        $origin = trim((string) ($server['HTTP_ORIGIN'] ?? ''));
+        if (strtolower($origin) === 'null') {
+            return $fetchSite === 'same-origin';
+        }
+
+        foreach ([$origin, trim((string) ($server['HTTP_REFERER'] ?? ''))] as $value) {
+            if ($value === '') {
                 continue;
             }
-            $host = strtolower((string) parse_url($value, PHP_URL_HOST));
+            $scheme = strtolower((string) parse_url($value, PHP_URL_SCHEME));
+            $host = strtolower(trim((string) parse_url($value, PHP_URL_HOST), '.'));
             $port = parse_url($value, PHP_URL_PORT);
-            $authority = $host . ($port !== null && $port !== false ? ':' . $port : '');
+            if (!in_array($scheme, ['http', 'https'], true) || $host === '') {
+                return false;
+            }
+            $port = is_int($port) ? $port : null;
+            if (($scheme === 'https' && $port === 443) || ($scheme === 'http' && $port === 80)) {
+                $port = null;
+            }
 
-            return $host !== '' && ($authority === $requestHost || $host === $requestHost);
+            return $host === $request['host'] && $port === $request['port'];
         }
 
         return $fetchSite === 'same-origin';
+    }
+
+    /**
+     * "Host" header -> lowercase host and non-default port (80/443 become null).
+     *
+     * @return array{host:string,port:?int}|null
+     */
+    private static function splitAuthority(string $authority): ?array
+    {
+        $authority = strtolower(trim($authority));
+        if (preg_match('~^(\[[0-9a-f:.]+\]|[a-z0-9.\-]+?)\.?(?::(\d{1,5}))?$~', $authority, $match) !== 1 || $match[1] === '') {
+            return null;
+        }
+        $port = isset($match[2]) && $match[2] !== '' ? (int) $match[2] : null;
+        if ($port === 80 || $port === 443) {
+            $port = null;
+        }
+
+        return ['host' => $match[1], 'port' => $port];
     }
 
     /**
@@ -270,10 +395,15 @@ final class VisitAnalyticsService
         ];
     }
 
-    /** First day that is still kept; older rows are purged. */
+    /**
+     * First day that is still kept; older rows are purged. The cutoff is the first
+     * day of the month 14 months back, so the 14 full previous months plus the
+     * running one are kept. A plain "-14 months" overflows at month ends
+     * (2026-12-31 -> "2025-10-31", but 2027-04-30 -> 2026-02-30 -> 2026-03-02).
+     */
     public static function retentionCutoff(\DateTimeImmutable $today): string
     {
-        return $today->modify('-' . self::RETENTION_MONTHS . ' months')->format('Y-m-d');
+        return $today->modify('first day of -' . self::RETENTION_MONTHS . ' months')->format('Y-m-d');
     }
 
     /** @return 7|30|90|365 */

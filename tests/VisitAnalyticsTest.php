@@ -63,12 +63,33 @@ function register_visit_analytics_tests(callable $test, callable $assert): void
         $assert(VisitAnalyticsService::sanitizePath('/blog/svatba-v-lese') === '/blog/svatba-v-lese');
         $assert(VisitAnalyticsService::sanitizePath('/') === '/');
         $assert(VisitAnalyticsService::sanitizePath('/%C5%BEena') === '/%C5%BEena');
+        $assert(VisitAnalyticsService::sanitizePath("/a!$&'()*+,;=:@~b") === "/a!$&'()*+,;=:@~b", 'RFC 3986 pchar must be kept.');
         $assert(VisitAnalyticsService::sanitizePath('/admin') === null);
-        $assert(VisitAnalyticsService::sanitizePath('/admin/settings') === null);
-        $assert(VisitAnalyticsService::sanitizePath('relative') === null);
-        $assert(VisitAnalyticsService::sanitizePath('/a?b=c') === null);
-        $assert(VisitAnalyticsService::sanitizePath('/<script>') === null);
-        $assert(VisitAnalyticsService::sanitizePath('/' . str_repeat('a', 255)) === null);
+        $assert(VisitAnalyticsService::sanitizePath('/Admin/settings') === null);
+        $assert(VisitAnalyticsService::sanitizePath('/admin/') === null);
+        $assert(VisitAnalyticsService::sanitizePath('/admin?x=1') === null);
+        $assert(VisitAnalyticsService::sanitizePath('/%61dmin/pages') === null, 'Encoded admin path must stay blocked.');
+        $assert(VisitAnalyticsService::sanitizePath('/administrativa') === '/administrativa', '/administrativa is a public page.');
+        $assert(VisitAnalyticsService::sanitizePath('/admins-guide') === '/admins-guide');
+        $assert(VisitAnalyticsService::sanitizePath(null) === null);
+        $assert(VisitAnalyticsService::sanitizePath(['/']) === null);
+        // Invalid pathnames are normalized instead of dropping the whole beacon.
+        $assert(VisitAnalyticsService::sanitizePath('relative') === '/');
+        $assert(VisitAnalyticsService::sanitizePath('') === '/');
+        $assert(VisitAnalyticsService::sanitizePath('/a?b=c') === '/a', 'Query must be cut off.');
+        $assert(VisitAnalyticsService::sanitizePath('/a#frag') === '/a');
+        $assert(VisitAnalyticsService::sanitizePath('/<script>') === '/%3Cscript%3E');
+        $assert(VisitAnalyticsService::sanitizePath('/a b|c') === '/a%20b%7Cc');
+        $assert(VisitAnalyticsService::sanitizePath('/žena') === '/%C5%BEena', 'Raw UTF-8 must be percent-encoded.');
+        $assert(VisitAnalyticsService::sanitizePath('/100%') === '/100%25', 'A lone % must be escaped.');
+        $assert(VisitAnalyticsService::sanitizePath("/a\x00b") === '/a%00b');
+        $assert(VisitAnalyticsService::sanitizePath('/' . str_repeat('a', 400)) === '/' . str_repeat('a', 254), 'Long path must be cut to 255 bytes.');
+        $cut = (string) VisitAnalyticsService::sanitizePath('/' . str_repeat('a', 252) . 'ž');
+        $assert($cut === '/' . str_repeat('a', 252), 'Truncation must not split a %XX escape: ' . $cut);
+        foreach (['/<script>', '/a b|c', '/žena', '/100%', '/' . str_repeat('ž', 200)] as $raw) {
+            $clean = (string) VisitAnalyticsService::sanitizePath($raw);
+            $assert(strlen($clean) <= 255 && preg_match(VisitAnalyticsService::PATH_PATTERN, $clean) === 1, 'Normalized path must be storable: ' . $raw);
+        }
 
         $own = ['example.com', 'https://example.com'];
         $assert(VisitAnalyticsService::referrerHost('https://www.Google.com/search?q=x', $own) === 'www.google.com');
@@ -110,6 +131,9 @@ function register_visit_analytics_tests(callable $test, callable $assert): void
         $assert(VisitAnalyticsService::parsePayload($validBody(['v' => 'ABCDEF'])) === null, 'Malformed v must be rejected.');
         $assert(VisitAnalyticsService::parsePayload($validBody(['v' => str_repeat('A', 32)])) === null, 'Uppercase v must be rejected.');
         $assert(VisitAnalyticsService::parsePayload($validBody(['p' => '/admin/pages'])) === null);
+        $normalized = VisitAnalyticsService::parsePayload($validBody(['p' => '/<bad path>?q=1']));
+        $assert(is_array($normalized) && $normalized['p'] === '/%3Cbad%20path%3E', 'An odd pathname must not drop the beacon.');
+        $assert(VisitAnalyticsService::parsePayload($validBody(['p' => 42])) === null, 'A non-string path is an invalid payload.');
         $assert(VisitAnalyticsService::parsePayload($validBody(['w' => '390'])) === null);
         $assert(VisitAnalyticsService::parsePayload($validBody(['a' => 'yes'])) === null);
         $assert(VisitAnalyticsService::parsePayload($validBody(['s' => str_repeat('a', 101)])) === null);
@@ -119,7 +143,19 @@ function register_visit_analytics_tests(callable $test, callable $assert): void
     });
 
     $test('visit retention and admin range helpers are bounded', function () use ($assert): void {
-        $assert(VisitAnalyticsService::retentionCutoff(new DateTimeImmutable('2026-10-19')) === '2025-08-19');
+        $cutoffs = [
+            '2026-10-19' => '2025-08-01',
+            '2026-10-01' => '2025-08-01',
+            '2026-12-31' => '2025-10-01',
+            '2027-04-30' => '2026-02-01', // a plain "-14 months" overflows to 2026-03-02
+            '2027-05-31' => '2026-03-01',
+            '2028-02-29' => '2026-12-01',
+            '2026-01-15' => '2024-11-01',
+        ];
+        foreach ($cutoffs as $today => $cutoff) {
+            $actual = VisitAnalyticsService::retentionCutoff(new DateTimeImmutable($today . ' 23:59:59'));
+            $assert($actual === $cutoff, 'retentionCutoff(' . $today . ') = ' . $actual . ', expected ' . $cutoff);
+        }
         $assert(VisitAnalyticsService::normalizeRangeDays('7') === 7);
         $assert(VisitAnalyticsService::normalizeRangeDays('365') === 365);
         $assert(VisitAnalyticsService::normalizeRangeDays('14') === 30);
@@ -156,7 +192,10 @@ function register_visit_analytics_tests(callable $test, callable $assert): void
         $beacon = strpos($index, 'if (tryRecordVisitBeacon($earlyUri))');
         $assert($beacon !== false, 'Beacon dispatch missing.');
         $assert($beacon < strpos($index, "Auth::start();\n"), 'Beacon must run before Auth::start().');
-        $assert(str_contains($index, "RequestThrottle::hit('visit_beacon', \$ip, 60, 60, 300)"));
+        $assert(str_contains($index, 'VisitAnalyticsService::throttleKey($ip),'), 'Beacon throttle must bucket by network.');
+        $assert(str_contains($index, 'RequestThrottle::purgeStale(VisitAnalyticsService::THROTTLE_SCOPE'), 'Beacon must lazily purge throttle files.');
+        $purge = (string) file_get_contents($root . '/bin/purge-visits.php');
+        $assert(str_contains($purge, 'RequestThrottle::purgeStale('), 'purge-visits.php must purge throttle files too.');
         $assert(str_contains($index, "\$uri !== '/api/visit'"));
 
         $migration = (string) file_get_contents($root . '/database/migrations/109_create_site_visits.sql');

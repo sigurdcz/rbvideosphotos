@@ -51,6 +51,49 @@ final class RequestThrottle
         }
     }
 
+    /**
+     * Deletes state files of one scope whose last write is older than $maxAgeSeconds,
+     * at most $limit files per call. A state file is rewritten on every hit, so its
+     * mtime is the last activity; callers pass an age above window + lock. Only the
+     * "<scope>-<sha1>.json" files of that scope are touched; other scopes are left alone.
+     */
+    public static function purgeStale(string $scope, int $maxAgeSeconds, int $limit, ?string $directory = null, ?int $now = null): int
+    {
+        if (preg_match('~^[a-z0-9_-]+$~i', $scope) !== 1 || $limit <= 0) {
+            return 0;
+        }
+        $directory ??= self::directory();
+        $handle = @opendir($directory);
+        if ($handle === false) {
+            return 0;
+        }
+
+        $threshold = ($now ?? time()) - max(0, $maxAgeSeconds);
+        $pattern = '~^' . preg_quote($scope, '~') . '-[a-f0-9]{40}\.json$~';
+        $deleted = 0;
+        try {
+            while ($deleted < $limit && ($entry = readdir($handle)) !== false) {
+                if (preg_match($pattern, $entry) !== 1) {
+                    continue;
+                }
+                $path = $directory . '/' . $entry;
+                $mtime = @filemtime($path);
+                if ($mtime !== false && $mtime < $threshold && is_file($path) && @unlink($path)) {
+                    $deleted++;
+                }
+            }
+        } finally {
+            closedir($handle);
+        }
+
+        return $deleted;
+    }
+
+    private static function directory(): string
+    {
+        return dirname(__DIR__, 2) . '/storage/cache/throttle';
+    }
+
     private static function loadState(string $scope, string $key, int $windowSeconds, int $lockSeconds): array
     {
         $path = self::pathFor($scope, $key);
@@ -102,6 +145,6 @@ final class RequestThrottle
     private static function pathFor(string $scope, string $key): string
     {
         $hash = sha1($scope . '|' . $key);
-        return dirname(__DIR__, 2) . '/storage/cache/throttle/' . $scope . '-' . $hash . '.json';
+        return self::directory() . '/' . $scope . '-' . $hash . '.json';
     }
 }
