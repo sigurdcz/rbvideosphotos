@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\ViewModels;
 
 use App\Domain\PricingPackageCatalog;
+use App\Domain\ContactSubmissionStatus;
 use App\Repositories\ContactRepository;
 use App\Repositories\FaqRepository;
 use App\Repositories\SiteRepository;
@@ -107,7 +108,7 @@ final class KontaktPageData
             'form' => [
                 'csrfToken' => $csrfToken,
                 'honeypotField' => 'website',
-                'sentState' => $sentState,
+                'sentState' => ContactSubmissionStatus::normalize($sentState),
                 'selectedPackage' => $selectedPackage,
                 'packageSelectionInvalid' => $packageSelectionInvalid,
             ],

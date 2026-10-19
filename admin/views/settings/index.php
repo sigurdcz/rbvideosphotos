@@ -387,6 +387,16 @@ ob_start();
         </p>
       </div>
     </div>
+    <div class="form-group">
+      <label style="display:flex;align-items:center;gap:8px">
+        <input type="checkbox" name="visit_analytics_enabled" value="1" <?= (int)($site['visit_analytics_enabled'] ?? 1) === 1 ? 'checked' : '' ?> style="width:auto">
+        Vlastni mereni navstevnosti (zaloha k Google Analytics)
+      </label>
+      <p class="help-text" style="margin-top:6px">
+        Nezavisle na GA4/GTM. Bez souhlasu se uklada jen serverovy zaznam s denne rotujicim anonymnim otiskem (bez IP adresy a bez cookie);
+        cookie <code>cms_vid</code> vznika az po souhlasu s analytickymi cookies. Prehled je v <a href="/admin/analytics">Navstevnost</a>.
+      </p>
+    </div>
     <div class="form-row">
       <div class="form-group">
         <label>Google Analytics ID</label>

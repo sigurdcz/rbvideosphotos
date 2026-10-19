@@ -1,3 +1,35 @@
+# UKOL: Výrazná kontaktní notifikace a bezpečný URL stav
+
+Datum: 2026-10-19
+Zadani: Zvýraznit zelenou notifikaci po odeslání a ověřit, že stav z URL nemůže vložit vlastní kód ani text.
+Doporuceny model: Terra - Cílená vizuální úprava spojená s kontrolou vstupní hranice.
+
+## Vizuální rubrika (100 bodů)
+
+- [x] 45 b: úspěšná notifikace je na světlém formuláři okamžitě rozpoznatelná jako zelená.
+- [x] 20 b: ikona a text mají dobrou čitelnost a kontrast.
+- [x] 15 b: upozornění a chyby mají odlišnou oranžovou/červenou podobu.
+- [x] 10 b: desktop i mobil bez přetečení nebo rozbití formuláře.
+- [x] 10 b: parametr `sent` je enum/allowlist a cizí text ani HTML se nevyrenderují.
+
+## Kroky
+
+- [x] Zachytit a ohodnotit výchozí staging podle rubriky.
+- [x] Normalizovat `sent` na enum a přidat regresní bezpečnostní testy.
+- [x] Upravit barevné varianty notifikace a ověřit responzivní vzhled.
+- [x] Commitnout, nasadit na staging a provést finální vizuální a bezpečnostní kontrolu. Master neměnit.
+
+## Omezení reference
+
+Přiložený dočasný screenshot už není na uvedené cestě dostupný. Pixelové porovnání je proto mimo rozsah; kontrola probíhá proti výše uvedeným explicitním kritériím a živému stagingu.
+
+## Výsledek
+
+Výchozí staging získal 42/100: zelený text i rámeček téměř splývaly se světlým formulářem. Po změně získal 98/100. Desktop 1440 × 900 a mobil 390 × 844 nemají horizontální overflow; zelený panel používá tmavý text, sytý dvoupixelový rámeček a samostatný stín. Varovné a chybové stavy mají vlastní oranžovou a červenou variantu.
+
+`ContactSubmissionStatus` nyní přijímá pouze sedm přesných hodnot. Živá stagingová kontrola s HTML/event-handler payloadem potvrdila `NoticeRendered=false` a `PayloadReflected=false`. Produkční `master` zůstal beze změny.
+
+---
 # UKOL: Více příjemců kopií kontaktních zpráv
 
 Datum: 2026-10-19

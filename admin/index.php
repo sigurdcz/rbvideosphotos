@@ -40,6 +40,7 @@ try {
     $router->post('/admin/account/password', 'AccountController', 'changePassword');
 
     $router->get('/admin/messages', 'MessagesController', 'index');
+    $router->get('/admin/analytics', 'VisitAnalyticsController', 'index');
 
     // Dashboard
     $router->get('/admin', 'DashboardController', 'index');

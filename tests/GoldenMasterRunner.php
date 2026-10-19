@@ -76,7 +76,7 @@ function normalizeHtmlForGolden(string $html, bool $editMode = false): string
 
     // Content-hashed generated asset filenames (App\Support\FrontendAssetManager).
     $html = preg_replace(
-        '/((?:page-css|page-js|body-vars|video-overlay|inline-style-blocks|inline-body-scripts|cookie-consent-runtime|cookie-consent|frontend-runtime|tracking)-)[0-9a-f]{16}(\.(?:css|js))/',
+        '/((?:page-css|page-js|body-vars|video-overlay|inline-style-blocks|inline-body-scripts|cookie-consent-runtime|cookie-consent|frontend-runtime|tracking|visit-analytics)-)[0-9a-f]{16}(\.(?:css|js))/',
         '${1}HASH${2}',
         $html
     ) ?? $html;

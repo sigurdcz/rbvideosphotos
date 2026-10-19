@@ -225,7 +225,9 @@ function register_golden_bash_theme_tests(callable $test, callable $assert): voi
         foreach (['call', 'mail', 'location_on', 'receipt_long', 'schedule', 'expand_more'] as $contactSymbol) {
             $assert(str_contains($contactPage, '>' . $contactSymbol . '</span>'), 'Contact page is missing Google Material Symbol: ' . $contactSymbol);
         }
-        $assert(str_contains($contactPage, "partials/contact-status") && str_contains($contactStatus, 'check_circle</span>') && str_contains($contactStatus, 'warning</span>'), 'Shared status partial must keep official status icons.');
+        $assert(str_contains($contactPage, "partials/contact-status")
+            && str_contains($contactStatus, "'icon' => 'check_circle'")
+            && str_contains($contactStatus, "'icon' => 'warning'"), 'Shared status partial must keep official status icons.');
         $assert(!str_contains($contactPage, '&#9888;') && !str_contains($contactPage, '&#10003;') && !str_contains($contactPage, 'class="kt-faq-plus">+</span>')
             && str_contains($contactCss, '.kt-faq-item.is-open .kt-faq-plus{transform:rotate(180deg)}'), 'Contact page must not retain emoji status glyphs or text plus icons.');
         $assert(str_contains($css, '.gb-contact .gb-contact-intro>.section-label,.gb-contact .gb-contact-form::before,.gb-contact-faq>.section-label{margin-top:0!important;color:var(--gb-gold)!important'), 'Golden Bash contact column labels must share one gold top-left visual contract.');

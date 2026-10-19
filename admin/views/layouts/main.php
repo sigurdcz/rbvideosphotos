@@ -38,6 +38,7 @@
       <li><a href="/admin/gtm" class="<?= strpos($requestUri, '/admin/gtm') === 0 ? 'active' : '' ?>">Google Tag Manager</a></li>
       <li><a href="/admin/setup" class="<?= strpos($requestUri, '/admin/setup') === 0 ? 'active' : '' ?>">Pocatecni data</a></li>
       <?php if (($_user['role'] ?? '') === 'admin'): ?><li><a href="/admin/messages" class="<?= str_starts_with($requestUri, '/admin/messages') ? 'active' : '' ?>">E-maily a zprávy</a></li><?php endif; ?>
+      <?php if (($_user['role'] ?? '') === 'admin'): ?><li><a href="/admin/analytics" class="<?= str_starts_with($requestUri, '/admin/analytics') ? 'active' : '' ?>">Návštěvnost</a></li><?php endif; ?>
     </ul>
     <div style="padding:12px 16px 0;display:flex;flex-direction:column;gap:8px">
       <a href="<?= htmlspecialchars($homepageEditUrl) ?>" target="_blank" class="btn btn-inline-edit" style="width:100%;justify-content:center;box-sizing:border-box">&#9998; Editovat inline</a>
