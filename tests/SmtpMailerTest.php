@@ -50,6 +50,18 @@ function register_smtp_mailer_tests(callable $test, callable $assert): void
             $assert($service->send('another@example.test', 'Reset', 'token fixture'));
             $assert($smtp->events['connect'][0] === 'smtp.example.test' && !empty($smtp->events['starttls']));
             $assert($phpMailer->getToAddresses() === [['another@example.test','']], 'Recipient must not leak between messages');
+            $assert($service->send('primary@example.test', 'Copy', 'Body', 'copy@example.test'));
+            $assert($phpMailer->getCcAddresses() === [['copy@example.test','']], 'Configured CC must reach the SMTP envelope');
+            $assert($smtp->events['recipient'] === 'copy@example.test', 'SMTP RCPT must include the copy recipient');
+            $assert(str_contains($smtp->events['data'], 'Cc: copy@example.test'), 'CC must appear in message headers');
+            $assert($service->send('primary@example.test', 'No copy', 'Body'));
+            $assert($phpMailer->getCcAddresses() === [], 'Empty CC must clear previous recipients');
+            $assert($service->send('primary@example.test', 'Duplicate', 'Body', 'PRIMARY@example.test'));
+            $assert($phpMailer->getCcAddresses() === [], 'Same address must not receive a duplicate copy');
+            foreach (['not-an-email', "copy@example.test\r\nBcc: injected@example.test"] as $badCopy) {
+                try { $service->send('primary@example.test', 'Bad copy', 'Body', $badCopy); throw new \LogicException('Expected CC rejection'); }
+                catch (SmtpTransportException $e) { $assert($e->errorCode === 'smtp_invalid_message'); }
+            }
         } finally { $_ENV = $original; }
     });
     $test('SMTP rejects missing credentials, insecure config and sender mismatch before connecting', function () use ($assert): void {

@@ -1,5 +1,7 @@
 # Active24 deployment
 
+Kompletní první instalace testovacího prostředí: [STAGING.md](STAGING.md). Odložená práce: [BACKLOG.md](BACKLOG.md). Další vývoj patří na `dev`; produkční merge/push vyžaduje výslovný souhlas uživatele podle `INSTRUCTIONS.md`.
+
 Aktualni aplikacni zdroje pochazeji ze `sigurdcz/seo-cms`, commit `b8da8da02878735ef10c506fb75c43cf41984542`. Hosting tohoto repozitare je Active24. Postupy a adresy puvodniho Webzdarma workflow se zde nepouzivaji.
 
 ## GitHub Actions
@@ -15,9 +17,11 @@ Aktualni aplikacni zdroje pochazeji ze `sigurdcz/seo-cms`, commit `b8da8da028787
 
 ## Aktualizace databaze
 
+Video galerie: nová obsahová migrace `106_replace_approved_video_portfolio.sql` používá sdílený manifest `ApprovedVideoPortfolioService::MANIFEST` s přesnými 12 YouTube videi schválenými 17. 10. 2026. Nejprve `dev`/staging, potom migrace s `&publish=1` a kontrola `/nase-prace`. Obměňuje pouze video položky prvního veřejného webu; fotografie, jejich vzájemné pořadí, hero zdroje i fyzická média zachovává. Odstraní také staré exporty vyřazených video položek a stará vedlejší videa u zachovaných položek. Osm URL se překrývá s původní galerií; kontrola nepřítomnosti se vztahuje na čtyři vyřazená ID. Přesný seznam a výsledky ověření jsou v `VIDEO-GALLERY-2026-10-17.md`. Aktuální demo seed používá stejný manifest, takže reset nevrátí původní videa.
+
 1. Over, ze serverovy `.env` odkazuje na databazi spravneho prostredi.
 2. Pro novou verzi spust `/migrate-util.php?token=<MIGRATE_TOKEN>` z vlastniho prohlizece.
-3. Utility aplikuji append-only migrace. Existujici 001–023 jsou beze zmen; pribyvaji 024–102.
+3. Utility aplikuji append-only migrace. Existujici 001–023 jsou beze zmen; aktualni verze obsahuje dalsi migrace az po 106.
 4. Sdileny `database/migration-schema-state.php` rozpozna zname historicke prekryvy a viditelne je zapise do evidence. Jine SQL chyby se neignoruji.
 5. Obsahove application-compatible migrace bez existujiciho webu zustanou nezapsane a utility je explicitne uvede jako odlozene. Po zakladnim seedu spust migrace znovu.
 6. Pro existujici web lze po uspesnych migracich pouzit `&publish=1` k uplnemu publishi. Nespoustej Armagedon pro beznou aktualizaci.
@@ -62,6 +66,19 @@ Pokud odeslání selže, návštěvník dostane potvrzení uložení a informaci
 Obnova hesla zapisuje pouze metadata pokusu do stejné tabulky, **nikdy resetovací URL, token ani tělo e-mailu**. Neúspěšné/nepotvrzené předání zneplatní reset token a zobrazí chybu.
 
 ## SMTP pro Active24 / Websupport
+
+### Nepovinná kopie kontaktních zpráv
+
+Po nasazení spusťte migraci **107_add_contact_email_copy.sql**. V **Nastavení →
+Kontaktní komunikace** lze uložit jednu adresu do pole **Kopie kontaktních zpráv**.
+Prázdné pole kopii vypne; hlavní příjemce zůstává zachovaný. Používá se běžná CC
+kopie (adresu vidí hlavní příjemce), stejná adresa jako hlavní příjemce se neduplikuje.
+Kopie se neposílá u obnovy hesla. Nastavení smí měnit jen administrátor.
+
+Adresu eviduje databázový archiv v `cc_recipient` ještě před SMTP pokusem a přehled
+**E-maily a zprávy** ji zobrazuje. Chyba SMTP zachová tělo i příjemce v databázi.
+Neplatná kopie se neignoruje: nastavení ji odmítne, transport zprávu označí jako
+selhanou a zachová zálohu. `.env` ani GitHub Secrets pro tuto funkci nepřibývají.
 
 Na serveru do stávajícího `.env` doplňte:
 

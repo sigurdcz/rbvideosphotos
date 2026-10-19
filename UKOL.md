@@ -1,3 +1,132 @@
+# UKOL: Nepovinná kopie kontaktních e-mailů
+
+Datum: 2026-10-19
+Zadani: Druhé e-mailové pole v Nastavení pro nepovinnou kopii kontaktních zpráv; prázdné pole nic nepřidá.
+Doporuceny model: Terra - Rozšíření nastavení, SMTP a archivu.
+
+## Kroky
+
+- [x] Zmapovat nastavení, SMTP, databázový archiv a práva.
+- [x] Nová migrace107, admin pole s validací a SMTP CC včetně archivu.
+- [x] Ověřit prázdnou/platnou/neplatnou kopii, oprávnění a obnovu hesla bez CC.
+- [x] Dokumentace/wiki, commit a staging ověření. Master bez změny.
+
+## Poznamky
+
+Kopie pouze kontaktních zpráv. Reset hesla se nekopíruje. Archiv se ukládá před SMTP a eviduje skutečnou CC adresu. Změna CC jen admin, jiné editory ji nesmí zrušit. Historické migrace jsou neměnné.
+
+---
+# UKOL: Hero video podle výšky a pravého okraje
+
+Datum: 2026-10-18
+Zadani: Video vždy na výšku hero při skutečném poměru, zarovnat doprava, zdroje mobil<=700, tablet701–1050, desktop>=1051.
+Doporuceny model: Sol - Společná oprava JS metadat, source lifecycle a CSS.
+
+## Kroky
+
+- [x] Najít kolize cover výpočtu a mobilního centrování.
+- [x] Doplnit height-fit a pravý okraj, přepínání zdroje při změně breakpointu.
+- [x] Regresní testy poměrů a breakpointů, staging screenshoty s explicitní metadata fixture.
+- [x] Dokumentace/wiki, commit a push dev. Master bez změny.
+
+## Poznamky
+
+Nové zadání nahrazuje předchozí offset24–48px přesným zarovnáním doprava. Gradient30–58% zachovat. Bez dostupných Vimeo metadat nelze tvrdit živou vizuální správnost; metadata fixture musí být výslovně označena.
+
+---
+# UKOL: Kratší hero gradient podle modré značky
+
+Datum: 2026-10-18
+Zadani: Ukončit gradient přibližně u pravé hrany modrého označení, aby pravá část videa nebyla vybledlá.
+Doporuceny model: Terra - Cílená CSS změna.
+
+## Kroky
+
+- [x] Vyhodnotit značku: konec přibližně58% šířky hero.
+- [x] Zkrátit smoothstep přechod30–80% na30–58%, posun a mobil zachovat.
+- [x] Nasadit dev na staging a ověřit skutečné CSS/screenshot.
+
+## Poznamky
+
+Uživatelský screenshot přímo obsahuje chybový přehrávač; tento obraz lze použít pro vyhodnocení přechodu, nikoli jako doklad funkčního videa. Saturaci ani zdroj videa neměnit.
+
+---
+# UKOL: Plynulý přechod hero videa
+
+Datum: 2026-10-18
+Zadani: Opravit viditelný svislý zlom gradientu po posunu hero videa, zachovat jeho posun doprava.
+Doporuceny model: Terra - Cílená oprava maskovacího CSS.
+
+## Kroky
+
+- [x] Prohlédnout uživatelský screenshot a finální masku.
+- [x] Nahradit nerovnoměrné opacity body plynulým eased náběhem ve stejné oblasti.
+- [x] Ověřit nasazení a computed CSS stagingu; zapsat skutečné limity ověření.
+
+## Poznamky
+
+Předchozí geometrický PASS nedokazoval plynulost živého videa. Uživatelský screenshot tento vizuální problém znovu otevírá. Maskování má být stejné pro poster i iframe přes společný panel; mobil bez změny.
+
+---
+# UKOL: Posun hero videa doprava
+
+Datum: 2026-10-18
+Zadani: Posunout hlavní homepage video mírně doprava a ponechat přesně původní gradient.
+Doporuceny model: Terra - Cílená úprava pozice média.
+
+## Kroky
+
+- [x] Prověřit finální CSS pro video, poster a gradient.
+- [x] Posunout desktopové video i poster stejným posunem, mobil zachovat.
+- [x] Ověřit generované CSS na stagingu, dokumentovat a commitnout na dev.
+
+## Poznamky
+
+Posun24–48px od701px; gradientový panel zůstává na původní pozici. Přehrávání Vimeo v předchozí kontrole selhávalo, geometrii lze ověřit odděleně; bez tvrzení úspěšného přehrávání.
+
+---
+# UKOL: Větší fotografie v homepage O nás
+
+Datum: 2026-10-17
+Zadani: Zvětšit fotografii v homepage sekci O nás tak, aby na desktopu vyplnila výšku vedle textu a služeb; zachovat čitelné zobrazení na mobilu.
+Doporuceny model: Terra - Cílená oprava CSS s vizuálním ověřením.
+
+## Kroky
+
+- [x] Zjistit aktivní šablonu a příčinu omezené velikosti.
+- [x] Upravit rozměry a ověřit desktop i mobil screenshotem.
+- [x] Zapsat výsledek, uložit commit a nasadit na staging; master bez změny.
+
+## Poznamky
+
+Cíl: větší fotografie bez deformace a přetékání. Přiložené screenshoty ukazují krátký portrét proti výrazně vyššímu sloupci služeb.
+
+---
+# UKOL: Galerie v editaci stránky
+
+Datum: 2026-10-17
+Zadani: Zpřístupnit foto a video galerie přímo z editace stránky Naše práce.
+Doporuceny model: Terra - Rozšíření existující administrace.
+
+## Kroky
+
+- [x] Prověřit editaci stránek a portfolia.
+- [x] Doplnit správu galerií bez duplikace dat.
+- [x] Ověřit ovládání a zachování ukládání.
+- [x] Aktualizovat dokumentaci a wiki, commit na dev.
+
+## Poznamky
+
+Pouze dev/staging. Produkce vyžaduje samostatný explicitní souhlas. Schválené pořadí videí zůstává zachováno.
+
+Přidána záložka s přehledem podle content_type a odkazy do existujícího editoru, který ukládá média, videa i pořadí. Nová galerie přebírá zvolený typ. Záložka je mimo formulář stránky, bez vnořených formulářů.
+
+## Výsledek
+
+Nová záložka a předvolba typu galerie jsou implementované; cílený render test a PHP lint všech pěti změněných PHP souborů prošly. ARCHITECTURE.md popisuje ovládání. Živé přihlášené UI zatím neověřeno.
+
+## Předchozí záznamy
+
 # UKOL: Hero media zachovat v galerii a zvysit kvalitu
 
 Datum: 2026-07-22
@@ -1737,7 +1866,7 @@ Doporuceny model: Sol - Motiv pochazi z novejsiho zdrojoveho projektu a vyzaduje
 ## Kroky
 - [x] Potvrdit absenci motivu v checkoutu a historii.
 - [-] Nacist original z puvodniho seo-cms a zkontrolovat zavislosti.
-- [ ] Doplnit motiv a potrebnou integraci bez nahrazovani vzhledu jinou sablonou.
+- [x] Doplnit motiv a potrebnou integraci bez nahrazovani vzhledu jinou sablonou.
 - [ ] Overit registraci, testy a nasazeni.
 ## Poznamky
 Verejne API vracelo 404; autentizovany dotaz originalni slozku nalezl. Nacita se zdrojova historie bez prepnuti aktualni vetve. Predchozi homepage 404 neni zatim vysvetlena: uzivatel predtim spoustel seed na starem hostingu, nikoli na nove produkci.
@@ -1920,3 +2049,127 @@ Dva social goldens po kontrole upraveny pouze v og:image a navazane Organization
 
 ## Vysledek
 Nova105 odstrani OG/Twitter overrides vsech stranek, ostatni SEO/global/media zustanou. Live specialni routy a portfolio export preferuji globaly, seedy nevraceji testovaci fotografie. Overeno16 assertions +107 migraci/15 handleru +219 regresi. Dva ocekavane goldens aktualizovany jen social URL;27/28 zbyva znamy About poster. DEPLOYMENT/ARCHITECTURE a wiki aktualizovany, README/INSTRUCTIONS nevyzadovaly zmenu. Produkcni migrace ani push neprovedeny.
+
+---
+# UKOL: Activate staging and document deployment
+Datum: 2026-10-16
+Zadani: Push OG opravy na produkci, aktivovat dev/staging, pripravit uplny instalacni navod a backlog.
+Doporuceny model: Sol - Konfigurace dvou prostredi, GitHub Actions a provozni dokumentace.
+## Kroky
+- [x] Push master fe561ed a overit production Actions (38959519402 success).
+- [x] Vytvorit environment staging omezeny na dev; doplnit kontrolu secrets a branch guard workflow.
+- [x] Pripravit STAGING.md, BACKLOG.md a pravidla souhlasu pred master v INSTRUCTIONS.md.
+- [x] Overit YAML konfiguraci a push dev bd097d3; staging Actions38959853911 ukonceny kontrolou chybejicich secrets.
+- [x] Aktualizovat wiki a zaznamenat skutecny stav prvniho staging nasazeni (wiki2e86b39).
+- [x] Po doplneni/opravach tri FTP secrets zopakovat Actions:38960080119/attempt5 success, prvni uplny prenos dokoncen.
+## Poznamky
+Pri kontrole existoval jen environment production. Staging vytvoren pres GitHub API; FTP secrets musi uzivatel vlozit do GitHubu (nikoli do chatu). Zadost o doplneni odeslana. Serverovy .env/DB/SMTP zustavaji oddelene a nejsou generovany z GitHub secrets. Migrace105 na produkci nespustena.
+
+## Vysledek
+OG zdroje nasazeny na produkci uspesne. Dev push a staging environment aktivni, ale zadny staging soubor zatim neprenesen: vsechny FTP secrets chybi a preflight zastavil workflow pred checkoutem. Staging URL vraci200 s titulem Brzy jsme zpet, nikoli overeny novy CMS. STAGING.md obsahuje povinne nastaveni hostingu, secrets, DB, .env, migraci, admina, obsahu a SMTP; BACKLOG.md zachycuje tri pozadavky; INSTRUCTIONS.md zakazuje dalsi master merge/push bez konkretniho souhlasu. YAML/FTPS/branch guard kontroly a diff check prosly. Wiki524 stranek, nova stranka staging-deployment608 slov; pipeline coverage zustava partial. Prvni prenos a funkcni instalace zustavaji otevrene.
+
+Aktualizace po doplneni secrets: pokusy2-4 vracely530 Login incorrect, pokus5 uspesne dokoncil FTPS nasazeni. Predchozi blokace secrets je vyresena; funkcni DB/.env a obsah je nutne overit samostatne. BACKLOG bod4 doplnen na zadost uzivatele: burger animace do krizku a rusive tmave hover pozadi (commit67f2311), oprava odlozena.
+
+---
+# UKOL: Backlog — fonts, hero video and burger
+Datum: 2026-10-16
+Zadani: Zacit resit backlog: overit staging workflow, opravit ceske fonty, plne pokryti hero videem a burger animaci/hover.
+Doporuceny model: Sol - Interakce CSS, fontu, media a navigace vyzaduje skutecne renderovaci QA.
+## Kroky
+- [x] Overit runtime, motiv, lokalni spousteni a staging; najit skutecne priciny tri UI vad.
+- [x] Zachytit diagnostiku Chrome CDP a zapsat rubriku; celkove skore nepridelovat kvuli chybejicim lokalnim mediim.
+- [x] Implementovat spravny font, metadata-driven hero cover a burger animaci/hover pri zachovani focusu.
+- [x] Overit skutecne generovane assety, font a nav interakce;219 regresi +27/28 goldens, znamy About poster neprepsan.
+- [x] Aktualizovat backlog, technickou dokumentaci/wiki a pripravit oddelene commity zdroju/snapshotu na dev. Bez noveho push.
+- [ ] Na inicializovanem stagingu overit skutecne prehravani, poster pri selhani, dotyk a pomalou sit. Bez teto brany video neoznacovat kompletne overene.
+## Poznamky
+Pozadavek screenshotu: fallback obrazek nesmi prosvitat nad ani pod prehravanym videem; ma zustat funkcni pred nactenim nebo pri chybe videa. Fonty musi vykreslit ceske znaky. Burger se otevrenim meni na krizek a hover nema tmavou plochu. Bod1 potrebuje vlastni DB/.env a opravneni schvalovatele; nepredstirat dokonceny staging jen podle FTP success.
+
+## Vysledek
+Regular italic4.001 s kompletnimi ceskymi glyfy a font-display:swap; nova verze souboru zachova immutable cache. Burger opraven i do1050px, transparentni hover a keyboard focus/reduced-motion zachovany v obou Golden Bash motivech. Hero cte rozmery426x206/240x240 z konkretniho Vimeo iframe, resizeprepocita cover; metadata timeout ma explicitni diagnostiku. Test odhalil regex rozbity minifikatorem, nahrazen prefixem a overen skutecny generated JS. Metadata fixture v Chrome prokazuje pouze geometrii, nikoli zive prehravani. QA-BACKLOG-2026-10-16.md zachycuje dukazy a omezeni; wiki470cb86. Pozdejsi 700px capture bez dokonceneho CSS odmitnut, samostatny recapture nav/font prosel; neplatne dukazy se nepovazuji za PASS.
+
+### Priorita 17. 10. 2026: odblokovani prvniho admina stagingu
+
+- [x] Overit kod PasswordResetService/InitialAdminService a dostupnost bootstrapu. Bootstrap/login200, homepage404; GET neprokazuje existenci/neexistenci uctu.
+- [x] Doplnit STAGING.md o bootstrap pred seedem, obecne potvrzeni pro neexistujici login a samostatne APP_URL/tokeny.
+- [x] Uzivatel vytvoril prvniho admina pres bootstrap a potvrdil funkcni pristup odpovedi "uz to jede" dne17.10.2026. Potvrzeni se vztahuje k dotazu na vytvoreni/prihlaseni, nikoli automaticky ke seedu, SMTP nebo frontend QA.
+- [ ] Po prihlaseni dokonci seed/demo, ulozeni form_email, opakovani migraci a publish; pak overit skutecne SMTP i obsah.
+
+Pri nove DB migrace nevytvareji kopii produkcnich users ani contact_info. Obnova neni nastroj vytvoreni prvniho admina; pro neznamy login vraci obecne potvrzeni bez odeslani. Existujici ucet bez form_email dostane explicitni chybu. Kopie produkcniho .env s pouhou zmenou DB navic ponechava reset APP_URL na produkci. Zadny reset, SQL zapis, odeslani emailu ani bootstrap na serveru agent nespustil; vyzaduje uzivatelovo soukrome zadani prvnich credentials.
+
+---
+# UKOL: Strict staging-first release policy
+Datum: 2026-10-17
+Zadani: Vsechny zmeny nejprve staging, zadny primy vyvoj/push do master; merge jen po konkretnim vyslovnem souhlasu uzivatele.
+Doporuceny model: Terra - Omezena dokumentacni zmena pravidel repozitare.
+## Kroky
+- [x] Pridat korenovy AGENTS.md, zprisnit INSTRUCTIONS.md a sjednotit STAGING.md.
+- [x] Vymezit konkretni schvaleny obsah, zakaz auto-merge/obchazeni a odlisit obecne OK/push od souhlasu s master merge.
+- [x] Overit diff a ulozit na dev bez push/merge; GitHub branch protection zustava samostatna otevrena cast backlogu.
+## Vysledek
+Zavazna politika pro vsechny typy zmen. Jedina release cesta je overene dev/staging -> vyslovny souhlas uzivatele s konkretnim merge -> master. Korenovy AGENTS.md zajisti viditelnost pro dalsi agenty. Zadny deployment ani GitHub branch protection nemenena.
+
+---
+# UKOL: Replace video portfolio with ordered YouTube selection
+Datum: 2026-10-17
+Zadani: Nahradit dosavadni video galerii presne12 zadanymi videi v poradi1-12, nejprve staging; fotografie/hero zachovat, master bez souhlasu nemenit.
+Doporuceny model: Sol - Datova nahrada, migrace a overeni poradi napric DB, listingem a homepage.
+## Kroky
+- [x] Overit video model a aktualni stagingAPI/listing; oficialni oEmbed metadata vsech12URL dostupna.
+- [x] Pripravit append-only106 a sdileny manifest demo importeru; fotografie/hero/media soubory zachovany.
+- [x] Izolovane overit48 assertions vcetne starych exportu, presnychURL/poradi a idempotence;108 migraci/16handleru;219regresi a27/28goldens (znamy About poster).
+- [x] Commit4ab1ff1/push dev, Actions39061862591 success; staging106 a publish uspesne.
+- [x] API/HTML/Chrome overily presne12 videi v zadane posloupnosti,24fotografii nezmenenych,4vyrazenaID mimo listing/homepage a stareadresy404. Vsechny12nahledy200, vsechny12karty oteviraji odpovidajici iframe; desktop/mobil bez horizontalniho overflow/JSvyjimek.
+- [x] Aktualizovat VIDEO-GALLERY/DEPLOYMENT a wiki5eb8df9; read-only wiki lint po prekroceni kadence de8da68, bez hromadnych oprav znalosti.
+## Poznamky
+Zadana ID v poradi: L-zaa5hj-aU,cXU7Ty-kjyA,hYj2w3P5rK8,5ZlVVcIu10U,O5i9TzCms5c,b9WhNN8VYhc,C1wL3QFZhn0,DBWKJ46eM4c,su0hKnBnCKw,1z-qckQn5UU,o-1xGllIShY,GBKJ_VB_Nmw. Predchozi UI opravy jsou commitnute na dev, dosud nepushnute; staging push bude obsahovat i tyto revize, transparentne uvest.
+
+## Vysledek
+Na stagingu je schvalena dvanactka ve spravnem poradi.8puvodnichURL se prekryva se zadanim a zustalo,4vyrazeneodstraneny a4novepridany. Fotografie/hero a fyzickamedia zachovany.48izolovanych assertions,108migraci/16handleru,219regresi a27/28goldens (znamy About poster). Browser overil filtr/nahledy/otevirani iframe, ne prehrani celych filmu. Zapis dukazu VIDEO-GALLERY-2026-10-17.md. Master stalefe561ed, zadny produkcni merge/deploy. Produkce ceka na konkretni souhlas uzivatele.
+
+Stagingprokazatelne APIverejneHTML12/12,24fotoidentickych,4oldURL404,12thumbnail200; Chrome1920x1080/390x844 stabilnivyska a zadnechybejicividitelneobrazky. Vsech12karet otevre spravnyiframe. Kontrolniodkaz https://staging.rbvideosphotos.cz/nase-prace#videogalerie. Staging push obsahuje i drive pripravene front-endopravy, uzivateli vyslovne oznameno; zadne implicitni schvaleni produkce.
+
+Dodatečné ověření celých views: karta i panel sdílejí tabs kontejner, panel je mimo page-form, kontakt panel nezobrazuje a vytvoření videogalerie předvolí video. Oba cílené testy prošly. První staging push c4be6a6 spuštěn.
+
+
+O nás: desktop >=951px dostal 40% sloupec, menší mezeru48px a natažení fotografie na výšku copy bloku, image cover bez deformace. Obě Golden Bash šablony; <=950px původní layout. Rubrika: velikost/vyrovnání45, ořez25, responzivita20, runtime10. Předchozí detail potvrzuje krátkou fotografii, hodnocení72/100 (−28 velikost/vyrovnání). Hero přehrávač ve screenshotu nehraje; mimo rozsah opravy.
+
+Iterace1: 88/100 (velikost45/45, ořez13/25, responzivita20/20, runtime10/10 v cílové sekci). Při951px příliš úzký vysoký portrét ořezával okraje obličejů. Hranice změny posunuta na1200px; menší layout zůstává původní. Nutné nové snímky1199/1200/1920/390.
+
+Iterace2 náhled:96/100 (45/45 velikost,21/25 ořez — u1200px těsnější boky,20/20 responzivita,10/10 runtime cílové sekce). Oba obličeje plně viditelné; 1920px portrét552x698 proti původním430x473, výška shodná s copy. Mobil354x389 beze změny. QA-BACKLOG aktualizován. Zbývá ověřit skutečné nasazené generované CSS.
+
+## Výsledek O nás 2026-10-17
+
+Nasazeno f24e00b na staging, Actions39065542463 success. Skutečné generované CSS (bez injekce) ověřeno1920/1199/1200/390px, DPR1 Chrome, consent odmítnut skutečným tlačítkem. Cílová sekce96/100:45/45 velikost,21/25 ořez,20/20 responzivita,10/10 runtime portrétu. Detail .codex-qa/about-final-1920.png, -1199.png, -1200.png, -390.png. Celé stránky .codex-qa/about-final-full-desktop.png (1920x5593), -mobile.png (390x12565), stabilní výšky,0 failedVisibleImages. Fotografie552x698.25, mobil354x389.39, bez horizontálního overflow. QA-BACKLOG a wiki frontend-backlog-fixes aktualizovány. Produkce neřešena.
+
+Samostatný nalezený problém: staging hero Vimeo hlásí This video does not exist. Přehrávání není součástí opravy fotografie; uživatel informován.
+
+## Výsledek hero posunu2026-10-18
+
+Nasazeno ba2d867, Actions39129260883 success. Chrome CDP bez lokálního CSS1920/701/700/390, DPR1, odmítnuté cookies: gradient shodný s uloženým stavem před změnou na všech4 šířkách; iframe i poster posun48/24/0/0px. Nulový horizontal overflow, poster načten. Důkazy .codex-qa/hero-shift-final.json a hero-shift-final-{1920,701,700,390}.png. Kompozice přehrávaného záběru není ověřena: Vimeo stále hlásí This video does not exist; neposkytnuto falešné vizuální skóre. Wiki frontend-backlog-fixes aktualizována. Produkční master beze změny.
+
+Úprava: původní nepravidelné mask stops nahrazeny11 vzorky smoothstep3t²−2t³ přes30–80% šířky, zachovaný offset24–48px a mobil bez masky. Chrome načítá nové body a bez overflow při1920/701/700/390. Alpha kvantizuje na8bit (např .028 -> .027), test nesmí vyžadovat totožný desetinný řetězec. Náhled nad produkcí blokuje Vimeo zabezpečení připojení; nesmí být označen jako vizuální PASS nad přehrávaným záběrem.
+
+## Výsledek plynulé masky2026-10-18
+
+3d1f037 nasazen na staging, Actions39130163101 success. Skutečné computed CSS bez injekce ověřeno1920/701/700/390: nové smoothstep mask stops na desktopu, mobil none, zachován posun, nulový horizontální overflow. Důkazy .codex-qa/hero-smooth-final.json a hero-smooth-final-{width}.png. Wiki aktualizována. Vizuální potvrzení živého záběru zůstává otevřené kvůli Vimeo blokaci; žádné nové vizuální PASS skóre. Produkce beze změny.
+
+## Výsledek kratšího gradientu2026-10-18
+
+a502a3f nasazen na staging, Actions39140469546 success. Skutečné CSS v Chrome1920/701/700/390: neprůhledný konec58%, mobil none, offset zachován, žádný overflow. .codex-qa/hero-short-final.json a hero-short-final-{width}.png. Desktop screenshot vizuálně potvrzuje kratší pozvolný přechod proti chybovému přehrávači stejně jako uživatelská reference. Přehrávání blokuje ověření Vimeo připojení, žádný claim o živém záběru. Wiki aktualizována, produkce nezměněna.
+
+JS nyní nastavuje šířku=heroHeight*realRatio a výšku=heroHeight, lifecycle vrací cleanup pro eventy/ResizeObserver a mediaquery sourcechange. CSS na konci Diagonal ruší všechny mobilní centrovací/posunové transformace a ukotví vpravo. Transparentní mezera vlevo při užším videu neukazuje starý poster ani černé pozadí; poster skryt jen po vložení přehrávače, chybový iframe není skrýván. Prošly Node testy metadat, poměrů, resize a breakpointů.
+
+ARCHITECTURE a QA-BACKLOG aktualizovány: starý covermax výpočet a jednorázový výběr zdroje už neplatí. PHP ResponsiveHeroVideo8/8; Node metadata/bezpečnost/cleanup a breakpointy prošly. Skutečný AssetMinifier výstup prošel node --check. Konfigurace tabletURL je historicky prázdná a sdílí desktop; samostatný tablet zdroj lze vyplnit v administraci, nesmí se vymyslet jiný klip.
+
+## Výsledek height-fit2026-10-18
+
+8d59d30 na dev/staging, Actions39141510796 success. PHP8 responsivních testů, Node2 testy a minifikovaný bundle parse prošly. Živý Chrome nad nasazeným CSS/JS:390/700/701/1050/1051/1920, výška600px mobil a620px ostatní přesně odpovídá panelu, rightDelta0, poměry fixture1:1/4:3/426:206 zachovány, skutečná nakonfigurovaná sourceURL podle breakpointu a žádný overflow. Testovací zprávy metadat jsou výslovně označené; Vimeo skutečné přehrávání nadále neověřeno. .codex-qa/hero-height-fixture-results.json a hero-height-fixture-{width}.png. Gradient30–58% zachován, předchozí offset nahrazen right0. Tablet bez vlastníURL vědomě sdílí desktop, uživatel informován. ARCHITECTURE, QA-BACKLOG a wiki aktualizovány. Master beze změny.
+
+Implementováno107: contact_info.form_email_cc a mail_archive.cc_recipient. CC validuje admin i transport; nepovolená změna odmítnuta repository, vynechané pole zachová hodnotu. MailArchive ukládá tělo aCC předSMTP. Duplicita s hlavním příjemcem potlačena, prázdná hodnota vypíná CC, reset sCC je výslovně odmítnut. Přehled zpráv kopii zobrazuje. SMTP testy aPHP lint prošly.
+
+Integrační výsledky: SMTP3 testy, mail archive27 assertions, recipient policy13 assertions, password reset19 assertions plus negativní scénáře, upgrade109 migrací a16 contenthandlerů prošel. Testy používají náhodné lokální DB, ne produkční/staging data. DokumentaceDEPLOYMENT aARCHITECTURE aktualizována. K provozu nutná migrace107, žádné nové.env ani GitHubsecrets.
+
+## Výsledek kopie kontaktu2026-10-19
+
+6246ef4 nasazen na dev/staging, Actions39261191994 success. Staging migrate-util HTTP200,107 přítomna, Údržba dokončena a bez SQLSTATE. Settings view test ověřil prázdné/vyplněné/escapované CC, nepovinnost a odděleného hlavního příjemce. SMTP3 testy včetně skutečného RCPT proCC a očištění po další zprávě; mail archive28 assertions včetně zálohy po SMTP odmítnutí; policy13; reset19; upgrade109/16 prošly. Skutečná pošta se při testech neodesílala. Pole nepovinné, resetbezCC, žádné nové.env/secrets. DEPLOYMENT, ARCHITECTURE a wiki aktualizovány. Produkce beze změny.

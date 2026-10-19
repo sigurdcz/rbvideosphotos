@@ -1,0 +1,55 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const vm = require('node:vm');
+const source = fs.readFileSync('public/assets/frontend-runtime.js', 'utf8');
+new vm.Script(source);
+if (process.argv[2]) new vm.Script(fs.readFileSync(process.argv[2], 'utf8'));
+const start = source.indexOf('  function initHeroVideoCover(');
+const end = source.indexOf('  function initHeroVideoFacades()', start);
+const listeners = {}, properties = {}, sent = [], warnings = [], removed = [];
+let timeout;
+const facade = { clientWidth: 998, clientHeight: 620, dataset: {},
+  closest: () => ({}), style: {setProperty: (key,value) => properties[key] = parseFloat(value)} };
+const player = {postMessage: (data,origin) => sent.push([JSON.parse(data),origin])};
+const iframe = {src:'https://player.vimeo.com/video/1228181473', contentWindow:player,
+  addEventListener: (type,fn) => listeners['iframe:'+type] = fn,
+  removeEventListener: type => removed.push('iframe:'+type)};
+const window = {addEventListener: (type,fn) => listeners[type] = fn,
+  removeEventListener: type => removed.push(type),
+  clearTimeout: () => {}, setTimeout: fn => {timeout=fn;return 1}};
+const context = {window,console:{warn:s=>warnings.push(s)}};
+vm.createContext(context);
+vm.runInContext(source.slice(start,end),context);
+const cleanup = context.initHeroVideoCover(facade,iframe);
+listeners['iframe:load']();
+assert.deepEqual(sent.map(x=>x[0].method),['getVideoWidth','getVideoHeight','getVideoWidth','getVideoHeight']);
+assert(sent.every(x=>x[1]==='https://player.vimeo.com'));
+const message = (method,value,origin='https://player.vimeo.com',source=player) =>
+  listeners.message({origin,source,data:JSON.stringify({method,value})});
+message('getVideoWidth',426,'https://evil.example');
+message('getVideoHeight',206);
+assert.equal(facade.dataset.videoCoverRatio,undefined,'reject foreign origin');
+message('getVideoWidth',426,'https://player.vimeo.com',{});
+assert.equal(facade.dataset.videoCoverRatio,undefined,'reject another frame');
+message('getVideoWidth',426);
+assert.equal(Number(facade.dataset.videoCoverRatio),426/206);
+assert(properties['--hero-video-cover-width'] >= 620*426/206);
+assert.equal(properties['--hero-video-cover-height'],620);
+facade.clientWidth=390;facade.clientHeight=684;
+message('getVideoWidth',240);message('getVideoHeight',240);
+listeners.resize();
+assert.equal(properties['--hero-video-cover-width'],684);
+assert.equal(properties['--hero-video-cover-height'],684);
+facade.clientWidth=1920;facade.clientHeight=620;
+message('getVideoWidth',426);message('getVideoHeight',206);listeners.resize();
+assert.equal(properties['--hero-video-cover-width'],620*426/206,'wide panels may have a left gap');
+assert.equal(properties['--hero-video-cover-height'],620,'height must never be driven by panel width');
+message('getVideoWidth',0);message('getVideoHeight',-1);
+assert.equal(Number(facade.dataset.videoCoverRatio),426/206,'invalid dimensions do not overwrite metadata');
+const missing = {...facade,dataset:{}};
+context.initHeroVideoCover(missing,iframe);timeout();
+assert.equal(missing.dataset.videoCoverError,'metadata-unavailable');
+assert.equal(warnings.length,1,'metadata failure must be visible');
+cleanup();
+assert.deepEqual(removed, ['message', 'resize', 'iframe:load']);
+console.log('HeroVideoCover: PASS metadata, origin/source checks, desktop/mobile cover, resize and explicit timeout');

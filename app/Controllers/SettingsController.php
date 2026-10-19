@@ -42,6 +42,12 @@ class SettingsController extends Controller
         $this->requireAdmin();
         $this->csrfCheck();
 
+        $emailCopy = array_key_exists('form_email_cc', $_POST) ? trim((string)$_POST['form_email_cc']) : null;
+        if ($emailCopy !== null && $emailCopy !== '' && (strlen($emailCopy) > 254 || !filter_var($emailCopy, FILTER_VALIDATE_EMAIL) || preg_match('/[\r\n]/', $emailCopy))) {
+            $this->flash('error', 'E-mail pro kopii není platná adresa. Nastavení nebylo uloženo.');
+            $this->redirect('/admin/settings');
+        }
+
         $sites = new SiteRepository();
         $contactRepo = new ContactRepository();
         $site = $sites->findFirst();
@@ -122,6 +128,7 @@ class SettingsController extends Controller
         if ($siteId > 0) {
             $contactData = $contactRepo->findBySiteSafe($siteId);
             $contactData['form_email'] = trim((string)($_POST['form_email'] ?? ''));
+            if ($emailCopy !== null) { $contactData['form_email_cc'] = $emailCopy; }
             $contactRepo->upsert($siteId, $contactData, true);
         }
 

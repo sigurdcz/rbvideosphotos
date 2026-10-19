@@ -369,7 +369,7 @@ function register_golden_bash_theme_tests(callable $test, callable $assert): voi
             && !str_contains($layout, 'fonts.gstatic.com')
             && is_file(dirname(__DIR__) . '/public/assets/fonts/fonts.css'), 'Golden Bash text fonts must be self-hosted same-origin so they need neither a third-party connection nor JavaScript, with the hero face preloaded.');
         $fontCss = (string) file_get_contents(dirname(__DIR__) . '/public/assets/fonts/fonts.css');
-        $assert(str_contains($fontCss, 'font-display: optional') && !str_contains($fontCss, 'font-display: swap'), 'Golden Bash webfonts must not trigger a late mobile layout swap.');
+        $assert(str_contains($fontCss, 'font-display: swap') && !str_contains($fontCss, 'font-display: optional;'), 'Brand fonts must repair late loads rather than permanently retain a system face or mixed Czech glyphs.');
 
         // The upright faces are variable files, so one file serves every weight. Naming a
         // file after a weight is what led to six byte-identical copies being downloaded.

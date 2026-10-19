@@ -3,6 +3,7 @@ $isEdit = $page !== null;
 $pageTitle = $isEdit ? 'Upravit stranku' : 'Nova stranka';
 $h = fn($v) => htmlspecialchars((string)$v);
 $layoutType = $layoutType ?? 'generic';
+$hasPortfolioGallery = $isEdit && trim((string)($page['url_path'] ?? ''), '/') === 'nase-prace';
 $templateName = $template['name'] ?? '';
 $socialOptions = ['instagram','facebook','youtube','tiktok','linkedin','twitter','pinterest','whatsapp','telegram'];
 $fixedSocials = [
@@ -209,6 +210,9 @@ ob_start();
 <div data-tabs-container>
   <div class="tabs">
     <button type="button" class="tab-btn" data-tab="basic">Zakladni</button>
+    <?php if ($hasPortfolioGallery): ?>
+      <button type="button" class="tab-btn" data-tab="portfolio-gallery">Foto a video galerie</button>
+    <?php endif; ?>
     <?php if ($isEdit && $page['template_id']): ?>
       <?php if ($layoutType === 'faq'): ?>
         <button type="button" class="tab-btn" data-tab="page-content">Obsah stranky</button>
@@ -748,6 +752,11 @@ ob_start();
   </form>
 
   <?php if ($isEdit): ?>
+  <?php if ($hasPortfolioGallery): ?>
+    <div class="tab-pane" id="tab-portfolio-gallery">
+      <?php require __DIR__ . '/portfolio-gallery.php'; ?>
+    </div>
+  <?php endif; ?>
   <form id="sync-form" method="POST" action="/admin/blocks/sync-template">
     <input type="hidden" name="_csrf" value="<?= $h($_csrfToken) ?>">
     <input type="hidden" name="page_id" value="<?= (int)$page['id'] ?>">

@@ -1,3 +1,13 @@
+/* Italic v4.001 is the true Regular 400 instance (the old file was Light).
+   One complete Unicode face keeps Czech accents and Latin in the same instance.
+   New filename invalidates the year-long immutable font cache. */
+@font-face {
+  font-family: 'Cormorant Garamond';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url(/assets/fonts/cormorantgaramond-italic-v4.001.woff2) format('woff2');
+}
 /* Self-hosted brand families, latin + latin-ext (Czech needs both files of a family:
    latin carries ASCII plus á é í ó ú ý, latin-ext carries č ř š ž ě ů ď ť ň).
    Previously two render-blocking requests to fonts.googleapis.com delayed first paint
@@ -5,7 +15,7 @@
    shift in the hero. Serving them from our own origin removes both.
 
    The upright files are VARIABLE (Montserrat wght 100-900, Cormorant Garamond 300-700),
-   so one file serves every weight; the italic Cormorant file is static. Each weight is
+   so one file serves every weight; the italic Cormorant file is a complete static Regular instance. Each weight is
    still declared separately - the descriptor picks the instance off the axis - but every
    declaration of a family now points at the SAME url. Twelve urls used to stand in front
    of six distinct payloads (Montserrat three copies per range, Cormorant two), so a page
@@ -16,30 +26,15 @@
    Do not edit a font file in place: /assets/fonts/*.woff2 is served immutable for a
    year (public/index.php), so a changed face needs a new filename.
 
-   font-display: optional is deliberate. It never re-lays-out text after paint, which is
-   what keeps CLS at 0; swap would trade that for guaranteed typography. The preloads in
-   the theme layouts are what make the font win that window in the first place. */
-@font-face {
-  font-family: 'Cormorant Garamond';
-  font-style: italic;
-  font-weight: 400;
-  font-display: optional;
-  src: url(/assets/fonts/cormorantgaramond-italic-latin-ext.woff2) format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-@font-face {
-  font-family: 'Cormorant Garamond';
-  font-style: italic;
-  font-weight: 400;
-  font-display: optional;
-  src: url(/assets/fonts/cormorantgaramond-italic-latin.woff2) format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
+   font-display: swap intentionally repairs late loads. Optional permanently kept
+   a system face when a Latin or Czech subset missed its first-paint window.
+   Same-origin preloads remain to limit layout shifts; complete typography wins
+   over silently retaining a wrong face for the rest of the visit. */
 @font-face {
   font-family: 'Cormorant Garamond';
   font-style: normal;
   font-weight: 400;
-  font-display: optional;
+  font-display: swap;
   src: url(/assets/fonts/cormorantgaramond-latin-ext.woff2) format('woff2');
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
@@ -47,7 +42,7 @@
   font-family: 'Cormorant Garamond';
   font-style: normal;
   font-weight: 400;
-  font-display: optional;
+  font-display: swap;
   src: url(/assets/fonts/cormorantgaramond-latin.woff2) format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
@@ -55,7 +50,7 @@
   font-family: 'Cormorant Garamond';
   font-style: normal;
   font-weight: 500;
-  font-display: optional;
+  font-display: swap;
   src: url(/assets/fonts/cormorantgaramond-latin-ext.woff2) format('woff2');
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
@@ -63,7 +58,7 @@
   font-family: 'Cormorant Garamond';
   font-style: normal;
   font-weight: 500;
-  font-display: optional;
+  font-display: swap;
   src: url(/assets/fonts/cormorantgaramond-latin.woff2) format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
@@ -71,7 +66,7 @@
   font-family: 'Montserrat';
   font-style: normal;
   font-weight: 400;
-  font-display: optional;
+  font-display: swap;
   src: url(/assets/fonts/montserrat-latin-ext.woff2) format('woff2');
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
@@ -79,7 +74,7 @@
   font-family: 'Montserrat';
   font-style: normal;
   font-weight: 400;
-  font-display: optional;
+  font-display: swap;
   src: url(/assets/fonts/montserrat-latin.woff2) format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
@@ -87,7 +82,7 @@
   font-family: 'Montserrat';
   font-style: normal;
   font-weight: 500;
-  font-display: optional;
+  font-display: swap;
   src: url(/assets/fonts/montserrat-latin-ext.woff2) format('woff2');
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
@@ -95,7 +90,7 @@
   font-family: 'Montserrat';
   font-style: normal;
   font-weight: 500;
-  font-display: optional;
+  font-display: swap;
   src: url(/assets/fonts/montserrat-latin.woff2) format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
@@ -103,7 +98,7 @@
   font-family: 'Montserrat';
   font-style: normal;
   font-weight: 700;
-  font-display: optional;
+  font-display: swap;
   src: url(/assets/fonts/montserrat-latin-ext.woff2) format('woff2');
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
@@ -111,7 +106,7 @@
   font-family: 'Montserrat';
   font-style: normal;
   font-weight: 700;
-  font-display: optional;
+  font-display: swap;
   src: url(/assets/fonts/montserrat-latin.woff2) format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }

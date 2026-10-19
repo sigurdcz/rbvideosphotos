@@ -9,6 +9,8 @@ Jednoduche SEO CMS pro male staticke weby v cistem PHP 8. Aplikace ma admin rozh
 - `API.md` - REST API reference pro clanky, portfolio a media
 - `GTM_ADMIN.md` - provozni navod k `/admin/gtm`
 - `INSTRUCTIONS.md` - contribution pravidla pro vyvoj a AI asistenty
+- [STAGING.md](STAGING.md) - povinné secrets, samostatná DB, `.env` a první instalace stagingu na Active24
+- [BACKLOG.md](BACKLOG.md) - odložené úkoly a kritéria dokončení
 - `analytics.md` - staticky snapshot predane GA4 analytiky; urcuje prioritni testovaci viewporty podle realne navstevnosti
 - `qa-testing.md` - povinny QA postup pro verejny runtime na telefonu `390 x 844` CSS px a PC `1920 x 1080` CSS px
 - `SCREENSHOT-WORKFLOW.md` - aktualni Chrome/CDP capture postup pro jednotlive routy i cely sitemap inventar

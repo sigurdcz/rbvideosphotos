@@ -18,7 +18,8 @@ try {
     $db->exec(file_get_contents(dirname(__DIR__) . '/database/migrations/104_add_mail_archive.sql'));
     $db->exec("CREATE TABLE sites (id INT UNSIGNED PRIMARY KEY) ENGINE=InnoDB");
     $db->exec("CREATE TABLE contact_info (site_id INT UNSIGNED PRIMARY KEY, form_email VARCHAR(255), email VARCHAR(255)) ENGINE=InnoDB");
-    $db->exec("INSERT INTO sites VALUES (1); INSERT INTO contact_info VALUES (1, 'recovery@example.test', 'public@example.test')");
+    $db->exec(file_get_contents(dirname(__DIR__) . '/database/migrations/107_add_contact_email_copy.sql'));
+    $db->exec("INSERT INTO sites VALUES (1); INSERT INTO contact_info (site_id,form_email,email,form_email_cc) VALUES (1, 'recovery@example.test', 'public@example.test', 'copy@example.test')");
     $oldHash = password_hash('old-password-123', PASSWORD_BCRYPT);
     $db->prepare('INSERT INTO users (email, password_hash) VALUES (?, ?)')->execute(['admin@example.test', $oldHash]);
     $_ENV['APP_URL'] = 'https://example.test';
@@ -29,6 +30,8 @@ try {
     check(count($messages) === 0, 'Unknown account sends no mail');
     $service->request('admin@example.test');
     check($messages[0][0] === 'recovery@example.test', 'Mail goes to configured recovery address, not login or public email');
+    check(($messages[0][4] ?? '') === '', 'Configured contact copy must not receive password reset links');
+    check($db->query('SELECT cc_recipient FROM mail_archive ORDER BY id DESC LIMIT 1')->fetchColumn() === null, 'Reset archive has no CC');
     check(str_contains($messages[0][2], 'admin@example.test'), 'Recovery email identifies target account');
     check($db->query('SELECT recipient FROM mail_archive ORDER BY id DESC LIMIT 1')->fetchColumn() === 'recovery@example.test', 'Archive records actual central recipient');
     preg_match('/token=([a-f0-9]{64})/', $messages[0][2], $m); $token = $m[1];

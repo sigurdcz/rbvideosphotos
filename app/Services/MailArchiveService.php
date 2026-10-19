@@ -11,12 +11,15 @@ final class MailArchiveService
     public function __construct(private PDO $db, private ?\Closure $sender = null) {}
 
     /** Contact bodies are durable; password reset secrets must never be archived. */
-    public function send(string $kind, string $recipient, string $subject, string $body, string $headers = ''): array
+    public function send(string $kind, string $recipient, string $subject, string $body, string $headers = '', string $cc = ''): array
     {
         if (!in_array($kind, ['contact', 'password_reset'], true)) { throw new RuntimeException('Unknown mail kind'); }
+        $cc = trim($cc);
+        if ($kind !== 'contact' && $cc !== '') { throw new RuntimeException('Password reset copies are not allowed'); }
+        if (strcasecmp($cc, $recipient) === 0) { $cc = ''; }
         // If storage fails, no mail is sent and no success is reported.
-        $stmt = $this->db->prepare('INSERT INTO mail_archive (kind, recipient, subject, body, created_at) VALUES (?, ?, ?, ?, ?)');
-        $stmt->execute([$kind, $recipient, $subject, $kind === 'contact' ? $body : null, gmdate('Y-m-d H:i:s')]);
+        $stmt = $this->db->prepare('INSERT INTO mail_archive (kind, recipient, cc_recipient, subject, body, created_at) VALUES (?, ?, ?, ?, ?, ?)');
+        $stmt->execute([$kind, $recipient, $cc !== '' ? $cc : null, $subject, $kind === 'contact' ? $body : null, gmdate('Y-m-d H:i:s')]);
         $id = (int) $this->db->lastInsertId();
         $status = 'failed';
         $error = null;
@@ -26,10 +29,12 @@ final class MailArchiveService
                 $error = 'invalid_recipient';
             } elseif (preg_match('/[\r\n]/', $subject)) {
                 $error = 'invalid_subject';
+            } elseif ($cc !== '' && (!filter_var($cc, FILTER_VALIDATE_EMAIL) || preg_match('/[\r\n]/', $cc))) {
+                $error = 'invalid_cc_recipient';
             } else {
                 // SMTP acceptance cannot prove mailbox delivery.
-                $sent = $this->sender ? ($this->sender)($recipient, $subject, $body, $headers)
-                    : (new SmtpMailer())->send($recipient, $subject, $body);
+                $sent = $this->sender ? ($this->sender)($recipient, $subject, $body, $headers, $cc)
+                    : (new SmtpMailer())->send($recipient, $subject, $body, $cc);
                 $status = $sent ? 'accepted' : 'failed';
                 $error = $sent ? null : 'transport_rejected';
             }

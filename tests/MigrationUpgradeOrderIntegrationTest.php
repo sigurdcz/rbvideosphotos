@@ -51,11 +51,11 @@ namespace {
         try {
             $expected = count(glob($root . '/database/migrations/*.sql'));
             $applied = (int) $admin->query('SELECT COUNT(*) FROM schema_migrations')->fetchColumn();
-            if ($applied !== $expected || \App\Services\ApplicationCompatibleMigrationService::$calls !== 15 || str_contains($output, 'Migrace selhala')) {
+            if ($applied !== $expected || \App\Services\ApplicationCompatibleMigrationService::$calls !== 16 || str_contains($output, 'Migrace selhala')) {
                 fwrite(STDERR, "FAIL: SQL/content upgrade order, applied {$applied}/{$expected}\n" . strip_tags($output));
                 $failed = true;
             } else {
-                echo "PASS: all {$applied} migrations complete; 15 content handlers ran after schema dependencies existed.\n";
+                echo "PASS: all {$applied} migrations complete; 16 content handlers ran after schema dependencies existed.\n";
             }
         } finally {
             // Only this process's random, freshly-created database is removed.

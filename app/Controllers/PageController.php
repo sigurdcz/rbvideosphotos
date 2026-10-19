@@ -9,6 +9,7 @@ use App\Repositories\ContactRepository;
 use App\Repositories\FaqRepository;
 use App\Repositories\MediaRepository;
 use App\Repositories\PageRepository;
+use App\Repositories\PortfolioRepository;
 use App\Repositories\ServiceRepository;
 use App\Repositories\SiteRepository;
 use App\Repositories\TemplateRepository;
@@ -202,6 +203,8 @@ class PageController extends Controller
             'templates'  => $templates,
             'template'   => $template,
             'layoutType' => $layout,
+            'portfolioEntries' => trim((string)($page['url_path'] ?? ''), '/') === 'nase-prace'
+                ? (new PortfolioRepository())->allBySite((int)$page['site_id']) : [],
             'faqItems'   => $layout === 'faq' ? (new FaqRepository())->allBySite((int)$page['site_id']) : [],
             'contact'    => $layout === 'contact' ? (new ContactRepository())->findBySiteSafe((int)$page['site_id']) : [],
             'serviceItems' => $serviceItems,

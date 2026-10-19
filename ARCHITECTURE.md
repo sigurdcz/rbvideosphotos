@@ -99,7 +99,8 @@ admin editaci, viz `074`-`077`) + stejny zaznam v `database/seeds/seed.php`; u o
   `hero_video[_tablet|_mobile]`). Desktop je povinny a je fallbackem; varianta se do HTML zapise,
   jen kdyz je stejneho typu jako desktopova (embed k embedu, soubor k souboru). Vyber dela az
   prohlizec - staticky publish je jedna HTML pro vsechny, takze server o zarizeni rozhodovat nesmi.
-  Varianta se vybira jednou pri vlozeni prehravace, pri zmene sirky okna se uz neprepina.
+  Varianta se vybere pri vlozeni prehravace a znovu pri prekroceni700/1050px.
+  Stejna URL prehravac nerestartuje; nova URL odstrani stary iframe i metadata listenery/observer.
   Produkcni konfigurace pouziva tablet = desktop: tabletova varianta je prazdna (NULL), do HTML se
   `data-embed-url-tablet` nezapise a `pickEmbedUrl()` vrati desktopovou URL; vlastni video ma jen mobil.
   Migrace 100 tablet vycistila i na existujicich DB, seedy ho nenastavuji - nevyplnovat ho zpet stejnou URL.
@@ -713,3 +714,33 @@ SMTP konfigurace je v serverovém `.env` (`SMTP_HOST`, `SMTP_PORT`, `SMTP_ENCRYP
 Po datové migraci 105 mají všechny dosavadní stránky NULL `og_image_id`/`twitter_image_id`. Obvyklý renderer i publish používají globální Nastavení. `injectPageHeadMetadata` dodržuje prioritu explicitní SEO stránky > globální platformní obrázek > obsahová fotografie při absenci globálu. Twitter bez vlastního globálu dědí vybraný OG obrázek. `PortfolioPublishService` také upřednostňuje globální OG a pro globální obrázky používá společný MediaUrlResolver, aby export neodkazoval na interní storage cestu.
 
 Aktuální demo/base seedy vkládají page sharing image ID jako NULL. Schema.org explicitní obrázek je jiná vlastnost a migrace jej nemění; automatický Organization image nadále sleduje vybraný OG obrázek.
+
+## Hero cover a nacitani brand fontu
+
+Golden Bash Diagonal pouziva height-fit Vimeo iframe ze skutecnych metadat getVideoWidth/getVideoHeight: vyska=heroHeight, sirka=heroHeight*(videoWidth/videoHeight), pravý okraj0 bez transformace. Sirsi video presahuje vlevo, uzsi muze nechat vlevo prazdne misto. frontend-runtime.initHeroVideoCover prijima zpravy jen z https://player.vimeo.com a konkretniho contentWindow; ResizeObserver prepocita CSS promenne --hero-video-cover-width/height. Provizorni pomer16:9 je vyznamove oznacen, pri nedostupnych metadatech po15s vznikne console warning a data-video-cover-error. Neni to potvrzeni prehravani. Poster se po vlozeni iframe skryje, aby neprosvital vedle uzsiho videa; vadny iframe zustava viditelny. Mobil<=700, tablet701–1050, desktop>=1051. Gradient30–58% zustava, starsi horizontalni offset je nahrazen presnym pravym zarovnanim.
+
+Font CSS pouziva swap a same-origin preloady. Kurziva Cormorant Garamond v4.001 je kompletni Regular400, nikoli stary Light outline deklarovany jako400. Novy immutable filename a licence/provenance jsou v public/assets/fonts/README.md; reprodukce scripts/build_cormorant_italic.py vyzaduje presny upstream SHA256. Runtime nema Python/FontTools zavislost. Pozdni swap muze zpusobit layout shift, ktery je treba overovat pri pomale siti.
+
+Burger animace obou Golden Bash motivu plati do1050px a zachovava aria-expanded, Escape/focus, transparentni hover a reduced-motion. Overeni a otevrene brany: QA-BACKLOG-2026-10-16.md; konecna QA videa vyzaduje skutecne prehravani, metadata fixture dokazuje pouze geometrii.
+# Galerie v editaci stránky Naše práce
+
+Editace stránky s URL cestou `nase-prace` obsahuje záložku „Foto a video galerie“.
+PageController načítá portfolio jen pro web této stránky. Přehled rozlišuje
+fotografie a videa podle `content_type`, nikoli podle přítomnosti video odkazu.
+Přidání a úprava otevírají existující editor portfolia v nové kartě, takže
+rozepsané bloky stránky zůstávají zachované. Odkaz přidání předvolí typ galerie;
+ukládání, CSRF, média, pořadí a publikování zůstávají v PortfolioController.
+Panel je mimo formulář stránky a sám neprovádí zápisy. Mazání je dostupné
+přes odkaz Kompletní správa galerií. Po uložení galerie obnovte přehled stránky.
+Ověření: `php tests/PagePortfolioGalleryTest.php`. Nová migrace není potřeba.
+# Nepovinná kopie kontaktních zpráv
+
+Migrace107 přidává nullable `contact_info.form_email_cc` a `mail_archive.cc_recipient`.
+SettingsController validuje jednu nepovinnou adresu před zápisy. ContactRepository
+chrání hlavního příjemce i CC proti změnám mimo admin cestu a zachovává vynechané
+pole při jiných úpravách kontaktu. Prázdná hodnota se uloží jako NULL.
+Kontaktní POST načte uložené CC a předá je šestým argumentem MailArchiveService::send
+(pátý zůstává kompatibilní headers). Archiv uloží CC a tělo před odesláním.
+SmtpMailer přidává CC přes PHPMailer::addCC, každou zprávu začíná clearAllRecipients.
+CC shodné s hlavním příjemcem se potlačí. Password reset kopii nepoužívá a archivní
+služba explicitní CC u resetu odmítá. SMTP přijetí stále neznamená prokázané doručení.

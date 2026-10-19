@@ -24,6 +24,7 @@ final class ApplicationCompatibleMigrationService
         '098_revert_first_portfolio_cover_weare5.sql',
         '101_replace_about_cameraman_video_fallback.sql',
         '102_replace_work_listing_hero.sql',
+        '106_replace_approved_video_portfolio.sql',
     ];
 
     private SiteRepository $sites;
@@ -122,6 +123,9 @@ final class ApplicationCompatibleMigrationService
             ),
             '102_replace_work_listing_hero.sql' => $this->applyWithoutResult(
                 static fn() => $seeder->replaceWorkListingHero($siteId)
+            ),
+            '106_replace_approved_video_portfolio.sql' => $this->applyWithoutResult(
+                static fn() => (new ApprovedVideoPortfolioService())->replace($siteId)
             ),
         };
     }

@@ -200,6 +200,11 @@ ob_start();
         Pro obnovu přístupu musí být pole vyplněné platnou adresou a uložené.
       </p>
     </div>
+    <div class="form-group">
+      <label for="form-email-cc">Kopie kontaktních zpráv (nepovinné)</label>
+      <input id="form-email-cc" type="email" name="form_email_cc" maxlength="254" value="<?= $h($contact['form_email_cc'] ?? '') ?>" placeholder="kopie@vase-domena.cz">
+      <p class="help-text">Na tuto adresu odešleme kopii (CC) kontaktní zprávy. Prázdné pole = bez kopie. Odkazy pro obnovu hesla se sem neposílají.</p>
+    </div>
   </div>
 
   <div class="card">

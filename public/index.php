@@ -2590,11 +2590,13 @@ try {
         }
         $site = (new SiteRepository())->findFirst();
         $formEmail = null;
+        $formEmailCopy = '';
         $recipientLookupFailed = false;
         if ($site) {
             try {
                 $ci = (new ContactRepository())->findBySite((int)$site['id']);
                 $formEmail = trim((string)($ci['form_email'] ?? ''));
+                $formEmailCopy = trim((string)($ci['form_email_cc'] ?? ''));
                 if ($formEmail === '') {
                     $formEmail = trim((string)($ci['email'] ?? ''));
                 }
@@ -2627,7 +2629,7 @@ try {
             RequestThrottle::hit('contact_form', $contactThrottleKey, 3, 10 * 60, 10 * 60);
             try {
                 $delivery = (new \App\Services\MailArchiveService(\App\Core\Database::getInstance()))
-                    ->send('contact', (string) $formEmail, mb_substr($subject, 0, 255), $body);
+                    ->send('contact', (string) $formEmail, mb_substr($subject, 0, 255), $body, '', $formEmailCopy);
                 $contactSaved = true;
                 $contactMailSent = $delivery['status'] === 'accepted';
             } catch (\Throwable $e) {

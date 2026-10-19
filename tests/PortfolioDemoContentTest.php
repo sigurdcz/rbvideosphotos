@@ -87,6 +87,8 @@ $test('video gallery manifest maps exactly 12 distinguishable YouTube items', fu
     $videoManifest = $reflection->getReflectionConstant('VIDEO_MANIFEST')->getValue();
 
     $assert(count($videoManifest) === 12, 'Video gallery manifest must contain exactly twelve items.');
+    $approvedIds = ['L-zaa5hj-aU','cXU7Ty-kjyA','hYj2w3P5rK8','5ZlVVcIu10U','O5i9TzCms5c','b9WhNN8VYhc','C1wL3QFZhn0','DBWKJ46eM4c','su0hKnBnCKw','1z-qckQn5UU','o-1xGllIShY','GBKJ_VB_Nmw'];
+    $assert(array_column($videoManifest, 'video_url') === array_map(static fn(string $id): string => 'https://www.youtube.com/watch?v=' . $id, $approvedIds), 'Demo replay must preserve the exact user-approved video order, not the old chronological gallery.');
 
     $photoSlugs = array_column($photoManifest, 'slug');
     $slugs = [];
