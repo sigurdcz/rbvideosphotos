@@ -208,6 +208,7 @@ function tryRecordVisitBeacon(string $uri): bool
         RequestThrottle::purgeStale(VisitAnalyticsService::THROTTLE_SCOPE, VisitAnalyticsService::THROTTLE_STALE_SECONDS, 200);
     }
     if ($throttle['locked']) {
+        logRejectedVisitBeacon('throttled');
         http_response_code(429);
         header('Retry-After: ' . max(1, (int) $throttle['retry_after']));
         return true;

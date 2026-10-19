@@ -33,8 +33,9 @@ Odložená práce. Před zahájením vybereme prioritu; rozpracovaný úkol se v
 - Hotovo: otevření plynule změní burger na křížek, zavření vrátí burger; hover nemá rušivé tmavé pozadí. Ověřit myš, dotyk i klávesnici a zachovat viditelný focus pro ovládání klávesnicí.
 - Implementováno pro oba Golden Bash motivy: animace platí do 1050 px, transparentní hover/active, přístupný focus a omezení animace při reduced motion. Chrome ověřil klik/hover, otevřený křížek, zavření přes Escape a vrácení focusu. Finální ověření dotyku a stagingu zůstává otevřené.
 
-## 5. Zásady o vlastním měření návštěvnosti — P2, čeká text
+## 5. Zásady o vlastním měření návštěvnosti a retence logů — P2, čeká text a rozhodnutí
 
 - Doplnit zásady o vlastní měření návštěvnosti (cookieless hash + cookie `cms_vid` po souhlasu) do právního textu „Cookies a souhlasy“ na `/podminky-uziti`. Text vede uživatel; změna obsahu jde přes novou migraci.
-- Popsat: bez souhlasu se ukládá jen serverový záznam (cesta, doména odkazující stránky, UTM, typ zařízení, denně rotující anonymní otisk z IP a prohlížeče; IP adresa se neukládá); po souhlasu s analytickými cookies cookie `cms_vid` (náhodný identifikátor, platnost cca 13 měsíců); retence 14 měsíců; správce dat; měření lze vypnout v Nastavení.
-- Hotovo bude, když `/podminky-uziti` na stagingu obsahuje uvedené body včetně názvu cookie `cms_vid`, její doby platnosti a retence, text odpovídá chování `public/assets/visit-analytics.js` a uživatel text schválí.
+- Popsat: bez souhlasu se ukládá jen serverový záznam (cesta, doména odkazující stránky, UTM, typ zařízení, denně rotující anonymní otisk z IP a prohlížeče; IP adresa se do `site_visits` neukládá); po souhlasu s analytickými cookies cookie `cms_vid` (náhodný identifikátor, platnost cca 13 měsíců); retence 14 celých měsíců + běžící měsíc; správce dat; měření lze vypnout v Nastavení.
+- Pozor, „IP se neukládá“ platí jen pro `site_visits`: `Runtime::startRequest()`/`finishRequest()` zapisuje do `storage/logs/traffic-*.log` u každého requestu (i `POST /api/visit`) IP, User-Agent a Referer. Rozhodnout a zdokumentovat zásady a retenci aplikačních logů (doba uchování, rotace/mazání `storage/logs`, případně zkrácení IP nebo vynechání `/api/visit` z traffic logu) a promítnout to do textu zásad.
+- Hotovo bude, když `/podminky-uziti` na stagingu obsahuje uvedené body včetně názvu cookie `cms_vid`, její doby platnosti a retence, text odpovídá chování `public/assets/visit-analytics.js` i skutečnému logování, retence logů je nastavená a uživatel text schválí.

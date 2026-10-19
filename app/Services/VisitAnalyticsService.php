@@ -34,11 +34,18 @@ final class VisitAnalyticsService
     public const THROTTLE_SCOPE = 'visit_beacon';
     /** Throttle files older than this are stale: window 60 s + lock 300 s, with a wide margin. */
     public const THROTTLE_STALE_SECONDS = 3600;
-    public const REJECTION_REASONS = ['foreign_origin', 'invalid_payload', 'missing_secret', 'other'];
+    public const REJECTION_REASONS = ['foreign_origin', 'invalid_payload', 'missing_secret', 'throttled', 'other'];
 
-    /** Salted, daily rotating visitor hash; the raw IP never leaves this function. */
+    /**
+     * Salted, daily rotating visitor hash; the raw IP never leaves this function.
+     * An empty key is refused: an unkeyed hash of an IPv4 address is reversible.
+     */
     public static function visitorHash(string $ip, string $userAgent, string $day, string $secret): string
     {
+        if (trim($secret) === '') {
+            throw new \InvalidArgumentException('Visit hash requires a non-empty server secret.');
+        }
+
         return substr(hash_hmac('sha256', $ip . '|' . $userAgent . '|' . $day, $secret), 0, 32);
     }
 
@@ -71,6 +78,11 @@ final class VisitAnalyticsService
         $packed = @inet_pton(trim($ip));
         if ($packed === false) {
             return 'unknown';
+        }
+        // IPv4-mapped IPv6 (::ffff:a.b.c.d, dual-stack sockets) is an IPv4 client;
+        // a /48 of it would put every IPv4 visitor into one shared bucket.
+        if (strlen($packed) === 16 && str_starts_with($packed, str_repeat("\0", 10) . "\xff\xff")) {
+            $packed = substr($packed, 12);
         }
         if (strlen($packed) === 4) {
             return 'v4:' . (string) inet_ntop(substr($packed, 0, 3) . "\0") . '/24';

@@ -115,6 +115,207 @@ function register_visit_analytics_tests(callable $test, callable $assert): void
         $assert(!VisitAnalyticsService::isSameOrigin(['HTTP_HOST' => 'example.com']), 'No origin information must be rejected.');
     });
 
+    $test('visit beacon same-origin matrix covers ports, null origin, fetch metadata and www', function () use ($assert): void {
+        // [Host, Origin, Referer, Sec-Fetch-Site, expected]
+        $matrix = [
+            ['example.com:443', 'https://example.com', null, null, true],
+            ['example.com', 'https://example.com:443', null, null, true],
+            ['example.com:80', 'http://example.com', null, null, true],
+            ['example.com', 'http://example.com:80', null, null, true],
+            ['EXAMPLE.com', 'https://Example.COM', null, 'same-origin', true],
+            ['example.com.', 'https://example.com', null, null, true],
+            ['localhost:8000', 'http://localhost:8000', null, 'same-origin', true],
+            ['[::1]:8000', 'http://[::1]:8000', null, null, true],
+            ['example.com', 'null', null, 'same-origin', true],
+            ['example.com', null, 'https://example.com:443/blog?x=1', null, true],
+            ['example.com:8443', 'https://example.com', null, null, false],
+            ['example.com', 'https://example.com:8443', null, null, false],
+            ['localhost:8000', 'http://localhost:8001', null, null, false],
+            ['localhost:8000', 'http://localhost', null, null, false],
+            ['example.com', 'null', null, null, false],
+            ['example.com', 'null', 'https://example.com/', null, false],
+            ['example.com', 'null', null, 'same-site', false],
+            ['example.com', 'https://example.com', null, 'same-site', false],
+            ['example.com', 'https://example.com', null, 'none', false],
+            ['example.com', 'https://example.com', null, 'cross-site', false],
+            ['example.com', null, null, 'same-site', false],
+            ['www.example.com', 'https://example.com', null, null, false],
+            ['example.com', 'https://www.example.com', null, null, false],
+            ['staging.example.com', 'https://example.com', null, 'same-site', false],
+            ['example.com', 'ftp://example.com', null, null, false],
+            ['example.com', 'garbage', null, null, false],
+            ['example.com', 'https://evil.test', 'https://example.com/', null, false],
+            ['example.com', null, 'https://example.com.evil.test/', null, false],
+            ['example.com', null, 'https://example.com@evil.test/', null, false],
+            ['', 'https://example.com', null, null, false],
+            ['exa mple.com', 'https://exa mple.com', null, null, false],
+        ];
+        foreach ($matrix as [$host, $origin, $referer, $fetchSite, $expected]) {
+            $server = ['HTTP_HOST' => $host];
+            if ($origin !== null) {
+                $server['HTTP_ORIGIN'] = $origin;
+            }
+            if ($referer !== null) {
+                $server['HTTP_REFERER'] = $referer;
+            }
+            if ($fetchSite !== null) {
+                $server['HTTP_SEC_FETCH_SITE'] = $fetchSite;
+            }
+            $assert(
+                VisitAnalyticsService::isSameOrigin($server) === $expected,
+                'isSameOrigin(' . json_encode($server) . ') should be ' . ($expected ? 'true' : 'false')
+            );
+        }
+    });
+
+    $test('visit secret has no public default and the hash refuses an empty key', function () use ($assert): void {
+        $names = ['VISIT_ANALYTICS_SALT', 'API_KEY'];
+        $saved = [];
+        foreach ($names as $name) {
+            $saved[$name] = [
+                'env' => array_key_exists($name, $_ENV) ? $_ENV[$name] : null,
+                'server' => array_key_exists($name, $_SERVER) ? $_SERVER[$name] : null,
+                'getenv' => getenv($name),
+            ];
+        }
+        $set = static function (array $values) use ($names): void {
+            foreach ($names as $name) {
+                unset($_ENV[$name], $_SERVER[$name]);
+                putenv($name);
+                if (isset($values[$name])) {
+                    $_ENV[$name] = $values[$name];
+                }
+            }
+        };
+
+        try {
+            $set([]);
+            $assert(VisitAnalyticsService::secret() === null, 'Without salt and API key there must be no secret.');
+            $set(['VISIT_ANALYTICS_SALT' => '   ', 'API_KEY' => '']);
+            $assert(VisitAnalyticsService::secret() === null, 'A blank salt is not a secret.');
+            $set(['API_KEY' => 'api-key-value']);
+            $assert(VisitAnalyticsService::secret() === 'api-key-value', 'API_KEY is the fallback.');
+            $set(['VISIT_ANALYTICS_SALT' => 'salt-value', 'API_KEY' => 'api-key-value']);
+            $assert(VisitAnalyticsService::secret() === 'salt-value', 'VISIT_ANALYTICS_SALT wins.');
+        } finally {
+            foreach ($names as $name) {
+                unset($_ENV[$name], $_SERVER[$name]);
+                putenv($name);
+                if ($saved[$name]['env'] !== null) {
+                    $_ENV[$name] = $saved[$name]['env'];
+                }
+                if ($saved[$name]['server'] !== null) {
+                    $_SERVER[$name] = $saved[$name]['server'];
+                }
+                if ($saved[$name]['getenv'] !== false) {
+                    putenv($name . '=' . $saved[$name]['getenv']);
+                }
+            }
+        }
+
+        foreach (['', '  '] as $empty) {
+            $threw = false;
+            try {
+                VisitAnalyticsService::visitorHash('203.0.113.42', 'UA', '2026-10-19', $empty);
+            } catch (\InvalidArgumentException) {
+                $threw = true;
+            }
+            $assert($threw, 'visitorHash() must refuse an empty secret.');
+        }
+
+        $index = (string) file_get_contents(dirname(__DIR__) . '/public/index.php');
+        $secretCheck = strpos($index, 'if ($secret === null) {');
+        $assert($secretCheck !== false && $secretCheck < strpos($index, 'RequestThrottle::hit('), 'Missing secret must stop the beacon before throttle and insert.');
+    });
+
+    $test('visit throttle key buckets IPv4 by /24 and IPv6 by /48', function () use ($assert): void {
+        $key = static fn(string $ip): string => VisitAnalyticsService::throttleKey($ip);
+        $assert($key('203.0.113.42') === 'v4:203.0.113.0/24', 'IPv4 key: ' . $key('203.0.113.42'));
+        $assert($key('203.0.113.42') === $key('203.0.113.7') && $key(' 203.0.113.255 ') === $key('203.0.113.1'));
+        $assert($key('203.0.113.42') !== $key('203.0.114.42'), 'Different /24 must not share a bucket.');
+        $assert($key('2001:db8:abcd:12::1') === 'v6:2001:db8:abcd::/48', 'IPv6 key: ' . $key('2001:db8:abcd:12::1'));
+        $assert($key('2001:db8:abcd:12::1') === $key('2001:DB8:ABCD:ffff:1:2:3:4'), 'One /48 (any /64 inside) must share a bucket.');
+        $assert($key('2001:db8:abcd::1') !== $key('2001:db8:abce::1'), 'Different /48 must not share a bucket.');
+        $assert($key('::ffff:203.0.113.5') === 'v4:203.0.113.0/24', 'IPv4-mapped IPv6 must bucket as IPv4: ' . $key('::ffff:203.0.113.5'));
+        $assert($key('::ffff:198.51.100.5') !== $key('::ffff:203.0.113.5'));
+        $assert($key('unknown') === 'unknown' && $key('') === 'unknown' && $key('1.2.3') === 'unknown');
+    });
+
+    $test('visit throttle purge removes only stale visit_beacon files and respects the limit', function () use ($assert): void {
+        $dir = sys_get_temp_dir() . '/visit-throttle-test-' . bin2hex(random_bytes(6));
+        mkdir($dir, 0775, true);
+        $now = 1_800_000_000;
+        $old = $now - 7200;
+        $file = static function (string $name, int $mtime) use ($dir): string {
+            $path = $dir . '/' . $name;
+            file_put_contents($path, '{}');
+            touch($path, $mtime);
+            return $path;
+        };
+
+        try {
+            $staleBeacon = [];
+            for ($i = 0; $i < 5; $i++) {
+                $staleBeacon[] = $file('visit_beacon-' . sha1('stale' . $i) . '.json', $old);
+            }
+            $freshBeacon = $file('visit_beacon-' . sha1('fresh') . '.json', $now - 60);
+            $login = $file('login-' . sha1('login') . '.json', $old);
+            $reject = $file('visit_reject-foreign_origin.json', $old);
+            $odd = $file('visit_beacon-notahash.json', $old);
+
+            $assert(\App\Security\RequestThrottle::purgeStale('visit_beacon', 3600, 2, $dir, $now) === 2, 'Limit per call must hold.');
+            $remaining = count(array_filter($staleBeacon, 'is_file'));
+            $assert($remaining === 3, 'Expected 3 stale files left after a limited run, got ' . $remaining);
+            $assert(\App\Security\RequestThrottle::purgeStale('visit_beacon', 3600, 100, $dir, $now) === 3);
+            $assert(count(array_filter($staleBeacon, 'is_file')) === 0, 'All stale beacon files must be gone.');
+            $assert(is_file($freshBeacon), 'A recently written beacon file must stay.');
+            $assert(is_file($login), 'Other throttle scopes (login) must never be purged.');
+            $assert(is_file($reject), 'Rejection counters must not be purged.');
+            $assert(is_file($odd), 'Only "<scope>-<sha1>.json" names may be purged.');
+            $assert(\App\Security\RequestThrottle::purgeStale('../visit_beacon', 0, 100, $dir, $now) === 0, 'Unsafe scope must be refused.');
+            $assert(\App\Security\RequestThrottle::purgeStale('visit_beacon', 0, 0, $dir, $now) === 0, 'Zero limit deletes nothing.');
+            $assert(\App\Security\RequestThrottle::purgeStale('visit_beacon', 0, 10, $dir . '/missing', $now) === 0);
+        } finally {
+            foreach ((array) glob($dir . '/*') as $path) {
+                if (is_file((string) $path)) {
+                    unlink((string) $path);
+                }
+            }
+            rmdir($dir);
+        }
+    });
+
+    $test('visit rejection logging is aggregated per reason and interval', function () use ($assert): void {
+        $dir = sys_get_temp_dir() . '/visit-reject-test-' . bin2hex(random_bytes(6));
+        $now = 1_800_000_000;
+
+        try {
+            $assert(VisitAnalyticsService::countRejection('foreign_origin', $dir, $now) === 1, 'First rejection is logged at once.');
+            $assert(VisitAnalyticsService::countRejection('foreign_origin', $dir, $now + 10) === null, 'Within the interval nothing is logged.');
+            $assert(VisitAnalyticsService::countRejection('foreign_origin', $dir, $now + 20) === null);
+            $assert(VisitAnalyticsService::countRejection('missing_secret', $dir, $now + 30) === 1, 'Reasons are counted separately.');
+            $assert(VisitAnalyticsService::countRejection('foreign_origin', $dir, $now + 3600) === 3, 'After the interval the accumulated count is logged.');
+            $assert(VisitAnalyticsService::countRejection('foreign_origin', $dir, $now + 3610) === null);
+            $assert(VisitAnalyticsService::countRejection('../../etc', $dir, $now) === 1, 'Unknown reasons fold into "other".');
+            $files = array_map('basename', (array) glob($dir . '/*'));
+            sort($files);
+            $assert($files === ['visit_reject-foreign_origin.json', 'visit_reject-missing_secret.json', 'visit_reject-other.json'], 'Fixed file set: ' . implode(',', $files));
+            foreach ($files as $name) {
+                $state = (string) file_get_contents($dir . '/' . $name);
+                $assert(!preg_match('~\d+\.\d+\.\d+\.\d+~', $state), 'Rejection state must not contain an IP.');
+            }
+        } finally {
+            foreach ((array) glob($dir . '/*') as $path) {
+                if (is_file((string) $path)) {
+                    unlink((string) $path);
+                }
+            }
+            if (is_dir($dir)) {
+                rmdir($dir);
+            }
+        }
+    });
+
     $test('visit payload validation rejects oversized bodies, bad ids and wrong types', function () use ($assert, $validBody): void {
         $payload = VisitAnalyticsService::parsePayload($validBody());
         $assert(is_array($payload) && $payload['p'] === '/svatebni-foto-video' && $payload['a'] === false && $payload['v'] === null);
