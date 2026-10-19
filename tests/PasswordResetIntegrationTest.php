@@ -19,6 +19,7 @@ try {
     $db->exec("CREATE TABLE sites (id INT UNSIGNED PRIMARY KEY) ENGINE=InnoDB");
     $db->exec("CREATE TABLE contact_info (site_id INT UNSIGNED PRIMARY KEY, form_email VARCHAR(255), email VARCHAR(255)) ENGINE=InnoDB");
     $db->exec(file_get_contents(dirname(__DIR__) . '/database/migrations/107_add_contact_email_copy.sql'));
+    $db->exec(file_get_contents(dirname(__DIR__) . '/database/migrations/108_expand_contact_email_copy_list.sql'));
     $db->exec("INSERT INTO sites VALUES (1); INSERT INTO contact_info (site_id,form_email,email,form_email_cc) VALUES (1, 'recovery@example.test', 'public@example.test', 'copy@example.test')");
     $oldHash = password_hash('old-password-123', PASSWORD_BCRYPT);
     $db->prepare('INSERT INTO users (email, password_hash) VALUES (?, ?)')->execute(['admin@example.test', $oldHash]);

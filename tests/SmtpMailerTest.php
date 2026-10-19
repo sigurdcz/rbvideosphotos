@@ -20,7 +20,7 @@ final class TestSmtpChannel extends SMTP
     public function authenticate($username, $password, $authtype = null, $OAuth = null) { $this->events['auth'] = [$username, $password]; return $this->authAccepted; }
     public function getServerExt($name) { return false; }
     public function mail($from) { $this->events['from'] = $from; return true; }
-    public function recipient($address, $dsn = '') { $this->events['recipient'] = $address; return true; }
+    public function recipient($address, $dsn = '') { $this->events['recipients'][] = $address; return true; }
     public function data($msg_data) { $this->events['data'] = $msg_data; return $this->dataAccepted; }
     public function reset() { return true; }
     public function quit($close_on_error = true) { $this->open = false; return true; }
@@ -41,7 +41,7 @@ function register_smtp_mailer_tests(callable $test, callable $assert): void
             $assert($smtp->events['connect'][2]['ssl'] === ['verify_peer'=>true,'verify_peer_name'=>true,'allow_self_signed'=>false]);
             $assert($smtp->events['auth'] === ['team@example.test','fixture-password']);
             $assert($smtp->events['from'] === 'team@example.test');
-            $assert($smtp->events['recipient'] === 'configured@example.test');
+            $assert($smtp->events['recipients'] === ['configured@example.test']);
             $assert(str_contains(strtolower($smtp->events['data']), 'charset=utf-8') && str_contains($smtp->events['data'], 'quoted-printable'));
             $assert(str_contains(quoted_printable_decode($smtp->events['data']), 'Zpráva česky'));
             $assert(!str_contains($smtp->events['data'], 'fixture-password'));
@@ -50,13 +50,14 @@ function register_smtp_mailer_tests(callable $test, callable $assert): void
             $assert($service->send('another@example.test', 'Reset', 'token fixture'));
             $assert($smtp->events['connect'][0] === 'smtp.example.test' && !empty($smtp->events['starttls']));
             $assert($phpMailer->getToAddresses() === [['another@example.test','']], 'Recipient must not leak between messages');
-            $assert($service->send('primary@example.test', 'Copy', 'Body', 'copy@example.test'));
-            $assert($phpMailer->getCcAddresses() === [['copy@example.test','']], 'Configured CC must reach the SMTP envelope');
-            $assert($smtp->events['recipient'] === 'copy@example.test', 'SMTP RCPT must include the copy recipient');
-            $assert(str_contains($smtp->events['data'], 'Cc: copy@example.test'), 'CC must appear in message headers');
+            $smtp->events['recipients'] = [];
+            $assert($service->send('primary@example.test', 'Copy', 'Body', "copy@example.test, second@example.test\nPRIMARY@example.test copy@example.test"));
+            $assert($phpMailer->getCcAddresses() === [['copy@example.test',''], ['second@example.test','']], 'Every unique configured CC must reach the SMTP envelope');
+            $assert($smtp->events['recipients'] === ['primary@example.test', 'copy@example.test', 'second@example.test'], 'SMTP RCPT must include the primary and every unique copy recipient');
+            $assert(str_contains($smtp->events['data'], 'Cc: copy@example.test, second@example.test'), 'All CC recipients must appear in message headers');
             $assert($service->send('primary@example.test', 'No copy', 'Body'));
             $assert($phpMailer->getCcAddresses() === [], 'Empty CC must clear previous recipients');
-            $assert($service->send('primary@example.test', 'Duplicate', 'Body', 'PRIMARY@example.test'));
+            $assert($service->send('primary@example.test', 'Duplicate', 'Body', 'PRIMARY@example.test primary@example.test'));
             $assert($phpMailer->getCcAddresses() === [], 'Same address must not receive a duplicate copy');
             foreach (['not-an-email', "copy@example.test\r\nBcc: injected@example.test"] as $badCopy) {
                 try { $service->send('primary@example.test', 'Bad copy', 'Body', $badCopy); throw new \LogicException('Expected CC rejection'); }

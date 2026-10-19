@@ -13,6 +13,7 @@ try{
  $db->exec(file_get_contents(dirname(__DIR__).'/database/migrations/028_add_reviews_url_to_contact_info.sql'));
  $db->exec(file_get_contents(dirname(__DIR__).'/database/migrations/104_add_mail_archive.sql'));
  $db->exec(file_get_contents(dirname(__DIR__).'/database/migrations/107_add_contact_email_copy.sql'));
+ $db->exec(file_get_contents(dirname(__DIR__).'/database/migrations/108_expand_contact_email_copy_list.sql'));
  $db->exec("INSERT INTO sites (name,domain) VALUES ('One','one.test'),('Two','two.test')");
  (new ReflectionProperty(App\Core\Database::class,'instance'))->setValue(null,$db);
  $repo=new ContactRepository();$repo->upsert(1,['form_email'=>'central@example.test','email'=>'public@example.test'],true);
@@ -28,14 +29,14 @@ try{
  check($repo->findBySite(1)['form_email']==='new-central@example.test','Omitted field preserved for admin too');
  $repo->upsert(2,['email'=>'public2@example.test']);
  check($repo->findBySite(2)['form_email']===null,'Untrusted insert does not invent a recovery address');
- $repo->upsert(1,['form_email_cc'=>'copy@example.test'],true);
- check($repo->findBySite(1)['form_email_cc']==='copy@example.test','Admin can set copy');
+ $repo->upsert(1,['form_email_cc'=>"copy@example.test second@example.test, COPY@example.test\nnew-central@example.test"],true);
+ check($repo->findBySite(1)['form_email_cc']==='copy@example.test, second@example.test','Admin can set and normalize multiple unique copies');
  $repo->upsert(1,['phone_1'=>'789']);
- check($repo->findBySite(1)['form_email_cc']==='copy@example.test','Other editors preserve copy');
- try{$repo->upsert(1,['form_email_cc'=>'other@example.test']);throw new LogicException('Expected copy denial');}catch(RuntimeException $e){check($repo->findBySite(1)['form_email_cc']==='copy@example.test','Non-admin cannot change copy');}
+ check($repo->findBySite(1)['form_email_cc']==='copy@example.test, second@example.test','Other editors preserve copies');
+ try{$repo->upsert(1,['form_email_cc'=>'other@example.test']);throw new LogicException('Expected copy denial');}catch(RuntimeException $e){check($repo->findBySite(1)['form_email_cc']==='copy@example.test, second@example.test','Non-admin cannot change copies');}
  $repo->upsert(1,['email'=>'public@example.test'],true);
- check($repo->findBySite(1)['form_email_cc']==='copy@example.test','Admin omission also preserves copy');
- try{$repo->upsert(1,['form_email_cc'=>'bad'],true);throw new LogicException('Expected invalid copy denial');}catch(InvalidArgumentException $e){check($repo->findBySite(1)['form_email_cc']==='copy@example.test','Invalid copy rejected without loss');}
+ check($repo->findBySite(1)['form_email_cc']==='copy@example.test, second@example.test','Admin omission also preserves copies');
+ try{$repo->upsert(1,['form_email_cc'=>'valid@example.test, bad'],true);throw new LogicException('Expected invalid copy denial');}catch(InvalidArgumentException $e){check($repo->findBySite(1)['form_email_cc']==='copy@example.test, second@example.test','One invalid copy rejects the whole list without loss');}
  $repo->upsert(1,['form_email_cc'=>''],true);
  check($repo->findBySite(1)['form_email_cc']===null,'Empty value disables copy');
  echo "PASS: {$checks} recovery recipient permission assertions.\n";

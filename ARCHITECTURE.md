@@ -735,12 +735,18 @@ přes odkaz Kompletní správa galerií. Po uložení galerie obnovte přehled s
 Ověření: `php tests/PagePortfolioGalleryTest.php`. Nová migrace není potřeba.
 # Nepovinná kopie kontaktních zpráv
 
-Migrace107 přidává nullable `contact_info.form_email_cc` a `mail_archive.cc_recipient`.
-SettingsController validuje jednu nepovinnou adresu před zápisy. ContactRepository
-chrání hlavního příjemce i CC proti změnám mimo admin cestu a zachovává vynechané
-pole při jiných úpravách kontaktu. Prázdná hodnota se uloží jako NULL.
+Migrace107 přidává nullable `contact_info.form_email_cc` a `mail_archive.cc_recipient`;
+append-only migrace108 je rozšiřuje z `VARCHAR(255)` na `TEXT`. `EmailRecipientList`
+je společný parser pro čárky a bílé znaky včetně nových řádků, validuje každou adresu,
+odstraňuje duplicity bez ohledu na velikost písmen a ukládá kanonický seznam oddělený
+čárkou a mezerou. SettingsController validuje celý nepovinný seznam před zápisy.
+ContactRepository chrání hlavního příjemce i CC proti změnám mimo admin cestu,
+zachovává vynechané pole při jiných úpravách kontaktu a prázdnou hodnotu ukládá jako
+NULL.
 Kontaktní POST načte uložené CC a předá je šestým argumentem MailArchiveService::send
 (pátý zůstává kompatibilní headers). Archiv uloží CC a tělo před odesláním.
-SmtpMailer přidává CC přes PHPMailer::addCC, každou zprávu začíná clearAllRecipients.
-CC shodné s hlavním příjemcem se potlačí. Password reset kopii nepoužívá a archivní
-služba explicitní CC u resetu odmítá. SMTP přijetí stále neznamená prokázané doručení.
+SmtpMailer přidává každé CC přes PHPMailer::addCC a každou zprávu začíná
+clearAllRecipients. CC shodné s hlavním příjemcem se potlačí. Jediná neplatná adresa
+odmítne celý seznam; MailArchiveService přitom zachová kontaktní zprávu i zadaný CC
+text a uloží `invalid_cc_recipient`. Password reset kopii nepoužívá a archivní služba
+explicitní CC u resetu odmítá. SMTP přijetí stále neznamená prokázané doručení.

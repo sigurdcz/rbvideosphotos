@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Core\Database;
+use App\Services\EmailRecipientList;
 use PDO;
 
 class ContactRepository
@@ -44,10 +45,10 @@ class ContactRepository
             }
             if (!array_key_exists($field, $d)) { $d[$field] = $existing[$field] ?? null; }
         }
-        $copy = trim((string)$d['form_email_cc']);
-        if ($copy !== '' && (strlen($copy) > 254 || !filter_var($copy, FILTER_VALIDATE_EMAIL) || preg_match('/[\r\n]/', $copy))) {
-            throw new \InvalidArgumentException('E-mail pro kopii není platná adresa.');
-        }
+        $d['form_email_cc'] = EmailRecipientList::normalize(
+            (string)$d['form_email_cc'],
+            (string)($d['form_email'] ?? $existing['form_email'] ?? '')
+        );
         $fields = $allowRecoveryRecipientChange ? self::FIELDS : array_values(array_diff(self::FIELDS, ['form_email', 'form_email_cc']));
         $vals = [];
         foreach ($fields as $f) {

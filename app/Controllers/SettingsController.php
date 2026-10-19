@@ -7,6 +7,7 @@ use App\Core\Env;
 use App\Repositories\ContactRepository;
 use App\Repositories\MediaRepository;
 use App\Repositories\SiteRepository;
+use App\Services\EmailRecipientList;
 
 class SettingsController extends Controller
 {
@@ -43,9 +44,13 @@ class SettingsController extends Controller
         $this->csrfCheck();
 
         $emailCopy = array_key_exists('form_email_cc', $_POST) ? trim((string)$_POST['form_email_cc']) : null;
-        if ($emailCopy !== null && $emailCopy !== '' && (strlen($emailCopy) > 254 || !filter_var($emailCopy, FILTER_VALIDATE_EMAIL) || preg_match('/[\r\n]/', $emailCopy))) {
-            $this->flash('error', 'E-mail pro kopii není platná adresa. Nastavení nebylo uloženo.');
-            $this->redirect('/admin/settings');
+        if ($emailCopy !== null) {
+            try {
+                $emailCopy = EmailRecipientList::normalize($emailCopy, trim((string)($_POST['form_email'] ?? '')));
+            } catch (\InvalidArgumentException $e) {
+                $this->flash('error', 'Seznam e-mailů pro kopii obsahuje neplatnou adresu. Nastavení nebylo uloženo.');
+                $this->redirect('/admin/settings');
+            }
         }
 
         $sites = new SiteRepository();

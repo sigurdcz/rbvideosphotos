@@ -202,8 +202,8 @@ ob_start();
     </div>
     <div class="form-group">
       <label for="form-email-cc">Kopie kontaktních zpráv (nepovinné)</label>
-      <input id="form-email-cc" type="email" name="form_email_cc" maxlength="254" value="<?= $h($contact['form_email_cc'] ?? '') ?>" placeholder="kopie@vase-domena.cz">
-      <p class="help-text">Na tuto adresu odešleme kopii (CC) kontaktní zprávy. Prázdné pole = bez kopie. Odkazy pro obnovu hesla se sem neposílají.</p>
+      <textarea id="form-email-cc" name="form_email_cc" rows="4" maxlength="60000" spellcheck="false" placeholder="kopie@vase-domena.cz&#10;dalsi@vase-domena.cz"><?= $h($contact['form_email_cc'] ?? '') ?></textarea>
+      <p class="help-text">Zadejte jednu nebo více CC adres oddělených čárkou, mezerou nebo novým řádkem. Prázdné pole = bez kopie. Odkazy pro obnovu hesla se sem neposílají.</p>
     </div>
   </div>
 
