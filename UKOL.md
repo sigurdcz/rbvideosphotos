@@ -1,3 +1,22 @@
+# UKOL: Obnova kontaktních formulářů po ruční úpravě serveru
+
+Datum: 2026-10-19
+Zadani: Znovu nasadit viditelné kontaktní formuláře na homepage a /kontakt, nejprve staging a po ověření rovnou produkce.
+Doporuceny model: Terra - Cílená oprava dvou šablon, regresní test a řízený deployment.
+
+## Kroky
+
+- [x] Porovnat formuláře v repozitáři, stagingu a produkci.
+- [x] Upravit obě zdrojové šablony tak, aby je FTP synchronizace znovu nahrála.
+- [x] Ověřit, že formuláře nejsou zakomentované a zůstávají funkční.
+- [ ] Commit, staging deploy a kontrola obou stránek.
+- [ ] Po výslovném souhlasu v zadání sloučit do masteru a ověřit produkci.
+
+## Poznamky
+
+Produkční homepage obsahovala celý druhý `.hp-contact-box` v HTML komentáři; staging jej renderoval normálně. `/kontakt` formulář renderoval na obou prostředích, ale jeho zdrojová šablona se znovu nasadí také, aby se přepsaly případné ruční úpravy FTP.
+
+---
 # UKOL: Nepovinná kopie kontaktních e-mailů
 
 Datum: 2026-10-19
