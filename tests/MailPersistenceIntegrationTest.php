@@ -15,6 +15,7 @@ try {
  $db->exec(file_get_contents(dirname(__DIR__) . '/database/migrations/104_add_mail_archive.sql'));
  $db->exec('CREATE TABLE contact_info (site_id INT PRIMARY KEY)');
  $db->exec(file_get_contents(dirname(__DIR__) . '/database/migrations/107_add_contact_email_copy.sql'));
+ $db->exec(file_get_contents(dirname(__DIR__) . '/database/migrations/108_expand_contact_email_copy_list.sql'));
  $_ENV['APP_URL'] = 'https://example.test'; $_ENV['MAIL_FROM'] = 'team@example.test';
  $calls = 0;
  $body = "Jméno: Test\nKontakt: test@example.test\nZpráva: <b>client & content</b>";
@@ -37,13 +38,13 @@ try {
    check($db->query('SELECT cc_recipient FROM mail_archive ORDER BY id DESC LIMIT 1')->fetchColumn() === ($cc !== '' ? $cc : null), 'Copy archived before transport');
    return true;
  });
- $withCopy->send('contact', 'team@example.test', 'Copy', $body, '', 'copy@example.test');
- check($copyCalls === ['copy@example.test'], 'Copy forwarded to sender');
+ $withCopy->send('contact', 'team@example.test', 'Copy', $body, '', "copy@example.test, second@example.test\nCOPY@example.test team@example.test");
+ check($copyCalls === ['copy@example.test, second@example.test'], 'Normalized unique copies forwarded to sender and primary suppressed');
  $copyFailure = (new MailArchiveService($db, fn() => false))->send('contact', 'team@example.test', 'Failed copy', $body, '', 'copy@example.test');
  $copyRow = $db->query('SELECT body,cc_recipient FROM mail_archive ORDER BY id DESC LIMIT 1')->fetch();
  check($copyFailure['status'] === 'failed' && $copyRow['body'] === $body && $copyRow['cc_recipient'] === 'copy@example.test', 'SMTP rejection retains body and copy recipient');
  $withCopy->send('contact', 'team@example.test', 'No copy', $body);
- check($copyCalls === ['copy@example.test', ''], 'Empty copy sends only primary');
+ check($copyCalls === ['copy@example.test, second@example.test', ''], 'Empty copy sends only primary');
  $withCopy->send('contact', 'team@example.test', 'Duplicate', $body, '', 'TEAM@example.test');
  check(end($copyCalls) === '', 'Duplicate primary copy suppressed');
  $result = $withCopy->send('contact', 'team@example.test', 'Invalid', $body, '', 'bad');

@@ -1,3 +1,30 @@
+# UKOL: Více příjemců kopií kontaktních zpráv
+
+Datum: 2026-10-19
+Zadani: Změnit jednořádkové CC pole na textovou oblast a podporovat více adres oddělených čárkami, mezerami nebo novými řádky.
+Doporuceny model: Terra - Ohraničené rozšíření administrace, validace, databázového archivu a SMTP o více příjemců.
+
+## Kroky
+
+- [x] Navrhnout jednotnou normalizaci, validaci a úložiště seznamu CC adres.
+- [x] Přidat novou append-only migraci bez změny historické migrace107.
+- [x] Upravit administraci, repository, archiv a SMTP pro více CC adres.
+- [x] Doplnit testy oddělovačů, duplicit, neplatných adres, prázdné hodnoty a zálohy.
+- [-] Aktualizovat dokumentaci, commitnout a ověřit staging. Master bez nového souhlasu neměnit.
+
+## Poznamky
+
+Platné oddělovače: čárka, libovolná mezera a nový řádek. Prázdná hodnota znamená bez kopie. Každá adresa musí projít validací; neplatný seznam se nesmí uložit ani odeslat. Duplicitní CC a shoda s hlavním příjemcem se odstraní bez rozesílání duplicit.
+
+Přidána sdílená služba `EmailRecipientList`, textarea v administraci, kanonický zápis seznamu do databáze a iterace všech CC přes PHPMailer. Nová migrace108 mění oba dosavadní `VARCHAR(255)` sloupce na `TEXT`; historická migrace107 zůstává beze změny.
+
+Testovací databáze používají migraci108 i pro archiv, repository a reset hesla. Dokumentace DEPLOYMENT a ARCHITECTURE popisuje oddělovače, viditelnost běžného CC, odmítnutí celého neplatného seznamu a zachování databázové zálohy.
+
+První běh repository integračního testu odhalil chybnou fixture: očekávala potlačení staré hlavní adresy po její dřívější změně. Fixture nyní používá skutečně aktuálního hlavního příjemce; produkční kód se kvůli tomuto selhání neměnil.
+
+Ověření: parser5 kontrol, SMTP mock3 scénáře, view3 varianty, archiv28 kontrol, oprávnění13 kontrol, reset19 kontrol a kompletní pořadí110 migrací. Žádný test neposílá skutečný e-mail.
+
+---
 # UKOL: Obnova kontaktních formulářů po ruční úpravě serveru
 
 Datum: 2026-10-19
@@ -9,8 +36,8 @@ Doporuceny model: Terra - Cílená oprava dvou šablon, regresní test a řízen
 - [x] Porovnat formuláře v repozitáři, stagingu a produkci.
 - [x] Upravit obě zdrojové šablony tak, aby je FTP synchronizace znovu nahrála.
 - [x] Ověřit, že formuláře nejsou zakomentované a zůstávají funkční.
-- [ ] Commit, staging deploy a kontrola obou stránek.
-- [ ] Po výslovném souhlasu v zadání sloučit do masteru a ověřit produkci.
+- [x] Commit, staging deploy a kontrola obou stránek.
+- [x] Po výslovném souhlasu v zadání sloučit do masteru a ověřit produkci.
 
 ## Poznamky
 

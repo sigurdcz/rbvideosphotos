@@ -10,7 +10,11 @@ final class SmtpMailer
 
     public function send(string $recipient, string $subject, string $body, string $cc = ''): bool
     {
-        $cc = trim($cc);
+        try {
+            $ccRecipients = EmailRecipientList::parse($cc);
+        } catch (\InvalidArgumentException $e) {
+            throw new SmtpTransportException('smtp_invalid_message');
+        }
         $host = trim((string) Env::get('SMTP_HOST', ''));
         $username = trim((string) Env::get('SMTP_USERNAME', ''));
         $password = (string) Env::get('SMTP_PASSWORD', '');
@@ -24,8 +28,7 @@ final class SmtpMailer
             throw new SmtpTransportException('smtp_configuration');
         }
         if (!filter_var($recipient, FILTER_VALIDATE_EMAIL) || preg_match('/[\r\n]/', $recipient)
-            || preg_match('/[\r\n]/', $subject)
-            || ($cc !== '' && (!filter_var($cc, FILTER_VALIDATE_EMAIL) || preg_match('/[\r\n]/', $cc)))) {
+            || preg_match('/[\r\n]/', $subject)) {
             throw new SmtpTransportException('smtp_invalid_message');
         }
         $mail = $this->mailer ?? new PHPMailer(true);
@@ -49,7 +52,9 @@ final class SmtpMailer
             $mail->clearReplyTos();
             $mail->setFrom($from, 'RB Videos Photos');
             $mail->addAddress($recipient); // Recipient is supplied by CMS, never replaced with the sender.
-            if ($cc !== '' && strcasecmp($cc, $recipient) !== 0) { $mail->addCC($cc); }
+            foreach ($ccRecipients as $ccRecipient) {
+                if (strcasecmp($ccRecipient, $recipient) !== 0) { $mail->addCC($ccRecipient); }
+            }
             $mail->Subject = $subject;
             $mail->isHTML(false);
             $mail->Body = $body;
