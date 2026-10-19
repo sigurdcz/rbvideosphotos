@@ -90,6 +90,7 @@ class SettingsController extends Controller
             'cookie_consent_enabled' => isset($_POST['cookie_consent_enabled']) ? 1 : 0,
             'cookie_consent_analytics_enabled' => isset($_POST['cookie_consent_analytics_enabled']) ? 1 : 0,
             'cookie_consent_marketing_enabled' => isset($_POST['cookie_consent_marketing_enabled']) ? 1 : 0,
+            'visit_analytics_enabled' => isset($_POST['visit_analytics_enabled']) ? 1 : 0,
             'head_scripts' => $_POST['head_scripts'] ?? '',
             'body_scripts' => $_POST['body_scripts'] ?? '',
             'analytics_head_scripts' => $_POST['analytics_head_scripts'] ?? '',

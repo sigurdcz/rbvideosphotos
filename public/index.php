@@ -28,12 +28,14 @@ use App\Repositories\SeoRepository;
 use App\Repositories\ServiceRepository;
 use App\Repositories\SiteRepository;
 use App\Repositories\TemplateRepository;
+use App\Repositories\VisitAnalyticsRepository;
 use App\Services\HomepageContentService;
 use App\Services\PageRenderer;
 use App\Services\SeoRenderer;
 use App\Services\SecurityTxtHttpResponder;
 use App\Services\SecurityTxtService;
 use App\Services\ThemeTemplateRegistry;
+use App\Services\VisitAnalyticsService;
 use App\Security\RequestThrottle;
 use App\Support\FrontendAssetManager;
 use App\View\ViewFactory;
@@ -146,6 +148,84 @@ function tryServePublicAssetWithoutSession(string $uri): bool
 }
 
 if (tryServePublicAssetWithoutSession($earlyUri)) {
+    exit;
+}
+
+/**
+ * POST /api/visit - first-party visit beacon (public/assets/visit-analytics.js).
+ *
+ * Runs before Auth::start() so it never creates a session cookie, and outside
+ * /api/v1/* so it needs no API key. Always answers without a body: 204 for
+ * accepted and silently dropped beacons alike (so probing learns nothing),
+ * 405 for other methods and 429 when one IP floods the endpoint. Validation and
+ * hashing live in VisitAnalyticsService; the IP is used for the hash and the
+ * throttle only and is never stored.
+ */
+function tryRecordVisitBeacon(string $uri): bool
+{
+    if ($uri !== '/api/visit') {
+        return false;
+    }
+
+    header_remove('Set-Cookie');
+    header('Cache-Control: no-store');
+    header('X-Robots-Tag: noindex');
+
+    if (strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'POST') {
+        http_response_code(405);
+        header('Allow: POST');
+        return true;
+    }
+
+    if (!VisitAnalyticsService::isSameOrigin($_SERVER)) {
+        http_response_code(204);
+        return true;
+    }
+
+    $ip = RequestThrottle::currentIp();
+    $throttle = RequestThrottle::hit('visit_beacon', $ip, 60, 60, 300);
+    if ($throttle['locked']) {
+        http_response_code(429);
+        header('Retry-After: ' . max(1, (int) $throttle['retry_after']));
+        return true;
+    }
+
+    $body = file_get_contents('php://input', false, null, 0, VisitAnalyticsService::MAX_BODY_BYTES + 1);
+    $payload = is_string($body) ? VisitAnalyticsService::parsePayload($body) : null;
+    if ($payload === null) {
+        http_response_code(204);
+        return true;
+    }
+
+    try {
+        $site = (new SiteRepository())->findFirst();
+        if ($site && (int) ($site['visit_analytics_enabled'] ?? 1) === 1) {
+            $now = new DateTimeImmutable('now');
+            $ownHosts = [(string) ($_SERVER['HTTP_HOST'] ?? ''), (string) ($site['domain'] ?? '')];
+            $repository = new VisitAnalyticsRepository();
+            $repository->insert(VisitAnalyticsService::buildRecord(
+                (int) $site['id'],
+                $payload,
+                $ip,
+                substr((string) ($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 512),
+                $ownHosts,
+                VisitAnalyticsService::secret(),
+                $now
+            ));
+            // Lazy retention: roughly one beacon in a hundred trims rows older than 14 months.
+            if (random_int(1, 100) === 1) {
+                $repository->purgeBefore(VisitAnalyticsService::retentionCutoff($now));
+            }
+        }
+    } catch (\Throwable $e) {
+        Logger::error('visit-analytics', $e->getMessage());
+    }
+
+    http_response_code(204);
+    return true;
+}
+
+if (tryRecordVisitBeacon($earlyUri)) {
     exit;
 }
 Auth::start();

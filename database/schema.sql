@@ -439,4 +439,33 @@ CREATE TABLE IF NOT EXISTS `reviews` (
   CONSTRAINT `fk_reviews_site` FOREIGN KEY (`site_id`) REFERENCES `sites` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- --------------------------------------------------------
+-- site_visits (migrace 109)
+-- Vlastni mereni navstevnosti nezavisle na GA4/GTM. Zadna IP adresa se
+-- neuklada: visitor_hash = denne rotujici HMAC(IP|UA|den), visitor_id = cookie
+-- cms_vid jen se souhlasem s analytickymi cookies. Bez FK (levny zapis,
+-- lina retence 14 mesicu). Prepinac je sites.visit_analytics_enabled
+-- (TINYINT(1) NOT NULL DEFAULT 1), pridany stejnou migraci.
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `site_visits` (
+  `id`                BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `site_id`           INT UNSIGNED NOT NULL,
+  `visited_at`        DATETIME NOT NULL,
+  `visited_on`        DATE NOT NULL,
+  `path`              VARCHAR(255) NOT NULL,
+  `referrer_host`     VARCHAR(255) NULL,
+  `utm_source`        VARCHAR(100) NULL,
+  `utm_medium`        VARCHAR(100) NULL,
+  `utm_campaign`      VARCHAR(100) NULL,
+  `device_type`       ENUM('desktop','mobile','tablet','unknown') NOT NULL DEFAULT 'unknown',
+  `visitor_hash`      CHAR(32) NOT NULL,
+  `visitor_id`        CHAR(32) NULL,
+  `consent_analytics` TINYINT(1) NOT NULL DEFAULT 0,
+  `is_bot`            TINYINT(1) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY `site_visits_site_day` (`site_id`, `visited_on`),
+  KEY `site_visits_site_path` (`site_id`, `path`(100)),
+  KEY `site_visits_day_visitor` (`visited_on`, `visitor_hash`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 SET FOREIGN_KEY_CHECKS = 1;

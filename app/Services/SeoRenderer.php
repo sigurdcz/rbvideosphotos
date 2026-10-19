@@ -443,10 +443,19 @@ HTML;
 
         $encoded = htmlspecialchars($json, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $src = self::hashedAssetSrc('cookie-consent-runtime.js', 'cookie-consent-runtime');
-        return <<<HTML
+        $html = <<<HTML
 <meta name="cms-cookie-consent-settings" content="{$encoded}">
 <script src="{$src}" defer></script>
 HTML;
+
+        // First-party visit beacon, independent of GA4/GTM. Placed after the consent
+        // runtime so window.cmsCookieConsent exists when this deferred script runs.
+        if ((int)($site['visit_analytics_enabled'] ?? 1) === 1) {
+            $visitSrc = self::hashedAssetSrc('visit-analytics.js', 'visit-analytics');
+            $html .= "\n" . '<script src="' . $this->e($visitSrc) . '" defer data-cms-visit-analytics-js></script>';
+        }
+
+        return $html;
     }
 
     /**

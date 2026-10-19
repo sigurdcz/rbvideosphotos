@@ -149,6 +149,7 @@ class SiteRepository
             'clarity_id',
             'meta_pixel_id',
             'tracking_events_json',
+            'visit_analytics_enabled',
         ];
 
         return array_values(array_filter($columns, fn(string $col): bool => $this->supportsColumn($col)));
