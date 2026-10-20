@@ -1,8 +1,8 @@
 <?php
 $state = (string) ($form['sentState'] ?? '');
 $notices = [
- '1' => ['tone' => 'success', 'icon' => 'check_circle', 'text' => 'Zpráva je bezpečně uložena. E-mail byl předán poštovní službě; doručení do schránky zatím není potvrzené.'],
- 'saved' => ['tone' => 'warning', 'icon' => 'warning', 'text' => 'Zpráva je bezpečně uložena. Předání e-mailu se nepodařilo potvrdit, správce ji najde v administraci.'],
+    '1' => ['tone' => 'success', 'icon' => 'check_circle', 'text' => 'Děkujeme za zprávu. Ozveme se vám co nejdříve.'],
+ 'saved' => ['tone' => 'warning', 'icon' => 'warning', 'text' => 'Děkujeme, vaši zprávu jsme přijali a máme ji u sebe. Ozveme se vám co nejdříve.'],
  'error' => ['tone' => 'error', 'icon' => 'error', 'text' => 'Zprávu se nepodařilo uložit. Nebyla odeslána. Zkuste to prosím znovu nebo nás kontaktujte přímo.'],
  'invalid' => ['tone' => 'warning', 'icon' => 'warning', 'text' => 'Vyplňte prosím všechna povinná pole a souhlas se zpracováním údajů.'],
  'invalid-package' => ['tone' => 'warning', 'icon' => 'warning', 'text' => 'Vybraný balíček není platný. Vyberte jej prosím znovu.'],
