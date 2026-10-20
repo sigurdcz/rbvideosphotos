@@ -142,7 +142,6 @@ Nejdulesitejsi promenne:
 | `GTM_CLIENT_ID`, `GTM_CLIENT_SECRET`, `GTM_ENCRYPTION_KEY` | OAuth a sifrovani GTM adminu |
 | `GTM_REDIRECT_URI`, `GTM_AUTH_URI`, `GTM_TOKEN_URI`, `GTM_API_BASE_URI` | Volitelne GTM/OAuth override |
 | `FTP_HOST`, `FTP_USER`, `FTP_PASS` | Nasazeni pres FTP/FTPS |
-| `IMAP_HOST`, `IMAP_PORT`, `IMAP_USERNAME`, `IMAP_PASSWORD`, `MAILBOX_*` | Sdilena posta (Admin -> Posta): cteni schranky pres IMAP; bez vlastni hodnoty se pouziji `SMTP_*`. Cron `php bin/mailbox-sync.php` kazde 3 minuty. Vse v `.env.example` a v `ARCHITECTURE.md` ("Sdilena posta"). |
 
 GA4, Clarity a Meta Pixel ID se bezne nastavuji v admin sekci `Nastaveni` a ukladaji se do tabulky `sites`, ne do `.env`.
 

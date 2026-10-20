@@ -40,24 +40,6 @@ try {
     $router->post('/admin/account/password', 'AccountController', 'changePassword');
 
     $router->get('/admin/messages', 'MessagesController', 'index');
-
-    // Shared mailbox (team@ via IMAP/SMTP)
-    $router->get('/admin/mail', 'MailController', 'index');
-    $router->get('/admin/mail/thread', 'MailController', 'thread');
-    $router->get('/admin/mail/compose', 'MailController', 'compose');
-    $router->get('/admin/mail/drafts', 'MailController', 'drafts');
-    $router->get('/admin/mail/poll', 'MailController', 'poll');
-    $router->get('/admin/mail/attachment', 'MailController', 'attachment');
-    $router->post('/admin/mail/send', 'MailController', 'send');
-    $router->post('/admin/mail/draft/save', 'MailController', 'draftSave');
-    $router->post('/admin/mail/draft/delete', 'MailController', 'draftDelete');
-    $router->post('/admin/mail/attachment/upload', 'MailController', 'attachmentUpload');
-    $router->post('/admin/mail/attachment/delete', 'MailController', 'attachmentDelete');
-    $router->post('/admin/mail/sync', 'MailController', 'sync');
-    $router->post('/admin/mail/thread/unread', 'MailController', 'markUnread');
-    $router->get('/admin/mail/templates', 'MailController', 'templates');
-    $router->post('/admin/mail/templates/save', 'MailController', 'templateSave');
-    $router->post('/admin/mail/templates/delete', 'MailController', 'templateDelete');
     $router->get('/admin/analytics', 'VisitAnalyticsController', 'index');
 
     // Dashboard

@@ -55,7 +55,7 @@ Kompletni implementace vcetne automaticke rotace, uploadu, bezpecne obnovy a tes
 
 ## 2. Sdilena posta (mailbox) v SeoEditoru s ochranou proti dvojite odpovedi
 
-**Stav:** Implementovano na vetvi `codex/shared-mailbox` (celek najednou, bez etap); ceka na staging a overeni s realnou schrankou. Popis a provoz: `ARCHITECTURE.md`, sekce "Sdilena posta".
+**Stav:** Napad
 
 ### Cil
 
