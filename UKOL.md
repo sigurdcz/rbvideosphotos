@@ -1,3 +1,32 @@
+# UKOL: Kruhové indikátory benefitů v homepage hero
+
+Datum: 2026-10-20
+Zadani: Opravit oválné indikátory benefitů v hero homepage a dát jim neprůhledný bílý střed.
+Doporuceny model: Terra - Úzká CSS oprava s responzivní vizuální kontrolou.
+
+## Vizuální rubrika (100 bodů)
+
+- [x] 45 b: všechny čtyři indikátory mají přesný poměr 1:1 a shodný průměr.
+- [x] 30 b: střed indikátoru je neprůhledný bílý na světlé i obrazové části hero.
+- [x] 15 b: indikátory zůstávají zarovnané s textem a nedeformují rozestupy.
+- [x] 10 b: desktop, 701px hranice a mobil nemají overflow ani regresi layoutu.
+
+## Kroky
+
+- [x] Zachytit výchozí staging a změřit computed geometrii indikátorů.
+- [x] Opravit oba izolované Golden Bash motivy stejným pravidlem.
+- [x] Ověřit statické testy a skutečný staging na rizikových šířkách.
+- [x] Commitnout a pushnout pouze na dev; master bez nového souhlasu neměnit.
+
+## Průběh
+
+Výchozí staging 1440 × 900 potvrdil průhledný střed nad videem a rozdílnou vizuální šířku při delším textu. Příčinou je smrštitelný flex pseudo-element bez vlastního pozadí. Oprava přidává pevnou flex basis, minimální rozměry, aspect ratio, border-box a bílé pozadí; mobil zachovává kompaktní průměr 13 px.
+
+## Výsledek
+
+Commit `d98d4e9` nasadil staging workflow `39424125952` úspěšně. Chrome/CDP kontrola při 1440, 701 a 700 CSS px potvrdila shodné kruhy, bílou výplň a `scrollWidth === clientWidth`. Výchozí stav získal 55/100, finální stav 100/100. Externí video provider v automatizované relaci zobrazil vlastní restrikční text; tento síťový stav nebyl nahrazen fallbackem a nemění důkaz geometrie indikátorů. Master zůstává beze změny.
+
+---
 # UKOL: Výrazná kontaktní notifikace a bezpečný URL stav
 
 Datum: 2026-10-19

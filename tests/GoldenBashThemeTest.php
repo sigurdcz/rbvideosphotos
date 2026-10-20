@@ -204,6 +204,10 @@ function register_golden_bash_theme_tests(callable $test, callable $assert): voi
         $assert(str_contains($js, "question.setAttribute('aria-expanded'") && str_contains($js, "answer.style.height = answer.scrollHeight + 'px'") && str_contains($css, 'height .38s cubic-bezier(.22,.61,.36,1)'), 'Golden Bash homepage FAQ must expose the smooth accessible accordion contract used by the contact route.');
         $assert(str_contains($js, "reviewsGrid.parentElement.classList.add('gb-review-list')") && str_contains($js, "contactGrid.classList.add('gb-contact-grid')"), 'Golden Bash does not adapt active DB-first homepage wrappers.');
         $assert(str_contains($js, 'gb-mobile-contact') && str_contains($css, '.gb-nav-open .gb-menu span:first-child'), 'Golden Bash mobile navigation is missing its contact action or open-state animation.');
+        $assert(str_contains($css, '.gb-hero-benefits span::before')
+            && str_contains($css, 'flex:0 0 16px!important')
+            && str_contains($css, 'aspect-ratio:1 / 1!important')
+            && str_contains($css, 'background:#fff!important'), 'Homepage hero benefit markers must remain opaque circles under flex pressure.');
         $assert(str_contains($css, '.gb-blog .hp-blog-title a{color:var(--gb-ink)!important}'), 'Golden Bash blog title links must stay dark on light cards.');
         $assert(str_contains($css, '.gb-blog{height:450px') && str_contains($css, '.gb-blog .hp-blog-card{height:360px') && str_contains($css, '.gb-contact>.container{height:620px'), 'Golden Bash desktop sections must leave enough vertical room for complete blog copy and the fixed-height contact composition.');
         $assert(str_contains($css, '.gb-reviews{height:640px') && str_contains($css, '.gb-reviews .hp-review-card:nth-child(n+7){display:none!important}') && str_contains($css, '.gb-reviews .hp-review-card:nth-child(n+4){border-top:1px solid'), 'Golden Bash homepage reviews must show exactly two rows of three DB reviews.');
