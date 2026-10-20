@@ -37,6 +37,7 @@
       <li><a href="/admin/settings" class="<?= strpos($requestUri, '/admin/settings') === 0 ? 'active' : '' ?>">Nastaveni</a></li>
       <li><a href="/admin/gtm" class="<?= strpos($requestUri, '/admin/gtm') === 0 ? 'active' : '' ?>">Google Tag Manager</a></li>
       <li><a href="/admin/setup" class="<?= strpos($requestUri, '/admin/setup') === 0 ? 'active' : '' ?>">Pocatecni data</a></li>
+      <li><a href="/admin/mail" class="<?= str_starts_with($requestUri, '/admin/mail') ? 'active' : '' ?>">Pošta <span class="nav-badge" data-mail-badge hidden></span></a></li>
       <?php if (($_user['role'] ?? '') === 'admin'): ?><li><a href="/admin/messages" class="<?= str_starts_with($requestUri, '/admin/messages') ? 'active' : '' ?>">E-maily a zprávy</a></li><?php endif; ?>
       <?php if (($_user['role'] ?? '') === 'admin'): ?><li><a href="/admin/analytics" class="<?= str_starts_with($requestUri, '/admin/analytics') ? 'active' : '' ?>">Návštěvnost</a></li><?php endif; ?>
     </ul>
@@ -89,5 +90,6 @@
   </div>
 </div>
 <script src="<?= htmlspecialchars($adminAssetVersion('admin.js')) ?>"></script>
+<script src="<?= htmlspecialchars($adminAssetVersion('mail.js')) ?>" defer></script>
 </body>
 </html>
