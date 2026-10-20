@@ -62,6 +62,7 @@ Kdyz se neco z teto mapy zmeni, uprav ji ve stejnem commitu.
 | Schema a data | `database/migrations/` (append-only), dokumentacni `database/schema.sql`, seedy `database/seeds/` |
 | Testy a goldeny | `php tests/run.php`, regenerace `--update-goldens`, soubory `tests/goldens/{live,publish}/` |
 | Poradi a stitek karet na /cenik | cislo slotu `cenik_card_<n>_*` (`CenikPageData::fromBlocks()`), slot -> `data-package-id` v `PricingPackageCatalog::SLOT_IDS`; preusporadani viz migrace `094` |
+| Sdilena posta (Admin -> Posta) | `app/Services/Mailbox/` (IMAP klient, MIME parser, sync, odesilani), `app/Repositories/MailboxRepository.php`, `app/Controllers/MailController.php`, `admin/views/mail/`, `admin/assets/mail.js`, cron `bin/mailbox-sync.php`; sekce "Sdilena posta" nize |
 | Editovatelne texty stranek o-nas / blog / nase-prace / cenik | bloky v `content_blocks` podle konvence nize; sablona ma stejny text jako fallback, takze klic najdes hledanim viditelneho textu v `Templates/golden-bash-diagonal/views/` |
 
 **Konvence klicu pro texty sablon.** Kazdy viditelny text ma vlastni radek v `content_blocks`
@@ -131,6 +132,41 @@ admin editaci, viz `074`-`077`) + stejny zaznam v `database/seeds/seed.php`; u o
   ktery obsahuje JEN ten jeden text - ne na `<a>` se sipkou nebo `<div>` s cenou i jednotkou,
   jinak by se dekorace ulozila do textu a pri dalsim renderu zdvojila. Takove texty jsou
   editovatelne jen v adminu (napr. `blog_more_label`, `cenik_card_*_price`).
+
+## Sdilena posta (Admin -> Posta)
+
+Spolecna schranka `team@` (Active24/Websupport) cteni pres IMAP a odesilani pres SMTP; vice lidi odpovida z jednoho mista
+a system hlida, aby nikdo neodpovedel na zpravu, na kterou uz odpovedeno bylo. Pristup ma kazdy prihlaseny uzivatel CMS
+(zatim bez ACL); "autor" odpovedi je jen volny text, ktery si pamatuje prohlizec (`author_label`, sloupec `author_user_id` je
+pripraveny na profily).
+
+- **Cteni:** `ImapClient` (cisty PHP, bez `ext-imap`; transport `SocketMailTransport` s overenim certifikatu) -> `MailboxSyncService`
+  stahuje INBOX a slozku Odeslane (autodetekce `\Sent`). Idempotentni podle Message-ID, kurzor = posledni UID na slozku
+  (`mailbox_sync_state`), davka `MAILBOX_SYNC_BATCH`, prvni import `MAILBOX_INITIAL_DAYS` zpet, jedna synchronizace naraz
+  (MySQL `GET_LOCK`). Spousti ji cron `bin/mailbox-sync.php` (doporuceno kazde 3 min) a - pokud je `MAILBOX_LAZY_SYNC_SECONDS` > 0 -
+  otevrena stranka Posta (poll). Chyba synchronizace je videt cervene v seznamu; ochrana proti dvojite odpovedi je pak jen tak
+  aktualni jako posledni uspesna synchronizace.
+- **Vlakna:** `MailboxRepository::ingest()` - nejdriv `In-Reply-To`/`References`, pak stejny normalizovany predmet + protistrana do 30 dni.
+- **Co znamena "odpovezeno":** existuje odchozi zprava (`sending`/`sent`) novejsi nez posledni prichozi (razeno `sent_at`, `id`).
+  Zahrnuje i odpovedi z webmailu/mobilu (pridou ze slozky Odeslane).
+- **Ochrana proti dvojite odpovedi** (`MailboxSender::send()`, vzdy na serveru, serializovano `GET_LOCK` na vlakno): pred odeslanim se
+  osvezi slozka Odeslane; je-li vlakno uz zodpovezene (`already_replied`) nebo po otevreni formulare prisla nova prichozi zprava
+  (`new_inbound`), vrati se HTTP 409 + `signature` stavu. Klient muze odeslat znovu jen s `confirm_signature` presne tohoto stavu,
+  takze potvrzeni nikdy nekryje pozdejsi zmenu. Odesilana zprava se do DB vlozi jako `sending` DRIV nez jde na SMTP, takze
+  soubeznou druhou odpoved zachyti i rozdelany odesilani. Pri selhani SMTP se radek smaze a koncept zustane.
+- **Koncepty:** `mailbox_drafts`, jeden sdileny koncept na vlakno, automaticke ukladani, optimisticke verzovani (`version`;
+  409 + dialog "nacist jeho verzi / prepsat").
+- **Prilohy:** soubory v `storage/mailbox/<xx>/<nahodny klic>` mimo web root; jmeno souboru je jen metadata. Odchozi: limit
+  `MAILBOX_MAX_ATTACHMENT_MB`/`MAILBOX_MAX_TOTAL_MB`, blokovane spustitelne/skriptove pripony. Stahovani vzdy jako `attachment`
+  (inline jen bezpecne obrazky/PDF) s `nosniff` a CSP `sandbox`.
+- **HTML prichozi posty:** `MailHtmlSanitizer` (allowlist tagu/atributu/CSS, `javascript:` a vzdalene obrazky blokovane,
+  `cid:` obrazky mapovane na prilohu). Zobrazuje se primo v administraci - sanitizer je jedina obrana proti XSS.
+- **Odesilani:** PHPMailer pres `SmtpMailer::readConfig()`/`applyTransport()` (sdilene s kontaktnim formularem); kopie se ulozi do
+  slozky Odeslane pres IMAP APPEND. Bcc je jen v obalce SMTP a v DB, ne v hlavickach.
+- **Kontaktni formular:** zpravy z webu chodi z vlastni adresy `team@`, proto predvyplneni odpovedi bere e-mail klienta z radku
+  `Kontakt:` v tele (viz `MailboxView::replyRecipients()`); kdyz je tam telefon, prijemce se vyplni rucne.
+- **Testy:** `tests/MailboxTest.php` (v `php tests/run.php`) a `php tests/MailboxIntegrationTest.php` (potrebuje MySQL, zaklada a maze
+  docasnou databazi).
 
 ## Request flow
 

@@ -469,3 +469,6 @@ CREATE TABLE IF NOT EXISTS `site_visits` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+-- Sdilena posta (migrace 110): vlakna, zpravy, koncepty, prilohy, stav synchronizace, sablony odpovedi.
+-- Plna definice je v database/migrations/110_create_mailbox.sql (casy v UTC, Message-ID se indexuje pres SHA-1 hash).
