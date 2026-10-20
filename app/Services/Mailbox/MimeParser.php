@@ -76,7 +76,11 @@ final class MimeParser
                 continue;
             }
             $name = strtolower(trim(substr($line, 0, $colon)));
-            $headers[$name][] = trim(substr($line, $colon + 1));
+            $value = trim(substr($line, $colon + 1));
+            if (!mb_check_encoding($value, 'UTF-8')) {
+                $value = self::toUtf8($value, ''); // legacy raw 8-bit header (not RFC 2047): assume Windows-1250
+            }
+            $headers[$name][] = $value;
         }
         return $headers;
     }
@@ -263,26 +267,32 @@ final class MimeParser
 
     public static function toUtf8(string $data, string $charset): string
     {
-        $charset = strtolower(trim($charset, " \t\"'"));
+        $charset = strtolower(trim($charset, " 	\"'"));
         if ($charset === '' || $charset === 'utf-8' || $charset === 'utf8' || $charset === 'us-ascii') {
-            return mb_check_encoding($data, 'UTF-8') ? $data : mb_convert_encoding($data, 'UTF-8', 'Windows-1250');
+            // Declared (or implied) UTF-8 that is not valid: Czech legacy mail is almost always Windows-1250.
+            return mb_check_encoding($data, 'UTF-8') ? $data : self::convert($data, 'CP1250');
         }
         if (preg_match('/^(cp|windows-?)1250$/', $charset)) {
-            $charset = 'Windows-1250';
+            $charset = 'CP1250';
         }
+        return self::convert($data, $charset);
+    }
+
+    private static function convert(string $data, string $from): string
+    {
         try {
-            $converted = @mb_convert_encoding($data, 'UTF-8', $charset);
+            $converted = @mb_convert_encoding($data, 'UTF-8', $from);
             if (is_string($converted) && mb_check_encoding($converted, 'UTF-8')) {
                 return $converted;
             }
         } catch (\Throwable $e) {
-            // unknown charset - fall through to iconv
+            // unknown charset name for mbstring - try iconv
         }
-        $converted = @iconv($charset, 'UTF-8//IGNORE', $data);
-        if (is_string($converted)) {
+        $converted = @iconv($from, 'UTF-8//IGNORE', $data);
+        if (is_string($converted) && mb_check_encoding($converted, 'UTF-8')) {
             return $converted;
         }
-        return mb_convert_encoding($data, 'UTF-8', 'UTF-8');
+        return mb_scrub($data, 'UTF-8');
     }
 
     /** Decodes RFC 2047 encoded words. */

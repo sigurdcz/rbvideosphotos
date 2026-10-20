@@ -36,7 +36,9 @@ $service = new MailboxSyncService(
     MailboxConfig::inboxFolder(),
     MailboxConfig::sentFolder(),
     MailboxConfig::syncBatch(),
-    MailboxConfig::initialImportDays()
+    MailboxConfig::initialImportDays(),
+    MailboxConfig::maxFetchBytes(),
+    MailboxConfig::address()
 );
 $result = $service->sync(240);
 

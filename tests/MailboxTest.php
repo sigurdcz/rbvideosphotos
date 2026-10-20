@@ -252,6 +252,25 @@ function register_mailbox_tests(callable $test, callable $assert): void
         $assert($log[2] === "From: a@b.cz\r\nSubject: x\r\n\r\nbody\r\n");
     });
 
+    $test('mailbox IMAP: INTERNALDATE, RFC822.SIZE and header-only fetch', function () use ($assert): void {
+        $raw = "From: a@b.cz\r\nSubject: T\r\n\r\nBody";
+        $transport = new FakeMailTransport("* OK ready\r\n", function (string $data) use ($raw): string {
+            if (!preg_match('/^(A\d+) (.*)\r\n$/s', $data, $m)) { return ''; }
+            [$tag, $cmd] = [$m[1], $m[2]];
+            if (str_starts_with($cmd, 'LOGIN')) { return "{$tag} OK\r\n"; }
+            if (str_contains($cmd, 'RFC822.SIZE')) { return "* 1 FETCH (UID 5 RFC822.SIZE 123456)\r\n{$tag} OK\r\n"; }
+            if (str_contains($cmd, 'BODY.PEEK[HEADER]')) { $h = "From: a@b.cz\r\n\r\n"; return '* 1 FETCH (UID 5 BODY[HEADER] {' . strlen($h) . "}\r\n{$h})\r\n{$tag} OK\r\n"; }
+            if (str_contains($cmd, 'INTERNALDATE')) { return '* 1 FETCH (UID 5 INTERNALDATE "20-Oct-2026 12:30:05 +0200" BODY[] {' . strlen($raw) . "}\r\n{$raw})\r\n{$tag} OK\r\n"; }
+            return "{$tag} BAD\r\n";
+        });
+        $client = new ImapClient($transport);
+        $client->connect('u', 'p');
+        $msg = $client->fetchMessage(5);
+        $assert($msg['raw'] === $raw && $msg['internaldate'] !== null && $msg['internaldate']->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:s') === '2026-10-20 10:30:05', 'INTERNALDATE must be parsed to the right instant.');
+        $assert($client->messageSize(5) === 123456);
+        $assert($client->fetchHeader(5) === "From: a@b.cz\r\n\r\n");
+    });
+
     // ------------------------------------------------------------------ helpers
 
     $test('mailbox attachments: dangerous names blocked, path traversal impossible, files stored under random keys', function () use ($assert): void {

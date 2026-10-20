@@ -124,6 +124,7 @@ final class MailController extends Controller
         $in['known_inbound_id'] = (int) ($_POST['known_inbound_id'] ?? 0);
         $in['confirm_signature'] = (string) ($_POST['confirm_signature'] ?? '');
         session_write_close(); // do not hold the session lock during SMTP/IMAP
+        ignore_user_abort(true); // a closed tab must not kill the request between "sending" and "sent"
         try {
             $result = $this->sender($repo)->send($in);
         } catch (MailboxValidationException $e) {
@@ -381,7 +382,8 @@ final class MailController extends Controller
     {
         return new MailboxSyncService(
             $repo, new AttachmentStore(), static fn() => MailboxConfig::connectImap(),
-            MailboxConfig::inboxFolder(), MailboxConfig::sentFolder(), MailboxConfig::syncBatch(), MailboxConfig::initialImportDays()
+            MailboxConfig::inboxFolder(), MailboxConfig::sentFolder(), MailboxConfig::syncBatch(), MailboxConfig::initialImportDays(),
+            MailboxConfig::maxFetchBytes(), MailboxConfig::address()
         );
     }
 

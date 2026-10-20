@@ -73,7 +73,6 @@ final class MailboxSender
 
         $smtp = SmtpMailer::readConfig(); // throws SmtpTransportException('smtp_configuration') before anything is stored
         $messageIdHeader = sprintf('<%s@%s>', bin2hex(random_bytes(16)), substr(strrchr($smtp['from'], '@'), 1));
-        $guard = null;
         $inserted = null;
         $replyTo = null;
 
@@ -173,6 +172,15 @@ final class MailboxSender
             $this->repo->moveDraftAttachmentsToMessage($draftId, $inserted['message_id']);
             $this->repo->deleteDraft($draftId);
         }
+        if ($threadId !== null) {
+            // An autosave that was still in flight when the user pressed Send may have created another draft of this thread.
+            $leftover = $this->repo->findDraftByThread($threadId);
+            if ($leftover !== null) {
+                foreach ($this->repo->deleteDraft((int) $leftover['id']) as $attachment) {
+                    $this->store->delete($attachment['storage_key']);
+                }
+            }
+        }
         $this->repo->markUnread($inserted['thread_id'], false);
 
         return [
@@ -214,7 +222,12 @@ final class MailboxSender
         }
         $refs = preg_split('/\s+/', trim((string) ($message['refs'] ?? '')), -1, PREG_SPLIT_NO_EMPTY) ?: [];
         $refs[] = $message['message_id'];
-        $refs = array_slice(array_values(array_unique($refs)), -20);
+        $refs = array_values(array_unique($refs));
+        // PHPMailer RFC 2047-encodes header values longer than ~980 bytes, which breaks threading at the recipient:
+        // keep the root id plus as many of the newest ids as fit into 900 bytes.
+        while (count($refs) > 2 && strlen(implode(' ', $refs)) > 900) {
+            array_splice($refs, 1, 1);
+        }
         return [(string) $message['message_id'], implode(' ', $refs)];
     }
 

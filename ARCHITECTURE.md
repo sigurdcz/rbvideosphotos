@@ -147,7 +147,17 @@ pripraveny na profily).
   otevrena stranka Posta (poll). Chyba synchronizace je videt cervene v seznamu; ochrana proti dvojite odpovedi je pak jen tak
   aktualni jako posledni uspesna synchronizace.
 - **Vlakna:** `MailboxRepository::ingest()` - nejdriv `In-Reply-To`/`References`, pak stejny normalizovany predmet + protistrana do 30 dni.
-- **Co znamena "odpovezeno":** existuje odchozi zprava (`sending`/`sent`) novejsi nez posledni prichozi (razeno `sent_at`, `id`).
+  U zprav z kontaktniho formulare (odesilatel = nase adresa) je protistrana e-mail z radku `Kontakt:`; bez nej se predmet nepouzije
+  a kazda zprava je samostatne vlakno (jinak by se slili dva ruzni "Janove").
+- **Odolnost synchronizace:** pred stazenim se zjisti `RFC822.SIZE`; zprava nad `MAILBOX_MAX_MESSAGE_MB` (vychozi z `memory_limit`/8,
+  max 20 MB) se nestahuje a vznikne zastupna zprava s odesilatelem a predmetem a odkazem na webmail. Stejne tak zprava, kterou server
+  nevydal, nebo ktera spadla pri importu. Kurzor UID se posouva PRED importem a v `mailbox_sync_state.last_error` je znacka
+  `processing:<uid>` - spadly beh tak nezablokuje dalsi (UID se pri dalsim behu zmeni na zastupnou zpravu). Import zpravy
+  i s prilohami bezi v transakci. Pri zmene `UIDVALIDITY` se ulozene `(folder, imap_uid)` vynuluji a slozka se znovu projde.
+- **Co znamena "odpovezeno":** existuje odchozi zprava (`sending`/`sent`) novejsi nez posledni prichozi. Poradi urcuje
+  `received_at` (IMAP `INTERNALDATE`, jinak nejvyse "ted"), NE hlavicka `Date` klienta - ta je jen k zobrazeni, protoze hodiny
+  klientu jdou spatne. Vlakno bez jedine prichozi zpravy (zalozili jsme ho my) neni "odpovezene". Zprava ve stavu `sending`
+  starsi nez 10 minut (spadly proces) se prestane pocitat.
   Zahrnuje i odpovedi z webmailu/mobilu (pridou ze slozky Odeslane).
 - **Ochrana proti dvojite odpovedi** (`MailboxSender::send()`, vzdy na serveru, serializovano `GET_LOCK` na vlakno): pred odeslanim se
   osvezi slozka Odeslane; je-li vlakno uz zodpovezene (`already_replied`) nebo po otevreni formulare prisla nova prichozi zprava

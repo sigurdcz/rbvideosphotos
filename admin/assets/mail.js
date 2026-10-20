@@ -319,6 +319,8 @@
   async function doSend(confirmSignature) {
     state.sending = true;
     window.clearTimeout(state.timer);
+    // Let an autosave that is already in flight finish, so its draft id is part of this request.
+    for (let i = 0; i < 100 && state.saving; i++) await new Promise(resolve => window.setTimeout(resolve, 50));
     sendBtn.disabled = true;
     setStatus('Odesílám…');
     const data = collect();
@@ -340,8 +342,8 @@
     state.sending = false;
     setStatus('');
     if (result.status === 409 && result.json.status === 'conflict') {
+      // knownInbound is deliberately NOT advanced here: if the user cancels, the "new mail arrived" warning must stay.
       showConflictModal(result.json);
-      if (result.json.last_inbound_id) state.knownInbound = String(result.json.last_inbound_id);
       return;
     }
     sendBtn.disabled = false;

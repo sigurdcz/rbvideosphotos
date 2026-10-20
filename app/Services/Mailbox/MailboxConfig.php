@@ -74,6 +74,26 @@ final class MailboxConfig
         return self::intSetting('MAILBOX_LAZY_SYNC_SECONDS', 120, 0, 86400);
     }
 
+    /**
+     * Largest message the sync downloads. Parsing needs roughly 8x the raw size in memory, so the cap follows
+     * memory_limit; bigger messages become a placeholder that points to the webmail.
+     */
+    public static function maxFetchBytes(): int
+    {
+        $override = filter_var(Env::get('MAILBOX_MAX_MESSAGE_MB', ''), FILTER_VALIDATE_INT);
+        if ($override !== false && $override > 0) {
+            return min($override, 200) * 1048576;
+        }
+        $raw = trim((string) ini_get('memory_limit'));
+        if ($raw === '' || $raw === '-1') {
+            return 20 * 1048576;
+        }
+        $bytes = (int) $raw;
+        $unit = strtolower(substr($raw, -1));
+        $bytes *= $unit === 'g' ? 1073741824 : ($unit === 'm' ? 1048576 : ($unit === 'k' ? 1024 : 1));
+        return (int) max(2 * 1048576, min(20 * 1048576, intdiv($bytes, 8)));
+    }
+
     public static function maxAttachmentBytes(): int
     {
         return self::intSetting('MAILBOX_MAX_ATTACHMENT_MB', 10, 1, 100) * 1048576;

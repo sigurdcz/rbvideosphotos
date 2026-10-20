@@ -1,6 +1,7 @@
 <?php
 namespace App\Repositories;
 
+use App\Services\Mailbox\MailboxView;
 use App\Services\Mailbox\MimeParser;
 use PDO;
 
@@ -8,17 +9,26 @@ use PDO;
  * Storage for the shared mailbox. All timestamps are UTC (Y-m-d H:i:s).
  *
  * "Answered" is decided from message order, not from who wrote: a thread is answered when an outbound
- * message (sending/sent) is newer than the newest inbound one. Ordering is (sent_at, id).
+ * message (sending/sent) is newer than the newest inbound one. Ordering uses received_at (server-trusted arrival time: IMAP INTERNALDATE or our own clock), then id; the Date header is display-only because client clocks can be wrong.
  */
 final class MailboxRepository
 {
     public const PAGE_SIZE = 30;
+    /** A 'sending' row older than this is a crashed send and stops counting as an answer. */
+    public const SENDING_TTL_SECONDS = 600;
+    /** Messages that count: all inbound, sent outbound, and outbound still being sent (parameter = stale cutoff). */
+    private const VISIBLE = "(direction = 'in' OR status = 'sent' OR (status = 'sending' AND created_at >= ?))";
 
     public function __construct(private PDO $db) {}
 
     public function db(): PDO
     {
         return $this->db;
+    }
+
+    public static function staleCutoff(): string
+    {
+        return gmdate('Y-m-d H:i:s', time() - self::SENDING_TTL_SECONDS);
     }
 
     public static function now(): string
@@ -56,18 +66,30 @@ final class MailboxRepository
         }
 
         $subject = mb_substr($parsed['subject'] !== '' ? $parsed['subject'] : '(bez předmětu)', 0, 500, 'UTF-8');
-        $counterparty = $direction === 'in'
-            ? $parsed['from']['addr']
-            : ($parsed['to'][0]['addr'] ?? '');
+        $own = strtolower((string) ($extra['own_address'] ?? ''));
+        if ($direction === 'in') {
+            $counterparty = $parsed['from']['addr'];
+            if ($own !== '' && $counterparty === $own) {
+                // Contact-form mails are sent by the site from our own address: the client is whoever is in the "Kontakt:" line.
+                // Without one there is no counterparty, so the subject fallback must not merge unrelated people.
+                $counterparty = (string) MailboxView::contactEmail((string) $parsed['text']);
+            }
+        } else {
+            $counterparty = $parsed['to'][0]['addr'] ?? '';
+        }
         $sentAt = $parsed['date']->format('Y-m-d H:i:s');
-        $threadId = $this->resolveThread($parsed, $subject, $counterparty, $sentAt);
+        // Ordering must not depend on the sender's clock: use the IMAP INTERNALDATE when known, otherwise never later than now.
+        $now = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
+        $arrived = $extra['arrived'] ?? ($parsed['date'] < $now ? $parsed['date'] : $now);
+        $receivedAt = $arrived->setTimezone(new \DateTimeZone('UTC'))->format('Y-m-d H:i:s');
+        $threadId = $this->resolveThread($parsed, $subject, $counterparty, $receivedAt);
 
         $status = $direction === 'in' ? 'received' : 'sent';
         $this->db->prepare(
             'INSERT INTO mailbox_messages (thread_id, direction, status, folder, imap_uid, message_id, message_id_hash, in_reply_to, refs,
                 from_addr, from_name, reply_to, to_addrs, cc_addrs, bcc_addrs, subject, body_text, body_html, has_attachments,
-                author_label, sent_at, created_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                author_label, sent_at, received_at, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         )->execute([
             $threadId, $direction, $status, $folder, $uid,
             mb_substr($parsed['message_id'], 0, 998, 'UTF-8'), $hash,
@@ -78,7 +100,7 @@ final class MailboxRepository
             self::formatAddresses($parsed['to']), self::formatAddresses($parsed['cc']), $extra['bcc'] ?? null,
             $subject, $parsed['text'], $parsed['html'] !== '' ? $parsed['html'] : null,
             $parsed['attachments'] !== [] ? 1 : 0,
-            $extra['author_label'] ?? null, $sentAt, self::now(),
+            $extra['author_label'] ?? null, $sentAt, $receivedAt, self::now(),
         ]);
         $messageId = (int) $this->db->lastInsertId();
         $this->refreshThread($threadId);
@@ -126,25 +148,50 @@ final class MailboxRepository
         $stmt = $this->db->prepare(
             "SELECT
                COUNT(*) AS total,
-               MAX(sent_at) AS last_at,
-               MAX(CASE WHEN direction = 'in' THEN sent_at END) AS last_in,
-               MAX(CASE WHEN direction = 'out' AND status IN ('sending','sent') THEN sent_at END) AS last_out
-             FROM mailbox_messages WHERE thread_id = ? AND (direction = 'in' OR status IN ('sending','sent'))"
+               MAX(received_at) AS last_at,
+               MAX(CASE WHEN direction = 'in' THEN received_at END) AS last_in,
+               MAX(CASE WHEN direction = 'out' THEN received_at END) AS last_out
+             FROM mailbox_messages WHERE thread_id = ? AND " . self::VISIBLE . ""
         );
-        $stmt->execute([$threadId]);
+        $stmt->execute([$threadId, self::staleCutoff()]);
         $agg = $stmt->fetch();
         if ((int) ($agg['total'] ?? 0) === 0) {
             $this->db->prepare('DELETE FROM mailbox_threads WHERE id = ?')->execute([$threadId]);
             return;
         }
         $last = $this->db->prepare(
-            "SELECT body_text FROM mailbox_messages WHERE thread_id = ? AND (direction = 'in' OR status IN ('sending','sent')) ORDER BY sent_at DESC, id DESC LIMIT 1"
+            "SELECT body_text FROM mailbox_messages WHERE thread_id = ? AND " . self::VISIBLE . " ORDER BY received_at DESC, id DESC LIMIT 1"
         );
-        $last->execute([$threadId]);
+        $last->execute([$threadId, self::staleCutoff()]);
         $snippet = trim(preg_replace('/\s+/u', ' ', (string) $last->fetchColumn()) ?? '');
         $this->db->prepare(
             'UPDATE mailbox_threads SET message_count = ?, last_message_at = ?, last_inbound_at = ?, last_outbound_at = ?, snippet = ? WHERE id = ?'
         )->execute([(int) $agg['total'], $agg['last_at'], $agg['last_in'], $agg['last_out'], mb_substr($snippet, 0, 300, 'UTF-8'), $threadId]);
+    }
+
+    /** Runs $work in a transaction (re-entrant: joins one that is already open). */
+    public function transactional(callable $work): mixed
+    {
+        if ($this->db->inTransaction()) {
+            return $work();
+        }
+        $this->db->beginTransaction();
+        try {
+            $result = $work();
+            $this->db->commit();
+            return $result;
+        } catch (\Throwable $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    /** After a UIDVALIDITY change the stored UIDs of a folder are meaningless; a rescan re-attaches them by Message-ID. */
+    public function clearImapCoordinates(string $folder): void
+    {
+        $this->db->prepare('UPDATE mailbox_messages SET folder = NULL, imap_uid = NULL WHERE folder = ?')->execute([$folder]);
     }
 
     public function markUnread(int $threadId, bool $unread): void
@@ -228,9 +275,9 @@ final class MailboxRepository
     public function threadMessages(int $threadId): array
     {
         $stmt = $this->db->prepare(
-            "SELECT * FROM mailbox_messages WHERE thread_id = ? AND (direction = 'in' OR status IN ('sending','sent')) ORDER BY sent_at ASC, id ASC"
+            "SELECT * FROM mailbox_messages WHERE thread_id = ? AND " . self::VISIBLE . " ORDER BY received_at ASC, id ASC"
         );
-        $stmt->execute([$threadId]);
+        $stmt->execute([$threadId, self::staleCutoff()]);
         $messages = $stmt->fetchAll();
         if ($messages === []) {
             return [];
@@ -268,20 +315,21 @@ final class MailboxRepository
      */
     public function replyState(int $threadId): array
     {
-        $in = $this->db->prepare("SELECT id, sent_at FROM mailbox_messages WHERE thread_id = ? AND direction = 'in' ORDER BY sent_at DESC, id DESC LIMIT 1");
+        $in = $this->db->prepare("SELECT id, received_at FROM mailbox_messages WHERE thread_id = ? AND direction = 'in' ORDER BY received_at DESC, id DESC LIMIT 1");
         $in->execute([$threadId]);
         $lastIn = $in->fetch() ?: null;
 
         $out = $this->db->prepare(
-            "SELECT id, sent_at, status, from_addr, author_label, to_addrs, cc_addrs, subject, body_text FROM mailbox_messages
-             WHERE thread_id = ? AND direction = 'out' AND status IN ('sending','sent') ORDER BY sent_at DESC, id DESC LIMIT 1"
+            "SELECT id, sent_at, received_at, status, from_addr, author_label, to_addrs, cc_addrs, subject, body_text FROM mailbox_messages
+             WHERE thread_id = ? AND direction = 'out' AND " . self::VISIBLE . " ORDER BY received_at DESC, id DESC LIMIT 1"
         );
-        $out->execute([$threadId]);
+        $out->execute([$threadId, self::staleCutoff()]);
         $lastOut = $out->fetch() ?: null;
 
-        $answered = $lastOut !== null && ($lastIn === null
-            || $lastOut['sent_at'] > $lastIn['sent_at']
-            || ($lastOut['sent_at'] === $lastIn['sent_at'] && (int) $lastOut['id'] > (int) $lastIn['id']));
+        // No inbound mail at all (thread started by us) is a neutral state, not an "answered" one.
+        $answered = $lastOut !== null && $lastIn !== null && (
+            $lastOut['received_at'] > $lastIn['received_at']
+            || ($lastOut['received_at'] === $lastIn['received_at'] && (int) $lastOut['id'] > (int) $lastIn['id']));
 
         return [
             'last_inbound_id' => (int) ($lastIn['id'] ?? 0),
@@ -296,6 +344,11 @@ final class MailboxRepository
 
     public function insertOutbound(?int $threadId, array $fields): array
     {
+        return $this->transactional(fn(): array => $this->insertOutboundRow($threadId, $fields));
+    }
+
+    private function insertOutboundRow(?int $threadId, array $fields): array
+    {
         $sentAt = self::now();
         $subject = mb_substr($fields['subject'], 0, 500, 'UTF-8');
         $hash = sha1(strtolower($fields['message_id']));
@@ -308,12 +361,12 @@ final class MailboxRepository
         }
         $this->db->prepare(
             "INSERT INTO mailbox_messages (thread_id, direction, status, message_id, message_id_hash, in_reply_to, refs, from_addr, from_name,
-                to_addrs, cc_addrs, bcc_addrs, subject, body_text, has_attachments, author_label, sent_at, created_at)
-             VALUES (?, 'out', 'sending', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                to_addrs, cc_addrs, bcc_addrs, subject, body_text, has_attachments, author_label, sent_at, received_at, created_at)
+             VALUES (?, 'out', 'sending', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
         )->execute([
             $threadId, $fields['message_id'], $hash, $fields['in_reply_to'] ?: null, $fields['refs'] ?: null,
             $fields['from_addr'], $fields['from_name'], $fields['to'], $fields['cc'] ?: null, $fields['bcc'] ?: null,
-            $subject, $fields['body'], $fields['has_attachments'] ? 1 : 0, $fields['author_label'] ?: null, $sentAt, $sentAt,
+            $subject, $fields['body'], $fields['has_attachments'] ? 1 : 0, $fields['author_label'] ?: null, $sentAt, $sentAt, $sentAt,
         ]);
         $messageId = (int) $this->db->lastInsertId();
         $this->refreshThread($threadId);
@@ -377,10 +430,18 @@ final class MailboxRepository
                 $id = (int) $existing['id'];
                 $expectedVersion = (int) $existing['version'];
             } else {
-                $this->db->prepare(
-                    'INSERT INTO mailbox_drafts (thread_id, to_addrs, cc_addrs, bcc_addrs, subject, body, author_label, version, created_at, updated_at)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?)'
-                )->execute([$threadId, ...$values, $now, $now]);
+                try {
+                    $this->db->prepare(
+                        'INSERT INTO mailbox_drafts (thread_id, to_addrs, cc_addrs, bcc_addrs, subject, body, author_label, version, created_at, updated_at)
+                         VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?)'
+                    )->execute([$threadId, ...$values, $now, $now]);
+                } catch (\PDOException $e) {
+                    // Two people opened the first draft of the same thread at once: the loser gets the winner's draft as a conflict.
+                    if ($threadId !== null && ($winner = $this->findDraftByThread($threadId)) !== null) {
+                        return ['ok' => false, 'conflict' => $winner];
+                    }
+                    throw $e;
+                }
                 return ['ok' => true, 'id' => (int) $this->db->lastInsertId(), 'version' => 1];
             }
         }

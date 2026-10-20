@@ -1,6 +1,7 @@
 -- Shared mailbox (team@ via IMAP/SMTP): threads, messages, attachments, drafts, reply templates.
 -- All timestamps are UTC. Message-ID values are indexed through a SHA-1 hash so the unique key
--- stays short on old MariaDB row formats. author_label is a free-text placeholder until
+-- stays short on old MariaDB row formats. sent_at is the (client-controlled) Date header and only for display;
+-- received_at (IMAP INTERNALDATE or our own clock) is what orders messages and decides "answered". author_label is a free-text placeholder until
 -- profiles/ACL exist; author_user_id is reserved for them.
 CREATE TABLE IF NOT EXISTS mailbox_threads (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -42,10 +43,11 @@ CREATE TABLE IF NOT EXISTS mailbox_messages (
   author_label VARCHAR(100) NULL,
   author_user_id INT UNSIGNED NULL,
   sent_at DATETIME NOT NULL,
+  received_at DATETIME NOT NULL,
   created_at DATETIME NOT NULL,
   UNIQUE KEY mailbox_messages_mid (message_id_hash),
   UNIQUE KEY mailbox_messages_uid (folder, imap_uid),
-  INDEX mailbox_messages_thread (thread_id, sent_at, id)
+  INDEX mailbox_messages_thread (thread_id, received_at, id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS mailbox_drafts (

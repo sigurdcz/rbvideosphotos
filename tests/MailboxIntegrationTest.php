@@ -185,7 +185,6 @@ try {
     $sync->importRaw($in5, 'in', 'INBOX', 9);
     $known = $repo->replyState($tid)['last_inbound_id'];
     $repo->insertOutbound($tid, ['message_id' => '<inflight@example.test>', 'in_reply_to' => '', 'refs' => '', 'from_addr' => 'team@example.test', 'from_name' => 'T', 'to' => 'jana@client.cz', 'cc' => '', 'bcc' => '', 'subject' => 'Re: Svatba 2027', 'body' => 'Kolega právě odpovídá', 'has_attachments' => false, 'author_label' => 'Marie']);
-    $pdo->exec("UPDATE mailbox_messages SET sent_at = DATE_ADD(UTC_TIMESTAMP(), INTERVAL 1 MINUTE) WHERE message_id = '<inflight@example.test>'"); // newer than the last inbound mail
     $busy = $sender->send(['draft_id' => null, 'known_inbound_id' => $known] + $base);
     check($busy['status'] === 'conflict' && $busy['outbound']['in_progress'] === true && $busy['outbound']['author'] === 'Marie', 'A reply that is still being sent blocks a second one');
     $pdo->exec("DELETE FROM mailbox_messages WHERE message_id = '<inflight@example.test>'");
@@ -238,10 +237,22 @@ try {
                 return '* SEARCH ' . implode(' ', $hit) . "\r\n{$tag} OK\r\n";
             }
             if (str_starts_with($cmd, 'UID SEARCH SINCE')) { return '* SEARCH ' . implode(' ', array_keys($folders[$selected])) . "\r\n{$tag} OK\r\n"; }
+            if (preg_match('/^UID FETCH (\d+) \(RFC822\.SIZE\)/', $cmd, $u)) {
+                $size = $GLOBALS['fakeSizes'][$selected . ':' . $u[1]] ?? strlen($folders[$selected][(int) $u[1]]);
+                return '* 1 FETCH (UID ' . $u[1] . ' RFC822.SIZE ' . $size . ")\r\n{$tag} OK\r\n";
+            }
+            if (preg_match('/^UID FETCH (\d+) \(BODY\.PEEK\[HEADER\]\)/', $cmd, $u)) {
+                $raw = $folders[$selected][(int) $u[1]];
+                $header = substr($raw, 0, (int) strpos($raw, "\r\n\r\n")) . "\r\n\r\n";
+                return '* 1 FETCH (UID ' . $u[1] . ' BODY[HEADER] {' . strlen($header) . "}\r\n" . $header . ")\r\n{$tag} OK\r\n";
+            }
             if (preg_match('/^UID FETCH (\d+)/', $cmd, $u)) {
+                if (in_array($selected . ':' . $u[1], $GLOBALS['fakeBroken'] ?? [], true)) { return "{$tag} NO broken\r\n"; }
                 $fetched[] = $selected . ':' . $u[1];
                 $raw = $folders[$selected][(int) $u[1]];
-                return '* 1 FETCH (UID ' . $u[1] . ' BODY[] {' . strlen($raw) . "}\r\n" . $raw . ")\r\n{$tag} OK\r\n";
+                $internal = $GLOBALS['fakeInternal'][$selected . ':' . $u[1]] ?? null;
+                $meta = $internal ? ' INTERNALDATE "' . $internal . '"' : '';
+                return '* 1 FETCH (UID ' . $u[1] . $meta . ' BODY[] {' . strlen($raw) . "}\r\n" . $raw . ")\r\n{$tag} OK\r\n";
             }
             return "{$tag} BAD\r\n";
         });
@@ -273,6 +284,108 @@ try {
     $res = $broken->sync(5);
     check($res['errors'] === ['imap_connect'] && $repo->syncState('INBOX')['last_error'] === 'imap_connect', 'IMAP outage is stored for the UI banner');
     check($repo->syncState('INBOX')['last_uid'] === $cursorBefore, 'An outage must not move the cursor');
+
+    // ---------------------------------------------------------------- regressions found in review
+    $GLOBALS['fakeSizes'] = []; $GLOBALS['fakeBroken'] = []; $GLOBALS['fakeInternal'] = [];
+    $reset = static function () use ($pdo, &$folders): void {
+        $pdo->exec('DELETE FROM mailbox_attachments'); $pdo->exec('DELETE FROM mailbox_messages'); $pdo->exec('DELETE FROM mailbox_threads'); $pdo->exec('DELETE FROM mailbox_sync_state');
+    };
+
+    // (1) Client clocks must not decide "answered": ordering uses the server-trusted arrival time (INTERNALDATE).
+    $reset();
+    $folders = ['INBOX' => [1 => raw(['From' => 'Pozdní <late@client.cz>', 'To' => 'team@example.test', 'Subject' => 'Hodiny', 'Message-ID' => '<k1@client.cz>', 'Date' => gmdate('r', time() + 900)], 'Moje hodiny předcházejí.')], 'Sent' => []];
+    $GLOBALS['fakeInternal'] = ['INBOX:1' => gmdate('d-M-Y H:i:s', time() - 120) . ' +0000'];
+    $svcSkew = new MailboxSyncService($repo, $store, $makeClient, 'INBOX', '', 50, 30, 15_000_000, 'team@example.test');
+    $svcSkew->sync(10);
+    $skewTid = (int) $pdo->query('SELECT id FROM mailbox_threads')->fetchColumn();
+    $skewSender = new MailboxSender($repo, $store, $factory);
+    $skewSent = $skewSender->send(['thread_id' => $skewTid, 'draft_id' => null, 'to' => 'late@client.cz', 'cc' => '', 'bcc' => '', 'subject' => 'Re: Hodiny', 'body' => 'Odpověď.', 'known_inbound_id' => $repo->replyState($skewTid)['last_inbound_id']]);
+    check($skewSent['status'] === 'sent' && $repo->replyState($skewTid)['answered'] === true, 'Client clock 15 min ahead must not leave the thread unanswered');
+    $folders['INBOX'][2] = raw(['From' => 'Pozdní <late@client.cz>', 'To' => 'team@example.test', 'Subject' => 'Re: Hodiny', 'Message-ID' => '<k2@client.cz>', 'Date' => gmdate('r', time() - 3600)], 'Dotaz po odpovědi, ale mé hodiny jdou pozadu.');
+    $GLOBALS['fakeInternal']['INBOX:2'] = gmdate('d-M-Y H:i:s', time() + 2) . ' +0000';
+    $svcSkew->sync(10);
+    check($repo->replyState($skewTid)['answered'] === false && MailboxRepository::isAwaiting($repo->findThread($skewTid)), 'A follow-up from a client whose clock is behind must re-open the thread');
+
+    // (2) UIDVALIDITY change: new mail must not collide with stored (folder, uid) pairs.
+    $reset();
+    $uidValidity = 700;
+    $folders = ['INBOX' => [7 => raw(['From' => 'A <a@client.cz>', 'To' => 'team@example.test', 'Subject' => 'Stará', 'Message-ID' => '<u1@client.cz>', 'Date' => gmdate('r', time() - 500)], 'Stará.')], 'Sent' => []];
+    $svcUid = new MailboxSyncService($repo, $store, $makeClient, 'INBOX', '', 50, 30);
+    $svcUid->sync(10);
+    $uidValidity = 701; // mailbox restored: UID 7 now belongs to a different message
+    $folders['INBOX'] = [7 => raw(['From' => 'B <b@client.cz>', 'To' => 'team@example.test', 'Subject' => 'Nová po obnově', 'Message-ID' => '<u2@client.cz>', 'Date' => gmdate('r', time() - 100)], 'Nová.')];
+    $res = $svcUid->sync(10);
+    check($res['errors'] === [] && (int) $pdo->query("SELECT COUNT(*) FROM mailbox_messages WHERE message_id = '<u2@client.cz>'")->fetchColumn() === 1, 'New mail that reuses an old UID after UIDVALIDITY change is imported, not lost');
+    check((int) $pdo->query('SELECT COUNT(*) FROM mailbox_threads WHERE message_count = 0')->fetchColumn() === 0, 'No orphan empty threads');
+    $uidValidity = 500;
+
+    // (3) Oversized and unreadable messages become visible placeholders instead of wedging or silently vanishing.
+    $reset();
+    $folders = ['INBOX' => [
+        1 => raw(['From' => 'Fotograf <foto@client.cz>', 'To' => 'team@example.test', 'Subject' => 'Velké video', 'Message-ID' => '<big@client.cz>', 'Date' => gmdate('r', time() - 60)], 'x'),
+        2 => raw(['From' => 'Rozbitý <broken@client.cz>', 'To' => 'team@example.test', 'Subject' => 'Rozbitá zpráva', 'Message-ID' => '<brk@client.cz>', 'Date' => gmdate('r', time() - 50)], 'y'),
+        3 => raw(['From' => 'OK <ok@client.cz>', 'To' => 'team@example.test', 'Subject' => 'Normální', 'Message-ID' => '<okk@client.cz>', 'Date' => gmdate('r', time() - 40)], 'z'),
+    ], 'Sent' => []];
+    $GLOBALS['fakeSizes'] = ['INBOX:1' => 90_000_000];
+    $GLOBALS['fakeBroken'] = ['INBOX:2'];
+    $svcBig = new MailboxSyncService($repo, $store, $makeClient, 'INBOX', '', 50, 30, 15_000_000);
+    $res = $svcBig->sync(10);
+    $big = $pdo->query("SELECT * FROM mailbox_messages WHERE message_id = '<big@client.cz>'")->fetch();
+    check($big && str_contains($big['body_text'], 'příliš velká') && $big['from_addr'] === 'foto@client.cz' && $big['subject'] === 'Velké video', 'Oversized mail is kept as a placeholder with its real sender and subject');
+    $brk = $pdo->query("SELECT * FROM mailbox_messages WHERE message_id = '<brk@client.cz>'")->fetch();
+    check($brk && str_contains($brk['body_text'], 'webmailu'), 'A message the server cannot deliver becomes a placeholder');
+    check((int) $pdo->query("SELECT COUNT(*) FROM mailbox_messages WHERE message_id = '<okk@client.cz>'")->fetchColumn() === 1 && $repo->syncState('INBOX')['last_uid'] === 3, 'The messages after a bad one are still imported');
+    check(!str_starts_with((string) $repo->syncState('INBOX')['last_error'], 'processing:'), 'The crash marker is cleared after a normal run');
+    // A run that died mid-import leaves the marker; the next run turns that UID into a placeholder and moves on.
+    $GLOBALS['fakeSizes'] = []; $GLOBALS['fakeBroken'] = [];
+    $folders['INBOX'][4] = raw(['From' => 'Pád <crash@client.cz>', 'To' => 'team@example.test', 'Subject' => 'Shodila PHP', 'Message-ID' => '<crash@client.cz>', 'Date' => gmdate('r', time() - 30)], 'w');
+    $repo->saveSyncState('INBOX', 500, 4, 'processing:4');
+    $svcBig->sync(10);
+    check($pdo->query("SELECT body_text FROM mailbox_messages WHERE message_id = '<crash@client.cz>'")->fetchColumn() !== false && $repo->syncState('INBOX')['last_error'] === 'import_crashed', 'A UID that crashed the previous run is placeholdered and reported');
+
+    // (4) Contact-form mails (From = our own address) from different people must not share a thread.
+    $reset();
+    $own = 'team@example.test';
+    $svcForm = new MailboxSyncService($repo, $store, $makeClient, 'INBOX', '', 50, 30, 15_000_000, $own);
+    $form = static fn(string $id, string $contact) => raw(['From' => $own, 'To' => $own, 'Subject' => 'Nová zpráva z webu - Jana', 'Message-ID' => $id, 'Date' => gmdate('r', time() - 10), 'Content-Type' => 'text/plain; charset=utf-8'], "Jméno: Jana\nKontakt: {$contact}\nZpráva:\nAhoj");
+    $svcForm->importRaw($form('<f1@site>', 'jana1@client.cz'), 'in', 'INBOX', 1);
+    $svcForm->importRaw($form('<f2@site>', 'jana2@client.cz'), 'in', 'INBOX', 2);
+    $svcForm->importRaw($form('<f3@site>', '+420 123 456 789'), 'in', 'INBOX', 3);
+    $svcForm->importRaw($form('<f4@site>', '+420 999 999 999'), 'in', 'INBOX', 4);
+    check((int) $pdo->query('SELECT COUNT(*) FROM mailbox_threads')->fetchColumn() === 4, 'Different people with the same first name stay in separate threads');
+
+    // (5) A crashed 'sending' row stops counting as an answer after the TTL.
+    $reset();
+    $svcForm->importRaw(raw(['From' => 'K <k@client.cz>', 'To' => $own, 'Subject' => 'Visí', 'Message-ID' => '<h1@client.cz>', 'Date' => gmdate('r', time() - 5000)], 'Dotaz.'), 'in', 'INBOX', 1, new DateTimeImmutable('-2 hours'));
+    $hangTid = (int) $pdo->query('SELECT id FROM mailbox_threads')->fetchColumn();
+    $ins = $repo->insertOutbound($hangTid, ['message_id' => '<hang@example.test>', 'in_reply_to' => '', 'refs' => '', 'from_addr' => $own, 'from_name' => 'T', 'to' => 'k@client.cz', 'cc' => '', 'bcc' => '', 'subject' => 'Re: Visí', 'body' => 'x', 'has_attachments' => false, 'author_label' => 'Zombie']);
+    check($repo->replyState($hangTid)['answered'] === true, 'A fresh in-flight send counts as an answer');
+    $pdo->exec("UPDATE mailbox_messages SET created_at = DATE_SUB(UTC_TIMESTAMP(), INTERVAL 11 MINUTE) WHERE id = {$ins['message_id']}");
+    check($repo->replyState($hangTid)['answered'] === false, 'A send that never finished expires and no longer blocks replying');
+
+    // (6) Threads started by us are neutral (no "already answered" banner) and follow-ups go to the same recipients.
+    $reset();
+    $own1 = $sender->send(['thread_id' => null, 'draft_id' => null, 'to' => 'novy@client.cz', 'cc' => '', 'bcc' => '', 'subject' => 'Nabídka', 'body' => 'Dobrý den.']);
+    $ownTid = $own1['thread_id'];
+    check($repo->replyState($ownTid)['answered'] === false, 'A thread without inbound mail is not "answered"');
+    $followUp = $sender->send(['thread_id' => $ownTid, 'draft_id' => null, 'to' => 'novy@client.cz', 'cc' => '', 'bcc' => '', 'subject' => 'Re: Nabídka', 'body' => 'Ještě doplnění.']);
+    check($followUp['status'] === 'sent', 'Follow-up on our own thread needs no confirmation');
+    $outMsg = $repo->findMessage($own1['message_id']);
+    check(App\Services\Mailbox\MailboxView::replyRecipients($outMsg, $own, false)['to'] === 'novy@client.cz', 'Reply form for an outbound-only thread is addressed to the earlier recipients');
+
+    // (7) Long References stay below the RFC 2047 threshold so threading survives at the recipient.
+    $reset();
+    $ids = [];
+    for ($i = 0; $i < 30; $i++) { $ids[] = '<CAHk-' . str_repeat('x', 60) . $i . '@mail.gmail.example>'; }
+    $svcForm->importRaw(raw(['From' => 'L <l@client.cz>', 'To' => $own, 'Subject' => 'Dlouhé vlákno', 'Message-ID' => '<long9@client.cz>', 'References' => implode(' ', $ids), 'Date' => gmdate('r', time() - 5)], 'Dotaz.'), 'in', 'INBOX', 1);
+    $longTid = (int) $pdo->query('SELECT id FROM mailbox_threads')->fetchColumn();
+    $sender->send(['thread_id' => $longTid, 'draft_id' => null, 'to' => 'l@client.cz', 'cc' => '', 'bcc' => '', 'subject' => 'Re: Dlouhé vlákno', 'body' => 'Odpověď.', 'known_inbound_id' => $repo->replyState($longTid)['last_inbound_id']]);
+    $mime = preg_replace("/\r\n[ \t]+/", ' ', $channel->events['data']);
+    check(preg_match('/^References: (.+)$/m', $mime, $rm) === 1 && !str_contains($rm[1], '=?') && strlen($rm[1]) < 1000 && str_contains($rm[1], '<long9@client.cz>') && str_contains($rm[1], $ids[0]), 'References is trimmed (root + newest) instead of being RFC 2047 encoded');
+
+    // (8) Legacy raw 8-bit headers are converted to UTF-8.
+    $legacy = "From: =?ISO-8859-2?Q?Jan?= <j@client.cz>\r\nSubject: P\x9Aili\x9D\r\nMessage-ID: <leg@client.cz>\r\n\r\nx";
+    check(MimeParser::parse($legacy)['subject'] === 'Pšiliť', 'Raw Windows-1250 header bytes become valid UTF-8: ' . MimeParser::parse($legacy)['subject']);
 
     // ---------------------------------------------------------------- templates
     $tpl = $repo->saveTemplate(null, 'Děkujeme', 'Děkujeme za zprávu.');

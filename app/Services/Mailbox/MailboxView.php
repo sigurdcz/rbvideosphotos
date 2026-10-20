@@ -65,9 +65,14 @@ final class MailboxView
         if ($primary === [] && strtolower((string) $message['from_addr']) !== $own) {
             $primary[] = (string) $message['from_addr'];
         }
+        if ($message['direction'] === 'out') {
+            // Following up on our own message: write to the same people again.
+            $primary = array_column(MimeParser::parseAddressList((string) ($message['to_addrs'] ?? '')), 'addr');
+        }
         if ($primary === [] && $message['direction'] === 'in') {
-            if (preg_match('/^\s*Kontakt:\s*(\S+@\S+)/mi', (string) $message['body_text'], $m) && filter_var(rtrim($m[1], '.,;'), FILTER_VALIDATE_EMAIL)) {
-                $primary[] = rtrim($m[1], '.,;');
+            $contact = self::contactEmail((string) $message['body_text']);
+            if ($contact !== null) {
+                $primary[] = $contact;
             } else {
                 $note = 'Zpráva přišla z kontaktního formuláře webu bez e-mailu klienta - vyplňte adresu příjemce ručně.';
             }
@@ -81,6 +86,16 @@ final class MailboxView
             }
         }
         return ['to' => implode(', ', $primary), 'cc' => implode(', ', $cc), 'note' => $note];
+    }
+
+    /** E-mail from the "Kontakt:" line of a contact-form message (null when it holds a phone number or is missing). */
+    public static function contactEmail(string $body): ?string
+    {
+        if (preg_match('/^\s*Kontakt:\s*(\S+@\S+)/mi', $body, $m)) {
+            $email = strtolower(rtrim($m[1], '.,;'));
+            return filter_var($email, FILTER_VALIDATE_EMAIL) ? $email : null;
+        }
+        return null;
     }
 
     public static function size(int $bytes): string

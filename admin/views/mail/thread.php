@@ -44,7 +44,9 @@ ob_start(); ?>
       <?php else: ?>
         <pre class="mail-text"><?= $h($m['body_text']) ?></pre>
       <?php endif; ?>
-      <?php $files = array_filter($m['attachments'], static fn($a) => !$a['is_inline'] || $a['content_id'] === null); ?>
+      <?php // Hide only inline images the rendered HTML actually references; others (e.g. photos from Apple Mail) stay listed.
+      $html = (string) ($m['body_html'] ?? '');
+      $files = array_filter($m['attachments'], static fn($a) => !$a['is_inline'] || $a['content_id'] === null || $html === '' || stripos($html, 'cid:' . $a['content_id']) === false); ?>
       <?php if ($files): ?>
         <ul class="mail-attachments mail-attachments--read">
           <?php foreach ($files as $a): ?>

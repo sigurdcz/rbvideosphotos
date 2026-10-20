@@ -20,10 +20,15 @@ final class SocketMailTransport implements MailTransport
 
     public function readLine(): ?string
     {
-        $line = fgets($this->stream, 65536);
-        if ($line === false) {
-            return null;
-        }
+        // fgets() returns at most 64 KB; long untagged responses (UID SEARCH with thousands of UIDs) span several reads.
+        $line = '';
+        do {
+            $chunk = fgets($this->stream, 65536);
+            if ($chunk === false) {
+                return $line === '' ? null : rtrim($line, "\r\n");
+            }
+            $line .= $chunk;
+        } while (!str_ends_with($chunk, "\n") && strlen($line) < 4_000_000);
         return rtrim($line, "\r\n");
     }
 

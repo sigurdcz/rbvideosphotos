@@ -76,13 +76,54 @@ final class ImapClient
 
     public function fetchRaw(int $uid): string
     {
-        $lines = $this->command('UID FETCH ' . $uid . ' (BODY.PEEK[])', 'imap_fetch');
+        return $this->fetchMessage($uid)['raw'];
+    }
+
+    /**
+     * @return array{raw:string, internaldate:?\DateTimeImmutable} internaldate = the server's own arrival time
+     */
+    public function fetchMessage(int $uid): array
+    {
+        $lines = $this->command('UID FETCH ' . $uid . ' (INTERNALDATE BODY.PEEK[])', 'imap_fetch');
+        foreach ($lines as $line) {
+            if (isset($line['literals'][0]) && preg_match('/^\* \d+ FETCH/i', $line['text'])) {
+                return ['raw' => $line['literals'][0], 'internaldate' => $this->parseInternalDate($line['text'])];
+            }
+        }
+        throw new ImapException('imap_fetch_empty');
+    }
+
+    /** Size in bytes (RFC822.SIZE) without downloading the message. */
+    public function messageSize(int $uid): int
+    {
+        $lines = $this->command('UID FETCH ' . $uid . ' (RFC822.SIZE)', 'imap_size');
+        foreach ($lines as $line) {
+            if (preg_match('/RFC822\.SIZE (\d+)/i', $line['text'], $m)) {
+                return (int) $m[1];
+            }
+        }
+        throw new ImapException('imap_fetch_empty');
+    }
+
+    /** Header block only (used for messages too large to download). */
+    public function fetchHeader(int $uid): string
+    {
+        $lines = $this->command('UID FETCH ' . $uid . ' (BODY.PEEK[HEADER])', 'imap_fetch');
         foreach ($lines as $line) {
             if (isset($line['literals'][0]) && preg_match('/^\* \d+ FETCH/i', $line['text'])) {
                 return $line['literals'][0];
             }
         }
         throw new ImapException('imap_fetch_empty');
+    }
+
+    private function parseInternalDate(string $text): ?\DateTimeImmutable
+    {
+        if (!preg_match('/INTERNALDATE "\s*(\d{1,2}-[A-Za-z]{3}-\d{4} \d{2}:\d{2}:\d{2} [+-]\d{4})"/i', $text, $m)) {
+            return null;
+        }
+        $date = \DateTimeImmutable::createFromFormat('j-M-Y H:i:s O', $m[1]);
+        return $date === false ? null : $date;
     }
 
     /** @return list<array{name:string,flags:list<string>}> */
