@@ -318,6 +318,14 @@ function register_mailbox_tests(callable $test, callable $assert): void
         $assert(str_starts_with(MailboxView::quote(['sent_at' => '2026-10-20 08:00:00', 'from_name' => 'Jan', 'from_addr' => 'j@x.cz', 'body_text' => "a\nb"]), "\n\nDne 20. 10. 2026 10:00 Jan napsal(a):\n> a\n> b"));
     });
 
+    $test('mailbox view: quoted history is split off only when it is a clean trailing block', function () use ($assert): void {
+        [$fresh, $quoted] = MailboxView::splitQuoted("Díky!\n\nDne 17. 10. 2026 Jana napsal(a):\n> Ahoj\n>\n> Tým");
+        $assert($fresh === 'Díky!' && str_starts_with($quoted, 'Dne 17. 10. 2026 Jana napsal(a):') && str_contains($quoted, '> Tým'), json_encode([$fresh, $quoted]));
+        [$fresh, $quoted] = MailboxView::splitQuoted("> otázka 1\nodpověď 1\n> otázka 2\nodpověď 2");
+        $assert($quoted === '' && str_contains($fresh, 'odpověď 2'), 'Interleaved quotes must stay inline so no reply text is hidden.');
+        $assert(MailboxView::splitQuoted('Bez citace') === ['Bez citace', '']);
+    });
+
     $test('mailbox sender: recipient validation rejects header injection, bad addresses and oversized lists', function () use ($assert): void {
         $assert(MailboxSender::validAddresses('Jan <a@example.cz>, A@example.cz; b@example.cz', 'Komu') === ['a@example.cz', 'b@example.cz'], 'De-duplicated, case-insensitive.');
         foreach (["a@example.cz\r\nBcc: x@evil.cz", 'neni-adresa', 'a@@example.cz'] as $bad) {

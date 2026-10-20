@@ -235,7 +235,7 @@
     size.textContent = '(' + attachment.size_label + ')';
     label.appendChild(size);
     const remove = document.createElement('button');
-    remove.type = 'button'; remove.className = 'btn-link'; remove.textContent = 'Odebrat';
+    remove.type = 'button'; remove.className = 'mail-linkbtn'; remove.textContent = 'Odebrat';
     remove.setAttribute('data-attachment-remove', '');
     item.append(label, remove);
     attachmentList.appendChild(item);

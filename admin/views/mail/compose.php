@@ -5,9 +5,8 @@ $activeTab = 'compose';
 $thread = null;
 $state = null;
 ob_start(); ?>
-<div class="page-header"><h1>Nová zpráva</h1></div>
 <?php require __DIR__ . '/_tabs.php'; ?>
-<div class="card mail-reply">
+<section class="mail-compose mail-compose--new">
   <?php require __DIR__ . '/_form.php'; ?>
-</div>
+</section>
 <?php $slot = ob_get_clean(); require __DIR__ . '/../layouts/main.php'; ?>

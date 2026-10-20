@@ -3,40 +3,40 @@ $h = static fn($v) => htmlspecialchars((string) $v, ENT_QUOTES | ENT_SUBSTITUTE,
 $pageTitle = 'Šablony odpovědí';
 $activeTab = 'templates';
 ob_start(); ?>
-<div class="page-header"><h1>Šablony odpovědí</h1></div>
 <?php require __DIR__ . '/_tabs.php'; ?>
-<div class="card" style="max-width:720px">
-  <div class="card-title"><?= $edit ? 'Upravit šablonu' : 'Nová šablona' ?></div>
-  <form method="post" action="/admin/mail/templates/save">
-    <input type="hidden" name="_csrf" value="<?= $h($_csrfToken) ?>">
-    <input type="hidden" name="id" value="<?= $edit ? (int) $edit['id'] : '' ?>">
-    <div class="form-group"><label for="tpl-name">Název</label><input type="text" id="tpl-name" name="name" maxlength="150" value="<?= $h($edit['name'] ?? '') ?>" required></div>
-    <div class="form-group"><label for="tpl-body">Text</label><textarea id="tpl-body" name="body" rows="8" required><?= $h($edit['body'] ?? '') ?></textarea></div>
-    <button type="submit" class="btn btn-primary">Uložit šablonu</button>
-    <?php if ($edit): ?><a class="btn btn-secondary" href="/admin/mail/templates">Zrušit úpravu</a><?php endif; ?>
-  </form>
+<div class="mail-split">
+  <section class="mail-panel mail-panel--pad">
+    <h2 class="mail-h2"><?= $edit ? 'Upravit šablonu' : 'Nová šablona' ?></h2>
+    <form method="post" action="/admin/mail/templates/save" class="mail-form">
+      <input type="hidden" name="_csrf" value="<?= $h($_csrfToken) ?>">
+      <input type="hidden" name="id" value="<?= $edit ? (int) $edit['id'] : '' ?>">
+      <div class="mail-field"><label for="tpl-name">Název</label><input type="text" id="tpl-name" name="name" maxlength="150" value="<?= $h($edit['name'] ?? '') ?>" required></div>
+      <textarea id="tpl-body" name="body" rows="9" aria-label="Text šablony" placeholder="Text šablony" required><?= $h($edit['body'] ?? '') ?></textarea>
+      <div class="mail-form__buttons mail-form__buttons--solo">
+        <button type="submit" class="btn btn-primary">Uložit šablonu</button>
+        <?php if ($edit): ?><a class="btn btn-secondary" href="/admin/mail/templates">Zrušit úpravu</a><?php endif; ?>
+      </div>
+    </form>
+  </section>
+  <section class="mail-panel">
+    <?php if ($templates === []): ?>
+      <div class="mail-empty"><p>Zatím žádné šablony.</p></div>
+    <?php else: ?>
+      <div class="mail-list">
+        <?php foreach ($templates as $t): ?>
+          <div class="mail-row mail-row--tpl">
+            <span class="mail-row__main"><strong><?= $h($t['name']) ?></strong><span class="mail-row__snippet"><?= $h(mb_substr(trim(preg_replace('/\s+/u', ' ', (string) $t['body']) ?? ''), 0, 110, 'UTF-8')) ?></span></span>
+            <span class="mail-row__flags">
+              <a class="mail-linkbtn" href="/admin/mail/templates?edit=<?= (int) $t['id'] ?>">Upravit</a>
+              <form method="post" action="/admin/mail/templates/delete" data-confirm="Smazat šablonu?">
+                <input type="hidden" name="_csrf" value="<?= $h($_csrfToken) ?>"><input type="hidden" name="id" value="<?= (int) $t['id'] ?>">
+                <button class="mail-linkbtn mail-linkbtn--danger">Smazat</button>
+              </form>
+            </span>
+          </div>
+        <?php endforeach; ?>
+      </div>
+    <?php endif; ?>
+  </section>
 </div>
-<?php if ($templates): ?>
-<div class="card">
-  <div class="card-title">Uložené šablony</div>
-  <table>
-    <thead><tr><th>Název</th><th>Náhled</th><th>Akce</th></tr></thead>
-    <tbody>
-    <?php foreach ($templates as $t): ?>
-      <tr>
-        <td><?= $h($t['name']) ?></td>
-        <td><?= $h(mb_substr(trim(preg_replace('/\s+/u', ' ', (string) $t['body']) ?? ''), 0, 100, 'UTF-8')) ?></td>
-        <td>
-          <a class="btn btn-sm btn-secondary" href="/admin/mail/templates?edit=<?= (int) $t['id'] ?>">Upravit</a>
-          <form method="post" action="/admin/mail/templates/delete" style="display:inline" data-confirm="Smazat šablonu?">
-            <input type="hidden" name="_csrf" value="<?= $h($_csrfToken) ?>"><input type="hidden" name="id" value="<?= (int) $t['id'] ?>">
-            <button class="btn btn-sm btn-danger">Smazat</button>
-          </form>
-        </td>
-      </tr>
-    <?php endforeach; ?>
-    </tbody>
-  </table>
-</div>
-<?php endif; ?>
 <?php $slot = ob_get_clean(); require __DIR__ . '/../layouts/main.php'; ?>

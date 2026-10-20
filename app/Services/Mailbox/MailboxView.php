@@ -98,6 +98,39 @@ final class MailboxView
         return null;
     }
 
+    /**
+     * Splits a plain-text mail into the new text and the quoted history below it ("> ..." block, optionally
+     * introduced by an "On ... wrote:" line), so threads read like a conversation instead of a wall of quotes.
+     *
+     * @return array{0:string,1:string}
+     */
+    public static function splitQuoted(string $text): array
+    {
+        $lines = preg_split('/\r\n|\n/', $text) ?: [];
+        $first = null;
+        foreach ($lines as $i => $line) {
+            if (str_starts_with(ltrim($line), '>')) {
+                $first = $i;
+                break;
+            }
+        }
+        if ($first === null) {
+            return [$text, ''];
+        }
+        // The line right before the quote usually announces it ("Dne ... napsal(a):", "On ... wrote:").
+        $start = $first;
+        if ($start > 0 && preg_match('/(napsal|wrote|odpov)/iu', $lines[$start - 1])) {
+            $start--;
+        }
+        $rest = array_slice($lines, $first);
+        foreach ($rest as $line) {
+            if (trim($line) !== '' && !str_starts_with(ltrim($line), '>')) {
+                return [$text, '']; // the quote is interleaved with replies: leave it as is
+            }
+        }
+        return [rtrim(implode("\n", array_slice($lines, 0, $start))), trim(implode("\n", array_slice($lines, $start)))];
+    }
+
     public static function size(int $bytes): string
     {
         if ($bytes >= 1048576) {
