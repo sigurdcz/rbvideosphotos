@@ -52,3 +52,55 @@ Stranka `Zalohy` ma zobrazovat automaticke, rucni a nahrane zalohy vcetne typu, 
 ### Odhad
 
 Kompletni implementace vcetne automaticke rotace, uploadu, bezpecne obnovy a testu: priblizne 5 az 7 pracovnich dnu. Odhad zavisi na limitech hostingu pro cron, velikost uploadu, dobu behu PHP a dostupne misto.
+
+## 2. Sdilena posta (mailbox) v SeoEditoru s ochranou proti dvojite odpovedi
+
+**Stav:** Napad
+
+### Cil
+
+Klient pouziva SeoEditor jako centralni misto pro cteni a odpovidani na maily ze schranky `team@rbvideosphotos.cz` (Active24). Na poste pracuje vice lidi a stava se, ze na stejny mail odpovi dva najednou. System musi takovou dvojitou odpoved zachytit a upozornit.
+
+### Zakladni funkce
+
+- odesilani pres SMTP Active24 z adresy `team@rbvideosphotos.cz` (spravne SPF/DKIM, ne PHP `mail()`),
+- cteni prichozi posty pres IMAP (cron synchronizace do DB), kopie zprav zustava ve schrance,
+- odeslana odpoved ulozit i do slozky Odeslane ve schrance (IMAP APPEND),
+- zahrnout i odpovedi odeslane mimo SeoEditor (webmail, mobil) - synchronizace slozky Odeslane,
+- vlákna (konverzace) podle hlavicek `Message-ID`, `In-Reply-To`, `References`; odchozi odpoved s korektnimi hlavickami.
+
+### Ochrana proti dvojite odpovedi (hlavni pozadavek)
+
+- Pokud na posledni zpravu klienta uz nekdo odpovedel, zobrazit u vlakna **cerveny banner** s datem a nahledem te odpovedi.
+- Pred odeslanim zobrazit **modal s potvrzenim**: "Na zpravu uz bylo odpovezeno. Opravdu odeslat?"
+- Kontrola musi byt na serveru, ne jen ve strance: formular posila ID posledni zname zpravy vlakna; pokud mezitim pribyla odchozi odpoved, server odeslani odmitne a vyzada potvrzeni (priznak `confirmed`). Tim se zachyti i soubeh.
+- Banner se ma obnovovat i behem psani (polling), aby se objevil, kdyz nekdo odpovi, zatimco je okno otevrene.
+
+### Bezne funkce odpovedi
+
+- koncepty (drafty) nedopsanych zprav s automatickym ukladanim na server, jeden sdileny koncept na vlakno, verzovani proti tichemu prepsani, smazani po odeslani,
+- prilohy (odesilani i stahovani prichozich) s limitem velikosti a typu, ulozeni mimo webroot,
+- pole Komu, Cc, Bcc, vice prijemcu s validaci; Odpovedet a Odpovedet vsem,
+- HTML z prichozich mailu cistit (sanitizace) kvuli XSS.
+
+### Mimo rozsah (zatim)
+
+- Zadna personalizace, uzivatelske profily ani ACL: v teto fazi neexistuji individualni ucty, takze se neresi, kdo odpovedel ani zamky "prave odpovida X". Prihlaseni pres profily a ACL pribude pozdeji; tento modul na nej ma byt pripraven (napr. nepovinny sloupec autora u odchozich zprav).
+- Mailove rozhrani musi byt za stavajicim prihlasenim do SeoEditoru.
+
+### Navrhovane etapy
+
+1. Synchronizace schranky, seznam vlaken, detail, odesilani (Komu/Cc/Bcc, prilohy), banner + modal + serverova pojistka.
+2. Koncepty, Odpovedet vsem, notifikace o nove poste.
+3. Hledani, sablony odpovedi, cisteni HTML.
+
+### Otevrene otazky
+
+- jedna sdilena schranka, nebo vice schranek,
+- dostupnost PHP IMAP rozsireni na hostingu (jinak knihovna v cistem PHP),
+- limity Active24 pro pocet odeslanych mailu za hodinu a velikost priloh,
+- sifrovane ulozeni hesla ke schrance v konfiguraci.
+
+### Odhad
+
+Etapa 1 a 2 priblizne 5 az 8 pracovnich dnu; etapa 3 dalsi 2 az 3 dny. Odhad zavisi na IMAP dostupnosti a limitech hostingu. Vse nejdriv na `dev` a staging.
