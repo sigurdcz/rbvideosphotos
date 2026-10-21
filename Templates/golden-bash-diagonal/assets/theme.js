@@ -596,7 +596,33 @@
     var contactGrid = contact.querySelector('.hp-contact-grid');
     if (contactIntro && contactVisualSource) {
       contactIntro.classList.add('gb-contact-visual');
-      contactIntro.style.setProperty('--gb-contact-image', 'url("' + contactVisualSource.getAttribute('src') + '")');
+      // The hidden source <img> carries the ORIGINAL file in src (a PNG of 100+ kB) and the light
+      // WebP variants in srcset. Use the largest variant up to 900 px, and set the background only
+      // when the section is about to come into view: it sits at the bottom of the page, and
+      // loading it at once competed with the hero for bandwidth.
+      var pickContactImage = function (img) {
+        var best = null;
+        (img.getAttribute('srcset') || '').split(',').forEach(function (part) {
+          var bits = part.trim().split(/\s+/);
+          var width = parseInt(bits[1], 10);
+          if (bits[0] && width && width <= 900 && (!best || width > best.width)) best = { url: bits[0], width: width };
+        });
+        return best ? best.url : img.getAttribute('src');
+      };
+      var applyContactImage = function () {
+        contactIntro.style.setProperty('--gb-contact-image', 'url("' + pickContactImage(contactVisualSource) + '")');
+      };
+      if ('IntersectionObserver' in window) {
+        var contactObserver = new IntersectionObserver(function (entries) {
+          if (entries.some(function (entry) { return entry.isIntersecting; })) {
+            contactObserver.disconnect();
+            applyContactImage();
+          }
+        }, { rootMargin: '600px 0px' });
+        contactObserver.observe(contactIntro);
+      } else {
+        applyContactImage();
+      }
     }
     if (contactGrid) {
       contactGrid.classList.add('gb-contact-grid');
