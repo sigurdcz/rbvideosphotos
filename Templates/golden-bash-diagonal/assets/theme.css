@@ -3165,7 +3165,8 @@ body.theme-golden-bash.theme-golden-bash-diagonal[data-cms-page-key="homepage"] 
     object-position:center center!important;
   }
   body.theme-golden-bash.theme-golden-bash-diagonal[data-cms-page-key="homepage"] .hp-hero>video.theme-hero-video{
-    top:0!important;bottom:0!important;left:50%!important;right:auto!important;object-position:center top!important;transform:translateX(-50%)!important;
+    top:72px!important;bottom:auto!important;left:0!important;right:0!important;
+    width:100%!important;height:calc(100% - 72px)!important;object-fit:cover!important;object-position:center top!important;transform:none!important;
   }
 }
 

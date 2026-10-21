@@ -2376,3 +2376,32 @@ Doporuceny model: Sol - Vykon hero videa, fontu, kritickeho CSS a cache vyzaduje
 ## Vysledek
 
 Lokalni implementace je hotova a zdokumentovana v ARCHITECTURE i globalni wiki (commit 0c48fa0). Pred nasazenim se homepage stale chova podle stareho staging HTML; dalsi realne PageSpeed/DOM mereni je mozne az po samostatne povolenem pushi na `dev`. Produkcni `master` se nemeni.
+
+---
+# UKOL: Mobilni hero video pod navigaci bez odkryteho pruhu
+
+Datum: 2026-10-21
+Zadani: Ukotvit mobilni hero video pod prekryvajici navigaci a zaroven zajistit, aby video pokrylo celou sirku hero bez odkryteho pruhu vlevo.
+Doporuceny model: Terra - Jde o presne vymezenou CSS regresi s responzivnim kontraktem a cilenym testem.
+
+## Kroky
+
+- [x] Zmerit ze screenshotu rozdil mezi zacatkem video elementu a spodkem navigace.
+- [x] Opravit mobilni geometrii video elementu bez deformace obrazu.
+- [x] Aktualizovat regresni test a technickou dokumentaci.
+- [x] Spustit cilene testy a kontrolu diffu.
+- [x] Commitnout hotovou opravu na `dev`; bez vyzvy nepushovat.
+
+## Poznamky
+
+Screenshot potvrzuje dve soubezne priciny: video zacina pod prekryvajici navigaci a jeho element ma jen 375 px proti zhruba 604 px sirokemu hero. Finalni mobilni kontrakt proto musi pouzit horni inset 72 px, spodni hranu 0 a plnou sirku/vysku zbytku panelu s `object-fit:cover` a `object-position:center top`.
+
+Finalni CSS nyni zacina video na `top:72px`, nastavuje `width:100%` a `height:calc(100% - 72px)`. `object-fit:cover` zachovava pomer obrazu a orizne prebytek uvnitr plneho mobilniho panelu; video uz neni transformaci centrovany jako uzky 375px element.
+
+Regresni test ted vyzaduje cely kontrakt: odsazeni 72 px, vysku zbytku hero, plnou sirku, cover orez a nulovou transformaci. ARCHITECTURE popisuje rozdil mezi nativnim mobilnim videem a Vimeo iframe.
+
+Cileny Golden Bash test pro mobilni hero prosel a `git diff --check` nenasel chybu. Overeni je lokalni nad zdrojovym CSS; skutecny staging se zmeni az po samostatne povolenem pushi na `dev`.
+
+## Vysledek
+
+Mobilni nativni hero video zacina 72 px pod hornim okrajem prekryvane hero sekce, vyplni celou sirku a zbyvajici vysku a zachovava pomer pres `object-fit:cover`. Cileny regresni test prosel a `git diff --check` je cisty. Kompletni sada novy test take prosla; nadale obsahuje drive znamy nesouvisejici Golden Bash isolation FAIL a chybejici lokalni DB pripojeni. ARCHITECTURE byla aktualizovana. Zmena je pripravena v lokalnim commitu na `dev`; bez explicitniho pozadavku nebyla pushnuta.

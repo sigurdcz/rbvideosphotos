@@ -111,19 +111,21 @@ function register_golden_bash_theme_tests(callable $test, callable $assert): voi
         }
     });
 
-    $test('golden bash diagonal centers every mobile homepage hero video source', function () use ($assert, $diagonalThemeDir): void {
+    $test('golden bash diagonal keeps mobile homepage hero media below navigation', function () use ($assert, $diagonalThemeDir): void {
         $css = str_replace("\r\n", "\n", (string)file_get_contents($diagonalThemeDir . '/assets/theme.css'));
         $mobileOverride = '@media(max-width:700px){' . "\n"
             . '  body.theme-golden-bash.theme-golden-bash-diagonal[data-cms-page-key="homepage"] .hp-hero>.theme-hero-video iframe{' . "\n"
             . '    left:50%!important;right:auto!important;transform:translateX(-50%)!important;' . "\n"
             . '  }';
-        $nativeOverride = 'top:0!important;bottom:0!important;left:50%!important;right:auto!important;object-position:center top!important;transform:translateX(-50%)!important;';
+        $nativeOverride = 'top:72px!important;bottom:auto!important;left:0!important;right:0!important;'
+            . "\n" . '    width:100%!important;height:calc(100% - 72px)!important;object-fit:cover!important;object-position:center top!important;transform:none!important;';
         $desktopContract = strpos($css, 'body.theme-golden-bash.theme-golden-bash-diagonal[data-cms-page-key="homepage"] .hp-hero>video.theme-hero-video{' . "\n" . '  left:auto!important;right:0!important;');
         $mobileContract = strpos($css, $mobileOverride);
         $assert($desktopContract !== false && $mobileContract !== false && $desktopContract < $mobileContract, 'The final mobile override must win after the desktop right-edge contract.');
-        $assert(str_contains($css, $nativeOverride), 'The native mobile hero video must center its crop instead of inheriting right anchoring.');
+        $assert(str_contains($css, $nativeOverride), 'The native mobile hero video must start below navigation and cover the full hero width.');
         $assert(str_contains($css, 'object-position:center center!important;'), 'The mobile poster must retain a centered crop.');
-        $assert(str_contains($css, 'top:0!important;bottom:0!important;') && str_contains($css, 'object-position:center top!important;'), 'The native mobile video must cover the hero from its top edge without exposing a background strip.');
+        $assert(str_contains($css, 'top:72px!important;bottom:auto!important;') && str_contains($css, 'height:calc(100% - 72px)!important;'), 'The native mobile video must stay below the 72px navigation without overflowing the hero.');
+        $assert(str_contains($css, 'width:100%!important;height:calc(100% - 72px)!important;object-fit:cover!important;'), 'The native mobile video must cover the hero width without exposing a side strip.');
     });
 
     $test('golden bash theme registers a complete isolated design contract', function () use ($assert, $themeDir, $root): void {
