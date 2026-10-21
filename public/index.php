@@ -165,8 +165,12 @@ function tryServePublicAssetWithoutSession(string $uri): bool
     $rangeHeader = trim((string)($_SERVER['HTTP_RANGE'] ?? ''));
     if ($rangeHeader !== '' && $size > 0 && preg_match('~^bytes=(\d*)-(\d*)$~', $rangeHeader, $rangeMatch)
         && ($rangeMatch[1] !== '' || $rangeMatch[2] !== '')) {
+        // If-Range carries the validator the client got earlier: our ETag, or (Safari does this
+        // when a proxy turned the ETag weak) the Last-Modified date. Answering a date we do not
+        // recognise with the whole file would break video playback and seeking on iOS.
         $ifRange = trim((string)($_SERVER['HTTP_IF_RANGE'] ?? ''));
-        if ($ifRange === '' || $ifRange === $etag) {
+        $lastModifiedHttp = $mtime > 0 ? gmdate('D, d M Y H:i:s', $mtime) . ' GMT' : '';
+        if ($ifRange === '' || $ifRange === $etag || ($lastModifiedHttp !== '' && $ifRange === $lastModifiedHttp)) {
             if ($rangeMatch[1] === '') {
                 // "bytes=-N": the last N bytes.
                 $start = max(0, $size - (int)$rangeMatch[2]);

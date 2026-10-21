@@ -89,6 +89,7 @@ function register_hero_video_media_tests(callable $test, callable $assert): void
         $assert(str_contains($index, "header('Accept-Ranges: bytes')"), 'The server must announce byte ranges.');
         $assert(str_contains($index, 'http_response_code(206)') && str_contains($index, "header('Content-Range: bytes '"), 'A range must be answered with 206 and Content-Range.');
         $assert(str_contains($index, 'http_response_code(416)'), 'An unsatisfiable range must be answered with 416.');
+        $assert(str_contains($index, '$ifRange === $lastModifiedHttp'), 'If-Range may carry the Last-Modified date (Safari); it must still get a 206, not the whole file.');
         $assert(str_contains($index, 'header(\'Content-Length: \' . $length)'), 'The length must be sent so the browser can plan its buffering.');
         $assert(str_contains($index, 'fread($handle'), 'A large file must be streamed in chunks, not held in memory.');
     });
