@@ -145,27 +145,35 @@ request -> admin/index.php -> Core\Router -> Controller -> Repository/Service ->
 `public/index.php` odbavuje requesty v tomto poradi:
 
 ```text
-1. /.well-known/security.txt a /security.txt -> SecurityTxtHttpResponder
-2. /assets/*, /media/*  -> tryServePublicAssetWithoutSession(), readfile s realpath ochranou
-3. POST /api/visit      -> tryRecordVisitBeacon(), vlastni mereni navstevnosti (pred Auth::start)
+1. GET/HEAD /api/health -> HealthCheckHttpResponder, application + DB readiness, 200/503
+2. /.well-known/security.txt a /security.txt -> SecurityTxtHttpResponder
+3. /assets/*, /media/*  -> tryServePublicAssetWithoutSession(), readfile s realpath ochranou
+4. POST /api/visit      -> tryRecordVisitBeacon(), vlastni mereni navstevnosti (pred Auth::start)
    -- Auth::start() --
-4. /api/v1/*            -> ApiController::dispatch()
-5. legacy /blog/* nebo /nase-prace/* -> 301 redirect na prime slugy
-6. /sluzby              -> tryServeServicesPage() z `service_items`
-7. /nase-prace          -> tryServePortfolioPage() listing
-8. /blog                -> tryServeBlogListingPage()
-9. /faq                 -> tryServeFaqPage() z `faq_items`
-10. /kontakt            -> tryServeKontaktPage() z `contact_info`
-11. POST /kontakt/odeslat -> CSRF, honeypot, throttling, archiv v DB a SMTP; veřejný kontrakt přijímá jméno, kontakt, typ focení, místo, zprávu a volitelný enum-like `selected_package_id`, nikoli název, cenu ani datum akce. `PricingPackageCatalog` identifikátor ověří proti serverovému whitelistu a teprve z interní definice získá název a cenu pro e-mail. Neznámé ID blokuje odeslání se stavem `invalid-package`; redirect zachovává pouze ověřené ID v query `balicek`.
-12. CMS stranka z DB    -> tryServeDatabasePage()
-13. Blog detail         -> tryServeBlogPostPage()
-14. Portfolio detail    -> tryServePortfolioPage(..., true)
-15. storage/published/* -> explicitni soubory podle pripony (napr. sitemap, robots, llms.txt a ikony)
-16. 404
+5. /api/v1/*            -> ApiController::dispatch()
+6. legacy /blog/* nebo /nase-prace/* -> 301 redirect na prime slugy
+7. /sluzby              -> tryServeServicesPage() z `service_items`
+8. /nase-prace          -> tryServePortfolioPage() listing
+9. /blog                -> tryServeBlogListingPage()
+10. /faq                -> tryServeFaqPage() z `faq_items`
+11. /kontakt            -> tryServeKontaktPage() z `contact_info`
+12. POST /kontakt/odeslat -> CSRF, honeypot, throttling, archiv v DB a SMTP; veřejný kontrakt přijímá jméno, kontakt, typ focení, místo, zprávu a volitelný enum-like `selected_package_id`, nikoli název, cenu ani datum akce. `PricingPackageCatalog` identifikátor ověří proti serverovému whitelistu a teprve z interní definice získá název a cenu pro e-mail. Neznámé ID blokuje odeslání se stavem `invalid-package`; redirect zachovává pouze ověřené ID v query `balicek`.
+13. CMS stranka z DB    -> tryServeDatabasePage()
+14. Blog detail         -> tryServeBlogPostPage()
+15. Portfolio detail    -> tryServePortfolioPage(..., true)
+16. storage/published/* -> explicitni soubory podle pripony (napr. sitemap, robots, llms.txt a ikony)
+17. 404
 ```
 
 Security endpointy jsou zamerne pred `Auth::start()`: verejny strojovy soubor nesmi zakladat PHP session ani posilat session cookie.
 Totez plati pro `POST /api/visit`: beacon nesmi zakladat session a lezi mimo `/api/v1/*`, takze nevyzaduje API klic.
+`/api/health` je jeste drive: nezaklada session ani visit, neni v sitemap/robots a vraci `X-Robots-Tag: noindex, nofollow, noarchive`. Odpoved zverejni jen `status`, UTC cas a agregovane `application/database` checks. DB chyba je JSON s HTTP503, nikoli tichy HTTP200.
+
+### Health monitoring pipeline
+
+`bin/health-check.php` vola pres verejnou domenu `/api/health`, zmeri odezvu a ulozi kazdy beh do `health_checks` (migrace110). HTTP chyba, timeout, neplatny JSON i database=error jsou `unhealthy`. Runner konci 0 jen pri zdravem kontraktu, 1 pri nezdravem stavu a 2 pri konfiguracni nebo dvojite persistencni chybe. Pokud zapis do DB neni mozny, stejny bezpecny record s UUID jde do `storage/logs/health-check-pending.jsonl`; dalsi beh po obnove DB soubor pod exkluzivnim zamkem prehraje a az po uspesnem vlozeni vyprazdni. UNIQUE UUID dela retry idempotentni. Neplatny radek se nesmaze ani nepreskoci.
+
+`HealthCheckRepository::summary()` napaji existujici `/admin/analytics`: aktualni stav, uptime pouze z provedenych kontrol, response time a denni graf. Den bez dat je sedy, ne 100% healthy. Posledni zaznam starsi nez 20 minut je `stale`/„Monitoring neběží“, aby zastaveny cron nebyl tise vydavan za dostupnost. Historie ma retenci 14 mesicu stejne jako navstevnost.
 
 ## Obsahovy model
 

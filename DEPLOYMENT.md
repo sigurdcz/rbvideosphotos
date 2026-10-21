@@ -21,7 +21,7 @@ Video galerie: nová obsahová migrace `106_replace_approved_video_portfolio.sql
 
 1. Over, ze serverovy `.env` odkazuje na databazi spravneho prostredi.
 2. Pro novou verzi spust `/migrate-util.php?token=<MIGRATE_TOKEN>` z vlastniho prohlizece.
-3. Utility aplikuji append-only migrace. Existujici 001–023 jsou beze zmen; aktualni verze obsahuje dalsi migrace az po 106.
+3. Utility aplikuji append-only migrace. Existujici migrace jsou beze zmen; aktualni verze obsahuje dalsi migrace az po 110.
 4. Sdileny `database/migration-schema-state.php` rozpozna zname historicke prekryvy a viditelne je zapise do evidence. Jine SQL chyby se neignoruji.
 5. Obsahove application-compatible migrace bez existujiciho webu zustanou nezapsane a utility je explicitne uvede jako odlozene. Po zakladnim seedu spust migrace znovu.
 6. Pro existujici web lze po uspesnych migracich pouzit `&publish=1` k uplnemu publishi. Nespoustej Armagedon pro beznou aktualizaci.
@@ -38,6 +38,26 @@ Po prihlaseni na `/admin/login` pouzij `/admin/setup`. Na opravdu prazdne instal
 - `php tests/InitialAdminTest.php`: autorizace, jednorazovost, heslo a zamek bootstrapu s PDO double.
 - `php bin/seo-smoke.php https://rbvideosphotos.cz`: produkcni kontrola po migraci a publishi; dokud web nema inicializovany obsah, HTTP 404/500 je nezavrena brana.
 - `.gitattributes` sjednocuje LF zdroju, aby textove kontrakty fungovaly i na Windows.
+
+## Health monitoring a cron
+
+Po nasazeni aplikuj append-only migraci **110_create_health_checks.sql**. Do serveroveho `.env` lze explicitne pridat:
+
+```dotenv
+HEALTH_CHECK_URL=https://rbvideosphotos.cz/api/health
+```
+
+Na stagingu pouzij `https://staging.rbvideosphotos.cz/api/health`; prostredi se nesmi navzajem monitorovat do stejne DB. Kdyz promenna chybi, runner sklada cil jako `{APP_URL}/api/health`. Zadny novy GitHub Secret neni potreba.
+
+V Active24 vytvor CLI cron s intervalem 10 minut. Priklad cron vyrazu a prikazu:
+
+```cron
+*/10 * * * * /usr/bin/php /ABSOLUTNI/CESTA/K/WEBU/bin/health-check.php
+```
+
+Presnou absolutni cestu a nazev PHP CLI vezmi z detailu hostingu; nepouzivej webovou URL skriptu, protoze `bin/health-check.php` mimo CLI vraci404. Po prvnim behu over: `/api/health` HTTP200 JSON, cron exit0, novy radek v admin **Analytika**, a aktualni cas posledni kontroly. Simulaci chyby provadej pouze na stagingu: docasne nastav nedostupny `HEALTH_CHECK_URL`, spust runner, ocekavej exit1 a `unhealthy` radek (je-li DB dostupna). Pri nedostupne DB se zaznam ulozi do `storage/logs/health-check-pending.jsonl`; po obnove dalsi beh vypise `replayed>0` a soubor vyprazdni.
+
+`/api/health` neni sitemap URL, nevytvari session a nevstupuje do `site_visits`. Vraci jen agregovany stav bez DB hostu, jmen, hesel nebo vyjimky. V administraci je monitoring po 20 minutach bez zaznamu explicitne stale; sede dny nejsou vydavany za dostupnost.
 
 Obsahove PHP handlery se vzdy provadeji az po dokonceni vsech SQL migraci, i kdyz web uz existuje. Aktualni handler starsi migrace muze pouzivat schema_name z 079; jednopruschodove poradi proto neni bezpecne. Regresni overeni: php tests/MigrationUpgradeOrderIntegrationTest.php vytvori vlastni nahodnou DB, spusti skutecne SQL a nahradi pouze obsahove efekty kontrolou schema zavislosti.
 

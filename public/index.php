@@ -36,6 +36,7 @@ use App\Services\SecurityTxtHttpResponder;
 use App\Services\SecurityTxtService;
 use App\Services\ThemeTemplateRegistry;
 use App\Services\VisitAnalyticsService;
+use App\Services\HealthCheckHttpResponder;
 use App\Security\RequestThrottle;
 use App\Support\FrontendAssetManager;
 use App\View\ViewFactory;
@@ -85,6 +86,13 @@ function tryServeSecurityTxt(string $uri): bool
 }
 
 $earlyUri = parse_url((string) ($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH);
+
+// Public machine-readable liveness/readiness endpoint. It runs before sessions,
+// visit analytics and page routing, so monitoring never creates a cookie or a
+// site_visits row and the response cannot be mistaken for a CMS page.
+if ((new HealthCheckHttpResponder())->serve((string) $earlyUri)) {
+    exit;
+}
 $earlyUri = rtrim((string) $earlyUri, '/') ?: '/';
 if (tryServeSecurityTxt($earlyUri)) {
     exit;

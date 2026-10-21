@@ -1,3 +1,43 @@
+# UKOL: Health API, cron monitoring a analytika zdraví
+
+Datum: 2026-10-21
+Zadani: Přidat veřejné health API mimo sitemapu a roboty, desetiminutový cron se spolehlivým záznamem výpadků a rozšířit administraci Analytika o zdraví webu a návštěvnost.
+Doporuceny model: Sol - Změna propojuje veřejný endpoint, plánovanou úlohu, databázovou historii, odolný zápis a administrační grafy.
+
+## Kroky
+
+- [x] Zmapovat současnou analytiku, routing, databázové schéma a provozní možnosti cronu.
+- [x] Navrhnout bezpečný health kontrakt, retenci a append-only databázovou migraci.
+- [x] Implementovat health API bez session, indexace, sitemap a analytického započítání.
+- [x] Implementovat cron runner, detekci výpadku a obnovitelný záložní záznam.
+- [x] Rozšířit Analytiku o stav, dostupnost, historii a graf vedle návštěvnosti.
+- [x] Doplnit testy, dokumentaci, cron návod a wiki.
+- [x] Commitnout dokončenou implementaci.
+- [ ] Nasadit na staging po výslovném požadavku na push; master bez výslovného potvrzení neměnit.
+
+## Poznamky
+
+Health API zveřejní jen bezpečný agregovaný stav a čas. Cron bude zapisovat všechny běhy, aby šel počítat uptime a kreslit graf; výpadek endpointu se nesmí ztratit jen proto, že HTTP požadavek selhal. Pokud selže i databáze, runner zapíše explicitní JSONL fallback a další úspěšný běh jej importuje.
+
+Přidána nová migrace110 a fresh-install schema tabulky health_checks s UUID deduplikací, bezpečnými stavovými poli a bez citlivého detailu chyby. Historické migrace zůstaly beze změny. Database::createConnection umožní health responderu převést DB výpadek na strukturované HTTP503 bez ukončení standardní chybovou stránkou.
+
+Přidány vrstvy HealthCheckService, HealthCheckHttpResponder, HealthCheckRepository a explicitní HealthCheckFallbackStore. `/api/health` běží před session i visit beaconem, podporuje GET/HEAD, odmítá ostatní metody a zveřejňuje pouze agregovaný application/database stav.
+
+CLI runner bin/health-check.php načítá explicitní HEALTH_CHECK_URL (nebo APP_URL + /api/health), vrací exit0/1 podle zdraví, zapisuje každý běh a při DB chybě používá storage/logs/health-check-pending.jsonl. Neuložení do DB ani do fallbacku je viditelná kritická chyba s exit2; žádný výpadek se tiše nezahodí.
+
+Existující admin stránka /admin/analytics byla zachována a rozšířena, nevznikla duplicitní sekce. Nově samostatně načítá health historii, ukazuje aktuální/stale stav, uptime z provedených kontrol, chyby, odezvu a denní graf; chyba jedné tabulky neschová druhý datový tok. Sidebar používá širší název Analytika.
+
+Analytika navíc zobrazuje posledních20 nezdravých běhů s UTC časem, HTTP stavem, DB stavem, bezpečným error_code, odezvou a informací, zda šlo o přímý cron nebo obnovený JSONL záznam.
+
+Přidána cílená sada HealthCheckTest: kontrakt parseru, bezpečné cílové URL, HTTP200/503 responder, JSONL replay a zachování poškozeného záznamu, pořadí rout před beacon/session, absence v sitemapě, migrace, cron a admin wiring.
+
+README, ARCHITECTURE a DEPLOYMENT nyní popisují endpoint, pořadí rout, databázový/fallback tok, retenci, stale detekci, proměnnou HEALTH_CHECK_URL a konkrétní desetiminutový Active24 cron. Staging a produkce musí používat vlastní URL i DB; žádný nový GitHub Secret není potřeba.
+
+## Vysledek
+
+Implementace je dokončená a cílená health sada prošla 5/5; všech 12 dotčených PHP souborů prošlo lintem a `git diff --check` je čistý. Úplná starší sada zůstává na výchozí dev větvi blokovaná existujícím Golden Bash isolation testem a nedostupnou lokální DB; tyto nesouvisející problémy nebyly skryty ani nahrazeny fallbackem. Kód je lokálně commitnutý; staging push čeká na výslovný požadavek podle git workflow. Master zůstává beze změny.
+
+---
 # UKOL: Kruhové indikátory benefitů v homepage hero
 
 Datum: 2026-10-20
