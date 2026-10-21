@@ -187,7 +187,7 @@ final class HeroMediaRenderer
         $youtubeId = $m[1];
     } elseif (preg_match('~youtube\.com/(?:embed|shorts)/([A-Za-z0-9_-]{6,})~i', $url, $m)) {
         $youtubeId = $m[1];
-    } elseif (preg_match('~[?&]v=([A-Za-z0-9_-]{6,})~i', $url, $m)) {
+    } elseif (preg_match('~^https?://(?:[a-z0-9-]+\.)*youtube(?:-nocookie)?\.com/[^#]*[?&]v=([A-Za-z0-9_-]{6,})~i', $url, $m)) {
         $youtubeId = $m[1];
     }
 

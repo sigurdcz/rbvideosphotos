@@ -120,7 +120,18 @@ function register_hero_video_media_tests(callable $test, callable $assert): void
         }
         $assert(HeroVideoMediaLookup::versionedUrl('https://vimeo.com/1') === 'https://vimeo.com/1', 'An external URL is left alone.');
         $assert(HeroVideoMediaLookup::versionedUrl('/media/does/not/exist.mp4') === '/media/does/not/exist.mp4', 'A file that is not on disk gets no version.');
-        $assert(HeroVideoMediaLookup::versionedUrl('/media/x.mp4?v=1') === '/media/x.mp4?v=1', 'An existing query is kept.');
+        $assert(HeroVideoMediaLookup::versionedUrl('/media/x.mp4?rev=1') === '/media/x.mp4?rev=1', 'An existing query is kept.');
+
+        // A version parameter turned a local video into a YouTube iframe ("video is not available").
+        foreach (['/media/2026/10/x.mp4?v=1792607358', '/media/2026/10/x.webm?rev=1792607358', 'https://staging.example.cz/media/x.mp4?v=abcdefghij'] as $local) {
+            $assert(HeroMediaRenderer::buildVideoEmbedUrl($local) === '', 'A local file must never become an embed: ' . $local);
+            $html = HeroMediaRenderer::buildHeroVideoHtml('', '', true, '', $local);
+            $assert(str_contains($html, '<source media="(max-width: 700px)" src="') && !str_contains($html, 'data-embed-url') && !str_contains($html, 'youtube'), 'A versioned local video must render as a plain video: ' . $local);
+        }
+        $assert(str_contains(HeroMediaRenderer::buildVideoEmbedUrl('https://www.youtube.com/watch?v=5ZlVVcIu10U'), 'embed/5ZlVVcIu10U'), 'A real YouTube watch link still works.');
+        $assert(str_contains(HeroMediaRenderer::buildVideoEmbedUrl('https://m.youtube.com/watch?feature=share&v=5ZlVVcIu10U'), 'embed/5ZlVVcIu10U'), 'The id may follow another parameter.');
+        $assert(str_contains(HeroMediaRenderer::buildVideoEmbedUrl('https://youtu.be/5ZlVVcIu10U'), 'embed/5ZlVVcIu10U'), 'A short link still works.');
+        $assert(HeroMediaRenderer::buildVideoEmbedUrl('https://evil.example/watch?v=5ZlVVcIu10U') === '', 'Only YouTube hosts yield a YouTube embed.');
         $assert(str_contains($read('public/index.php'), 'HeroVideoMediaLookup::versionedUrl(') && str_contains($read('app/Services/PublishService.php'), 'HeroVideoMediaLookup::versionedUrl('), 'Live and published pages must version local video URLs.');
         $assert(str_contains($read('public/assets/frontend-runtime.js'), 'video.play && video.play()'), 'The plain hero video must be started by hand when the browser does not.');
         $assert(str_contains($read('public/index.php'), 'HeroVideoMediaLookup::ratios($siteId, $urls)') && str_contains($read('app/Services/PublishService.php'), 'HeroVideoMediaLookup::lightPoster($siteId, $posterUrl)'), 'Live and published pages must both use the lookups.');

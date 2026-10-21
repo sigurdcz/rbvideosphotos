@@ -27,7 +27,7 @@ final class HeroVideoMediaLookup
     }
 
     /**
-     * "/media/x.mp4" -> "/media/x.mp4?v=<file mtime>". Media answers are cached for a year
+     * "/media/x.mp4" -> "/media/x.mp4?rev=<file mtime>". Media answers are cached for a year
      * ("immutable"), also by a cache in front of PHP, so a file that was once answered the old
      * way (no byte ranges, no video type) would be answered that way forever. A version in the
      * URL makes the cache treat it as a new address, and changes with the file when it is replaced.
@@ -41,7 +41,8 @@ final class HeroVideoMediaLookup
         $file = dirname(__DIR__, 2) . '/' . $path;
         $mtime = is_file($file) ? (int)filemtime($file) : 0;
 
-        return $mtime > 0 ? $url . '?v=' . $mtime : $url;
+        // Not "v": YouTube links carry ?v=<id>, and a version parameter must never look like one.
+        return $mtime > 0 ? $url . '?rev=' . $mtime : $url;
     }
 
     /**
