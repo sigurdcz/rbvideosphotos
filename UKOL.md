@@ -13,7 +13,7 @@ Doporuceny model: Sol - Změna propojuje veřejný endpoint, plánovanou úlohu,
 - [x] Rozšířit Analytiku o stav, dostupnost, historii a graf vedle návštěvnosti.
 - [x] Doplnit testy, dokumentaci, cron návod a wiki.
 - [x] Commitnout dokončenou implementaci.
-- [ ] Nasadit na staging po výslovném požadavku na push; master bez výslovného potvrzení neměnit.
+- [x] Nasadit na staging po výslovném požadavku na push; master bez výslovného potvrzení neměnit.
 
 ## Poznamky
 
@@ -35,7 +35,7 @@ README, ARCHITECTURE a DEPLOYMENT nyní popisují endpoint, pořadí rout, datab
 
 ## Vysledek
 
-Implementace je dokončená a cílená health sada prošla 5/5; všech 12 dotčených PHP souborů prošlo lintem a `git diff --check` je čistý. Úplná starší sada zůstává na výchozí dev větvi blokovaná existujícím Golden Bash isolation testem a nedostupnou lokální DB; tyto nesouvisející problémy nebyly skryty ani nahrazeny fallbackem. Kód je lokálně commitnutý; staging push čeká na výslovný požadavek podle git workflow. Master zůstává beze změny.
+Implementace je dokončená a cílená health sada prošla 5/5; všech 12 dotčených PHP souborů prošlo lintem a `git diff --check` je čistý. Úplná starší sada zůstává na výchozí dev větvi blokovaná existujícím Golden Bash isolation testem a nedostupnou lokální DB; tyto nesouvisející problémy nebyly skryty ani nahrazeny fallbackem. Commit `a32e1e7` byl nasazen na `dev`; staging workflow `39589135404` skončil úspěšně. Živý `https://staging.rbvideosphotos.cz/api/health` vrátil HTTP 200, `status=ok`, `database=ok`, `Cache-Control: no-store` a `X-Robots-Tag: noindex, nofollow, noarchive`. Master zůstává beze změny. Pro ukládání historie je ještě nutné spustit migraci 110 a nastavit Active24 cron.
 
 ---
 # UKOL: Kruhové indikátory benefitů v homepage hero
