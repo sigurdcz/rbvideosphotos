@@ -33,9 +33,10 @@ final class HeroMediaRenderer
     /**
      * Hero video with an independent source per screen width. A width whose field is empty
      * has no video at all: nothing is inherited from another width, and the browser shows
-     * only the poster there. The kind of player (embed or plain file) follows the first
-     * filled width in the order desktop, tablet, mobile; a width of the other kind is
-     * dropped, so a Vimeo video can never end up with an .mp4 in the same attribute set.
+     * only the poster there. Every width keeps its own kind of source, so Vimeo on desktop
+     * and a plain file on mobile work together: such a mixed set renders both players, each
+     * tagged with the widths it serves, and a small stylesheet shows only the one that has a
+     * video at the current width.
      *
      * @param array{desktop?:string,tablet?:string,mobile?:string} $urls
      */
@@ -47,34 +48,51 @@ final class HeroMediaRenderer
             'tablet' => self::resolveHeroVideoSource((string)($urls['tablet'] ?? '')),
             'mobile' => self::resolveHeroVideoSource((string)($urls['mobile'] ?? '')),
         ];
-        $kind = '';
-        foreach ($sources as $source) {
-            if ($source['embed'] !== '') {
-                $kind = 'embed';
-                break;
-            }
-            if ($source['direct'] !== '') {
-                $kind = 'direct';
-                break;
+        $kinds = [];
+        foreach (['embed', 'direct'] as $kind) {
+            foreach ($sources as $source) {
+                if ($source[$kind] !== '') {
+                    $kinds[] = $kind;
+                    break;
+                }
             }
         }
-        if ($kind === '') {
+        if ($kinds === []) {
             return '';
         }
-        $pick = static fn(string $width): string => $sources[$width][$kind];
-        $embed = $kind === 'embed';
+        $mixed = count($kinds) > 1;
 
-        return \App\View\ViewFactory::forTheme(null)->render('partials/hero-video', [
-            'embedUrl' => $embed ? $pick('desktop') : '',
-            'directUrl' => $embed ? '' : $pick('desktop'),
-            'kind' => $kind,
-            'posterUrl' => $posterUrl,
-            'autoplay' => $autoplay,
-            'tabletEmbedUrl' => $embed ? $pick('tablet') : '',
-            'mobileEmbedUrl' => $embed ? $pick('mobile') : '',
-            'tabletDirectUrl' => $embed ? '' : $pick('tablet'),
-            'mobileDirectUrl' => $embed ? '' : $pick('mobile'),
-        ]);
+        $html = '';
+        foreach ($kinds as $kind) {
+            $pick = static fn(string $width): string => $sources[$width][$kind];
+            $embed = $kind === 'embed';
+            $html .= \App\View\ViewFactory::forTheme(null)->render('partials/hero-video', [
+                'embedUrl' => $embed ? $pick('desktop') : '',
+                'directUrl' => $embed ? '' : $pick('desktop'),
+                'kind' => $kind,
+                'posterUrl' => $posterUrl,
+                'autoplay' => $autoplay,
+                'tabletEmbedUrl' => $embed ? $pick('tablet') : '',
+                'mobileEmbedUrl' => $embed ? $pick('mobile') : '',
+                'tabletDirectUrl' => $embed ? '' : $pick('tablet'),
+                'mobileDirectUrl' => $embed ? '' : $pick('mobile'),
+                'widths' => $mixed
+                    ? array_keys(array_filter($sources, static fn(array $source): bool => $source[$kind] !== ''))
+                    : [],
+            ]);
+        }
+
+        return $mixed ? self::mixedWidthsStyle() . $html : $html;
+    }
+
+    /** Shows only the player that has a video at the current width (mixed Vimeo/file sets). */
+    private static function mixedWidthsStyle(): string
+    {
+        return '<style data-hero-video-widths>'
+            . '@media (max-width:700px){.theme-hero-video[data-hero-widths]:not([data-hero-widths~="mobile"]){display:none}}'
+            . '@media (min-width:700.02px) and (max-width:1050px){.theme-hero-video[data-hero-widths]:not([data-hero-widths~="tablet"]){display:none}}'
+            . '@media (min-width:1050.02px){.theme-hero-video[data-hero-widths]:not([data-hero-widths~="desktop"]){display:none}}'
+            . '</style>';
     }
 
     /**

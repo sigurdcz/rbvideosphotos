@@ -79,14 +79,23 @@ function register_responsive_hero_video_tests(callable $test, callable $assert):
         );
     });
 
-    $test('a variant of a different kind than the desktop video is dropped', function () use ($assert, $vimeo): void {
-        $mixed = HeroMediaRenderer::buildHeroVideoHtml($vimeo, '', false, 'https://example.com/hero.mp4', 'https://example.com/nonsense');
-        $assert(!str_contains($mixed, 'data-embed-url-tablet'), 'A file cannot be a variant of an embedded player.');
-        $assert(!str_contains($mixed, 'data-embed-url-mobile'), 'An unrecognised address must be dropped, not passed through.');
-        $assert(!str_contains($mixed, '<source media'), 'An embed must not grow file sources.');
+    $test('a Vimeo/YouTube width and a file width can live in one set', function () use ($assert, $vimeo): void {
+        // The real case: Vimeo on desktop and tablet, an uploaded file on the phone.
+        $mixed = HeroMediaRenderer::buildHeroVideoHtml($vimeo, '', false, $vimeo, '/media/2026/10/m.webm');
+        $assert(str_contains($mixed, 'data-embed-url="https://player.vimeo.com/video/1133996815'), 'The embed keeps its widths.');
+        $assert(str_contains($mixed, '<source media="(max-width: 700px)" src="/media/2026/10/m.webm">'), 'The file keeps the phone width.');
+        $assert(str_contains($mixed, 'data-hero-widths="desktop tablet"') && str_contains($mixed, 'data-hero-widths="mobile"'), 'Each player is tagged with the widths it serves.');
+        $assert(str_contains($mixed, '<style data-hero-video-widths>'), 'A mixed set needs the stylesheet that shows one player per width.');
+        $assert(!str_contains($mixed, 'data-embed-url-mobile'), 'The phone must not also get an embed.');
 
         $reverse = HeroMediaRenderer::buildHeroVideoHtml('https://example.com/hero.mp4', '', false, $vimeo, '');
-        $assert(!str_contains($reverse, 'data-embed-url') && !str_contains($reverse, 'max-width: 1050px'), 'A player cannot be a variant of a file.');
+        $assert(str_contains($reverse, 'data-embed-url-tablet=') && str_contains($reverse, '<source media="(min-width: 1050.02px)" src="https://example.com/hero.mp4">'), 'A file on desktop and a player on tablet coexist.');
+
+        $single = HeroMediaRenderer::buildHeroVideoHtml($vimeo, '', false, $vimeo, '');
+        $assert(!str_contains($single, 'data-hero-widths') && !str_contains($single, '<style'), 'A set of one kind keeps the plain markup.');
+
+        $junk = HeroMediaRenderer::buildHeroVideoHtml($vimeo, '', false, '', 'https://example.com/nonsense');
+        $assert(!str_contains($junk, 'data-embed-url-mobile') && !str_contains($junk, '<source'), 'An unrecognised address must be dropped, not passed through.');
 
         $assert(HeroMediaRenderer::buildResponsiveHeroVideoHtml(['desktop' => '', 'tablet' => '', 'mobile' => '']) === '', 'Without any video nothing renders.');
         $tabletOnly = HeroMediaRenderer::buildResponsiveHeroVideoHtml(['desktop' => '', 'tablet' => $vimeo]);
