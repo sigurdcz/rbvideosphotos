@@ -65,8 +65,13 @@ function register_hero_video_media_tests(callable $test, callable $assert): void
         // only path the homepage editor takes); neither may fall back to a bare URL input.
         $assert(substr_count($form, '$renderVideoField(') >= 2, 'Both block renderers must use the shared video field.');
         $assert(!str_contains($form, 'placeholder="https://... nebo /media/..."'), 'No video field may be a bare URL input without the Media button.');
-        $assert(str_contains($form, "kind: 'video', lockKind: 'video'"), 'The Media button must open the picker on the Video tab only.');
+        $assert(str_contains($read('admin/assets/admin.js'), "kind: 'video', lockKind: 'video'"), 'The Media button must open the picker on the Video tab only.');
         $assert(!str_contains($form, '<input type="url" name="block_content[]" value="<?= $h($value) ?>" placeholder="https://... nebo /media/...">'), 'A local /media/ path must not be rejected by type=url.');
+
+        $settings = $read('admin/views/settings/index.php');
+        $assert(substr_count($settings, 'data-hero-video-media') === 3, 'The three default hero video fields in Settings need a Media button each.');
+        $assert(!str_contains($settings, '<input type="url" name="default_hero_video_url'), 'Settings video fields must accept a local /media/ path.');
+        $assert(str_contains($read('admin/assets/admin.js'), "closest('[data-hero-video-media]')"), 'One global handler must serve every video field.');
 
         $layout = $read('admin/views/layouts/main.php');
         $assert(str_contains($layout, 'data-picker-tab="video"'), 'The picker needs a Video tab.');

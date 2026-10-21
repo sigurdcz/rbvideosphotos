@@ -738,32 +738,48 @@ HTML;
 
         $autoplay = (int)($site['video_autoplay_enabled'] ?? 1) === 1;
 
-        // Priorita: 1) vlastni video stranky (kazda sirka okna zvlast, nic se nededi),
-        // 2) page hero_bg foto, 3) site default poster foto. Vychozi video webu se pro hero nepouziva.
+        $page = $this->pages->findById($pageId);
+        $isHomepage = trim((string)($page['url_path'] ?? '')) === '';
+        // Priorita: 1) vlastni video stranky, 2) homepage: vychozi video webu z Nastaveni,
+        // 3) page hero_bg foto, 4) site default poster foto, 5) vychozi video webu.
+        // Uvnitr jedne sady (stranka / web) ma kazda sirka okna vlastni video a nic se nededi.
         $blockUrl = function (string $key) use ($pageId): string {
             $block = $this->blocks->findByKey($pageId, $key);
 
             return $block ? $this->normalizePublicAssetUrl((string)($block['content'] ?? '')) : '';
         };
-        // The page's own three fields decide, in one shared place, so live and publish cannot disagree.
-        $heroUrls = HeroMediaRenderer::pickHeroVideoUrls(
+        $pageUrls = HeroMediaRenderer::pickHeroVideoUrls(
             $blockUrl('hero_video'),
             $blockUrl('hero_video_tablet'),
             $blockUrl('hero_video_mobile')
         );
+        $siteUrls = HeroMediaRenderer::pickHeroVideoUrls(
+            $this->normalizePublicAssetUrl((string)($site['default_hero_video_url'] ?? '')),
+            $this->normalizePublicAssetUrl((string)($site['default_hero_video_url_tablet'] ?? '')),
+            $this->normalizePublicAssetUrl((string)($site['default_hero_video_url_mobile'] ?? ''))
+        );
+        $buildHero = fn(array $urls): string => $this->buildHeroVideoHtml($urls['desktop'], $posterUrl, $autoplay, $urls['tablet'], $urls['mobile']);
 
         $videoHtml = '';
-        if (HeroMediaRenderer::hasHeroVideo($heroUrls)) {
-            $videoHtml = $this->buildHeroVideoHtml($heroUrls['desktop'], $posterUrl, $autoplay, $heroUrls['tablet'], $heroUrls['mobile']);
+        if (HeroMediaRenderer::hasHeroVideo($pageUrls)) {
+            $videoHtml = $buildHero($pageUrls);
         } else {
+            if ($isHomepage && HeroMediaRenderer::hasHeroVideo($siteUrls)) {
+                $videoHtml = $buildHero($siteUrls);
+            }
+
             $photoBlock = $this->blocks->findByKey($pageId, 'hero_bg');
             $pagePhoto = $photoBlock ? $this->normalizePublicAssetUrl((string)($photoBlock['content'] ?? '')) : '';
-            if ($pagePhoto !== '') {
+            if ($videoHtml === '' && $pagePhoto !== '') {
                 $videoHtml = $this->buildHeroImageHtml($pagePhoto);
             }
 
             if ($videoHtml === '' && $posterUrl !== '') {
                 $videoHtml = $this->buildHeroImageHtml($posterUrl);
+            }
+
+            if ($videoHtml === '' && HeroMediaRenderer::hasHeroVideo($siteUrls)) {
+                $videoHtml = $buildHero($siteUrls);
             }
         }
 

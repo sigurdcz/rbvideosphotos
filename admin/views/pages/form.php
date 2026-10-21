@@ -321,7 +321,7 @@ ob_start();
         <div class="card-title">Hero pozadi (video nebo foto)</div>
         <p class="form-hint" style="margin-bottom:12px">
           Prednost ma video. Pokud hero video nechate prazdne a vyplnite hero foto, pouzije se foto.
-          Kazda sirka okna ma vlastni video a nic se nededi: prazdne pole = na dane sirce zadne video (ani z jineho zarizeni, ani z Nastaveni).
+          Kazda sirka okna ma vlastni video a nic se nededi mezi zarizenimi: prazdne pole = na dane sirce zadne video. Kdyz jsou vsechna tri pole prazdna, pouzije se video z Nastaveni (Vychozi hero video).
           Vsechny vyplnene sirky musi byt stejneho druhu - bud Vimeo/YouTube odkazy, nebo videa z Medii. Pri smesi se prehraje jen druh prvni vyplnene sirky.
         </p>
         <?php $renderBlockField('hero_video', 'Hero video - desktop', 'link', 'Prehraje se pri sirce okna nad 1050 px. Vimeo / YouTube URL, nebo tlacitko Media -> zalozka Video. Prazdne = na desktopu zadne video.'); ?>
@@ -954,28 +954,6 @@ ob_start();
     });
     document.addEventListener('keydown', event => {
       if (event.key === 'Escape' && modal.classList.contains('is-open')) close();
-    });
-  })();
-  </script>
-  <script>
-  (function(){
-    // Hero video fields: the Media button opens the shared picker locked to videos.
-    document.addEventListener('click', event => {
-      const openBtn = event.target.closest('[data-hero-video-media]');
-      const clearBtn = event.target.closest('[data-hero-video-clear]');
-      const btn = openBtn || clearBtn;
-      if (!btn) return;
-      const input = document.getElementById(btn.dataset.targetId);
-      if (!input) return;
-      const apply = value => {
-        input.value = value;
-        input.dispatchEvent(new Event('input', { bubbles: true }));
-        input.dispatchEvent(new Event('change', { bubbles: true }));
-      };
-      if (clearBtn) { apply(''); return; }
-      document.dispatchEvent(new CustomEvent('admin:media-picker:open', {
-        detail: { kind: 'video', lockKind: 'video', select: url => apply(url || '') }
-      }));
     });
   })();
   </script>

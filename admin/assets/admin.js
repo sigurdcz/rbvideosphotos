@@ -629,3 +629,23 @@ function slugify(str) {
     window.AdminMediaPicker.open({mode:'single', imagesOnly:!!e.detail.imagesOnly, kind: e.detail.kind || '', lockKind: e.detail.lockKind || '', onConfirm: list => { if (list[0]) e.detail.select(list[0].url, list[0]); }});
   }, true);
 })();
+
+// Video fields (hero video in the page editor and in Settings): the Media button opens the
+// shared picker locked to videos and writes the chosen /media/... URL into the field.
+document.addEventListener('click', event => {
+  const openBtn = event.target.closest('[data-hero-video-media]');
+  const clearBtn = event.target.closest('[data-hero-video-clear]');
+  const btn = openBtn || clearBtn;
+  if (!btn || btn.disabled) return;
+  const input = document.getElementById(btn.dataset.targetId);
+  if (!input) return;
+  const apply = value => {
+    input.value = value;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  };
+  if (clearBtn) { apply(''); return; }
+  document.dispatchEvent(new CustomEvent('admin:media-picker:open', {
+    detail: { kind: 'video', lockKind: 'video', select: url => apply(url || '') }
+  }));
+});

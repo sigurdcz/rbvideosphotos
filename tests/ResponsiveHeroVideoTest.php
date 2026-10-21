@@ -115,7 +115,7 @@ function register_responsive_hero_video_tests(callable $test, callable $assert):
         $assert(str_contains($runtime, 'HERO_VIDEO_TABLET_MAX = 1050'), 'The runtime tablet breakpoint must match the theme.');
     });
 
-    $test('nothing is inherited between widths or from the site default', function () use ($assert, $root): void {
+    $test('nothing is inherited between widths inside a set', function () use ($assert, $root): void {
         $own = HeroMediaRenderer::pickHeroVideoUrls('page.mp4', 'page-t.mp4', '');
         $assert($own === ['desktop' => 'page.mp4', 'tablet' => 'page-t.mp4', 'mobile' => ''], 'An empty mobile field stays empty.');
 
@@ -128,11 +128,13 @@ function register_responsive_hero_video_tests(callable $test, callable $assert):
         $assert(HeroMediaRenderer::hasHeroVideo($mobileOnly) === true, 'A single filled width is a hero video.');
         $assert(HeroMediaRenderer::hasHeroVideo(['desktop' => 'https://example.com/nonsense']) === false, 'An unrecognised address is not a video.');
 
-        // Both injectors must go through that one function and ignore the site default video.
+        // Both injectors resolve the page's own set and the Settings set through that one function,
+        // page first; a set is taken whole, so a width of one set never fills a gap in the other.
         foreach (['/public/index.php', '/app/Services/PublishService.php'] as $file) {
             $source = (string) file_get_contents($root . $file);
-            $assert(str_contains($source, 'pickHeroVideoUrls('), "{$file} must resolve the widths through the shared rule.");
-            $assert(!str_contains($source, 'default_hero_video_url'), "{$file} must not fall back to the site default video.");
+            $assert(substr_count($source, 'pickHeroVideoUrls(') >= 2, "{$file} must resolve both sets through the shared rule.");
+            $assert(str_contains($source, 'default_hero_video_url_tablet') && str_contains($source, 'default_hero_video_url_mobile'), "{$file} must read the Settings set.");
+            $assert(str_contains($source, 'hasHeroVideo($pageUrls)') && str_contains($source, 'hasHeroVideo($siteUrls)'), "{$file} must pick a whole set, never mix widths of two sets.");
         }
     });
 

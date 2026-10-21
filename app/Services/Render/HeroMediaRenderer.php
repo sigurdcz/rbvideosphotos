@@ -78,10 +78,10 @@ final class HeroMediaRenderer
     }
 
     /**
-     * The hero video of a page is exactly the page's own three fields, trimmed. There is no
-     * fallback between widths and none to a site-wide default: an empty field means no
-     * video at that width. Both the live and the published render call this, so the two
-     * cannot drift apart.
+     * Normalises one set of three hero video fields (the page's own, or the site default
+     * from Settings). Inside a set there is no fallback between widths: an empty field
+     * means no video at that width. Which set wins (page first, then the site default) is
+     * decided by the callers, live and published alike, in the same order.
      *
      * @return array{desktop:string,tablet:string,mobile:string}
      */
