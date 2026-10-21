@@ -1537,7 +1537,8 @@ function injectPageHeroVideo(string $html, array $site, ?int $pageId, string $pa
         normalizePublicAssetUrl((string)($site['default_hero_video_url_mobile'] ?? ''))
     );
     $buildHero = static fn(array $urls): string => buildHeroVideoHtml(
-        $urls['desktop'], $posterUrl, $autoplay, $urls['tablet'], $urls['mobile'],
+        \App\Services\HeroVideoMediaLookup::versionedUrl($urls['desktop']), $posterUrl, $autoplay,
+        \App\Services\HeroVideoMediaLookup::versionedUrl($urls['tablet']), \App\Services\HeroVideoMediaLookup::versionedUrl($urls['mobile']),
         \App\Services\HeroVideoMediaLookup::ratios($siteId, $urls),
         \App\Services\HeroVideoMediaLookup::lightPoster($siteId, $posterUrl)
     );

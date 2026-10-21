@@ -760,7 +760,8 @@ HTML;
         );
         $siteId = (int)($site['id'] ?? 0);
         $buildHero = fn(array $urls): string => $this->buildHeroVideoHtml(
-            $urls['desktop'], $posterUrl, $autoplay, $urls['tablet'], $urls['mobile'],
+            HeroVideoMediaLookup::versionedUrl($urls['desktop']), $posterUrl, $autoplay,
+            HeroVideoMediaLookup::versionedUrl($urls['tablet']), HeroVideoMediaLookup::versionedUrl($urls['mobile']),
             HeroVideoMediaLookup::ratios($siteId, $urls),
             HeroVideoMediaLookup::lightPoster($siteId, $posterUrl)
         );

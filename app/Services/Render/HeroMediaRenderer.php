@@ -95,8 +95,9 @@ final class HeroMediaRenderer
     }
 
     /**
-     * Reserves the plain video's box per width from the stored dimensions. "auto W / H" uses the
-     * file's own ratio once known and this one before that, so nothing moves when it arrives.
+     * Reserves the plain video's box per width from the stored dimensions. A plain "W / H" (not
+     * "auto W / H", which prefers the poster's ratio until the metadata arrives) keeps the box
+     * the same before and after the video's own metadata is known, so nothing moves.
      *
      * @param array<string,array{embed:string,direct:string}> $sources
      * @param array<string,string> $ratios
@@ -114,7 +115,7 @@ final class HeroMediaRenderer
             if (($sources[$width]['direct'] ?? '') === '' || !preg_match('~^\d{1,5} / \d{1,5}$~', $ratio)) {
                 continue;
             }
-            $rules .= '@media ' . $query . '{video.theme-hero-video--native{aspect-ratio:auto ' . $ratio . '}}';
+            $rules .= '@media ' . $query . '{video.theme-hero-video--native{aspect-ratio:' . $ratio . '}}';
         }
 
         return $rules === '' ? '' : '<style data-hero-video-ratio>' . $rules . '</style>';

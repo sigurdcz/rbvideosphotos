@@ -599,7 +599,20 @@
   // breakpoint so "empty = no video" and the per-width source also hold after a resize.
   function initNativeHeroVideos() {
     var videos = Array.prototype.slice.call(document.querySelectorAll('video.theme-hero-video--native'));
-    if (!videos.length || !window.matchMedia) return;
+    if (!videos.length) return;
+    // With preload=metadata and a file whose bitrate is above the connection's speed, the browser
+    // never decides it has "enough data" and the autoplay attribute never fires. The video is
+    // muted, so starting it by hand is allowed; do it as soon as there is something to show.
+    videos.forEach(function (video) {
+      var kick = function () {
+        if (!video.autoplay || !video.paused || video.readyState < 3 || video.offsetParent === null) return;
+        var started = video.play && video.play();
+        if (started && started.catch) started.catch(function () {});
+      };
+      ['canplay', 'loadeddata'].forEach(function (name) { video.addEventListener(name, kick); });
+      kick();
+    });
+    if (!window.matchMedia) return;
     [700, 1050].forEach(function (max) {
       var query = window.matchMedia('(max-width: ' + max + 'px)');
       var change = function () { videos.forEach(function (video) { if (typeof video.load === 'function') video.load(); }); };

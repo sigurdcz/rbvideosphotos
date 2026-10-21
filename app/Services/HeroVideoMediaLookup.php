@@ -27,6 +27,24 @@ final class HeroVideoMediaLookup
     }
 
     /**
+     * "/media/x.mp4" -> "/media/x.mp4?v=<file mtime>". Media answers are cached for a year
+     * ("immutable"), also by a cache in front of PHP, so a file that was once answered the old
+     * way (no byte ranges, no video type) would be answered that way forever. A version in the
+     * URL makes the cache treat it as a new address, and changes with the file when it is replaced.
+     */
+    public static function versionedUrl(string $url): string
+    {
+        $path = self::storagePath($url);
+        if ($path === '' || str_contains($url, '?')) {
+            return $url;
+        }
+        $file = dirname(__DIR__, 2) . '/' . $path;
+        $mtime = is_file($file) ? (int)filemtime($file) : 0;
+
+        return $mtime > 0 ? $url . '?v=' . $mtime : $url;
+    }
+
+    /**
      * Aspect ratio per width, taken from the dimensions stored when the video was uploaded, so
      * the page can reserve the right box before the video's own metadata arrives (that late
      * arrival used to resize the element and shift the whole hero).

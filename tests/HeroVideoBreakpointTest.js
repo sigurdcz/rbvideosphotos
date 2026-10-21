@@ -24,7 +24,7 @@ const window = {matchMedia: query => {
   queries.push(item); return item;
 }};
 const document = {
-  querySelectorAll: () => [facade],
+  querySelectorAll: (selector) => selector === '[data-hero-video-facade]' ? [facade] : [],
   createElement: () => ({getAttribute(name) {return this[name];}, remove() {frame = null;}}),
 };
 const context = {window, document, initHeroVideoCover: () => () => {cleaned++;}};

@@ -100,8 +100,8 @@ function register_hero_video_media_tests(callable $test, callable $assert): void
         $ratios = ['mobile' => '480 / 480', 'desktop' => '1920 / 1080'];
         $html = HeroMediaRenderer::buildHeroVideoHtml('/media/d.mp4', '/media/poster.png', true, '', '/media/m.webm', $ratios, '/media/poster_md.webp');
         $assert(str_contains($html, '<style data-hero-video-ratio>'), 'Known dimensions must reserve the video box.');
-        $assert(str_contains($html, '@media (max-width:700px){video.theme-hero-video--native{aspect-ratio:auto 480 / 480}}'), 'The phone gets its own ratio.');
-        $assert(str_contains($html, '@media (min-width:1050.02px){video.theme-hero-video--native{aspect-ratio:auto 1920 / 1080}}'), 'The desktop gets its own ratio.');
+        $assert(str_contains($html, '@media (max-width:700px){video.theme-hero-video--native{aspect-ratio:480 / 480}}'), 'The phone gets its own ratio.');
+        $assert(str_contains($html, '@media (min-width:1050.02px){video.theme-hero-video--native{aspect-ratio:1920 / 1080}}'), 'The desktop gets its own ratio.');
         $assert(!str_contains($html, '(min-width:700.02px) and (max-width:1050px){video'), 'A width without a video gets no ratio rule.');
         $assert(str_contains($html, 'poster="/media/poster_md.webp"') && !str_contains($html, 'poster="/media/poster.png"'), 'The plain video must use the light poster.');
 
@@ -118,6 +118,11 @@ function register_hero_video_media_tests(callable $test, callable $assert): void
         foreach (['', 'https://vimeo.com/1', '/media/../../.env', '/other/x.mp4', '/media/a/../b.mp4'] as $bad) {
             $assert(HeroVideoMediaLookup::storagePath($bad) === '', 'Must not map: ' . $bad);
         }
+        $assert(HeroVideoMediaLookup::versionedUrl('https://vimeo.com/1') === 'https://vimeo.com/1', 'An external URL is left alone.');
+        $assert(HeroVideoMediaLookup::versionedUrl('/media/does/not/exist.mp4') === '/media/does/not/exist.mp4', 'A file that is not on disk gets no version.');
+        $assert(HeroVideoMediaLookup::versionedUrl('/media/x.mp4?v=1') === '/media/x.mp4?v=1', 'An existing query is kept.');
+        $assert(str_contains($read('public/index.php'), 'HeroVideoMediaLookup::versionedUrl(') && str_contains($read('app/Services/PublishService.php'), 'HeroVideoMediaLookup::versionedUrl('), 'Live and published pages must version local video URLs.');
+        $assert(str_contains($read('public/assets/frontend-runtime.js'), 'video.play && video.play()'), 'The plain hero video must be started by hand when the browser does not.');
         $assert(str_contains($read('public/index.php'), 'HeroVideoMediaLookup::ratios($siteId, $urls)') && str_contains($read('app/Services/PublishService.php'), 'HeroVideoMediaLookup::lightPoster($siteId, $posterUrl)'), 'Live and published pages must both use the lookups.');
     });
 }
