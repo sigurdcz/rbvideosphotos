@@ -52,6 +52,18 @@ $renderMediaField = static function (string $fieldId, string $value, bool $disab
     </div>
     <?php
 };
+// A video field (Vimeo / YouTube URL or a video from the library) with the Media button.
+// Shared by both block renderers below, so no page ends up with a bare URL input.
+$renderVideoField = static function (string $fieldId, string $value, bool $disabled = false) use ($h): void {
+    $off = $disabled ? ' disabled' : '';
+    ?>
+    <div class="hero-video-field" style="display:flex;gap:8px;align-items:center">
+      <input type="text" name="block_content[]" id="<?= $h($fieldId) ?>" value="<?= $h($value) ?>" placeholder="Vimeo / YouTube URL nebo video z Médií (/media/...)" style="flex:1" data-hero-video-input<?= $off ?>>
+      <button type="button" class="btn btn-sm btn-secondary" data-hero-video-media data-target-id="<?= $h($fieldId) ?>"<?= $off ?>>Média</button>
+      <button type="button" class="btn btn-sm btn-secondary" data-hero-video-clear data-target-id="<?= $h($fieldId) ?>"<?= $off ?>>Odebrat</button>
+    </div>
+    <?php
+};
 $blockMap = [];
 $homepageAutofillBlocks = $homepageAutofillBlocks ?? [];
 $serviceItems = $serviceItems ?? [];
@@ -77,7 +89,7 @@ foreach (($blocks ?? []) as $block) {
 }
 
 $renderedBlockKeys = [];
-$renderBlockField = function (string $key, string $label, string $type = 'text', string $hint = '') use ($blockMap, $h, &$renderedBlockKeys, $renderMediaField): void {
+$renderBlockField = function (string $key, string $label, string $type = 'text', string $hint = '') use ($blockMap, $h, &$renderedBlockKeys, $renderMediaField, $renderVideoField): void {
     if (isset($renderedBlockKeys[$key])) {
         return;
     }
@@ -97,7 +109,7 @@ $renderBlockField = function (string $key, string $label, string $type = 'text',
       <?php elseif ($inputType === 'image'): ?>
         <?php $renderMediaField($fieldId, (string)$value); ?>
       <?php elseif ($inputType === 'video'): ?>
-        <input type="url" name="block_content[]" value="<?= $h($value) ?>" placeholder="https://... nebo /media/...">
+        <?php $renderVideoField($fieldId, (string)$value); ?>
       <?php elseif (in_array($inputType, ['html', 'richtext'], true)): ?>
         <div class="article-editor-wrap" data-richtext-editor>
           <div class="article-editor-toolbar">
@@ -309,11 +321,12 @@ ob_start();
         <div class="card-title">Hero pozadi (video nebo foto)</div>
         <p class="form-hint" style="margin-bottom:12px">
           Prednost ma video. Pokud hero video nechate prazdne a vyplnite hero foto, pouzije se foto.
-          Kdyz necelate prazdne obe, stranka pouzije vychozi hero video ze sekce Nastaveni.
+          Kazda sirka okna ma vlastni video a nic se nededi mezi zarizenimi: prazdne pole = na dane sirce zadne video. Kdyz jsou vsechna tri pole prazdna, pouzije se video z Nastaveni (Vychozi hero video).
+          Vsechny vyplnene sirky musi byt stejneho druhu - bud Vimeo/YouTube odkazy, nebo videa z Medii. Pri smesi se prehraje jen druh prvni vyplnene sirky.
         </p>
-        <?php $renderBlockField('hero_video', 'Hero video - Vimeo / YouTube URL', 'link', 'Napr. https://vimeo.com/123456789, https://youtu.be/... nebo https://www.youtube.com/watch?v=...'); ?>
-        <?php $renderBlockField('hero_video_tablet', 'Hero video - tablet (volitelne)', 'link', 'Prehraje se pri sirce okna do 1050 px. Prazdne = pouzije se desktopove video.'); ?>
-        <?php $renderBlockField('hero_video_mobile', 'Hero video - mobil (volitelne)', 'link', 'Prehraje se pri sirce okna do 700 px. Prazdne = pouzije se tabletove, jinak desktopove video.'); ?>
+        <?php $renderBlockField('hero_video', 'Hero video - desktop', 'link', 'Prehraje se pri sirce okna nad 1050 px. Vimeo / YouTube URL, nebo tlacitko Media -> zalozka Video. Prazdne = na desktopu zadne video.'); ?>
+        <?php $renderBlockField('hero_video_tablet', 'Hero video - tablet', 'link', 'Prehraje se pri sirce okna 701-1050 px. Prazdne = na tabletu zadne video (nededi se z desktopu).'); ?>
+        <?php $renderBlockField('hero_video_mobile', 'Hero video - mobil', 'link', 'Prehraje se pri sirce okna do 700 px. Prazdne = na mobilu zadne video (nededi se z tabletu ani desktopu).'); ?>
         <?php $renderBlockField('hero_bg', 'Hero foto', 'image', 'Pouzije se jako pozadi hero sekce, kdyz neni vyplnene hero video.'); ?>
       </div>
       <?php endif; ?>
@@ -691,8 +704,15 @@ ob_start();
               <?php elseif ($block['block_type'] === 'image'): ?>
                 <?php $renderMediaField($blockFieldId, (string)($block['content'] ?? ''), $autofillEnabled); ?>
               <?php elseif (($block['block_type'] === 'video') || $block['block_key'] === 'hero_video'): ?>
-                <input type="url" name="block_content[]" value="<?= $h($block['content'] ?? '') ?>" placeholder="https://... nebo /media/..."<?= $autofillEnabled ? ' disabled' : '' ?>>
-                <div class="form-hint"><?= $block['block_key'] === 'hero_video' ? 'URL videa pro pozadí v hero sekci homepage.' : 'URL videa (YouTube nebo Vimeo). Pokud je vyplněno, přehraje se místo přiřazené fotografie.' ?></div>
+                <?php $renderVideoField($blockFieldId, (string)($block['content'] ?? ''), $autofillEnabled); ?>
+                <?php
+                  $videoHints = [
+                    'hero_video' => 'Desktop (nad 1050 px). Vimeo / YouTube URL, nebo tlačítko Média → záložka Video. Prázdné = na desktopu žádné video.',
+                    'hero_video_tablet' => 'Tablet (701-1050 px). Prázdné = na tabletu žádné video (nedědí se z desktopu).',
+                    'hero_video_mobile' => 'Mobil (do 700 px). Prázdné = na mobilu žádné video (nedědí se z tabletu ani desktopu).',
+                  ];
+                ?>
+                <div class="form-hint"><?= $h($videoHints[$block['block_key']] ?? 'URL videa (YouTube nebo Vimeo) nebo video z Médií. Pokud je vyplněno, přehraje se místo přiřazené fotografie.') ?></div>
               <?php elseif (in_array($block['block_type'], ['html','richtext'], true)): ?>
                 <div class="article-editor-wrap" data-richtext-editor>
                   <div class="article-editor-toolbar">

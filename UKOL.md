@@ -1,3 +1,66 @@
+# UKOL: Tři sekce administrační Analytiky
+
+Datum: 2026-10-21
+Zadani: Rozdělit Analytiku na Přehled, Health a Návštěvnost; přehled spojí hlavní metriky a detailní sekce zachovají své grafy a tabulky.
+Doporuceny model: Sol - Jde o ohraničenou úpravu controlleru, serverově řízené navigace a administračního view.
+
+## Kroky
+
+- [x] Navrhnout serverově řízené sekce s allowlistem.
+- [x] Přidat společný Přehled a oddělit detail Health/Návštěvnost.
+- [x] Doplnit regresní testy a ověřit PHP/CSS wiring.
+- [x] Commitnout dokončenou úpravu.
+- [ ] Po výslovném požadavku nasadit na staging; master neměnit.
+
+## Poznamky
+
+Sekce používá query parametr `view=overview|health|visits`, který controller normalizuje přes pevný allowlist. Přehled načítá oba datové zdroje; detail Health nespouští dotaz návštěvnosti a detail Návštěvnost nespouští health dotaz. Volba období zůstává při přepnutí sekce zachována.
+
+## Vysledek
+
+Analytika má tři serverově řízené sekce. Přehled kombinuje aktuální health stav, dostupnost, odezvu a hlavní návštěvní metriky bez podrobných tabulek. Health zachovává denní graf a poslední problémy; Návštěvnost zachovává denní návštěvy, stránky, referrery, kampaně a zařízení. Cílená sada prošla 6/6 včetně skutečného renderu všech tří variant, PHP lint prošel a `git diff --check` je čistý. Změna je lokálně commitnutá; staging push čeká na výslovný požadavek. Master zůstává beze změny.
+
+---
+# UKOL: Health API, cron monitoring a analytika zdraví
+
+Datum: 2026-10-21
+Zadani: Přidat veřejné health API mimo sitemapu a roboty, desetiminutový cron se spolehlivým záznamem výpadků a rozšířit administraci Analytika o zdraví webu a návštěvnost.
+Doporuceny model: Sol - Změna propojuje veřejný endpoint, plánovanou úlohu, databázovou historii, odolný zápis a administrační grafy.
+
+## Kroky
+
+- [x] Zmapovat současnou analytiku, routing, databázové schéma a provozní možnosti cronu.
+- [x] Navrhnout bezpečný health kontrakt, retenci a append-only databázovou migraci.
+- [x] Implementovat health API bez session, indexace, sitemap a analytického započítání.
+- [x] Implementovat cron runner, detekci výpadku a obnovitelný záložní záznam.
+- [x] Rozšířit Analytiku o stav, dostupnost, historii a graf vedle návštěvnosti.
+- [x] Doplnit testy, dokumentaci, cron návod a wiki.
+- [x] Commitnout dokončenou implementaci.
+- [x] Nasadit na staging po výslovném požadavku na push; master bez výslovného potvrzení neměnit.
+
+## Poznamky
+
+Health API zveřejní jen bezpečný agregovaný stav a čas. Cron bude zapisovat všechny běhy, aby šel počítat uptime a kreslit graf; výpadek endpointu se nesmí ztratit jen proto, že HTTP požadavek selhal. Pokud selže i databáze, runner zapíše explicitní JSONL fallback a další úspěšný běh jej importuje.
+
+Přidána nová migrace110 a fresh-install schema tabulky health_checks s UUID deduplikací, bezpečnými stavovými poli a bez citlivého detailu chyby. Historické migrace zůstaly beze změny. Database::createConnection umožní health responderu převést DB výpadek na strukturované HTTP503 bez ukončení standardní chybovou stránkou.
+
+Přidány vrstvy HealthCheckService, HealthCheckHttpResponder, HealthCheckRepository a explicitní HealthCheckFallbackStore. `/api/health` běží před session i visit beaconem, podporuje GET/HEAD, odmítá ostatní metody a zveřejňuje pouze agregovaný application/database stav.
+
+CLI runner bin/health-check.php načítá explicitní HEALTH_CHECK_URL (nebo APP_URL + /api/health), vrací exit0/1 podle zdraví, zapisuje každý běh a při DB chybě používá storage/logs/health-check-pending.jsonl. Neuložení do DB ani do fallbacku je viditelná kritická chyba s exit2; žádný výpadek se tiše nezahodí.
+
+Existující admin stránka /admin/analytics byla zachována a rozšířena, nevznikla duplicitní sekce. Nově samostatně načítá health historii, ukazuje aktuální/stale stav, uptime z provedených kontrol, chyby, odezvu a denní graf; chyba jedné tabulky neschová druhý datový tok. Sidebar používá širší název Analytika.
+
+Analytika navíc zobrazuje posledních20 nezdravých běhů s UTC časem, HTTP stavem, DB stavem, bezpečným error_code, odezvou a informací, zda šlo o přímý cron nebo obnovený JSONL záznam.
+
+Přidána cílená sada HealthCheckTest: kontrakt parseru, bezpečné cílové URL, HTTP200/503 responder, JSONL replay a zachování poškozeného záznamu, pořadí rout před beacon/session, absence v sitemapě, migrace, cron a admin wiring.
+
+README, ARCHITECTURE a DEPLOYMENT nyní popisují endpoint, pořadí rout, databázový/fallback tok, retenci, stale detekci, proměnnou HEALTH_CHECK_URL a konkrétní desetiminutový Active24 cron. Staging a produkce musí používat vlastní URL i DB; žádný nový GitHub Secret není potřeba.
+
+## Vysledek
+
+Implementace je dokončená a cílená health sada prošla 5/5; všech 12 dotčených PHP souborů prošlo lintem a `git diff --check` je čistý. Úplná starší sada zůstává na výchozí dev větvi blokovaná existujícím Golden Bash isolation testem a nedostupnou lokální DB; tyto nesouvisející problémy nebyly skryty ani nahrazeny fallbackem. Commit `a32e1e7` byl nasazen na `dev`; staging workflow `39589135404` skončil úspěšně. Živý `https://staging.rbvideosphotos.cz/api/health` vrátil HTTP 200, `status=ok`, `database=ok`, `Cache-Control: no-store` a `X-Robots-Tag: noindex, nofollow, noarchive`. Master zůstává beze změny. Pro ukládání historie je ještě nutné spustit migraci 110 a nastavit Active24 cron.
+
+---
 # UKOL: Kruhové indikátory benefitů v homepage hero
 
 Datum: 2026-10-20
@@ -2284,3 +2347,107 @@ Integrační výsledky: SMTP3 testy, mail archive27 assertions, recipient policy
 ## Výsledek kopie kontaktu2026-10-19
 
 6246ef4 nasazen na dev/staging, Actions39261191994 success. Staging migrate-util HTTP200,107 přítomna, Údržba dokončena a bez SQLSTATE. Settings view test ověřil prázdné/vyplněné/escapované CC, nepovinnost a odděleného hlavního příjemce. SMTP3 testy včetně skutečného RCPT proCC a očištění po další zprávě; mail archive28 assertions včetně zálohy po SMTP odmítnutí; policy13; reset19; upgrade109/16 prošly. Skutečná pošta se při testech neodesílala. Pole nepovinné, resetbezCC, žádné nové.env/secrets. DEPLOYMENT, ARCHITECTURE a wiki aktualizovány. Produkce beze změny.
+
+# UKOL: Dalsi optimalizace PageSpeed
+
+Datum: 2026-10-21
+Zadani: Navazat na zlepseni mobilniho PageSpeed stagingu z puvodnich 60 na 87 bodu a odstranit dalsi nejvetsi priciny pomaleho vykresleni bez vizualni nebo funkcni regrese.
+Doporuceny model: Sol - Vykon hero videa, fontu, kritickeho CSS a cache vyzaduje mereni, browser QA a regresni testy.
+
+## Kroky
+
+- [x] Precist konkretni diagnostiku cerstveho PageSpeed reportu a zmerit aktualni staging/dev baseline.
+- [x] Seradit nalezy podle dopadu na LCP, blokovani vykresleni a objem prenosu; nedelat kosmeticke mikrooptimalizace pred hlavni pricinou.
+- [x] Implementovat dalsi bezpecne optimalizace na `dev` se zachovanim vzhledu a tri breakpointu hero videa.
+- [-] Overit testy, skutecne generovane assety, mobilni i desktopovy layout a znovu zmerit vykon.
+- [x] Aktualizovat technickou dokumentaci a globalni wiki; vysledky zapsat vcetne omezeni.
+
+## Poznamky
+
+- Produkcni report z 21:26 ukazuje 60 bodu, LCP 3,7 s a CLS 0,698; produkce jeste neobsahuje aktualni `dev` optimalizace.
+- Staging ve stejnou dobu ukazuje 87 bodu, pristupnost/doporucene postupy/SEO 100 a prochazeni agenty 3/3. Aktualni baseline se proto musi vztahovat ke stagingu.
+- Stavajici otevrene podezreni: render-blocking page CSS a pet fontu; hero video je uz Range-served, `preload=metadata`, s lehkym posterem a rezervovanym pomerem stran.
+- PageSpeed API vratilo 429 (denni kvota vycerpana). Lokalni Lighthouse se do 3 minut neukoncil a nevytvoril report; vysledek nebyl nahrazen odhadem. Systemovy TLS uspesne nacetl staging HTTP 200.
+- Staging homepage ma 176749 B HTML, 161 `img` uzlu, 38238 B inline CSS a pet font preloadu. Hlavni novy zasah prevadi skryte modalni galerie z desitek `<img srcset>` uzlu na bezpecny JSON a obrazky vytvari az pri otevreni. Stare publikovane `.pt-photos` zustavaji explicitne podporovane; neplatny novy JSON se oznaci `data-gallery-error` a vypise do konzole, nikoli tise nahradi.
+- Presny prepocet soucasneho staging HTML: 36 skrytych galerii obsahuje 109 `<img>` uzlu a 55367 B markupu. Stejna data v novem JSON kontraktu maji odhadovanych 29289 B, tedy o 26078 B / 47,1 % mene; hlavni prinos je odstraneni 109 DOM obrazku a jejich `srcset` z pocatecniho renderu.
+- JSON pouziva `JSON_HEX_*` a `JSON_THROW_ON_ERROR`; render test s `</script><script>` payloadem overuje, ze nelze ukoncit datovy element a ze originalni Unicode/alt text projde beze ztraty. PHP lint, oba JS parsery, cilene gallery/theme testy a `git diff --check` prosly.
+- Plna sada ma dva nesouvisejici zname blokery: drive existujici rozdil CSS mezi Golden Bash a Diagonal a chybejici lokalni DB pripojeni. Zmenene soubory CSS ani DB netykaji; cilene testy zmen prosly. Browser fixture prokazal otevreni JSON galerie, ale capture proces skoncil nenulove pri cekani na stabilni full-page vysku otevreneho modalu, proto nejde oznacit za kompletni browser PASS.
+
+## Vysledek
+
+Lokalni implementace je hotova a zdokumentovana v ARCHITECTURE i globalni wiki (commit 0c48fa0). Pred nasazenim se homepage stale chova podle stareho staging HTML; dalsi realne PageSpeed/DOM mereni je mozne az po samostatne povolenem pushi na `dev`. Produkcni `master` se nemeni.
+
+---
+# UKOL: Mobilni hero video pod navigaci bez odkryteho pruhu
+
+Datum: 2026-10-21
+Zadani: Ukotvit mobilni hero video pod prekryvajici navigaci a zaroven zajistit, aby video pokrylo celou sirku hero bez odkryteho pruhu vlevo.
+Doporuceny model: Terra - Jde o presne vymezenou CSS regresi s responzivnim kontraktem a cilenym testem.
+
+## Kroky
+
+- [x] Zmerit ze screenshotu rozdil mezi zacatkem video elementu a spodkem navigace.
+- [x] Opravit mobilni geometrii video elementu bez deformace obrazu.
+- [x] Aktualizovat regresni test a technickou dokumentaci.
+- [x] Spustit cilene testy a kontrolu diffu.
+- [x] Commitnout hotovou opravu na `dev`; bez vyzvy nepushovat.
+
+## Poznamky
+
+Screenshot potvrzuje dve soubezne priciny: video zacina pod prekryvajici navigaci a jeho element ma jen 375 px proti zhruba 604 px sirokemu hero. Finalni mobilni kontrakt proto musi pouzit horni inset 72 px, spodni hranu 0 a plnou sirku/vysku zbytku panelu s `object-fit:cover` a `object-position:center top`.
+
+Finalni CSS nyni zacina video na `top:72px`, nastavuje `width:100%` a `height:calc(100% - 72px)`. `object-fit:cover` zachovava pomer obrazu a orizne prebytek uvnitr plneho mobilniho panelu; video uz neni transformaci centrovany jako uzky 375px element.
+
+Regresni test ted vyzaduje cely kontrakt: odsazeni 72 px, vysku zbytku hero, plnou sirku, cover orez a nulovou transformaci. ARCHITECTURE popisuje rozdil mezi nativnim mobilnim videem a Vimeo iframe.
+
+Cileny Golden Bash test pro mobilni hero prosel a `git diff --check` nenasel chybu. Overeni je lokalni nad zdrojovym CSS; skutecny staging se zmeni az po samostatne povolenem pushi na `dev`.
+
+## Vysledek
+
+Mobilni nativni hero video zacina 72 px pod hornim okrajem prekryvane hero sekce, vyplni celou sirku a zbyvajici vysku a zachovava pomer pres `object-fit:cover`. Cileny regresni test prosel a `git diff --check` je cisty. Kompletni sada novy test take prosla; nadale obsahuje drive znamy nesouvisejici Golden Bash isolation FAIL a chybejici lokalni DB pripojeni. ARCHITECTURE byla aktualizovana. Zmena je pripravena v lokalnim commitu na `dev`; bez explicitniho pozadavku nebyla pushnuta.
+
+---
+# UKOL: Oprava mobilni stranky Sluzby
+
+Datum: 2026-10-21
+Zadani: Opravit responzivni layout stranky Sluzby, aby na mobilu nebyly karty a text stlacene do necitelnych uzkych sloupcu a vsechny sekce mely stabilni geometrii.
+Doporuceny model: Terra - Jde o ohranicenou responzivni CSS opravu s vizualni kontrolou realne stranky.
+
+## Vizualni rubrika (100 bodu, cil alespon 90)
+
+- [ ] 20 b: platno 375 px bez horizontalniho overflow a useknuti.
+- [ ] 10 b: hlavicka, breadcrumbs a mobilni navigace bez prekryvu.
+- [ ] 15 b: hero ma citelny obsah, spravny orez a pouzitelna CTA.
+- [ ] 25 b: sest sluzeb ma citelne karty, konzistentni obrazky a rozestupy.
+- [ ] 15 b: proces spoluprace ma vsechny ctyri kroky a citelnou hierarchii.
+- [ ] 10 b: CTA a footer jsou citelne a bez kolizi.
+- [ ] 5 b: assety se nactou bez zjevne runtime chyby.
+
+## Kroky
+
+- [x] Prohlednout dodany full-page screenshot v puvodnim rozliseni a najit odpovidajici CSS.
+- [x] Zachytit platny Chrome/CDP baseline na 375 px a zmerit problematicke sekce.
+- [x] Upravit mobilni geometrii stranky Sluzby v Diagonal sablone.
+- [x] Doplnit regresni test a dokumentaci.
+- [x] Zachytit finalni 375/700/701px dukazy a vyhodnotit rubriku.
+- [x] Commitnout hotovou opravu na `dev`; bez explicitniho pozadavku nepushovat.
+
+## Poznamky
+
+Dodany screenshot 375x3590 ukazuje hlavni regresi v kartach sluzeb: textova cast a obrazek zustavaji vedle sebe, text ma pouze priblizne polovinu karty a pouziva 10px pismo. Proces a CTA jsou kompaktni, ale musi se overit proti realnemu DOM a nesmi se hodnotit pouze ze zmenseneho full-page nahledu.
+
+Baseline ze screenshotu: 64/100. Nejvetsi odpocty jsou sekce sluzeb -12, typografie a karty -8 a chybejici runtime/interakcni dukaz -6.
+
+Chrome/CDP baseline `https://rbvideosphotos.cz/sluzby` pri 375x812 CSS px, DPR1, cache off: stabilni full-page vyska 3590 px, `scrollWidth===clientWidth===375`, 10/10 viditelnych obrazku nacteno. Karty maji 113px textovy sloupec, popisy i odkazy 10px a ctyri odkazy jsou hlasene jako ancestor-clipped. Cookie overlay byl pritomen; mimo jeho oblast zustava dukaz geometrie platny.
+
+Prvni iterace na375/700px odstranila vsechny ancestor-clipped nalezy, ale povinna kontrola701px odhalila navrat desktopoveho vnitrniho splitu: nadpisy a popisy prekryvaly obrazky a sest odkazu bylo znovu hlaseno jako orezanych. Predchozi prubezne skore92/100 proto nebylo prijato jako finalni.
+
+Diagonal CSS nyni do1050px sklada vnitrni obsah karty do jednoho sloupce: 210px obrazek pres celou sirku a obsah pod nim s prirozenou vyskou. Vnejsi grid zustava na701–1050px dvousloupcovy a do700px je jednosloupcovy. Popis je12px, fakta11.5px a odkaz ma36px vysokou plochu. Proces Sluzby dostal na telefonu12px popisy a minimalni vysku kroku122px. Plny desktop zacina az na1051px.
+
+Finalni Chrome/CDP preview pouzil zivy DOM a assety z `https://rbvideosphotos.cz/sluzby`, cache off, DPR1 a realne tlacitko Odmitnout vse; lokalni CSS bylo vlozeno jako posledni author style. Pri375,700,701 a1050px plati `scrollWidth===clientWidth`, zadne outside/clipped/ancestorClipped prvky, zadne prekryvy a vsechny viditelne obrazky jsou nactene. Pri1051px se vraci desktop; QA nahlasilo drive existujici presah header CTA o43px, ktery nesouvisi s mobilni opravou a nebyl skryt.
+
+Finalni mobilni skore preview:94/100 (platno20/20, hlavicka9/10, hero14/15, sluzby25/25, proces14/15, CTA/footer8/10, runtime preview4/5). Odecteno za existujici10px CTA texty a za to, ze generovany staging asset jeste nebyl nasazen. Dukazy: `.codex-qa/services-final-375.png`, `services-detail-375.png`, `services-final-700.png`, `services-final2-701.png`, `services-detail2-701.png`, `services-final2-1050.png` a `services-final2-1051.png`.
+
+## Vysledek
+
+Mobilni a tabletova stranka Sluzby ma citelne vertikalni karty bez prekryvu a orezani, plnou mobilni typografii procesu a stabilni breakpointy700/701/1050/1051. Cileny regresni test prosel a `git diff --check` je cisty. Kompletni sada novy test take prosla; nadale hlasi znamy nesouvisejici isolation FAIL Diagonal CSS a chybejici lokalni DB pripojeni. Zmena je lokalne pripravena na `dev`; bez explicitniho pozadavku nebyla pushnuta.

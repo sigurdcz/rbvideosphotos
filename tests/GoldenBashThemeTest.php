@@ -111,6 +111,31 @@ function register_golden_bash_theme_tests(callable $test, callable $assert): voi
         }
     });
 
+    $test('golden bash diagonal keeps mobile homepage hero media below navigation', function () use ($assert, $diagonalThemeDir): void {
+        $css = str_replace("\r\n", "\n", (string)file_get_contents($diagonalThemeDir . '/assets/theme.css'));
+        $mobileOverride = '@media(max-width:700px){' . "\n"
+            . '  body.theme-golden-bash.theme-golden-bash-diagonal[data-cms-page-key="homepage"] .hp-hero>.theme-hero-video iframe{' . "\n"
+            . '    left:50%!important;right:auto!important;transform:translateX(-50%)!important;' . "\n"
+            . '  }';
+        $nativeOverride = 'top:72px!important;bottom:auto!important;left:0!important;right:0!important;'
+            . "\n" . '    width:100%!important;height:calc(100% - 72px)!important;object-fit:cover!important;object-position:center top!important;transform:none!important;';
+        $desktopContract = strpos($css, 'body.theme-golden-bash.theme-golden-bash-diagonal[data-cms-page-key="homepage"] .hp-hero>video.theme-hero-video{' . "\n" . '  left:auto!important;right:0!important;');
+        $mobileContract = strpos($css, $mobileOverride);
+        $assert($desktopContract !== false && $mobileContract !== false && $desktopContract < $mobileContract, 'The final mobile override must win after the desktop right-edge contract.');
+        $assert(str_contains($css, $nativeOverride), 'The native mobile hero video must start below navigation and cover the full hero width.');
+        $assert(str_contains($css, 'object-position:center center!important;'), 'The mobile poster must retain a centered crop.');
+        $assert(str_contains($css, 'top:72px!important;bottom:auto!important;') && str_contains($css, 'height:calc(100% - 72px)!important;'), 'The native mobile video must stay below the 72px navigation without overflowing the hero.');
+        $assert(str_contains($css, 'width:100%!important;height:calc(100% - 72px)!important;object-fit:cover!important;'), 'The native mobile video must cover the hero width without exposing a side strip.');
+    });
+
+    $test('golden bash diagonal services cards stay readable on mobile', function () use ($assert, $diagonalThemeDir): void {
+        $css = str_replace("\r\n", "\n", (string)file_get_contents($diagonalThemeDir . '/assets/theme.css'));
+        $assert(str_contains($css, '@media(max-width:1050px){') && str_contains($css, 'grid-template-rows:210px auto!important;'), 'Phone and tablet service cards must stack fixed media above naturally sized copy.');
+        $assert(str_contains($css, 'grid-column:1!important;') && str_contains($css, 'grid-row:2!important;'), 'Mobile service copy must use the full card width below its image.');
+        $assert(str_contains($css, 'font-size:12px!important;') && str_contains($css, 'font-size:11.5px!important;'), 'Mobile service descriptions and facts must remain readable.');
+        $assert(str_contains($css, '.gb-main>.gb-services-hero) .gb-shared-process__step{') && str_contains($css, 'min-height:122px!important;'), 'Services process cards must grow for the larger mobile copy.');
+    });
+
     $test('golden bash theme registers a complete isolated design contract', function () use ($assert, $themeDir, $root): void {
         $theme = (new ThemeTemplateRegistry($root . '/Templates'))->find('golden-bash');
         $assert($theme !== null, 'Golden Bash is not discoverable by the theme registry.');
@@ -303,7 +328,7 @@ function register_golden_bash_theme_tests(callable $test, callable $assert): voi
         $assert(HomepageContentService::HOMEPAGE_PORTFOLIO_BATCH_SIZE === 5 && str_contains($homepageContentService, 'ThemeTemplateRegistry::isGoldenBashFamily($this->currentThemeKey)') && str_contains($homepageContentService, 'self::HOMEPAGE_PORTFOLIO_BATCH_SIZE'), 'Golden Bash family themes must receive every published homepage gallery while other themes retain the named five-gallery limit.');
         $assert(str_contains($js, 'initHomepagePortfolioLoadMore') && str_contains($js, "hiddenCards.slice(0, batchSize)") && str_contains($js, "controls.hidden = true") && str_contains($css, '.gb-portfolio-more__button'), 'Golden Bash homepage portfolio must progressively reveal repeated five-gallery batches and remove the control after the final batch.');
         $assert(str_contains($portfolioListingData, 'foreach ($repo->allPublished($siteId) as $entry)') && !str_contains($portfolioListingData, 'array_slice('), 'The Nase prace listing must keep every published gallery without the homepage limit.');
-        $assert(str_contains($portfolioListing, 'data-gallery-date') && str_contains($portfolioListing, 'class="pt-photos"'), 'Portfolio listing cards must expose dates and the full hidden gallery media set.');
+        $assert(str_contains($themedPortfolioListing, 'data-gallery-date') && str_contains($themedPortfolioListing, 'class="pt-photos-data"') && str_contains($themedPortfolioListing, 'JSON_HEX_TAG'), 'Golden Bash portfolio listing cards must expose dates and the complete gallery as safe compact JSON.');
         $assert(str_contains($themedPortfolioListing, 'class="pt-card gb-work-tile"'), 'Golden Bash portfolio listing must expose one full-link tile per database entry.');
         $assert(str_contains($css, '.gb-work-listing .pt-grid{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;grid-template-rows:repeat(4,230px)')
             && str_contains($css, '.gb-work-listing .pt-card:nth-child(1){grid-column:1;grid-row:1 / span 2}')

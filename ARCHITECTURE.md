@@ -52,7 +52,10 @@ Kdyz se neco z teto mapy zmeni, uprav ji ve stejnem commitu.
 | Poradi fotek v galerii | `setMedia()` / `setGallery()` (+ mapa cisel z formulare), cte `getMedia()` / `getGallery()` |
 | Videa u prace | tabulka `portfolio_videos`, `setVideos()` / `getVideos()`; `portfolio_entries.video_url` je zrcadlo PRVNIHO videa |
 | Hero media na homepage | `Templates/golden-bash-diagonal/assets/theme.css` - blok "Golden Bash Diagonal" na konci souboru; `app/Views/partials/hero-video.phtml` |
-| Ktere hero video se prehraje | `HeroMediaRenderer::buildResponsiveHeroVideoHtml()`; vyber podle sirky dela `pickEmbedUrl()` v `public/assets/frontend-runtime.js` |
+| Ktere hero video se prehraje | `HeroMediaRenderer::buildResponsiveHeroVideoHtml()`; Vimeo/YouTube vybira podle sirky `pickEmbedUrl()` v `public/assets/frontend-runtime.js`, soubor `<source media>` v `hero-video.phtml`; smisena sada = oba prehravace + `<style data-hero-video-widths>` |
+| Rozmery, poster a verze lokalniho videa | `app/Services/HeroVideoMediaLookup.php` (`ratios()`, `lightPoster()`, `versionedUrl()`) |
+| Nahrani videa do Medii | `MediaController::upload` + `MediaIngestionService::attachVideoDetails()` + `VideoMediaInfo`; metadata a miniaturu cte prohlizec (`probeVideo()` v `admin/views/media/index.php`), server nema ffmpeg |
+| Vyber videa z Medii | sdileny picker v `admin/assets/admin.js` (zalozky Vse/Obrazky/Video, `lockKind`), tlacitko `[data-hero-video-media]` v admin/views/pages/form.php a settings/index.php |
 | Odkud se bere URL hero videa | dva duplikatni injektory: `public/index.php::injectPageHeroVideo()` (live) a `PublishService::injectPageHeroVideo()` (publish) - menit VZDY oba |
 | Hero na podstrankach, overlay | `app/Services/Render/HeroMediaRenderer.php`, `public/assets/frontend-runtime.css` |
 | Karty blogu na homepage | `HomepageContentService::buildBlogCardHtml()`; pri ulozeni clanku je prepisuje `BlogSyncService` |
@@ -95,15 +98,40 @@ admin editaci, viz `074`-`077`) + stejny zaznam v `database/seeds/seed.php`; u o
   ktera uz sloupec ma, spadne na "Duplicate column" a zablokuje vsechny dalsi migrace.
 - **`sort_order = 0` znamena "bez rucniho cisla"** a radi se az za ocislovane polozky; v galeriich
   je ale 0 legacy pozice z poradi vyberu, proto tam plati prosty `sort_order ASC`.
-- **Hero video ma tri varianty** (`sites.default_hero_video_url[_tablet|_mobile]`, u stranky bloky
-  `hero_video[_tablet|_mobile]`). Desktop je povinny a je fallbackem; varianta se do HTML zapise,
-  jen kdyz je stejneho typu jako desktopova (embed k embedu, soubor k souboru). Vyber dela az
-  prohlizec - staticky publish je jedna HTML pro vsechny, takze server o zarizeni rozhodovat nesmi.
-  Varianta se vybere pri vlozeni prehravace a znovu pri prekroceni700/1050px.
-  Stejna URL prehravac nerestartuje; nova URL odstrani stary iframe i metadata listenery/observer.
-  Produkcni konfigurace pouziva tablet = desktop: tabletova varianta je prazdna (NULL), do HTML se
-  `data-embed-url-tablet` nezapise a `pickEmbedUrl()` vrati desktopovou URL; vlastni video ma jen mobil.
-  Migrace 100 tablet vycistila i na existujicich DB, seedy ho nenastavuji - nevyplnovat ho zpet stejnou URL.
+- **Hero video: kazda sirka okna ma vlastni zdroj a nic se nededi.** Pole `hero_video`,
+  `hero_video_tablet`, `hero_video_mobile` (u stranky bloky, ve vychozim nastaveni
+  `sites.default_hero_video_url[_tablet|_mobile]`) znamenaji desktop (nad 1050 px), tablet
+  (701-1050 px) a mobil (do 700 px). **Prazdne pole = na dane sirce zadne video** (jen poster),
+  nic se neprebira z jineho zarizeni. Poradi zdroju (live i publish stejne): vlastni sada stranky,
+  na homepage vychozi sada z Nastaveni, hero foto stranky, poster, vychozi sada z Nastaveni.
+  Sada se bere CELA (`HeroMediaRenderer::hasHeroVideo()`), sirky dvou sad se nemicha.
+  Kazda sirka muze byt jineho druhu (Vimeo/YouTube nebo soubor `/media/...`); smisena sada
+  vykresli oba prehravace oznacene `data-hero-widths` a malym `<style>` se zobrazi jen ten, ktery
+  ma na sirce video. Soubory pouzivaji `<source media>` s rozsahy bez mezery (`max-width:700px`,
+  `min-width:700.02px` a `max-width:1050px`, `min-width:1050.02px`), embedy `pickEmbedUrl()`,
+  ktery pri zmene sirky prehravac vlozi, vymeni nebo odstrani. Plain `<video>` se pri prechodu
+  hranice nacte znovu (`initNativeHeroVideos()`) a spusti se rucne, jakmile umi hrat (autoplay
+  se u souboru s vyssim datovym tokem nez rychlost pripojeni sam nespusti).
+  Staticky publish je jedna HTML pro vsechny, takze server o zarizeni rozhodovat nesmi.
+  Vychozi video webu se tedy pouziva jako sada (ne po sirkach); u produkcni DB je desktop=Vimeo,
+  tablet prazdny, mobil vlastni zdroj. Migrace 100 tablet vycistila; nevyplnovat ho zpet stejnou URL.
+- **Video z Medii: kvalita, cache a Range.**
+  - Doporuceni: smycka 10-15 s, MP4 H.264, bez zvuku a bez timecode stopy, faststart, desktop
+    1920x1080 (3-5 MB), tablet 1280x720 (2-3 MB), mobil 720x1080 (do 1,5 MB). Server video
+    neprekoduje (zadny ffmpeg); admin jen upozorni (`VideoMediaInfo`: nad Full HD, nad 25 MB, na vysku).
+  - Rozmery se ukladaji do `media.width/height` a pouzivaji pro `aspect-ratio` plain `<video>`
+    (`HeroVideoMediaLookup::ratios()`); jinak se element po prichodu metadat prepocita z pomeru
+    posteru na pomer videa a posune celou stranku (CLS). Pouziva se presne `W / H`, ne `auto W / H`
+    (to by do prichodu metadat preferovalo pomer posteru).
+  - `<video poster>` je jedna obycejna URL, proto se pouziva lehka varianta `medium`/`small` z knihovny
+    (`lightPoster()`), ne originalni PNG o nekolika MB. Embed si ponechava puvodni poster (dostane srcset).
+  - `preload="metadata"`, ne `auto`: `auto` stahne cely soubor a zdrzuje udalost `load`.
+  - Lokalni videa dostavaji `?rev=<mtime souboru>` (`versionedUrl()`): media maji `immutable` na rok,
+    vcetne cache pred PHP, a jednou zapamatovana stara odpoved (bez Range, octet-stream) by se
+    vracela donekonecna. **Parametr se NESMI jmenovat `v`:** YouTube detektor (`[?&]v=<id>`)
+    z toho udelal iframe neexistujiciho videa. YouTube `?v=` se ted bere jen na hostech YouTube.
+  - Pri vymene souboru se `rev` zmeni sam (jina mtime); stare adresy bez `rev` mohou cache vracet
+    po zmene servirovani stale po dobu platnosti.
 - **Legacy sablony s `<video data-block="hero_video">`** (stare seedy) si hero video vykresli
   samy pres `PageRenderer`, injektor je pak preskoci - varianty se na takovych strankach
   neprojevi. Aktivni tema tudy nejde.
@@ -145,27 +173,37 @@ request -> admin/index.php -> Core\Router -> Controller -> Repository/Service ->
 `public/index.php` odbavuje requesty v tomto poradi:
 
 ```text
-1. /.well-known/security.txt a /security.txt -> SecurityTxtHttpResponder
-2. /assets/*, /media/*  -> tryServePublicAssetWithoutSession(), readfile s realpath ochranou
-3. POST /api/visit      -> tryRecordVisitBeacon(), vlastni mereni navstevnosti (pred Auth::start)
+1. GET/HEAD /api/health -> HealthCheckHttpResponder, application + DB readiness, 200/503
+2. /.well-known/security.txt a /security.txt -> SecurityTxtHttpResponder
+3. /assets/*, /media/*  -> tryServePublicAssetWithoutSession(): realpath ochrana, typy vcetne mp4/webm/mov,
+   `Accept-Ranges`, `Range`->206/416 a `If-Range` (ETag i datum Last-Modified, kvuli Safari),
+   soubor nad 4 MB nebo cast se posila po kouscich (`fread`), ne `readfile`
+4. POST /api/visit      -> tryRecordVisitBeacon(), vlastni mereni navstevnosti (pred Auth::start)
    -- Auth::start() --
-4. /api/v1/*            -> ApiController::dispatch()
-5. legacy /blog/* nebo /nase-prace/* -> 301 redirect na prime slugy
-6. /sluzby              -> tryServeServicesPage() z `service_items`
-7. /nase-prace          -> tryServePortfolioPage() listing
-8. /blog                -> tryServeBlogListingPage()
-9. /faq                 -> tryServeFaqPage() z `faq_items`
-10. /kontakt            -> tryServeKontaktPage() z `contact_info`
-11. POST /kontakt/odeslat -> CSRF, honeypot, throttling, archiv v DB a SMTP; veřejný kontrakt přijímá jméno, kontakt, typ focení, místo, zprávu a volitelný enum-like `selected_package_id`, nikoli název, cenu ani datum akce. `PricingPackageCatalog` identifikátor ověří proti serverovému whitelistu a teprve z interní definice získá název a cenu pro e-mail. Neznámé ID blokuje odeslání se stavem `invalid-package`; redirect zachovává pouze ověřené ID v query `balicek`.
-12. CMS stranka z DB    -> tryServeDatabasePage()
-13. Blog detail         -> tryServeBlogPostPage()
-14. Portfolio detail    -> tryServePortfolioPage(..., true)
-15. storage/published/* -> explicitni soubory podle pripony (napr. sitemap, robots, llms.txt a ikony)
-16. 404
+5. /api/v1/*            -> ApiController::dispatch()
+6. legacy /blog/* nebo /nase-prace/* -> 301 redirect na prime slugy
+7. /sluzby              -> tryServeServicesPage() z `service_items`
+8. /nase-prace          -> tryServePortfolioPage() listing
+9. /blog                -> tryServeBlogListingPage()
+10. /faq                -> tryServeFaqPage() z `faq_items`
+11. /kontakt            -> tryServeKontaktPage() z `contact_info`
+12. POST /kontakt/odeslat -> CSRF, honeypot, throttling, archiv v DB a SMTP; veřejný kontrakt přijímá jméno, kontakt, typ focení, místo, zprávu a volitelný enum-like `selected_package_id`, nikoli název, cenu ani datum akce. `PricingPackageCatalog` identifikátor ověří proti serverovému whitelistu a teprve z interní definice získá název a cenu pro e-mail. Neznámé ID blokuje odeslání se stavem `invalid-package`; redirect zachovává pouze ověřené ID v query `balicek`.
+13. CMS stranka z DB    -> tryServeDatabasePage()
+14. Blog detail         -> tryServeBlogPostPage()
+15. Portfolio detail    -> tryServePortfolioPage(..., true)
+16. storage/published/* -> explicitni soubory podle pripony (napr. sitemap, robots, llms.txt a ikony)
+17. 404
 ```
 
 Security endpointy jsou zamerne pred `Auth::start()`: verejny strojovy soubor nesmi zakladat PHP session ani posilat session cookie.
 Totez plati pro `POST /api/visit`: beacon nesmi zakladat session a lezi mimo `/api/v1/*`, takze nevyzaduje API klic.
+`/api/health` je jeste drive: nezaklada session ani visit, neni v sitemap/robots a vraci `X-Robots-Tag: noindex, nofollow, noarchive`. Odpoved zverejni jen `status`, UTC cas a agregovane `application/database` checks. DB chyba je JSON s HTTP503, nikoli tichy HTTP200.
+
+### Health monitoring pipeline
+
+`bin/health-check.php` vola pres verejnou domenu `/api/health`, zmeri odezvu a ulozi kazdy beh do `health_checks` (migrace110). HTTP chyba, timeout, neplatny JSON i database=error jsou `unhealthy`. Runner konci 0 jen pri zdravem kontraktu, 1 pri nezdravem stavu a 2 pri konfiguracni nebo dvojite persistencni chybe. Pokud zapis do DB neni mozny, stejny bezpecny record s UUID jde do `storage/logs/health-check-pending.jsonl`; dalsi beh po obnove DB soubor pod exkluzivnim zamkem prehraje a az po uspesnem vlozeni vyprazdni. UNIQUE UUID dela retry idempotentni. Neplatny radek se nesmaze ani nepreskoci.
+
+`HealthCheckRepository::summary()` napaji existujici `/admin/analytics`: aktualni stav, uptime pouze z provedenych kontrol, response time a denni graf. Den bez dat je sedy, ne 100% healthy. Posledni zaznam starsi nez 20 minut je `stale`/„Monitoring neběží“, aby zastaveny cron nebyl tise vydavan za dostupnost. Historie ma retenci 14 mesicu stejne jako navstevnost.
 
 ## Obsahovy model
 
@@ -297,10 +335,10 @@ Pro dane logicke jmeno view (napr. `archetypes/cenik`, `partials/hero`) se hleda
 - **Obnova demo media variant**: svatebni importer kontroluje dostupnost PHP GD pred prvnim zapisem, aby nevytvoril castecny dataset bez thumbnailu. Pokud opakovany beh najde drive zaregistrovany original bez fyzicke `thumb` varianty, zavola `MediaIngestionService::regenerateImageVariants()` a variantu doplni; chybejici GD, cizi site ID, video nebo necitelny original zustavaji viditelnou chybou.
 - **Nahledy clanku v Premium Photo**: homepage portfolio/blog a listingy `/nase-prace` a `/blog` pouzivaji stejny `premium-media--film` kontrakt. URL media patri pouze do jednoho `<img>`; nesmi se soucasne opakovat v inline `background-image`. CSS roztahne obraz pres celou sirku mezi 20px cernou horni a spodni filmovou listou a caption vykresli jako absolutni overlay.
 - **Sdilena detailni galerie Premium Photo**: `assets/theme.js` rozpozna `.bp-hero`, `.pf-detail-hero` a `.svc-hero`, prevezme pouze skutecna media z hero a DB-renderovaneho obsahu a sestavi jednu `.detail-media-gallery`. Hero medium je vzdy prvni polozkou seznamu; stejnou URL z nasledneho DB gallery bloku runtime deduplikuje, ale ze zdrojoveho seznamu se uz neorezava. Blog hero pouziva originalni `media.storage_path`, zatimco `thumb_path`/`medium_path` zustavaji pouze pro nahledy. Portfolio a sluzby uz predavaji full/original URL. Obrazky, nativni video a YouTube/Vimeo embed pouzivaji stejny track. Ovlada se sipkami, teckami, Left/Right/Home/End a horizontalnim swipem. Aktivni tecka se zvetsi a CSS respektuje `prefers-reduced-motion`. Pokud stranka nema zadne medium, komponenta se nevytvori a nevklada placeholder.
-- **Modalni galerie karet Golden Bash**: `HomepageData` a `PortfolioListingData` predavaji kartam skutecne `published_at`, zkraceny DB popis a originalni URL vsech `portfolio_media`. Partialy je zapisuji jako `data-gallery-*` a skryty `.pt-photos`; tema proto pri otevreni karty neprovadi dodatecny request ani nevymysli obsah. Jeden dialog v `Templates/golden-bash/assets/theme.js` obsluhuje homepage `.pt-tile` i listing `.pt-card`, cykli index modulo, podporuje sipky, klik na hlavni obraz, Left/Right, Escape, backdrop close a vraceni fokusu. Odkaz `Vice info` je jedina cesta z galerie na detail. Projekt bez galerie pouzije skutecny cover jako jedinou polozku; bez galerie i coveru se modal neotevre. Detail portfolia nesmi zvetsovat galerijni thumbnail: `PortfolioDetailData` nastavi hero na `medium`, theme jej renderuje jako prioritni `<img class="hero-bg" data-responsive-profile="portfolio-hero">` a `ResponsiveImageMarkupService` nabidne 480/720/1280px varianty. `sizes` je na mobilu sirka viewportu minus 32 px a na desktopu 62vw, takze Chrome pro zhruba 930px plochu zvoli 1280px/81KB WebP misto 300px thumbnailu nebo neomezeneho originalu.
+- **Modalni galerie karet Golden Bash**: `HomepageData` a `PortfolioListingData` predavaji kartam skutecne `published_at`, zkraceny DB popis a originalni URL vsech `portfolio_media`. Partialy zapisuji metadata do `data-gallery-*` a seznam medii do bezpecneho `application/json.pt-photos-data`; pri prvnim vykresleni proto nevznika stovka skrytych `<img>` uzlu ani jejich `srcset`, ale galerie stale nepotrebuje dodatecny request na API. JSON pouziva `JSON_HEX_*` a `JSON_THROW_ON_ERROR`: hodnota nemuze ukoncit `<script>` a chyba kodovani se nesmi tise zmenit na prazdnou galerii. Tema data parsuje az pri otevreni karty a DOM hlavniho obrazu a nahledu vytvori az v dialogu. Neplatny payload oznaci na karte `data-gallery-error=invalid-data` a zapise chybu do konzole; jiz publikovany stary vystup se skrytym `.pt-photos` ma explicitni kompatibilni cestu. Jeden dialog v `Templates/golden-bash/assets/theme.js` obsluhuje homepage `.pt-tile` i listing `.pt-card`, cykli index modulo, podporuje sipky, klik na hlavni obraz, Left/Right, Escape, backdrop close a vraceni fokusu. Odkaz `Vice info` je jedina cesta z galerie na detail. Projekt bez galerie pouzije skutecny cover jako jedinou polozku; bez galerie i coveru se modal neotevre. Detail portfolia nesmi zvetsovat galerijni thumbnail: `PortfolioDetailData` nastavi hero na `medium`, theme jej renderuje jako prioritni `<img class="hero-bg" data-responsive-profile="portfolio-hero">` a `ResponsiveImageMarkupService` nabidne 480/720/1280px varianty. `sizes` je na mobilu sirka viewportu minus 32 px a na desktopu 62vw, takze Chrome pro zhruba 930px plochu zvoli 1280px/81KB WebP misto 300px thumbnailu nebo neomezeneho originalu.
 - **Mobilni Golden Bash homepage**: breakpoint do 700 px rezervuje v hero pevny prostor nad absolutnim benefit pruhem pro jedine viditelne CTA; runtime vytvorene `Ukazka prace` zustava v DOM, ale `.gb-hero-work` ji skryva pres `display:none`. Mobilni fixed hlavicka ma u horni hrany 72 px a po scrollu nad 8 px JS prepne `gb-mobile-header-compact`, ktera plynule zmensi hlavicku i rezervu shellu na 42 px; `prefers-reduced-motion` animaci vypina. Prechod profilu sluzeb do `Nase prace` pouziva zmenseny spodni a horni padding; desktopove rozmery sekci se tim nemeni.
 - **Golden Bash Diagonal hero**: duplikat `Templates/golden-bash-diagonal/` meni pouze geometrii homepage media vrstvy. SVG clip je primy polygon `M .27 0 H 1 V 1 H .55 Z` a zlaty okraj pouziva shodnou primku `M270 0 L550 1000`; media vrstva ma na desktopu/tabletu plnou sirku, proto je videt vetsi cast videa. Do 700 px se clip vypina a zustava puvodni mobilni full-bleed kompozice. Ostatni soubory a assety jsou fyzicke kopie, aby pozdejsi uprava jedne sablony skryte nemenila druhou.
-- **Dlazdicovy listing Nase prace v Golden Bash**: `views/archetypes/portfolio-listing.phtml` zachovava jednu semantickou full-link kartu pro kazdy skutecny zaznam z `PortfolioListingData`, vcetne H2, data atributu a skryte galerie. Theme CSS meni pouze prezentaci: aktualni devitipolozkovy desktop pouziva asymetrickou mozaiku 4 sloupce x 4 radky s explicitni pozici `nth-child(1..9)`, obraz pres celou dlazdici a kontrastni gradientovy titulek; do 800 px prechazi na dva sloupce a do 700 px na kompaktni 220px radky bez desktopoveho row-spanu. Explicitni pozice jsou nutne, protoze puvodni 4x2 geometrie vyplnila vsech osm bunek prvnimi peti kartami a dalsi zaznamy padaly do implicitnich radku nulove vysky. Perex zustava v DOM pro datovy a modalni kontrakt, ale vizualne se skryva. Cela dlazdice je odkaz a ma explicitni `:focus-visible` obrys; live i publish sdileji stejny theme archetyp. Homepage je zamerne teaser: `HomepageContentService::HOMEPAGE_PORTFOLIO_LIMIT` omezuje zdroj na prvnich pet publikovanych galerii a Golden Bash zobrazi kazdou z nich prave jednou v petidilne mozaice. Dalsi fotografie zustavaji pouze ve skrytem `.pt-photos` seznamu jedine karty a oteviraji se v jejim lightboxu; klient z nich nesmi klonovat dalsi karty. Samostatny `PortfolioListingData::forSite()` tento limit nepouziva a `/nase-prace` proto vzdy vypise vsechny publikovane galerie.
+- **Dlazdicovy listing Nase prace v Golden Bash**: `views/archetypes/portfolio-listing.phtml` zachovava jednu semantickou full-link kartu pro kazdy skutecny zaznam z `PortfolioListingData`, vcetne H2, data atributu a kompaktniho JSON seznamu galerie. Theme CSS meni pouze prezentaci: aktualni devitipolozkovy desktop pouziva asymetrickou mozaiku 4 sloupce x 4 radky s explicitni pozici `nth-child(1..9)`, obraz pres celou dlazdici a kontrastni gradientovy titulek; do 800 px prechazi na dva sloupce a do 700 px na kompaktni 220px radky bez desktopoveho row-spanu. Explicitni pozice jsou nutne, protoze puvodni 4x2 geometrie vyplnila vsech osm bunek prvnimi peti kartami a dalsi zaznamy padaly do implicitnich radku nulove vysky. Perex zustava v DOM pro datovy a modalni kontrakt, ale vizualne se skryva. Cela dlazdice je odkaz a ma explicitni `:focus-visible` obrys; live i publish sdileji stejny theme archetyp. Homepage je zamerne teaser: `HomepageContentService::HOMEPAGE_PORTFOLIO_LIMIT` omezuje zdroj na prvnich pet publikovanych galerii a Golden Bash zobrazi kazdou z nich prave jednou v petidilne mozaice. Dalsi fotografie zustavaji v JSON te jedine karty a DOM obrazu vznikne az po otevreni lightboxu; klient z nich nesmi klonovat dalsi karty. Samostatny `PortfolioListingData::forSite()` tento limit nepouziva a `/nase-prace` proto vzdy vypise vsechny publikovane galerie.
 - **Homepage O nas v Premium Photo**: `assets/theme.js` sklada `.premium-about-split` ze skryteho DB markeru `.jb-about-visual__source` a prvnich ctyr sluzeb. Kompozice podporuje jak theme PHTML wrapper `.premium-photo-home` s `.premium-service-card`, tak publikovany genericky homepage DOM v `main` s `.hp-svc-card`; produkcni sekce proto nezavisi na tom, zda byl staticky vystup vygenerovan pred nebo po zapnuti manifest-v2 homepage wrapperu.
 - **Golden Bash O nas media a odkazy**: append-only migrace 086 a Demo seeder importuji aktualni `weare5.jpg` standardni Media Library pipeline a vazou jej na homepage blok `jb-about-visual__media`; historicka migrace 085 a jeji `weare4.jpg` zustavaji beze zmeny. Administrator muze v editoru homepage vybrat existujici medium nebo primo nahrat novou fotografii s povinnym ALT textem; image-only upload prochazi `MediaController` a po ulozeni stranky prepise pouze tento DB blok. `HomepageSectionRenderer` predava optimalizovanou variantu jako skryty DB marker a theme stejny serverem vyrenderovany obrazek presune do tymove kompozice bez druheho requestu. Golden Bash fotografii zobrazuje s radiusem 18 px, bez bile vinetace a bez vnejsiho glow; spodni cerny gradient od 38 % vysky zesiluje k 90% cerne u spodni hrany a oba radky popisku maji samostatny textovy stin. Original fotografie zustava beze zmeny. Samostatne bloky `jb-about-photographer__media` a `jb-about-cameraman__media` nadale vlastni dva portrety pro ostatni kompozice a `weare2.png` zustava dostupny pro sve oddelene SEO pouziti; prvni karta sluzeb ("Svatební den - foto + video" na `/sluzby` i v homepage `hp-services-grid`) od migrace 097 pouziva `weare5.jpg` (`DemoContentSeeder::FIRST_SERVICE_VISUAL`, seed i handler `replaceFirstServiceVisualWithWeare5()` hledaji sluzbu podle titulku/detail URL a medium podle `original_filename`, jinak ingest pres `MediaIngestionService`). Vsechny odkazy v homepage kompozici O nas, vcetne prekryvnych odkazu sest sluzeb a CTA, smeruji na `/#kontakt`.
 - **Tomasova video karta O nas**: poster/fallback uz nepouziva genericke `black.png`. Cisty seed i Demo seed ingestuji `database/seeds/demo_assets/fallback tomáš.png` standardni `MediaIngestionService` pipeline a ukladaji vyslednou Media Library URL do bloku `about_cameraman_image`. Existujici weby opravuje append-only application-compatible migrace `101_replace_about_cameraman_video_fallback.sql`; chybejici zdroj nebo neplatna media cesta migraci viditelne zastavi.
@@ -344,7 +382,7 @@ ne v `Templates/*/layout.html`: live i publish ho dostanou pres `injectSharedFro
 `prefers-color-scheme: dark` pravidlo ve verejnych CSS/JS nepridavat; hlida `tests/LightOnlyColorSchemeTest.php`.
 Admin (`/admin`) ma vlastni vzhled a pravidlo se ho netyka.
 
-Stranka muze mit vlastni `hero_video` blok. Pokud chybi, frontend pouzije default hodnoty ze `sites`. Hlavni a Demo seed nastavuji `default_hero_poster_url` na nahranou fotografii `svatba-nevesta-zenich-polibek-kamenna-zed.webp`; homepage default video pouziva Vimeo `1229273025` pro desktop i tablet a Vimeo `1228952734` do 700 px; tabletova varianta (`default_hero_video_url_tablet`) je zamerne prazdna (NULL), takze tablet pada na desktopove video (seed, Demo seed, handler migrace 087 i migrace 100). Priorita je strankove video, homepage default video, strankova foto, site default poster a nakonec site default video.
+Stranka muze mit vlastni `hero_video`, `hero_video_tablet` a `hero_video_mobile`. Pokud nema zadne, frontend pouzije vychozi sadu ze `sites` (kazda sirka zvlast, prazdne pole = zadne video; podrobnosti v sekci o pastech). Hlavni a Demo seed nastavuji `default_hero_poster_url` na nahranou fotografii `svatba-nevesta-zenich-polibek-kamenna-zed.webp`; homepage default video pouziva Vimeo `1229273025` pro desktop i tablet a Vimeo `1228952734` do 700 px; tabletova varianta (`default_hero_video_url_tablet`) je zamerne prazdna (NULL), takze tablet pada na desktopove video (seed, Demo seed, handler migrace 087 i migrace 100). Priorita je strankove video, homepage default video, strankova foto, site default poster a nakonec site default video.
 
 ## Publish pipeline
 
@@ -741,11 +779,13 @@ Aktuální demo/base seedy vkládají page sharing image ID jako NULL. Schema.or
 
 ## Hero cover a nacitani brand fontu
 
-Golden Bash Diagonal pouziva height-fit Vimeo iframe ze skutecnych metadat getVideoWidth/getVideoHeight: vyska=heroHeight, sirka=heroHeight*(videoWidth/videoHeight), pravý okraj0 bez transformace. Sirsi video presahuje vlevo, uzsi muze nechat vlevo prazdne misto. frontend-runtime.initHeroVideoCover prijima zpravy jen z https://player.vimeo.com a konkretniho contentWindow; ResizeObserver prepocita CSS promenne --hero-video-cover-width/height. Provizorni pomer16:9 je vyznamove oznacen, pri nedostupnych metadatech po15s vznikne console warning a data-video-cover-error. Neni to potvrzeni prehravani. Poster se po vlozeni iframe skryje, aby neprosvital vedle uzsiho videa; vadny iframe zustava viditelny. Mobil<=700, tablet701–1050, desktop>=1051. Gradient30–58% zustava, starsi horizontalni offset je nahrazen presnym pravym zarovnanim.
+Golden Bash Diagonal pouziva height-fit Vimeo iframe ze skutecnych metadat getVideoWidth/getVideoHeight: vyska=heroHeight a sirka=heroHeight*(videoWidth/videoHeight). Na tabletu 701–1050 px a desktopu >=1051 px zustava pravy okraj0 bez transformace; sirsi video presahuje vlevo a uzsi muze nechat vlevo prazdne misto. Mobil do 700 px Vimeo iframe centruje a nededi prave ukotveni. Nativni mobilni video zacina pod 72px pevnou navigaci, zabira celou zbyvajici sirku i vysku hero a zachovava pomer obrazu pres object-fit:cover s object-position:center top; tim navigace nezakryva horni cast zaberu a po stranach se neodkryva pozadi. Poster zustava centrovany. frontend-runtime.initHeroVideoCover prijima zpravy jen z https://player.vimeo.com a konkretniho contentWindow; ResizeObserver prepocita CSS promenne --hero-video-cover-width/height. Provizorni pomer16:9 je vyznamove oznacen, pri nedostupnych metadatech po15s vznikne console warning a data-video-cover-error. Neni to potvrzeni prehravani. Poster se po vlozeni iframe skryje, aby neprosvital vedle uzsiho videa; vadny iframe zustava viditelny. Gradient30–58% zustava, starsi horizontalni offset na vetsich sirach je nahrazen presnym pravym zarovnanim.
 
 Font CSS pouziva swap a same-origin preloady. Kurziva Cormorant Garamond v4.001 je kompletni Regular400, nikoli stary Light outline deklarovany jako400. Novy immutable filename a licence/provenance jsou v public/assets/fonts/README.md; reprodukce scripts/build_cormorant_italic.py vyzaduje presny upstream SHA256. Runtime nema Python/FontTools zavislost. Pozdni swap muze zpusobit layout shift, ktery je treba overovat pri pomale siti.
 
 Burger animace obou Golden Bash motivu plati do1050px a zachovava aria-expanded, Escape/focus, transparentni hover a reduced-motion. Overeni a otevrene brany: QA-BACKLOG-2026-10-16.md; konecna QA videa vyzaduje skutecne prehravani, metadata fixture dokazuje pouze geometrii.
+
+Stranka Sluzby v Golden Bash Diagonal do1050px nepouziva desktopovy deleny vnitrni radek karty. Kazda `.service-card` ma jeden vnitrni sloupec, prvni radek je 210px obrazek pres plnou sirku a druhy radek je prirozene vysoky obsah. `object-fit:cover` zachovava pomer media, zatimco textovy blok ma vlastni odsazeni pro absolutne umistene cislo. Popis pouziva 12px, fakta 11.5px a odkaz minimalne 36px vysky. Vnejsi grid zustava na tabletu 701–1050px dvousloupcovy a do700px prechazi na jeden sloupec. Sdileny proces se pouze na telefonu do700px a route s `.gb-services-hero` zvetsi na minimalne122px a jeho popisy na12px; ostatni stranky se sdilenou sekci zustavaji beze zmeny. Desktop od1051px zachovava puvodni vodorovne karty.
 # Galerie v editaci stránky Naše práce
 
 Editace stránky s URL cestou `nase-prace` obsahuje záložku „Foto a video galerie“.

@@ -1,6 +1,20 @@
-<?php /** @var list<array{href:string,title:string,thumbUrl:string,hasVideo:bool,photos:list<array{url:string,alt:string}>,videoEmbedUrl:string}> $tiles - see App\ViewModels\HomepageData::portfolioTile() */ ?>
+<?php
+/** @var list<array{href:string,title:string,thumbUrl:string,hasVideo:bool,photos:list<array{url:string,fullUrl:string,alt:string}>,videoEmbedUrl:string}> $tiles - see App\ViewModels\HomepageData::portfolioTile() */
+$galleryJson = static function (array $photos): string {
+    $items = array_map(static fn (array $photo): array => [
+        'src' => (string)($photo['fullUrl'] ?? $photo['url'] ?? ''),
+        'thumb' => (string)($photo['url'] ?? ''),
+        'alt' => (string)($photo['alt'] ?? ''),
+    ], $photos);
+
+    return json_encode(
+        $items,
+        JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_THROW_ON_ERROR
+    );
+};
+?>
 <div class="pt-grid"><?php foreach ($tiles as $tile): ?><a class="pt-tile" href="<?= $this->e($tile['href']) ?>" data-content-type="<?= $tile['hasVideo'] ? 'video' : 'photo' ?>"<?= $tile['videoEmbedUrl'] !== '' ? ' data-video-embed="' . $this->e($tile['videoEmbedUrl']) . '"' : '' ?> data-gallery-date="<?= $this->e($tile['date']) ?>" data-gallery-description="<?= $this->e($tile['description']) ?>" data-gallery-author="<?= $this->e($tile['author']) ?>">
   <div class="pt-caption"><?= $this->e($tile['title']) ?></div>
   <div class="pt-thumb"><?= $tile['thumbUrl'] !== '' ? '<img src="' . $this->e($tile['thumbUrl']) . '" alt="' . $this->e($tile['title']) . '" loading="lazy" data-responsive-profile="homepage-card">' : '<div class="pt-thumb-placeholder">&#9654;</div>' ?><?= $tile['hasVideo'] ? '<span class="pt-play">&#9654;</span>' : '' ?></div>
-  <div class="pt-photos"><?php foreach ($tile['photos'] as $photo): ?><img src="<?= $this->e($photo['url']) ?>" data-full="<?= $this->e($photo['fullUrl']) ?>" alt="<?= $this->e($photo['alt']) ?>" loading="lazy"><?php endforeach; ?></div>
+  <script type="application/json" class="pt-photos-data"><?= $galleryJson($tile['photos']) ?></script>
 </a><?php endforeach; ?></div><?php ?>

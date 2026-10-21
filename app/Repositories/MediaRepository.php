@@ -21,14 +21,17 @@ class MediaRepository
         return $stmt->fetchAll();
     }
 
-    public function pickerPage(int $siteId, string $query = '', int $page = 1, int $perPage = 24, bool $imagesOnly = false): array
+    public function pickerPage(int $siteId, string $query = '', int $page = 1, int $perPage = 24, bool $imagesOnly = false, string $kind = 'all'): array
     {
         $page = max(1, $page);
         $perPage = max(1, min(60, $perPage));
         $where = ['m.site_id = ?'];
         $params = [$siteId];
-        if ($imagesOnly) {
+        if ($imagesOnly || $kind === 'image') {
             $where[] = "m.mime_type LIKE 'image/%'";
+        } elseif ($kind === 'video') {
+            // Only what the hero <video> can play; avi/mkv stay in the library but are not offered here.
+            $where[] = "m.mime_type IN ('video/mp4', 'video/webm', 'video/quicktime')";
         }
         if ($query !== '') {
             $where[] = '(m.original_filename LIKE ? OR m.alt_text LIKE ? OR m.title LIKE ?)';
@@ -106,6 +109,12 @@ class MediaRepository
     {
         $stmt = $this->db->prepare('UPDATE media SET alt_text = ?, title = ? WHERE id = ?');
         $stmt->execute([$data['alt_text'] ?? null, $data['title'] ?? null, $id]);
+    }
+
+    public function updateDimensions(int $id, int $width, int $height): void
+    {
+        $stmt = $this->db->prepare('UPDATE media SET width = ?, height = ? WHERE id = ?');
+        $stmt->execute([$width > 0 ? $width : null, $height > 0 ? $height : null, $id]);
     }
 
     public function delete(int $id): void

@@ -122,6 +122,9 @@ API_KEY=
 # Pro vlastni mereni navstevnosti povinne (jinak API_KEY; bez obou se nic neuklada)
 VISIT_ANALYTICS_SALT=
 
+# Volitelne; prazdne znamena {APP_URL}/api/health
+HEALTH_CHECK_URL=http://localhost:8000/api/health
+
 DB_DRIVER=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
@@ -139,6 +142,7 @@ Nejdulesitejsi promenne:
 | `MIGRATE_TOKEN` | Token pro `migrate-util.php` |
 | `API_KEY` | Klic pro `/api/v1/*` endpointy |
 | `VISIT_ANALYTICS_SALT` | HMAC klic pro denni anonymni otisk vlastniho mereni navstevnosti (`/api/visit`). Pro mereni povinny: prazdny = pouzije se `API_KEY`; bez obou se nic neuklada (beacon vraci 204, v logu agregovane `missing_secret`). Verejny vychozi klic zamerne neexistuje. Zmena klice jen prerusi navaznost otisku v aktualnim dni. |
+| `HEALTH_CHECK_URL` | Volitelny plny cil cron monitoru. Prazdne = `{APP_URL}/api/health`; pro staging nastav staging domenu, pro produkci produkcni. |
 | `GTM_CLIENT_ID`, `GTM_CLIENT_SECRET`, `GTM_ENCRYPTION_KEY` | OAuth a sifrovani GTM adminu |
 | `GTM_REDIRECT_URI`, `GTM_AUTH_URI`, `GTM_TOKEN_URI`, `GTM_API_BASE_URI` | Volitelne GTM/OAuth override |
 | `FTP_HOST`, `FTP_USER`, `FTP_PASS` | Nasazeni pres FTP/FTPS |
@@ -146,6 +150,20 @@ Nejdulesitejsi promenne:
 GA4, Clarity a Meta Pixel ID se bezne nastavuji v admin sekci `Nastaveni` a ukladaji se do tabulky `sites`, ne do `.env`.
 
 Detail GTM setupu je v `GTM_ADMIN.md`.
+
+## Health API a desetiminutovy monitoring
+
+`GET /api/health` a `HEAD /api/health` vraci maly JSON bez session a bez zapocteni navstevy. Zdrava aplikace s dostupnou databazi vraci HTTP200 a `{"status":"ok",...}`; chyba DB vraci HTTP503 a `status=error`. Endpoint neni v sitemap ani robots a posila `X-Robots-Tag: noindex, nofollow, noarchive`.
+
+Po migraci `110_create_health_checks.sql` spoustej na serveru kazdych 10 minut:
+
+```cron
+*/10 * * * * /usr/bin/php /ABSOLUTNI/CESTA/K/WEBU/bin/health-check.php
+```
+
+V Active24 cronu vyber PHP CLI dostupne pro danou verzi, nastav interval 10 minut a jako prikaz pouzij absolutni cestu k `bin/health-check.php`. Runner vypise jeden stavovy radek a vraci exit0 pro healthy, exit1 pro zachyceny problem a exit2 pro konfiguracni/persistencni chybu. Pokud DB pri vypadku neprijima zapisy, zaznam zustane v `storage/logs/health-check-pending.jsonl` a po obnove se automaticky importuje. Soubor nema byt verejne dostupny ani mazany deployem.
+
+V administraci otevri **Analytika** (`/admin/analytics`). Zdravi a navstevnost pouzivaji spolecny vyber 7/30/90/365 dni, ale nacitaji se nezavisle. Bez behu dele nez 20 minut se ukaze „Monitoring neběží“; den bez dat je sedy a neni zapocten jako uspesny.
 
 ## Prvotni spusteni
 

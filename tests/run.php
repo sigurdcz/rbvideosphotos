@@ -424,6 +424,9 @@ register_content_ordering_tests($test, $assert);
 require __DIR__ . '/ResponsiveHeroVideoTest.php';
 register_responsive_hero_video_tests($test, $assert);
 
+require __DIR__ . '/HeroVideoMediaTest.php';
+register_hero_video_media_tests($test, $assert);
+
 require __DIR__ . '/LightOnlyColorSchemeTest.php';
 register_light_only_color_scheme_tests($test, $assert);
 
@@ -487,6 +490,9 @@ register_smtp_mailer_tests($test, $assert);
 
 require __DIR__ . '/VisitAnalyticsTest.php';
 register_visit_analytics_tests($test, $assert);
+
+require __DIR__ . '/HealthCheckTest.php';
+register_health_check_tests($test, $assert);
 
 $failures = 0;
 foreach ($tests as [$name, $callback]) {

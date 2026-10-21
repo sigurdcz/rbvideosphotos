@@ -596,7 +596,33 @@
     var contactGrid = contact.querySelector('.hp-contact-grid');
     if (contactIntro && contactVisualSource) {
       contactIntro.classList.add('gb-contact-visual');
-      contactIntro.style.setProperty('--gb-contact-image', 'url("' + contactVisualSource.getAttribute('src') + '")');
+      // The hidden source <img> carries the ORIGINAL file in src (a PNG of 100+ kB) and the light
+      // WebP variants in srcset. Use the largest variant up to 900 px, and set the background only
+      // when the section is about to come into view: it sits at the bottom of the page, and
+      // loading it at once competed with the hero for bandwidth.
+      var pickContactImage = function (img) {
+        var best = null;
+        (img.getAttribute('srcset') || '').split(',').forEach(function (part) {
+          var bits = part.trim().split(/\s+/);
+          var width = parseInt(bits[1], 10);
+          if (bits[0] && width && width <= 900 && (!best || width > best.width)) best = { url: bits[0], width: width };
+        });
+        return best ? best.url : img.getAttribute('src');
+      };
+      var applyContactImage = function () {
+        contactIntro.style.setProperty('--gb-contact-image', 'url("' + pickContactImage(contactVisualSource) + '")');
+      };
+      if ('IntersectionObserver' in window) {
+        var contactObserver = new IntersectionObserver(function (entries) {
+          if (entries.some(function (entry) { return entry.isIntersecting; })) {
+            contactObserver.disconnect();
+            applyContactImage();
+          }
+        }, { rootMargin: '600px 0px' });
+        contactObserver.observe(contactIntro);
+      } else {
+        applyContactImage();
+      }
     }
     if (contactGrid) {
       contactGrid.classList.add('gb-contact-grid');
@@ -849,25 +875,51 @@
         return;
       }
       lightbox.classList.remove('is-video');
-      var images = Array.prototype.slice.call(card.querySelectorAll('.pt-photos img'));
-      if (!images.length) {
-        var cover = card.querySelector('.pt-thumb img, .bl-thumb img');
-        if (cover) images.push(cover);
+      var dataNode = card.querySelector('.pt-photos-data');
+      if (dataNode) {
+        try {
+          var parsedItems = JSON.parse(dataNode.textContent || '[]');
+          if (!Array.isArray(parsedItems)) throw new Error('Gallery payload is not an array.');
+          galleryItems = parsedItems.map(function (item) {
+            return {
+              src: item && typeof item.src === 'string' ? item.src : '',
+              thumb: item && typeof item.thumb === 'string' ? item.thumb : '',
+              alt: item && typeof item.alt === 'string' ? item.alt : ''
+            };
+          });
+        } catch (error) {
+          card.dataset.galleryError = 'invalid-data';
+          console.error('Portfolio gallery data is invalid.', error);
+          return;
+        }
+      } else {
+        // Backward compatibility for already-published static pages. New output uses
+        // compact JSON so hundreds of hidden <img> nodes do not burden initial render.
+        var images = Array.prototype.slice.call(card.querySelectorAll('.pt-photos img'));
+        galleryItems = images.map(function (image) {
+          return {
+            src: image.getAttribute('data-full') || image.currentSrc || image.getAttribute('src'),
+            thumb: image.currentSrc || image.getAttribute('src'),
+            alt: image.getAttribute('alt') || ''
+          };
+        });
       }
-      galleryItems = images.map(function (image) {
-        return {
-          src: image.getAttribute('data-full') || image.currentSrc || image.getAttribute('src'),
-          thumb: image.currentSrc || image.getAttribute('src'),
-          alt: image.getAttribute('alt') || ''
-        };
-      }).filter(function (item, index, items) {
+      if (!galleryItems.length) {
+        var cover = card.querySelector('.pt-thumb img, .bl-thumb img');
+        if (cover) galleryItems.push({
+          src: cover.currentSrc || cover.getAttribute('src'),
+          thumb: cover.currentSrc || cover.getAttribute('src'),
+          alt: cover.getAttribute('alt') || ''
+        });
+      }
+      galleryItems = galleryItems.filter(function (item, index, items) {
         return item.src && items.findIndex(function (candidate) { return candidate.src === item.src; }) === index;
       });
       if (!galleryItems.length) return;
       var clickedImage = card.querySelector('.pt-thumb img, .bl-thumb img');
       var clickedImageSrc = clickedImage ? (clickedImage.currentSrc || clickedImage.getAttribute('src')) : '';
       var initialGalleryIndex = galleryItems.findIndex(function (item) {
-        return item.src === clickedImageSrc;
+        return item.src === clickedImageSrc || item.thumb === clickedImageSrc;
       });
       if (initialGalleryIndex < 0) initialGalleryIndex = 0;
 

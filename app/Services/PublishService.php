@@ -740,31 +740,38 @@ HTML;
 
         $page = $this->pages->findById($pageId);
         $isHomepage = trim((string)($page['url_path'] ?? '')) === '';
-        // Priorita: 1) page hero_video, 2) homepage site default video, 3) page hero_bg foto, 4) site default poster foto, 5) site default video.
-        $videoBlock = $this->blocks->findByKey($pageId, 'hero_video');
-        $pageVideo = $videoBlock ? $this->normalizePublicAssetUrl((string)($videoBlock['content'] ?? '')) : '';
+        // Priorita: 1) vlastni video stranky, 2) homepage: vychozi video webu z Nastaveni,
+        // 3) page hero_bg foto, 4) site default poster foto, 5) vychozi video webu.
+        // Uvnitr jedne sady (stranka / web) ma kazda sirka okna vlastni video a nic se nededi.
         $blockUrl = function (string $key) use ($pageId): string {
             $block = $this->blocks->findByKey($pageId, $key);
 
             return $block ? $this->normalizePublicAssetUrl((string)($block['content'] ?? '')) : '';
         };
-        $defaultVideo = $this->normalizePublicAssetUrl((string)($site['default_hero_video_url'] ?? ''));
-        // Which trio wins is decided in one shared place, so live and publish cannot disagree.
-        $heroUrls = HeroMediaRenderer::pickHeroVideoUrls(
-            $pageVideo,
+        $pageUrls = HeroMediaRenderer::pickHeroVideoUrls(
+            $blockUrl('hero_video'),
             $blockUrl('hero_video_tablet'),
-            $blockUrl('hero_video_mobile'),
-            $defaultVideo,
+            $blockUrl('hero_video_mobile')
+        );
+        $siteUrls = HeroMediaRenderer::pickHeroVideoUrls(
+            $this->normalizePublicAssetUrl((string)($site['default_hero_video_url'] ?? '')),
             $this->normalizePublicAssetUrl((string)($site['default_hero_video_url_tablet'] ?? '')),
             $this->normalizePublicAssetUrl((string)($site['default_hero_video_url_mobile'] ?? ''))
         );
+        $siteId = (int)($site['id'] ?? 0);
+        $buildHero = fn(array $urls): string => $this->buildHeroVideoHtml(
+            HeroVideoMediaLookup::versionedUrl($urls['desktop']), $posterUrl, $autoplay,
+            HeroVideoMediaLookup::versionedUrl($urls['tablet']), HeroVideoMediaLookup::versionedUrl($urls['mobile']),
+            HeroVideoMediaLookup::ratios($siteId, $urls),
+            HeroVideoMediaLookup::lightPoster($siteId, $posterUrl)
+        );
 
         $videoHtml = '';
-        if ($pageVideo !== '') {
-            $videoHtml = $this->buildHeroVideoHtml($pageVideo, $posterUrl, $autoplay, $heroUrls['tablet'], $heroUrls['mobile']);
+        if (HeroMediaRenderer::hasHeroVideo($pageUrls)) {
+            $videoHtml = $buildHero($pageUrls);
         } else {
-            if ($isHomepage && $defaultVideo !== '') {
-                $videoHtml = $this->buildHeroVideoHtml($defaultVideo, $posterUrl, $autoplay, $heroUrls['tablet'], $heroUrls['mobile']);
+            if ($isHomepage && HeroMediaRenderer::hasHeroVideo($siteUrls)) {
+                $videoHtml = $buildHero($siteUrls);
             }
 
             $photoBlock = $this->blocks->findByKey($pageId, 'hero_bg');
@@ -777,8 +784,8 @@ HTML;
                 $videoHtml = $this->buildHeroImageHtml($posterUrl);
             }
 
-            if ($videoHtml === '' && $defaultVideo !== '') {
-                $videoHtml = $this->buildHeroVideoHtml($defaultVideo, $posterUrl, $autoplay, $heroUrls['tablet'], $heroUrls['mobile']);
+            if ($videoHtml === '' && HeroMediaRenderer::hasHeroVideo($siteUrls)) {
+                $videoHtml = $buildHero($siteUrls);
             }
         }
 
@@ -809,9 +816,9 @@ HTML;
         return \App\Services\Render\HeroMediaRenderer::ensureHeroVideoStyle($html);
     }
 
-    private function buildHeroVideoHtml(string $videoUrl, string $posterUrl = '', bool $autoplay = false, string $tabletUrl = '', string $mobileUrl = ''): string
+    private function buildHeroVideoHtml(string $videoUrl, string $posterUrl = '', bool $autoplay = false, string $tabletUrl = '', string $mobileUrl = '', array $ratios = [], string $videoPosterUrl = ''): string
     {
-        return \App\Services\Render\HeroMediaRenderer::buildHeroVideoHtml($videoUrl, $posterUrl, $autoplay, $tabletUrl, $mobileUrl);
+        return \App\Services\Render\HeroMediaRenderer::buildHeroVideoHtml($videoUrl, $posterUrl, $autoplay, $tabletUrl, $mobileUrl, $ratios, $videoPosterUrl);
     }
 
     private function buildHeroImageHtml(string $imageUrl): string

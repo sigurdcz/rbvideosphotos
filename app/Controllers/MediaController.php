@@ -16,9 +16,11 @@ class MediaController extends Controller
         $site = (new SiteRepository())->findFirst();
         if (!$site) $this->json(['error' => 'Web nenalezen'], 404);
         $page = max(1, (int)($_GET['page'] ?? 1));
+        $kind = (string)($_GET['kind'] ?? 'all');
+        if (!in_array($kind, ['all', 'image', 'video'], true)) $kind = 'all';
         $result = (new MediaRepository())->pickerPage(
             (int)$site['id'], trim((string)($_GET['q'] ?? '')), $page, 24,
-            ($_GET['images'] ?? '') === '1'
+            ($_GET['images'] ?? '') === '1', $kind
         );
         $publicUrl = static function(string $path): string {
             $path = str_replace('\\', '/', trim($path));
@@ -27,12 +29,22 @@ class MediaController extends Controller
             if (str_starts_with($path, 'storage/media/')) return '/media/' . ltrim(substr($path, 14), '/');
             return '/' . ltrim($path, '/');
         };
-        $items = array_map(static fn(array $m): array => [
-            'id' => (int)$m['id'], 'name' => (string)$m['original_filename'],
-            'url' => $publicUrl((string)$m['storage_path']),
-            'thumb' => $publicUrl((string)($m['thumb_path'] ?: $m['storage_path'])),
-            'mime' => (string)$m['mime_type'], 'alt' => (string)($m['alt_text'] ?? ''),
-        ], $result['items']);
+        $base = dirname(__DIR__, 2) . '/';
+        $items = array_map(static function (array $m) use ($publicUrl, $base): array {
+            $isVideo = str_starts_with((string)$m['mime_type'], 'video/');
+            $item = [
+                'id' => (int)$m['id'], 'name' => (string)$m['original_filename'],
+                'url' => $publicUrl((string)$m['storage_path']),
+                // A video without a captured thumbnail gets no image at all; the picker draws a placeholder.
+                'thumb' => $isVideo && !$m['thumb_path'] ? '' : $publicUrl((string)($m['thumb_path'] ?: $m['storage_path'])),
+                'mime' => (string)$m['mime_type'], 'alt' => (string)($m['alt_text'] ?? ''),
+            ];
+            if ($isVideo) {
+                $bytes = (int)@filesize($base . ltrim((string)$m['storage_path'], '/'));
+                $item['video'] = \App\Services\VideoMediaInfo::describe((int)$m['width'], (int)$m['height'], $bytes);
+            }
+            return $item;
+        }, $result['items']);
         $this->json(['items' => $items, 'total' => $result['total'], 'page' => $page,
             'pages' => max(1, (int)ceil($result['total'] / $result['per_page']))]);
     }
@@ -85,7 +97,7 @@ class MediaController extends Controller
         $ingest  = new MediaIngestionService();
         $repo    = new MediaRepository();
 
-        foreach ($files as $file) {
+        foreach ($files as $index => $file) {
             if ($file['error'] === UPLOAD_ERR_INI_SIZE || $file['error'] === UPLOAD_ERR_FORM_SIZE) {
                 $results[] = ['error' => 'Soubor je příliš velký (PHP limit): ' . $file['name']];
                 continue;
@@ -130,6 +142,24 @@ class MediaController extends Controller
             }
 
             $mediaId = (int)$stored['media_id'];
+            $videoInfo = null;
+            if ($isVideo) {
+                // The browser measured the video and captured a frame (no ffmpeg on the server);
+                // the values are untrusted and sanitised in the service.
+                $meta = json_decode((string)($_POST['video_meta_' . $index] ?? ''), true);
+                $thumbFile = $_FILES['video_thumb_' . $index] ?? null;
+                $thumbTmp = is_array($thumbFile) && ($thumbFile['error'] ?? 1) === UPLOAD_ERR_OK
+                    && is_uploaded_file((string)$thumbFile['tmp_name'])
+                    ? (string)$thumbFile['tmp_name']
+                    : null;
+                $details = $ingest->attachVideoDetails($mediaId, (string)$stored['storage_path'], is_array($meta) ? $meta : [], $thumbTmp);
+                $videoInfo = \App\Services\VideoMediaInfo::describe(
+                    $details['width'],
+                    $details['height'],
+                    (int)@filesize(dirname(__DIR__, 2) . '/' . ltrim((string)$stored['storage_path'], '/'))
+                );
+                $videoInfo['thumb'] = $details['thumb'];
+            }
             $storedMedia = $repo->findByIdWithThumb($mediaId);
             $r = [
                 'success' => true,
@@ -143,6 +173,9 @@ class MediaController extends Controller
                 'alt_text' => $altText,
                 'title' => $title,
             ];
+            if ($videoInfo !== null) {
+                $r['video'] = $videoInfo;
+            }
             $results[] = $r;
         }
 

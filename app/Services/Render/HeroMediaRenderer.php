@@ -21,75 +21,143 @@ final class HeroMediaRenderer
         ]);
     }
 
-    public static function buildHeroVideoHtml(string $videoUrl, string $posterUrl = '', bool $autoplay = false, string $tabletUrl = '', string $mobileUrl = ''): string
+    public static function buildHeroVideoHtml(string $videoUrl, string $posterUrl = '', bool $autoplay = false, string $tabletUrl = '', string $mobileUrl = '', array $ratios = [], string $videoPosterUrl = ''): string
     {
         return self::buildResponsiveHeroVideoHtml(
             ['desktop' => $videoUrl, 'tablet' => $tabletUrl, 'mobile' => $mobileUrl],
             $posterUrl,
-            $autoplay
+            $autoplay,
+            $ratios,
+            $videoPosterUrl
         );
     }
 
     /**
-     * Hero video with optional narrower-screen variants. The desktop URL is the one that
-     * always renders and stays the fallback; a variant is emitted only when it resolves to
-     * the same kind of source as the desktop one, so a Vimeo desktop video can never end up
-     * with an .mp4 in the same attribute set. With both variants empty the markup is byte
-     * for byte what it was before they existed.
+     * Hero video with an independent source per screen width. A width whose field is empty
+     * has no video at all: nothing is inherited from another width, and the browser shows
+     * only the poster there. Every width keeps its own kind of source, so Vimeo on desktop
+     * and a plain file on mobile work together: such a mixed set renders both players, each
+     * tagged with the widths it serves, and a small stylesheet shows only the one that has a
+     * video at the current width.
+     *
+     * $ratios (width => "W / H") lets the page reserve the video's box before its metadata arrives;
+     * $videoPosterUrl is a lighter poster used only by the plain <video> element.
      *
      * @param array{desktop?:string,tablet?:string,mobile?:string} $urls
+     * @param array<string,string> $ratios
      */
-    public static function buildResponsiveHeroVideoHtml(array $urls, string $posterUrl = '', bool $autoplay = false): string
+    public static function buildResponsiveHeroVideoHtml(array $urls, string $posterUrl = '', bool $autoplay = false, array $ratios = [], string $videoPosterUrl = ''): string
     {
         // Embed URL resolution stays here (logic); markup is app/Views/partials/hero-video.phtml.
-        $desktop = self::resolveHeroVideoSource((string)($urls['desktop'] ?? ''));
-        $variant = static function (string $url) use ($desktop): array {
-            $resolved = self::resolveHeroVideoSource($url);
-            if ($desktop['embed'] !== '') {
-                return ['embed' => $resolved['embed'], 'direct' => ''];
+        $sources = [
+            'desktop' => self::resolveHeroVideoSource((string)($urls['desktop'] ?? '')),
+            'tablet' => self::resolveHeroVideoSource((string)($urls['tablet'] ?? '')),
+            'mobile' => self::resolveHeroVideoSource((string)($urls['mobile'] ?? '')),
+        ];
+        $kinds = [];
+        foreach (['embed', 'direct'] as $kind) {
+            foreach ($sources as $source) {
+                if ($source[$kind] !== '') {
+                    $kinds[] = $kind;
+                    break;
+                }
             }
-            if ($desktop['direct'] !== '') {
-                return ['embed' => '', 'direct' => $resolved['direct']];
-            }
+        }
+        if ($kinds === []) {
+            return '';
+        }
+        $mixed = count($kinds) > 1;
 
-            return ['embed' => '', 'direct' => ''];
-        };
-        $tablet = $variant((string)($urls['tablet'] ?? ''));
-        $mobile = $variant((string)($urls['mobile'] ?? ''));
+        $html = '';
+        foreach ($kinds as $kind) {
+            $pick = static fn(string $width): string => $sources[$width][$kind];
+            $embed = $kind === 'embed';
+            $html .= \App\View\ViewFactory::forTheme(null)->render('partials/hero-video', [
+                'embedUrl' => $embed ? $pick('desktop') : '',
+                'directUrl' => $embed ? '' : $pick('desktop'),
+                'kind' => $kind,
+                'posterUrl' => $posterUrl,
+                'videoPosterUrl' => $videoPosterUrl,
+                'autoplay' => $autoplay,
+                'tabletEmbedUrl' => $embed ? $pick('tablet') : '',
+                'mobileEmbedUrl' => $embed ? $pick('mobile') : '',
+                'tabletDirectUrl' => $embed ? '' : $pick('tablet'),
+                'mobileDirectUrl' => $embed ? '' : $pick('mobile'),
+                'widths' => $mixed
+                    ? array_keys(array_filter($sources, static fn(array $source): bool => $source[$kind] !== ''))
+                    : [],
+            ]);
+        }
 
-        return \App\View\ViewFactory::forTheme(null)->render('partials/hero-video', [
-            'embedUrl' => $desktop['embed'],
-            'directUrl' => $desktop['direct'],
-            'posterUrl' => $posterUrl,
-            'autoplay' => $autoplay,
-            'tabletEmbedUrl' => $tablet['embed'],
-            'mobileEmbedUrl' => $mobile['embed'],
-            'tabletDirectUrl' => $tablet['direct'],
-            'mobileDirectUrl' => $mobile['direct'],
-        ]);
+        $style = ($mixed ? self::mixedWidthsStyle() : '') . (in_array('direct', $kinds, true) ? self::ratioStyle($sources, $ratios) : '');
+
+        return $style . $html;
     }
 
     /**
-     * Which trio of URLs the hero video uses: the page's own videos when the page has a
-     * desktop one, otherwise the site defaults. Without this rule a page with its own
-     * desktop video could inherit a mobile video belonging to a different one. Both the
-     * live and the published render call this, so the two cannot drift apart.
+     * Reserves the plain video's box per width from the stored dimensions. A plain "W / H" (not
+     * "auto W / H", which prefers the poster's ratio until the metadata arrives) keeps the box
+     * the same before and after the video's own metadata is known, so nothing moves.
+     *
+     * @param array<string,array{embed:string,direct:string}> $sources
+     * @param array<string,string> $ratios
+     */
+    private static function ratioStyle(array $sources, array $ratios): string
+    {
+        $queries = [
+            'mobile' => '(max-width:700px)',
+            'tablet' => '(min-width:700.02px) and (max-width:1050px)',
+            'desktop' => '(min-width:1050.02px)',
+        ];
+        $rules = '';
+        foreach ($queries as $width => $query) {
+            $ratio = (string)($ratios[$width] ?? '');
+            if (($sources[$width]['direct'] ?? '') === '' || !preg_match('~^\d{1,5} / \d{1,5}$~', $ratio)) {
+                continue;
+            }
+            $rules .= '@media ' . $query . '{video.theme-hero-video--native{aspect-ratio:' . $ratio . '}}';
+        }
+
+        return $rules === '' ? '' : '<style data-hero-video-ratio>' . $rules . '</style>';
+    }
+
+    /** Shows only the player that has a video at the current width (mixed Vimeo/file sets). */
+    private static function mixedWidthsStyle(): string
+    {
+        return '<style data-hero-video-widths>'
+            . '@media (max-width:700px){.theme-hero-video[data-hero-widths]:not([data-hero-widths~="mobile"]){display:none}}'
+            . '@media (min-width:700.02px) and (max-width:1050px){.theme-hero-video[data-hero-widths]:not([data-hero-widths~="tablet"]){display:none}}'
+            . '@media (min-width:1050.02px){.theme-hero-video[data-hero-widths]:not([data-hero-widths~="desktop"]){display:none}}'
+            . '</style>';
+    }
+
+    /**
+     * Normalises one set of three hero video fields (the page's own, or the site default
+     * from Settings). Inside a set there is no fallback between widths: an empty field
+     * means no video at that width. Which set wins (page first, then the site default) is
+     * decided by the callers, live and published alike, in the same order.
      *
      * @return array{desktop:string,tablet:string,mobile:string}
      */
-    public static function pickHeroVideoUrls(
-        string $pageDesktop,
-        string $pageTablet,
-        string $pageMobile,
-        string $siteDesktop,
-        string $siteTablet,
-        string $siteMobile
-    ): array {
-        if (trim($pageDesktop) !== '') {
-            return ['desktop' => $pageDesktop, 'tablet' => $pageTablet, 'mobile' => $pageMobile];
+    public static function pickHeroVideoUrls(string $pageDesktop, string $pageTablet, string $pageMobile): array
+    {
+        return [
+            'desktop' => trim($pageDesktop),
+            'tablet' => trim($pageTablet),
+            'mobile' => trim($pageMobile),
+        ];
+    }
+
+    public static function hasHeroVideo(array $urls): bool
+    {
+        foreach (['desktop', 'tablet', 'mobile'] as $width) {
+            $source = self::resolveHeroVideoSource((string)($urls[$width] ?? ''));
+            if ($source['embed'] !== '' || $source['direct'] !== '') {
+                return true;
+            }
         }
 
-        return ['desktop' => $siteDesktop, 'tablet' => $siteTablet, 'mobile' => $siteMobile];
+        return false;
     }
 
     /** @return array{embed:string,direct:string} */
@@ -119,7 +187,7 @@ final class HeroMediaRenderer
         $youtubeId = $m[1];
     } elseif (preg_match('~youtube\.com/(?:embed|shorts)/([A-Za-z0-9_-]{6,})~i', $url, $m)) {
         $youtubeId = $m[1];
-    } elseif (preg_match('~[?&]v=([A-Za-z0-9_-]{6,})~i', $url, $m)) {
+    } elseif (preg_match('~^https?://(?:[a-z0-9-]+\.)*youtube(?:-nocookie)?\.com/[^#]*[?&]v=([A-Za-z0-9_-]{6,})~i', $url, $m)) {
         $youtubeId = $m[1];
     }
 

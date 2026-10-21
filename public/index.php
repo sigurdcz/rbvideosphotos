@@ -36,6 +36,7 @@ use App\Services\SecurityTxtHttpResponder;
 use App\Services\SecurityTxtService;
 use App\Services\ThemeTemplateRegistry;
 use App\Services\VisitAnalyticsService;
+use App\Services\HealthCheckHttpResponder;
 use App\Security\RequestThrottle;
 use App\Support\FrontendAssetManager;
 use App\View\ViewFactory;
@@ -85,6 +86,13 @@ function tryServeSecurityTxt(string $uri): bool
 }
 
 $earlyUri = parse_url((string) ($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH);
+
+// Public machine-readable liveness/readiness endpoint. It runs before sessions,
+// visit analytics and page routing, so monitoring never creates a cookie or a
+// site_visits row and the response cannot be mistaken for a CMS page.
+if ((new HealthCheckHttpResponder())->serve((string) $earlyUri)) {
+    exit;
+}
 $earlyUri = rtrim((string) $earlyUri, '/') ?: '/';
 if (tryServeSecurityTxt($earlyUri)) {
     exit;
@@ -114,6 +122,10 @@ function tryServePublicAssetWithoutSession(string $uri): bool
         'svg' => 'image/svg+xml',
         'woff' => 'font/woff',
         'woff2' => 'font/woff2',
+        'mp4', 'm4v' => 'video/mp4',
+        'webm' => 'video/webm',
+        'mov' => 'video/quicktime',
+        'ogv' => 'video/ogg',
         default => 'application/octet-stream',
     };
     $mtime = (int)(filemtime($file) ?: 0);
@@ -142,8 +154,66 @@ function tryServePublicAssetWithoutSession(string $uri): bool
         return true;
     }
 
-    header('Content-Length: ' . $size);
-    if (strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'HEAD') readfile($file);
+    // Byte ranges: browsers fetch video in pieces, and iOS Safari refuses to play a video
+    // from a server that cannot answer a Range request. Without this the whole file was
+    // sent every time, nothing could start before it had fully arrived, and the page
+    // 'load' event waited for it.
+    header('Accept-Ranges: bytes');
+    $start = 0;
+    $end = max(0, $size - 1);
+    $partial = false;
+    $rangeHeader = trim((string)($_SERVER['HTTP_RANGE'] ?? ''));
+    if ($rangeHeader !== '' && $size > 0 && preg_match('~^bytes=(\d*)-(\d*)$~', $rangeHeader, $rangeMatch)
+        && ($rangeMatch[1] !== '' || $rangeMatch[2] !== '')) {
+        // If-Range carries the validator the client got earlier: our ETag, or (Safari does this
+        // when a proxy turned the ETag weak) the Last-Modified date. Answering a date we do not
+        // recognise with the whole file would break video playback and seeking on iOS.
+        $ifRange = trim((string)($_SERVER['HTTP_IF_RANGE'] ?? ''));
+        $lastModifiedHttp = $mtime > 0 ? gmdate('D, d M Y H:i:s', $mtime) . ' GMT' : '';
+        if ($ifRange === '' || $ifRange === $etag || ($lastModifiedHttp !== '' && $ifRange === $lastModifiedHttp)) {
+            if ($rangeMatch[1] === '') {
+                // "bytes=-N": the last N bytes.
+                $start = max(0, $size - (int)$rangeMatch[2]);
+            } else {
+                $start = (int)$rangeMatch[1];
+                if ($rangeMatch[2] !== '') $end = min($end, (int)$rangeMatch[2]);
+            }
+            if ($start > $end || $start >= $size || ($rangeMatch[1] === '' && (int)$rangeMatch[2] <= 0)) {
+                http_response_code(416);
+                header('Content-Range: bytes */' . $size);
+                return true;
+            }
+            $partial = true;
+        }
+    }
+    if ($partial) {
+        http_response_code(206);
+        header('Content-Range: bytes ' . $start . '-' . $end . '/' . $size);
+    }
+    $length = $size > 0 ? $end - $start + 1 : 0;
+    header('Content-Length: ' . $length);
+    if (strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET')) === 'HEAD') return true;
+
+    if (!$partial && $size <= 4 * 1048576) {
+        readfile($file);
+        return true;
+    }
+    // Large or partial: stream in chunks, so a video never sits in memory and a visitor who
+    // leaves stops the transfer.
+    @set_time_limit(0);
+    while (ob_get_level() > 0) @ob_end_clean();
+    $handle = fopen($file, 'rb');
+    if ($handle === false) return true;
+    fseek($handle, $start);
+    $left = $length;
+    while ($left > 0 && !connection_aborted()) {
+        $chunk = fread($handle, (int)min(262144, $left));
+        if ($chunk === false || $chunk === '') break;
+        echo $chunk;
+        $left -= strlen($chunk);
+        flush();
+    }
+    fclose($handle);
     return true;
 }
 
@@ -1454,25 +1524,33 @@ function injectPageHeroVideo(string $html, array $site, ?int $pageId, string $pa
     $autoplay = (int)($site['video_autoplay_enabled'] ?? 1) === 1;
 
     $isHomepage = $pageKey === 'homepage';
-    // Priorita: 1) page hero_video, 2) homepage site default video, 3) page hero_bg foto, 4) site default poster foto, 5) site default video.
+    // Priorita: 1) vlastni video stranky, 2) homepage: vychozi video webu z Nastaveni,
+    // 3) page hero_bg foto, 4) site default poster foto, 5) vychozi video webu.
+    // Uvnitr jedne sady (stranka / web) ma kazda sirka okna vlastni video a nic se nededi.
     $videoHtml = '';
     $pid = (int)($pageId ?? 0);
-    $pageVideo = $pid > 0 ? resolvePageBlockUrl($pid, 'hero_video') : '';
-    $defaultVideo = normalizePublicAssetUrl((string)($site['default_hero_video_url'] ?? ''));
-    // Which trio wins is decided in one shared place, so live and publish cannot disagree.
-    $heroUrls = \App\Services\Render\HeroMediaRenderer::pickHeroVideoUrls(
-        $pageVideo,
+    $heroRenderer = \App\Services\Render\HeroMediaRenderer::class;
+    $pageUrls = $heroRenderer::pickHeroVideoUrls(
+        $pid > 0 ? resolvePageBlockUrl($pid, 'hero_video') : '',
         $pid > 0 ? resolvePageBlockUrl($pid, 'hero_video_tablet') : '',
-        $pid > 0 ? resolvePageBlockUrl($pid, 'hero_video_mobile') : '',
-        $defaultVideo,
+        $pid > 0 ? resolvePageBlockUrl($pid, 'hero_video_mobile') : ''
+    );
+    $siteUrls = $heroRenderer::pickHeroVideoUrls(
+        normalizePublicAssetUrl((string)($site['default_hero_video_url'] ?? '')),
         normalizePublicAssetUrl((string)($site['default_hero_video_url_tablet'] ?? '')),
         normalizePublicAssetUrl((string)($site['default_hero_video_url_mobile'] ?? ''))
     );
-    if ($pageVideo !== '') {
-        $videoHtml = buildHeroVideoHtml($pageVideo, $posterUrl, $autoplay, $heroUrls['tablet'], $heroUrls['mobile']);
+    $buildHero = static fn(array $urls): string => buildHeroVideoHtml(
+        \App\Services\HeroVideoMediaLookup::versionedUrl($urls['desktop']), $posterUrl, $autoplay,
+        \App\Services\HeroVideoMediaLookup::versionedUrl($urls['tablet']), \App\Services\HeroVideoMediaLookup::versionedUrl($urls['mobile']),
+        \App\Services\HeroVideoMediaLookup::ratios($siteId, $urls),
+        \App\Services\HeroVideoMediaLookup::lightPoster($siteId, $posterUrl)
+    );
+    if ($heroRenderer::hasHeroVideo($pageUrls)) {
+        $videoHtml = $buildHero($pageUrls);
     } else {
-        if ($isHomepage && $defaultVideo !== '') {
-            $videoHtml = buildHeroVideoHtml($defaultVideo, $posterUrl, $autoplay, $heroUrls['tablet'], $heroUrls['mobile']);
+        if ($isHomepage && $heroRenderer::hasHeroVideo($siteUrls)) {
+            $videoHtml = $buildHero($siteUrls);
         }
 
         $pagePhoto = $pid > 0 ? resolvePageHeroImageUrl($pid) : '';
@@ -1484,8 +1562,8 @@ function injectPageHeroVideo(string $html, array $site, ?int $pageId, string $pa
             $videoHtml = buildHeroImageHtml($posterUrl);
         }
 
-        if ($videoHtml === '' && $defaultVideo !== '') {
-            $videoHtml = buildHeroVideoHtml($defaultVideo, $posterUrl, $autoplay, $heroUrls['tablet'], $heroUrls['mobile']);
+        if ($videoHtml === '' && $heroRenderer::hasHeroVideo($siteUrls)) {
+            $videoHtml = $buildHero($siteUrls);
         }
     }
 
@@ -1577,9 +1655,9 @@ function resolveSocialImageUrl(MediaRepository $mediaRepo, $imageId, array $site
     );
 }
 
-function buildHeroVideoHtml(string $videoUrl, string $posterUrl = '', bool $autoplay = false, string $tabletUrl = '', string $mobileUrl = ''): string
+function buildHeroVideoHtml(string $videoUrl, string $posterUrl = '', bool $autoplay = false, string $tabletUrl = '', string $mobileUrl = '', array $ratios = [], string $videoPosterUrl = ''): string
 {
-    return \App\Services\Render\HeroMediaRenderer::buildHeroVideoHtml($videoUrl, $posterUrl, $autoplay, $tabletUrl, $mobileUrl);
+    return \App\Services\Render\HeroMediaRenderer::buildHeroVideoHtml($videoUrl, $posterUrl, $autoplay, $tabletUrl, $mobileUrl, $ratios, $videoPosterUrl);
 }
 
 function hasHeroVideoElement(string $html): bool

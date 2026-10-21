@@ -301,15 +301,27 @@ ob_start();
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label>Defaultni hero video URL</label>
-        <div class="help-text" style="margin-bottom:8px">Vlozte odkaz z Vimeo nebo YouTube, napr. <code>https://vimeo.com/123456789</code> nebo <code>https://www.youtube.com/watch?v=...</code>.</div>
-        <input type="url" name="default_hero_video_url" id="default-hero-video-url" value="<?= $h($site['default_hero_video_url'] ?? '') ?>" placeholder="https://vimeo.com/... nebo https://www.youtube.com/watch?v=...">
-        <label style="margin-top:12px">Hero video pro tablet (volitelne)</label>
-        <div class="help-text" style="margin-bottom:8px">Prehraje se pri sirce okna 701-1050 px. Prazdne = na tabletu se prehraje desktopove video (vychozi nastaveni webu).</div>
-        <input type="url" name="default_hero_video_url_tablet" id="default-hero-video-url-tablet" value="<?= $h($site['default_hero_video_url_tablet'] ?? '') ?>" placeholder="https://vimeo.com/... nebo https://www.youtube.com/watch?v=...">
-        <label style="margin-top:12px">Hero video pro mobil (volitelne)</label>
-        <div class="help-text" style="margin-bottom:8px">Prehraje se pri sirce okna do 700 px. Prazdne = pouzije se tabletove, jinak desktopove video.</div>
-        <input type="url" name="default_hero_video_url_mobile" id="default-hero-video-url-mobile" value="<?= $h($site['default_hero_video_url_mobile'] ?? '') ?>" placeholder="https://vimeo.com/... nebo https://www.youtube.com/watch?v=...">
+        <label>Hero video pro desktop (nad 1050 px)</label>
+        <div class="help-text" style="margin-bottom:8px"><strong>Kazda sirka okna ma vlastni video a nic se nededi: prazdne pole = na dane sirce zadne video.</strong> Vlozte odkaz z Vimeo nebo YouTube, nebo kliknete na Media a vyberte video z knihovny. Vimeo: z Vimeo nebo YouTube, napr. <code>https://vimeo.com/123456789</code> nebo <code>https://www.youtube.com/watch?v=...</code>.</div>
+        <div class="hero-video-field" style="display:flex;gap:8px;align-items:center">
+          <input type="text" name="default_hero_video_url" id="default-hero-video-url" value="<?= $h($site['default_hero_video_url'] ?? '') ?>" placeholder="Vimeo / YouTube URL nebo video z Médií (/media/...)" style="flex:1" data-hero-video-input>
+          <button type="button" class="btn btn-sm btn-secondary" data-hero-video-media data-target-id="default-hero-video-url">Média</button>
+          <button type="button" class="btn btn-sm btn-secondary" data-hero-video-clear data-target-id="default-hero-video-url">Odebrat</button>
+        </div>
+        <label style="margin-top:12px">Hero video pro tablet (701-1050 px)</label>
+        <div class="help-text" style="margin-bottom:8px">Prehraje se pri sirce okna 701-1050 px. Hero ho jiz nepouziva.</div>
+        <div class="hero-video-field" style="display:flex;gap:8px;align-items:center">
+          <input type="text" name="default_hero_video_url_tablet" id="default-hero-video-url-tablet" value="<?= $h($site['default_hero_video_url_tablet'] ?? '') ?>" placeholder="Vimeo / YouTube URL nebo video z Médií (/media/...)" style="flex:1" data-hero-video-input>
+          <button type="button" class="btn btn-sm btn-secondary" data-hero-video-media data-target-id="default-hero-video-url-tablet">Média</button>
+          <button type="button" class="btn btn-sm btn-secondary" data-hero-video-clear data-target-id="default-hero-video-url-tablet">Odebrat</button>
+        </div>
+        <label style="margin-top:12px">Hero video pro mobil (do 700 px)</label>
+        <div class="help-text" style="margin-bottom:8px">Hero ho jiz nepouziva.</div>
+        <div class="hero-video-field" style="display:flex;gap:8px;align-items:center">
+          <input type="text" name="default_hero_video_url_mobile" id="default-hero-video-url-mobile" value="<?= $h($site['default_hero_video_url_mobile'] ?? '') ?>" placeholder="Vimeo / YouTube URL nebo video z Médií (/media/...)" style="flex:1" data-hero-video-input>
+          <button type="button" class="btn btn-sm btn-secondary" data-hero-video-media data-target-id="default-hero-video-url-mobile">Média</button>
+          <button type="button" class="btn btn-sm btn-secondary" data-hero-video-clear data-target-id="default-hero-video-url-mobile">Odebrat</button>
+        </div>
       </div>
       <div class="form-group">
         <label>Placeholder / poster obrazek</label>

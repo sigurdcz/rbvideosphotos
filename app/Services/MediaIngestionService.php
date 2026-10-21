@@ -62,6 +62,63 @@ class MediaIngestionService
         return $this->createMediaRecord($siteId, $originalFilename, $storagePath . '/' . $newName, $dest, $altText, $title, $mime, $ext, $isVideo);
     }
 
+    /**
+     * Completes a freshly stored video with what the browser found out about it: its
+     * dimensions and one captured frame as the thumbnail. The browser values are untrusted
+     * (see VideoMediaInfo), and the frame is decoded and re-encoded as WebP, so whatever the
+     * client sent never reaches disk as-is. A failing thumbnail never fails the upload.
+     *
+     * @return array{width:int,height:int,thumb:bool,thumb_error:?string}
+     */
+    public function attachVideoDetails(int $mediaId, string $storagePath, array $meta, ?string $thumbTmpPath): array
+    {
+        $info = VideoMediaInfo::sanitize($meta);
+        $this->media->updateDimensions($mediaId, $info['width'], $info['height']);
+
+        $result = ['width' => $info['width'], 'height' => $info['height'], 'thumb' => false, 'thumb_error' => null];
+        if ($thumbTmpPath === null || $thumbTmpPath === '') {
+            return $result;
+        }
+
+        $dest = '';
+        try {
+            if (!extension_loaded('gd')) {
+                throw new \RuntimeException('PHP rozsireni GD neni nactene.');
+            }
+            $size = (int)@filesize($thumbTmpPath);
+            if ($size <= 0 || $size > 3 * 1024 * 1024) {
+                throw new \RuntimeException('Miniatura ma nepovolenou velikost.');
+            }
+            $image = @getimagesize($thumbTmpPath);
+            $allowed = [IMAGETYPE_JPEG, IMAGETYPE_PNG, IMAGETYPE_WEBP];
+            if (!$image || !in_array($image[2], $allowed, true) || $image[0] < 1 || $image[1] < 1
+                || $image[0] * $image[1] > 16_000_000) {
+                throw new \RuntimeException('Miniatura neni platny obrazek.');
+            }
+
+            $fullDir = dirname(__DIR__, 2) . '/' . dirname($storagePath);
+            $name = pathinfo($storagePath, PATHINFO_FILENAME) . '_th.webp';
+            $dest = $fullDir . '/' . $name;
+            $encoded = $this->variants->createResizedWithinBudget($thumbTmpPath, $dest, 480, 70 * 1024, 82, 47, 5);
+            $this->replaceVariantFile($mediaId, [
+                'format' => 'thumb',
+                'width' => $encoded['width'],
+                'height' => $encoded['height'],
+                'path' => dirname($storagePath) . '/' . $name,
+                'filesize' => $encoded['filesize'],
+            ]);
+            $result['thumb'] = true;
+        } catch (\Throwable $e) {
+            if ($dest !== '' && is_file($dest)) {
+                @unlink($dest);
+            }
+            $result['thumb_error'] = $e->getMessage();
+            Logger::warning('media', 'Video thumbnail was not stored', ['media_id' => $mediaId, 'error' => $e->getMessage()]);
+        }
+
+        return $result;
+    }
+
     public function ingestRemoteImage(
         int $siteId,
         string $url,

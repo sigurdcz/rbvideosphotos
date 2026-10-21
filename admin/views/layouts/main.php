@@ -38,7 +38,7 @@
       <li><a href="/admin/gtm" class="<?= strpos($requestUri, '/admin/gtm') === 0 ? 'active' : '' ?>">Google Tag Manager</a></li>
       <li><a href="/admin/setup" class="<?= strpos($requestUri, '/admin/setup') === 0 ? 'active' : '' ?>">Pocatecni data</a></li>
       <?php if (($_user['role'] ?? '') === 'admin'): ?><li><a href="/admin/messages" class="<?= str_starts_with($requestUri, '/admin/messages') ? 'active' : '' ?>">E-maily a zprávy</a></li><?php endif; ?>
-      <?php if (($_user['role'] ?? '') === 'admin'): ?><li><a href="/admin/analytics" class="<?= str_starts_with($requestUri, '/admin/analytics') ? 'active' : '' ?>">Návštěvnost</a></li><?php endif; ?>
+      <?php if (($_user['role'] ?? '') === 'admin'): ?><li><a href="/admin/analytics" class="<?= str_starts_with($requestUri, '/admin/analytics') ? 'active' : '' ?>">Analytika</a></li><?php endif; ?>
     </ul>
     <div style="padding:12px 16px 0;display:flex;flex-direction:column;gap:8px">
       <a href="<?= htmlspecialchars($homepageEditUrl) ?>" target="_blank" class="btn btn-inline-edit" style="width:100%;justify-content:center;box-sizing:border-box">&#9998; Editovat inline</a>
@@ -82,6 +82,7 @@
       <div><strong id="admin-media-picker-title">Vybrat z médií</strong><div class="form-hint">Knihovna se načítá až po otevření tohoto okna.</div></div>
       <button type="button" class="btn btn-secondary" data-picker-close>Zavřít</button>
     </div>
+    <div class="admin-media-picker__tabs" data-picker-tabs role="tablist" aria-label="Typ média"><button type="button" role="tab" data-picker-tab="all">Vše</button><button type="button" role="tab" data-picker-tab="image">Obrázky</button><button type="button" role="tab" data-picker-tab="video">Video</button></div>
     <form class="admin-media-picker__search" data-picker-search><input type="search" placeholder="Hledat podle názvu nebo ALT textu" aria-label="Hledat média"><button class="btn btn-secondary" type="submit">Hledat</button></form>
     <div class="admin-media-picker__status" data-picker-status></div>
     <div class="admin-media-picker__grid" data-picker-grid></div>

@@ -486,17 +486,16 @@
     var HERO_VIDEO_MOBILE_MAX = 700;
     var HERO_VIDEO_TABLET_MAX = 1050;
 
-    // Only change players when the selected source changes across a device breakpoint.
+    // Each width has its own source and nothing is inherited: an empty attribute means
+    // no video at that width, so the facade stays a poster there.
     function pickEmbedUrl(facade) {
       var desktop = facade.getAttribute('data-embed-url') || '';
       if (!window.matchMedia) return desktop;
       if (window.matchMedia('(max-width: ' + HERO_VIDEO_MOBILE_MAX + 'px)').matches) {
-        return facade.getAttribute('data-embed-url-mobile')
-          || facade.getAttribute('data-embed-url-tablet')
-          || desktop;
+        return facade.getAttribute('data-embed-url-mobile') || '';
       }
       if (window.matchMedia('(max-width: ' + HERO_VIDEO_TABLET_MAX + 'px)').matches) {
-        return facade.getAttribute('data-embed-url-tablet') || desktop;
+        return facade.getAttribute('data-embed-url-tablet') || '';
       }
       return desktop;
     }
@@ -507,6 +506,18 @@
     function play(facade) {
       var embedUrl = pickEmbedUrl(facade);
       var previous = facade.querySelector('iframe');
+      if (embedUrl === '') {
+        // No video at this width: drop a player left over from another width.
+        if (previous) {
+          if (coverCleanup.has(facade)) coverCleanup.get(facade)();
+          previous.remove();
+          facade.classList.remove('is-playing');
+        }
+        var idle = facade.querySelector('.theme-hero-video__play');
+        if (idle) idle.hidden = true;
+        status(facade, '');
+        return;
+      }
       if (previous && previous.getAttribute('src') === embedUrl) return;
       if (!/^https:\/\/(?:www\.youtube(?:-nocookie)?\.com\/embed\/|player\.vimeo\.com\/video\/)/i.test(embedUrl)) {
         status(facade, 'Video nelze načíst: neplatná adresa přehrávače.');
@@ -565,11 +576,18 @@
     facades.forEach(function(facade) {
       var button = facade.querySelector('.theme-hero-video__play');
       if (button) button.addEventListener('click', function(){ play(facade); });
+      if (button && pickEmbedUrl(facade) === '') button.hidden = true;
       scheduleAutoplay(facade);
       if (window.matchMedia) {
         [HERO_VIDEO_MOBILE_MAX, HERO_VIDEO_TABLET_MAX].forEach(function (max) {
           var query = window.matchMedia('(max-width: ' + max + 'px)');
-          var change = function () { if (facade.dataset.videoLoaded === '1') play(facade); };
+          var change = function () {
+            if (facade.dataset.videoLoaded === '1') { play(facade); return; }
+            var idleButton = facade.querySelector('.theme-hero-video__play');
+            var available = pickEmbedUrl(facade) !== '';
+            if (idleButton) idleButton.hidden = !available;
+            if (available && facade.getAttribute('data-hero-video-autoplay') !== null) play(facade);
+          };
           if (query.addEventListener) query.addEventListener('change', change);
           else query.addListener(change);
         });
@@ -577,6 +595,33 @@
     });
   }
 
+  // A plain <video> picks its <source media> once at load; reload it when the width crosses a
+  // breakpoint so "empty = no video" and the per-width source also hold after a resize.
+  function initNativeHeroVideos() {
+    var videos = Array.prototype.slice.call(document.querySelectorAll('video.theme-hero-video--native'));
+    if (!videos.length) return;
+    // With preload=metadata and a file whose bitrate is above the connection's speed, the browser
+    // never decides it has "enough data" and the autoplay attribute never fires. The video is
+    // muted, so starting it by hand is allowed; do it as soon as there is something to show.
+    videos.forEach(function (video) {
+      var kick = function () {
+        if (!video.autoplay || !video.paused || video.readyState < 3 || video.offsetParent === null) return;
+        var started = video.play && video.play();
+        if (started && started.catch) started.catch(function () {});
+      };
+      ['canplay', 'loadeddata'].forEach(function (name) { video.addEventListener(name, kick); });
+      kick();
+    });
+    if (!window.matchMedia) return;
+    [700, 1050].forEach(function (max) {
+      var query = window.matchMedia('(max-width: ' + max + 'px)');
+      var change = function () { videos.forEach(function (video) { if (typeof video.load === 'function') video.load(); }); };
+      if (query.addEventListener) query.addEventListener('change', change);
+      else query.addListener(change);
+    });
+  }
+
+  initNativeHeroVideos();
   initActiveNav();
   initPricingModal();
   initEditorialGoldEnhancements();
