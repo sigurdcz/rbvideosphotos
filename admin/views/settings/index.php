@@ -301,14 +301,14 @@ ob_start();
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label>Defaultni hero video URL</label>
-        <div class="help-text" style="margin-bottom:8px">Vlozte odkaz z Vimeo nebo YouTube, napr. <code>https://vimeo.com/123456789</code> nebo <code>https://www.youtube.com/watch?v=...</code>.</div>
+        <label>Defaultni hero video URL (hero ho jiz nepouziva)</label>
+        <div class="help-text" style="margin-bottom:8px"><strong>Hero video se nyni nastavuje u kazde stranky zvlast (Stranky &rarr; upravit &rarr; Hero video) a nic se z tohoto nastaveni nededi.</strong> Pole zustava jen jako zaloha. Vlozte odkaz z Vimeo nebo YouTube, napr. <code>https://vimeo.com/123456789</code> nebo <code>https://www.youtube.com/watch?v=...</code>.</div>
         <input type="url" name="default_hero_video_url" id="default-hero-video-url" value="<?= $h($site['default_hero_video_url'] ?? '') ?>" placeholder="https://vimeo.com/... nebo https://www.youtube.com/watch?v=...">
         <label style="margin-top:12px">Hero video pro tablet (volitelne)</label>
-        <div class="help-text" style="margin-bottom:8px">Prehraje se pri sirce okna 701-1050 px. Prazdne = na tabletu se prehraje desktopove video (vychozi nastaveni webu).</div>
+        <div class="help-text" style="margin-bottom:8px">Prehraje se pri sirce okna 701-1050 px. Hero ho jiz nepouziva.</div>
         <input type="url" name="default_hero_video_url_tablet" id="default-hero-video-url-tablet" value="<?= $h($site['default_hero_video_url_tablet'] ?? '') ?>" placeholder="https://vimeo.com/... nebo https://www.youtube.com/watch?v=...">
         <label style="margin-top:12px">Hero video pro mobil (volitelne)</label>
-        <div class="help-text" style="margin-bottom:8px">Prehraje se pri sirce okna do 700 px. Prazdne = pouzije se tabletove, jinak desktopove video.</div>
+        <div class="help-text" style="margin-bottom:8px">Hero ho jiz nepouziva.</div>
         <input type="url" name="default_hero_video_url_mobile" id="default-hero-video-url-mobile" value="<?= $h($site['default_hero_video_url_mobile'] ?? '') ?>" placeholder="https://vimeo.com/... nebo https://www.youtube.com/watch?v=...">
       </div>
       <div class="form-group">

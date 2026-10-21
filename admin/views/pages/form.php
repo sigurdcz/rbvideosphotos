@@ -97,7 +97,11 @@ $renderBlockField = function (string $key, string $label, string $type = 'text',
       <?php elseif ($inputType === 'image'): ?>
         <?php $renderMediaField($fieldId, (string)$value); ?>
       <?php elseif ($inputType === 'video'): ?>
-        <input type="url" name="block_content[]" value="<?= $h($value) ?>" placeholder="https://... nebo /media/...">
+        <div class="hero-video-field" style="display:flex;gap:8px;align-items:center">
+          <input type="text" name="block_content[]" id="<?= $h($fieldId) ?>" value="<?= $h($value) ?>" placeholder="Vimeo / YouTube URL nebo video z Médií (/media/...)" style="flex:1" data-hero-video-input>
+          <button type="button" class="btn btn-sm btn-secondary" data-hero-video-media data-target-id="<?= $h($fieldId) ?>">Média</button>
+          <button type="button" class="btn btn-sm btn-secondary" data-hero-video-clear data-target-id="<?= $h($fieldId) ?>">Odebrat</button>
+        </div>
       <?php elseif (in_array($inputType, ['html', 'richtext'], true)): ?>
         <div class="article-editor-wrap" data-richtext-editor>
           <div class="article-editor-toolbar">
@@ -309,11 +313,12 @@ ob_start();
         <div class="card-title">Hero pozadi (video nebo foto)</div>
         <p class="form-hint" style="margin-bottom:12px">
           Prednost ma video. Pokud hero video nechate prazdne a vyplnite hero foto, pouzije se foto.
-          Kdyz necelate prazdne obe, stranka pouzije vychozi hero video ze sekce Nastaveni.
+          Kazda sirka okna ma vlastni video a nic se nededi: prazdne pole = na dane sirce zadne video (ani z jineho zarizeni, ani z Nastaveni).
+          Vsechny vyplnene sirky musi byt stejneho druhu - bud Vimeo/YouTube odkazy, nebo videa z Medii. Pri smesi se prehraje jen druh prvni vyplnene sirky.
         </p>
-        <?php $renderBlockField('hero_video', 'Hero video - Vimeo / YouTube URL', 'link', 'Napr. https://vimeo.com/123456789, https://youtu.be/... nebo https://www.youtube.com/watch?v=...'); ?>
-        <?php $renderBlockField('hero_video_tablet', 'Hero video - tablet (volitelne)', 'link', 'Prehraje se pri sirce okna do 1050 px. Prazdne = pouzije se desktopove video.'); ?>
-        <?php $renderBlockField('hero_video_mobile', 'Hero video - mobil (volitelne)', 'link', 'Prehraje se pri sirce okna do 700 px. Prazdne = pouzije se tabletove, jinak desktopove video.'); ?>
+        <?php $renderBlockField('hero_video', 'Hero video - desktop', 'link', 'Prehraje se pri sirce okna nad 1050 px. Vimeo / YouTube URL, nebo tlacitko Media -> zalozka Video. Prazdne = na desktopu zadne video.'); ?>
+        <?php $renderBlockField('hero_video_tablet', 'Hero video - tablet', 'link', 'Prehraje se pri sirce okna 701-1050 px. Prazdne = na tabletu zadne video (nededi se z desktopu).'); ?>
+        <?php $renderBlockField('hero_video_mobile', 'Hero video - mobil', 'link', 'Prehraje se pri sirce okna do 700 px. Prazdne = na mobilu zadne video (nededi se z tabletu ani desktopu).'); ?>
         <?php $renderBlockField('hero_bg', 'Hero foto', 'image', 'Pouzije se jako pozadi hero sekce, kdyz neni vyplnene hero video.'); ?>
       </div>
       <?php endif; ?>
@@ -934,6 +939,28 @@ ob_start();
     });
     document.addEventListener('keydown', event => {
       if (event.key === 'Escape' && modal.classList.contains('is-open')) close();
+    });
+  })();
+  </script>
+  <script>
+  (function(){
+    // Hero video fields: the Media button opens the shared picker locked to videos.
+    document.addEventListener('click', event => {
+      const openBtn = event.target.closest('[data-hero-video-media]');
+      const clearBtn = event.target.closest('[data-hero-video-clear]');
+      const btn = openBtn || clearBtn;
+      if (!btn) return;
+      const input = document.getElementById(btn.dataset.targetId);
+      if (!input) return;
+      const apply = value => {
+        input.value = value;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      };
+      if (clearBtn) { apply(''); return; }
+      document.dispatchEvent(new CustomEvent('admin:media-picker:open', {
+        detail: { kind: 'video', lockKind: 'video', select: url => apply(url || '') }
+      }));
     });
   })();
   </script>

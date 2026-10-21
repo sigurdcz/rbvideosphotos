@@ -44,7 +44,7 @@ ob_start();
     </div>
     <div class="drop-zone" id="upload-drop" data-upload-input="#upload-file-input">
       <span id="drop-label">Přetáhněte soubory sem nebo klikněte pro výběr</span>
-      <br><small style="color:var(--c-muted)">Obrázky: JPG, PNG, WebP, GIF - max 10 MB &nbsp;|&nbsp; Video: MP4, MOV, WebM, AVI - max 512 MB</small>
+      <br><small style="color:var(--c-muted)">Obrázky: JPG, PNG, WebP, GIF - max 10 MB &nbsp;|&nbsp; Video: MP4, MOV, WebM, AVI - max 512 MB. Pro hero doporučujeme MP4 (H.264) na šířku, do Full HD a do 25 MB. Rozlišení a miniaturu zjistí prohlížeč při nahrání; kvalita se na serveru nesnižuje.</small>
     </div>
     <input type="file" id="upload-file-input" name="files[]"
            accept=".jpg,.jpeg,.png,.webp,.gif,.mp4,.mov,.webm,.avi,.mkv" multiple style="display:none">
@@ -68,13 +68,24 @@ ob_start();
     <?php foreach ($media as $m):
       $isGif   = ($m['mime_type'] === 'image/gif');
       $isVideo = str_starts_with($m['mime_type'] ?? '', 'video/');
-      $thumb   = $isVideo ? null : $mediaThumb($m);
       $vmap    = $variantMap($m);
+      $thumb   = $isVideo ? (isset($vmap['thumb']) ? $mediaThumb($m) : null) : $mediaThumb($m);
+      $videoInfo = $isVideo
+        ? \App\Services\VideoMediaInfo::describe(
+            (int)($m['width'] ?? 0),
+            (int)($m['height'] ?? 0),
+            (int)@filesize(dirname(__DIR__, 3) . '/' . ltrim((string)$m['storage_path'], '/'))
+          )
+        : null;
     ?>
     <div class="media-card media-card--manage">
       <div class="media-card-preview">
         <?php if ($isVideo): ?>
-          <div style="display:flex;align-items:center;justify-content:center;height:100%;background:#111;color:#c4963c;font-size:2.4rem">&#9654;</div>
+          <?php if ($thumb): ?>
+            <img src="<?= $h($thumb) ?>" alt="<?= $h($m['alt_text']) ?>" loading="lazy">
+          <?php else: ?>
+            <div style="display:flex;align-items:center;justify-content:center;height:100%;background:#111;color:#c4963c;font-size:2.4rem">&#9654;</div>
+          <?php endif; ?>
           <span class="media-badge-type">VIDEO</span>
         <?php else: ?>
           <img src="<?= $h($thumb) ?>" alt="<?= $h($m['alt_text']) ?>" loading="lazy">
@@ -89,12 +100,18 @@ ob_start();
         </div>
         <?php if (!$isVideo && $m['width'] && $m['height']): ?>
           <div class="media-card-dim"><?= (int)$m['width'] ?> × <?= (int)$m['height'] ?> px</div>
+        <?php elseif ($videoInfo): ?>
+          <div class="media-card-dim"><?= $h($videoInfo['label']) ?></div>
+          <?php foreach ($videoInfo['warnings'] as $warning): ?>
+            <div class="media-card-dim" style="color:#b45309"><?= $h($warning) ?></div>
+          <?php endforeach; ?>
         <?php endif; ?>
 
         <div class="media-card-variants">
           <span class="mv-badge mv-badge--orig" title="Originál">orig</span>
           <?php if ($isVideo): ?>
-            <span class="mv-badge mv-badge--gif" title="Video - náhledy se negenerují">video</span>
+            <span class="mv-badge <?= isset($vmap['thumb']) ? 'mv-badge--ok' : 'mv-badge--miss' ?>"
+                  title="<?= isset($vmap['thumb']) ? 'Miniatura videa · ' . $vmap['thumb']['width'] . '×' . $vmap['thumb']['height'] : 'Miniatura videa chybí (prohlížeč ji nedokázal vytvořit)' ?>">thumb</span>
           <?php elseif (!$isGif): ?>
             <span class="mv-badge <?= isset($vmap['webp'])   ? 'mv-badge--ok' : 'mv-badge--miss' ?>"
                   title="<?= isset($vmap['webp']) ? 'WebP · ' . $vmap['webp']['width'] . '×' . $vmap['webp']['height'] . ' · ' . $fmtBytes((int)$vmap['webp']['filesize']) : 'WebP varianta chybí' ?>">webp</span>
@@ -195,6 +212,23 @@ ob_start();
     queue.querySelectorAll('.uq-state').forEach(s => { s.textContent = '⏳'; s.style.color = ''; });
 
     const fd = new FormData(form);
+    const selected = Array.from(input.files);
+    setStatus('Zjišťuji parametry videí…', '');
+    // Probed in parallel, so several undecodable files cost one timeout, not one each.
+    const probes = await Promise.all(selected.map(f => isVideo(f.name) ? probeVideo(f) : Promise.resolve(undefined)));
+    for (let i = 0; i < selected.length; i++) {
+      if (probes[i] === undefined) continue;
+      const probe = probes[i];
+      const item = queue.querySelectorAll('.upload-queue-item')[i];
+      if (!probe) {
+        if (item) item.querySelector('.uq-size').insertAdjacentText('beforeend', ' · parametry nezjištěny (kodek prohlížeč nepodporuje)');
+        continue;
+      }
+      fd.append('video_meta_' + i, JSON.stringify(probe.meta));
+      if (probe.blob) fd.append('video_thumb_' + i, probe.blob, 'thumb.jpg');
+      if (item) item.querySelector('.uq-size').insertAdjacentText('beforeend', ' · ' + probe.meta.width + '×' + probe.meta.height + ' · ' + Math.round(probe.meta.duration) + ' s');
+    }
+    setStatus('', '');
     try {
       const resp = await fetch('/admin/media/upload', { method: 'POST', body: fd });
 
@@ -252,6 +286,40 @@ ob_start();
     }
   });
 
+  // The server has no ffmpeg, so the browser reads the video's size and length and
+  // captures one frame as the thumbnail. A video the browser cannot decode still uploads.
+  function probeVideo(file) {
+    return new Promise(resolve => {
+      const url = URL.createObjectURL(file);
+      const video = document.createElement('video');
+      video.muted = true; video.preload = 'metadata'; video.playsInline = true;
+      let meta = null, done = false, timer = null;
+      const finish = blob => {
+        if (done) return;
+        done = true; clearTimeout(timer);
+        URL.revokeObjectURL(url); video.removeAttribute('src'); video.load();
+        resolve(meta ? { meta, blob: blob || null } : null);
+      };
+      timer = setTimeout(() => finish(null), 8000);
+      video.onerror = () => finish(null);
+      video.onloadedmetadata = () => {
+        if (!video.videoWidth || !video.videoHeight) { finish(null); return; }
+        meta = { width: video.videoWidth, height: video.videoHeight, duration: isFinite(video.duration) ? video.duration : 0 };
+        video.currentTime = Math.min(1, Math.max(0.1, (meta.duration || 2) * 0.1));
+      };
+      video.onseeked = () => {
+        const scale = Math.min(1, 640 / video.videoWidth);
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(video.videoWidth * scale));
+        canvas.height = Math.max(1, Math.round(video.videoHeight * scale));
+        try {
+          canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+          canvas.toBlob(blob => finish(blob), 'image/jpeg', 0.82);
+        } catch (_) { finish(null); }
+      };
+      video.src = url;
+    });
+  }
   function setStatus(msg, color) {
     status.textContent = msg;
     status.style.color = color;

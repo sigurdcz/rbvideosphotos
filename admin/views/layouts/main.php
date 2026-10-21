@@ -82,6 +82,7 @@
       <div><strong id="admin-media-picker-title">Vybrat z médií</strong><div class="form-hint">Knihovna se načítá až po otevření tohoto okna.</div></div>
       <button type="button" class="btn btn-secondary" data-picker-close>Zavřít</button>
     </div>
+    <div class="admin-media-picker__tabs" data-picker-tabs role="tablist" aria-label="Typ média"><button type="button" role="tab" data-picker-tab="all">Vše</button><button type="button" role="tab" data-picker-tab="image">Obrázky</button><button type="button" role="tab" data-picker-tab="video">Video</button></div>
     <form class="admin-media-picker__search" data-picker-search><input type="search" placeholder="Hledat podle názvu nebo ALT textu" aria-label="Hledat média"><button class="btn btn-secondary" type="submit">Hledat</button></form>
     <div class="admin-media-picker__status" data-picker-status></div>
     <div class="admin-media-picker__grid" data-picker-grid></div>

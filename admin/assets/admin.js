@@ -533,7 +533,8 @@ function slugify(str) {
   const status = modal.querySelector('[data-picker-status]');
   const pageLabel = modal.querySelector('[data-picker-page]');
   const search = modal.querySelector('[data-picker-search] input');
-  let options = null, items = [], selected = new Map(), page = 1, pages = 1, opener = null;
+  const tabs = modal.querySelector('[data-picker-tabs]');
+  let options = null, items = [], selected = new Map(), page = 1, pages = 1, opener = null, kind = 'all';
 
   const close = () => {
     modal.classList.remove('is-open'); modal.setAttribute('aria-hidden', 'true');
@@ -545,9 +546,26 @@ function slugify(str) {
       const button = document.createElement('button');
       button.type = 'button'; button.className = 'admin-media-picker__item';
       button.classList.toggle('is-selected', selected.has(String(item.id)));
-      const image = document.createElement('img'); image.src = item.thumb; image.alt = item.alt || item.name; image.loading = 'lazy';
+      let visual;
+      if (item.thumb) {
+        visual = document.createElement('img'); visual.src = item.thumb; visual.alt = item.alt || item.name; visual.loading = 'lazy';
+      } else {
+        // A video without a captured thumbnail: a placeholder instead of a broken image.
+        visual = document.createElement('div'); visual.className = 'admin-media-picker__video-ph'; visual.textContent = '▶';
+      }
       const name = document.createElement('span'); name.textContent = item.name;
-      button.append(image, name);
+      button.append(visual, name);
+      if (item.video) {
+        const info = document.createElement('small'); info.className = 'admin-media-picker__video-info';
+        info.textContent = item.video.label || '';
+        if (item.video.warnings && item.video.warnings.length) info.title = item.video.warnings.join(' ');
+        button.appendChild(info);
+        if (item.video.warnings && item.video.warnings.length) {
+          const warn = document.createElement('small'); warn.className = 'admin-media-picker__video-warn';
+          warn.textContent = '⚠ ' + item.video.warnings[0];
+          button.appendChild(warn);
+        }
+      }
       button.addEventListener('click', () => {
         const key = String(item.id);
         if (options.mode === 'single') selected.clear();
@@ -563,7 +581,7 @@ function slugify(str) {
   };
   const load = async () => {
     status.textContent = 'Načítám média…'; grid.innerHTML = '';
-    const qs = new URLSearchParams({page: String(page), q: search.value.trim(), images: options.imagesOnly ? '1' : '0'});
+    const qs = new URLSearchParams({page: String(page), q: search.value.trim(), images: options.imagesOnly ? '1' : '0', kind});
     try {
       const response = await fetch('/admin/media/picker?' + qs, {headers:{Accept:'application/json'}});
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -572,9 +590,27 @@ function slugify(str) {
       status.textContent = 'Média se nepodařilo načíst: ' + error.message;
     }
   };
+  const syncTabs = () => {
+    if (!tabs) return;
+    // lockKind pins the picker to one kind (the hero video fields only take a video).
+    tabs.querySelectorAll('[data-picker-tab]').forEach(tab => {
+      const value = tab.dataset.pickerTab;
+      const lock = options.lockKind || (options.imagesOnly ? 'image' : '');
+      tab.hidden = !!lock && value !== lock;
+      tab.classList.toggle('is-active', value === kind);
+      tab.setAttribute('aria-selected', value === kind ? 'true' : 'false');
+    });
+  };
+  if (tabs) tabs.addEventListener('click', e => {
+    const tab = e.target.closest('[data-picker-tab]');
+    if (!tab || tab.hidden || tab.dataset.pickerTab === kind) return;
+    kind = tab.dataset.pickerTab; page = 1; syncTabs(); load();
+  });
   window.AdminMediaPicker = {
     open(config) {
-      options = Object.assign({mode:'single', imagesOnly:false, selected:[]}, config || {});
+      options = Object.assign({mode:'single', imagesOnly:false, selected:[], kind:'', lockKind:''}, config || {});
+      kind = options.lockKind || (options.imagesOnly ? 'image' : (options.kind || 'all'));
+      syncTabs();
       selected = new Map((options.selected || []).map(item => [String(item.id), item]));
       opener = document.activeElement; page = 1; search.value = '';
       modal.classList.add('is-open'); modal.setAttribute('aria-hidden', 'false'); load(); search.focus();
@@ -590,6 +626,6 @@ function slugify(str) {
   document.addEventListener('admin:media-picker:open', e => {
     if (!e.detail || typeof e.detail.select !== 'function') return;
     e.stopImmediatePropagation();
-    window.AdminMediaPicker.open({mode:'single', imagesOnly:!!e.detail.imagesOnly, onConfirm: list => { if (list[0]) e.detail.select(list[0].url, list[0]); }});
+    window.AdminMediaPicker.open({mode:'single', imagesOnly:!!e.detail.imagesOnly, kind: e.detail.kind || '', lockKind: e.detail.lockKind || '', onConfirm: list => { if (list[0]) e.detail.select(list[0].url, list[0]); }});
   }, true);
 })();

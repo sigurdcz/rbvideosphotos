@@ -1461,39 +1461,26 @@ function injectPageHeroVideo(string $html, array $site, ?int $pageId, string $pa
     $posterUrl = normalizePublicAssetUrl((string)($site['default_hero_poster_url'] ?? ''));
     $autoplay = (int)($site['video_autoplay_enabled'] ?? 1) === 1;
 
-    $isHomepage = $pageKey === 'homepage';
-    // Priorita: 1) page hero_video, 2) homepage site default video, 3) page hero_bg foto, 4) site default poster foto, 5) site default video.
+    // Priorita: 1) vlastni video stranky (kazda sirka okna zvlast, nic se nededi),
+    // 2) page hero_bg foto, 3) site default poster foto. Vychozi video webu se pro hero nepouziva.
     $videoHtml = '';
     $pid = (int)($pageId ?? 0);
-    $pageVideo = $pid > 0 ? resolvePageBlockUrl($pid, 'hero_video') : '';
-    $defaultVideo = normalizePublicAssetUrl((string)($site['default_hero_video_url'] ?? ''));
-    // Which trio wins is decided in one shared place, so live and publish cannot disagree.
+    // The page's own three fields decide, in one shared place, so live and publish cannot disagree.
     $heroUrls = \App\Services\Render\HeroMediaRenderer::pickHeroVideoUrls(
-        $pageVideo,
+        $pid > 0 ? resolvePageBlockUrl($pid, 'hero_video') : '',
         $pid > 0 ? resolvePageBlockUrl($pid, 'hero_video_tablet') : '',
-        $pid > 0 ? resolvePageBlockUrl($pid, 'hero_video_mobile') : '',
-        $defaultVideo,
-        normalizePublicAssetUrl((string)($site['default_hero_video_url_tablet'] ?? '')),
-        normalizePublicAssetUrl((string)($site['default_hero_video_url_mobile'] ?? ''))
+        $pid > 0 ? resolvePageBlockUrl($pid, 'hero_video_mobile') : ''
     );
-    if ($pageVideo !== '') {
-        $videoHtml = buildHeroVideoHtml($pageVideo, $posterUrl, $autoplay, $heroUrls['tablet'], $heroUrls['mobile']);
+    if (\App\Services\Render\HeroMediaRenderer::hasHeroVideo($heroUrls)) {
+        $videoHtml = buildHeroVideoHtml($heroUrls['desktop'], $posterUrl, $autoplay, $heroUrls['tablet'], $heroUrls['mobile']);
     } else {
-        if ($isHomepage && $defaultVideo !== '') {
-            $videoHtml = buildHeroVideoHtml($defaultVideo, $posterUrl, $autoplay, $heroUrls['tablet'], $heroUrls['mobile']);
-        }
-
         $pagePhoto = $pid > 0 ? resolvePageHeroImageUrl($pid) : '';
-        if ($videoHtml === '' && $pagePhoto !== '') {
+        if ($pagePhoto !== '') {
             $videoHtml = buildHeroImageHtml($pagePhoto);
         }
 
         if ($videoHtml === '' && $posterUrl !== '') {
             $videoHtml = buildHeroImageHtml($posterUrl);
-        }
-
-        if ($videoHtml === '' && $defaultVideo !== '') {
-            $videoHtml = buildHeroVideoHtml($defaultVideo, $posterUrl, $autoplay, $heroUrls['tablet'], $heroUrls['mobile']);
         }
     }
 

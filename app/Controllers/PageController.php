@@ -332,8 +332,8 @@ class PageController extends Controller
     private function ensurePageHeroVideoBlock(int $pageId): void
     {
         $blockRepo = new BlockRepository();
-        // Tablet and mobile are optional overrides of the desktop video; a page that has no
-        // row for them simply falls back to the desktop one.
+        // Each width has its own video and nothing is inherited; a page without a row for
+        // tablet or mobile simply has no video at that width.
         $blocks = [
             'hero_video' => 'Hero - video pozadi (Vimeo/YouTube URL)',
             'hero_video_tablet' => 'Hero - video pro tablet (do 1050 px)',

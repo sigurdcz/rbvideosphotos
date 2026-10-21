@@ -31,65 +31,79 @@ final class HeroMediaRenderer
     }
 
     /**
-     * Hero video with optional narrower-screen variants. The desktop URL is the one that
-     * always renders and stays the fallback; a variant is emitted only when it resolves to
-     * the same kind of source as the desktop one, so a Vimeo desktop video can never end up
-     * with an .mp4 in the same attribute set. With both variants empty the markup is byte
-     * for byte what it was before they existed.
+     * Hero video with an independent source per screen width. A width whose field is empty
+     * has no video at all: nothing is inherited from another width, and the browser shows
+     * only the poster there. The kind of player (embed or plain file) follows the first
+     * filled width in the order desktop, tablet, mobile; a width of the other kind is
+     * dropped, so a Vimeo video can never end up with an .mp4 in the same attribute set.
      *
      * @param array{desktop?:string,tablet?:string,mobile?:string} $urls
      */
     public static function buildResponsiveHeroVideoHtml(array $urls, string $posterUrl = '', bool $autoplay = false): string
     {
         // Embed URL resolution stays here (logic); markup is app/Views/partials/hero-video.phtml.
-        $desktop = self::resolveHeroVideoSource((string)($urls['desktop'] ?? ''));
-        $variant = static function (string $url) use ($desktop): array {
-            $resolved = self::resolveHeroVideoSource($url);
-            if ($desktop['embed'] !== '') {
-                return ['embed' => $resolved['embed'], 'direct' => ''];
+        $sources = [
+            'desktop' => self::resolveHeroVideoSource((string)($urls['desktop'] ?? '')),
+            'tablet' => self::resolveHeroVideoSource((string)($urls['tablet'] ?? '')),
+            'mobile' => self::resolveHeroVideoSource((string)($urls['mobile'] ?? '')),
+        ];
+        $kind = '';
+        foreach ($sources as $source) {
+            if ($source['embed'] !== '') {
+                $kind = 'embed';
+                break;
             }
-            if ($desktop['direct'] !== '') {
-                return ['embed' => '', 'direct' => $resolved['direct']];
+            if ($source['direct'] !== '') {
+                $kind = 'direct';
+                break;
             }
-
-            return ['embed' => '', 'direct' => ''];
-        };
-        $tablet = $variant((string)($urls['tablet'] ?? ''));
-        $mobile = $variant((string)($urls['mobile'] ?? ''));
+        }
+        if ($kind === '') {
+            return '';
+        }
+        $pick = static fn(string $width): string => $sources[$width][$kind];
+        $embed = $kind === 'embed';
 
         return \App\View\ViewFactory::forTheme(null)->render('partials/hero-video', [
-            'embedUrl' => $desktop['embed'],
-            'directUrl' => $desktop['direct'],
+            'embedUrl' => $embed ? $pick('desktop') : '',
+            'directUrl' => $embed ? '' : $pick('desktop'),
+            'kind' => $kind,
             'posterUrl' => $posterUrl,
             'autoplay' => $autoplay,
-            'tabletEmbedUrl' => $tablet['embed'],
-            'mobileEmbedUrl' => $mobile['embed'],
-            'tabletDirectUrl' => $tablet['direct'],
-            'mobileDirectUrl' => $mobile['direct'],
+            'tabletEmbedUrl' => $embed ? $pick('tablet') : '',
+            'mobileEmbedUrl' => $embed ? $pick('mobile') : '',
+            'tabletDirectUrl' => $embed ? '' : $pick('tablet'),
+            'mobileDirectUrl' => $embed ? '' : $pick('mobile'),
         ]);
     }
 
     /**
-     * Which trio of URLs the hero video uses: the page's own videos when the page has a
-     * desktop one, otherwise the site defaults. Without this rule a page with its own
-     * desktop video could inherit a mobile video belonging to a different one. Both the
-     * live and the published render call this, so the two cannot drift apart.
+     * The hero video of a page is exactly the page's own three fields, trimmed. There is no
+     * fallback between widths and none to a site-wide default: an empty field means no
+     * video at that width. Both the live and the published render call this, so the two
+     * cannot drift apart.
      *
      * @return array{desktop:string,tablet:string,mobile:string}
      */
-    public static function pickHeroVideoUrls(
-        string $pageDesktop,
-        string $pageTablet,
-        string $pageMobile,
-        string $siteDesktop,
-        string $siteTablet,
-        string $siteMobile
-    ): array {
-        if (trim($pageDesktop) !== '') {
-            return ['desktop' => $pageDesktop, 'tablet' => $pageTablet, 'mobile' => $pageMobile];
+    public static function pickHeroVideoUrls(string $pageDesktop, string $pageTablet, string $pageMobile): array
+    {
+        return [
+            'desktop' => trim($pageDesktop),
+            'tablet' => trim($pageTablet),
+            'mobile' => trim($pageMobile),
+        ];
+    }
+
+    public static function hasHeroVideo(array $urls): bool
+    {
+        foreach (['desktop', 'tablet', 'mobile'] as $width) {
+            $source = self::resolveHeroVideoSource((string)($urls[$width] ?? ''));
+            if ($source['embed'] !== '' || $source['direct'] !== '') {
+                return true;
+            }
         }
 
-        return ['desktop' => $siteDesktop, 'tablet' => $siteTablet, 'mobile' => $siteMobile];
+        return false;
     }
 
     /** @return array{embed:string,direct:string} */

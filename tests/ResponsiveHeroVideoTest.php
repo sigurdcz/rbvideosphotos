@@ -5,13 +5,13 @@ declare(strict_types=1);
 use App\Services\Render\HeroMediaRenderer;
 
 /**
- * The hero video can differ per screen width: desktop, tablet, phone.
+ * The hero video has an independent source per screen width: desktop, tablet, phone.
  *
- * The contract these tests protect: desktop is the only required one and stays the
- * fallback, a variant is emitted only when it resolves to the same kind of source as
- * the desktop video, and the width is decided in the browser, never on the server,
- * because one published HTML file is served to every visitor. That an unused feature
- * changes nothing is proven by the golden suite passing without regeneration, not here.
+ * The contract these tests protect: an empty field means no video at that width - nothing
+ * is inherited from another width or from a site-wide default - a width is emitted only
+ * when it resolves to the same kind of source as the first filled one, and the width is
+ * decided in the browser, never on the server, because one published HTML file is served
+ * to every visitor.
  */
 function register_responsive_hero_video_tests(callable $test, callable $assert): void
 {
@@ -49,16 +49,15 @@ function register_responsive_hero_video_tests(callable $test, callable $assert):
         }
     });
 
-    $test('without variants the markup is exactly what it was before', function () use ($assert, $vimeo, $youtube): void {
-        foreach ([$vimeo, $youtube, 'https://example.com/hero.mp4'] as $url) {
-            $before = HeroMediaRenderer::buildHeroVideoHtml($url, '/media/poster.webp', true);
-            $after = HeroMediaRenderer::buildHeroVideoHtml($url, '/media/poster.webp', true, '', '');
-            $assert($before === $after, 'Empty variants must not change the markup for ' . $url);
-            $assert(
-                !str_contains($after, 'data-embed-url-tablet') && !str_contains($after, '<source media'),
-                'No variant may appear when none is set.'
-            );
-        }
+    $test('a desktop-only video plays on desktop only', function () use ($assert, $vimeo, $youtube): void {
+        $embed = HeroMediaRenderer::buildHeroVideoHtml($vimeo, '/media/poster.webp', true, '', '');
+        $assert(str_contains($embed, 'data-embed-url="https://player.vimeo.com/video/1133996815'), 'Desktop embed must render.');
+        $assert(!str_contains($embed, 'data-embed-url-tablet') && !str_contains($embed, 'data-embed-url-mobile'), 'Empty widths must not be emitted.');
+
+        $native = HeroMediaRenderer::buildHeroVideoHtml('https://example.com/hero.mp4', '/media/poster.webp', true, '', '');
+        $assert(str_contains($native, '<source media="(min-width: 1050.02px)" src="https://example.com/hero.mp4">'), 'A file video is limited to desktop widths.');
+        $assert(!str_contains($native, 'max-width: 700px') && !str_contains($native, 'max-width: 1050px'), 'No source may cover the widths whose field is empty.');
+        $assert(str_contains($native, 'poster="/media/poster.webp"'), 'The poster stays for widths without a video.');
     });
 
     $test('a filled variant is emitted as its own attribute', function () use ($assert, $vimeo, $youtube): void {
@@ -71,11 +70,12 @@ function register_responsive_hero_video_tests(callable $test, callable $assert):
         // second download after a swap.
         $native = HeroMediaRenderer::buildHeroVideoHtml('https://example.com/a.mp4', '', false, 'https://example.com/b.mp4', 'https://example.com/c.webm');
         $assert(str_contains($native, '<source media="(max-width: 700px)" src="https://example.com/c.webm">'), 'The phone source must come first.');
-        $assert(str_contains($native, '<source media="(max-width: 1050px)" src="https://example.com/b.mp4">'), 'The tablet source must follow it.');
+        $assert(str_contains($native, '<source media="(min-width: 700.02px) and (max-width: 1050px)" src="https://example.com/b.mp4">'), 'The tablet source covers only the tablet widths.');
+        $assert(str_contains($native, '<source media="(min-width: 1050.02px)" src="https://example.com/a.mp4">'), 'The desktop source covers only the desktop widths.');
         $assert(
-            strpos($native, 'max-width: 700px') < strpos($native, 'max-width: 1050px')
-                && strpos($native, 'max-width: 1050px') < strpos($native, 'src="https://example.com/a.mp4"'),
-            'The browser takes the first matching source, so narrowest must come first.'
+            strpos($native, 'max-width: 700px') < strpos($native, 'min-width: 700.02px')
+                && strpos($native, 'min-width: 700.02px') < strpos($native, 'min-width: 1050.02px'),
+            'Sources are ordered mobile, tablet, desktop.'
         );
     });
 
@@ -86,9 +86,14 @@ function register_responsive_hero_video_tests(callable $test, callable $assert):
         $assert(!str_contains($mixed, '<source media'), 'An embed must not grow file sources.');
 
         $reverse = HeroMediaRenderer::buildHeroVideoHtml('https://example.com/hero.mp4', '', false, $vimeo, '');
-        $assert(!str_contains($reverse, '<source media') && !str_contains($reverse, 'data-embed-url-tablet'), 'A player cannot be a variant of a file.');
+        $assert(!str_contains($reverse, 'data-embed-url') && !str_contains($reverse, 'max-width: 1050px'), 'A player cannot be a variant of a file.');
 
-        $assert(HeroMediaRenderer::buildResponsiveHeroVideoHtml(['desktop' => '', 'tablet' => $vimeo]) === '', 'Without a desktop video nothing renders.');
+        $assert(HeroMediaRenderer::buildResponsiveHeroVideoHtml(['desktop' => '', 'tablet' => '', 'mobile' => '']) === '', 'Without any video nothing renders.');
+        $tabletOnly = HeroMediaRenderer::buildResponsiveHeroVideoHtml(['desktop' => '', 'tablet' => $vimeo]);
+        $assert(
+            str_contains($tabletOnly, 'data-embed-url-tablet=') && !str_contains($tabletOnly, 'data-embed-url="'),
+            'A tablet-only video must not appear on desktop.'
+        );
     });
 
     $test('the browser picks the width, and its breakpoints match the theme', function () use ($assert, $root): void {
@@ -110,31 +115,24 @@ function register_responsive_hero_video_tests(callable $test, callable $assert):
         $assert(str_contains($runtime, 'HERO_VIDEO_TABLET_MAX = 1050'), 'The runtime tablet breakpoint must match the theme.');
     });
 
-    $test('the variants follow whichever desktop video won', function () use ($assert, $root): void {
-        // A page with its own desktop video must not inherit a mobile video belonging to
-        // a different one - that is the whole rule, and it lives in one function so the
-        // live page and the static export cannot implement it differently.
-        $ownVideo = HeroMediaRenderer::pickHeroVideoUrls('page.mp4', 'page-t.mp4', '', 'site.mp4', 'site-t.mp4', 'site-m.mp4');
-        $assert(
-            $ownVideo === ['desktop' => 'page.mp4', 'tablet' => 'page-t.mp4', 'mobile' => ''],
-            "A page's own video must bring only the page's own variants."
-        );
+    $test('nothing is inherited between widths or from the site default', function () use ($assert, $root): void {
+        $own = HeroMediaRenderer::pickHeroVideoUrls('page.mp4', 'page-t.mp4', '');
+        $assert($own === ['desktop' => 'page.mp4', 'tablet' => 'page-t.mp4', 'mobile' => ''], 'An empty mobile field stays empty.');
 
-        $inherited = HeroMediaRenderer::pickHeroVideoUrls('', 'page-t.mp4', 'page-m.mp4', 'site.mp4', 'site-t.mp4', '');
-        $assert(
-            $inherited === ['desktop' => 'site.mp4', 'tablet' => 'site-t.mp4', 'mobile' => ''],
-            'Falling back to the site video must take the site variants, not stale page ones.'
-        );
+        $mobileOnly = HeroMediaRenderer::pickHeroVideoUrls('', '', 'page-m.mp4');
+        $assert($mobileOnly['desktop'] === '' && $mobileOnly['tablet'] === '', 'A mobile video must not fill the other widths.');
 
-        $blank = HeroMediaRenderer::pickHeroVideoUrls('   ', 't', 'm', 'site.mp4', '', '');
-        $assert($blank['desktop'] === 'site.mp4', 'Whitespace is not a video.');
+        $blank = HeroMediaRenderer::pickHeroVideoUrls('   ', "\t", '');
+        $assert($blank === ['desktop' => '', 'tablet' => '', 'mobile' => ''], 'Whitespace is not a video.');
+        $assert(HeroMediaRenderer::hasHeroVideo($blank) === false, 'Empty fields mean there is no hero video.');
+        $assert(HeroMediaRenderer::hasHeroVideo($mobileOnly) === true, 'A single filled width is a hero video.');
+        $assert(HeroMediaRenderer::hasHeroVideo(['desktop' => 'https://example.com/nonsense']) === false, 'An unrecognised address is not a video.');
 
-        // Both injectors must go through that one function.
+        // Both injectors must go through that one function and ignore the site default video.
         foreach (['/public/index.php', '/app/Services/PublishService.php'] as $file) {
-            $assert(
-                str_contains((string) file_get_contents($root . $file), 'pickHeroVideoUrls('),
-                "{$file} must resolve the trio through the shared rule."
-            );
+            $source = (string) file_get_contents($root . $file);
+            $assert(str_contains($source, 'pickHeroVideoUrls('), "{$file} must resolve the widths through the shared rule.");
+            $assert(!str_contains($source, 'default_hero_video_url'), "{$file} must not fall back to the site default video.");
         }
     });
 
@@ -156,21 +154,15 @@ function register_responsive_hero_video_tests(callable $test, callable $assert):
         $assert(str_contains($pageController, "'hero_video_mobile' =>"), 'The page blocks must be created for the mobile video.');
     });
 
-    // Production config: the tablet plays the desktop video, the phone keeps its own one.
-    $test('the tablet falls back to the desktop video in seeds, migration 100 and the browser', function () use ($assert, $root): void {
+    // The browser never falls back to another width's video either.
+    $test('the browser has no fallback between widths, and seeds and migration 100 still hold', function () use ($assert, $root): void {
         $desktop = 'https://vimeo.com/1229273025';
         $mobile = 'https://vimeo.com/1228952734';
 
-        $html = HeroMediaRenderer::buildHeroVideoHtml($desktop, '/media/poster.webp', true, '', $mobile);
-        $assert(str_contains($html, 'data-embed-url="https://player.vimeo.com/video/1229273025?'), 'Desktop embed must render.');
-        $assert(!str_contains($html, 'data-embed-url-tablet'), 'An empty tablet variant must not be emitted.');
-        $assert(str_contains($html, 'data-embed-url-mobile="https://player.vimeo.com/video/1228952734?'), 'The mobile variant stays.');
-
         $runtime = (string) file_get_contents($root . '/public/assets/frontend-runtime.js');
-        $assert(
-            str_contains($runtime, "return facade.getAttribute('data-embed-url-tablet') || desktop;"),
-            'Without a tablet attribute pickEmbedUrl() must return the desktop URL.'
-        );
+        $assert(str_contains($runtime, "return facade.getAttribute('data-embed-url-tablet') || '';"), 'Without a tablet attribute pickEmbedUrl() must return nothing.');
+        $assert(str_contains($runtime, "return facade.getAttribute('data-embed-url-mobile') || '';"), 'Without a mobile attribute pickEmbedUrl() must return nothing.');
+        $assert(!str_contains($runtime, "|| desktop;"), 'No width may fall back to the desktop video.');
 
         $demoSeeder = (string) file_get_contents($root . '/app/Services/DemoContentSeeder.php');
         $assert(str_contains($demoSeeder, "'default_hero_video_url_tablet' => null,"), 'Demo seed must leave the tablet variant empty.');
