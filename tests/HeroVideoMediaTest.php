@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Services\HeroVideoMediaLookup;
+use App\Services\Render\HeroMediaRenderer;
 use App\Services\VideoMediaInfo;
 
 /**
@@ -77,5 +79,45 @@ function register_hero_video_media_tests(callable $test, callable $assert): void
         $assert(str_contains($layout, 'data-picker-tab="video"'), 'The picker needs a Video tab.');
         $js = $read('admin/assets/admin.js');
         $assert(str_contains($js, 'options.lockKind') && str_contains($js, ', kind})'), 'The picker script must send and lock the kind.');
+    });
+
+    $test('media files are served with their real type and byte ranges', function () use ($assert, $read): void {
+        // iOS Safari will not play a video from a server that cannot answer a Range request, and
+        // without one the whole file was sent (and the page load waited for it) on every visit.
+        $index = $read('public/index.php');
+        $assert(str_contains($index, "'mp4', 'm4v' => 'video/mp4'") && str_contains($index, "'webm' => 'video/webm'") && str_contains($index, "'mov' => 'video/quicktime'"), 'Video types must not fall back to octet-stream.');
+        $assert(str_contains($index, "header('Accept-Ranges: bytes')"), 'The server must announce byte ranges.');
+        $assert(str_contains($index, 'http_response_code(206)') && str_contains($index, "header('Content-Range: bytes '"), 'A range must be answered with 206 and Content-Range.');
+        $assert(str_contains($index, 'http_response_code(416)'), 'An unsatisfiable range must be answered with 416.');
+        $assert(str_contains($index, 'header(\'Content-Length: \' . $length)'), 'The length must be sent so the browser can plan its buffering.');
+        $assert(str_contains($index, 'fread($handle'), 'A large file must be streamed in chunks, not held in memory.');
+    });
+
+    $test('the plain hero video does not hold the page back or resize it late', function () use ($assert, $read): void {
+        $partial = $read('app/Views/partials/hero-video.phtml');
+        $assert(str_contains($partial, 'preload="metadata"') && !str_contains($partial, 'preload="auto"'), 'preload=auto fetched the whole file and delayed the load event.');
+
+        $ratios = ['mobile' => '480 / 480', 'desktop' => '1920 / 1080'];
+        $html = HeroMediaRenderer::buildHeroVideoHtml('/media/d.mp4', '/media/poster.png', true, '', '/media/m.webm', $ratios, '/media/poster_md.webp');
+        $assert(str_contains($html, '<style data-hero-video-ratio>'), 'Known dimensions must reserve the video box.');
+        $assert(str_contains($html, '@media (max-width:700px){video.theme-hero-video--native{aspect-ratio:auto 480 / 480}}'), 'The phone gets its own ratio.');
+        $assert(str_contains($html, '@media (min-width:1050.02px){video.theme-hero-video--native{aspect-ratio:auto 1920 / 1080}}'), 'The desktop gets its own ratio.');
+        $assert(!str_contains($html, '(min-width:700.02px) and (max-width:1050px){video'), 'A width without a video gets no ratio rule.');
+        $assert(str_contains($html, 'poster="/media/poster_md.webp"') && !str_contains($html, 'poster="/media/poster.png"'), 'The plain video must use the light poster.');
+
+        $embed = HeroMediaRenderer::buildHeroVideoHtml('https://vimeo.com/123', '/media/poster.png', true, '', '', $ratios, '/media/poster_md.webp');
+        $assert(str_contains($embed, 'src="/media/poster.png"') && !str_contains($embed, 'poster_md.webp') && !str_contains($embed, 'data-hero-video-ratio'), 'An embed keeps the original poster image (it gets srcset later) and needs no ratio.');
+
+        $hostile = HeroMediaRenderer::buildHeroVideoHtml('/media/d.mp4', '', false, '', '', ['desktop' => '1px;}</style><script>alert(1)</script>'], '');
+        $assert(!str_contains($hostile, '<script>') && !str_contains($hostile, 'data-hero-video-ratio'), 'A malformed ratio must never reach the page.');
+    });
+
+    $test('library lookups map only local /media/ URLs and reject traversal', function () use ($assert, $read): void {
+        $assert(HeroVideoMediaLookup::storagePath('/media/2026/10/x.mp4') === 'storage/media/2026/10/x.mp4', 'A local path maps to its storage path.');
+        $assert(HeroVideoMediaLookup::storagePath('https://staging.example.cz/media/2026/10/x.mp4') === 'storage/media/2026/10/x.mp4', 'An absolute URL on a site maps by its path.');
+        foreach (['', 'https://vimeo.com/1', '/media/../../.env', '/other/x.mp4', '/media/a/../b.mp4'] as $bad) {
+            $assert(HeroVideoMediaLookup::storagePath($bad) === '', 'Must not map: ' . $bad);
+        }
+        $assert(str_contains($read('public/index.php'), 'HeroVideoMediaLookup::ratios($siteId, $urls)') && str_contains($read('app/Services/PublishService.php'), 'HeroVideoMediaLookup::lightPoster($siteId, $posterUrl)'), 'Live and published pages must both use the lookups.');
     });
 }

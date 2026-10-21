@@ -758,7 +758,12 @@ HTML;
             $this->normalizePublicAssetUrl((string)($site['default_hero_video_url_tablet'] ?? '')),
             $this->normalizePublicAssetUrl((string)($site['default_hero_video_url_mobile'] ?? ''))
         );
-        $buildHero = fn(array $urls): string => $this->buildHeroVideoHtml($urls['desktop'], $posterUrl, $autoplay, $urls['tablet'], $urls['mobile']);
+        $siteId = (int)($site['id'] ?? 0);
+        $buildHero = fn(array $urls): string => $this->buildHeroVideoHtml(
+            $urls['desktop'], $posterUrl, $autoplay, $urls['tablet'], $urls['mobile'],
+            HeroVideoMediaLookup::ratios($siteId, $urls),
+            HeroVideoMediaLookup::lightPoster($siteId, $posterUrl)
+        );
 
         $videoHtml = '';
         if (HeroMediaRenderer::hasHeroVideo($pageUrls)) {
@@ -810,9 +815,9 @@ HTML;
         return \App\Services\Render\HeroMediaRenderer::ensureHeroVideoStyle($html);
     }
 
-    private function buildHeroVideoHtml(string $videoUrl, string $posterUrl = '', bool $autoplay = false, string $tabletUrl = '', string $mobileUrl = ''): string
+    private function buildHeroVideoHtml(string $videoUrl, string $posterUrl = '', bool $autoplay = false, string $tabletUrl = '', string $mobileUrl = '', array $ratios = [], string $videoPosterUrl = ''): string
     {
-        return \App\Services\Render\HeroMediaRenderer::buildHeroVideoHtml($videoUrl, $posterUrl, $autoplay, $tabletUrl, $mobileUrl);
+        return \App\Services\Render\HeroMediaRenderer::buildHeroVideoHtml($videoUrl, $posterUrl, $autoplay, $tabletUrl, $mobileUrl, $ratios, $videoPosterUrl);
     }
 
     private function buildHeroImageHtml(string $imageUrl): string

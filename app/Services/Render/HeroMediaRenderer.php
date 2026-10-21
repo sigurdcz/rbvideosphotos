@@ -21,12 +21,14 @@ final class HeroMediaRenderer
         ]);
     }
 
-    public static function buildHeroVideoHtml(string $videoUrl, string $posterUrl = '', bool $autoplay = false, string $tabletUrl = '', string $mobileUrl = ''): string
+    public static function buildHeroVideoHtml(string $videoUrl, string $posterUrl = '', bool $autoplay = false, string $tabletUrl = '', string $mobileUrl = '', array $ratios = [], string $videoPosterUrl = ''): string
     {
         return self::buildResponsiveHeroVideoHtml(
             ['desktop' => $videoUrl, 'tablet' => $tabletUrl, 'mobile' => $mobileUrl],
             $posterUrl,
-            $autoplay
+            $autoplay,
+            $ratios,
+            $videoPosterUrl
         );
     }
 
@@ -38,9 +40,13 @@ final class HeroMediaRenderer
      * tagged with the widths it serves, and a small stylesheet shows only the one that has a
      * video at the current width.
      *
+     * $ratios (width => "W / H") lets the page reserve the video's box before its metadata arrives;
+     * $videoPosterUrl is a lighter poster used only by the plain <video> element.
+     *
      * @param array{desktop?:string,tablet?:string,mobile?:string} $urls
+     * @param array<string,string> $ratios
      */
-    public static function buildResponsiveHeroVideoHtml(array $urls, string $posterUrl = '', bool $autoplay = false): string
+    public static function buildResponsiveHeroVideoHtml(array $urls, string $posterUrl = '', bool $autoplay = false, array $ratios = [], string $videoPosterUrl = ''): string
     {
         // Embed URL resolution stays here (logic); markup is app/Views/partials/hero-video.phtml.
         $sources = [
@@ -71,6 +77,7 @@ final class HeroMediaRenderer
                 'directUrl' => $embed ? '' : $pick('desktop'),
                 'kind' => $kind,
                 'posterUrl' => $posterUrl,
+                'videoPosterUrl' => $videoPosterUrl,
                 'autoplay' => $autoplay,
                 'tabletEmbedUrl' => $embed ? $pick('tablet') : '',
                 'mobileEmbedUrl' => $embed ? $pick('mobile') : '',
@@ -82,7 +89,35 @@ final class HeroMediaRenderer
             ]);
         }
 
-        return $mixed ? self::mixedWidthsStyle() . $html : $html;
+        $style = ($mixed ? self::mixedWidthsStyle() : '') . (in_array('direct', $kinds, true) ? self::ratioStyle($sources, $ratios) : '');
+
+        return $style . $html;
+    }
+
+    /**
+     * Reserves the plain video's box per width from the stored dimensions. "auto W / H" uses the
+     * file's own ratio once known and this one before that, so nothing moves when it arrives.
+     *
+     * @param array<string,array{embed:string,direct:string}> $sources
+     * @param array<string,string> $ratios
+     */
+    private static function ratioStyle(array $sources, array $ratios): string
+    {
+        $queries = [
+            'mobile' => '(max-width:700px)',
+            'tablet' => '(min-width:700.02px) and (max-width:1050px)',
+            'desktop' => '(min-width:1050.02px)',
+        ];
+        $rules = '';
+        foreach ($queries as $width => $query) {
+            $ratio = (string)($ratios[$width] ?? '');
+            if (($sources[$width]['direct'] ?? '') === '' || !preg_match('~^\d{1,5} / \d{1,5}$~', $ratio)) {
+                continue;
+            }
+            $rules .= '@media ' . $query . '{video.theme-hero-video--native{aspect-ratio:auto ' . $ratio . '}}';
+        }
+
+        return $rules === '' ? '' : '<style data-hero-video-ratio>' . $rules . '</style>';
     }
 
     /** Shows only the player that has a video at the current width (mixed Vimeo/file sets). */
