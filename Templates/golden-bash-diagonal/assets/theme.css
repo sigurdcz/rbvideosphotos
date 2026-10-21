@@ -3157,6 +3157,17 @@ body.theme-golden-bash.theme-golden-bash-diagonal[data-cms-page-key="homepage"] 
 body.theme-golden-bash.theme-golden-bash-diagonal[data-cms-page-key="homepage"] .hp-hero>video.theme-hero-video{
   left:auto!important;right:0!important;width:auto!important;height:100%!important;max-width:none!important;object-position:right center!important;
 }
+@media(max-width:700px){
+  body.theme-golden-bash.theme-golden-bash-diagonal[data-cms-page-key="homepage"] .hp-hero>.theme-hero-video iframe{
+    left:50%!important;right:auto!important;transform:translateX(-50%)!important;
+  }
+  body.theme-golden-bash.theme-golden-bash-diagonal[data-cms-page-key="homepage"] .hp-hero>.theme-hero-video .theme-hero-video__poster{
+    object-position:center center!important;
+  }
+  body.theme-golden-bash.theme-golden-bash-diagonal[data-cms-page-key="homepage"] .hp-hero>video.theme-hero-video{
+    left:50%!important;right:auto!important;object-position:center center!important;transform:translateX(-50%)!important;
+  }
+}
 
 /* Hero benefit markers are real opaque circles. Fixed flex geometry prevents
    long labels from squeezing the marker into an oval. */
