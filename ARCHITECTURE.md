@@ -52,7 +52,10 @@ Kdyz se neco z teto mapy zmeni, uprav ji ve stejnem commitu.
 | Poradi fotek v galerii | `setMedia()` / `setGallery()` (+ mapa cisel z formulare), cte `getMedia()` / `getGallery()` |
 | Videa u prace | tabulka `portfolio_videos`, `setVideos()` / `getVideos()`; `portfolio_entries.video_url` je zrcadlo PRVNIHO videa |
 | Hero media na homepage | `Templates/golden-bash-diagonal/assets/theme.css` - blok "Golden Bash Diagonal" na konci souboru; `app/Views/partials/hero-video.phtml` |
-| Ktere hero video se prehraje | `HeroMediaRenderer::buildResponsiveHeroVideoHtml()`; vyber podle sirky dela `pickEmbedUrl()` v `public/assets/frontend-runtime.js` |
+| Ktere hero video se prehraje | `HeroMediaRenderer::buildResponsiveHeroVideoHtml()`; Vimeo/YouTube vybira podle sirky `pickEmbedUrl()` v `public/assets/frontend-runtime.js`, soubor `<source media>` v `hero-video.phtml`; smisena sada = oba prehravace + `<style data-hero-video-widths>` |
+| Rozmery, poster a verze lokalniho videa | `app/Services/HeroVideoMediaLookup.php` (`ratios()`, `lightPoster()`, `versionedUrl()`) |
+| Nahrani videa do Medii | `MediaController::upload` + `MediaIngestionService::attachVideoDetails()` + `VideoMediaInfo`; metadata a miniaturu cte prohlizec (`probeVideo()` v `admin/views/media/index.php`), server nema ffmpeg |
+| Vyber videa z Medii | sdileny picker v `admin/assets/admin.js` (zalozky Vse/Obrazky/Video, `lockKind`), tlacitko `[data-hero-video-media]` v admin/views/pages/form.php a settings/index.php |
 | Odkud se bere URL hero videa | dva duplikatni injektory: `public/index.php::injectPageHeroVideo()` (live) a `PublishService::injectPageHeroVideo()` (publish) - menit VZDY oba |
 | Hero na podstrankach, overlay | `app/Services/Render/HeroMediaRenderer.php`, `public/assets/frontend-runtime.css` |
 | Karty blogu na homepage | `HomepageContentService::buildBlogCardHtml()`; pri ulozeni clanku je prepisuje `BlogSyncService` |
@@ -95,15 +98,40 @@ admin editaci, viz `074`-`077`) + stejny zaznam v `database/seeds/seed.php`; u o
   ktera uz sloupec ma, spadne na "Duplicate column" a zablokuje vsechny dalsi migrace.
 - **`sort_order = 0` znamena "bez rucniho cisla"** a radi se az za ocislovane polozky; v galeriich
   je ale 0 legacy pozice z poradi vyberu, proto tam plati prosty `sort_order ASC`.
-- **Hero video ma tri varianty** (`sites.default_hero_video_url[_tablet|_mobile]`, u stranky bloky
-  `hero_video[_tablet|_mobile]`). Desktop je povinny a je fallbackem; varianta se do HTML zapise,
-  jen kdyz je stejneho typu jako desktopova (embed k embedu, soubor k souboru). Vyber dela az
-  prohlizec - staticky publish je jedna HTML pro vsechny, takze server o zarizeni rozhodovat nesmi.
-  Varianta se vybere pri vlozeni prehravace a znovu pri prekroceni700/1050px.
-  Stejna URL prehravac nerestartuje; nova URL odstrani stary iframe i metadata listenery/observer.
-  Produkcni konfigurace pouziva tablet = desktop: tabletova varianta je prazdna (NULL), do HTML se
-  `data-embed-url-tablet` nezapise a `pickEmbedUrl()` vrati desktopovou URL; vlastni video ma jen mobil.
-  Migrace 100 tablet vycistila i na existujicich DB, seedy ho nenastavuji - nevyplnovat ho zpet stejnou URL.
+- **Hero video: kazda sirka okna ma vlastni zdroj a nic se nededi.** Pole `hero_video`,
+  `hero_video_tablet`, `hero_video_mobile` (u stranky bloky, ve vychozim nastaveni
+  `sites.default_hero_video_url[_tablet|_mobile]`) znamenaji desktop (nad 1050 px), tablet
+  (701-1050 px) a mobil (do 700 px). **Prazdne pole = na dane sirce zadne video** (jen poster),
+  nic se neprebira z jineho zarizeni. Poradi zdroju (live i publish stejne): vlastni sada stranky,
+  na homepage vychozi sada z Nastaveni, hero foto stranky, poster, vychozi sada z Nastaveni.
+  Sada se bere CELA (`HeroMediaRenderer::hasHeroVideo()`), sirky dvou sad se nemicha.
+  Kazda sirka muze byt jineho druhu (Vimeo/YouTube nebo soubor `/media/...`); smisena sada
+  vykresli oba prehravace oznacene `data-hero-widths` a malym `<style>` se zobrazi jen ten, ktery
+  ma na sirce video. Soubory pouzivaji `<source media>` s rozsahy bez mezery (`max-width:700px`,
+  `min-width:700.02px` a `max-width:1050px`, `min-width:1050.02px`), embedy `pickEmbedUrl()`,
+  ktery pri zmene sirky prehravac vlozi, vymeni nebo odstrani. Plain `<video>` se pri prechodu
+  hranice nacte znovu (`initNativeHeroVideos()`) a spusti se rucne, jakmile umi hrat (autoplay
+  se u souboru s vyssim datovym tokem nez rychlost pripojeni sam nespusti).
+  Staticky publish je jedna HTML pro vsechny, takze server o zarizeni rozhodovat nesmi.
+  Vychozi video webu se tedy pouziva jako sada (ne po sirkach); u produkcni DB je desktop=Vimeo,
+  tablet prazdny, mobil vlastni zdroj. Migrace 100 tablet vycistila; nevyplnovat ho zpet stejnou URL.
+- **Video z Medii: kvalita, cache a Range.**
+  - Doporuceni: smycka 10-15 s, MP4 H.264, bez zvuku a bez timecode stopy, faststart, desktop
+    1920x1080 (3-5 MB), tablet 1280x720 (2-3 MB), mobil 720x1080 (do 1,5 MB). Server video
+    neprekoduje (zadny ffmpeg); admin jen upozorni (`VideoMediaInfo`: nad Full HD, nad 25 MB, na vysku).
+  - Rozmery se ukladaji do `media.width/height` a pouzivaji pro `aspect-ratio` plain `<video>`
+    (`HeroVideoMediaLookup::ratios()`); jinak se element po prichodu metadat prepocita z pomeru
+    posteru na pomer videa a posune celou stranku (CLS). Pouziva se presne `W / H`, ne `auto W / H`
+    (to by do prichodu metadat preferovalo pomer posteru).
+  - `<video poster>` je jedna obycejna URL, proto se pouziva lehka varianta `medium`/`small` z knihovny
+    (`lightPoster()`), ne originalni PNG o nekolika MB. Embed si ponechava puvodni poster (dostane srcset).
+  - `preload="metadata"`, ne `auto`: `auto` stahne cely soubor a zdrzuje udalost `load`.
+  - Lokalni videa dostavaji `?rev=<mtime souboru>` (`versionedUrl()`): media maji `immutable` na rok,
+    vcetne cache pred PHP, a jednou zapamatovana stara odpoved (bez Range, octet-stream) by se
+    vracela donekonecna. **Parametr se NESMI jmenovat `v`:** YouTube detektor (`[?&]v=<id>`)
+    z toho udelal iframe neexistujiciho videa. YouTube `?v=` se ted bere jen na hostech YouTube.
+  - Pri vymene souboru se `rev` zmeni sam (jina mtime); stare adresy bez `rev` mohou cache vracet
+    po zmene servirovani stale po dobu platnosti.
 - **Legacy sablony s `<video data-block="hero_video">`** (stare seedy) si hero video vykresli
   samy pres `PageRenderer`, injektor je pak preskoci - varianty se na takovych strankach
   neprojevi. Aktivni tema tudy nejde.
@@ -147,7 +175,9 @@ request -> admin/index.php -> Core\Router -> Controller -> Repository/Service ->
 ```text
 1. GET/HEAD /api/health -> HealthCheckHttpResponder, application + DB readiness, 200/503
 2. /.well-known/security.txt a /security.txt -> SecurityTxtHttpResponder
-3. /assets/*, /media/*  -> tryServePublicAssetWithoutSession(), readfile s realpath ochranou
+3. /assets/*, /media/*  -> tryServePublicAssetWithoutSession(): realpath ochrana, typy vcetne mp4/webm/mov,
+   `Accept-Ranges`, `Range`->206/416 a `If-Range` (ETag i datum Last-Modified, kvuli Safari),
+   soubor nad 4 MB nebo cast se posila po kouscich (`fread`), ne `readfile`
 4. POST /api/visit      -> tryRecordVisitBeacon(), vlastni mereni navstevnosti (pred Auth::start)
    -- Auth::start() --
 5. /api/v1/*            -> ApiController::dispatch()
@@ -352,7 +382,7 @@ ne v `Templates/*/layout.html`: live i publish ho dostanou pres `injectSharedFro
 `prefers-color-scheme: dark` pravidlo ve verejnych CSS/JS nepridavat; hlida `tests/LightOnlyColorSchemeTest.php`.
 Admin (`/admin`) ma vlastni vzhled a pravidlo se ho netyka.
 
-Stranka muze mit vlastni `hero_video` blok. Pokud chybi, frontend pouzije default hodnoty ze `sites`. Hlavni a Demo seed nastavuji `default_hero_poster_url` na nahranou fotografii `svatba-nevesta-zenich-polibek-kamenna-zed.webp`; homepage default video pouziva Vimeo `1229273025` pro desktop i tablet a Vimeo `1228952734` do 700 px; tabletova varianta (`default_hero_video_url_tablet`) je zamerne prazdna (NULL), takze tablet pada na desktopove video (seed, Demo seed, handler migrace 087 i migrace 100). Priorita je strankove video, homepage default video, strankova foto, site default poster a nakonec site default video.
+Stranka muze mit vlastni `hero_video`, `hero_video_tablet` a `hero_video_mobile`. Pokud nema zadne, frontend pouzije vychozi sadu ze `sites` (kazda sirka zvlast, prazdne pole = zadne video; podrobnosti v sekci o pastech). Hlavni a Demo seed nastavuji `default_hero_poster_url` na nahranou fotografii `svatba-nevesta-zenich-polibek-kamenna-zed.webp`; homepage default video pouziva Vimeo `1229273025` pro desktop i tablet a Vimeo `1228952734` do 700 px; tabletova varianta (`default_hero_video_url_tablet`) je zamerne prazdna (NULL), takze tablet pada na desktopove video (seed, Demo seed, handler migrace 087 i migrace 100). Priorita je strankove video, homepage default video, strankova foto, site default poster a nakonec site default video.
 
 ## Publish pipeline
 

@@ -2347,3 +2347,43 @@ Integrační výsledky: SMTP3 testy, mail archive27 assertions, recipient policy
 ## Výsledek kopie kontaktu2026-10-19
 
 6246ef4 nasazen na dev/staging, Actions39261191994 success. Staging migrate-util HTTP200,107 přítomna, Údržba dokončena a bez SQLSTATE. Settings view test ověřil prázdné/vyplněné/escapované CC, nepovinnost a odděleného hlavního příjemce. SMTP3 testy včetně skutečného RCPT proCC a očištění po další zprávě; mail archive28 assertions včetně zálohy po SMTP odmítnutí; policy13; reset19; upgrade109/16 prošly. Skutečná pošta se při testech neodesílala. Pole nepovinné, resetbezCC, žádné nové.env/secrets. DEPLOYMENT, ARCHITECTURE a wiki aktualizovány. Produkce beze změny.
+
+# UKOL: Hero video po sirkach, video v Mediich a vykon
+
+Zadani: hero video na homepage nema dedit mezi desktopem, tabletem a mobilem (prazdne pole = zadne
+video), u poli ma byt tlacitko Media -> zalozka Video a Media maji umet videa (parametry, miniatura).
+Pak mereni nacitani s videem "Mobilni verze.webm" a opravy podle mereni.
+
+## Implementace
+- `HeroMediaRenderer`: kazda sirka ma vlastni zdroj, `hasHeroVideo()`, smisena sada Vimeo/YouTube + soubor
+  (`data-hero-widths` + `<style data-hero-video-widths>`), `ratioStyle()`, `videoPosterUrl`.
+- `public/index.php` a `PublishService`: poradi sada stranky -> homepage vychozi sada -> foto -> poster -> vychozi sada.
+- Admin: picker se zalozkami Vse/Obrazky/Video (`lockKind`), tlacitko Media u hero poli ve strankach
+  i v Nastaveni (spolecny `$renderVideoField`, jeden handler v `admin.js`), pole prijimaji `/media/...`.
+- Media: prohlizec cte rozmery/delku a vyfoti miniaturu (`probeVideo()`), server data oklesti
+  (`VideoMediaInfo::sanitize`) a miniaturu prekoduje do WebP (`attachVideoDetails`), kvalita a varovani v UI.
+- Servirovani `/media/`: typy videa, `Accept-Ranges`, 206/416, `If-Range` (ETag i datum), `Content-Length`, stream po kouscich.
+- Vykon: `preload="metadata"`, `aspect-ratio` z ulozenych rozmeru, lehky poster, `?rev=` u lokalnich videi,
+  rucni start plain `<video>`, tema golden-bash(-diagonal): obrazek sekce Kontakt az pred zobrazenim a jako WebP.
+- Testy: `tests/HeroVideoMediaTest.php` (nove), `tests/ResponsiveHeroVideoTest.php` (prepsan na nove pravidlo),
+  `tests/HeroVideoBreakpointTest.js` (mock odpovida jen na selektor facade).
+
+## Vysledek mereni (Chrome, mobil, pomale 4G, CPU 4x, median ze 3)
+Staging pred: load 56-68 s, LCP 27 s, CLS 0,71, 10-13 MB. Po: load ~7 s, LCP ~2,5 s, CLS 0, ~640 kB.
+Izolovane: soubor s Range se rozjede za 0,5 s; bez Range a s metadaty na konci souboru za 11 s.
+Smycka: soubor 12 s/0,7 MB plynuly vsude; soubor 15 s/10 MB se na pomale lince zasekava (start 30 s, 0,4-0,5 s na smycku).
+
+## Chyby a poucení (neopakovat)
+- `?v=<mtime>` u lokalniho videa se shodovalo s YouTube detektorem a udelalo z nej YouTube iframe
+  ("Video neni mozne prehrat"). Oprava: parametr `rev` + YouTube `?v=` jen na hostech YouTube.
+- Puvodne jsem pochopil hero zdroj jako pole u stranek; skutecne je to Nastaveni -> Vychozi hero video.
+  Vychozi sada je zpet jako zdroj homepage.
+- Stary mezipamet pred PHP vraci uz jednou stazene adresy `/media/` postaru (immutable); proto `?rev=`.
+- Po zmene `index.php` overovat Range nejen HEAD, ale i GET (HEAD obchazi mezipamet).
+- Testovaci PHP server (`php -S`) je jednovlaknovy: video a stranku ze dvou portu.
+
+## Otevrene
+- Video na stagingu je 10,2 MB (5,4 Mbit/s, 15 s, se zvukem, metadata na konci). Nahradit smyckou do ~1,5 MB (zadani pro stridace v konverzaci).
+- Safari/iPhone nemuzu otestovat (WebKit pro Playwright neni nainstalovan); smycka v Chrome funguje.
+- Kriticke CSS inline neprovedeno (riziko CLS bez vizualnich testu); LCP ~2,5 s drzi page-css a 5 fontu.
+- Merge `dev` -> `master` az po vyslovnem souhlasu uzivatele s timto konkretnim merge.
