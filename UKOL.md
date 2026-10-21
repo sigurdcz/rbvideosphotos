@@ -2348,42 +2348,31 @@ Integrační výsledky: SMTP3 testy, mail archive27 assertions, recipient policy
 
 6246ef4 nasazen na dev/staging, Actions39261191994 success. Staging migrate-util HTTP200,107 přítomna, Údržba dokončena a bez SQLSTATE. Settings view test ověřil prázdné/vyplněné/escapované CC, nepovinnost a odděleného hlavního příjemce. SMTP3 testy včetně skutečného RCPT proCC a očištění po další zprávě; mail archive28 assertions včetně zálohy po SMTP odmítnutí; policy13; reset19; upgrade109/16 prošly. Skutečná pošta se při testech neodesílala. Pole nepovinné, resetbezCC, žádné nové.env/secrets. DEPLOYMENT, ARCHITECTURE a wiki aktualizovány. Produkce beze změny.
 
-# UKOL: Hero video po sirkach, video v Mediich a vykon
+# UKOL: Dalsi optimalizace PageSpeed
 
-Zadani: hero video na homepage nema dedit mezi desktopem, tabletem a mobilem (prazdne pole = zadne
-video), u poli ma byt tlacitko Media -> zalozka Video a Media maji umet videa (parametry, miniatura).
-Pak mereni nacitani s videem "Mobilni verze.webm" a opravy podle mereni.
+Datum: 2026-10-21
+Zadani: Navazat na zlepseni mobilniho PageSpeed stagingu z puvodnich 60 na 87 bodu a odstranit dalsi nejvetsi priciny pomaleho vykresleni bez vizualni nebo funkcni regrese.
+Doporuceny model: Sol - Vykon hero videa, fontu, kritickeho CSS a cache vyzaduje mereni, browser QA a regresni testy.
 
-## Implementace
-- `HeroMediaRenderer`: kazda sirka ma vlastni zdroj, `hasHeroVideo()`, smisena sada Vimeo/YouTube + soubor
-  (`data-hero-widths` + `<style data-hero-video-widths>`), `ratioStyle()`, `videoPosterUrl`.
-- `public/index.php` a `PublishService`: poradi sada stranky -> homepage vychozi sada -> foto -> poster -> vychozi sada.
-- Admin: picker se zalozkami Vse/Obrazky/Video (`lockKind`), tlacitko Media u hero poli ve strankach
-  i v Nastaveni (spolecny `$renderVideoField`, jeden handler v `admin.js`), pole prijimaji `/media/...`.
-- Media: prohlizec cte rozmery/delku a vyfoti miniaturu (`probeVideo()`), server data oklesti
-  (`VideoMediaInfo::sanitize`) a miniaturu prekoduje do WebP (`attachVideoDetails`), kvalita a varovani v UI.
-- Servirovani `/media/`: typy videa, `Accept-Ranges`, 206/416, `If-Range` (ETag i datum), `Content-Length`, stream po kouscich.
-- Vykon: `preload="metadata"`, `aspect-ratio` z ulozenych rozmeru, lehky poster, `?rev=` u lokalnich videi,
-  rucni start plain `<video>`, tema golden-bash(-diagonal): obrazek sekce Kontakt az pred zobrazenim a jako WebP.
-- Testy: `tests/HeroVideoMediaTest.php` (nove), `tests/ResponsiveHeroVideoTest.php` (prepsan na nove pravidlo),
-  `tests/HeroVideoBreakpointTest.js` (mock odpovida jen na selektor facade).
+## Kroky
 
-## Vysledek mereni (Chrome, mobil, pomale 4G, CPU 4x, median ze 3)
-Staging pred: load 56-68 s, LCP 27 s, CLS 0,71, 10-13 MB. Po: load ~7 s, LCP ~2,5 s, CLS 0, ~640 kB.
-Izolovane: soubor s Range se rozjede za 0,5 s; bez Range a s metadaty na konci souboru za 11 s.
-Smycka: soubor 12 s/0,7 MB plynuly vsude; soubor 15 s/10 MB se na pomale lince zasekava (start 30 s, 0,4-0,5 s na smycku).
+- [x] Precist konkretni diagnostiku cerstveho PageSpeed reportu a zmerit aktualni staging/dev baseline.
+- [x] Seradit nalezy podle dopadu na LCP, blokovani vykresleni a objem prenosu; nedelat kosmeticke mikrooptimalizace pred hlavni pricinou.
+- [x] Implementovat dalsi bezpecne optimalizace na `dev` se zachovanim vzhledu a tri breakpointu hero videa.
+- [-] Overit testy, skutecne generovane assety, mobilni i desktopovy layout a znovu zmerit vykon.
+- [x] Aktualizovat technickou dokumentaci a globalni wiki; vysledky zapsat vcetne omezeni.
 
-## Chyby a poucení (neopakovat)
-- `?v=<mtime>` u lokalniho videa se shodovalo s YouTube detektorem a udelalo z nej YouTube iframe
-  ("Video neni mozne prehrat"). Oprava: parametr `rev` + YouTube `?v=` jen na hostech YouTube.
-- Puvodne jsem pochopil hero zdroj jako pole u stranek; skutecne je to Nastaveni -> Vychozi hero video.
-  Vychozi sada je zpet jako zdroj homepage.
-- Stary mezipamet pred PHP vraci uz jednou stazene adresy `/media/` postaru (immutable); proto `?rev=`.
-- Po zmene `index.php` overovat Range nejen HEAD, ale i GET (HEAD obchazi mezipamet).
-- Testovaci PHP server (`php -S`) je jednovlaknovy: video a stranku ze dvou portu.
+## Poznamky
 
-## Otevrene
-- Video na stagingu je 10,2 MB (5,4 Mbit/s, 15 s, se zvukem, metadata na konci). Nahradit smyckou do ~1,5 MB (zadani pro stridace v konverzaci).
-- Safari/iPhone nemuzu otestovat (WebKit pro Playwright neni nainstalovan); smycka v Chrome funguje.
-- Kriticke CSS inline neprovedeno (riziko CLS bez vizualnich testu); LCP ~2,5 s drzi page-css a 5 fontu.
-- Merge `dev` -> `master` az po vyslovnem souhlasu uzivatele s timto konkretnim merge.
+- Produkcni report z 21:26 ukazuje 60 bodu, LCP 3,7 s a CLS 0,698; produkce jeste neobsahuje aktualni `dev` optimalizace.
+- Staging ve stejnou dobu ukazuje 87 bodu, pristupnost/doporucene postupy/SEO 100 a prochazeni agenty 3/3. Aktualni baseline se proto musi vztahovat ke stagingu.
+- Stavajici otevrene podezreni: render-blocking page CSS a pet fontu; hero video je uz Range-served, `preload=metadata`, s lehkym posterem a rezervovanym pomerem stran.
+- PageSpeed API vratilo 429 (denni kvota vycerpana). Lokalni Lighthouse se do 3 minut neukoncil a nevytvoril report; vysledek nebyl nahrazen odhadem. Systemovy TLS uspesne nacetl staging HTTP 200.
+- Staging homepage ma 176749 B HTML, 161 `img` uzlu, 38238 B inline CSS a pet font preloadu. Hlavni novy zasah prevadi skryte modalni galerie z desitek `<img srcset>` uzlu na bezpecny JSON a obrazky vytvari az pri otevreni. Stare publikovane `.pt-photos` zustavaji explicitne podporovane; neplatny novy JSON se oznaci `data-gallery-error` a vypise do konzole, nikoli tise nahradi.
+- Presny prepocet soucasneho staging HTML: 36 skrytych galerii obsahuje 109 `<img>` uzlu a 55367 B markupu. Stejna data v novem JSON kontraktu maji odhadovanych 29289 B, tedy o 26078 B / 47,1 % mene; hlavni prinos je odstraneni 109 DOM obrazku a jejich `srcset` z pocatecniho renderu.
+- JSON pouziva `JSON_HEX_*` a `JSON_THROW_ON_ERROR`; render test s `</script><script>` payloadem overuje, ze nelze ukoncit datovy element a ze originalni Unicode/alt text projde beze ztraty. PHP lint, oba JS parsery, cilene gallery/theme testy a `git diff --check` prosly.
+- Plna sada ma dva nesouvisejici zname blokery: drive existujici rozdil CSS mezi Golden Bash a Diagonal a chybejici lokalni DB pripojeni. Zmenene soubory CSS ani DB netykaji; cilene testy zmen prosly. Browser fixture prokazal otevreni JSON galerie, ale capture proces skoncil nenulove pri cekani na stabilni full-page vysku otevreneho modalu, proto nejde oznacit za kompletni browser PASS.
+
+## Vysledek
+
+Lokalni implementace je hotova a zdokumentovana v ARCHITECTURE i globalni wiki (commit 0c48fa0). Pred nasazenim se homepage stale chova podle stareho staging HTML; dalsi realne PageSpeed/DOM mereni je mozne az po samostatne povolenem pushi na `dev`. Produkcni `master` se nemeni.

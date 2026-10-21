@@ -875,25 +875,51 @@
         return;
       }
       lightbox.classList.remove('is-video');
-      var images = Array.prototype.slice.call(card.querySelectorAll('.pt-photos img'));
-      if (!images.length) {
-        var cover = card.querySelector('.pt-thumb img, .bl-thumb img');
-        if (cover) images.push(cover);
+      var dataNode = card.querySelector('.pt-photos-data');
+      if (dataNode) {
+        try {
+          var parsedItems = JSON.parse(dataNode.textContent || '[]');
+          if (!Array.isArray(parsedItems)) throw new Error('Gallery payload is not an array.');
+          galleryItems = parsedItems.map(function (item) {
+            return {
+              src: item && typeof item.src === 'string' ? item.src : '',
+              thumb: item && typeof item.thumb === 'string' ? item.thumb : '',
+              alt: item && typeof item.alt === 'string' ? item.alt : ''
+            };
+          });
+        } catch (error) {
+          card.dataset.galleryError = 'invalid-data';
+          console.error('Portfolio gallery data is invalid.', error);
+          return;
+        }
+      } else {
+        // Backward compatibility for already-published static pages. New output uses
+        // compact JSON so hundreds of hidden <img> nodes do not burden initial render.
+        var images = Array.prototype.slice.call(card.querySelectorAll('.pt-photos img'));
+        galleryItems = images.map(function (image) {
+          return {
+            src: image.getAttribute('data-full') || image.currentSrc || image.getAttribute('src'),
+            thumb: image.currentSrc || image.getAttribute('src'),
+            alt: image.getAttribute('alt') || ''
+          };
+        });
       }
-      galleryItems = images.map(function (image) {
-        return {
-          src: image.getAttribute('data-full') || image.currentSrc || image.getAttribute('src'),
-          thumb: image.currentSrc || image.getAttribute('src'),
-          alt: image.getAttribute('alt') || ''
-        };
-      }).filter(function (item, index, items) {
+      if (!galleryItems.length) {
+        var cover = card.querySelector('.pt-thumb img, .bl-thumb img');
+        if (cover) galleryItems.push({
+          src: cover.currentSrc || cover.getAttribute('src'),
+          thumb: cover.currentSrc || cover.getAttribute('src'),
+          alt: cover.getAttribute('alt') || ''
+        });
+      }
+      galleryItems = galleryItems.filter(function (item, index, items) {
         return item.src && items.findIndex(function (candidate) { return candidate.src === item.src; }) === index;
       });
       if (!galleryItems.length) return;
       var clickedImage = card.querySelector('.pt-thumb img, .bl-thumb img');
       var clickedImageSrc = clickedImage ? (clickedImage.currentSrc || clickedImage.getAttribute('src')) : '';
       var initialGalleryIndex = galleryItems.findIndex(function (item) {
-        return item.src === clickedImageSrc;
+        return item.src === clickedImageSrc || item.thumb === clickedImageSrc;
       });
       if (initialGalleryIndex < 0) initialGalleryIndex = 0;
 
