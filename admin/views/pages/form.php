@@ -52,6 +52,18 @@ $renderMediaField = static function (string $fieldId, string $value, bool $disab
     </div>
     <?php
 };
+// A video field (Vimeo / YouTube URL or a video from the library) with the Media button.
+// Shared by both block renderers below, so no page ends up with a bare URL input.
+$renderVideoField = static function (string $fieldId, string $value, bool $disabled = false) use ($h): void {
+    $off = $disabled ? ' disabled' : '';
+    ?>
+    <div class="hero-video-field" style="display:flex;gap:8px;align-items:center">
+      <input type="text" name="block_content[]" id="<?= $h($fieldId) ?>" value="<?= $h($value) ?>" placeholder="Vimeo / YouTube URL nebo video z Médií (/media/...)" style="flex:1" data-hero-video-input<?= $off ?>>
+      <button type="button" class="btn btn-sm btn-secondary" data-hero-video-media data-target-id="<?= $h($fieldId) ?>"<?= $off ?>>Média</button>
+      <button type="button" class="btn btn-sm btn-secondary" data-hero-video-clear data-target-id="<?= $h($fieldId) ?>"<?= $off ?>>Odebrat</button>
+    </div>
+    <?php
+};
 $blockMap = [];
 $homepageAutofillBlocks = $homepageAutofillBlocks ?? [];
 $serviceItems = $serviceItems ?? [];
@@ -77,7 +89,7 @@ foreach (($blocks ?? []) as $block) {
 }
 
 $renderedBlockKeys = [];
-$renderBlockField = function (string $key, string $label, string $type = 'text', string $hint = '') use ($blockMap, $h, &$renderedBlockKeys, $renderMediaField): void {
+$renderBlockField = function (string $key, string $label, string $type = 'text', string $hint = '') use ($blockMap, $h, &$renderedBlockKeys, $renderMediaField, $renderVideoField): void {
     if (isset($renderedBlockKeys[$key])) {
         return;
     }
@@ -97,11 +109,7 @@ $renderBlockField = function (string $key, string $label, string $type = 'text',
       <?php elseif ($inputType === 'image'): ?>
         <?php $renderMediaField($fieldId, (string)$value); ?>
       <?php elseif ($inputType === 'video'): ?>
-        <div class="hero-video-field" style="display:flex;gap:8px;align-items:center">
-          <input type="text" name="block_content[]" id="<?= $h($fieldId) ?>" value="<?= $h($value) ?>" placeholder="Vimeo / YouTube URL nebo video z Médií (/media/...)" style="flex:1" data-hero-video-input>
-          <button type="button" class="btn btn-sm btn-secondary" data-hero-video-media data-target-id="<?= $h($fieldId) ?>">Média</button>
-          <button type="button" class="btn btn-sm btn-secondary" data-hero-video-clear data-target-id="<?= $h($fieldId) ?>">Odebrat</button>
-        </div>
+        <?php $renderVideoField($fieldId, (string)$value); ?>
       <?php elseif (in_array($inputType, ['html', 'richtext'], true)): ?>
         <div class="article-editor-wrap" data-richtext-editor>
           <div class="article-editor-toolbar">
@@ -696,8 +704,15 @@ ob_start();
               <?php elseif ($block['block_type'] === 'image'): ?>
                 <?php $renderMediaField($blockFieldId, (string)($block['content'] ?? ''), $autofillEnabled); ?>
               <?php elseif (($block['block_type'] === 'video') || $block['block_key'] === 'hero_video'): ?>
-                <input type="url" name="block_content[]" value="<?= $h($block['content'] ?? '') ?>" placeholder="https://... nebo /media/..."<?= $autofillEnabled ? ' disabled' : '' ?>>
-                <div class="form-hint"><?= $block['block_key'] === 'hero_video' ? 'URL videa pro pozadí v hero sekci homepage.' : 'URL videa (YouTube nebo Vimeo). Pokud je vyplněno, přehraje se místo přiřazené fotografie.' ?></div>
+                <?php $renderVideoField($blockFieldId, (string)($block['content'] ?? ''), $autofillEnabled); ?>
+                <?php
+                  $videoHints = [
+                    'hero_video' => 'Desktop (nad 1050 px). Vimeo / YouTube URL, nebo tlačítko Média → záložka Video. Prázdné = na desktopu žádné video.',
+                    'hero_video_tablet' => 'Tablet (701-1050 px). Prázdné = na tabletu žádné video (nedědí se z desktopu).',
+                    'hero_video_mobile' => 'Mobil (do 700 px). Prázdné = na mobilu žádné video (nedědí se z tabletu ani desktopu).',
+                  ];
+                ?>
+                <div class="form-hint"><?= $h($videoHints[$block['block_key']] ?? 'URL videa (YouTube nebo Vimeo) nebo video z Médií. Pokud je vyplněno, přehraje se místo přiřazené fotografie.') ?></div>
               <?php elseif (in_array($block['block_type'], ['html','richtext'], true)): ?>
                 <div class="article-editor-wrap" data-richtext-editor>
                   <div class="article-editor-toolbar">

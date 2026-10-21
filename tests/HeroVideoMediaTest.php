@@ -61,7 +61,10 @@ function register_hero_video_media_tests(callable $test, callable $assert): void
 
     $test('the hero video fields offer the Media picker locked to videos', function () use ($assert, $read): void {
         $form = $read('admin/views/pages/form.php');
-        $assert(substr_count($form, 'data-hero-video-media') >= 2, 'Each hero video field needs a Media button.');
+        // One shared renderer, used by the hero card AND by the generic block list (which is the
+        // only path the homepage editor takes); neither may fall back to a bare URL input.
+        $assert(substr_count($form, '$renderVideoField(') >= 2, 'Both block renderers must use the shared video field.');
+        $assert(!str_contains($form, 'placeholder="https://... nebo /media/..."'), 'No video field may be a bare URL input without the Media button.');
         $assert(str_contains($form, "kind: 'video', lockKind: 'video'"), 'The Media button must open the picker on the Video tab only.');
         $assert(!str_contains($form, '<input type="url" name="block_content[]" value="<?= $h($value) ?>" placeholder="https://... nebo /media/...">'), 'A local /media/ path must not be rejected by type=url.');
 
