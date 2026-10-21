@@ -117,12 +117,13 @@ function register_golden_bash_theme_tests(callable $test, callable $assert): voi
             . '  body.theme-golden-bash.theme-golden-bash-diagonal[data-cms-page-key="homepage"] .hp-hero>.theme-hero-video iframe{' . "\n"
             . '    left:50%!important;right:auto!important;transform:translateX(-50%)!important;' . "\n"
             . '  }';
-        $nativeOverride = 'left:50%!important;right:auto!important;object-position:center center!important;transform:translateX(-50%)!important;';
+        $nativeOverride = 'top:70px!important;left:50%!important;right:auto!important;object-position:center top!important;transform:translateX(-50%)!important;';
         $desktopContract = strpos($css, 'body.theme-golden-bash.theme-golden-bash-diagonal[data-cms-page-key="homepage"] .hp-hero>video.theme-hero-video{' . "\n" . '  left:auto!important;right:0!important;');
         $mobileContract = strpos($css, $mobileOverride);
         $assert($desktopContract !== false && $mobileContract !== false && $desktopContract < $mobileContract, 'The final mobile override must win after the desktop right-edge contract.');
         $assert(str_contains($css, $nativeOverride), 'The native mobile hero video must center its crop instead of inheriting right anchoring.');
-        $assert(str_contains($css, 'object-position:center center!important;'), 'The mobile poster and video must share a centered crop.');
+        $assert(str_contains($css, 'object-position:center center!important;'), 'The mobile poster must retain a centered crop.');
+        $assert(str_contains($css, 'top:70px!important;') && str_contains($css, 'object-position:center top!important;'), 'The native mobile video must start below the navigation and keep the top of its frame visible.');
     });
 
     $test('golden bash theme registers a complete isolated design contract', function () use ($assert, $themeDir, $root): void {
