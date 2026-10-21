@@ -1,6 +1,8 @@
 <?php
 $h = static fn($v) => htmlspecialchars((string) $v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 $pageTitle = 'Analytika';
+$activeView = in_array(($activeView ?? 'overview'), ['overview', 'health', 'visits'], true) ? $activeView : 'overview';
+$viewUrl = static fn(string $view) => '/admin/analytics?' . http_build_query(['view' => $view, 'days' => $days]);
 $deviceLabels = ['desktop' => 'Počítač', 'mobile' => 'Mobil', 'tablet' => 'Tablet', 'unknown' => 'Neznámé'];
 $renderTop = static function (string $title, array $rows, ?array $labels = null) use ($h): void {
     $max = 0;
@@ -23,12 +25,18 @@ $renderTop = static function (string $title, array $rows, ?array $labels = null)
 ob_start(); ?>
 <div class="page-header"><h1>Analytika</h1></div>
 <p>Jedno místo pro dostupnost webu a vlastní měření návštěvnosti. Health monitoring neukládá údaje návštěvníků a neběží přes analytický beacon.</p>
-<?php if (!$enabled && $hasSite): ?><div class="alert alert-warning">Měření je vypnuté v <a href="/admin/settings">Nastavení</a> (karta Cookies, consent a analytics). Zobrazená data jsou historická.</div><?php endif; ?>
-<?php if (!empty($loadError)): ?><div class="alert alert-danger"><?= $h($loadError) ?></div><?php endif; ?>
-<?php if (!empty($healthLoadError)): ?><div class="alert alert-danger"><?= $h($healthLoadError) ?></div><?php endif; ?>
+<nav class="tabs analytics-tabs" aria-label="Sekce analytiky">
+  <?php foreach (['overview' => 'Přehled', 'health' => 'Health', 'visits' => 'Návštěvnost'] as $viewKey => $viewLabel): ?>
+    <a class="tab-btn <?= $activeView === $viewKey ? 'active' : '' ?>" href="<?= $h($viewUrl($viewKey)) ?>" <?= $activeView === $viewKey ? 'aria-current="page"' : '' ?>><?= $h($viewLabel) ?></a>
+  <?php endforeach; ?>
+</nav>
+<?php if (!$enabled && $hasSite && $activeView !== 'health'): ?><div class="alert alert-warning">Měření je vypnuté v <a href="/admin/settings">Nastavení</a> (karta Cookies, consent a analytics). Zobrazená data jsou historická.</div><?php endif; ?>
+<?php if (!empty($loadError) && $activeView !== 'health'): ?><div class="alert alert-danger"><?= $h($loadError) ?></div><?php endif; ?>
+<?php if (!empty($healthLoadError) && $activeView !== 'visits'): ?><div class="alert alert-danger"><?= $h($healthLoadError) ?></div><?php endif; ?>
 <?php if (!$hasSite): ?><div class="card"><p>Nejprve <a href="/admin/settings">nastavte web</a>.</p></div><?php endif; ?>
 
 <form method="get" action="/admin/analytics" style="display:flex;gap:12px;flex-wrap:wrap;margin:20px 0;align-items:center">
+  <input type="hidden" name="view" value="<?= $h($activeView) ?>">
   <label>Období
     <select name="days">
       <?php foreach ([7 => 'Posledních 7 dní', 30 => 'Posledních 30 dní', 90 => 'Posledních 90 dní', 365 => 'Posledních 365 dní'] as $value => $label): ?>
@@ -39,6 +47,43 @@ ob_start(); ?>
   <button type="submit" class="btn btn-primary">Zobrazit</button>
 </form>
 
+<?php if ($activeView === 'overview'): ?>
+<section class="analytics-section" aria-labelledby="overview-heading">
+  <div class="analytics-section__head">
+    <div><h2 id="overview-heading">Přehled</h2><p class="help-text">Souhrn zdraví webu a návštěvnosti za zvolené období.</p></div>
+  </div>
+  <?php if (is_array($healthSummary)): ?>
+    <?php
+      $overviewLatest = $healthSummary['latest'];
+      $overviewHealthy = !$healthSummary['stale'] && is_array($overviewLatest) && ($overviewLatest['status'] ?? '') === 'healthy';
+      $overviewStateLabel = $healthSummary['stale'] ? 'Monitoring neběží' : ($overviewHealthy ? 'Web je zdravý' : 'Web má problém');
+    ?>
+    <div class="health-state <?= $overviewHealthy ? 'health-state--healthy' : 'health-state--unhealthy' ?>">
+      <span class="health-state__dot" aria-hidden="true"></span>
+      <div><strong><?= $h($overviewStateLabel) ?></strong><div><?= $overviewLatest ? 'Poslední kontrola: ' . $h($overviewLatest['checked_at']) . ' UTC' : 'Zatím neproběhla žádná kontrola.' ?></div></div>
+      <a class="btn btn-secondary analytics-state-link" href="<?= $h($viewUrl('health')) ?>">Detail health</a>
+    </div>
+  <?php endif; ?>
+  <div class="stats-grid analytics-overview-grid">
+    <?php if (is_array($healthSummary)): ?>
+      <div class="stat-card"><div class="stat-num"><?= $healthSummary['uptime'] === null ? '—' : $h(number_format((float) $healthSummary['uptime'], 2, ',', ' ')) . ' %' ?></div><div class="stat-lbl">Dostupnost</div></div>
+      <div class="stat-card"><div class="stat-num"><?= $h(number_format((int) $healthSummary['average_ms'], 0, ',', ' ')) ?> ms</div><div class="stat-lbl">Průměrná odezva</div></div>
+      <div class="stat-card"><div class="stat-num"><?= $h(number_format((int) $healthSummary['unhealthy'], 0, ',', ' ')) ?></div><div class="stat-lbl">Nezdravé kontroly</div></div>
+    <?php endif; ?>
+    <?php if (is_array($summary)): ?>
+      <div class="stat-card"><div class="stat-num"><?= $h(number_format($summary['visits'], 0, ',', ' ')) ?></div><div class="stat-lbl">Návštěvy</div></div>
+      <div class="stat-card"><div class="stat-num"><?= $h(number_format($summary['uniques'], 0, ',', ' ')) ?></div><div class="stat-lbl">Unikátní návštěvníci</div></div>
+      <div class="stat-card"><div class="stat-num"><?= $h(number_format((float) $summary['consent_share'], 1, ',', ' ')) ?> %</div><div class="stat-lbl">Návštěvy se souhlasem</div></div>
+    <?php endif; ?>
+  </div>
+  <div class="analytics-overview-actions">
+    <a class="btn btn-secondary" href="<?= $h($viewUrl('health')) ?>">Podrobný health</a>
+    <a class="btn btn-secondary" href="<?= $h($viewUrl('visits')) ?>">Podrobná návštěvnost</a>
+  </div>
+</section>
+<?php endif; ?>
+
+<?php if ($activeView === 'health'): ?>
 <section class="analytics-section" aria-labelledby="health-heading">
   <div class="analytics-section__head">
     <div><h2 id="health-heading">Zdraví webu</h2><p class="help-text">Kontrola <code>/api/health</code> každých 10 minut. Bez záznamu déle než 20 minut je monitoring označen jako zastaralý.</p></div>
@@ -101,7 +146,9 @@ ob_start(); ?>
     <div class="card"><p>Historie zdraví zatím není dostupná.</p></div>
   <?php endif; ?>
 </section>
+<?php endif; ?>
 
+<?php if ($activeView === 'visits'): ?>
 <section class="analytics-section" aria-labelledby="visits-heading">
 <h2 id="visits-heading">Návštěvnost (vlastní měření)</h2>
 <p>Záloha k Google Analytics, nezávislá na GA4/GTM. Bez souhlasu s analytickými cookies se ukládá jen serverový záznam s denně rotujícím anonymním otiskem (IP adresa se neukládá); identifikátor návštěvníka v cookie <code>cms_vid</code> vzniká až po souhlasu. Data se uchovávají 14 měsíců.</p>
@@ -145,4 +192,5 @@ ob_start(); ?>
 </div>
 <?php endif; ?>
 </section>
+<?php endif; ?>
 <?php $slot = ob_get_clean(); require __DIR__ . '/../layouts/main.php'; ?>

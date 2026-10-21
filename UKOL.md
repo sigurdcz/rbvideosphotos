@@ -1,3 +1,26 @@
+# UKOL: Tři sekce administrační Analytiky
+
+Datum: 2026-10-21
+Zadani: Rozdělit Analytiku na Přehled, Health a Návštěvnost; přehled spojí hlavní metriky a detailní sekce zachovají své grafy a tabulky.
+Doporuceny model: Sol - Jde o ohraničenou úpravu controlleru, serverově řízené navigace a administračního view.
+
+## Kroky
+
+- [x] Navrhnout serverově řízené sekce s allowlistem.
+- [x] Přidat společný Přehled a oddělit detail Health/Návštěvnost.
+- [x] Doplnit regresní testy a ověřit PHP/CSS wiring.
+- [x] Commitnout dokončenou úpravu.
+- [ ] Po výslovném požadavku nasadit na staging; master neměnit.
+
+## Poznamky
+
+Sekce používá query parametr `view=overview|health|visits`, který controller normalizuje přes pevný allowlist. Přehled načítá oba datové zdroje; detail Health nespouští dotaz návštěvnosti a detail Návštěvnost nespouští health dotaz. Volba období zůstává při přepnutí sekce zachována.
+
+## Vysledek
+
+Analytika má tři serverově řízené sekce. Přehled kombinuje aktuální health stav, dostupnost, odezvu a hlavní návštěvní metriky bez podrobných tabulek. Health zachovává denní graf a poslední problémy; Návštěvnost zachovává denní návštěvy, stránky, referrery, kampaně a zařízení. Cílená sada prošla 6/6 včetně skutečného renderu všech tří variant, PHP lint prošel a `git diff --check` je čistý. Změna je lokálně commitnutá; staging push čeká na výslovný požadavek. Master zůstává beze změny.
+
+---
 # UKOL: Health API, cron monitoring a analytika zdraví
 
 Datum: 2026-10-21

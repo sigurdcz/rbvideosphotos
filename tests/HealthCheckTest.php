@@ -116,8 +116,50 @@ function register_health_check_tests(callable $test, callable $assert): void
         $cron = (string) file_get_contents($root . '/bin/health-check.php');
         $assert(str_contains($cron, 'health-check-pending.jsonl') && str_contains($cron, 'exit($record[\'status\'] === \'healthy\' ? 0 : 1)'));
         $admin = (string) file_get_contents($root . '/admin/views/analytics/index.php');
-        foreach (['Zdraví webu', 'Monitoring neběží', 'Denní zdraví', 'Návštěvnost (vlastní měření)'] as $text) {
+        foreach (['Přehled', 'Health', 'Zdraví webu', 'Monitoring neběží', 'Denní zdraví', 'Návštěvnost (vlastní měření)', "\$activeView === 'overview'", "\$activeView === 'health'", "\$activeView === 'visits'"] as $text) {
             $assert(str_contains($admin, $text), 'Admin analytics missing: ' . $text);
         }
+        $controller = (string) file_get_contents($root . '/app/Controllers/VisitAnalyticsController.php');
+        $assert(str_contains($controller, "['overview', 'health', 'visits']"), 'Analytics view must use a fixed allowlist.');
+        $assert(str_contains($controller, "\$view !== 'health'") && str_contains($controller, "\$view !== 'visits'"), 'Detail views must avoid unrelated analytics queries.');
+    });
+
+    $test('analytics renders overview and both detailed sections independently', function () use ($assert, $root): void {
+        $render = static function (string $view) use ($root): string {
+            $days = 30;
+            $activeView = $view;
+            $enabled = true;
+            $hasSite = true;
+            $loadError = null;
+            $healthLoadError = null;
+            $summary = [
+                'from' => '2026-09-22', 'to' => '2026-10-21', 'visits' => 120, 'uniques' => 80,
+                'consented_uniques' => 40, 'consent_share' => 33.3, 'bots' => 5,
+                'daily' => [['day' => '2026-10-21', 'visits' => 10, 'uniques' => 8]],
+                'top_paths' => [], 'top_referrers' => [], 'top_sources' => [], 'devices' => [],
+            ];
+            $healthSummary = [
+                'uptime' => 99.5, 'checks' => 100, 'unhealthy' => 1, 'average_ms' => 85, 'stale' => false,
+                'latest' => ['status' => 'healthy', 'checked_at' => '2026-10-21 10:00:00'],
+                'daily' => [['day' => '2026-10-21', 'checks' => 10, 'unhealthy' => 0, 'uptime' => 100]],
+                'recent_failures' => [],
+            ];
+            $_user = ['role' => 'admin', 'email' => 'admin@example.test'];
+            $_csrfToken = 'test';
+            $_SERVER['REQUEST_URI'] = '/admin/analytics?view=' . $view . '&days=30';
+            ob_start();
+            include $root . '/admin/views/analytics/index.php';
+            return (string) ob_get_clean();
+        };
+
+        $overview = $render('overview');
+        $assert(str_contains($overview, 'Souhrn zdraví webu a návštěvnosti'));
+        $assert(str_contains($overview, 'Podrobný health') && str_contains($overview, 'Podrobná návštěvnost'));
+        $assert(!str_contains($overview, 'Denní zdraví') && !str_contains($overview, 'Denní návštěvy'));
+        $health = $render('health');
+        $assert(str_contains($health, 'Denní zdraví') && !str_contains($health, 'Denní návštěvy'));
+        $visits = $render('visits');
+        $assert(str_contains($visits, 'Denní návštěvy') && !str_contains($visits, 'Denní zdraví'));
+        $assert(str_contains($visits, 'view=overview&amp;days=30') && str_contains($visits, 'view=health&amp;days=30'));
     });
 }

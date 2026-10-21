@@ -16,18 +16,24 @@ final class VisitAnalyticsController extends Controller
         header('Cache-Control: no-store');
 
         $days = VisitAnalyticsService::normalizeRangeDays($_GET['days'] ?? 30);
+        $view = strtolower(trim((string) ($_GET['view'] ?? 'overview')));
+        if (!in_array($view, ['overview', 'health', 'visits'], true)) {
+            $view = 'overview';
+        }
         $site = (new SiteRepository())->findFirst();
         $summary = null;
         $healthSummary = null;
         $loadError = null;
         $healthLoadError = null;
-        if ($site) {
+        if ($site && $view !== 'health') {
             try {
                 $summary = (new VisitAnalyticsRepository())->summary((int) $site['id'], $days, new \DateTimeImmutable('today'));
             } catch (\PDOException $e) {
                 \App\Core\Logger::error('visit-analytics', $e->getMessage());
                 $loadError = 'Tabulka site_visits není dostupná. Spusťte migrace (109_create_site_visits.sql).';
             }
+        }
+        if ($site && $view !== 'visits') {
             try {
                 $healthSummary = (new HealthCheckRepository())->summary(
                     (int) $site['id'],
@@ -42,6 +48,7 @@ final class VisitAnalyticsController extends Controller
 
         $this->view('analytics.index', [
             'days' => $days,
+            'activeView' => $view,
             'summary' => $summary,
             'healthSummary' => $healthSummary,
             'loadError' => $loadError,
