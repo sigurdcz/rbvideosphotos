@@ -784,6 +784,8 @@ Golden Bash Diagonal pouziva height-fit Vimeo iframe ze skutecnych metadat getVi
 Font CSS pouziva swap a same-origin preloady. Kurziva Cormorant Garamond v4.001 je kompletni Regular400, nikoli stary Light outline deklarovany jako400. Novy immutable filename a licence/provenance jsou v public/assets/fonts/README.md; reprodukce scripts/build_cormorant_italic.py vyzaduje presny upstream SHA256. Runtime nema Python/FontTools zavislost. Pozdni swap muze zpusobit layout shift, ktery je treba overovat pri pomale siti.
 
 Burger animace obou Golden Bash motivu plati do1050px a zachovava aria-expanded, Escape/focus, transparentni hover a reduced-motion. Overeni a otevrene brany: QA-BACKLOG-2026-10-16.md; konecna QA videa vyzaduje skutecne prehravani, metadata fixture dokazuje pouze geometrii.
+
+Stranka Sluzby v Golden Bash Diagonal do1050px nepouziva desktopovy deleny vnitrni radek karty. Kazda `.service-card` ma jeden vnitrni sloupec, prvni radek je 210px obrazek pres plnou sirku a druhy radek je prirozene vysoky obsah. `object-fit:cover` zachovava pomer media, zatimco textovy blok ma vlastni odsazeni pro absolutne umistene cislo. Popis pouziva 12px, fakta 11.5px a odkaz minimalne 36px vysky. Vnejsi grid zustava na tabletu 701–1050px dvousloupcovy a do700px prechazi na jeden sloupec. Sdileny proces se pouze na telefonu do700px a route s `.gb-services-hero` zvetsi na minimalne122px a jeho popisy na12px; ostatni stranky se sdilenou sekci zustavaji beze zmeny. Desktop od1051px zachovava puvodni vodorovne karty.
 # Galerie v editaci stránky Naše práce
 
 Editace stránky s URL cestou `nase-prace` obsahuje záložku „Foto a video galerie“.

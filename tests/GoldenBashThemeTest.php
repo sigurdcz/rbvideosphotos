@@ -128,6 +128,14 @@ function register_golden_bash_theme_tests(callable $test, callable $assert): voi
         $assert(str_contains($css, 'width:100%!important;height:calc(100% - 72px)!important;object-fit:cover!important;'), 'The native mobile video must cover the hero width without exposing a side strip.');
     });
 
+    $test('golden bash diagonal services cards stay readable on mobile', function () use ($assert, $diagonalThemeDir): void {
+        $css = str_replace("\r\n", "\n", (string)file_get_contents($diagonalThemeDir . '/assets/theme.css'));
+        $assert(str_contains($css, '@media(max-width:1050px){') && str_contains($css, 'grid-template-rows:210px auto!important;'), 'Phone and tablet service cards must stack fixed media above naturally sized copy.');
+        $assert(str_contains($css, 'grid-column:1!important;') && str_contains($css, 'grid-row:2!important;'), 'Mobile service copy must use the full card width below its image.');
+        $assert(str_contains($css, 'font-size:12px!important;') && str_contains($css, 'font-size:11.5px!important;'), 'Mobile service descriptions and facts must remain readable.');
+        $assert(str_contains($css, '.gb-main>.gb-services-hero) .gb-shared-process__step{') && str_contains($css, 'min-height:122px!important;'), 'Services process cards must grow for the larger mobile copy.');
+    });
+
     $test('golden bash theme registers a complete isolated design contract', function () use ($assert, $themeDir, $root): void {
         $theme = (new ThemeTemplateRegistry($root . '/Templates'))->find('golden-bash');
         $assert($theme !== null, 'Golden Bash is not discoverable by the theme registry.');

@@ -2405,3 +2405,49 @@ Cileny Golden Bash test pro mobilni hero prosel a `git diff --check` nenasel chy
 ## Vysledek
 
 Mobilni nativni hero video zacina 72 px pod hornim okrajem prekryvane hero sekce, vyplni celou sirku a zbyvajici vysku a zachovava pomer pres `object-fit:cover`. Cileny regresni test prosel a `git diff --check` je cisty. Kompletni sada novy test take prosla; nadale obsahuje drive znamy nesouvisejici Golden Bash isolation FAIL a chybejici lokalni DB pripojeni. ARCHITECTURE byla aktualizovana. Zmena je pripravena v lokalnim commitu na `dev`; bez explicitniho pozadavku nebyla pushnuta.
+
+---
+# UKOL: Oprava mobilni stranky Sluzby
+
+Datum: 2026-10-21
+Zadani: Opravit responzivni layout stranky Sluzby, aby na mobilu nebyly karty a text stlacene do necitelnych uzkych sloupcu a vsechny sekce mely stabilni geometrii.
+Doporuceny model: Terra - Jde o ohranicenou responzivni CSS opravu s vizualni kontrolou realne stranky.
+
+## Vizualni rubrika (100 bodu, cil alespon 90)
+
+- [ ] 20 b: platno 375 px bez horizontalniho overflow a useknuti.
+- [ ] 10 b: hlavicka, breadcrumbs a mobilni navigace bez prekryvu.
+- [ ] 15 b: hero ma citelny obsah, spravny orez a pouzitelna CTA.
+- [ ] 25 b: sest sluzeb ma citelne karty, konzistentni obrazky a rozestupy.
+- [ ] 15 b: proces spoluprace ma vsechny ctyri kroky a citelnou hierarchii.
+- [ ] 10 b: CTA a footer jsou citelne a bez kolizi.
+- [ ] 5 b: assety se nactou bez zjevne runtime chyby.
+
+## Kroky
+
+- [x] Prohlednout dodany full-page screenshot v puvodnim rozliseni a najit odpovidajici CSS.
+- [x] Zachytit platny Chrome/CDP baseline na 375 px a zmerit problematicke sekce.
+- [x] Upravit mobilni geometrii stranky Sluzby v Diagonal sablone.
+- [x] Doplnit regresni test a dokumentaci.
+- [x] Zachytit finalni 375/700/701px dukazy a vyhodnotit rubriku.
+- [x] Commitnout hotovou opravu na `dev`; bez explicitniho pozadavku nepushovat.
+
+## Poznamky
+
+Dodany screenshot 375x3590 ukazuje hlavni regresi v kartach sluzeb: textova cast a obrazek zustavaji vedle sebe, text ma pouze priblizne polovinu karty a pouziva 10px pismo. Proces a CTA jsou kompaktni, ale musi se overit proti realnemu DOM a nesmi se hodnotit pouze ze zmenseneho full-page nahledu.
+
+Baseline ze screenshotu: 64/100. Nejvetsi odpocty jsou sekce sluzeb -12, typografie a karty -8 a chybejici runtime/interakcni dukaz -6.
+
+Chrome/CDP baseline `https://rbvideosphotos.cz/sluzby` pri 375x812 CSS px, DPR1, cache off: stabilni full-page vyska 3590 px, `scrollWidth===clientWidth===375`, 10/10 viditelnych obrazku nacteno. Karty maji 113px textovy sloupec, popisy i odkazy 10px a ctyri odkazy jsou hlasene jako ancestor-clipped. Cookie overlay byl pritomen; mimo jeho oblast zustava dukaz geometrie platny.
+
+Prvni iterace na375/700px odstranila vsechny ancestor-clipped nalezy, ale povinna kontrola701px odhalila navrat desktopoveho vnitrniho splitu: nadpisy a popisy prekryvaly obrazky a sest odkazu bylo znovu hlaseno jako orezanych. Predchozi prubezne skore92/100 proto nebylo prijato jako finalni.
+
+Diagonal CSS nyni do1050px sklada vnitrni obsah karty do jednoho sloupce: 210px obrazek pres celou sirku a obsah pod nim s prirozenou vyskou. Vnejsi grid zustava na701–1050px dvousloupcovy a do700px je jednosloupcovy. Popis je12px, fakta11.5px a odkaz ma36px vysokou plochu. Proces Sluzby dostal na telefonu12px popisy a minimalni vysku kroku122px. Plny desktop zacina az na1051px.
+
+Finalni Chrome/CDP preview pouzil zivy DOM a assety z `https://rbvideosphotos.cz/sluzby`, cache off, DPR1 a realne tlacitko Odmitnout vse; lokalni CSS bylo vlozeno jako posledni author style. Pri375,700,701 a1050px plati `scrollWidth===clientWidth`, zadne outside/clipped/ancestorClipped prvky, zadne prekryvy a vsechny viditelne obrazky jsou nactene. Pri1051px se vraci desktop; QA nahlasilo drive existujici presah header CTA o43px, ktery nesouvisi s mobilni opravou a nebyl skryt.
+
+Finalni mobilni skore preview:94/100 (platno20/20, hlavicka9/10, hero14/15, sluzby25/25, proces14/15, CTA/footer8/10, runtime preview4/5). Odecteno za existujici10px CTA texty a za to, ze generovany staging asset jeste nebyl nasazen. Dukazy: `.codex-qa/services-final-375.png`, `services-detail-375.png`, `services-final-700.png`, `services-final2-701.png`, `services-detail2-701.png`, `services-final2-1050.png` a `services-final2-1051.png`.
+
+## Vysledek
+
+Mobilni a tabletova stranka Sluzby ma citelne vertikalni karty bez prekryvu a orezani, plnou mobilni typografii procesu a stabilni breakpointy700/701/1050/1051. Cileny regresni test prosel a `git diff --check` je cisty. Kompletni sada novy test take prosla; nadale hlasi znamy nesouvisejici isolation FAIL Diagonal CSS a chybejici lokalni DB pripojeni. Zmena je lokalne pripravena na `dev`; bez explicitniho pozadavku nebyla pushnuta.
