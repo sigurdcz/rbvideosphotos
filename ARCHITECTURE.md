@@ -187,7 +187,7 @@ request -> admin/index.php -> Core\Router -> Controller -> Repository/Service ->
 9. /blog                -> tryServeBlogListingPage()
 10. /faq                -> tryServeFaqPage() z `faq_items`
 11. /kontakt            -> tryServeKontaktPage() z `contact_info`
-12. POST /kontakt/odeslat -> CSRF, honeypot, throttling, archiv v DB a SMTP; veřejný kontrakt přijímá jméno, kontakt, typ focení, místo, zprávu a volitelný enum-like `selected_package_id`, nikoli název, cenu ani datum akce. `PricingPackageCatalog` identifikátor ověří proti serverovému whitelistu a teprve z interní definice získá název a cenu pro e-mail. Neznámé ID blokuje odeslání se stavem `invalid-package`; redirect zachovává pouze ověřené ID v query `balicek`.
+12. POST /kontakt/odeslat -> CSRF, honeypot, throttling, statický antispam, archiv v DB a SMTP; veřejný kontrakt přijímá jméno, kontakt, typ focení, místo, zprávu a volitelný enum-like `selected_package_id`, nikoli název, cenu ani datum akce. `PricingPackageCatalog` identifikátor ověří proti serverovému whitelistu a teprve z interní definice získá název a cenu pro e-mail. Neznámé ID blokuje odeslání se stavem `invalid-package`; redirect zachovává pouze ověřené ID v query `balicek`.
 13. CMS stranka z DB    -> tryServeDatabasePage()
 14. Blog detail         -> tryServeBlogPostPage()
 15. Portfolio detail    -> tryServePortfolioPage(..., true)
@@ -753,7 +753,9 @@ Hero obsahovy container je ve vyssi vizualni vrstve nez video, ale jeho neintera
 
 ## Archiv pošty
 
-Kontaktní POST nejdříve validuje CSRF, honeypot, limit a vstup. `MailArchiveService` pak uloží obsah do `mail_archive` (migrace 104) a až poté zavolá `SmtpMailer` (PHPMailer 7.1.1, povinná autentizace a SSL/TLS nebo STARTTLS). PHP `mail()` se nepoužívá. Stav `accepted` znamená předání transportu, ne doručení; `failed` ponechává obsah pro administrátora, `stored` značí nepotvrzený pokus. Při chybě INSERT se mail neodesílá. `MessagesController` zpřístupňuje stránkovaný archiv na `/admin/messages` pouze roli admin.
+Kontaktní POST nejdříve validuje CSRF, honeypot, limit a vstup. `ContactSpamFilter` následně přiděluje body pouze vysvětlitelným statickým signálům. Samotný odkaz má 2 body a nestačí k blokaci; práh je 7 bodů. Silné signály jsou známá botí věta, URL vložená do jména nebo kombinace hazardní propagace, výzvy k akci a odkazu. Filtr nepoužívá externí službu ani jazyk jako důvod zamítnutí.
+
+`MailArchiveService` uloží běžný obsah do `mail_archive` (migrace 104) a až poté zavolá `SmtpMailer` (PHPMailer 7.1.1, povinná autentizace a SSL/TLS nebo STARTTLS). PHP `mail()` se nepoužívá. Stav `accepted` znamená předání transportu, ne doručení; `failed` ponechává obsah pro administrátora, `stored` značí nepotvrzený pokus. Antispam volá `archiveSpam()`: uloží celé tělo se stavem `spam` a omezeným strojovým důvodem `static_spam:*`, ale SMTP vůbec nespustí. Při chybě INSERT se mail neodesílá. `MessagesController` zpřístupňuje stránkovaný archiv včetně filtru a počtu spamu na `/admin/messages` pouze roli admin.
 
 Obnova hesla používá stejnou službu, ale ukládá pouze metadata bez těla a tajného tokenu. Automatický retry není zaveden. Nastavení, limity a ověřovací příkazy jsou v `DEPLOYMENT.md`.
 
@@ -763,7 +765,7 @@ SMTP konfigurace je v serverovém `.env` (`SMTP_HOST`, `SMTP_PORT`, `SMTP_ENCRYP
 
 `AccountController` používá Auth, CSRF a RequestThrottle; identitu bere pouze ze session. `AccountPasswordService` transakčně zamkne users řádek, ověří současný bcrypt hash, uloží nové heslo a odstraní reset tokeny účtu. Selhání odstranění tokenů vrací celou transakci zpět. Controller po úspěchu odhlašuje aktuální relaci, stávající Auth fingerprint odmítne ostatní staré relace při příštím požadavku.
 
-`MessagesController` vyžaduje roli admin a deleguje SQL na `MailArchiveRepository`. Parametrizované filtry mají allowlist status/kind, stránka je kladné číslo nejvýše 1 000 000, limit je 50. Počty za celý archiv jsou oddělené od filtrovaného výsledku. Zobrazení HTML escapuje a nesmí obsahovat resetovací tokeny.
+`MessagesController` vyžaduje roli admin a deleguje SQL na `MailArchiveRepository`. Parametrizované filtry mají allowlist status `stored|accepted|failed|spam` a kind, stránka je kladné číslo nejvýše 1 000 000, limit je 50. Počty za celý archiv jsou oddělené od filtrovaného výsledku. Zobrazení HTML escapuje a nesmí obsahovat resetovací tokeny.
 
 ## Centrální recovery příjemce
 

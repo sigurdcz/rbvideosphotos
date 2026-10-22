@@ -10,7 +10,7 @@ final class MailArchiveRepository
 
     public function overview(string $status = '', string $kind = '', int $page = 1): array
     {
-        if (!in_array($status, ['', 'stored', 'accepted', 'failed'], true)
+        if (!in_array($status, ['', 'stored', 'accepted', 'failed', 'spam'], true)
             || !in_array($kind, ['', 'contact', 'password_reset'], true) || $page < 1 || $page > 1000000) {
             throw new InvalidArgumentException('Neplatný filtr přehledu e-mailů.');
         }
@@ -25,7 +25,7 @@ final class MailArchiveRepository
         $stmt = $this->db->prepare('SELECT * FROM mail_archive' . $where . ' ORDER BY id DESC LIMIT 50 OFFSET ' . $offset);
         $stmt->execute($values);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        $counts = ['stored' => 0, 'accepted' => 0, 'failed' => 0];
+        $counts = ['stored' => 0, 'accepted' => 0, 'failed' => 0, 'spam' => 0];
         foreach ($this->db->query('SELECT status, COUNT(*) AS total FROM mail_archive GROUP BY status')->fetchAll(PDO::FETCH_ASSOC) as $row) {
             $counts[$row['status']] = (int) $row['total'];
         }

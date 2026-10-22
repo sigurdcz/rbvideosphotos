@@ -2827,10 +2827,20 @@ try {
             }
             RequestThrottle::hit('contact_form', $contactThrottleKey, 3, 10 * 60, 10 * 60);
             try {
-                $delivery = (new \App\Services\MailArchiveService(\App\Core\Database::getInstance()))
-                    ->send('contact', (string) $formEmail, mb_substr($subject, 0, 255), $body, '', $formEmailCopy);
+                $archive = new \App\Services\MailArchiveService(\App\Core\Database::getInstance());
+                $spam = (new \App\Services\ContactSpamFilter())->classify($name, $contact, $message);
+                $delivery = $spam['isSpam']
+                    ? $archive->archiveSpam((string) $formEmail, mb_substr($subject, 0, 255), $body, $spam['reasons'], $formEmailCopy)
+                    : $archive->send('contact', (string) $formEmail, mb_substr($subject, 0, 255), $body, '', $formEmailCopy);
                 $contactSaved = true;
                 $contactMailSent = $delivery['status'] === 'accepted';
+                if ($delivery['status'] === 'spam') {
+                    Logger::warning('contact_form', 'Static spam filter suppressed contact email', [
+                        'archive_id' => $delivery['id'],
+                        'score' => $spam['score'],
+                        'reasons' => $spam['reasons'],
+                    ]);
+                }
             } catch (\Throwable $e) {
                 Logger::error('contact_form', 'Contact message could not be archived; mail not sent', ['type' => get_class($e)]);
             }

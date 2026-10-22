@@ -2451,3 +2451,36 @@ Finalni mobilni skore preview:94/100 (platno20/20, hlavicka9/10, hero14/15, sluz
 ## Vysledek
 
 Mobilni a tabletova stranka Sluzby ma citelne vertikalni karty bez prekryvu a orezani, plnou mobilni typografii procesu a stabilni breakpointy700/701/1050/1051. Cileny regresni test prosel a `git diff --check` je cisty. Kompletni sada novy test take prosla; nadale hlasi znamy nesouvisejici isolation FAIL Diagonal CSS a chybejici lokalni DB pripojeni. Zmena je lokalne pripravena na `dev`; bez explicitniho pozadavku nebyla pushnuta.
+# UKOL: Staticky antispam kontaktniho formulare
+
+Datum: 2026-10-22
+Zadani: Doplnit deterministicky antispam pro verejne kontaktni formulare, ktery zachyti zjevne linkove a kasino spamy, zachova legitimni poptavky a podezrele zpravy ponecha dohledatelne bez odeslani e-mailu.
+Doporuceny model: Terra - Omezena produkcni uprava musi spravne kombinovat skore, archivaci, mail transport a regresni testy bez falesnych blokaci.
+
+## Kroky
+
+- [x] Zmapovat prijem kontaktniho formulare, honeypot, rate limit, mail archive a admin prehled.
+- [x] Navrhnout vysvetlitelne staticke skore s konzervativnimi pravidly a explicitnim duvodem blokace.
+- [x] Ulozit spam do databaze jako rozlisitelny stav a neposilat jej pres SMTP.
+- [x] Zobrazit spam a duvod v administraci bez zmeny resetu hesla.
+- [x] Pridat regresni testy pro oba dodane spamy a legitimni ceske poptavky.
+- [x] Aktualizovat relevantni dokumentaci, spustit cilene testy a commitnout na dev bez pushe.
+
+## Poznamky
+
+- Akceptace: oba ukazkove spamy jsou zachyceny, zpravy Sigurda a Barbory projdou a vsechny pokusy zustanou dohledatelne v DB/adminu.
+- Platne projektove pravidlo: nejdriv dev a staging; master az po samostatnem overeni a novem vyslovnem souhlasu.
+- Prijem je centralne v POST /kontakt/odeslat. Existujici honeypot a IP throttle zustavaji. Novy ContactSpamFilter pouziva prah 7 bodu; samotny odkaz ma jen 2 body, takze odkaz na legitimni misto svatby neblokuje.
+- MailArchiveService::archiveSpam uklada plne telo se stavem spam a strojovym duvodem, ale vubec nevola SMTP. Admin prehled ma novy citelny stav, pocitadlo a filtr.
+- Integrační test archivu mel zastaralou fixture jen z migrace 104, a proto mu chybel cc_recipient pridany pozdeji. Testovaci schema bylo doplneno lokalnim ALTERem; historicke migrace zustaly beze zmeny.
+- ARCHITECTURE a DEPLOYMENT nyni popisuji prah, signaly, stav spam, zadne SMTP pro spam a dohledatelnost v adminu. Nova SQL migrace neni potreba, protoze status a error_code jsou existujici VARCHAR sloupce.
+- Spam archiv zachovava i puvodni diagnostickou hodnotu CC pri stare/neplatne konfiguraci; nikdy ji nepouzije k odeslani, protoze spam cesta SMTP vubec nevola.
+- Integracni test navic overuje allowlist filtru repository a celkovy spam counter, nejen HTML label.
+
+## Vysledek
+
+Kontaktni formular nyni pred SMTP pouziva konzervativni staticke skore s prahem 7. Oba dodane spamy dosahly 19 a 13 bodu, zatimco dodane legitimni poptavky 0 bodu a legitimni zprava s jedinym URL 2 body. Zachyceny spam se neodesila, ale zustava cely v mail_archive se stavem spam a strojovym duvodem; admin ho umi pocitat a filtrovat. Nova migrace ani env promenna nejsou potreba.
+
+PHP lint zmenenych souboru, git diff --check a MailArchiveIntegrationTest s 20 kontrolami prosly. Kontaktni klasifikator prosel vsemi peti regresnimi vektory. Kompletni tests/run.php nadale obsahuje drive znamy nesouvisejici Golden Bash isolation FAIL a chybejici lokalni DB pripojeni; nebyly zakryty ani vydavany za uspesne. Globalni wiki byla aktualizovana samostatnym commitem. Zmena je commitnuta lokalne na dev a bez explicitniho pozadavku nebyla pushnuta.
+
+---
