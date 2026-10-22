@@ -169,14 +169,14 @@ V administraci otevri **Analytika** (`/admin/analytics`). Zdravi a navstevnost p
 
 `GET /api/runtime-info` a `HEAD /api/runtime-info` vraci presnou PHP verzi, SAPI, stav vuci bezpecnostnimu minimu pro CVE-2026-109618/109619 a dostupnost `pdo_mysql`, `gd`, `mbstring`, `openssl` a `json`. Endpoint bezi pred session, neni v sitemap/robots a nikdy nevypisuje `phpinfo()`, php.ini, serverove cesty, databazove udaje ani env.
 
-Token neposilej v URL. Pouzij `MIGRATE_TOKEN` ze serveroveho `.env` v jedne z hlavicek:
+Pouzij `MIGRATE_TOKEN` ze serveroveho `.env` jako GET parametr:
 
 ```bash
-curl -sS -H "X-Migrate-Token: TVUJ_MIGRATE_TOKEN" https://rbvideosphotos.cz/api/runtime-info
-curl -sS -H "Authorization: Bearer TVUJ_MIGRATE_TOKEN" https://staging.rbvideosphotos.cz/api/runtime-info
+https://rbvideosphotos.cz/api/runtime-info?token=TVUJ_MIGRATE_TOKEN
+https://staging.rbvideosphotos.cz/api/runtime-info?token=TVUJ_MIGRATE_TOKEN
 ```
 
-Bez tokenu nebo s chybnym tokenem endpoint vrati obecny HTTP 404. Pro PHP 8.5 je `security_status=patched` az od 8.5.12; neznama budouci vetev vrati `unknown_branch` a bezpecnost si nevymysli.
+Bez tokenu nebo s chybnym tokenem endpoint vrati obecny HTTP 404. `Runtime::sanitizeUri()` nahrazuje hodnotu `token` v aplikacnich traffic/error logach za `***`; hostingovy access log spravovany providerem vsak muze obsahovat plnou URL, proto odkaz nikam nesdilej. Pro PHP 8.5 je `security_status=patched` az od 8.5.12; neznama budouci vetev vrati `unknown_branch` a bezpecnost si nevymysli.
 
 ## Prvotni spusteni
 

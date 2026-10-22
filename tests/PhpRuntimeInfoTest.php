@@ -8,9 +8,10 @@ function register_php_runtime_info_tests(callable $test, callable $assert): void
 {
     $test('runtime info endpoint requires MIGRATE_TOKEN and returns a bounded safe payload', function () use ($assert): void {
         $previous = $_SERVER;
+        $previousGet = $_GET;
         try {
             $_SERVER['REQUEST_METHOD'] = 'GET';
-            unset($_SERVER['HTTP_X_MIGRATE_TOKEN'], $_SERVER['HTTP_AUTHORIZATION']);
+            $_GET = [];
             $responder = new PhpRuntimeInfoHttpResponder('secret-token', '8.5.11', 'fpm-fcgi', static fn(string $name): bool => $name !== 'gd');
 
             ob_start();
@@ -18,13 +19,13 @@ function register_php_runtime_info_tests(callable $test, callable $assert): void
             $missing = json_decode((string) ob_get_clean(), true);
             $assert($handled && http_response_code() === 404 && $missing === ['status' => 'error', 'error' => 'not_found']);
 
-            $_SERVER['HTTP_X_MIGRATE_TOKEN'] = 'wrong-token';
+            $_GET['token'] = 'wrong-token';
             ob_start();
             $responder->serve(PhpRuntimeInfoHttpResponder::PATH);
             $wrong = json_decode((string) ob_get_clean(), true);
             $assert(http_response_code() === 404 && $wrong === ['status' => 'error', 'error' => 'not_found']);
 
-            $_SERVER['HTTP_X_MIGRATE_TOKEN'] = 'secret-token';
+            $_GET['token'] = 'secret-token';
             ob_start();
             $responder->serve(PhpRuntimeInfoHttpResponder::PATH);
             $payload = json_decode((string) ob_get_clean(), true);
@@ -46,16 +47,17 @@ function register_php_runtime_info_tests(callable $test, callable $assert): void
             $assert($responder->serve('/other') === false);
         } finally {
             $_SERVER = $previous;
+            $_GET = $previousGet;
             http_response_code(200);
         }
     });
 
-    $test('runtime info endpoint supports bearer token and does not guess unknown branch safety', function () use ($assert): void {
+    $test('runtime info endpoint uses GET token and does not guess unknown branch safety', function () use ($assert): void {
         $previous = $_SERVER;
+        $previousGet = $_GET;
         try {
             $_SERVER['REQUEST_METHOD'] = 'GET';
-            unset($_SERVER['HTTP_X_MIGRATE_TOKEN']);
-            $_SERVER['HTTP_AUTHORIZATION'] = 'Bearer secret-token';
+            $_GET = ['token' => 'secret-token'];
             ob_start();
             (new PhpRuntimeInfoHttpResponder('secret-token', '8.6.0', 'cli', static fn(): bool => true))
                 ->serve(PhpRuntimeInfoHttpResponder::PATH);
@@ -65,6 +67,7 @@ function register_php_runtime_info_tests(callable $test, callable $assert): void
             $assert($payload['php']['security_status'] === 'unknown_branch');
         } finally {
             $_SERVER = $previous;
+            $_GET = $previousGet;
             http_response_code(200);
         }
     });
@@ -77,5 +80,7 @@ function register_php_runtime_info_tests(callable $test, callable $assert): void
         $assert($route !== false && $auth !== false && $route < $auth, 'Runtime info endpoint must run before Auth::start().');
         $assert(!str_contains((string) file_get_contents($root . '/app/Services/SitemapGenerator.php'), PhpRuntimeInfoHttpResponder::PATH));
         $assert(!str_contains((string) file_get_contents($root . '/app/Services/RobotsGenerator.php'), PhpRuntimeInfoHttpResponder::PATH));
+        $runtime = (string) file_get_contents($root . '/app/Core/Runtime.php');
+        $assert(str_contains($runtime, '(?:api_key|token|access_token)'), 'Traffic logger must mask token query values.');
     });
 }

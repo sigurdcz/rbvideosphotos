@@ -48,13 +48,7 @@ final class PhpRuntimeInfoHttpResponder
             return $this->respond(503, ['status' => 'error', 'error' => 'runtime_info_unavailable'], $method);
         }
 
-        $provided = trim((string) ($_SERVER['HTTP_X_MIGRATE_TOKEN'] ?? ''));
-        if ($provided === '') {
-            $authorization = trim((string) ($_SERVER['HTTP_AUTHORIZATION'] ?? ''));
-            if (preg_match('/^Bearer\s+(.+)$/i', $authorization, $match) === 1) {
-                $provided = trim($match[1]);
-            }
-        }
+        $provided = trim((string) ($_GET['token'] ?? ''));
         if ($provided === '' || !hash_equals($expected, $provided)) {
             return $this->respond(404, ['status' => 'error', 'error' => 'not_found'], $method);
         }

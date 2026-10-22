@@ -94,8 +94,8 @@ $earlyUri = parse_url((string) ($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH);
 if ((new HealthCheckHttpResponder())->serve((string) $earlyUri)) {
     exit;
 }
-// Restricted runtime diagnostics. The migration token is accepted only in a
-// request header so it does not leak into URLs, referrers or routine access logs.
+// Restricted runtime diagnostics. Runtime::sanitizeUri() masks token query
+// values in application traffic/error logs before this early route is served.
 if ((new PhpRuntimeInfoHttpResponder())->serve((string) $earlyUri)) {
     exit;
 }

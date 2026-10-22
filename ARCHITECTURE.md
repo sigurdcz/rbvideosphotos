@@ -174,7 +174,7 @@ request -> admin/index.php -> Core\Router -> Controller -> Repository/Service ->
 
 ```text
 1. GET/HEAD /api/health -> HealthCheckHttpResponder, application + DB readiness, 200/503
-2. GET/HEAD /api/runtime-info -> PhpRuntimeInfoHttpResponder, pouze s MIGRATE_TOKEN v hlavicce
+2. GET/HEAD /api/runtime-info -> PhpRuntimeInfoHttpResponder, pouze s MIGRATE_TOKEN v GET parametru `token`
 3. /.well-known/security.txt a /security.txt -> SecurityTxtHttpResponder
 4. /assets/*, /media/*  -> tryServePublicAssetWithoutSession(): realpath ochrana, typy vcetne mp4/webm/mov,
    `Accept-Ranges`, `Range`->206/416 a `If-Range` (ETag i datum Last-Modified, kvuli Safari),
@@ -200,7 +200,7 @@ Security endpointy jsou zamerne pred `Auth::start()`: verejny strojovy soubor ne
 Totez plati pro `POST /api/visit`: beacon nesmi zakladat session a lezi mimo `/api/v1/*`, takze nevyzaduje API klic.
 `/api/health` je jeste drive: nezaklada session ani visit, neni v sitemap/robots a vraci `X-Robots-Tag: noindex, nofollow, noarchive`. Odpoved zverejni jen `status`, UTC cas a agregovane `application/database` checks. DB chyba je JSON s HTTP503, nikoli tichy HTTP200.
 
-`/api/runtime-info` je chraneny stejnym serverovym `MIGRATE_TOKEN` jako migracni utilita, ale token prijima pouze v `X-Migrate-Token` nebo `Authorization: Bearer` hlavicce. Query parametr neni podporovan, aby se tajemstvi nedostalo do URL, refereru nebo beznych access logu. Bez platneho tokenu vraci obecny 404 JSON. Platna odpoved obsahuje pouze `PHP_VERSION`, odvozene `version_id`, SAPI, minimum pro CVE-2026-109618/109619 a dostupnost pozadovanych extensions; nikdy phpinfo, ini hodnoty, serverove cesty, DB konfiguraci ani env. Endpoint bezi pred session/analytics, je `no-store`, neni v sitemap/robots a HEAD nema telo.
+`/api/runtime-info` je chraneny stejnym serverovym `MIGRATE_TOKEN` jako migracni utilita a prijima jej v GET parametru `token`. `Runtime::sanitizeUri()` maskuje jeho hodnotu v aplikacnich traffic/error logach; provozni access log hostingu muze plnou URL stale uchovat. Bez platneho tokenu vraci obecny 404 JSON. Platna odpoved obsahuje pouze `PHP_VERSION`, odvozene `version_id`, SAPI, minimum pro CVE-2026-109618/109619 a dostupnost pozadovanych extensions; nikdy phpinfo, ini hodnoty, serverove cesty, DB konfiguraci ani env. Endpoint bezi pred session/analytics, je `no-store`, posila `Referrer-Policy: no-referrer`, neni v sitemap/robots a HEAD nema telo.
 
 ### Health monitoring pipeline
 
