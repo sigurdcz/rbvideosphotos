@@ -108,6 +108,7 @@ try {
     // Settings
     $router->get('/admin/settings',        'SettingsController', 'index');
     $router->post('/admin/settings/update','SettingsController', 'update');
+    $router->post('/admin/settings/spam-test','SettingsController', 'testSpam');
 
     // RFC 9116 security.txt
     $router->get('/admin/security-txt',         'SecurityTxtController', 'index');

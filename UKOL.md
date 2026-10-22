@@ -2539,3 +2539,33 @@ Lokalni DB koncila migraci 103, proto byla izolovane aplikovana existujici appen
 
 Lokalni administrace ukazala stav `Web ma problem`, dostupnost 0,00 %, jednu provedenou a jednu nezdravou kontrolu a prumernou odezvu 15000 ms. Tabulka problemu obsahuje HTTP 504, DB `unknown`, kod `http_504` a zdroj `cron`. Screenshot je ulozen v `artifacts/health-504-local.jpg`. Testovaci zaznam zustava pouze v lokalni DB, aby si jej uzivatel mohl prohlednout; produkce ani staging nebyly zmeneny.
 
+---
+# UKOL: Sprava statickeho antispamu v administraci
+
+Datum: 2026-10-22
+Zadani: Pridat do Nastaveni bezpecnou spravu statickeho antispamu vcetne zapnuti, prahu, bodu, seznamu frazi a testovaci klasifikace bez odeslani formulare.
+Doporuceny model: Sol - Zmena propojuje databazovou konfiguraci, validaci, administracni UI, runtime filtr a bezpecny testovaci endpoint.
+
+## Kroky
+
+- [x] Zmapovat uloziste globalnich nastaveni, admin save flow a existujici antispam kontrakt.
+- [x] Pridat append-only migraci 111 a bezpecne vychozi hodnoty do fresh schema.
+- [x] Zavest typovanou konfiguraci a validaci bez ticheho fallbacku pri poskozene konfiguraci.
+- [x] Rozsirit ContactSpamFilter a odesilani formulare o DB konfiguraci.
+- [x] Pridat sekci Nastaveni -> Antispam a testovaci klasifikaci bez SMTP/archivace.
+- [x] Doplnit regresni a integracni testy, dokumentaci a lokalni vizualni kontrolu.
+- [x] Commitnout hotovou zmenu na `dev`; bez vyzvy nepushovat a nemenit `master`.
+
+## Poznamky
+
+Stavajici pevna pravidla zustanou vychozim profilem. Administrace musi odmitnout neplatny prah, body, prilis dlouhe seznamy a prazdnou povinnou konfiguraci. Testovaci klasifikace nesmi zapisovat zpravu do archivu ani ji odeslat e-mailem.
+Pridana verzovana konfigurace `ContactSpamConfig`, zapis do `sites.contact_spam_config_json` pres novou idempotentni migraci 111 a writable allowlist repository. Ulozene neplatne JSON nebo nepodporovana verze se nezamaskuji: verejne odeslani skonci viditelnou chybou a admin zobrazi opravny banner.
+Nastaveni obsahuje prepinac, prah, sest bodovych vah, tri povinne seznamy a volitelny allowlist domen. Samostatny admin test pouziva ulozenou konfiguraci a pouze vraci skore/duvody pres flash; nevola MailArchiveService ani SMTP.
+Cileny executable test prosel 7 kontrolami. PHP lint vsech zmenenych PHP souboru a `git diff --check` prosly. Plna sada dosla ke znamemu nesouvisejicimu Golden Bash isolation FAIL a pote k lokalnimu DB blockeru; tyto chyby nebyly skryty.
+
+## Vysledek
+
+Antispam lze spravovat v administraci v sekci Nastaveni -> Antispam. Spravce muze filtr zapnout nebo vypnout, upravit prah a sest bodovych vah, editovat zname fraze, reklamni vyrazy a CTA a povolit legitimni domeny. Samostatny test vyhodnoti vzorek proti naposledy ulozene konfiguraci bez zapisu do archivu a bez SMTP.
+
+Nova append-only migrace 111 pridava verzovanou JSON konfiguraci webu. Neplatna ulozena konfigurace se nezamaskuje vychozimi hodnotami; admin zobrazi chybu a verejne odeslani se zastavi. Cilene testy, PHP lint, diff check, dvojite provedeni migrace a lokalni UI kontrola prosly. Cela testovaci sada nadale narazi na znamy nesouvisejici Golden Bash isolation FAIL a lokalni DB blocker. Globalni wiki byla aktualizovana samostatnym commitem `cd8bf6a`. Zmena zustava pouze na lokalni vetvi `dev`; staging ani produkce nebyly zmeneny.
+

@@ -8,6 +8,8 @@ use App\Repositories\ContactRepository;
 use App\Repositories\MediaRepository;
 use App\Repositories\SiteRepository;
 use App\Services\EmailRecipientList;
+use App\Services\ContactSpamConfig;
+use App\Services\ContactSpamFilter;
 
 class SettingsController extends Controller
 {
@@ -27,12 +29,24 @@ class SettingsController extends Controller
         $contact = $site ? (new ContactRepository())->findBySiteSafe((int)$site['id']) : [];
 
         $apiKey = Env::get('API_KEY') ?: null;
+        $spamConfigError = null;
+        try {
+            $spamConfig = ContactSpamConfig::fromStored($site['contact_spam_config_json'] ?? null);
+        } catch (\InvalidArgumentException $e) {
+            $spamConfig = ContactSpamConfig::defaults();
+            $spamConfigError = $e->getMessage() . ' Zobrazené výchozí hodnoty nejsou aktivní, dokud nastavení znovu neuložíte.';
+        }
+        $spamTestResultRaw = $this->getFlash('spam_test_result');
+        $spamTestResult = $spamTestResultRaw ? json_decode($spamTestResultRaw, true) : null;
 
         $this->view('settings.index', [
             'site' => $site,
             'contact' => $contact,
             'media' => $media,
             'apiKey' => $apiKey,
+            'spamConfig' => $spamConfig,
+            'spamConfigError' => $spamConfigError,
+            'spamTestResult' => is_array($spamTestResult) ? $spamTestResult : null,
             'success' => $this->getFlash('success'),
             'error' => $this->getFlash('error'),
         ]);
@@ -56,6 +70,12 @@ class SettingsController extends Controller
         $sites = new SiteRepository();
         $contactRepo = new ContactRepository();
         $site = $sites->findFirst();
+        try {
+            $spamConfigJson = ContactSpamConfig::encode(ContactSpamConfig::fromPost($_POST));
+        } catch (\InvalidArgumentException $e) {
+            $this->flash('error', 'Antispam: ' . $e->getMessage() . ' Nastavení nebylo uloženo.');
+            $this->redirect('/admin/settings#antispam');
+        }
         $videoOverlayOpacity = str_replace(',', '.', trim((string)($_POST['video_overlay_opacity'] ?? '')));
         $videoOverlayOpacity = $videoOverlayOpacity === '' ? 0.62 : max(0, min(1, (float)$videoOverlayOpacity));
         $mediaImageQuality = trim((string)($_POST['media_image_quality'] ?? ''));
@@ -121,6 +141,7 @@ class SettingsController extends Controller
             'clarity_id' => trim($_POST['clarity_id'] ?? ''),
             'meta_pixel_id' => trim($_POST['meta_pixel_id'] ?? ''),
             'tracking_events_json' => $this->buildTrackingEventsJson(),
+            'contact_spam_config_json' => $spamConfigJson,
         ];
 
         $siteId = 0;
@@ -140,6 +161,25 @@ class SettingsController extends Controller
 
         $this->flash('success', 'Nastavení webu ulozeno.');
         $this->redirect('/admin/settings');
+    }
+
+    public function testSpam(array $params): void
+    {
+        $this->requireAdmin();
+        $this->csrfCheck();
+        $site = (new SiteRepository())->findFirst();
+        try {
+            $config = ContactSpamConfig::fromStored($site['contact_spam_config_json'] ?? null);
+            $result = (new ContactSpamFilter($config))->classify(
+                trim((string)($_POST['spam_test_name'] ?? '')),
+                trim((string)($_POST['spam_test_contact'] ?? '')),
+                trim((string)($_POST['spam_test_message'] ?? ''))
+            );
+            $this->flash('spam_test_result', json_encode($result, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
+        } catch (\Throwable $e) {
+            $this->flash('error', 'Test antispamu nelze provést: ' . $e->getMessage());
+        }
+        $this->redirect('/admin/settings#antispam-test');
     }
 
     private function validatedImageMediaId(int $mediaId, int $siteId): ?int

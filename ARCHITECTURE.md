@@ -208,6 +208,14 @@ Totez plati pro `POST /api/visit`: beacon nesmi zakladat session a lezi mimo `/a
 
 `HealthCheckRepository::summary()` napaji existujici `/admin/analytics`: aktualni stav, uptime pouze z provedenych kontrol, response time a denni graf. Den bez dat je sedy, ne 100% healthy. Posledni zaznam starsi nez 20 minut je `stale`/„Monitoring neběží“, aby zastaveny cron nebyl tise vydavan za dostupnost. Historie ma retenci 14 mesicu stejne jako navstevnost.
 
+### Konfigurovatelny kontaktni antispam
+
+`ContactSpamConfig` vlastni verzovany kontrakt statickeho bodoveho filtru. `NULL` v `sites.contact_spam_config_json` je legitimni signal pro vestaveny vychozi profil; neprazdny JSON prochazi uplnou validaci verze, boolean prepinace, prahu 1-100, vah 0-100, velikosti seznamu a syntaxe povolenych domen. Poskozena ulozena konfigurace vyvola viditelnou chybu a nesmi se tise nahradit defaultem.
+
+`ContactSpamFilter` dostane validovanou konfiguraci a vraci pouze `isSpam`, `score` a stabilni reason codes. Verejny kontaktni tok nacte konfiguraci ze stejneho zaznamu `sites`, klasifikuje pred `MailArchiveService::send()` a pri spamu vola `archiveSpam()`, takze zprava zustane dohledatelna, ale SMTP ani CC se nespusti. Povolené domeny potlaci pouze body za odkaz ve zprave; URL ve jmenu zustava silny signal.
+
+`POST /admin/settings/spam-test` vyzaduje admin roli a CSRF, pouziva naposledy ulozeny profil a vola pouze klasifikator. Nevola archiv ani mail transport. Admin save serializuje konfiguraci pres `ContactSpamConfig::fromPost()`; neplatne hodnoty odmitne jako celek bez castecneho ulozeni.
+
 ## Obsahovy model
 
 ### CMS stranky

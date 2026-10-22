@@ -155,6 +155,12 @@ Detail GTM setupu je v `GTM_ADMIN.md`.
 
 `GET /api/health` a `HEAD /api/health` vraci maly JSON bez session a bez zapocteni navstevy. Zdrava aplikace s dostupnou databazi vraci HTTP200 a `{"status":"ok",...}`; chyba DB vraci HTTP503 a `status=error`. Endpoint neni v sitemap ani robots a posila `X-Robots-Tag: noindex, nofollow, noarchive`.
 
+## Nastavitelny antispam kontaktniho formulare
+
+V **Administrace -> Nastaveni -> Antispam kontaktniho formulare** lze zapnout nebo vypnout staticky bodovy filtr, zmenit blokovaci prah, vahy jednotlivych signalu, spamove fraze, reklamni slova, vyzvy k akci a volitelny seznam povolenych domen. Samostatny testovaci formular pouziva naposledy ulozenou konfiguraci, ale nic nearchivuje a neposila pres SMTP.
+
+Konfigurace je verzovany JSON v `sites.contact_spam_config_json` (migrace `111_add_contact_spam_config.sql`). `NULL` znamena zamerne vychozi profil shodny s puvodnim filtrem. Neplatny neprazdny JSON nebo nepodporovana verze se nesmi tise nahradit vychozim profilem: admin zobrazi chybu a verejne odeslani se neodesle. Zachycena zprava se nadale ulozi v `mail_archive` se stavem `spam`, ale SMTP ani CC se nevolaji.
+
 Po migraci `110_create_health_checks.sql` spoustej na serveru kazdych 10 minut:
 
 ```cron
