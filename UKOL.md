@@ -2515,3 +2515,27 @@ Kontaktni formular nyni pred SMTP pouziva konzervativni staticke skore s prahem 
 PHP lint zmenenych souboru, git diff --check a MailArchiveIntegrationTest s 20 kontrolami prosly. Kontaktni klasifikator prosel vsemi peti regresnimi vektory. Kompletni tests/run.php nadale obsahuje drive znamy nesouvisejici Golden Bash isolation FAIL a chybejici lokalni DB pripojeni; nebyly zakryty ani vydavany za uspesne. Globalni wiki byla aktualizovana samostatnym commitem. Zmena je commitnuta lokalne na dev a bez explicitniho pozadavku nebyla pushnuta.
 
 ---
+---
+# UKOL: Lokalni simulace health chyby 504
+
+Datum: 2026-10-22
+Zadani: V lokalnim prostredi ulozit jeden health check s HTTP 504 a zachytit screenshot toho, jak se problem zobrazi v administracni sekci Health.
+Doporuceny model: Terra - Jde o omezeny lokalni test s databazovym zaznamem, spustenim aplikace a vizualnim overenim.
+
+## Kroky
+
+- [x] Overit lokalni DB, aplikacni server a prihlaseni do administrace.
+- [x] Vlozit jeden izolovany `unhealthy` health zaznam s HTTP 504.
+- [x] Otevrit lokalni administraci a zachytit screenshot Health sekce.
+- [x] Overit, ze UI ukazuje problem a tabulka obsahuje HTTP 504.
+- [x] Uvest lokalni data do rozumneho stavu a zaznamenat vysledek.
+
+## Poznamky
+
+Test se tyka pouze lokalni databaze. Produkce ani staging se nemeni.
+Lokalni DB koncila migraci 103, proto byla izolovane aplikovana existujici append-only migrace 110. Vlozeny zaznam ma stav `unhealthy`, HTTP 504, kod `http_504` a dobu odezvy 15000 ms.
+
+## Vysledek
+
+Lokalni administrace ukazala stav `Web ma problem`, dostupnost 0,00 %, jednu provedenou a jednu nezdravou kontrolu a prumernou odezvu 15000 ms. Tabulka problemu obsahuje HTTP 504, DB `unknown`, kod `http_504` a zdroj `cron`. Screenshot je ulozen v `artifacts/health-504-local.jpg`. Testovaci zaznam zustava pouze v lokalni DB, aby si jej uzivatel mohl prohlednout; produkce ani staging nebyly zmeneny.
+
