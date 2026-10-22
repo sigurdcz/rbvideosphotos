@@ -59,6 +59,16 @@ Presnou absolutni cestu a nazev PHP CLI vezmi z detailu hostingu; nepouzivej web
 
 `/api/health` neni sitemap URL, nevytvari session a nevstupuje do `site_visits`. Vraci jen agregovany stav bez DB hostu, jmen, hesel nebo vyjimky. V administraci je monitoring po 20 minutach bez zaznamu explicitne stale; sede dny nejsou vydavany za dostupnost.
 
+## Kontrola PHP runtime pod MIGRATE_TOKEN
+
+Po nasazeni over presnou serverovou verzi bez verejneho `phpinfo()`:
+
+```text
+https://rbvideosphotos.cz/api/runtime-info?token=TVUJ_MIGRATE_TOKEN
+```
+
+Token je GET parametr podle provozniho kontraktu. Aplikacni logger jeho hodnotu maskuje, ale provideruv access log muze uchovat plnou URL; odkaz proto nesdilej a po podezreni na unik token zmen. Platny JSON vraci jen verzi, SAPI, bezpecnostni minimum a stav povinnych extensions. Pro upozorneni z 21.10.2026 musi byt produkcni PHP 8.5 alespon 8.5.12 (`security_status=patched`). `unknown_branch` neni potvrzeni bezpecnosti a vyzaduje rucni kontrolu oficialniho PHP advisory. Stejnou kontrolu proved oddelene na stagingu.
+
 Obsahove PHP handlery se vzdy provadeji az po dokonceni vsech SQL migraci, i kdyz web uz existuje. Aktualni handler starsi migrace muze pouzivat schema_name z 079; jednopruschodove poradi proto neni bezpecne. Regresni overeni: php tests/MigrationUpgradeOrderIntegrationTest.php vytvori vlastni nahodnou DB, spusti skutecne SQL a nahradi pouze obsahove efekty kontrolou schema zavislosti.
 
 ## PHP 8.5 a davkove JSON odpovedi
@@ -79,7 +89,9 @@ Ověření vývoje: `php tests/PasswordResetIntegrationTest.php` vytváří a v 
 
 Po nasazení spusťte migrace včetně **104_add_mail_archive.sql**. V administraci přibyla stránka **E-maily a zprávy** (`/admin/messages`, pouze role admin). Obsah poptávky (jméno, kontakt, typ služby, místo, zpráva a balíček) se ukládá do `mail_archive.body` **před pokusem o odeslání**. Příjemce zůstává v nastavení Kontakt/Nastavení (`form_email`, případně kontaktní e-mail). Vytvoření schránky team@rbvideosphotos.cz samo toto nastavení nemění.
 
-Stavy: `stored` = uloženo, výsledek pokusu nepotvrzen (např. přerušení procesu); `accepted` = SMTP server přijal zprávu k doručení, nikoli důkaz doručení do schránky; `failed` = transport odmítl, konfigurace je neplatná nebo nastala chyba. Časové údaje jsou UTC. Přehled zobrazuje příjemce a bezpečný chybový kód. Automatické opakování se neprovádí, aby při nejasném výsledku nevznikaly duplicitní zprávy. Obsah lze v administraci přečíst a požadavek vyřídit přímo.
+Stavy: `stored` = uloženo, výsledek pokusu nepotvrzen (např. přerušení procesu); `accepted` = SMTP server přijal zprávu k doručení, nikoli důkaz doručení do schránky; `failed` = transport odmítl, konfigurace je neplatná nebo nastala chyba; `spam` = statický filtr zprávu uložil, ale záměrně nevolal SMTP. Časové údaje jsou UTC. Přehled zobrazuje příjemce a bezpečný chybový kód. Automatické opakování se neprovádí, aby při nejasném výsledku nevznikaly duplicitní zprávy. Obsah lze v administraci přečíst a požadavek vyřídit přímo.
+
+Statický antispam je konzervativní: samotný odkaz zprávu nezablokuje. Blokuje až skóre 7 založené na silné botí frázi, URL v poli jména nebo kombinaci hazardní propagace, výzvy k akci a odkazu. Důvod je v archivu jako `static_spam:*`. Falešně zachycenou poptávku lze proto vždy dohledat v **E-maily a zprávy → Zachyceno statickým antispamem**. Filtr nemění obnovu hesla.
 
 Pokud odeslání selže, návštěvník dostane potvrzení uložení a informaci o nepotvrzeném e-mailu. Při selhání zápisu do databáze se nic neodesílá a formulář ukáže chybu. Mail log obsahuje ID záznamu a kód chyby, nikoli obsah zprávy. Archiv je provozní záloha proti výpadku pošty; pro ztrátu databáze je nutná běžná externí záloha DB. Armagedon/reset databáze může archiv odstranit. Historické zprávy před nasazením nelze zpětně obnovit.
 
@@ -129,7 +141,7 @@ Ověření: `php tests/SmtpMailerTest.php`, `php tests/MailPersistenceIntegratio
 
 ## Přehled e-mailů a změna vlastního hesla
 
-- `/admin/messages`: administrátor vidí kontaktní zprávy i metadata obnovy hesla. Filtry `status=accepted|failed|stored` a `kind=contact|password_reset` lze kombinovat. Přehled zobrazuje příjemce, předmět, vznik a poslední pokus (UTC), obsah kontaktu a bezpečný chybový kód. Počty jsou za celý archiv, počet nalezených a seznam respektují filtr. Stránkování po 50 zachovává filtry. `accepted` je předání poštovní službě, nikoli potvrzené doručení. Neplatný filtr vrací HTTP 400; editor nemá k archivu přístup.
+- `/admin/messages`: administrátor vidí kontaktní zprávy i metadata obnovy hesla. Filtry `status=accepted|failed|stored|spam` a `kind=contact|password_reset` lze kombinovat. Přehled zobrazuje příjemce, předmět, vznik a poslední pokus (UTC), obsah kontaktu a bezpečný chybový kód. Počty jsou za celý archiv, počet nalezených a seznam respektují filtr. Stránkování po 50 zachovává filtry. `accepted` je předání poštovní službě, nikoli potvrzené doručení. Neplatný filtr vrací HTTP 400; editor nemá k archivu přístup.
 - `/admin/account/password`: každý přihlášený uživatel může změnit **pouze vlastní heslo**. Odkaz je v patičce administrace. Zadává současné heslo, nové heslo (12–72 bajtů, jiné než současné) a jeho potvrzení. POST vyžaduje CSRF a má limit 5 pokusů za 15 minut na účet. Po úspěchu se uživatel odhlásí a přihlásí novým heslem. Ostatní relace budou při dalším požadavku odmítnuty; existující reset odkazy účtu se zneplatní.
 
 Změna hesla neodesílá e-mail a nezávisí na dostupnosti SMTP. Pokud současné heslo neznáte, použijte `/admin/forgot-password`; ten identifikuje účet podle loginu a posílá odkaz na uložené `contact_info.form_email`. Heslo ani reset token se do archivu/logu nepíše, audit změny obsahuje pouze user_id.

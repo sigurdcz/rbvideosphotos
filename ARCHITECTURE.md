@@ -174,30 +174,33 @@ request -> admin/index.php -> Core\Router -> Controller -> Repository/Service ->
 
 ```text
 1. GET/HEAD /api/health -> HealthCheckHttpResponder, application + DB readiness, 200/503
-2. /.well-known/security.txt a /security.txt -> SecurityTxtHttpResponder
-3. /assets/*, /media/*  -> tryServePublicAssetWithoutSession(): realpath ochrana, typy vcetne mp4/webm/mov,
+2. GET/HEAD /api/runtime-info -> PhpRuntimeInfoHttpResponder, pouze s MIGRATE_TOKEN v GET parametru `token`
+3. /.well-known/security.txt a /security.txt -> SecurityTxtHttpResponder
+4. /assets/*, /media/*  -> tryServePublicAssetWithoutSession(): realpath ochrana, typy vcetne mp4/webm/mov,
    `Accept-Ranges`, `Range`->206/416 a `If-Range` (ETag i datum Last-Modified, kvuli Safari),
    soubor nad 4 MB nebo cast se posila po kouscich (`fread`), ne `readfile`
-4. POST /api/visit      -> tryRecordVisitBeacon(), vlastni mereni navstevnosti (pred Auth::start)
+5. POST /api/visit      -> tryRecordVisitBeacon(), vlastni mereni navstevnosti (pred Auth::start)
    -- Auth::start() --
-5. /api/v1/*            -> ApiController::dispatch()
-6. legacy /blog/* nebo /nase-prace/* -> 301 redirect na prime slugy
-7. /sluzby              -> tryServeServicesPage() z `service_items`
-8. /nase-prace          -> tryServePortfolioPage() listing
-9. /blog                -> tryServeBlogListingPage()
-10. /faq                -> tryServeFaqPage() z `faq_items`
-11. /kontakt            -> tryServeKontaktPage() z `contact_info`
-12. POST /kontakt/odeslat -> CSRF, honeypot, throttling, archiv v DB a SMTP; veřejný kontrakt přijímá jméno, kontakt, typ focení, místo, zprávu a volitelný enum-like `selected_package_id`, nikoli název, cenu ani datum akce. `PricingPackageCatalog` identifikátor ověří proti serverovému whitelistu a teprve z interní definice získá název a cenu pro e-mail. Neznámé ID blokuje odeslání se stavem `invalid-package`; redirect zachovává pouze ověřené ID v query `balicek`.
-13. CMS stranka z DB    -> tryServeDatabasePage()
-14. Blog detail         -> tryServeBlogPostPage()
-15. Portfolio detail    -> tryServePortfolioPage(..., true)
-16. storage/published/* -> explicitni soubory podle pripony (napr. sitemap, robots, llms.txt a ikony)
-17. 404
+6. /api/v1/*            -> ApiController::dispatch()
+7. legacy /blog/* nebo /nase-prace/* -> 301 redirect na prime slugy
+8. /sluzby              -> tryServeServicesPage() z `service_items`
+9. /nase-prace          -> tryServePortfolioPage() listing
+10. /blog               -> tryServeBlogListingPage()
+11. /faq                -> tryServeFaqPage() z `faq_items`
+12. /kontakt            -> tryServeKontaktPage() z `contact_info`
+13. POST /kontakt/odeslat -> CSRF, honeypot, throttling, statický antispam, archiv v DB a SMTP; veřejný kontrakt přijímá jméno, kontakt, typ focení, místo, zprávu a volitelný enum-like `selected_package_id`, nikoli název, cenu ani datum akce. `PricingPackageCatalog` identifikátor ověří proti serverovému whitelistu a teprve z interní definice získá název a cenu pro e-mail. Neznámé ID blokuje odeslání se stavem `invalid-package`; redirect zachovává pouze ověřené ID v query `balicek`.
+14. CMS stranka z DB    -> tryServeDatabasePage()
+15. Blog detail         -> tryServeBlogPostPage()
+16. Portfolio detail    -> tryServePortfolioPage(..., true)
+17. storage/published/* -> explicitni soubory podle pripony (napr. sitemap, robots, llms.txt a ikony)
+18. 404
 ```
 
 Security endpointy jsou zamerne pred `Auth::start()`: verejny strojovy soubor nesmi zakladat PHP session ani posilat session cookie.
 Totez plati pro `POST /api/visit`: beacon nesmi zakladat session a lezi mimo `/api/v1/*`, takze nevyzaduje API klic.
 `/api/health` je jeste drive: nezaklada session ani visit, neni v sitemap/robots a vraci `X-Robots-Tag: noindex, nofollow, noarchive`. Odpoved zverejni jen `status`, UTC cas a agregovane `application/database` checks. DB chyba je JSON s HTTP503, nikoli tichy HTTP200.
+
+`/api/runtime-info` je chraneny stejnym serverovym `MIGRATE_TOKEN` jako migracni utilita a prijima jej v GET parametru `token`. `Runtime::sanitizeUri()` maskuje jeho hodnotu v aplikacnich traffic/error logach; provozni access log hostingu muze plnou URL stale uchovat. Bez platneho tokenu vraci obecny 404 JSON. Platna odpoved obsahuje pouze `PHP_VERSION`, odvozene `version_id`, SAPI, minimum pro CVE-2026-109618/109619 a dostupnost pozadovanych extensions; nikdy phpinfo, ini hodnoty, serverove cesty, DB konfiguraci ani env. Endpoint bezi pred session/analytics, je `no-store`, posila `Referrer-Policy: no-referrer`, neni v sitemap/robots a HEAD nema telo.
 
 ### Health monitoring pipeline
 
@@ -753,7 +756,9 @@ Hero obsahovy container je ve vyssi vizualni vrstve nez video, ale jeho neintera
 
 ## Archiv pošty
 
-Kontaktní POST nejdříve validuje CSRF, honeypot, limit a vstup. `MailArchiveService` pak uloží obsah do `mail_archive` (migrace 104) a až poté zavolá `SmtpMailer` (PHPMailer 7.1.1, povinná autentizace a SSL/TLS nebo STARTTLS). PHP `mail()` se nepoužívá. Stav `accepted` znamená předání transportu, ne doručení; `failed` ponechává obsah pro administrátora, `stored` značí nepotvrzený pokus. Při chybě INSERT se mail neodesílá. `MessagesController` zpřístupňuje stránkovaný archiv na `/admin/messages` pouze roli admin.
+Kontaktní POST nejdříve validuje CSRF, honeypot, limit a vstup. `ContactSpamFilter` následně přiděluje body pouze vysvětlitelným statickým signálům. Samotný odkaz má 2 body a nestačí k blokaci; práh je 7 bodů. Silné signály jsou známá botí věta, URL vložená do jména nebo kombinace hazardní propagace, výzvy k akci a odkazu. Filtr nepoužívá externí službu ani jazyk jako důvod zamítnutí.
+
+`MailArchiveService` uloží běžný obsah do `mail_archive` (migrace 104) a až poté zavolá `SmtpMailer` (PHPMailer 7.1.1, povinná autentizace a SSL/TLS nebo STARTTLS). PHP `mail()` se nepoužívá. Stav `accepted` znamená předání transportu, ne doručení; `failed` ponechává obsah pro administrátora, `stored` značí nepotvrzený pokus. Antispam volá `archiveSpam()`: uloží celé tělo se stavem `spam` a omezeným strojovým důvodem `static_spam:*`, ale SMTP vůbec nespustí. Při chybě INSERT se mail neodesílá. `MessagesController` zpřístupňuje stránkovaný archiv včetně filtru a počtu spamu na `/admin/messages` pouze roli admin.
 
 Obnova hesla používá stejnou službu, ale ukládá pouze metadata bez těla a tajného tokenu. Automatický retry není zaveden. Nastavení, limity a ověřovací příkazy jsou v `DEPLOYMENT.md`.
 
@@ -763,7 +768,7 @@ SMTP konfigurace je v serverovém `.env` (`SMTP_HOST`, `SMTP_PORT`, `SMTP_ENCRYP
 
 `AccountController` používá Auth, CSRF a RequestThrottle; identitu bere pouze ze session. `AccountPasswordService` transakčně zamkne users řádek, ověří současný bcrypt hash, uloží nové heslo a odstraní reset tokeny účtu. Selhání odstranění tokenů vrací celou transakci zpět. Controller po úspěchu odhlašuje aktuální relaci, stávající Auth fingerprint odmítne ostatní staré relace při příštím požadavku.
 
-`MessagesController` vyžaduje roli admin a deleguje SQL na `MailArchiveRepository`. Parametrizované filtry mají allowlist status/kind, stránka je kladné číslo nejvýše 1 000 000, limit je 50. Počty za celý archiv jsou oddělené od filtrovaného výsledku. Zobrazení HTML escapuje a nesmí obsahovat resetovací tokeny.
+`MessagesController` vyžaduje roli admin a deleguje SQL na `MailArchiveRepository`. Parametrizované filtry mají allowlist status `stored|accepted|failed|spam` a kind, stránka je kladné číslo nejvýše 1 000 000, limit je 50. Počty za celý archiv jsou oddělené od filtrovaného výsledku. Zobrazení HTML escapuje a nesmí obsahovat resetovací tokeny.
 
 ## Centrální recovery příjemce
 

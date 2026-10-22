@@ -63,6 +63,36 @@ final class MailArchiveService
         return ['id' => $id, 'status' => $status];
     }
 
+    /**
+     * Persist a contact submission rejected by the static spam filter without
+     * invoking SMTP. The reason is a bounded machine code, never message text.
+     */
+    public function archiveSpam(string $recipient, string $subject, string $body, array $reasons, string $cc = ''): array
+    {
+        $reasonCodes = array_values(array_filter(array_map(
+            static fn($reason): string => preg_replace('/[^a-z0-9-]/', '', strtolower((string) $reason)) ?? '',
+            $reasons
+        )));
+        $errorCode = mb_substr('static_spam:' . implode(',', $reasonCodes), 0, 64);
+        $cc = trim($cc);
+        if ($cc !== '') {
+            try {
+                $cc = EmailRecipientList::normalize($cc, $recipient);
+            } catch (\InvalidArgumentException $e) {
+                // Preserve the configured value for diagnosis. No recipient is
+                // contacted because this path never invokes SMTP.
+            }
+        }
+        $stmt = $this->db->prepare(
+            'INSERT INTO mail_archive (kind, recipient, cc_recipient, subject, body, status, error_code, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+        );
+        $stmt->execute([
+            'contact', $recipient, $cc !== '' ? $cc : null, $subject, $body,
+            'spam', $errorCode, gmdate('Y-m-d H:i:s'),
+        ]);
+        return ['id' => (int) $this->db->lastInsertId(), 'status' => 'spam'];
+    }
+
     public static function headers(string $appUrl): string
     {
         $host = parse_url($appUrl, PHP_URL_HOST);

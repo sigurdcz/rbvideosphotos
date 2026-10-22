@@ -4,6 +4,7 @@ if (PHP_SAPI !== 'cli') { http_response_code(404); exit; }
 require dirname(__DIR__) . '/vendor/autoload.php';
 use App\Core\Env;
 use App\Services\MailArchiveService;
+use App\Repositories\MailArchiveRepository;
 Env::load(dirname(__DIR__) . '/.env');
 $db = new PDO(sprintf('mysql:host=%s;port=%s;charset=utf8mb4', Env::get('DB_HOST'), Env::get('DB_PORT', '3306')), Env::get('DB_USER'), Env::get('DB_PASS'), [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]);
 $name = 'rbvp_mail_test_' . bin2hex(random_bytes(6));
@@ -13,6 +14,7 @@ function check(bool $ok, string $message): void { global $checks; if (!$ok) { th
 try {
  $db->exec('USE `' . $name . '`');
  $db->exec(file_get_contents(dirname(__DIR__) . '/database/migrations/104_add_mail_archive.sql'));
+ $db->exec('ALTER TABLE mail_archive ADD COLUMN cc_recipient TEXT NULL AFTER recipient');
  $_ENV['APP_URL'] = 'https://example.test'; $_ENV['MAIL_FROM'] = 'team@example.test';
  $calls = 0;
  $body = "Jméno: Test\nKontakt: test@example.test\nZpráva: <script>alert(1)</script>";
@@ -29,6 +31,14 @@ try {
  $ok = new MailArchiveService($db, fn() => true);
  $result = $ok->send('contact', 'team@example.test', 'Poptávka', $body);
  check($result['status'] === 'accepted', 'Acceptance is not delivery');
+ $spamCalls = 0;
+ $spamArchive = new MailArchiveService($db, function () use (&$spamCalls): bool { $spamCalls++; return true; });
+ $spamResult = $spamArchive->archiveSpam('team@example.test', 'Spam', $body, ['gambling-promotion', 'link-in-message']);
+ check($spamResult['status'] === 'spam' && $spamCalls === 0, 'Spam is archived without SMTP');
+ $spamRow = $db->query('SELECT status, error_code, body FROM mail_archive WHERE id = ' . (int) $spamResult['id'])->fetch();
+ check($spamRow['status'] === 'spam' && str_starts_with($spamRow['error_code'], 'static_spam:') && $spamRow['body'] === $body, 'Spam body and bounded reason are durable');
+ $spamOverview = (new MailArchiveRepository($db))->overview('spam', 'contact', 1);
+ check($spamOverview['total'] === 1 && $spamOverview['counts']['spam'] === 1, 'Admin repository filters and counts spam');
  $exception = new MailArchiveService($db, fn() => throw new RuntimeException('SECRET transport credentials'));
  $exception->send('contact', 'team@example.test', 'Poptávka', $body);
  check($db->query('SELECT error_code FROM mail_archive ORDER BY id DESC LIMIT 1')->fetchColumn() === 'transport_exception', 'Safe exception code');
@@ -56,10 +66,11 @@ try {
  try { $service->send('contact', 'team@example.test', 'Poptávka', $body); throw new Exception('Expected DB failure'); }
  catch (PDOException $e) { check($calls === 1, 'DB failure prevents send'); }
  // The admin archive escapes untrusted contact content.
- $rows = [['id'=>1,'created_at'=>'2026-10-16','subject'=>'<img src=x onerror=alert(1)>','status'=>'failed','kind'=>'contact','recipient'=>'team@example.test','error_code'=>'transport_rejected','body'=>$body]];
- $total=1;$page=1;$_user=['role'=>'admin'];$_csrfToken='test';
+ $rows = [['id'=>1,'created_at'=>'2026-10-16','subject'=>'<img src=x onerror=alert(1)>','status'=>'spam','kind'=>'contact','recipient'=>'team@example.test','cc_recipient'=>null,'error_code'=>'static_spam:test','attempted_at'=>null,'body'=>$body]];
+ $counts=['stored'=>0,'accepted'=>0,'failed'=>0,'spam'=>1];$status='';$kind='';$total=1;$page=1;$_user=['role'=>'admin'];$_csrfToken='test';
  ob_start();require dirname(__DIR__) . '/admin/views/messages/index.php';$html=ob_get_clean();
  check(!str_contains($html, '<script>alert(1)</script>') && str_contains($html, '&lt;script&gt;'), 'Admin body escaped');
  check(!str_contains($html, '<img src=x onerror=alert(1)>'), 'Admin subject escaped');
+ check(str_contains($html, 'Zachyceno statickým antispamem'), 'Admin labels archived spam explicitly');
  echo "PASS: {$checks} archive, failure, privacy and escaping assertions.\n";
 } finally { $db->exec('DROP DATABASE `' . $name . '`'); }

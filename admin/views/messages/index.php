@@ -1,13 +1,13 @@
 <?php
 $h = static fn($v) => htmlspecialchars((string) $v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-$labels = ['stored' => 'Uloženo - výsledek odeslání nepotvrzen', 'accepted' => 'Převzato poštovní službou - doručení neověřeno', 'failed' => 'Odeslání selhalo'];
+$labels = ['stored' => 'Uloženo - výsledek odeslání nepotvrzen', 'accepted' => 'Převzato poštovní službou - doručení neověřeno', 'failed' => 'Odeslání selhalo', 'spam' => 'Zachyceno statickým antispamem'];
 $pageTitle = 'E-maily a zprávy';
 $pageUrl = static fn(int $number): string => '?' . http_build_query(['status' => $status, 'kind' => $kind, 'page' => $number]);
 ob_start(); ?>
 <div class="page-header"><h1>E-maily a zprávy</h1></div>
 <p>Kontaktní zprávy se ukládají před odesíláním. Přijetí poštovní službou nepotvrzuje doručení do schránky. Obsah obnovy hesla se z bezpečnostních důvodů neukládá.</p>
 <p>Nalezeno: <?= $h($total) ?>. Archiv obsahuje osobní údaje; přístup má pouze administrátor. Zálohujte databázi.</p>
-<p>Všechny pokusy: <strong><?= $h(array_sum($counts)) ?></strong> · Předáno poštovní službě: <strong><?= $h($counts['accepted']) ?></strong> · Selhalo: <strong><?= $h($counts['failed']) ?></strong> · Výsledek nepotvrzen: <strong><?= $h($counts['stored']) ?></strong></p>
+<p>Všechny pokusy: <strong><?= $h(array_sum($counts)) ?></strong> · Předáno poštovní službě: <strong><?= $h($counts['accepted']) ?></strong> · Zachycený spam: <strong><?= $h($counts['spam']) ?></strong> · Selhalo: <strong><?= $h($counts['failed']) ?></strong> · Výsledek nepotvrzen: <strong><?= $h($counts['stored']) ?></strong></p>
 <form method="get" action="/admin/messages" style="display:flex;gap:12px;flex-wrap:wrap;margin:20px 0">
 <label>Stav <select name="status"><option value="">Všechny stavy</option><?php foreach ($labels as $value => $label): ?><option value="<?= $h($value) ?>" <?= $status === $value ? 'selected' : '' ?>><?= $h($label) ?></option><?php endforeach; ?></select></label>
 <label>Typ <select name="kind"><option value="">Všechny typy</option><option value="contact" <?= $kind === 'contact' ? 'selected' : '' ?>>Kontaktní formulář</option><option value="password_reset" <?= $kind === 'password_reset' ? 'selected' : '' ?>>Obnova hesla</option></select></label>

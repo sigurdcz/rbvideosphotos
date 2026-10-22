@@ -21,6 +21,37 @@ Sekce používá query parametr `view=overview|health|visits`, který controller
 Analytika má tři serverově řízené sekce. Přehled kombinuje aktuální health stav, dostupnost, odezvu a hlavní návštěvní metriky bez podrobných tabulek. Health zachovává denní graf a poslední problémy; Návštěvnost zachovává denní návštěvy, stránky, referrery, kampaně a zařízení. Cílená sada prošla 6/6 včetně skutečného renderu všech tří variant, PHP lint prošel a `git diff --check` je čistý. Změna je lokálně commitnutá; staging push čeká na výslovný požadavek. Master zůstává beze změny.
 
 ---
+# UKOL: Chraneny PHP runtime info endpoint
+
+Datum: 2026-10-22
+Zadani: Pridat JSON API endpoint chraneny MIGRATE_TOKEN, ktery bezpečne zobrazi presnou verzi PHP a stav vuci kritickym minimalnim verzim bez uniku serverovych cest nebo konfigurace.
+Doporuceny model: Terra - Jde o ohraniceny bezpecnostni endpoint s autentizaci, omezenim vystupu, routingem pred session a regresnimi testy.
+
+## Kroky
+
+- [x] Zmapovat existujici early routing, praci s MIGRATE_TOKEN a technicke endpointy.
+- [x] Implementovat konstantni porovnani tokenu, GET/HEAD JSON odpoved a bezpecny runtime payload.
+- [x] Overit nezarazeni do sitemap/robots a zadne zalozeni session.
+- [x] Pridat regresni testy a dokumentaci pouziti.
+- [x] Spustit cilene testy, aktualizovat wiki a commitnout na dev bez pushe.
+
+## Poznamky
+
+- Endpoint nesmi vracet phpinfo(), php.ini cestu, env, nactene hodnoty konfigurace, serverove cesty ani seznam promenych prostredi.
+- Akceptace: bez tokenu nebo se spatnym tokenem nevznikne diagnosticky vystup; s platnym MIGRATE_TOKEN vrati presnou PHP_VERSION, SAPI, bezpecnostni minimum a boolean patched; HEAD vrati stejne hlavicky bez tela.
+- Pridana trida PhpRuntimeInfoHttpResponder a early route /api/runtime-info pred Auth::start(). Po nasledne zmene kontraktu se token prijima jako GET parametr `token`; aplikacni Runtime jeho hodnotu v traffic/error logach maskuje.
+- Payload je omezen na verzi, version_id, SAPI, stav vuci minimim pro CVE-2026-109618/109619 a boolean dostupnosti peti povinnych extensions. Neznamou budouci vetev oznaci unknown_branch misto ticheho odhadu bezpecnosti.
+- Regresni testy pokryvaji chybejici/chybny token, header i Bearer autentizaci, zastaralou a neznamou vetev, HEAD bez tela, zakazane citlive klice, poradi pred session a absenci v sitemap/robots.
+- README obsahuje URL s GET tokenem a upozorneni na provider access log, ARCHITECTURE presne poradi early rout a bezpecnostni kontrakt a DEPLOYMENT produkcni/staging kontrolu minimalni PHP verze.
+- Tri cilene runtime-info testy prosly, PHP lint nove tridy, routy i testu je cisty a git diff --check nehlasi chybu.
+
+## Vysledek
+
+Pridan chraneny endpoint `GET|HEAD /api/runtime-info`. Platny `MIGRATE_TOKEN` prijima jako GET parametr `token` a porovnava jej pres `hash_equals`; chybejici nebo chybny token vraci obecny 404 bez diagnostiky. Odpoved obsahuje jen presnou PHP verzi, version_id, SAPI, bezpecnostni minimum/stav pro CVE-2026-109618/109619 a dostupnost peti povinnych extensions. Neznama vetev je explicitne `unknown_branch`.
+
+Endpoint bezi pred Auth::start a analytics, nevytvari session, ma no-store/noindex, nepouziva DB a neni v sitemap ani robots. Tri cilene testy, PHP lint a git diff --check prosly. README, ARCHITECTURE, DEPLOYMENT a globalni wiki popisuji bezpecne curl pouziti pro produkci i staging. Nova migrace ani env promenna nejsou potreba; pouziva se existujici MIGRATE_TOKEN. Zmena je commitnuta lokalne na dev a bez explicitniho pozadavku nebyla pushnuta.
+
+---
 # UKOL: Health API, cron monitoring a analytika zdraví
 
 Datum: 2026-10-21
@@ -2451,3 +2482,36 @@ Finalni mobilni skore preview:94/100 (platno20/20, hlavicka9/10, hero14/15, sluz
 ## Vysledek
 
 Mobilni a tabletova stranka Sluzby ma citelne vertikalni karty bez prekryvu a orezani, plnou mobilni typografii procesu a stabilni breakpointy700/701/1050/1051. Cileny regresni test prosel a `git diff --check` je cisty. Kompletni sada novy test take prosla; nadale hlasi znamy nesouvisejici isolation FAIL Diagonal CSS a chybejici lokalni DB pripojeni. Zmena je lokalne pripravena na `dev`; bez explicitniho pozadavku nebyla pushnuta.
+# UKOL: Staticky antispam kontaktniho formulare
+
+Datum: 2026-10-22
+Zadani: Doplnit deterministicky antispam pro verejne kontaktni formulare, ktery zachyti zjevne linkove a kasino spamy, zachova legitimni poptavky a podezrele zpravy ponecha dohledatelne bez odeslani e-mailu.
+Doporuceny model: Terra - Omezena produkcni uprava musi spravne kombinovat skore, archivaci, mail transport a regresni testy bez falesnych blokaci.
+
+## Kroky
+
+- [x] Zmapovat prijem kontaktniho formulare, honeypot, rate limit, mail archive a admin prehled.
+- [x] Navrhnout vysvetlitelne staticke skore s konzervativnimi pravidly a explicitnim duvodem blokace.
+- [x] Ulozit spam do databaze jako rozlisitelny stav a neposilat jej pres SMTP.
+- [x] Zobrazit spam a duvod v administraci bez zmeny resetu hesla.
+- [x] Pridat regresni testy pro oba dodane spamy a legitimni ceske poptavky.
+- [x] Aktualizovat relevantni dokumentaci, spustit cilene testy a commitnout na dev bez pushe.
+
+## Poznamky
+
+- Akceptace: oba ukazkove spamy jsou zachyceny, zpravy Sigurda a Barbory projdou a vsechny pokusy zustanou dohledatelne v DB/adminu.
+- Platne projektove pravidlo: nejdriv dev a staging; master az po samostatnem overeni a novem vyslovnem souhlasu.
+- Prijem je centralne v POST /kontakt/odeslat. Existujici honeypot a IP throttle zustavaji. Novy ContactSpamFilter pouziva prah 7 bodu; samotny odkaz ma jen 2 body, takze odkaz na legitimni misto svatby neblokuje.
+- MailArchiveService::archiveSpam uklada plne telo se stavem spam a strojovym duvodem, ale vubec nevola SMTP. Admin prehled ma novy citelny stav, pocitadlo a filtr.
+- Integrační test archivu mel zastaralou fixture jen z migrace 104, a proto mu chybel cc_recipient pridany pozdeji. Testovaci schema bylo doplneno lokalnim ALTERem; historicke migrace zustaly beze zmeny.
+- ARCHITECTURE a DEPLOYMENT nyni popisuji prah, signaly, stav spam, zadne SMTP pro spam a dohledatelnost v adminu. Nova SQL migrace neni potreba, protoze status a error_code jsou existujici VARCHAR sloupce.
+- Spam archiv zachovava i puvodni diagnostickou hodnotu CC pri stare/neplatne konfiguraci; nikdy ji nepouzije k odeslani, protoze spam cesta SMTP vubec nevola.
+- Integracni test navic overuje allowlist filtru repository a celkovy spam counter, nejen HTML label.
+
+## Vysledek
+
+Kontaktni formular nyni pred SMTP pouziva konzervativni staticke skore s prahem 7. Oba dodane spamy dosahly 19 a 13 bodu, zatimco dodane legitimni poptavky 0 bodu a legitimni zprava s jedinym URL 2 body. Zachyceny spam se neodesila, ale zustava cely v mail_archive se stavem spam a strojovym duvodem; admin ho umi pocitat a filtrovat. Nova migrace ani env promenna nejsou potreba.
+
+PHP lint zmenenych souboru, git diff --check a MailArchiveIntegrationTest s 20 kontrolami prosly. Kontaktni klasifikator prosel vsemi peti regresnimi vektory. Kompletni tests/run.php nadale obsahuje drive znamy nesouvisejici Golden Bash isolation FAIL a chybejici lokalni DB pripojeni; nebyly zakryty ani vydavany za uspesne. Globalni wiki byla aktualizovana samostatnym commitem. Zmena je commitnuta lokalne na dev a bez explicitniho pozadavku nebyla pushnuta.
+
+---
