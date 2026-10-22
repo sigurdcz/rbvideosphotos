@@ -174,30 +174,33 @@ request -> admin/index.php -> Core\Router -> Controller -> Repository/Service ->
 
 ```text
 1. GET/HEAD /api/health -> HealthCheckHttpResponder, application + DB readiness, 200/503
-2. /.well-known/security.txt a /security.txt -> SecurityTxtHttpResponder
-3. /assets/*, /media/*  -> tryServePublicAssetWithoutSession(): realpath ochrana, typy vcetne mp4/webm/mov,
+2. GET/HEAD /api/runtime-info -> PhpRuntimeInfoHttpResponder, pouze s MIGRATE_TOKEN v hlavicce
+3. /.well-known/security.txt a /security.txt -> SecurityTxtHttpResponder
+4. /assets/*, /media/*  -> tryServePublicAssetWithoutSession(): realpath ochrana, typy vcetne mp4/webm/mov,
    `Accept-Ranges`, `Range`->206/416 a `If-Range` (ETag i datum Last-Modified, kvuli Safari),
    soubor nad 4 MB nebo cast se posila po kouscich (`fread`), ne `readfile`
-4. POST /api/visit      -> tryRecordVisitBeacon(), vlastni mereni navstevnosti (pred Auth::start)
+5. POST /api/visit      -> tryRecordVisitBeacon(), vlastni mereni navstevnosti (pred Auth::start)
    -- Auth::start() --
-5. /api/v1/*            -> ApiController::dispatch()
-6. legacy /blog/* nebo /nase-prace/* -> 301 redirect na prime slugy
-7. /sluzby              -> tryServeServicesPage() z `service_items`
-8. /nase-prace          -> tryServePortfolioPage() listing
-9. /blog                -> tryServeBlogListingPage()
-10. /faq                -> tryServeFaqPage() z `faq_items`
-11. /kontakt            -> tryServeKontaktPage() z `contact_info`
-12. POST /kontakt/odeslat -> CSRF, honeypot, throttling, statický antispam, archiv v DB a SMTP; veřejný kontrakt přijímá jméno, kontakt, typ focení, místo, zprávu a volitelný enum-like `selected_package_id`, nikoli název, cenu ani datum akce. `PricingPackageCatalog` identifikátor ověří proti serverovému whitelistu a teprve z interní definice získá název a cenu pro e-mail. Neznámé ID blokuje odeslání se stavem `invalid-package`; redirect zachovává pouze ověřené ID v query `balicek`.
-13. CMS stranka z DB    -> tryServeDatabasePage()
-14. Blog detail         -> tryServeBlogPostPage()
-15. Portfolio detail    -> tryServePortfolioPage(..., true)
-16. storage/published/* -> explicitni soubory podle pripony (napr. sitemap, robots, llms.txt a ikony)
-17. 404
+6. /api/v1/*            -> ApiController::dispatch()
+7. legacy /blog/* nebo /nase-prace/* -> 301 redirect na prime slugy
+8. /sluzby              -> tryServeServicesPage() z `service_items`
+9. /nase-prace          -> tryServePortfolioPage() listing
+10. /blog               -> tryServeBlogListingPage()
+11. /faq                -> tryServeFaqPage() z `faq_items`
+12. /kontakt            -> tryServeKontaktPage() z `contact_info`
+13. POST /kontakt/odeslat -> CSRF, honeypot, throttling, statický antispam, archiv v DB a SMTP; veřejný kontrakt přijímá jméno, kontakt, typ focení, místo, zprávu a volitelný enum-like `selected_package_id`, nikoli název, cenu ani datum akce. `PricingPackageCatalog` identifikátor ověří proti serverovému whitelistu a teprve z interní definice získá název a cenu pro e-mail. Neznámé ID blokuje odeslání se stavem `invalid-package`; redirect zachovává pouze ověřené ID v query `balicek`.
+14. CMS stranka z DB    -> tryServeDatabasePage()
+15. Blog detail         -> tryServeBlogPostPage()
+16. Portfolio detail    -> tryServePortfolioPage(..., true)
+17. storage/published/* -> explicitni soubory podle pripony (napr. sitemap, robots, llms.txt a ikony)
+18. 404
 ```
 
 Security endpointy jsou zamerne pred `Auth::start()`: verejny strojovy soubor nesmi zakladat PHP session ani posilat session cookie.
 Totez plati pro `POST /api/visit`: beacon nesmi zakladat session a lezi mimo `/api/v1/*`, takze nevyzaduje API klic.
 `/api/health` je jeste drive: nezaklada session ani visit, neni v sitemap/robots a vraci `X-Robots-Tag: noindex, nofollow, noarchive`. Odpoved zverejni jen `status`, UTC cas a agregovane `application/database` checks. DB chyba je JSON s HTTP503, nikoli tichy HTTP200.
+
+`/api/runtime-info` je chraneny stejnym serverovym `MIGRATE_TOKEN` jako migracni utilita, ale token prijima pouze v `X-Migrate-Token` nebo `Authorization: Bearer` hlavicce. Query parametr neni podporovan, aby se tajemstvi nedostalo do URL, refereru nebo beznych access logu. Bez platneho tokenu vraci obecny 404 JSON. Platna odpoved obsahuje pouze `PHP_VERSION`, odvozene `version_id`, SAPI, minimum pro CVE-2026-109618/109619 a dostupnost pozadovanych extensions; nikdy phpinfo, ini hodnoty, serverove cesty, DB konfiguraci ani env. Endpoint bezi pred session/analytics, je `no-store`, neni v sitemap/robots a HEAD nema telo.
 
 ### Health monitoring pipeline
 

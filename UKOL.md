@@ -21,6 +21,37 @@ Sekce používá query parametr `view=overview|health|visits`, který controller
 Analytika má tři serverově řízené sekce. Přehled kombinuje aktuální health stav, dostupnost, odezvu a hlavní návštěvní metriky bez podrobných tabulek. Health zachovává denní graf a poslední problémy; Návštěvnost zachovává denní návštěvy, stránky, referrery, kampaně a zařízení. Cílená sada prošla 6/6 včetně skutečného renderu všech tří variant, PHP lint prošel a `git diff --check` je čistý. Změna je lokálně commitnutá; staging push čeká na výslovný požadavek. Master zůstává beze změny.
 
 ---
+# UKOL: Chraneny PHP runtime info endpoint
+
+Datum: 2026-10-22
+Zadani: Pridat JSON API endpoint chraneny MIGRATE_TOKEN, ktery bezpečne zobrazi presnou verzi PHP a stav vuci kritickym minimalnim verzim bez uniku serverovych cest nebo konfigurace.
+Doporuceny model: Terra - Jde o ohraniceny bezpecnostni endpoint s autentizaci, omezenim vystupu, routingem pred session a regresnimi testy.
+
+## Kroky
+
+- [x] Zmapovat existujici early routing, praci s MIGRATE_TOKEN a technicke endpointy.
+- [x] Implementovat konstantni porovnani tokenu, GET/HEAD JSON odpoved a bezpecny runtime payload.
+- [x] Overit nezarazeni do sitemap/robots a zadne zalozeni session.
+- [x] Pridat regresni testy a dokumentaci pouziti.
+- [x] Spustit cilene testy, aktualizovat wiki a commitnout na dev bez pushe.
+
+## Poznamky
+
+- Endpoint nesmi vracet phpinfo(), php.ini cestu, env, nactene hodnoty konfigurace, serverove cesty ani seznam promenych prostredi.
+- Akceptace: bez tokenu nebo se spatnym tokenem nevznikne diagnosticky vystup; s platnym MIGRATE_TOKEN vrati presnou PHP_VERSION, SAPI, bezpecnostni minimum a boolean patched; HEAD vrati stejne hlavicky bez tela.
+- Pridana trida PhpRuntimeInfoHttpResponder a early route /api/runtime-info pred Auth::start(). Token se prijima pouze v hlavicce X-Migrate-Token nebo Authorization: Bearer, aby se neukladal do URL, refereru a beznych access logu.
+- Payload je omezen na verzi, version_id, SAPI, stav vuci minimim pro CVE-2026-109618/109619 a boolean dostupnosti peti povinnych extensions. Neznamou budouci vetev oznaci unknown_branch misto ticheho odhadu bezpecnosti.
+- Regresni testy pokryvaji chybejici/chybny token, header i Bearer autentizaci, zastaralou a neznamou vetev, HEAD bez tela, zakazane citlive klice, poradi pred session a absenci v sitemap/robots.
+- README obsahuje curl pouziti bez tokenu v URL, ARCHITECTURE presne poradi early rout a bezpecnostni kontrakt a DEPLOYMENT produkcni/staging kontrolu minimalni PHP verze.
+- Tri cilene runtime-info testy prosly, PHP lint nove tridy, routy i testu je cisty a git diff --check nehlasi chybu.
+
+## Vysledek
+
+Pridan chraneny endpoint `GET|HEAD /api/runtime-info`. Platny `MIGRATE_TOKEN` prijima pouze v `X-Migrate-Token` nebo Bearer hlavicce a porovnava jej pres `hash_equals`; chybejici nebo chybny token vraci obecny 404 bez diagnostiky. Odpoved obsahuje jen presnou PHP verzi, version_id, SAPI, bezpecnostni minimum/stav pro CVE-2026-109618/109619 a dostupnost peti povinnych extensions. Neznama vetev je explicitne `unknown_branch`.
+
+Endpoint bezi pred Auth::start a analytics, nevytvari session, ma no-store/noindex, nepouziva DB a neni v sitemap ani robots. Tri cilene testy, PHP lint a git diff --check prosly. README, ARCHITECTURE, DEPLOYMENT a globalni wiki popisuji bezpecne curl pouziti pro produkci i staging. Nova migrace ani env promenna nejsou potreba; pouziva se existujici MIGRATE_TOKEN. Zmena je commitnuta lokalne na dev a bez explicitniho pozadavku nebyla pushnuta.
+
+---
 # UKOL: Health API, cron monitoring a analytika zdraví
 
 Datum: 2026-10-21

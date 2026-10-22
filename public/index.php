@@ -37,6 +37,7 @@ use App\Services\SecurityTxtService;
 use App\Services\ThemeTemplateRegistry;
 use App\Services\VisitAnalyticsService;
 use App\Services\HealthCheckHttpResponder;
+use App\Services\PhpRuntimeInfoHttpResponder;
 use App\Security\RequestThrottle;
 use App\Support\FrontendAssetManager;
 use App\View\ViewFactory;
@@ -91,6 +92,11 @@ $earlyUri = parse_url((string) ($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH);
 // visit analytics and page routing, so monitoring never creates a cookie or a
 // site_visits row and the response cannot be mistaken for a CMS page.
 if ((new HealthCheckHttpResponder())->serve((string) $earlyUri)) {
+    exit;
+}
+// Restricted runtime diagnostics. The migration token is accepted only in a
+// request header so it does not leak into URLs, referrers or routine access logs.
+if ((new PhpRuntimeInfoHttpResponder())->serve((string) $earlyUri)) {
     exit;
 }
 $earlyUri = rtrim((string) $earlyUri, '/') ?: '/';

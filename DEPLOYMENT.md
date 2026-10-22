@@ -59,6 +59,16 @@ Presnou absolutni cestu a nazev PHP CLI vezmi z detailu hostingu; nepouzivej web
 
 `/api/health` neni sitemap URL, nevytvari session a nevstupuje do `site_visits`. Vraci jen agregovany stav bez DB hostu, jmen, hesel nebo vyjimky. V administraci je monitoring po 20 minutach bez zaznamu explicitne stale; sede dny nejsou vydavany za dostupnost.
 
+## Kontrola PHP runtime pod MIGRATE_TOKEN
+
+Po nasazeni over presnou serverovou verzi bez verejneho `phpinfo()`:
+
+```bash
+curl -sS -H "X-Migrate-Token: TVUJ_MIGRATE_TOKEN" https://rbvideosphotos.cz/api/runtime-info
+```
+
+Pouzit lze take `Authorization: Bearer TVUJ_MIGRATE_TOKEN`. Token se zamerne neprijima v query parametru: URL se bezne ukladaji do access logu a mohou uniknout v refereru. Platny JSON vraci jen verzi, SAPI, bezpecnostni minimum a stav povinnych extensions. Pro upozorneni z 21.10.2026 musi byt produkcni PHP 8.5 alespon 8.5.12 (`security_status=patched`). `unknown_branch` neni potvrzeni bezpecnosti a vyzaduje rucni kontrolu oficialniho PHP advisory. Stejnou kontrolu proved oddelene na stagingu.
+
 Obsahove PHP handlery se vzdy provadeji az po dokonceni vsech SQL migraci, i kdyz web uz existuje. Aktualni handler starsi migrace muze pouzivat schema_name z 079; jednopruschodove poradi proto neni bezpecne. Regresni overeni: php tests/MigrationUpgradeOrderIntegrationTest.php vytvori vlastni nahodnou DB, spusti skutecne SQL a nahradi pouze obsahove efekty kontrolou schema zavislosti.
 
 ## PHP 8.5 a davkove JSON odpovedi

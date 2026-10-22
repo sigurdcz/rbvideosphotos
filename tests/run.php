@@ -497,6 +497,9 @@ register_health_check_tests($test, $assert);
 require __DIR__ . '/ContactSpamFilterTest.php';
 register_contact_spam_filter_tests($test, $assert);
 
+require __DIR__ . '/PhpRuntimeInfoTest.php';
+register_php_runtime_info_tests($test, $assert);
+
 $failures = 0;
 foreach ($tests as [$name, $callback]) {
     try {

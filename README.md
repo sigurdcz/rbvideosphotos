@@ -165,6 +165,19 @@ V Active24 cronu vyber PHP CLI dostupne pro danou verzi, nastav interval 10 minu
 
 V administraci otevri **Analytika** (`/admin/analytics`). Zdravi a navstevnost pouzivaji spolecny vyber 7/30/90/365 dni, ale nacitaji se nezavisle. Bez behu dele nez 20 minut se ukaze „Monitoring neběží“; den bez dat je sedy a neni zapocten jako uspesny.
 
+## Chraneny PHP runtime check
+
+`GET /api/runtime-info` a `HEAD /api/runtime-info` vraci presnou PHP verzi, SAPI, stav vuci bezpecnostnimu minimu pro CVE-2026-109618/109619 a dostupnost `pdo_mysql`, `gd`, `mbstring`, `openssl` a `json`. Endpoint bezi pred session, neni v sitemap/robots a nikdy nevypisuje `phpinfo()`, php.ini, serverove cesty, databazove udaje ani env.
+
+Token neposilej v URL. Pouzij `MIGRATE_TOKEN` ze serveroveho `.env` v jedne z hlavicek:
+
+```bash
+curl -sS -H "X-Migrate-Token: TVUJ_MIGRATE_TOKEN" https://rbvideosphotos.cz/api/runtime-info
+curl -sS -H "Authorization: Bearer TVUJ_MIGRATE_TOKEN" https://staging.rbvideosphotos.cz/api/runtime-info
+```
+
+Bez tokenu nebo s chybnym tokenem endpoint vrati obecny HTTP 404. Pro PHP 8.5 je `security_status=patched` az od 8.5.12; neznama budouci vetev vrati `unknown_branch` a bezpecnost si nevymysli.
+
 ## Prvotni spusteni
 
 1. Vytvor databazi.
