@@ -2596,3 +2596,29 @@ Nastaveni antispamu obsahuje vychozene vypnuty checkbox pro e-mailove upozorneni
 Vychozi slovnik nyni zachyti i realny rusky casino vzorek `JamesTralf`. PHP lint a diff check prosly. Izolovana antispam sada ma 4 PASS testy vcetne SQLite overeni vypnuteho/zapnuteho upozorneni, vsech CC, sanitizovaneho tela a chyby SMTP. MySQL integracni test se v tomto behu nespustil, protoze lokalni DB konfigurace nema dostupny host; blocker zustal viditelny. Staging ani produkce nebyly zmeneny.
 Globalni wiki byla aktualizovana samostatnym commitem `058403b`.
 
+---
+# UKOL: Kompaktni refaktor administracni sekce Nastaveni
+
+Datum: 2026-10-23
+Zadani: Zkratit a zpruhlednit dlouhou stranku Nastaveni pomoci sekci, tabu, subtabu, selektu, modalu nebo jinych kompaktnich UI vzoru bez ztraty funkci.
+Doporuceny model: Sol - Rozsah zahrnuje velky PHP view, navigacni stav, pristupnost, responzivitu a vizualni regresi.
+
+## Kroky
+
+- [x] Zmapovat vsechny soucasne karty, formulare, kotvy a admin UI komponenty.
+- [x] Navrhnout hlavni taby a kompaktni vnorene skupiny bez zmeny datoveho kontraktu.
+- [x] Implementovat pristupne a responzivni prepinani sekci s podporou URL hash.
+- [x] Zachovat samostatny antispam test, media pickery, validaci a ukladani vsech poli.
+- [x] Overit desktop, responzivni CSS, klavesnici, reload/redirect hash a absenci JS chyb.
+- [x] Doplnit cilene testy a dokumentaci a commitnout na `dev`; bez vyzvy nepushovat.
+
+## Poznamky
+
+Refaktor je prezentacni. Nazvy poli, POST route, CSRF, serverova validace a repository zapis zustanou beze zmeny. Modal se pouzije jen tam, kde nezakryje povinne nastaveni nebo nevytvori druhy save flow.
+
+## Vysledek
+
+Stranka Nastaveni je rozdelena do peti hlavních zalozek: Obecne, Vzhled a media, Komunikace, Mereni a skripty a Antispam. Aktivni zalozka se zapisuje do URL hash, jde ovladat sipkami/Home/End a pri HTML validacni chybe se automaticky odkryje spravna zalozka i sbalena podsekce. Dlouhe layoutove a skriptove bloky jsou sbalitelne. Test antispamu je samostatny pristupny modal a REST API je nativni rozbalovaci detail.
+
+Vsechny puvodni nazvy poli, POST routy, CSRF, media picker i spolecne ukladani zustaly zachovane. Lokalni desktopova kontrola v realne administraci overila prepinani zalozek, hash, modal a sdilene ukladani. Responzivni breakpoint drzi taby ve vodorovnem scrollu a modal omezuje na vysku viewportu. PHP lint, diff check a 2/2 cilene kontraktni testy prosly. Cela legacy sada dosla k drive znamemu nesouvisejicimu Golden Bash golden testu a pote ji zastavila nedostupna lokalni DB; obe omezeni zustala zretelna.
+

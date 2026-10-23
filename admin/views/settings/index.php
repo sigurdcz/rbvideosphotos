@@ -63,10 +63,32 @@ ob_start();
 </div>
 <?php endif; ?>
 
-<form method="POST" action="/admin/settings/update">
+<div class="settings-workspace" data-settings-workspace>
+  <nav class="settings-tabs" role="tablist" aria-label="Sekce nastavení webu">
+    <?php foreach ([
+      'general' => 'Obecné',
+      'appearance' => 'Vzhled a média',
+      'communication' => 'Komunikace',
+      'measurement' => 'Měření a skripty',
+      'antispam' => 'Antispam',
+    ] as $settingsTabKey => $settingsTabLabel): ?>
+      <button
+        type="button"
+        class="settings-tab"
+        id="settings-tab-<?= $h($settingsTabKey) ?>"
+        role="tab"
+        aria-controls="settings-panel-<?= $h($settingsTabKey) ?>"
+        aria-selected="false"
+        tabindex="-1"
+        data-settings-tab="<?= $h($settingsTabKey) ?>"
+      ><?= $h($settingsTabLabel) ?></button>
+    <?php endforeach; ?>
+  </nav>
+
+<form method="POST" action="/admin/settings/update" data-settings-form>
   <input type="hidden" name="_csrf" value="<?= $h($_csrfToken) ?>">
 
-  <div class="card" id="antispam">
+  <div class="card settings-panel" id="settings-panel-antispam" role="tabpanel" aria-labelledby="settings-tab-antispam" data-settings-panel="antispam">
     <div class="card-title">Antispam kontaktního formuláře</div>
     <p class="help-text" style="margin-bottom:16px">Statický bodový filtr zpráv. Při dosažení prahu se zpráva uloží jako spam do E-mailů a zpráv, ale neodešle se přes SMTP. Honeypot a omezení podle IP zůstávají aktivní samostatně.</p>
     <?php if (!empty($spamConfigError)): ?><div class="alert alert-danger"><?= $h($spamConfigError) ?></div><?php endif; ?>
@@ -127,9 +149,10 @@ ob_start();
         <p class="help-text">Volitelné. Odkazy na tyto domény a jejich subdomény nepřidají body za odkaz ve zprávě.</p>
       </div>
     </div>
+    <button type="button" class="btn btn-secondary" data-open-spam-test>Otestovat filtr bez odeslání</button>
   </div>
 
-  <div class="card">
+  <div class="card settings-panel" id="settings-panel-general" role="tabpanel" aria-labelledby="settings-tab-general" data-settings-panel="general">
     <div class="card-title">Zakladni informace</div>
     <div class="form-row">
       <div class="form-group">
@@ -156,7 +179,7 @@ ob_start();
     </div>
   </div>
 
-  <div class="card">
+  <div class="card settings-panel" id="settings-panel-appearance" role="tabpanel" aria-labelledby="settings-tab-appearance" data-settings-panel="appearance">
     <div class="card-title">Obrazky pro sdileni na socialnich sitich</div>
     <p class="help-text" style="margin-bottom:16px">
       Stranka nebo clanek muze globalni obrazek prepsat vlastnim SEO obrazkem.
@@ -250,7 +273,7 @@ ob_start();
     </div>
   </div>
 
-  <div class="card">
+  <div class="card settings-panel" id="settings-panel-communication" role="tabpanel" aria-labelledby="settings-tab-communication" data-settings-panel="communication">
     <div class="card-title">Kontaktni komunikace</div>
     <?php if (trim((string)($contact['address_1'] ?? '')) === '' && trim((string)($contact['address_2'] ?? '')) === ''): ?>
     <div class="alert alert-warning" style="margin-bottom:12px">
@@ -272,7 +295,7 @@ ob_start();
     </div>
   </div>
 
-  <div class="card">
+  <div class="card settings-panel" data-settings-panel="appearance">
     <div class="card-title">Logo a favicony</div>
     <p class="help-text" style="margin-bottom:16px">
       Vyber logo a ikony primo z knihovny medii. Logo se pouzije ve verejne hlavicce webu,
@@ -345,7 +368,7 @@ ob_start();
     <p class="help-text">Pokud pole nechas prazdne, system zustane u vychoziho faviconu / sablony. Nova media nahrajes v sekci <a href="/admin/media">Media</a>.</p>
   </div>
 
-  <div class="card">
+  <div class="card settings-panel" data-settings-panel="appearance">
     <div class="card-title">Výchozí hero video</div>
     <p class="help-text" style="margin-bottom:16px">
       Toto video se pouzije jako fallback pro vsechny stranky, pokud konkretni stranka nema vlastni hero video.
@@ -432,7 +455,7 @@ ob_start();
     </div>
   </div>
 
-  <div class="card">
+  <div class="card settings-panel" id="settings-panel-measurement" role="tabpanel" aria-labelledby="settings-tab-measurement" data-settings-panel="measurement">
     <div class="card-title">Cookies, consent a analytics</div>
     <div class="form-group">
       <label style="display:flex;align-items:center;gap:8px">
@@ -497,8 +520,8 @@ ob_start();
     </div>
   </div>
 
-  <div class="card">
-    <div class="card-title">Technicky nezbytne skripty</div>
+  <div class="card settings-panel settings-collapsible is-collapsed" data-settings-panel="measurement" data-settings-collapsible>
+    <button type="button" class="card-title settings-collapsible__toggle" aria-expanded="false" data-settings-collapse-toggle>Technicky nezbytne skripty <span aria-hidden="true">⌄</span></button>
     <p class="help-text" style="margin-bottom:12px">
       Sem patri pouze skripty nutne pro fungovani webu. Analytiku, pixely, remarketing,
       heatmapy nebo podobne nastroje vkladej do sekci nize podle kategorie souhlasu.
@@ -513,8 +536,8 @@ ob_start();
     </div>
   </div>
 
-  <div class="card">
-    <div class="card-title">Analyticke skripty</div>
+  <div class="card settings-panel settings-collapsible is-collapsed" data-settings-panel="measurement" data-settings-collapsible>
+    <button type="button" class="card-title settings-collapsible__toggle" aria-expanded="false" data-settings-collapse-toggle>Analytické skripty <span aria-hidden="true">⌄</span></button>
     <p class="help-text" style="margin-bottom:12px">
       Google Analytics, Hotjar, Clarity nebo podobne merici nastroje. Pri zapnute consent liste
       se spusti pouze po povoleni kategorie Analyticke cookies.
@@ -529,8 +552,8 @@ ob_start();
     </div>
   </div>
 
-  <div class="card">
-    <div class="card-title">Marketingove skripty</div>
+  <div class="card settings-panel settings-collapsible is-collapsed" data-settings-panel="measurement" data-settings-collapsible>
+    <button type="button" class="card-title settings-collapsible__toggle" aria-expanded="false" data-settings-collapse-toggle>Marketingové skripty <span aria-hidden="true">⌄</span></button>
     <p class="help-text" style="margin-bottom:12px">
       Meta Pixel, Google Ads remarketing, TikTok Pixel a dalsi reklamni nebo remarketingove nastroje.
       Pri zapnute consent liste se spusti pouze po povoleni kategorie Marketingove cookies.
@@ -571,7 +594,7 @@ ob_start();
       'scroll_90'          => 'Scrollovani 90 % stranky',
     ];
   ?>
-  <div class="card">
+  <div class="card settings-panel" data-settings-panel="measurement">
     <div class="card-title">Tracking / Konverze</div>
     <p class="help-text" style="margin-bottom:16px">
       Centralni nastaveni merenı konverzı a analytickych eventu. Tracking se spustı pouze
@@ -622,8 +645,8 @@ ob_start();
     </div>
   </div>
 
-  <div class="card">
-    <div class="card-title">Layout webu (spolecna hlavicka a paticka)</div>
+  <div class="card settings-panel settings-collapsible is-collapsed" data-settings-panel="general" data-settings-collapsible>
+    <button type="button" class="card-title settings-collapsible__toggle" aria-expanded="false" data-settings-collapse-toggle>Pokročilé: layout webu <span aria-hidden="true">⌄</span></button>
     <p class="help-text" style="margin-bottom:16px">
       HTML layout obali kazdou stranku. Dostupne placeholdery:<br>
       <code>{page_content}</code> - obsah stranky &nbsp;|&nbsp;
@@ -656,11 +679,19 @@ ob_start();
     </div>
   </div>
 
-  <button type="submit" class="btn btn-primary">Uložit nastavení</button>
+  <div class="settings-savebar">
+    <span class="help-text">Uložení platí pro všechny záložky.</span>
+    <button type="submit" class="btn btn-primary">Uložit nastavení</button>
+  </div>
 </form>
+</div>
 
-<div class="card" id="antispam-test" style="margin-top:24px">
-  <div class="card-title">Test antispamu bez odeslání</div>
+<div class="settings-modal<?= is_array($spamTestResult ?? null) ? ' is-open' : '' ?>" id="antispam-test" aria-hidden="<?= is_array($spamTestResult ?? null) ? 'false' : 'true' ?>" data-spam-test-modal>
+ <div class="settings-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="antispam-test-title" tabindex="-1">
+  <div class="settings-modal__head">
+    <div class="card-title" id="antispam-test-title">Test antispamu bez odeslání</div>
+    <button type="button" class="btn btn-secondary" data-close-spam-test>Zavřít</button>
+  </div>
   <p class="help-text" style="margin-bottom:14px">Používá naposledy uložené nastavení. Test nic nezapíše do archivu a neodešle žádný e-mail.</p>
   <?php if (is_array($spamTestResult ?? null)): ?>
     <div class="alert <?= !empty($spamTestResult['isSpam']) ? 'alert-danger' : 'alert-success' ?>">
@@ -677,10 +708,11 @@ ob_start();
     <div class="form-group"><label>Testovací zpráva</label><textarea name="spam_test_message" rows="5" required placeholder="Vložte text pro výpočet skóre"></textarea></div>
     <button type="submit" class="btn btn-secondary">Vyhodnotit bez odeslání</button>
   </form>
+ </div>
 </div>
 
-<div class="card" style="margin-top:24px">
-  <div class="card-title">REST API</div>
+<details class="card settings-tool-card" style="margin-top:24px">
+  <summary class="card-title">REST API <span aria-hidden="true">⌄</span></summary>
   <?php if ($apiKey): ?>
   <div class="form-group">
     <label>API klic</label>
@@ -711,9 +743,32 @@ ob_start();
   <?php else: ?>
   <p class="help-text">API klic bude automaticky vygenerovan pri prvnim volani API endpointu.</p>
   <?php endif; ?>
-</div>
+</details>
 
 <style>
+.settings-workspace{--settings-accent:var(--c-primary);position:relative}
+.settings-tabs{position:sticky;top:0;z-index:20;display:flex;gap:6px;margin:0 0 18px;padding:8px;border:1px solid var(--c-border);border-radius:12px;background:color-mix(in srgb,var(--c-surface) 94%,transparent);box-shadow:0 8px 24px rgba(15,23,42,.06);overflow-x:auto;scrollbar-width:thin}
+.settings-tab{flex:0 0 auto;border:0;border-radius:8px;background:transparent;color:var(--c-muted);cursor:pointer;font:inherit;font-size:13px;font-weight:700;padding:10px 14px;white-space:nowrap}
+.settings-tab:hover{background:var(--c-bg);color:var(--c-text)}
+.settings-tab:focus-visible{outline:3px solid color-mix(in srgb,var(--settings-accent) 28%,transparent);outline-offset:1px}
+.settings-tab[aria-selected="true"]{background:var(--settings-accent);color:#fff;box-shadow:0 5px 14px color-mix(in srgb,var(--settings-accent) 24%,transparent)}
+.settings-workspace.is-enhanced .settings-panel[hidden]{display:none}
+.settings-workspace.is-enhanced .settings-panel{animation:settings-panel-in .16s ease-out}
+.settings-collapsible__toggle{display:flex;width:100%;align-items:center;justify-content:space-between;border:0;background:transparent;color:inherit;cursor:pointer;font:inherit;text-align:left}
+.settings-collapsible__toggle:focus-visible{outline:3px solid color-mix(in srgb,var(--settings-accent) 28%,transparent);outline-offset:3px;border-radius:4px}
+.settings-workspace.is-enhanced .settings-collapsible.is-collapsed>:not(.settings-collapsible__toggle){display:none}
+.settings-collapsible:not(.is-collapsed) .settings-collapsible__toggle span{transform:rotate(180deg)}
+.settings-collapsible__toggle span{transition:transform .16s ease}
+.settings-savebar{position:sticky;bottom:12px;z-index:18;display:flex;align-items:center;justify-content:flex-end;gap:14px;margin:18px 0;padding:12px 14px;border:1px solid var(--c-border);border-radius:12px;background:color-mix(in srgb,var(--c-surface) 94%,transparent);box-shadow:0 12px 34px rgba(15,23,42,.14);backdrop-filter:blur(10px)}
+.settings-tool-card>summary{display:flex;align-items:center;justify-content:space-between;cursor:pointer;list-style:none;margin:0}
+.settings-tool-card>summary::-webkit-details-marker{display:none}
+.settings-tool-card[open]>summary{margin-bottom:18px}
+.settings-modal{position:fixed;inset:0;z-index:1300;display:none;align-items:flex-start;justify-content:center;padding:7vh 24px;background:rgba(15,23,42,.68)}
+.settings-modal.is-open{display:flex}
+.settings-modal__dialog{width:min(760px,100%);max-height:86vh;overflow:auto;padding:20px;border:1px solid var(--c-border);border-radius:14px;background:var(--c-surface);box-shadow:0 28px 80px rgba(15,23,42,.32)}
+.settings-modal__head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}
+@keyframes settings-panel-in{from{opacity:.65;transform:translateY(3px)}to{opacity:1;transform:none}}
+@media(max-width:768px){.settings-tabs{top:0;margin-inline:-4px;padding:6px}.settings-tab{padding:9px 11px}.settings-savebar{bottom:8px;justify-content:space-between}.settings-savebar .help-text{max-width:150px}.settings-modal{padding:16px}.settings-modal__dialog{max-height:calc(100vh - 32px);padding:16px}}
 .brand-asset-picker{display:grid;gap:10px}
 .brand-asset-preview{min-height:76px;border:1px dashed var(--c-border);border-radius:10px;background:var(--c-bg);display:flex;align-items:center;justify-content:center;padding:12px;color:var(--c-muted);font-size:13px}
 .brand-asset-preview img{max-width:100%;max-height:58px;object-fit:contain;display:block}
@@ -735,6 +790,103 @@ ob_start();
 </style>
 <script>
 (function(){
+  const workspace = document.querySelector('[data-settings-workspace]');
+  if (workspace) {
+    const tabs = Array.from(workspace.querySelectorAll('[data-settings-tab]'));
+    const panels = Array.from(workspace.querySelectorAll('[data-settings-panel]'));
+    const validKeys = tabs.map(tab => tab.dataset.settingsTab);
+    const legacyHashes = {antispam:'antispam', 'antispam-test':'antispam', 'settings-antispam':'antispam'};
+
+    function keyFromHash() {
+      const hash = window.location.hash.slice(1);
+      if (legacyHashes[hash]) return legacyHashes[hash];
+      if (hash.startsWith('settings-')) return hash.slice(9);
+      return '';
+    }
+
+    function activate(key, options) {
+      const selected = validKeys.includes(key) ? key : 'general';
+      tabs.forEach(tab => {
+        const active = tab.dataset.settingsTab === selected;
+        tab.setAttribute('aria-selected', active ? 'true' : 'false');
+        tab.tabIndex = active ? 0 : -1;
+      });
+      panels.forEach(panel => { panel.hidden = panel.dataset.settingsPanel !== selected; });
+      if (options && options.focus) {
+        const tab = tabs.find(item => item.dataset.settingsTab === selected);
+        if (tab) tab.focus();
+      }
+      if (options && options.updateHash) {
+        history.replaceState(null, '', '#settings-' + selected);
+      }
+    }
+
+    workspace.classList.add('is-enhanced');
+    tabs.forEach((tab, index) => {
+      tab.addEventListener('click', () => activate(tab.dataset.settingsTab, {updateHash:true}));
+      tab.addEventListener('keydown', event => {
+        let next = index;
+        if (event.key === 'ArrowRight') next = (index + 1) % tabs.length;
+        else if (event.key === 'ArrowLeft') next = (index - 1 + tabs.length) % tabs.length;
+        else if (event.key === 'Home') next = 0;
+        else if (event.key === 'End') next = tabs.length - 1;
+        else return;
+        event.preventDefault();
+        activate(tabs[next].dataset.settingsTab, {focus:true,updateHash:true});
+      });
+    });
+    workspace.querySelectorAll('[data-settings-collapsible]').forEach(section => {
+      const toggle = section.querySelector('[data-settings-collapse-toggle]');
+      if (!toggle) return;
+      toggle.addEventListener('click', () => {
+        const collapsed = section.classList.toggle('is-collapsed');
+        toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+      });
+    });
+    const form = workspace.querySelector('[data-settings-form]');
+    if (form) {
+      form.addEventListener('invalid', event => {
+        const panel = event.target.closest('[data-settings-panel]');
+        if (panel) activate(panel.dataset.settingsPanel, {updateHash:true});
+        const collapsed = event.target.closest('[data-settings-collapsible]');
+        if (collapsed) {
+          collapsed.classList.remove('is-collapsed');
+          const toggle = collapsed.querySelector('[data-settings-collapse-toggle]');
+          if (toggle) toggle.setAttribute('aria-expanded', 'true');
+        }
+      }, true);
+    }
+    window.addEventListener('hashchange', () => activate(keyFromHash() || 'general'));
+    activate(keyFromHash() || 'general');
+  }
+
+  const spamModal = document.querySelector('[data-spam-test-modal]');
+  if (spamModal) {
+    const dialog = spamModal.querySelector('.settings-modal__dialog');
+    let returnFocus = null;
+    function openSpamModal(trigger) {
+      returnFocus = trigger || document.activeElement;
+      spamModal.classList.add('is-open');
+      spamModal.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      if (dialog) dialog.focus();
+    }
+    function closeSpamModal() {
+      spamModal.classList.remove('is-open');
+      spamModal.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+      if (returnFocus && typeof returnFocus.focus === 'function') returnFocus.focus();
+    }
+    document.querySelectorAll('[data-open-spam-test]').forEach(button => button.addEventListener('click', () => openSpamModal(button)));
+    spamModal.querySelectorAll('[data-close-spam-test]').forEach(button => button.addEventListener('click', closeSpamModal));
+    spamModal.addEventListener('click', event => { if (event.target === spamModal) closeSpamModal(); });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape' && spamModal.classList.contains('is-open')) closeSpamModal(); });
+    if (spamModal.classList.contains('is-open')) {
+      document.body.style.overflow = 'hidden';
+      if (dialog) dialog.focus();
+    }
+  }
+
   function bindRangeNumber(rangeId, inputId, valueId, fallback, decimals){
     var range = document.getElementById(rangeId);
     var input = document.getElementById(inputId);
