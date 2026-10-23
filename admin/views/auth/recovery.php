@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-<html lang="cs"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Obnova hesla - CMS</title><link rel="stylesheet" href="/admin/assets/admin.css"></head>
+<html lang="cs"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#172033">
+<title>Obnova hesla - CMS</title><link rel="icon" href="/admin/assets/admin-favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="/admin/assets/admin.css"></head>
 <body><div class="login-wrap"><div class="login-box">
 <h1><?= $reset ? 'Nové heslo' : 'Zapomenuté heslo' ?></h1>
 <?php foreach (['error', 'success'] as $kind): if (!empty($$kind)): ?>

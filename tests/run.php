@@ -502,6 +502,12 @@ register_contact_spam_notification_tests($test, $assert);
 require __DIR__ . '/PhpRuntimeInfoTest.php';
 register_php_runtime_info_tests($test, $assert);
 
+require __DIR__ . '/SettingsNavigationTest.php';
+register_settings_navigation_tests($test, $assert);
+
+require __DIR__ . '/AdminFaviconTest.php';
+register_admin_favicon_tests($test, $assert);
+
 $failures = 0;
 foreach ($tests as [$name, $callback]) {
     try {

@@ -8,7 +8,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#172033">
   <title><?= isset($pageTitle) ? htmlspecialchars($pageTitle) . ' - ' : '' ?>SEO Mini CMS</title>
+  <link rel="icon" href="<?= htmlspecialchars($adminAssetVersion('admin-favicon.svg')) ?>" type="image/svg+xml">
   <link rel="stylesheet" href="<?= htmlspecialchars($adminAssetVersion('admin.css')) ?>">
 </head>
 <body>
