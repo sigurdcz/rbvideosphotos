@@ -2641,3 +2641,21 @@ Doporuceny model: Sol - mala zmena sdileneho admin layoutu a autentizacnich vstu
 
 Administrace pouziva vlastni self-contained SVG favicon s tmavym podkladem, bilym pismenem A a modrym stavovym bodem. Ikona a odpovidajici theme-color jsou zapojene do hlavniho admin layoutu, prihlaseni i obnovy hesla. Lokalni prohlizec nacetl spravny link, asset vraci HTTP 200 a Content-Type image/svg+xml. PHP lint, diff check a 2/2 cilene testy prosly.
 
+---
+# UKOL: API nastaveni v zalozce Dev
+
+Datum: 2026-10-23
+Zadani: Presunout REST API blok v administracnim Nastaveni pod samostatnou zalozku Dev.
+Doporuceny model: Sol - mala navazujici uprava struktury tabu se zachovanim API klice a napovedy.
+
+## Kroky
+
+- [x] Pridat zalozku Dev do existujici pristupne navigace.
+- [x] Presunout REST API panel pod Dev bez zmeny jeho obsahu.
+- [x] Overit prepinani, HTML/PHP syntaxi a cilene testy.
+- [x] Commitnout na dev bez pushe.
+
+## Vysledek
+
+Navigace Nastaveni obsahuje sestou zalozku Dev. REST API panel je uvnitr jejiho tabpanelu a zustava nativne rozbalovaci; API klic ani seznam endpointu se nemenily. Panel pouziva stejny hash-aware a klavesove ovladany mechanismus jako ostatni zalozky. PHP lint, diff check a 2/2 cilene testy prosly.
+

@@ -71,6 +71,7 @@ ob_start();
       'communication' => 'Komunikace',
       'measurement' => 'Měření a skripty',
       'antispam' => 'Antispam',
+      'dev' => 'Dev',
     ] as $settingsTabKey => $settingsTabLabel): ?>
       <button
         type="button"
@@ -684,7 +685,6 @@ ob_start();
     <button type="submit" class="btn btn-primary">Uložit nastavení</button>
   </div>
 </form>
-</div>
 
 <div class="settings-modal<?= is_array($spamTestResult ?? null) ? ' is-open' : '' ?>" id="antispam-test" aria-hidden="<?= is_array($spamTestResult ?? null) ? 'false' : 'true' ?>" data-spam-test-modal>
  <div class="settings-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="antispam-test-title" tabindex="-1">
@@ -711,7 +711,7 @@ ob_start();
  </div>
 </div>
 
-<details class="card settings-tool-card" style="margin-top:24px">
+<details class="card settings-panel settings-tool-card" id="settings-panel-dev" role="tabpanel" aria-labelledby="settings-tab-dev" data-settings-panel="dev">
   <summary class="card-title">REST API <span aria-hidden="true">⌄</span></summary>
   <?php if ($apiKey): ?>
   <div class="form-group">
@@ -744,6 +744,7 @@ ob_start();
   <p class="help-text">API klic bude automaticky vygenerovan pri prvnim volani API endpointu.</p>
   <?php endif; ?>
 </details>
+</div>
 
 <style>
 .settings-workspace{--settings-accent:var(--c-primary);position:relative}

@@ -10,7 +10,7 @@ function register_settings_navigation_tests(callable $test, callable $assert): v
         $source = file_get_contents($viewPath);
         $assert(is_string($source), 'Settings view could not be read.');
 
-        foreach (['general', 'appearance', 'communication', 'measurement', 'antispam'] as $key) {
+        foreach (['general', 'appearance', 'communication', 'measurement', 'antispam', 'dev'] as $key) {
             $assert(str_contains($source, "'" . $key . "' =>"), 'Missing settings tab definition: ' . $key);
             $assert(str_contains($source, 'data-settings-panel="' . $key . '"'), 'Missing settings panel: ' . $key);
         }
@@ -35,6 +35,7 @@ function register_settings_navigation_tests(callable $test, callable $assert): v
         $assert(str_contains($source, 'action="/admin/settings/update"'), 'Main settings submit endpoint changed.');
         $assert(str_contains($source, 'action="/admin/settings/spam-test"'), 'Spam test endpoint changed.');
         $assert(str_contains($source, 'data-spam-test-modal'), 'Spam test must remain available in a modal.');
-        $assert(str_contains($source, '<details class="card settings-tool-card"'), 'REST API help must remain available as a compact tool.');
+        $assert(str_contains($source, 'settings-tool-card'), 'REST API help must remain available as a compact tool.');
+        $assert(str_contains($source, 'id="settings-panel-dev"'), 'REST API help must live inside the Dev tab.');
     });
 }
