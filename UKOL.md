@@ -2622,3 +2622,22 @@ Stranka Nastaveni je rozdelena do peti hlavních zalozek: Obecne, Vzhled a media
 
 Vsechny puvodni nazvy poli, POST routy, CSRF, media picker i spolecne ukladani zustaly zachovane. Lokalni desktopova kontrola v realne administraci overila prepinani zalozek, hash, modal a sdilene ukladani. Responzivni breakpoint drzi taby ve vodorovnem scrollu a modal omezuje na vysku viewportu. PHP lint, diff check a 2/2 cilene kontraktni testy prosly. Cela legacy sada dosla k drive znamemu nesouvisejicimu Golden Bash golden testu a pote ji zastavila nedostupna lokalni DB; obe omezeni zustala zretelna.
 
+---
+# UKOL: Rozlisovaci favicon administrace
+
+Datum: 2026-10-23
+Zadani: Pridat administraci vlastni ikonu, aby sla v Chrome zalozkach snadno rozeznat od verejneho webu.
+Doporuceny model: Sol - mala zmena sdileneho admin layoutu a autentizacnich vstupu.
+
+## Kroky
+
+- [x] Overit vsechny samostatne admin HTML head sablony.
+- [x] Vytvorit kontrastni samostatny SVG favicon bez externich zavislosti.
+- [x] Zapojit favicon a theme-color do administrace, loginu a obnovy hesla.
+- [x] Overit HTTP odpoved, vykresleni v zalozce a regresni testy.
+- [x] Commitnout na dev bez pushe.
+
+## Vysledek
+
+Administrace pouziva vlastni self-contained SVG favicon s tmavym podkladem, bilym pismenem A a modrym stavovym bodem. Ikona a odpovidajici theme-color jsou zapojene do hlavniho admin layoutu, prihlaseni i obnovy hesla. Lokalni prohlizec nacetl spravny link, asset vraci HTTP 200 a Content-Type image/svg+xml. PHP lint, diff check a 2/2 cilene testy prosly.
+
