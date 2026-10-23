@@ -34,11 +34,22 @@ try {
  $spamCalls = 0;
  $spamArchive = new MailArchiveService($db, function () use (&$spamCalls): bool { $spamCalls++; return true; });
  $spamResult = $spamArchive->archiveSpam('team@example.test', 'Spam', $body, ['gambling-promotion', 'link-in-message']);
- check($spamResult['status'] === 'spam' && $spamCalls === 0, 'Spam is archived without SMTP');
+ check($spamResult['status'] === 'spam' && $spamResult['notification_status'] === 'disabled' && $spamCalls === 0, 'Spam is archived without SMTP when notification is disabled');
  $spamRow = $db->query('SELECT status, error_code, body FROM mail_archive WHERE id = ' . (int) $spamResult['id'])->fetch();
  check($spamRow['status'] === 'spam' && str_starts_with($spamRow['error_code'], 'static_spam:') && $spamRow['body'] === $body, 'Spam body and bounded reason are durable');
+ $notificationCalls = [];
+ $spamNotify = new MailArchiveService($db, function ($to, $subject, $text, $headers, $cc) use (&$notificationCalls): bool {
+   $notificationCalls[] = compact('to', 'subject', 'text', 'headers', 'cc');
+   return true;
+ });
+ $notified = $spamNotify->archiveSpam('team@example.test', 'Untrusted https://bad.example', $body, ['link-in-message'], 'copy@example.test', true);
+ check($notified['status'] === 'spam' && $notified['notification_status'] === 'accepted', 'Enabled spam notification reports SMTP acceptance separately from spam status');
+ check(count($notificationCalls) === 1 && $notificationCalls[0]['to'] === 'team@example.test' && $notificationCalls[0]['cc'] === 'copy@example.test', 'Spam notification reaches primary and configured copies');
+ check(!str_contains($notificationCalls[0]['text'], 'bad.example') && !str_contains($notificationCalls[0]['text'], '<script>') && str_contains($notificationCalls[0]['text'], 'ID záznamu:'), 'Spam notification excludes untrusted content and identifies the archive row');
+ $failedNotification = (new MailArchiveService($db, fn() => false))->archiveSpam('team@example.test', 'Spam', $body, ['link-in-message'], '', true);
+ check($failedNotification['status'] === 'spam' && $failedNotification['notification_status'] === 'failed', 'Notification failure remains visible while spam stays archived');
  $spamOverview = (new MailArchiveRepository($db))->overview('spam', 'contact', 1);
- check($spamOverview['total'] === 1 && $spamOverview['counts']['spam'] === 1, 'Admin repository filters and counts spam');
+ check($spamOverview['total'] === 3 && $spamOverview['counts']['spam'] === 3, 'Admin repository filters and counts all spam notification outcomes');
  $exception = new MailArchiveService($db, fn() => throw new RuntimeException('SECRET transport credentials'));
  $exception->send('contact', 'team@example.test', 'Poptávka', $body);
  check($db->query('SELECT error_code FROM mail_archive ORDER BY id DESC LIMIT 1')->fetchColumn() === 'transport_exception', 'Safe exception code');

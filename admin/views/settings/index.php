@@ -47,6 +47,8 @@ if ($mediaImageQuality <= 0) {
     $mediaImageQuality = 90;
 }
 $mediaImageQuality = max(1, min(100, $mediaImageQuality));
+$spamConfig = $spamConfig ?? \App\Services\ContactSpamConfig::defaults();
+$spamWeights = $spamConfig['weights'];
 
 ob_start();
 ?>
@@ -63,6 +65,69 @@ ob_start();
 
 <form method="POST" action="/admin/settings/update">
   <input type="hidden" name="_csrf" value="<?= $h($_csrfToken) ?>">
+
+  <div class="card" id="antispam">
+    <div class="card-title">Antispam kontaktního formuláře</div>
+    <p class="help-text" style="margin-bottom:16px">Statický bodový filtr zpráv. Při dosažení prahu se zpráva uloží jako spam do E-mailů a zpráv, ale neodešle se přes SMTP. Honeypot a omezení podle IP zůstávají aktivní samostatně.</p>
+    <?php if (!empty($spamConfigError)): ?><div class="alert alert-danger"><?= $h($spamConfigError) ?></div><?php endif; ?>
+    <div class="form-group">
+      <label style="display:flex;align-items:center;gap:8px">
+        <input type="checkbox" name="contact_spam_enabled" value="1" <?= !empty($spamConfig['enabled']) ? 'checked' : '' ?> style="width:auto">
+        Zapnout statický antispam
+      </label>
+    </div>
+    <div class="form-group">
+      <label style="display:flex;align-items:center;gap:8px">
+        <input type="checkbox" name="contact_spam_notify_recipients" value="1" <?= !empty($spamConfig['notify_recipients']) ? 'checked' : '' ?> style="width:auto">
+        Poslat příjemcům e-mailové upozornění na zachycený spam
+      </label>
+      <p class="help-text">Upozornění dostane hlavní příjemce kontaktního formuláře i všechny nastavené CC adresy. Původní text ani odkazy ze spamu se do e-mailu nekopírují.</p>
+    </div>
+    <div class="form-group" style="max-width:260px">
+      <label>Práh pro označení spamu</label>
+      <input type="number" name="contact_spam_threshold" min="1" max="100" required value="<?= $h($spamConfig['threshold']) ?>">
+      <p class="help-text">Výchozí hodnota je 7 bodů.</p>
+    </div>
+    <div class="form-row-3">
+      <?php foreach ([
+        'known_phrase' => ['Známá spamová fráze', 'contact_spam_weight_known_phrase'],
+        'url_in_name' => ['Odkaz ve jménu', 'contact_spam_weight_url_in_name'],
+        'promotion_terms' => ['Dvě reklamní slova', 'contact_spam_weight_promotion_terms'],
+        'call_to_action' => ['Reklamní výzva', 'contact_spam_weight_call_to_action'],
+        'link_in_message' => ['Odkaz ve zprávě', 'contact_spam_weight_link_in_message'],
+        'contact_junk' => ['Text navíc za e-mailem', 'contact_spam_weight_contact_junk'],
+      ] as $weightKey => [$weightLabel, $weightName]): ?>
+      <div class="form-group">
+        <label><?= $h($weightLabel) ?></label>
+        <input type="number" name="<?= $h($weightName) ?>" min="0" max="100" required value="<?= $h($spamWeights[$weightKey]) ?>">
+      </div>
+      <?php endforeach; ?>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Známé spamové fráze</label>
+        <textarea name="contact_spam_known_phrases" rows="6" required><?= $h(\App\Services\ContactSpamConfig::listText($spamConfig['known_phrases'])) ?></textarea>
+        <p class="help-text">Jedna fráze na řádek. Shoda přidá nastavený počet bodů.</p>
+      </div>
+      <div class="form-group">
+        <label>Reklamní a hazardní slova</label>
+        <textarea name="contact_spam_promotion_terms" rows="6" required><?= $h(\App\Services\ContactSpamConfig::listText($spamConfig['promotion_terms'])) ?></textarea>
+        <p class="help-text">Jedno slovo nebo výraz na řádek. Body se přidají při výskytu alespoň dvou položek.</p>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Reklamní výzvy</label>
+        <textarea name="contact_spam_calls_to_action" rows="5" required><?= $h(\App\Services\ContactSpamConfig::listText($spamConfig['calls_to_action'])) ?></textarea>
+        <p class="help-text">Například „play now“ nebo „click here“.</p>
+      </div>
+      <div class="form-group">
+        <label>Povolené domény ve zprávách</label>
+        <textarea name="contact_spam_allowed_domains" rows="5" placeholder="mujweb.cz&#10;partner.cz"><?= $h(\App\Services\ContactSpamConfig::listText($spamConfig['allowed_domains'])) ?></textarea>
+        <p class="help-text">Volitelné. Odkazy na tyto domény a jejich subdomény nepřidají body za odkaz ve zprávě.</p>
+      </div>
+    </div>
+  </div>
 
   <div class="card">
     <div class="card-title">Zakladni informace</div>
@@ -593,6 +658,26 @@ ob_start();
 
   <button type="submit" class="btn btn-primary">Uložit nastavení</button>
 </form>
+
+<div class="card" id="antispam-test" style="margin-top:24px">
+  <div class="card-title">Test antispamu bez odeslání</div>
+  <p class="help-text" style="margin-bottom:14px">Používá naposledy uložené nastavení. Test nic nezapíše do archivu a neodešle žádný e-mail.</p>
+  <?php if (is_array($spamTestResult ?? null)): ?>
+    <div class="alert <?= !empty($spamTestResult['isSpam']) ? 'alert-danger' : 'alert-success' ?>">
+      Výsledek: <strong><?= !empty($spamTestResult['isSpam']) ? 'SPAM' : 'V pořádku' ?></strong>, skóre <?= $h($spamTestResult['score'] ?? 0) ?>.
+      Důvody: <?= $h(($spamTestResult['reasons'] ?? []) === [] ? 'žádné' : implode(', ', $spamTestResult['reasons'])) ?>
+    </div>
+  <?php endif; ?>
+  <form method="POST" action="/admin/settings/spam-test">
+    <input type="hidden" name="_csrf" value="<?= $h($_csrfToken) ?>">
+    <div class="form-row">
+      <div class="form-group"><label>Testovací jméno</label><input type="text" name="spam_test_name" required value="Test návštěvník"></div>
+      <div class="form-group"><label>Testovací kontakt</label><input type="text" name="spam_test_contact" required value="test@example.com"></div>
+    </div>
+    <div class="form-group"><label>Testovací zpráva</label><textarea name="spam_test_message" rows="5" required placeholder="Vložte text pro výpočet skóre"></textarea></div>
+    <button type="submit" class="btn btn-secondary">Vyhodnotit bez odeslání</button>
+  </form>
+</div>
 
 <div class="card" style="margin-top:24px">
   <div class="card-title">REST API</div>

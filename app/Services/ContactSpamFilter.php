@@ -13,11 +13,20 @@ namespace App\Services;
  */
 final class ContactSpamFilter
 {
-    private const BLOCK_SCORE = 7;
+    /** @param array<string,mixed>|null $config */
+    public function __construct(private ?array $config = null)
+    {
+        $this->config = ContactSpamConfig::fromStored(
+            $config === null ? null : ContactSpamConfig::encode($config)
+        );
+    }
 
     /** @return array{isSpam: bool, score: int, reasons: list<string>} */
     public function classify(string $name, string $contact, string $message): array
     {
+        if (!$this->config['enabled']) {
+            return ['isSpam' => false, 'score' => 0, 'reasons' => []];
+        }
         $nameText = $this->normalize($name);
         $contactText = $this->normalize($contact);
         $messageText = $this->normalize($message);
@@ -25,37 +34,37 @@ final class ContactSpamFilter
         $score = 0;
         $reasons = [];
 
-        if (str_contains($all, 'thank you very much for your inquiry we appreciate you')) {
-            $this->add($score, $reasons, 8, 'known-bot-boilerplate');
+        foreach ($this->config['known_phrases'] as $phrase) {
+            if (str_contains($all, $phrase)) {
+                $this->add($score, $reasons, $this->weight('known_phrase'), 'known-bot-boilerplate');
+                break;
+            }
         }
 
         if ($this->containsUrl($nameText)) {
-            $this->add($score, $reasons, 7, 'url-in-name');
+            $this->add($score, $reasons, $this->weight('url_in_name'), 'url-in-name');
         }
 
-        $promotionTerms = preg_match_all(
-            '/\b(?:casino|jackpot|bonus|reel|spin|cash|vault|wins?|gambling|betting)\b/u',
-            $all
-        );
+        $promotionTerms = $this->countTerms($all, $this->config['promotion_terms']);
         if (is_int($promotionTerms) && $promotionTerms >= 2) {
-            $this->add($score, $reasons, 6, 'gambling-promotion');
+            $this->add($score, $reasons, $this->weight('promotion_terms'), 'gambling-promotion');
         }
 
-        if (preg_match('/\b(?:play\s+now|click\s+here|visit\s+now|no\s+luck\?\s+no\s+problem)\b/u', $all) === 1) {
-            $this->add($score, $reasons, 3, 'promotional-call-to-action');
+        if ($this->containsPhrase($all, $this->config['calls_to_action'])) {
+            $this->add($score, $reasons, $this->weight('call_to_action'), 'promotional-call-to-action');
         }
 
-        if ($this->containsUrl($messageText)) {
-            $this->add($score, $reasons, 2, 'link-in-message');
+        if ($this->containsUntrustedUrl($messageText)) {
+            $this->add($score, $reasons, $this->weight('link_in_message'), 'link-in-message');
         }
 
         // Bot payloads often put an email first and append random tokens to the
         // contact field. This is only a weak signal and cannot block by itself.
         if (preg_match('/^[^\s@]+@[^\s@]+\.[^\s@]+\s+\S+/u', $contactText) === 1) {
-            $this->add($score, $reasons, 2, 'contact-field-junk');
+            $this->add($score, $reasons, $this->weight('contact_junk'), 'contact-field-junk');
         }
 
-        return ['isSpam' => $score >= self::BLOCK_SCORE, 'score' => $score, 'reasons' => $reasons];
+        return ['isSpam' => $score >= $this->config['threshold'], 'score' => $score, 'reasons' => $reasons];
     }
 
     private function normalize(string $value): string
@@ -71,6 +80,50 @@ final class ContactSpamFilter
             '~(?:https?://|www\.|\b[a-z0-9][a-z0-9.-]+\.(?:com|net|org|io|ru|xyz|top|click|site|online)(?:/|\b))~iu',
             $value
         ) === 1;
+    }
+
+    private function containsUntrustedUrl(string $value): bool
+    {
+        if (!$this->containsUrl($value)) return false;
+        preg_match_all('~(?:https?://|www\.)?([a-z0-9][a-z0-9.-]+\.[a-z]{2,63})~iu', $value, $matches);
+        foreach (($matches[1] ?? []) as $domain) {
+            $domain = strtolower(rtrim((string)$domain, '.'));
+            $allowed = false;
+            foreach ($this->config['allowed_domains'] as $safe) {
+                if ($domain === $safe || str_ends_with($domain, '.' . $safe)) {
+                    $allowed = true;
+                    break;
+                }
+            }
+            if (!$allowed) return true;
+        }
+        return false;
+    }
+
+    /** @param list<string> $phrases */
+    private function containsPhrase(string $text, array $phrases): bool
+    {
+        foreach ($phrases as $phrase) {
+            if (str_contains($text, $phrase)) return true;
+        }
+        return false;
+    }
+
+    /** @param list<string> $terms */
+    private function countTerms(string $text, array $terms): int
+    {
+        $count = 0;
+        foreach ($terms as $term) {
+            if (preg_match('/(?<![\pL\pN])' . preg_quote($term, '/') . '(?![\pL\pN])/u', $text) === 1) {
+                $count++;
+            }
+        }
+        return $count;
+    }
+
+    private function weight(string $key): int
+    {
+        return (int)$this->config['weights'][$key];
     }
 
     /** @param list<string> $reasons */

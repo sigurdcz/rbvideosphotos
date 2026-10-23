@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS `sites` (
   `google_analytics_id`   VARCHAR(50) DEFAULT NULL,
   `google_tag_manager_id` VARCHAR(50) DEFAULT NULL,
   `cookie_consent_enabled` TINYINT(1) NOT NULL DEFAULT 1,
+  `contact_spam_config_json` LONGTEXT DEFAULT NULL,
   `head_scripts`          TEXT DEFAULT NULL,
   `body_scripts`          TEXT DEFAULT NULL,
   `analytics_head_scripts` LONGTEXT DEFAULT NULL,

@@ -150,6 +150,7 @@ class SiteRepository
             'meta_pixel_id',
             'tracking_events_json',
             'visit_analytics_enabled',
+            'contact_spam_config_json',
         ];
 
         return array_values(array_filter($columns, fn(string $col): bool => $this->supportsColumn($col)));
