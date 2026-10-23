@@ -76,6 +76,13 @@ ob_start();
         Zapnout statický antispam
       </label>
     </div>
+    <div class="form-group">
+      <label style="display:flex;align-items:center;gap:8px">
+        <input type="checkbox" name="contact_spam_notify_recipients" value="1" <?= !empty($spamConfig['notify_recipients']) ? 'checked' : '' ?> style="width:auto">
+        Poslat příjemcům e-mailové upozornění na zachycený spam
+      </label>
+      <p class="help-text">Upozornění dostane hlavní příjemce kontaktního formuláře i všechny nastavené CC adresy. Původní text ani odkazy ze spamu se do e-mailu nekopírují.</p>
+    </div>
     <div class="form-group" style="max-width:260px">
       <label>Práh pro označení spamu</label>
       <input type="number" name="contact_spam_threshold" min="1" max="100" required value="<?= $h($spamConfig['threshold']) ?>">

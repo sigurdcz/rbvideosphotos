@@ -2837,7 +2837,14 @@ try {
                 $spamConfig = \App\Services\ContactSpamConfig::fromStored($site['contact_spam_config_json'] ?? null);
                 $spam = (new \App\Services\ContactSpamFilter($spamConfig))->classify($name, $contact, $message);
                 $delivery = $spam['isSpam']
-                    ? $archive->archiveSpam((string) $formEmail, mb_substr($subject, 0, 255), $body, $spam['reasons'], $formEmailCopy)
+                    ? $archive->archiveSpam(
+                        (string) $formEmail,
+                        mb_substr($subject, 0, 255),
+                        $body,
+                        $spam['reasons'],
+                        $formEmailCopy,
+                        !empty($spamConfig['notify_recipients'])
+                    )
                     : $archive->send('contact', (string) $formEmail, mb_substr($subject, 0, 255), $body, '', $formEmailCopy);
                 $contactSaved = true;
                 $contactMailSent = $delivery['status'] === 'accepted';

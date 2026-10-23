@@ -2569,3 +2569,30 @@ Antispam lze spravovat v administraci v sekci Nastaveni -> Antispam. Spravce muz
 
 Nova append-only migrace 111 pridava verzovanou JSON konfiguraci webu. Neplatna ulozena konfigurace se nezamaskuje vychozimi hodnotami; admin zobrazi chybu a verejne odeslani se zastavi. Cilene testy, PHP lint, diff check, dvojite provedeni migrace a lokalni UI kontrola prosly. Cela testovaci sada nadale narazi na znamy nesouvisejici Golden Bash isolation FAIL a lokalni DB blocker. Globalni wiki byla aktualizovana samostatnym commitem `cd8bf6a`. Zmena zustava pouze na lokalni vetvi `dev`; staging ani produkce nebyly zmeneny.
 
+---
+# UKOL: E-mailove upozorneni na zachyceny spam
+
+Datum: 2026-10-22
+Zadani: Pridat do obecneho nastaveni webu checkbox, ktery po zachyceni spamu upozorni hlavniho prijemce kontaktniho formulare a vsechny nastavene CC prijemce.
+Doporuceny model: Sol - Zmena zasahuje verzovanou konfiguraci, archivaci spamu, SMTP, admin UI a regresni testy.
+
+## Kroky
+
+- [x] Rozsirit antispam konfiguraci a admin UI o vychozene vypnute upozorneni.
+- [x] Po bezpecne archivaci spamu odeslat prijemcum pevne upozorneni bez aktivniho spamoveho obsahu.
+- [x] Pri selhani SMTP zachovat spam a chybu viditelne zalogovat bez falesneho potvrzeni.
+- [x] Doplnit regresni testy a dokumentaci.
+- [x] Commitnout hotovou zmenu na `dev`; bez vyzvy nepushovat a nemenit `master`.
+
+## Poznamky
+
+Upozorneni pouzije stejneho hlavniho prijemce a stejny normalizovany CC seznam jako bezna kontaktni zprava. Puvodni spamovy text ani odkazy se do upozorneni nekopiruji; e-mail obsahuje pouze ID archivniho zaznamu a strojove duvody. Spam musi zustat archivovany i pri chybe SMTP.
+Novy realny vzorek `JamesTralf` obsahoval ruskou casino reklamu a odkaz. Vychozi slovnik byl rozsiren o `казино`, `играть` a `dragonmoney`; jazyk sam o sobe se neboduje a regresni test vyzaduje kombinaci reklamniho obsahu.
+
+## Vysledek
+
+Nastaveni antispamu obsahuje vychozene vypnuty checkbox pro e-mailove upozorneni. Je-li zapnuty, spam se nejprve ulozi a potom se hlavnímu prijemci a vsem normalizovanym CC odesle pevne upozorneni pouze s ID zaznamu a reason codes. Puvodni predmet, zprava a odkazy se do upozorneni nekopiruji. Odmitnuti SMTP vrati `notification_status=failed`, zapise bezpecny log a zachova spam v archivu.
+
+Vychozi slovnik nyni zachyti i realny rusky casino vzorek `JamesTralf`. PHP lint a diff check prosly. Izolovana antispam sada ma 4 PASS testy vcetne SQLite overeni vypnuteho/zapnuteho upozorneni, vsech CC, sanitizovaneho tela a chyby SMTP. MySQL integracni test se v tomto behu nespustil, protoze lokalni DB konfigurace nema dostupny host; blocker zustal viditelny. Staging ani produkce nebyly zmeneny.
+Globalni wiki byla aktualizovana samostatnym commitem `058403b`.
+

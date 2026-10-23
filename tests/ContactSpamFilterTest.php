@@ -18,6 +18,14 @@ function register_contact_spam_filter_tests(callable $test, callable $assert): v
         $assert($boilerplate['isSpam'] === true, 'Known inquiry boilerplate must be spam.');
         $assert(in_array('known-bot-boilerplate', $boilerplate['reasons'], true), 'Boilerplate reason must be explicit.');
 
+        $russianCasino = $filter->classify(
+            'JamesTralf',
+            'edrmx@ksrkjо.th hmpb e181...',
+            'Здарова! Коротко расскажу про казино Драгон мани. Подробности — <a href=https://dragonmoney-obzor.org>https://dragonmoney-obzor.org</a>. Играть стоит в удовольствие.'
+        );
+        $assert($russianCasino['isSpam'] === true, 'Russian casino promotion with a link must be spam.');
+        $assert(in_array('gambling-promotion', $russianCasino['reasons'], true), 'Russian casino promotion reason must be explicit.');
+
         $casino = $filter->classify(
             'Devinzc',
             'nraqk@snpgrl.uj nkaq u251...',
@@ -61,7 +69,7 @@ function register_contact_spam_filter_tests(callable $test, callable $assert): v
 
     $test('contact spam configuration validates admin input and rejects corrupt storage', function () use ($assert): void {
         $post = [
-            'contact_spam_enabled' => '1', 'contact_spam_threshold' => '9',
+            'contact_spam_enabled' => '1', 'contact_spam_notify_recipients' => '1', 'contact_spam_threshold' => '9',
             'contact_spam_weight_known_phrase' => '8', 'contact_spam_weight_url_in_name' => '7',
             'contact_spam_weight_promotion_terms' => '6', 'contact_spam_weight_call_to_action' => '3',
             'contact_spam_weight_link_in_message' => '2', 'contact_spam_weight_contact_junk' => '2',
@@ -71,10 +79,13 @@ function register_contact_spam_filter_tests(callable $test, callable $assert): v
             'contact_spam_allowed_domains' => "Example.COM\nsub.example.org",
         ];
         $config = ContactSpamConfig::fromPost($post);
-        $assert($config['enabled'] === true && $config['threshold'] === 9);
+        $assert($config['enabled'] === true && $config['notify_recipients'] === true && $config['threshold'] === 9);
         $assert($config['known_phrases'] === ['bot phrase'], 'Lists must normalize and deduplicate.');
         $assert($config['allowed_domains'] === ['example.com', 'sub.example.org'], 'Domains must normalize.');
         $assert(ContactSpamConfig::fromStored(ContactSpamConfig::encode($config)) === $config, 'Stored config must round-trip exactly.');
+        $legacy = $config;
+        unset($legacy['notify_recipients']);
+        $assert(ContactSpamConfig::fromStored(json_encode($legacy, JSON_THROW_ON_ERROR))['notify_recipients'] === false, 'Older version 1 configuration must keep notifications disabled.');
 
         foreach (['{bad', json_encode(['version' => 99])] as $invalid) {
             $threw = false;
@@ -95,11 +106,12 @@ function register_contact_spam_filter_tests(callable $test, callable $assert): v
         $router = (string)file_get_contents($root . '/admin/index.php');
         $public = (string)file_get_contents($root . '/public/index.php');
         $migration = (string)file_get_contents($root . '/database/migrations/111_add_contact_spam_config.sql');
-        foreach (['contact_spam_enabled', 'contact_spam_threshold', 'contact_spam_known_phrases', 'contact_spam_allowed_domains', '/admin/settings/spam-test'] as $needle) {
+        foreach (['contact_spam_enabled', 'contact_spam_notify_recipients', 'contact_spam_threshold', 'contact_spam_known_phrases', 'contact_spam_allowed_domains', '/admin/settings/spam-test'] as $needle) {
             $assert(str_contains($settings . $router, $needle), 'Missing antispam admin control: ' . $needle);
         }
         $assert(str_contains($controller, 'ContactSpamConfig::fromPost($_POST)') && str_contains($controller, 'function testSpam'));
         $assert(str_contains($public, "ContactSpamConfig::fromStored(\$site['contact_spam_config_json'] ?? null)"));
+        $assert(str_contains($public, "!empty(\$spamConfig['notify_recipients'])"));
         $assert(str_contains($migration, 'contact_spam_config_json') && str_contains($migration, 'information_schema.columns'));
     });
 }

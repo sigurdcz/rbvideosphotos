@@ -159,7 +159,9 @@ Detail GTM setupu je v `GTM_ADMIN.md`.
 
 V **Administrace -> Nastaveni -> Antispam kontaktniho formulare** lze zapnout nebo vypnout staticky bodovy filtr, zmenit blokovaci prah, vahy jednotlivych signalu, spamove fraze, reklamni slova, vyzvy k akci a volitelny seznam povolenych domen. Samostatny testovaci formular pouziva naposledy ulozenou konfiguraci, ale nic nearchivuje a neposila pres SMTP.
 
-Konfigurace je verzovany JSON v `sites.contact_spam_config_json` (migrace `111_add_contact_spam_config.sql`). `NULL` znamena zamerne vychozi profil shodny s puvodnim filtrem. Neplatny neprazdny JSON nebo nepodporovana verze se nesmi tise nahradit vychozim profilem: admin zobrazi chybu a verejne odeslani se neodesle. Zachycena zprava se nadale ulozi v `mail_archive` se stavem `spam`, ale SMTP ani CC se nevolaji.
+Konfigurace je verzovany JSON v `sites.contact_spam_config_json` (migrace `111_add_contact_spam_config.sql`). `NULL` znamena zamerne vychozi profil shodny s puvodnim filtrem. Neplatny neprazdny JSON nebo nepodporovana verze se nesmi tise nahradit vychozim profilem: admin zobrazi chybu a verejne odeslani se neodesle. Zachycena zprava se nadale ulozi v `mail_archive` se stavem `spam`. Volitelny checkbox muze po archivaci poslat hlavnímu prijemci a vsem CC pevne upozorneni bez puvodniho spamoveho textu nebo odkazu; vychozi stav je vypnuto a chyba SMTP se zapisuje do logu.
+
+Vychozi reklamni slovnik pokryva i overeny rusky casino vzorek (`казино`, `играть`, `dragonmoney`). Jazyk samotny neni duvodem k blokaci; zprava se oznaci az kombinaci vice reklamnich vyrazu a dalsich signalu, napriklad odkazu nebo poskozeneho kontaktniho pole.
 
 Po migraci `110_create_health_checks.sql` spoustej na serveru kazdych 10 minut:
 

@@ -65,9 +65,17 @@ final class MailArchiveService
 
     /**
      * Persist a contact submission rejected by the static spam filter without
-     * invoking SMTP. The reason is a bounded machine code, never message text.
+     * invoking SMTP for the untrusted message. An optional fixed notification
+     * contains only the archive ID and bounded reason codes.
      */
-    public function archiveSpam(string $recipient, string $subject, string $body, array $reasons, string $cc = ''): array
+    public function archiveSpam(
+        string $recipient,
+        string $subject,
+        string $body,
+        array $reasons,
+        string $cc = '',
+        bool $notifyRecipients = false
+    ): array
     {
         $reasonCodes = array_values(array_filter(array_map(
             static fn($reason): string => preg_replace('/[^a-z0-9-]/', '', strtolower((string) $reason)) ?? '',
@@ -90,7 +98,41 @@ final class MailArchiveService
             'contact', $recipient, $cc !== '' ? $cc : null, $subject, $body,
             'spam', $errorCode, gmdate('Y-m-d H:i:s'),
         ]);
-        return ['id' => (int) $this->db->lastInsertId(), 'status' => 'spam'];
+        $id = (int) $this->db->lastInsertId();
+        $notificationStatus = $notifyRecipients
+            ? $this->notifySpamRecipients($id, $recipient, $cc, $reasonCodes)
+            : 'disabled';
+        return ['id' => $id, 'status' => 'spam', 'notification_status' => $notificationStatus];
+    }
+
+    /** @param list<string> $reasonCodes */
+    private function notifySpamRecipients(int $archiveId, string $recipient, string $cc, array $reasonCodes): string
+    {
+        try {
+            if (!filter_var($recipient, FILTER_VALIDATE_EMAIL) || preg_match('/[\r\n]/', $recipient)) {
+                throw new SmtpTransportException('smtp_invalid_message');
+            }
+            $normalizedCc = $cc === '' ? '' : EmailRecipientList::normalize($cc, $recipient);
+            $headers = self::headers((string) Env::get('APP_URL', ''));
+            $subject = 'Antispam zachytil zprávu z webu';
+            $body = "Statický antispam zachytil a bezpečně uložil zprávu.\n\n"
+                . 'ID záznamu: ' . $archiveId . "\n"
+                . 'Důvody: ' . ($reasonCodes === [] ? 'neuvedeny' : implode(', ', $reasonCodes)) . "\n\n"
+                . "Původní obsah najdete po přihlášení v administraci v sekci E-maily a zprávy.";
+            $sent = $this->sender
+                ? ($this->sender)($recipient, $subject, $body, $headers, $normalizedCc)
+                : (new SmtpMailer())->send($recipient, $subject, $body, $normalizedCc);
+            if (!$sent) {
+                Logger::error('contact_spam', 'Spam notification transport rejected', ['archive_id' => $archiveId]);
+                return 'failed';
+            }
+            Logger::info('contact_spam', 'Spam notification accepted by mail transport', ['archive_id' => $archiveId]);
+            return 'accepted';
+        } catch (\Throwable $e) {
+            $code = $e instanceof SmtpTransportException ? $e->errorCode : 'transport_exception';
+            Logger::error('contact_spam', 'Spam notification failed', ['archive_id' => $archiveId, 'code' => $code]);
+            return 'failed';
+        }
     }
 
     public static function headers(string $appUrl): string

@@ -14,6 +14,7 @@ final class ContactSpamConfig
         return [
             'version' => self::VERSION,
             'enabled' => true,
+            'notify_recipients' => false,
             'threshold' => 7,
             'weights' => [
                 'known_phrase' => 8,
@@ -24,7 +25,10 @@ final class ContactSpamConfig
                 'contact_junk' => 2,
             ],
             'known_phrases' => ['thank you very much for your inquiry we appreciate you'],
-            'promotion_terms' => ['casino', 'jackpot', 'bonus', 'reel', 'spin', 'cash', 'vault', 'wins', 'win', 'gambling', 'betting'],
+            'promotion_terms' => [
+                'casino', 'jackpot', 'bonus', 'reel', 'spin', 'cash', 'vault', 'wins', 'win', 'gambling', 'betting',
+                'казино', 'играть', 'dragonmoney',
+            ],
             'calls_to_action' => ['play now', 'click here', 'visit now', 'no luck? no problem'],
             'allowed_domains' => [],
         ];
@@ -53,6 +57,7 @@ final class ContactSpamConfig
         return self::validate([
             'version' => self::VERSION,
             'enabled' => isset($post['contact_spam_enabled']),
+            'notify_recipients' => isset($post['contact_spam_notify_recipients']),
             'threshold' => $post['contact_spam_threshold'] ?? null,
             'weights' => [
                 'known_phrase' => $post['contact_spam_weight_known_phrase'] ?? null,
@@ -102,10 +107,17 @@ final class ContactSpamConfig
         if (!is_bool($enabled)) {
             throw new \InvalidArgumentException('Přepínač antispamu musí být boolean.');
         }
+        // Version 1 configurations saved before spam notifications existed do
+        // not contain this optional flag. Missing therefore means disabled.
+        $notifyRecipients = $config['notify_recipients'] ?? false;
+        if (!is_bool($notifyRecipients)) {
+            throw new \InvalidArgumentException('Přepínač upozornění na spam musí být boolean.');
+        }
 
         return [
             'version' => self::VERSION,
             'enabled' => $enabled,
+            'notify_recipients' => $notifyRecipients,
             'threshold' => $threshold,
             'weights' => $weights,
             'known_phrases' => $known,
