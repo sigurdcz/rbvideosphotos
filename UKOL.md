@@ -2596,3 +2596,109 @@ Nastaveni antispamu obsahuje vychozene vypnuty checkbox pro e-mailove upozorneni
 Vychozi slovnik nyni zachyti i realny rusky casino vzorek `JamesTralf`. PHP lint a diff check prosly. Izolovana antispam sada ma 4 PASS testy vcetne SQLite overeni vypnuteho/zapnuteho upozorneni, vsech CC, sanitizovaneho tela a chyby SMTP. MySQL integracni test se v tomto behu nespustil, protoze lokalni DB konfigurace nema dostupny host; blocker zustal viditelny. Staging ani produkce nebyly zmeneny.
 Globalni wiki byla aktualizovana samostatnym commitem `058403b`.
 
+---
+# UKOL: Kompaktni refaktor administracni sekce Nastaveni
+
+Datum: 2026-10-23
+Zadani: Zkratit a zpruhlednit dlouhou stranku Nastaveni pomoci sekci, tabu, subtabu, selektu, modalu nebo jinych kompaktnich UI vzoru bez ztraty funkci.
+Doporuceny model: Sol - Rozsah zahrnuje velky PHP view, navigacni stav, pristupnost, responzivitu a vizualni regresi.
+
+## Kroky
+
+- [x] Zmapovat vsechny soucasne karty, formulare, kotvy a admin UI komponenty.
+- [x] Navrhnout hlavni taby a kompaktni vnorene skupiny bez zmeny datoveho kontraktu.
+- [x] Implementovat pristupne a responzivni prepinani sekci s podporou URL hash.
+- [x] Zachovat samostatny antispam test, media pickery, validaci a ukladani vsech poli.
+- [x] Overit desktop, responzivni CSS, klavesnici, reload/redirect hash a absenci JS chyb.
+- [x] Doplnit cilene testy a dokumentaci a commitnout na `dev`; bez vyzvy nepushovat.
+
+## Poznamky
+
+Refaktor je prezentacni. Nazvy poli, POST route, CSRF, serverova validace a repository zapis zustanou beze zmeny. Modal se pouzije jen tam, kde nezakryje povinne nastaveni nebo nevytvori druhy save flow.
+
+## Vysledek
+
+Stranka Nastaveni je rozdelena do peti hlavních zalozek: Obecne, Vzhled a media, Komunikace, Mereni a skripty a Antispam. Aktivni zalozka se zapisuje do URL hash, jde ovladat sipkami/Home/End a pri HTML validacni chybe se automaticky odkryje spravna zalozka i sbalena podsekce. Dlouhe layoutove a skriptove bloky jsou sbalitelne. Test antispamu je samostatny pristupny modal a REST API je nativni rozbalovaci detail.
+
+Vsechny puvodni nazvy poli, POST routy, CSRF, media picker i spolecne ukladani zustaly zachovane. Lokalni desktopova kontrola v realne administraci overila prepinani zalozek, hash, modal a sdilene ukladani. Responzivni breakpoint drzi taby ve vodorovnem scrollu a modal omezuje na vysku viewportu. PHP lint, diff check a 2/2 cilene kontraktni testy prosly. Cela legacy sada dosla k drive znamemu nesouvisejicimu Golden Bash golden testu a pote ji zastavila nedostupna lokalni DB; obe omezeni zustala zretelna.
+
+---
+# UKOL: Rozlisovaci favicon administrace
+
+Datum: 2026-10-23
+Zadani: Pridat administraci vlastni ikonu, aby sla v Chrome zalozkach snadno rozeznat od verejneho webu.
+Doporuceny model: Sol - mala zmena sdileneho admin layoutu a autentizacnich vstupu.
+
+## Kroky
+
+- [x] Overit vsechny samostatne admin HTML head sablony.
+- [x] Vytvorit kontrastni samostatny SVG favicon bez externich zavislosti.
+- [x] Zapojit favicon a theme-color do administrace, loginu a obnovy hesla.
+- [x] Overit HTTP odpoved, vykresleni v zalozce a regresni testy.
+- [x] Commitnout na dev bez pushe.
+
+## Vysledek
+
+Administrace pouziva vlastni self-contained SVG favicon s tmavym podkladem, bilym pismenem A a modrym stavovym bodem. Ikona a odpovidajici theme-color jsou zapojene do hlavniho admin layoutu, prihlaseni i obnovy hesla. Lokalni prohlizec nacetl spravny link, asset vraci HTTP 200 a Content-Type image/svg+xml. PHP lint, diff check a 2/2 cilene testy prosly.
+
+---
+# UKOL: API nastaveni v zalozce Dev
+
+Datum: 2026-10-23
+Zadani: Presunout REST API blok v administracnim Nastaveni pod samostatnou zalozku Dev.
+Doporuceny model: Sol - mala navazujici uprava struktury tabu se zachovanim API klice a napovedy.
+
+## Kroky
+
+- [x] Pridat zalozku Dev do existujici pristupne navigace.
+- [x] Presunout REST API panel pod Dev bez zmeny jeho obsahu.
+- [x] Overit prepinani, HTML/PHP syntaxi a cilene testy.
+- [x] Commitnout na dev bez pushe.
+
+## Vysledek
+
+Navigace Nastaveni obsahuje sestou zalozku Dev. REST API panel je uvnitr jejiho tabpanelu a zustava nativne rozbalovaci; API klic ani seznam endpointu se nemenily. Panel pouziva stejny hash-aware a klavesove ovladany mechanismus jako ostatni zalozky. PHP lint, diff check a 2/2 cilene testy prosly.
+
+---
+# UKOL: Antispam Billyvep a falesne uctenky
+
+Datum: 2026-10-25
+Zadani: Zachytit oba dodane spamove vzorky a zachovat pruchod legitimnich poptavek.
+Doporuceny model: Terra - Ohranicena uprava pravidel s regresnimi testy.
+
+## Kroky
+
+- [x] Zkontrolovat filtr a ulozenou konfiguraci.
+- [x] Doplnit pravidla a regresni testy vcetne legitimnich zprav.
+- [x] Overit syntaxi a cilene testy, aktualizovat dokumentaci a pripravit commit na dev.
+
+## Poznamky
+
+Existujici nesouvisejici artifacts/ obsahuje obrazky z minule prace; zustane mimo commit. Produkcni nasazeni vyzaduje overeny staging a konkretni souhlas s merge do master.
+ContactSpamConfig obsahuje tri nove uzke signatury; migrace 112 je idempotentne doplni do ulozenych seznamu bez zmeny vah, prahu a prepinacu. Regresni testy zahrnuji oba cele vzorky i legitimni rustinu, odkaz s telefonem a zadost o doklad.
+ARCHITECTURE popisuje nove fraze a nutnost migrace. Samostatny runner tests/run-contact-spam.php overuje filtr i notifikace; volitelny lokalni MySQL test pouziva vyhradne docasnou tabulku a kontroluje dvojity beh migrace i zachovani vlastnich nastaveni.
+Filtr a archiv/notifikace: 5/5 PASS. PHP lint vsech zmenenych PHP a diff check prosly. MySQL test migrace se po povoleni lokalniho spojeni zastavil na Access denied root bez hesla; provedeni migrace tedy neni overene. Staging ani produkce se nemenily.
+
+## Vysledek
+
+Nove vychozi signatury zachyti oba vzorky pri standardnim prahu (12 a 10 bodu). Migrace 112 prida fraze i do ulozenych profilu bez prepisu nastaveni. PHP lint, diff check a pet cilenych testu prosly; realny SQL beh zustava neovereny kvuli lokalni autentizaci MariaDB. ARCHITECTURE je aktualizovana a globalni wiki ma samostatny commit 6882c68. Bez pushe a nasazeni; pred produkci je nutne overit staging a migraci.
+
+---
+# UKOL: Nasazeni novych antispam pravidel
+
+Datum: 2026-10-25
+Zadani: Pripravit produkcni release antispamu 03b8704 pres povinne overeni stagingu.
+Doporuceny model: Terra - Nasazeni hotove zmeny s overenim migrace.
+
+## Kroky
+
+- [-] Overit rozsah dev proti master a pushnout dev na staging.
+- [ ] Overit deployment, staging a migraci 112 vcetne zachovani profilu.
+- [ ] Predlozit konkretni rozsah a vysledek ke schvaleni merge do master.
+- [ ] Po novem konkretnim souhlasu provest merge a overit produkci.
+
+## Poznamky
+
+Pozadavek na master prisel pred overenim stagingu. AGENTS.md a INSTRUCTIONS.md vyzaduji souhlas s konkretnim merge az po overeni stagingu. Existujici artifacts/ zustava mimo release.
+Po git fetch je funkcni rozdil proti origin/master pouze commit 03b8704. Cilena antispam sada znovu prosla 5/5. Nasledujici commit obsahuje jen tento release zaznam.
+

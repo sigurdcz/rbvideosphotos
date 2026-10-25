@@ -7,6 +7,30 @@ use App\Services\ContactSpamConfig;
 
 function register_contact_spam_filter_tests(callable $test, callable $assert): void
 {
+    $test('new bot signatures block Billyvep and receipt advertising without language bans', function () use ($assert): void {
+        $filter = new ContactSpamFilter();
+        $samples = [
+            ['Billyvep', 'rcrxo@mkrqxw.ms tenm q185...', 'Gunnyicz PXQRrbvideosphotos.czPXQR lxxiaya rdezpqsyl kcjz www.yahoo.com/tr1', 12],
+            ['Кира', '3lu@nnpzl.ru', '!!! Повторно, вылечили TG и обратную связь. Предлагаем кассовые чеки, отчетные закрывающие документы для бухучета и налоговой. По любым интересующим Вас товарам или услугам, суммам. В некоторых случаях возможно задними числами. Легально - чеки можно проверить через официальный портал ФНС. Без предоплат, гарантия 3 года. Подробнее и связь: https://ru-inform-gos.ru/tg-receipts-ezqGsHnWhE', 10],
+        ];
+        foreach ($samples as [$name, $contact, $message, $score]) {
+            $result = $filter->classify($name, $contact, $message);
+            $assert($result['isSpam'] && $result['score'] === $score, 'Supplied spam must reach its expected score.');
+            $assert(in_array('known-bot-boilerplate', $result['reasons'], true), 'Signature reason must be visible.');
+        }
+        foreach ([
+            ['Кира', '3lu@nnpzl.ru', 'Здравствуйте! Хотим заказать семейную фотосессию. Сколько стоит?'],
+            ['Jan Novák', 'jan@example.cz telefon +420 777 123 456', 'Dobrý den, rodinné focení prosím. Inspirace: www.yahoo.com/tr1'],
+            ['Jan Novák', 'jan@example.cz', 'Prosím o fakturu a účetní doklady za rodinné focení.'],
+            ['Кира', '3lu@nnpzl.ru', 'Нужен фотограф для семьи и чек за фотосессию.'],
+        ] as [$name, $contact, $message]) {
+            $assert(!$filter->classify($name, $contact, $message)['isSpam'], 'Language, contact, link or receipt request alone must pass.');
+        }
+        $disabled = ContactSpamConfig::defaults();
+        $disabled['enabled'] = false;
+        $assert(!(new ContactSpamFilter($disabled))->classify(...array_slice($samples[0], 0, 3))['isSpam'], 'New signatures respect the disabled switch.');
+    });
+
     $test('static contact spam filter blocks supplied bot examples and preserves real inquiries', function () use ($assert): void {
         $filter = new ContactSpamFilter();
 
