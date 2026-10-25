@@ -2683,3 +2683,22 @@ Filtr a archiv/notifikace: 5/5 PASS. PHP lint vsech zmenenych PHP a diff check p
 
 Nove vychozi signatury zachyti oba vzorky pri standardnim prahu (12 a 10 bodu). Migrace 112 prida fraze i do ulozenych profilu bez prepisu nastaveni. PHP lint, diff check a pet cilenych testu prosly; realny SQL beh zustava neovereny kvuli lokalni autentizaci MariaDB. ARCHITECTURE je aktualizovana a globalni wiki ma samostatny commit 6882c68. Bez pushe a nasazeni; pred produkci je nutne overit staging a migraci.
 
+---
+# UKOL: Nasazeni novych antispam pravidel
+
+Datum: 2026-10-25
+Zadani: Pripravit produkcni release antispamu 03b8704 pres povinne overeni stagingu.
+Doporuceny model: Terra - Nasazeni hotove zmeny s overenim migrace.
+
+## Kroky
+
+- [-] Overit rozsah dev proti master a pushnout dev na staging.
+- [ ] Overit deployment, staging a migraci 112 vcetne zachovani profilu.
+- [ ] Predlozit konkretni rozsah a vysledek ke schvaleni merge do master.
+- [ ] Po novem konkretnim souhlasu provest merge a overit produkci.
+
+## Poznamky
+
+Pozadavek na master prisel pred overenim stagingu. AGENTS.md a INSTRUCTIONS.md vyzaduji souhlas s konkretnim merge az po overeni stagingu. Existujici artifacts/ zustava mimo release.
+Po git fetch je funkcni rozdil proti origin/master pouze commit 03b8704. Cilena antispam sada znovu prosla 5/5. Nasledujici commit obsahuje jen tento release zaznam.
+
