@@ -25,9 +25,14 @@ register_contact_spam_filter_tests($test, $assert);
 register_contact_spam_notification_tests($test, $assert);
 
 if (in_array('--mysql', $argv, true)) {
-    $test('migration 112 extends stored profiles once and preserves settings', static function () use ($assert): void {
-        // Explicitly local, disposable TEMPORARY table; never load deployment credentials.
-        $db = new PDO('mysql:host=127.0.0.1;dbname=mysql;charset=utf8mb4', 'root', '', [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+    $test('migrations 112 and 113 extend stored profiles once and preserve settings', static function () use ($assert): void {
+        App\Core\Env::load(dirname(__DIR__) . '/.env');
+        $assert(App\Core\Env::get('DB_HOST') === '127.0.0.1', 'Migration tests require an explicitly local DB host.');
+        // TEMPORARY sites shadows the real table for this connection only.
+        $db = new PDO(
+            'mysql:host=127.0.0.1;port=' . App\Core\Env::get('DB_PORT', '3306') . ';dbname=' . App\Core\Env::get('DB_NAME') . ';charset=utf8mb4',
+            App\Core\Env::get('DB_USER'), App\Core\Env::get('DB_PASS'), [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
+        );
         $db->exec('CREATE TEMPORARY TABLE sites (id INT PRIMARY KEY, contact_spam_config_json LONGTEXT NULL)');
         $custom = App\Services\ContactSpamConfig::defaults();
         $custom['known_phrases'] = ['custom administrator phrase'];
@@ -35,6 +40,7 @@ if (in_array('--mysql', $argv, true)) {
         $custom['notify_recipients'] = true;
         $custom['threshold'] = 19;
         $custom['weights']['known_phrase'] = 12;
+        $custom['allowed_domains'] = ['example.com'];
         $insert = $db->prepare('INSERT INTO sites VALUES (?, ?)');
         $insert->execute([1, App\Services\ContactSpamConfig::encode($custom)]);
         $insert->execute([2, null]);
@@ -47,13 +53,26 @@ if (in_array('--mysql', $argv, true)) {
         $assert($first === $second, 'Repeated migration must not duplicate phrases.');
         $migrated = App\Services\ContactSpamConfig::fromStored($second);
         $expected = $custom;
-        $expected['known_phrases'] = array_merge($custom['known_phrases'], array_slice(App\Services\ContactSpamConfig::defaults()['known_phrases'], 1));
+        // Freeze the historical migration contract; future defaults can grow.
+        $expected['known_phrases'] = array_merge($custom['known_phrases'], [
+            'pxqrrbvideosphotos.czpxqr', 'предлагаем кассовые чеки', 'отчетные закрывающие документы',
+        ]);
         $assert($migrated === $expected, 'Custom lists, switches, weights and threshold must survive.');
+        $sql113 = file_get_contents(dirname(__DIR__) . '/database/migrations/113_add_first_lead_gen_spam_phrase.sql');
+        $db->exec($sql113);
+        $first113 = $db->query('SELECT contact_spam_config_json FROM sites WHERE id = 1')->fetchColumn();
+        $db->exec($sql113);
+        $second113 = $db->query('SELECT contact_spam_config_json FROM sites WHERE id = 1')->fetchColumn();
+        $assert($first113 === $second113, 'Migration 113 must also be idempotent.');
+        $expected['known_phrases'][] = "you're reading this because i just used your contact form";
+        $migrated = App\Services\ContactSpamConfig::fromStored($second113);
+        $assert($migrated === $expected, 'Migration 113 must only append its signature and preserve all custom settings.');
         $assert($db->query('SELECT contact_spam_config_json FROM sites WHERE id = 2')->fetchColumn() === null, 'NULL stays on defaults.');
         $assert($db->query('SELECT contact_spam_config_json FROM sites WHERE id = 3')->fetchColumn() === '', 'Empty default profile stays empty.');
         $migrated['enabled'] = true;
         $migrated['threshold'] = 7;
         $assert((new App\Services\ContactSpamFilter($migrated))->classify('Billyvep', 'bot@example.test', 'PXQRrbvideosphotos.czPXQR')['isSpam'], 'Migrated profile must detect signature.');
+        $assert((new App\Services\ContactSpamFilter($migrated))->classify('Keenan', 'hello@firstleadgen.com', "You're reading this because I just used your contact form.")['isSpam'], 'Migrated profile must detect First Lead Gen.');
     });
 }
 echo "$total tests, $failures failures\n";

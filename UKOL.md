@@ -2710,3 +2710,26 @@ Master pushnut na 0dd960f (historie zahrnuje e1c70b5 a aktualni origin/master). 
 
 Schvaleny obsah je na origin/master 0dd960f a produkcni deployment uspel. Produkcni migrace 112 nebyla spustena ani potvrzena; existujici ulozene profily ji potrebuji pro pridani novych frazi. Wiki release zaznam d8c2623 zachovava tuto mezeru. Tento zaverecny zaznam se commituje jen na dev, ne do schvalovaneho produkcniho obsahu.
 
+---
+# UKOL: Antispam First Lead Gen
+
+Datum: 2026-10-25
+Zadani: Zachytit dodanou nevyzadanou reklamu Keenan / First Lead Gen pri zachovani legitimnich poptavek a vlastnich pravidel.
+Doporuceny model: Terra - Uzke rozsireni signatury a regresnich testu.
+
+## Kroky
+
+- [x] Doplnit znamou frazi a novou append-only migraci 113.
+- [x] Overit cely vzorek, legitimni zpravy a idempotenci migraci v docasne lokalni tabulce.
+- [x] Aktualizovat dokumentaci a wiki, pripravit commit na dev bez pushe.
+
+## Poznamky
+
+Predchozi souhlas s master plati pouze pro minuly release. Nova signatura nebude blokovat samotnou anglictinu, jmeno nebo kontaktni domenu.
+ContactSpamConfig a migrace 113 obsahuji stejnou uzkou frazi. Test obsahuje cely dodany vzorek, HTML entity/whitespace variantu, legitimni anglicke poptavky od stejneho jmena/domeny i vypnuty filtr. MySQL runner nyni pouziva mistni ucet z .env (s kontrolou 127.0.0.1) a historicky kontrakt 112 ma explicitni seznam, nikoli menici se defaults. ARCHITECTURE popisuje novou signaturu a aktualni testovaci prikaz.
+Sada vcetne lokalni MariaDB 7/7 PASS; PHP lint vsech tri zmenenych PHP souboru a diff check PASS. Migrace 112 zustala nezmenena. Migrace 113 zachovala vlastni fraze, vahy, prah, domeny, oba prepinace i NULL/prazdne profily.
+
+## Vysledek
+
+First Lead Gen / Keenan vzorek ma 10 bodu a je zachycen pri vychozim prahu 7. Novou frazi pridava vychozi profil a append-only migrace 113; uzivatelska konfigurace se neprepisuje. Sedm testu vcetne realne lokalni SQL idempotence proslo, stejne jako PHP lint a diff check. ARCHITECTURE a globalni wiki (d682e62) jsou aktualizovane. Zmena zustava lokalne na dev, neni nasazena; existujici online profily budou potrebovat migraci 113 po staging overeni a novem schvaleni produkce.
+

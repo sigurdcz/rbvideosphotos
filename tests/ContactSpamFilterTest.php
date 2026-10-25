@@ -7,6 +7,47 @@ use App\Services\ContactSpamConfig;
 
 function register_contact_spam_filter_tests(callable $test, callable $assert): void
 {
+    $test('First Lead Gen sales pitch is spam while ordinary English inquiries pass', function () use ($assert): void {
+        $message = <<<'MESSAGE'
+Hi team,
+
+You're reading this because I just used your contact form. Imagine I'm a new customer: how long before you call me?
+
+A study of 433 companies found that only 7% answered a web form within 5 minutes. More than half hadn't replied after 5 business days. We put you in that 7%.
+
+The moment someone fills in a form on your site, we call them in about 30 seconds, and you decide who they talk to:
+
+1. You or your staff. We ring your phone and connect you while they're still on your website. If nobody answers, our AI takes the call.
+
+2. Our AI, on every call. It handles questions, qualifies them and books the appointment, 24/7, then sends you a full transcript.
+
+Hear it for yourself: go to https://firstleadgen.com, tap the blue phone icon in the bottom corner and enter your number. It calls you. You'll hear the AI option.
+
+Our Basic plan needs no credit card. The first 14 days are free. A real person helps you get set up.
+
+Talk soon,
+Keenan, First Lead Gen
+
+Not interested? Opt out here: https://firstleadgen.com/unsubscribe.aspx?d=rbvideosphotos.cz
+MESSAGE;
+        $filter = new ContactSpamFilter();
+        $result = $filter->classify('Keenan', 'hello@firstleadgen.com', $message);
+        $assert($result['isSpam'] && $result['score'] === 10, 'Supplied campaign must score 8 for signature and 2 for URL.');
+        $assert(in_array('known-bot-boilerplate', $result['reasons'], true), 'Campaign signature reason must be explicit.');
+        $encoded = str_replace("You're reading this because I just used your contact form", "YOU&#039;RE reading this\n because I just used your contact form", $message);
+        $assert($filter->classify('Keenan', 'hello@firstleadgen.com', $encoded)['isSpam'], 'Entity, case and whitespace normalization must preserve detection.');
+        foreach ([
+            'Hi team, can you photograph our corporate event in Le Grand-Quevilly? Please call me. Our website is https://firstleadgen.com.',
+            'I just used your contact form to ask about family photos. Could you send your pricing?',
+            'Can you photograph our AI conference? It runs 24/7 and includes a demo with a 14 day free trial.',
+        ] as $inquiry) {
+            $assert(!$filter->classify('Keenan', 'hello@firstleadgen.com', $inquiry)['isSpam'], 'Name, domain, English and AI vocabulary alone must not block.');
+        }
+        $disabled = ContactSpamConfig::defaults();
+        $disabled['enabled'] = false;
+        $assert(!(new ContactSpamFilter($disabled))->classify('Keenan', 'hello@firstleadgen.com', $message)['isSpam'], 'Disabled filter must respect the new signature.');
+    });
+
     $test('new bot signatures block Billyvep and receipt advertising without language bans', function () use ($assert): void {
         $filter = new ContactSpamFilter();
         $samples = [
