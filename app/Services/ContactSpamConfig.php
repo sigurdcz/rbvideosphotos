@@ -24,7 +24,12 @@ final class ContactSpamConfig
                 'link_in_message' => 2,
                 'contact_junk' => 2,
             ],
-            'known_phrases' => ['thank you very much for your inquiry we appreciate you'],
+            'known_phrases' => [
+                'thank you very much for your inquiry we appreciate you',
+                'pxqrrbvideosphotos.czpxqr',
+                'предлагаем кассовые чеки',
+                'отчетные закрывающие документы',
+            ],
             'promotion_terms' => [
                 'casino', 'jackpot', 'bonus', 'reel', 'spin', 'cash', 'vault', 'wins', 'win', 'gambling', 'betting',
                 'казино', 'играть', 'dragonmoney',

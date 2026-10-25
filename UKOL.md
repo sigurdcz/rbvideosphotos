@@ -2659,3 +2659,27 @@ Doporuceny model: Sol - mala navazujici uprava struktury tabu se zachovanim API 
 
 Navigace Nastaveni obsahuje sestou zalozku Dev. REST API panel je uvnitr jejiho tabpanelu a zustava nativne rozbalovaci; API klic ani seznam endpointu se nemenily. Panel pouziva stejny hash-aware a klavesove ovladany mechanismus jako ostatni zalozky. PHP lint, diff check a 2/2 cilene testy prosly.
 
+---
+# UKOL: Antispam Billyvep a falesne uctenky
+
+Datum: 2026-10-25
+Zadani: Zachytit oba dodane spamove vzorky a zachovat pruchod legitimnich poptavek.
+Doporuceny model: Terra - Ohranicena uprava pravidel s regresnimi testy.
+
+## Kroky
+
+- [x] Zkontrolovat filtr a ulozenou konfiguraci.
+- [x] Doplnit pravidla a regresni testy vcetne legitimnich zprav.
+- [x] Overit syntaxi a cilene testy, aktualizovat dokumentaci a pripravit commit na dev.
+
+## Poznamky
+
+Existujici nesouvisejici artifacts/ obsahuje obrazky z minule prace; zustane mimo commit. Produkcni nasazeni vyzaduje overeny staging a konkretni souhlas s merge do master.
+ContactSpamConfig obsahuje tri nove uzke signatury; migrace 112 je idempotentne doplni do ulozenych seznamu bez zmeny vah, prahu a prepinacu. Regresni testy zahrnuji oba cele vzorky i legitimni rustinu, odkaz s telefonem a zadost o doklad.
+ARCHITECTURE popisuje nove fraze a nutnost migrace. Samostatny runner tests/run-contact-spam.php overuje filtr i notifikace; volitelny lokalni MySQL test pouziva vyhradne docasnou tabulku a kontroluje dvojity beh migrace i zachovani vlastnich nastaveni.
+Filtr a archiv/notifikace: 5/5 PASS. PHP lint vsech zmenenych PHP a diff check prosly. MySQL test migrace se po povoleni lokalniho spojeni zastavil na Access denied root bez hesla; provedeni migrace tedy neni overene. Staging ani produkce se nemenily.
+
+## Vysledek
+
+Nove vychozi signatury zachyti oba vzorky pri standardnim prahu (12 a 10 bodu). Migrace 112 prida fraze i do ulozenych profilu bez prepisu nastaveni. PHP lint, diff check a pet cilenych testu prosly; realny SQL beh zustava neovereny kvuli lokalni autentizaci MariaDB. ARCHITECTURE je aktualizovana a globalni wiki ma samostatny commit 6882c68. Bez pushe a nasazeni; pred produkci je nutne overit staging a migraci.
+
