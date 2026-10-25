@@ -2692,13 +2692,21 @@ Doporuceny model: Terra - Nasazeni hotove zmeny s overenim migrace.
 
 ## Kroky
 
-- [-] Overit rozsah dev proti master a pushnout dev na staging.
-- [ ] Overit deployment, staging a migraci 112 vcetne zachovani profilu.
-- [ ] Predlozit konkretni rozsah a vysledek ke schvaleni merge do master.
-- [ ] Po novem konkretnim souhlasu provest merge a overit produkci.
+- [x] Overit rozsah dev proti master a pushnout dev na staging.
+- [x] Overit deployment, staging a migraci 112 vcetne zachovani profilu.
+- [x] Predlozit konkretni rozsah a vysledek ke schvaleni merge do master.
+- [x] Po novem konkretnim souhlasu provest merge a overit produkcni deployment.
 
 ## Poznamky
 
 Pozadavek na master prisel pred overenim stagingu. AGENTS.md a INSTRUCTIONS.md vyzaduji souhlas s konkretnim merge az po overeni stagingu. Existujici artifacts/ zustava mimo release.
 Po git fetch je funkcni rozdil proti origin/master pouze commit 03b8704. Cilena antispam sada znovu prosla 5/5. Nasledujici commit obsahuje jen tento release zaznam.
+Staging revize 2bcd0b83c60e7bf2eb3bf5bf11eafccf29598c67, Actions 40214508150 success. Homepage, /kontakt a /admin/login vraci HTTP 200. Rozsah proti master: 03b8704 (antispam) a 2bcd0b8 (release zaznam).
+Migrace 112 lokalne overena dvakrat pres existujici ucet z .env, vyhradne na TEMPORARY tabulce sites: PASS idempotence i presna shoda vlastnich frazi, vah, prahu, domen a prepinacu; NULL/prazdny profil beze zmeny. Původni root test bez hesla zustava nefunkcni, nebyl vydavan za PASS. Jednorazovy pomocny skript byl odstranen.
+Staging migrate-util.php bez staging tokenu vraci HTTP 403. Token neni v projektovych staging konfiguracich, lokalni .env patri localhostu. Uzivatel nasledne potvrdil staging migraci odpovedi overeno a po predlozeni revize 2bcd0b8 vyslovne schvalil master zprávou dej to nas master.
+Master pushnut na 0dd960f (historie zahrnuje e1c70b5 a aktualni origin/master). git diff 2bcd0b8 HEAD byl prazdny: obsah presne odpovida schvalene revizi. Produkcni Actions 40214700758 success. Homepage, /kontakt a /admin/login HTTP 200. Pracovni vetev je opet dev. Produkcni migrace 112 se deploymentem nespousti a je samostatnym neoverenym krokem.
+
+## Vysledek
+
+Schvaleny obsah je na origin/master 0dd960f a produkcni deployment uspel. Produkcni migrace 112 nebyla spustena ani potvrzena; existujici ulozene profily ji potrebuji pro pridani novych frazi. Wiki release zaznam d8c2623 zachovava tuto mezeru. Tento zaverecny zaznam se commituje jen na dev, ne do schvalovaneho produkcniho obsahu.
 
