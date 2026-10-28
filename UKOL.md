@@ -2777,3 +2777,24 @@ Defaults a migrace 115 pouzivaji frazi bez carek, aby admin parseList nerozdelil
 
 Dodany Nikolaj vzorek dosahuje 10 bodu pri prahu 7. Migrace 115 prida znamou frazi k existujicim pravidlum a neprepisuje vlastni nastaveni. Cilena sada vcetne MariaDB a admin roundtripu 9/9 PASS, PHP lint a diff check PASS. ARCHITECTURE a wiki (914a871) aktualizovany. Zmena se commituje pouze lokalne na dev bez pushe; online aktivace vyzaduje staging a migraci 115 a novy souhlas s produkci.
 
+---
+# UKOL: Produkcni release antispam pravidel 113-115
+
+Datum: 2026-10-28
+Zadani: Sloucit uzivatelem otestovany a schvaleny dev 5662eaa do master a overit deployment.
+Doporuceny model: Terra - Release hotovych otestovanych zmen.
+
+## Kroky
+
+- [x] Overit rozsah: First Lead Gen, Marie06 a nabidka osobnich databazi; migrace 113-115.
+- [x] Overit staging Actions a provest schvaleny merge presneho dev 5662eaa.
+- [x] Pushnout master a overit produkcni deployment a HTTP dostupnost.
+
+## Poznamky
+
+Uzivatel po staging pushi a uspechu Actions potvrdil, ze aktualni zmeny vyzkousel a jsou v poradku, a vyslovne pozadal o merge do master. Analyza vykonu nezmenila kod. Tento zaznam zustava mimo schvaleny obsah, po releasu se ulozi jen na dev. Produkcni migrace se deploymentem automaticky nespousteji.
+
+## Vysledek
+
+Master 7729e27fe2a9cc9a7b322e3c3521021e7c24bf52 pushnut. Produkcni Actions 40731189741 completed success; nasledne homepage, /kontakt a /admin/login HTTP 200. Obsah presne odpovida staging revizi 5662eaa (staging Actions 40718356250 success). Migrace 113-115 na produkci nejsou potvrzene a vyzaduji samostatne provedeni. Wiki release zaznam a3977e0. Zaver se commituje jen na dev bez dalsiho pushe; artifacts/ zustava mimo release.
+
