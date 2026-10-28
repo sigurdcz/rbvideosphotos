@@ -25,7 +25,7 @@ register_contact_spam_filter_tests($test, $assert);
 register_contact_spam_notification_tests($test, $assert);
 
 if (in_array('--mysql', $argv, true)) {
-    $test('migrations 112 and 113 extend stored profiles once and preserve settings', static function () use ($assert): void {
+    $test('migrations 112 through 114 extend stored profiles once and preserve settings', static function () use ($assert): void {
         App\Core\Env::load(dirname(__DIR__) . '/.env');
         $assert(App\Core\Env::get('DB_HOST') === '127.0.0.1', 'Migration tests require an explicitly local DB host.');
         // TEMPORARY sites shadows the real table for this connection only.
@@ -67,12 +67,22 @@ if (in_array('--mysql', $argv, true)) {
         $expected['known_phrases'][] = "you're reading this because i just used your contact form";
         $migrated = App\Services\ContactSpamConfig::fromStored($second113);
         $assert($migrated === $expected, 'Migration 113 must only append its signature and preserve all custom settings.');
+        $sql114 = file_get_contents(dirname(__DIR__) . '/database/migrations/114_add_french_article_spam_phrase.sql');
+        $db->exec($sql114);
+        $first114 = $db->query('SELECT contact_spam_config_json FROM sites WHERE id = 1')->fetchColumn();
+        $db->exec($sql114);
+        $second114 = $db->query('SELECT contact_spam_config_json FROM sites WHERE id = 1')->fetchColumn();
+        $assert($first114 === $second114, 'Migration 114 must be idempotent.');
+        $expected['known_phrases'][] = 'voici un article tres interessant a lire pendant son temps libre';
+        $migrated = App\Services\ContactSpamConfig::fromStored($second114);
+        $assert($migrated === $expected, 'Migration 114 must preserve all custom settings and previous phrases.');
         $assert($db->query('SELECT contact_spam_config_json FROM sites WHERE id = 2')->fetchColumn() === null, 'NULL stays on defaults.');
         $assert($db->query('SELECT contact_spam_config_json FROM sites WHERE id = 3')->fetchColumn() === '', 'Empty default profile stays empty.');
         $migrated['enabled'] = true;
         $migrated['threshold'] = 7;
         $assert((new App\Services\ContactSpamFilter($migrated))->classify('Billyvep', 'bot@example.test', 'PXQRrbvideosphotos.czPXQR')['isSpam'], 'Migrated profile must detect signature.');
         $assert((new App\Services\ContactSpamFilter($migrated))->classify('Keenan', 'hello@firstleadgen.com', "You're reading this because I just used your contact form.")['isSpam'], 'Migrated profile must detect First Lead Gen.');
+        $assert((new App\Services\ContactSpamFilter($migrated))->classify('Marie06', 'bot@example.fr', 'Voici un article tres interessant a lire pendant son temps libre.')['isSpam'], 'Migrated profile must detect French article campaign.');
     });
 }
 echo "$total tests, $failures failures\n";

@@ -7,6 +7,36 @@ use App\Services\ContactSpamConfig;
 
 function register_contact_spam_filter_tests(callable $test, callable $assert): void
 {
+    $test('French article spam campaign is blocked without rejecting French inquiries', function () use ($assert): void {
+        $message = <<<'MESSAGE'
+Hello tout le monde,
+
+Voici un article tres interessant a lire pendant son temps libre.
+
+Pour ceux que ca interesse, vous pouvez consulter la page ici :
+<a href=https://justpaste.it/i3zsp>https://rentry.co/2vpbgm9f</a>
+
+J'espere que cela vous sera utile.
+MESSAGE;
+        $filter = new ContactSpamFilter();
+        $result = $filter->classify('Marie06', 'lnrrn@rkgnkh.fq qhwt p888...', $message);
+        $assert($result['isSpam'] && $result['score'] === 12, 'Supplied article campaign must score 8 + 2 URL + 2 contact junk.');
+        $assert(in_array('known-bot-boilerplate', $result['reasons'], true), 'Campaign reason must be visible.');
+        $variant = str_replace('Voici un article tres interessant', "VOICI un article\n tres interessant", $message);
+        $assert($filter->classify('Marie06', 'lnrrn@rkgnkh.fq qhwt p888...', $variant)['isSpam'], 'Case and whitespace variations must match.');
+        foreach ([
+            'Bonjour, quel est le prix pour une séance photo en famille ?',
+            'Bonjour, voici notre lieu de mariage : https://justpaste.it/i3zsp. Êtes-vous disponibles pour les photos ?',
+            'Bonjour, nos idées pour la séance photo sont ici : https://rentry.co/2vpbgm9f.',
+            'Voici un article sur notre entreprise. Nous cherchons un photographe pour notre événement.',
+        ] as $inquiry) {
+            $assert(!$filter->classify('Marie06', 'marie@example.fr', $inquiry)['isSpam'], 'French, name and paste-site URL alone must pass.');
+        }
+        $disabled = ContactSpamConfig::defaults();
+        $disabled['enabled'] = false;
+        $assert(!(new ContactSpamFilter($disabled))->classify('Marie06', 'lnrrn@rkgnkh.fq qhwt p888...', $message)['isSpam'], 'Disabled filter respects the new signature.');
+    });
+
     $test('First Lead Gen sales pitch is spam while ordinary English inquiries pass', function () use ($assert): void {
         $message = <<<'MESSAGE'
 Hi team,

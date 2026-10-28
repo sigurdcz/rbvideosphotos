@@ -2733,3 +2733,25 @@ Sada vcetne lokalni MariaDB 7/7 PASS; PHP lint vsech tri zmenenych PHP souboru a
 
 First Lead Gen / Keenan vzorek ma 10 bodu a je zachycen pri vychozim prahu 7. Novou frazi pridava vychozi profil a append-only migrace 113; uzivatelska konfigurace se neprepisuje. Sedm testu vcetne realne lokalni SQL idempotence proslo, stejne jako PHP lint a diff check. ARCHITECTURE a globalni wiki (d682e62) jsou aktualizovane. Zmena zustava lokalne na dev, neni nasazena; existujici online profily budou potrebovat migraci 113 po staging overeni a novem schvaleni produkce.
 
+---
+# UKOL: Antispam francouzska reklama na clanek
+
+Datum: 2026-10-28
+Zadani: Doplnit pravidlo pro dodany Marie06 spam bez blokace legitimnich francouzskych poptavek.
+Doporuceny model: Terra - Uzka kampanová signatura a regresni testy.
+
+## Kroky
+
+- [x] Doplnit signaturu do defaults a migrace 114 bez zmeny starych migraci.
+- [x] Overit cely vzorek, legitimni francouzstinu a zachovani profilu pri opakovane migraci.
+- [x] Aktualizovat dokumentaci a wiki a pripravit commit na dev bez pushe.
+
+## Poznamky
+
+Existujici artifacts/ zustava mimo zmenu. First Lead Gen zmena 2fd82e5 je stale pouze lokalne; nove pravidlo take nema souhlas s produkcnim nasazenim.
+ContactSpamConfig a nova migrace 114 pridavaji jednu uzkou frazi. ContactSpamFilterTest obsahuje cely vzorek, variantu whitespace/case, legitimni francouzske poptavky vcetne obou paste webu a vypnuty filtr. SQL runner testuje 114 dvakrat a presnou shodu zachovane konfigurace po 112/113/114. ARCHITECTURE popisuje rozsah a omezeni pravidla. PHP lint a diff check prosly; bez DB 7/7 PASS.
+
+## Vysledek
+
+Marie06 vzorek dosahuje 12 bodu pri prahu 7; legitimni francouzstina a samotne paste odkazy se neblokuji. Migrace 114 pridava frazi k existujicim seznamum, nic nemaze a zachovava vsechna vlastni nastaveni. Cilena sada vcetne lokalni MariaDB 8/8 PASS, lint a diff check PASS. ARCHITECTURE a globalni wiki (17659c7) aktualizovany. Lokalni commit na dev bez pushe; online aktivace vyzaduje staging a migraci 114, produkce novy konkretni souhlas.
+

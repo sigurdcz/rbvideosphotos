@@ -30,6 +30,7 @@ final class ContactSpamConfig
                 'предлагаем кассовые чеки',
                 'отчетные закрывающие документы',
                 "you're reading this because i just used your contact form",
+                'voici un article tres interessant a lire pendant son temps libre',
             ],
             'promotion_terms' => [
                 'casino', 'jackpot', 'bonus', 'reel', 'spin', 'cash', 'vault', 'wins', 'win', 'gambling', 'betting',
