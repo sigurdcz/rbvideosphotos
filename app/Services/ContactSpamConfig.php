@@ -29,6 +29,9 @@ final class ContactSpamConfig
                 'pxqrrbvideosphotos.czpxqr',
                 'предлагаем кассовые чеки',
                 'отчетные закрывающие документы',
+                "you're reading this because i just used your contact form",
+                'voici un article tres interessant a lire pendant son temps libre',
+                'расширенная информация в отношении физ лиц',
             ],
             'promotion_terms' => [
                 'casino', 'jackpot', 'bonus', 'reel', 'spin', 'cash', 'vault', 'wins', 'win', 'gambling', 'betting',

@@ -7,6 +7,117 @@ use App\Services\ContactSpamConfig;
 
 function register_contact_spam_filter_tests(callable $test, callable $assert): void
 {
+    $test('personal data sales campaign is spam without banning Russian or Telegram', function () use ($assert): void {
+        $message = <<<'MESSAGE'
+Расширенная информация в отношении физ лиц, ИП, организаций (любые интересующие Вас сведения). Работаем комплексно с множеством баз и источников.
+- Выписки по счетам, книги покупок/продаж, котрагенты, клиенты и поставщики Ваших конкурентов
+- Телефоны и адреса интересующих людей
+- Имущество, счета, ТС
+- Налоговые досье, информация по сотрудникам
+- Розыск, судимости, проверка телефонов, геолокация
+- Магистраль, Граница/Рубеж, место ночевки, Поток и др.
+
+Подробнее и связь тут https://t.me/lbstbasebot
+Не работает ТГ, тогда сюда https://baza-biz.com/telegram/business-info?utm_source=fos&utm_medium=distribution&utm_campaign=telegram_business_info_fos&utm_content=telegram_landing&utm_term=business_info
+MESSAGE;
+        $filter = new ContactSpamFilter();
+        $result = $filter->classify('Николай', '4mk@mlzwq.ru', $message);
+        $assert($result['isSpam'] && $result['score'] === 10, 'Supplied data sales campaign must score 8 for signature and 2 for links.');
+        $assert(in_array('known-bot-boilerplate', $result['reasons'], true), 'Campaign signature reason must be visible.');
+        $defaults = ContactSpamConfig::defaults();
+        $post = ['contact_spam_enabled' => '1', 'contact_spam_threshold' => $defaults['threshold']];
+        foreach ($defaults['weights'] as $key => $value) {
+            $post['contact_spam_weight_' . $key] = $value;
+        }
+        foreach (['known_phrases', 'promotion_terms', 'calls_to_action', 'allowed_domains'] as $key) {
+            $post['contact_spam_' . $key] = ContactSpamConfig::listText($defaults[$key]);
+        }
+        $assert(ContactSpamConfig::fromPost($post) === $defaults, 'Saving defaults through admin must preserve whole signatures without comma splitting.');
+        $variant = str_replace('Расширенная информация в отношении', "РАСШИРЕННАЯ информация\n в отношении", $message);
+        $assert($filter->classify('Николай', '4mk@mlzwq.ru', $variant)['isSpam'], 'Case and whitespace variations must match.');
+        foreach ([
+            'Здравствуйте! Нужна семейная фотосессия. Сколько стоит?',
+            'Здравствуйте, нужны фотографии сотрудников нашей организации и счет за съемку.',
+            'Можно заказать съемку? Напишите мне в Telegram: https://t.me/example_customer',
+        ] as $inquiry) {
+            $assert(!$filter->classify('Николай', '4mk@mlzwq.ru', $inquiry)['isSpam'], 'Russian, sender identity, organization invoice and Telegram alone must pass.');
+        }
+        $disabled = ContactSpamConfig::defaults();
+        $disabled['enabled'] = false;
+        $assert(!(new ContactSpamFilter($disabled))->classify('Николай', '4mk@mlzwq.ru', $message)['isSpam'], 'Disabled filter respects the new signature.');
+    });
+
+    $test('French article spam campaign is blocked without rejecting French inquiries', function () use ($assert): void {
+        $message = <<<'MESSAGE'
+Hello tout le monde,
+
+Voici un article tres interessant a lire pendant son temps libre.
+
+Pour ceux que ca interesse, vous pouvez consulter la page ici :
+<a href=https://justpaste.it/i3zsp>https://rentry.co/2vpbgm9f</a>
+
+J'espere que cela vous sera utile.
+MESSAGE;
+        $filter = new ContactSpamFilter();
+        $result = $filter->classify('Marie06', 'lnrrn@rkgnkh.fq qhwt p888...', $message);
+        $assert($result['isSpam'] && $result['score'] === 12, 'Supplied article campaign must score 8 + 2 URL + 2 contact junk.');
+        $assert(in_array('known-bot-boilerplate', $result['reasons'], true), 'Campaign reason must be visible.');
+        $variant = str_replace('Voici un article tres interessant', "VOICI un article\n tres interessant", $message);
+        $assert($filter->classify('Marie06', 'lnrrn@rkgnkh.fq qhwt p888...', $variant)['isSpam'], 'Case and whitespace variations must match.');
+        foreach ([
+            'Bonjour, quel est le prix pour une séance photo en famille ?',
+            'Bonjour, voici notre lieu de mariage : https://justpaste.it/i3zsp. Êtes-vous disponibles pour les photos ?',
+            'Bonjour, nos idées pour la séance photo sont ici : https://rentry.co/2vpbgm9f.',
+            'Voici un article sur notre entreprise. Nous cherchons un photographe pour notre événement.',
+        ] as $inquiry) {
+            $assert(!$filter->classify('Marie06', 'marie@example.fr', $inquiry)['isSpam'], 'French, name and paste-site URL alone must pass.');
+        }
+        $disabled = ContactSpamConfig::defaults();
+        $disabled['enabled'] = false;
+        $assert(!(new ContactSpamFilter($disabled))->classify('Marie06', 'lnrrn@rkgnkh.fq qhwt p888...', $message)['isSpam'], 'Disabled filter respects the new signature.');
+    });
+
+    $test('First Lead Gen sales pitch is spam while ordinary English inquiries pass', function () use ($assert): void {
+        $message = <<<'MESSAGE'
+Hi team,
+
+You're reading this because I just used your contact form. Imagine I'm a new customer: how long before you call me?
+
+A study of 433 companies found that only 7% answered a web form within 5 minutes. More than half hadn't replied after 5 business days. We put you in that 7%.
+
+The moment someone fills in a form on your site, we call them in about 30 seconds, and you decide who they talk to:
+
+1. You or your staff. We ring your phone and connect you while they're still on your website. If nobody answers, our AI takes the call.
+
+2. Our AI, on every call. It handles questions, qualifies them and books the appointment, 24/7, then sends you a full transcript.
+
+Hear it for yourself: go to https://firstleadgen.com, tap the blue phone icon in the bottom corner and enter your number. It calls you. You'll hear the AI option.
+
+Our Basic plan needs no credit card. The first 14 days are free. A real person helps you get set up.
+
+Talk soon,
+Keenan, First Lead Gen
+
+Not interested? Opt out here: https://firstleadgen.com/unsubscribe.aspx?d=rbvideosphotos.cz
+MESSAGE;
+        $filter = new ContactSpamFilter();
+        $result = $filter->classify('Keenan', 'hello@firstleadgen.com', $message);
+        $assert($result['isSpam'] && $result['score'] === 10, 'Supplied campaign must score 8 for signature and 2 for URL.');
+        $assert(in_array('known-bot-boilerplate', $result['reasons'], true), 'Campaign signature reason must be explicit.');
+        $encoded = str_replace("You're reading this because I just used your contact form", "YOU&#039;RE reading this\n because I just used your contact form", $message);
+        $assert($filter->classify('Keenan', 'hello@firstleadgen.com', $encoded)['isSpam'], 'Entity, case and whitespace normalization must preserve detection.');
+        foreach ([
+            'Hi team, can you photograph our corporate event in Le Grand-Quevilly? Please call me. Our website is https://firstleadgen.com.',
+            'I just used your contact form to ask about family photos. Could you send your pricing?',
+            'Can you photograph our AI conference? It runs 24/7 and includes a demo with a 14 day free trial.',
+        ] as $inquiry) {
+            $assert(!$filter->classify('Keenan', 'hello@firstleadgen.com', $inquiry)['isSpam'], 'Name, domain, English and AI vocabulary alone must not block.');
+        }
+        $disabled = ContactSpamConfig::defaults();
+        $disabled['enabled'] = false;
+        $assert(!(new ContactSpamFilter($disabled))->classify('Keenan', 'hello@firstleadgen.com', $message)['isSpam'], 'Disabled filter must respect the new signature.');
+    });
+
     $test('new bot signatures block Billyvep and receipt advertising without language bans', function () use ($assert): void {
         $filter = new ContactSpamFilter();
         $samples = [

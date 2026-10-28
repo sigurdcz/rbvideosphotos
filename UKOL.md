@@ -2692,13 +2692,88 @@ Doporuceny model: Terra - Nasazeni hotove zmeny s overenim migrace.
 
 ## Kroky
 
-- [-] Overit rozsah dev proti master a pushnout dev na staging.
-- [ ] Overit deployment, staging a migraci 112 vcetne zachovani profilu.
-- [ ] Predlozit konkretni rozsah a vysledek ke schvaleni merge do master.
-- [ ] Po novem konkretnim souhlasu provest merge a overit produkci.
+- [x] Overit rozsah dev proti master a pushnout dev na staging.
+- [x] Overit deployment, staging a migraci 112 vcetne zachovani profilu.
+- [x] Predlozit konkretni rozsah a vysledek ke schvaleni merge do master.
+- [x] Po novem konkretnim souhlasu provest merge a overit produkcni deployment.
 
 ## Poznamky
 
 Pozadavek na master prisel pred overenim stagingu. AGENTS.md a INSTRUCTIONS.md vyzaduji souhlas s konkretnim merge az po overeni stagingu. Existujici artifacts/ zustava mimo release.
 Po git fetch je funkcni rozdil proti origin/master pouze commit 03b8704. Cilena antispam sada znovu prosla 5/5. Nasledujici commit obsahuje jen tento release zaznam.
+Staging revize 2bcd0b83c60e7bf2eb3bf5bf11eafccf29598c67, Actions 40214508150 success. Homepage, /kontakt a /admin/login vraci HTTP 200. Rozsah proti master: 03b8704 (antispam) a 2bcd0b8 (release zaznam).
+Migrace 112 lokalne overena dvakrat pres existujici ucet z .env, vyhradne na TEMPORARY tabulce sites: PASS idempotence i presna shoda vlastnich frazi, vah, prahu, domen a prepinacu; NULL/prazdny profil beze zmeny. Původni root test bez hesla zustava nefunkcni, nebyl vydavan za PASS. Jednorazovy pomocny skript byl odstranen.
+Staging migrate-util.php bez staging tokenu vraci HTTP 403. Token neni v projektovych staging konfiguracich, lokalni .env patri localhostu. Uzivatel nasledne potvrdil staging migraci odpovedi overeno a po predlozeni revize 2bcd0b8 vyslovne schvalil master zprávou dej to nas master.
+Master pushnut na 0dd960f (historie zahrnuje e1c70b5 a aktualni origin/master). git diff 2bcd0b8 HEAD byl prazdny: obsah presne odpovida schvalene revizi. Produkcni Actions 40214700758 success. Homepage, /kontakt a /admin/login HTTP 200. Pracovni vetev je opet dev. Produkcni migrace 112 se deploymentem nespousti a je samostatnym neoverenym krokem.
+
+## Vysledek
+
+Schvaleny obsah je na origin/master 0dd960f a produkcni deployment uspel. Produkcni migrace 112 nebyla spustena ani potvrzena; existujici ulozene profily ji potrebuji pro pridani novych frazi. Wiki release zaznam d8c2623 zachovava tuto mezeru. Tento zaverecny zaznam se commituje jen na dev, ne do schvalovaneho produkcniho obsahu.
+
+---
+# UKOL: Antispam First Lead Gen
+
+Datum: 2026-10-25
+Zadani: Zachytit dodanou nevyzadanou reklamu Keenan / First Lead Gen pri zachovani legitimnich poptavek a vlastnich pravidel.
+Doporuceny model: Terra - Uzke rozsireni signatury a regresnich testu.
+
+## Kroky
+
+- [x] Doplnit znamou frazi a novou append-only migraci 113.
+- [x] Overit cely vzorek, legitimni zpravy a idempotenci migraci v docasne lokalni tabulce.
+- [x] Aktualizovat dokumentaci a wiki, pripravit commit na dev bez pushe.
+
+## Poznamky
+
+Predchozi souhlas s master plati pouze pro minuly release. Nova signatura nebude blokovat samotnou anglictinu, jmeno nebo kontaktni domenu.
+ContactSpamConfig a migrace 113 obsahuji stejnou uzkou frazi. Test obsahuje cely dodany vzorek, HTML entity/whitespace variantu, legitimni anglicke poptavky od stejneho jmena/domeny i vypnuty filtr. MySQL runner nyni pouziva mistni ucet z .env (s kontrolou 127.0.0.1) a historicky kontrakt 112 ma explicitni seznam, nikoli menici se defaults. ARCHITECTURE popisuje novou signaturu a aktualni testovaci prikaz.
+Sada vcetne lokalni MariaDB 7/7 PASS; PHP lint vsech tri zmenenych PHP souboru a diff check PASS. Migrace 112 zustala nezmenena. Migrace 113 zachovala vlastni fraze, vahy, prah, domeny, oba prepinace i NULL/prazdne profily.
+
+## Vysledek
+
+First Lead Gen / Keenan vzorek ma 10 bodu a je zachycen pri vychozim prahu 7. Novou frazi pridava vychozi profil a append-only migrace 113; uzivatelska konfigurace se neprepisuje. Sedm testu vcetne realne lokalni SQL idempotence proslo, stejne jako PHP lint a diff check. ARCHITECTURE a globalni wiki (d682e62) jsou aktualizovane. Zmena zustava lokalne na dev, neni nasazena; existujici online profily budou potrebovat migraci 113 po staging overeni a novem schvaleni produkce.
+
+---
+# UKOL: Antispam francouzska reklama na clanek
+
+Datum: 2026-10-28
+Zadani: Doplnit pravidlo pro dodany Marie06 spam bez blokace legitimnich francouzskych poptavek.
+Doporuceny model: Terra - Uzka kampanová signatura a regresni testy.
+
+## Kroky
+
+- [x] Doplnit signaturu do defaults a migrace 114 bez zmeny starych migraci.
+- [x] Overit cely vzorek, legitimni francouzstinu a zachovani profilu pri opakovane migraci.
+- [x] Aktualizovat dokumentaci a wiki a pripravit commit na dev bez pushe.
+
+## Poznamky
+
+Existujici artifacts/ zustava mimo zmenu. First Lead Gen zmena 2fd82e5 je stale pouze lokalne; nove pravidlo take nema souhlas s produkcnim nasazenim.
+ContactSpamConfig a nova migrace 114 pridavaji jednu uzkou frazi. ContactSpamFilterTest obsahuje cely vzorek, variantu whitespace/case, legitimni francouzske poptavky vcetne obou paste webu a vypnuty filtr. SQL runner testuje 114 dvakrat a presnou shodu zachovane konfigurace po 112/113/114. ARCHITECTURE popisuje rozsah a omezeni pravidla. PHP lint a diff check prosly; bez DB 7/7 PASS.
+
+## Vysledek
+
+Marie06 vzorek dosahuje 12 bodu pri prahu 7; legitimni francouzstina a samotne paste odkazy se neblokuji. Migrace 114 pridava frazi k existujicim seznamum, nic nemaze a zachovava vsechna vlastni nastaveni. Cilena sada vcetne lokalni MariaDB 8/8 PASS, lint a diff check PASS. ARCHITECTURE a globalni wiki (17659c7) aktualizovany. Lokalni commit na dev bez pushe; online aktivace vyzaduje staging a migraci 114, produkce novy konkretni souhlas.
+
+---
+# UKOL: Antispam nabidka osobnich a firemnich databazi
+
+Datum: 2026-10-28
+Zadani: Doplnit pravidlo pro dodany Nikolaj spam bez plosne blokace rustiny nebo Telegramu.
+Doporuceny model: Terra - Uzka znama spamova signatura a regresni testy.
+
+## Kroky
+
+- [x] Pridat signaturu do defaults a append-only migrace 115.
+- [x] Overit cely vzorek, legitimni poptavky a idempotentni zachovani ulozenych pravidel.
+- [x] Aktualizovat dokumentaci a wiki, pripravit commit na dev bez pushe.
+
+## Poznamky
+
+Nove pravidlo se prida k existujicim seznamum. Vlastni fraze, vahy, prah, domeny a prepinace se neprepisuji. Predchozi lokalni zmeny a artifacts/ zustavaji zachovane.
+Defaults a migrace 115 pouzivaji frazi bez carek, aby admin parseList nerozdelil signaturu na obecna slova. Testy obsahuji cely vzorek, normalizaci, legitimni rustinu/Telegram a vypnuty filtr. SQL runner overuje 115 dvakrat a zachovani vsech drivejsich frazi; ARCHITECTURE popisuje pravidlo a jeho rozsah.
+
+## Vysledek
+
+Dodany Nikolaj vzorek dosahuje 10 bodu pri prahu 7. Migrace 115 prida znamou frazi k existujicim pravidlum a neprepisuje vlastni nastaveni. Cilena sada vcetne MariaDB a admin roundtripu 9/9 PASS, PHP lint a diff check PASS. ARCHITECTURE a wiki (914a871) aktualizovany. Zmena se commituje pouze lokalne na dev bez pushe; online aktivace vyzaduje staging a migraci 115 a novy souhlas s produkci.
 
