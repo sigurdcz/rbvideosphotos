@@ -2755,3 +2755,25 @@ ContactSpamConfig a nova migrace 114 pridavaji jednu uzkou frazi. ContactSpamFil
 
 Marie06 vzorek dosahuje 12 bodu pri prahu 7; legitimni francouzstina a samotne paste odkazy se neblokuji. Migrace 114 pridava frazi k existujicim seznamum, nic nemaze a zachovava vsechna vlastni nastaveni. Cilena sada vcetne lokalni MariaDB 8/8 PASS, lint a diff check PASS. ARCHITECTURE a globalni wiki (17659c7) aktualizovany. Lokalni commit na dev bez pushe; online aktivace vyzaduje staging a migraci 114, produkce novy konkretni souhlas.
 
+---
+# UKOL: Antispam nabidka osobnich a firemnich databazi
+
+Datum: 2026-10-28
+Zadani: Doplnit pravidlo pro dodany Nikolaj spam bez plosne blokace rustiny nebo Telegramu.
+Doporuceny model: Terra - Uzka znama spamova signatura a regresni testy.
+
+## Kroky
+
+- [x] Pridat signaturu do defaults a append-only migrace 115.
+- [x] Overit cely vzorek, legitimni poptavky a idempotentni zachovani ulozenych pravidel.
+- [x] Aktualizovat dokumentaci a wiki, pripravit commit na dev bez pushe.
+
+## Poznamky
+
+Nove pravidlo se prida k existujicim seznamum. Vlastni fraze, vahy, prah, domeny a prepinace se neprepisuji. Predchozi lokalni zmeny a artifacts/ zustavaji zachovane.
+Defaults a migrace 115 pouzivaji frazi bez carek, aby admin parseList nerozdelil signaturu na obecna slova. Testy obsahuji cely vzorek, normalizaci, legitimni rustinu/Telegram a vypnuty filtr. SQL runner overuje 115 dvakrat a zachovani vsech drivejsich frazi; ARCHITECTURE popisuje pravidlo a jeho rozsah.
+
+## Vysledek
+
+Dodany Nikolaj vzorek dosahuje 10 bodu pri prahu 7. Migrace 115 prida znamou frazi k existujicim pravidlum a neprepisuje vlastni nastaveni. Cilena sada vcetne MariaDB a admin roundtripu 9/9 PASS, PHP lint a diff check PASS. ARCHITECTURE a wiki (914a871) aktualizovany. Zmena se commituje pouze lokalne na dev bez pushe; online aktivace vyzaduje staging a migraci 115 a novy souhlas s produkci.
+

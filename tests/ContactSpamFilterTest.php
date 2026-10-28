@@ -7,6 +7,46 @@ use App\Services\ContactSpamConfig;
 
 function register_contact_spam_filter_tests(callable $test, callable $assert): void
 {
+    $test('personal data sales campaign is spam without banning Russian or Telegram', function () use ($assert): void {
+        $message = <<<'MESSAGE'
+Расширенная информация в отношении физ лиц, ИП, организаций (любые интересующие Вас сведения). Работаем комплексно с множеством баз и источников.
+- Выписки по счетам, книги покупок/продаж, котрагенты, клиенты и поставщики Ваших конкурентов
+- Телефоны и адреса интересующих людей
+- Имущество, счета, ТС
+- Налоговые досье, информация по сотрудникам
+- Розыск, судимости, проверка телефонов, геолокация
+- Магистраль, Граница/Рубеж, место ночевки, Поток и др.
+
+Подробнее и связь тут https://t.me/lbstbasebot
+Не работает ТГ, тогда сюда https://baza-biz.com/telegram/business-info?utm_source=fos&utm_medium=distribution&utm_campaign=telegram_business_info_fos&utm_content=telegram_landing&utm_term=business_info
+MESSAGE;
+        $filter = new ContactSpamFilter();
+        $result = $filter->classify('Николай', '4mk@mlzwq.ru', $message);
+        $assert($result['isSpam'] && $result['score'] === 10, 'Supplied data sales campaign must score 8 for signature and 2 for links.');
+        $assert(in_array('known-bot-boilerplate', $result['reasons'], true), 'Campaign signature reason must be visible.');
+        $defaults = ContactSpamConfig::defaults();
+        $post = ['contact_spam_enabled' => '1', 'contact_spam_threshold' => $defaults['threshold']];
+        foreach ($defaults['weights'] as $key => $value) {
+            $post['contact_spam_weight_' . $key] = $value;
+        }
+        foreach (['known_phrases', 'promotion_terms', 'calls_to_action', 'allowed_domains'] as $key) {
+            $post['contact_spam_' . $key] = ContactSpamConfig::listText($defaults[$key]);
+        }
+        $assert(ContactSpamConfig::fromPost($post) === $defaults, 'Saving defaults through admin must preserve whole signatures without comma splitting.');
+        $variant = str_replace('Расширенная информация в отношении', "РАСШИРЕННАЯ информация\n в отношении", $message);
+        $assert($filter->classify('Николай', '4mk@mlzwq.ru', $variant)['isSpam'], 'Case and whitespace variations must match.');
+        foreach ([
+            'Здравствуйте! Нужна семейная фотосессия. Сколько стоит?',
+            'Здравствуйте, нужны фотографии сотрудников нашей организации и счет за съемку.',
+            'Можно заказать съемку? Напишите мне в Telegram: https://t.me/example_customer',
+        ] as $inquiry) {
+            $assert(!$filter->classify('Николай', '4mk@mlzwq.ru', $inquiry)['isSpam'], 'Russian, sender identity, organization invoice and Telegram alone must pass.');
+        }
+        $disabled = ContactSpamConfig::defaults();
+        $disabled['enabled'] = false;
+        $assert(!(new ContactSpamFilter($disabled))->classify('Николай', '4mk@mlzwq.ru', $message)['isSpam'], 'Disabled filter respects the new signature.');
+    });
+
     $test('French article spam campaign is blocked without rejecting French inquiries', function () use ($assert): void {
         $message = <<<'MESSAGE'
 Hello tout le monde,
