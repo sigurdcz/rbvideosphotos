@@ -8,6 +8,13 @@ Staging je samostatný web [staging.rbvideosphotos.cz](https://staging.rbvideosp
 2. Aktivuj PHP s PDO MySQL, GD (včetně WebP), mbstring, OpenSSL a zapisováním do `storage/` a `public/assets/generated/`. Produkce běží na PHP 8.5; workflow sestavuje kompatibilní PHP 8.1 zdroje.
 3. Použij samostatný FTP účet `staging.rbvideosphotos.cz` omezený přímo na staging adresář. Připojení musí po přihlášení ukázat jeho obsah jako `/`. Hlavní FTP účet s přístupem k celému hostingu pro Actions nepoužívej.
 4. U tohoto FTP účtu nesmí GEO/IP ochrana blokovat GitHub runner. Funkční přihlášení z Total Commanderu v ČR samo přístup runneru nepotvrzuje.
+
+Diagnostika 2026-10-29: staging workflow pouziva `log-level: verbose`, aby byl
+videt posledni FTP prikaz pred ukoncenim spojeni. GitHub maskuje hodnoty secrets;
+tokeny ani hesla nepridavejte do vlastnich vypisu. Chyba `Server sent FIN packet
+unexpectedly` sama nerozlisuje TLS od odmitnuti prihlaseni/GEO ochrany. Pred zmenou
+protokolu nebo TLS nastaveni overte posledni odpoved serveru. Zadne prepnuti na
+nesifrovane FTP ani automaticky alternativni server se nepouziva.
 5. Před zveřejněním testovacího obsahu zapni ochranu stagingu heslem na úrovni hostingu a ověř, že nepřihlášený návštěvník dostane HTTP 401. Staging nemá automatickou ochranu před indexací; samotný název subdomény ani robots.txt ji nezaručí. Pokud hostingová ochrana není dostupná, je to nedokončený krok a je potřeba ochranu výslovně dořešit.
 
 ## 2. Povinné GitHub Environment Secrets
