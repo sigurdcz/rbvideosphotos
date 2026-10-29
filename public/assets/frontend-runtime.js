@@ -30,9 +30,11 @@
     var currentHash = window.location.hash || '';
     var isHome = currentPath === '/';
 
+    var activeLink;
     function activate(link) {
-      allLinks.forEach(function(item){ item.classList.remove('nav-active'); });
-      if (link) link.classList.add('nav-active');
+      if (link === activeLink) return;
+      allLinks.forEach(function(item){ item.classList.toggle('nav-active', item === link); });
+      activeLink = link;
     }
 
     function parseNavUrl(href) {
@@ -65,29 +67,6 @@
           return target ? { id: id, element: target, link: link } : null;
         })
         .filter(Boolean);
-    }
-
-    function visibleSectionLink(sectionEntries) {
-      if (!sectionEntries.length) return null;
-      var viewportCenter = window.innerHeight * 0.42;
-      var best = null;
-
-      sectionEntries.forEach(function(entry) {
-        var rect = entry.element.getBoundingClientRect();
-        if (rect.bottom <= 0 || rect.top >= window.innerHeight) {
-          return;
-        }
-
-        var distance = Math.abs(rect.top - viewportCenter);
-        if (!best || distance < best.distance) {
-          best = {
-            distance: distance,
-            link: entry.link
-          };
-        }
-      });
-
-      return best ? best.link : null;
     }
 
     var directLink = null;
@@ -133,14 +112,26 @@
       var hashLink = linkForSection(currentHash.replace(/^#/, ''));
       if (hashLink) activate(hashLink);
     } else {
-      activate(visibleSectionLink(sectionEntries) || directLink);
+      activate(directLink);
     }
 
+    var visibleSections = new Map();
     var io = new IntersectionObserver(function(entries){
-      var intersecting = entries.some(function(entry){ return entry.isIntersecting; });
-      if (!intersecting) return;
-      var active = visibleSectionLink(sectionEntries);
-      if (active) activate(active);
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) visibleSections.set(entry.target, entry);
+        else visibleSections.delete(entry.target);
+      });
+      var best = null;
+      sectionEntries.forEach(function(section) {
+        var entry = visibleSections.get(section.element);
+        if (!entry) return;
+        // Observer snapshots already contain geometry. Reading DOM layout here
+        // would synchronously flush the theme's preceding mutations.
+        var center = entry.rootBounds ? entry.rootBounds.top + entry.rootBounds.height / 2 : 0;
+        var distance = Math.abs(entry.boundingClientRect.top - center);
+        if (!best || distance < best.distance) best = { link: section.link, distance: distance };
+      });
+      if (best) activate(best.link);
     }, { rootMargin: '-40% 0px -40% 0px' });
     sectionEntries.forEach(function(entry){ io.observe(entry.element); });
   }

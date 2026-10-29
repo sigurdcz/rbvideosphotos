@@ -2777,3 +2777,141 @@ Defaults a migrace 115 pouzivaji frazi bez carek, aby admin parseList nerozdelil
 
 Dodany Nikolaj vzorek dosahuje 10 bodu pri prahu 7. Migrace 115 prida znamou frazi k existujicim pravidlum a neprepisuje vlastni nastaveni. Cilena sada vcetne MariaDB a admin roundtripu 9/9 PASS, PHP lint a diff check PASS. ARCHITECTURE a wiki (914a871) aktualizovany. Zmena se commituje pouze lokalne na dev bez pushe; online aktivace vyzaduje staging a migraci 115 a novy souhlas s produkci.
 
+---
+# UKOL: Produkcni release antispam pravidel 113-115
+
+Datum: 2026-10-28
+Zadani: Sloucit uzivatelem otestovany a schvaleny dev 5662eaa do master a overit deployment.
+Doporuceny model: Terra - Release hotovych otestovanych zmen.
+
+## Kroky
+
+- [x] Overit rozsah: First Lead Gen, Marie06 a nabidka osobnich databazi; migrace 113-115.
+- [x] Overit staging Actions a provest schvaleny merge presneho dev 5662eaa.
+- [x] Pushnout master a overit produkcni deployment a HTTP dostupnost.
+
+## Poznamky
+
+Uzivatel po staging pushi a uspechu Actions potvrdil, ze aktualni zmeny vyzkousel a jsou v poradku, a vyslovne pozadal o merge do master. Analyza vykonu nezmenila kod. Tento zaznam zustava mimo schvaleny obsah, po releasu se ulozi jen na dev. Produkcni migrace se deploymentem automaticky nespousteji.
+
+## Vysledek
+
+Master 7729e27fe2a9cc9a7b322e3c3521021e7c24bf52 pushnut. Produkcni Actions 40731189741 completed success; nasledne homepage, /kontakt a /admin/login HTTP 200. Obsah presne odpovida staging revizi 5662eaa (staging Actions 40718356250 success). Migrace 113-115 na produkci nejsou potvrzene a vyzaduji samostatne provedeni. Wiki release zaznam a3977e0. Zaver se commituje jen na dev bez dalsiho pushe; artifacts/ zustava mimo release.
+
+---
+# UKOL: Vykon homepage bez uprav videa
+
+Datum: 2026-10-29
+Zadani: Opravit dostupne problemy vykonu z PageSpeed reportu bez zmeny videa a jeho prehravani.
+Doporuceny model: Sol - Zmena serveroveho renderu, mobilni priority a navigacniho JavaScriptu s kontrolou vzhledu.
+
+## Kroky
+
+- [x] Overit pipeline homepage a pripravit serverove vykresleni vizualu O nas.
+- [x] Opravit nacitani mobilniho LCP obrazku a zbytecne layout reads v navigaci.
+- [x] Overit funkcni kontrakty, desktop/mobil a podle dostupnosti mereni pred/po.
+- [x] Aktualizovat dokumentaci a wiki a pripravit commit na dev bez pushe.
+
+## Poznamky
+
+Video, autoplay a zdroje videa jsou mimo tento ukol podle vyslovneho pozadavku uzivatele. Zachovat data z DB, vzhled a CLS; neodkladat plosne CSS. Existujici artifacts/ se nesmi pridat do commitu.
+GoldenBashAboutRenderer sklada DB obrazek do finalni figure/copy struktury v live i publish ceste, mimo edit mode. Oba theme JS zachovavaji existujici textove a interakcni upravy, ale serverove slozenou strukturu znovu nevytvareji. ResponsiveImageMarkupService dava explicitnimu obrazku eager a mobilni media-gated preload se shodnym srcset/sizes; desktopova hero priorita zustava. Navigace pouziva snapshoty IntersectionObserver a nemeni tridy pro stale stejny odkaz.
+Pridany behove PHP testy SSR, idempotence, edit/theme hranic, zachovani DB textu a video markup, responzivniho preloadu; zarazeny do hlavni sady i samostatneho runneru spolu s video regresemi (11/11 PASS). Node test navigace spousti realnou funkci s observer snapshoty a bez dostupneho DOM geometry API. Lokalni DB/media nejsou kopii produkce: chybi fotografie/logo a externi video hlasi nedostupnost uz pred upravou, proto nelze lokalni Lighthouse vydavat za produkcni mereni. Geometrie vizualu mobil pred/po shodna.
+Cele suite baseline bez mych zmen: 264 testu, 3 FAIL (Golden Bash CSS isolation, stary long-dash audit v admin analytics, zastaraly gallery source kontrakt) a 8 golden rozdilu. Nebyly opravovany ani prijaty nove goldeny. Upraven byl pouze souvisejici stary zdrojovy assert eager-loading na skutecny behovy test explicitniho eager obrazku a zachovani lazy ostatnich. Desktopova geometrie fotografie i sekce take presne odpovida baseline. PERFORMANCE a ARCHITECTURE popisuji novy kontrakt; opravena byla i zastarala poznamka o optional fontu podle aktualniho swap zdroje.
+Konzolova SyntaxError v baseline byla dohledana k extractInlineBodyScripts: application/json galerie se balilo do executable JS. V ramci stejne performance asset pipeline nyní bundluje jen klasicky JS; JSON, LD+JSON, moduly a dalsi datove typy zachovava. Pridana regrese kontroluje cisty datovy HTML i mix s opravdovym JS. bin/performance-smoke kontroluje mobilni preload a explicitni eager kandidaty podle noveho kontraktu.
+Finalni cilene testy 12/12 PASS a Node navigace PASS. Cela sada 268 testu se stejnymi 3 starsimi FAIL a 8 golden rozdily jako baseline, nove goldeny se negenerovaly. Prohlizec po oprave zachoval 36 JSON bloku galerii, galerie Kamila a Matej se otevrela s tremi img a bez data-gallery-error; po novem reloadu zadna nova konzolova chyba. BACKLOG eviduje staging mereni na skutecnych mediich a odlozene video.
+
+## Vysledek
+
+Fotografie O nas je ve finalni strukture jiz ze serveru a mobilni preload ji objevuje v head se shodnymi responsive kandidaty; desktopova priorita hero zustava. Navigace nepouziva synchronni layout reads a zbytecne neopakuje zmeny trid. Galerie si zachovavaji JSON a data se nespousteji jako JS, coz odstranilo konzolovou SyntaxError. Video/autoplay/zdroje ani CSS a fontove assety nebyly zmeneny. Cilene PHP testy 12/12 a Node test PASS, geometrie desktop/mobil shodna. Cela sada ma pouze stejne tri starsi FAIL a osm golden rozdilu jako baseline. Dokumentace ARCHITECTURE, PERFORMANCE a BACKLOG aktualizovana; wiki 726ea72. Bez nove migrace, bez pushe a bez nasazeni. Skutecne Lighthouse zlepseni a CLS je treba overit na stagingu s platnymi medii; lokalni chybejici media takove mereni neumoznuji.
+
+---
+# UKOL: Mobilni galerie a blikani hero pri hoveru
+
+Datum: 2026-10-29
+Zadani: Opravit otevirani fotogalerie na /nase-prace v iPhone Firefoxu a svisly problikavajici pruh hero videa pri rychlem hoveru podle dodaneho zaznamu.
+Doporuceny model: Sol - Kompatibilita dotykove galerie a skladani video/CSS vrstev vyzaduji reprodukci a regresni overeni.
+
+## Kroky
+
+- [x] Prohlednout video a zmapovat konkretni interakcni/renderovaci priciny.
+- [x] Opravit galerii a hero vrstvy bez zmeny obsahu videa.
+- [x] Overit dostupne regresni testy, dotykove interakce a vrstvy; fyzicke QA v BACKLOG.
+- [x] Aktualizovat dokumentaci a wiki, pripravit commit na dev bez pushe.
+
+## Poznamky
+
+Existujici lokalni performance commit 2c16fd6 je zachovany. Oprava prehravaci vrstvy je nyní vyslovne zadana; zmena video klipu/bitrate zustava mimo rozsah. Overeni na fyzickem iPhone zatim neni dostupne a nesmi se predstirat.
+Zaznam 16,6 s ukazuje pruh ziveho videa v oblasti leveho fade. Diagonal hero maska byla nahrazena inverznim papírovym gradientem na samostatnem hero pseudo-elementu, se stejnymi 30-58% body a vrstvou pod ovladanim; videoplocha nema masku ani filter wrapper, barvovy filter je na samotnem mediu. Mobilni fade zustava puvodni bez zmeny. Galerie v obou theme JS rozpoznava take .pt-card__media img, centruje nahledy jen pres vodorovny rail po zobrazeni, pouziva preventScroll focus a rusi stary zaviraci timer pri znovuotevreni. Chybejici obrazky maji explicitni diagnostiku.
+
+## Vysledek
+
+Chrome a WebKit dotykove testy PASS (otevreni, originaly, dalsi fotka, zavreni,
+legacy cover, rychle reopen a invalid JSON). Chrome nad realne generovanym/prunovanym
+CSS PASS pro hover, vrstvy, zadny overflow a hranici 700/701px; screenshot1280x800
+je synteticka iframe plocha, nikoli dukaz opravy GPU blikani skutecneho filmu.
+Performance12/12, navigace, HeroVideoCover a HeroVideoBreakpoint PASS; JS/PHP syntax
+a diff check PASS. Cela sada268 testu ma stejne3 drive zname FAIL a8 golden rozdilu
+jako baseline; zdrojovy assert cover selektoru byl aktualizovan pro novy kontrakt.
+Na zivem webu chybi JSON galerie kvuli stare pipeline, proto oprava potrebuje take
+predchozi lokalni commit2c16fd6. ARCHITECTURE a BACKLOG aktualizovany, wiki ma
+samostatnou rekonstrukcni stranku gallery-video-repaint. Fyzicky iPhone Firefox
+a stejna desktop GPU vyzaduji staging overeni; nenasazeno, zadny push ani master merge.
+
+---
+# UKOL: Staging FTPS disconnect 2026-10-29
+
+Zadani: Dokoncit staging a nasledne schvaleny release; vysvetlit dodany FIN log.
+Model: Sol. Lokalni dev9709a18 byl pushnut, run40914514477 selhal ve3 pokusech.
+Zivy staging ma stale stary gallery JS i masku, proto uzivatelovo overeni nelze
+spojit s novou revizi. Master zustava nezmeneny podle povinneho staging pravidla.
+
+- [x] Porovnat posledni uspech a selhani: stejna akce/SHA, stejna konfigurace,
+  FTP secrets naposledy zmeneny16.10.; oba runnery Ubuntu24.04.5 s jinou image revizi.
+- [x] Zapnout staging verbose log, commit4fa2dd6 pushnut; run40955812189 ukazuje
+  AUTH TLS234, TLS1.3 a FIN po OPTS UTF8 ON, pred USER.
+- [x] Overit explicitni TLS1.2 (fa0cdbf, run40955955246): stejny FIN pred USER.
+  Neuspesnou hypotezu odstranit, ponechat pouze diagnostiku a zdokumentovat vysledek.
+- [x] Hosting/GEO hypotezu nahradit nezavislym dukazem: curl listing na stejnem
+  runneru uspel, Node klient selhal na pre-login OPTS UTF8; zadny zasah hostingu nebyl nutny.
+- [x] Po odstraneni priciny zopakovat staging deploy a overit spravne assety.
+- [ ] Uzivatel znovu overi konkretni revizi; zmena release obsahu vyzaduje novy
+  vyslovny souhlas s merge do master. Zadny automaticky merge.
+
+Zadna zmena FTP hesla/protokolu, zadny nesifrovany prenos, zadne nove migrace,
+zadny rucni produkcni upload. TLS1.2 pokus neprokazuje konkretni pricinu na hostingu.
+
+Uzivatel29.10. vyslovne zada pokracovat a okamzite opravit staging. Dalsi krok je
+nezavisly curl FTPS listing na stejnem GitHub runneru se stejnymi secrets, bez zapisu.
+Insecure cert kontrola odpovida existujicimu security:loose; sifrovani je povinne.
+Pokud curl uspeje a Node akce selze, izoluje to klientskou implementaci, nikoli hosting
+obecne. Nezkouset stale stejny deploy bez noveho diagnostickeho dukazu.
+
+## Dokonceni opravy stagingu
+
+89a5fba pripina puvodni akci na SHA a kontrolovanym patchem vynecha pouze
+pred-prihlasovaci OPTS UTF8. Post-login UTF8, FTPS, account, state-name a exclude
+seznam zustavaji. Run40957885713 success; homepage /nase-prace /kontakt /admin/login
+HTTP200,36 JSON galerii a nove JS/CSS potvrzeny na webu. Skutecna staging galerie
+prochazi touch open/next/close v Chrome i WebKit393x852. Fyzicky iPhone a hardware
+video stale vyzaduji uzivatelskou kontrolu. Master nebyl zmenen, novy obsah release
+zahrnuje take kompatibilitu deploymentu a vyzaduje nove konkretni schvaleni.
+Tento zaverecny dokumentacni commit je lokalni; nasazena a overena revize89a5fba.
+
+---
+# UKOL: Produkcni release po staging QA 2026-10-29
+
+Uzivatel potvrzuje, ze se problem na stagingu uz neprojevuje, a zada produkci.
+Model Sol: release musi zachovat schvaleny frontend a overenou FTPS kompatibilitu.
+
+- [x] Overit dev/master rozsah a staging uzivatelske potvrzeni pro89a5fba.
+- [x] Pripravit shodny existujici FTPS patch take pro production workflow na dev;
+  puvodni production akce jej nepouzivala a mela stejnou pre-login UTF8 sekvenci.
+- [ ] Push dev a overeni finalni revize staging deploymentem.
+- [ ] Predlozit konkretni rozsirenou revizi uzivateli k novemu master merge souhlasu
+  podle AGENTS/INSTRUCTIONS, protoze pribyla production workflow zmena.
+- [ ] Po souhlasu merge dev do master a overit produkcni Actions i zive assety.
+
+Zdrojove frontend zmeny se nemeni. Production FTP secrets, cil, sifrovani,
+state-name a excludes zustavaji puvodni. Neni nova migrace ani rucni upload.
+

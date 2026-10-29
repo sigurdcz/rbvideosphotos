@@ -137,28 +137,30 @@ final class MarkupNormalizer
 
     $headPart = substr($html, 0, $headClosePos + 7);
     $bodyPart = substr($html, $headClosePos + 7);
-    if ($bodyPart === false || !preg_match_all('~<script\b(?![^>]*\bsrc=)(?![^>]*\btype=(["\'])application/ld\+json\1)[^>]*>(.*?)</script>~is', $bodyPart, $matches, PREG_SET_ORDER)) {
+    if ($bodyPart === false || !preg_match_all('~<script\b(?![^>]*\bsrc=)[^>]*>(.*?)</script>~is', $bodyPart, $matches, PREG_SET_ORDER)) {
         return $html;
     }
 
     $scripts = [];
     foreach ($matches as $match) {
+        if (!self::isClassicInlineScript($match[0])) continue;
         if (
-            str_contains($match[2], 'window.cmsCookieConsentSettings') ||
-            str_contains($match[2], 'function syncAdminBarOffset') ||
-            str_contains($match[2], 'function enhanceHero()') ||
-            str_contains($match[2], 'IntersectionObserver') ||
-            str_contains($match[2], "document.querySelector('[data-cenik-modal]')")
+            str_contains($match[1], 'window.cmsCookieConsentSettings') ||
+            str_contains($match[1], 'function syncAdminBarOffset') ||
+            str_contains($match[1], 'function enhanceHero()') ||
+            str_contains($match[1], 'IntersectionObserver') ||
+            str_contains($match[1], "document.querySelector('[data-cenik-modal]')")
         ) {
             continue;
         }
-        $scripts[] = trim($match[2]);
+        $scripts[] = trim($match[1]);
     }
 
     $bodyPart = preg_replace_callback(
-        '~<script\b(?![^>]*\bsrc=)(?![^>]*\btype=(["\'])application/ld\+json\1)[^>]*>(.*?)</script>~is',
+        '~<script\b(?![^>]*\bsrc=)[^>]*>(.*?)</script>~is',
         static function (array $match): string {
-            $script = $match[2];
+            if (!self::isClassicInlineScript($match[0])) return $match[0];
+            $script = $match[1];
             return str_contains($script, 'window.cmsCookieConsentSettings') ? $match[0] : '';
         },
         $bodyPart
@@ -171,6 +173,17 @@ final class MarkupNormalizer
 
     return FrontendAssetManager::injectGeneratedJs($headPart . $bodyPart, implode("\n", $scripts), 'inline-body-scripts', 'data-cms-inline-body-scripts');
 }
+
+    private static function isClassicInlineScript(string $markup): bool
+    {
+        $opening = substr($markup, 0, (int)strpos($markup, '>') + 1);
+        if (!preg_match('~\stype\s*=\s*(?:(["\'])(.*?)\1|([^\s>]+))~is', $opening, $type)) return true;
+        $value = ($type[1] ?? '') !== '' ? (string)($type[2] ?? '') : (string)($type[3] ?? '');
+        $mime = strtolower(trim(explode(';', $value)[0]));
+        // JSON, import maps, templates and modules must retain their type and
+        // position. Only classic JavaScript may enter a classic generated bundle.
+        return in_array($mime, ['', 'text/javascript', 'application/javascript', 'text/ecmascript', 'application/ecmascript'], true);
+    }
 
     public static function injectBodyCssVariableToken(string $html, string $name, string $value): string
 {

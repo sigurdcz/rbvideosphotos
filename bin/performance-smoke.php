@@ -53,8 +53,27 @@ try {
     $html = $home['body'];
     $expect($home['status'] === 200, 'Homepage ma HTTP ' . $home['status'] . ', ocekavano 200.');
     $expect(!preg_match('~<iframe[^>]+(?:youtube|vimeo)~i', $html), 'Pocatecni HTML obsahuje externi video iframe.');
-    $expect(substr_count($html, 'fetchpriority="high"') === 1, 'Pocatecni HTML nema prave jeden fetchpriority="high".');
-    $expect(substr_count($html, 'loading="eager"') === 1, 'Pocatecni HTML nema prave jeden loading="eager".');
+    $dom = new DOMDocument();
+    @$dom->loadHTML($html);
+    $xpath = new DOMXPath($dom);
+    $expect($xpath->query('//img[@fetchpriority="high"]')->length === 1, 'Pocatecni HTML nema prave jeden prioritni hero obrazek.');
+    $mobilePreloads = $xpath->query('//link[@data-mobile-lcp-preload]');
+    $expect($mobilePreloads->length <= 1, 'Mobilni LCP preload je duplicitni.');
+    foreach ($mobilePreloads as $preload) {
+        $image = $xpath->query('//img[@data-mobile-lcp]')->item(0);
+        $expect($preload->getAttribute('media') === '(max-width: 700px)', 'Mobilni LCP preload neni omezen na mobil.');
+        $expect($image instanceof DOMElement, 'Mobilni LCP preload nema odpovidajici obrazek.');
+        if ($image instanceof DOMElement) {
+            $expect(!$image->hasAttribute('hidden') && $image->getAttribute('loading') === 'eager', 'Mobilni LCP obrazek je skryty nebo lazy.');
+            foreach (['href' => 'src', 'imagesrcset' => 'srcset', 'imagesizes' => 'sizes'] as $linkAttr => $imageAttr) {
+                $expect($preload->getAttribute($linkAttr) === $image->getAttribute($imageAttr), 'Mobilni preload se lisi od obrazku: ' . $linkAttr);
+            }
+        }
+    }
+    foreach ($xpath->query('//img[@loading="eager"]') as $image) {
+        $expect($image->getAttribute('fetchpriority') === 'high' || $image->hasAttribute('data-eager-image')
+            || str_contains($image->getAttribute('class'), 'site-logo-img'), 'Neoznaceny obrazek ma eager loading.');
+    }
     $expect(substr_count($html, ' srcset=') > 0, 'Pocatecni HTML neobsahuje responzivni srcset.');
     $expect(str_contains($html, 'for="hp-contact-shooting-type"'), 'Select shooting_type nema explicitni label.');
     $expect((bool)preg_match('~<select\b(?=[^>]*\bid="hp-contact-shooting-type")(?=[^>]*\baria-label="[^"]+")[^>]*>~i', $html), 'Select shooting_type nema robustni accessible name.');
@@ -71,7 +90,7 @@ try {
         preg_match('~\bsrc="([^"]+)"~i', $priorityTag, $srcMatch);
         $priorityPath = (string)($srcMatch[1] ?? '');
         $priorityUrl = str_starts_with($priorityPath, 'http') ? $priorityPath : $baseUrl . $priorityPath;
-        $expect(str_contains($priorityTag, 'data-lcp-candidate'), 'Vysokou prioritu nema explicitni LCP kandidat.');
+        $expect(str_contains($priorityTag, 'data-lcp-candidate') || str_contains($priorityTag, 'hero-bg'), 'Vysokou prioritu nema LCP kandidat ani hero poster.');
         $expect(str_contains($priorityTag, 'loading="eager"'), 'LCP kandidat neni eager-load.');
         $priority = performanceRequest($priorityUrl, true);
         $cache = strtolower((string)($priority['headers']['cache-control'] ?? ''));

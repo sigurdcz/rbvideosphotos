@@ -82,8 +82,21 @@ jobs:
           mkdir -p _deploy/storage/published
           mkdir -p _deploy/storage/templates
 
+      - name: Diagnose FTPS with independent curl client (read only)
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          curl --ssl-reqd --insecure --verbose --connect-timeout 15 --max-time 45 \
+            --list-only --output /dev/null \
+            --user "$FTP_USERNAME:$FTP_PASSWORD" "ftp://$FTP_SERVER/"
+
+      - name: Apply staging FTPS login ordering compatibility
+        run: python3 bin/patch-staging-ftp-login.py
+
       - name: Deploy via FTPS (staging)
-        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
+        uses: SamKirkland/FTP-Deploy-Action@110f9186c050f71550953127052e77650219c287 # v4.4.0
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
@@ -91,6 +104,7 @@ jobs:
           port: 21
           protocol: ftps
           security: loose
+          log-level: verbose
           timeout: 120000
           local-dir: ./_deploy/
           server-dir: /

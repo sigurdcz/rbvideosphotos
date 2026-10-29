@@ -224,6 +224,14 @@ Vychozi zname fraze zahrnuji bot marker `pxqrrbvideosphotos.czpxqr` a reklamni s
 
 `POST /admin/settings/spam-test` vyzaduje admin roli a CSRF, pouziva naposledy ulozeny profil a vola pouze klasifikator. Nevola archiv ani mail transport. Admin save serializuje konfiguraci pres `ContactSpamConfig::fromPost()`; neplatne hodnoty odmitne jako celek bez castecneho ulozeni.
 
+### Serverove umisteni homepage LCP fotografie
+
+`PageComposer` v live i publish ceste po DB injekci obrazku vola `GoldenBashAboutRenderer::compose`. Pouze pro homepage rodiny Golden Bash a mimo edit mode presune DB fotografii do finalni `figure.gb-services-visual`, zbytek obsahu kontejneru zachova v `gb-services-copy`. Nemení text ani odkazy z DB a nezasahuje video. Chybny znamy layout s chybejicim kontejnerem vyvola explicitni chybu. Marker `data-about-visual-ready="1"` zabrani JS opakovanemu skladani; puvodni JS cesta zustava kompatibilni se starymi publikovanymi strankami.
+
+`ResponsiveImageMarkupService` respektuje `data-eager-image` a pro `data-mobile-lcp` vytvori jediny preload omezeny na mobilni media query se stejnymi responsive kandidaty a sizes jako obrazek. Neodebira prioritu desktopovemu hero posteru. Sdilena navigace zpracovava observer snapshoty bez dodatecnych layout reads. Kontrakty a omezeni mereni jsou v `PERFORMANCE.md`.
+
+Extrakce body skriptu v `MarkupNormalizer` rozlisuje klasicky JavaScript od JSON a ostatnich typu. Pouze prazdny type nebo bezny JavaScript/ecmascript MIME jde do klasickeho generovaneho bundlu; galerijni `application/json`, LD+JSON, moduly, importmap a dalsi datove bloky zachovavaji type, obsah i pozici. Galerijni JSON se nesmi spoustet ani odstranovat jako JS.
+
 ## Obsahovy model
 
 ### CMS stranky
@@ -835,3 +843,29 @@ clearAllRecipients. CC shodné s hlavním příjemcem se potlačí. Jediná nepl
 odmítne celý seznam; MailArchiveService přitom zachová kontaktní zprávu i zadaný CC
 text a uloží `invalid_cc_recipient`. Password reset kopii nepoužívá a archivní služba
 explicitní CC u resetu odmítá. SMTP přijetí stále neznamená prokázané doručení.
+
+### Galerie na dotyku a skladani hero vrstev (2026-10-29)
+
+Oba Golden Bash theme runtime oteviraji puvodni galerie z `.pt-photos-data`.
+Pro starsi karty bez datoveho bloku zustava explicitni jednofotkovy rezim z coveru,
+vcetne listingoveho `.pt-card__media img`. Neplatny JSON se hlasi pres
+`data-gallery-error=invalid-data`, chybejici pouzitelne obrazky pres `missing-images`;
+chybny datovy blok se nenahrazuje coverem. JSON musi zustat inertni take po
+`MarkupNormalizer::extractInlineBodyScripts` (performance oprava).
+Nahledy centruje jen `galleryThumbs.scrollLeft` po zobrazeni dialogu; nativni
+`scrollIntoView` nad skrytym dialogem se nepouziva. Focus otevreni ma `preventScroll`
+a znovuotevreni rusi 280ms zaviraci timer, aby neskryl novy dialog.
+
+Diagonal homepage nad 700px pouziva inverzni papirovy gradient v `.hp-hero::before`
+(z-index 1, pointer-events none), video zustava v z-index 0 a obsah v z-index 2.
+Prechod ma stejne smoothstep body 30-58%, ale na zive videoplose neni maska.
+Barvovy filter patri primo mediu, nikoli desktopovemu div wrapperu. Tim se odstranuje
+kompozicni kombinace masky a filtrovaneho iframe wrapperu pri hover repaintu.
+Mobilni design, zdroje videa, autoplay i geometrie coveru zustavaji zachovany.
+
+Regrese: `node tests/gallery-mobile.test.cjs` (Playwright v prostredi, Chrome a WebKit),
+`node tests/hero-fade-browser.test.cjs` (Chrome, PHP a Composer autoload).
+Druhy test kontroluje skutecny generovany/prunovany CSS asset, vrstvy, hover a
+hranici 700/701px; screenshot uklada do `.codex-qa`. Pouziva synteticky iframe,
+proto nedokazuje odstraneni hardwaroveho blikani skutecneho filmu.
+WebKit test neni nahradou fyzickeho iPhone Firefoxu; oba projevy vyzaduji staging QA.

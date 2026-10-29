@@ -477,7 +477,8 @@
       servicesLabel.textContent = 'Poznejte nás';
       servicesTitle.textContent = 'O nás';
       servicesIntro.textContent = 'Jsme dvojice fotografů a filmařů,\u00a0které spojuje cit pro přirozené světlo,\u00a0opravdové emoce a poctivou práci.';
-      var servicesVisual = document.createElement('figure');
+      var serverAboutReady = services.dataset.aboutVisualReady === '1';
+      var servicesVisual = serverAboutReady ? servicesContainer.querySelector('.gb-services-visual') : document.createElement('figure');
       servicesVisual.className = 'gb-services-visual';
       var servicesImage = aboutVisualSource.tagName === 'IMG'
         ? aboutVisualSource
@@ -487,15 +488,15 @@
       servicesImage.removeAttribute('hidden');
       servicesImage.className = 'gb-services-visual__image';
       servicesImage.alt = 'RB Videos & Photos při práci';
-      servicesVisual.appendChild(servicesImage);
-      var servicesCopy = document.createElement('div');
+      if (!serverAboutReady) servicesVisual.appendChild(servicesImage);
+      var servicesCopy = serverAboutReady ? servicesContainer.querySelector('.gb-services-copy') : document.createElement('div');
       servicesCopy.className = 'gb-services-copy';
       [servicesLabel, servicesTitle, servicesIntro, servicesGrid, servicesCta].forEach(function (element) {
-        servicesCopy.appendChild(element);
+        if (!serverAboutReady) servicesCopy.appendChild(element);
       });
       var servicesLink = servicesCta.querySelector('a');
       if (servicesLink) servicesLink.textContent = 'Více info o nás  →';
-      servicesContainer.replaceChildren(servicesVisual, servicesCopy);
+      if (!serverAboutReady) servicesContainer.replaceChildren(servicesVisual, servicesCopy);
       Array.prototype.slice.call(services.querySelectorAll('a')).forEach(function (link) {
         link.setAttribute('href', '/#kontakt');
       });
@@ -822,6 +823,17 @@
     var galleryItems = [];
     var galleryIndex = 0;
     var galleryTrigger = null;
+    var galleryCloseTimer = 0;
+
+    var centerActiveThumbnail = function () {
+      var thumb = galleryThumbs.children[galleryIndex];
+      if (!thumb || lightbox.hidden) return;
+      // Scroll only the thumbnail rail. scrollIntoView can scroll the page or
+      // a hidden modal's ancestors on iOS before the first lightbox paint.
+      var railRect = galleryThumbs.getBoundingClientRect();
+      var thumbRect = thumb.getBoundingClientRect();
+      galleryThumbs.scrollLeft += thumbRect.left - railRect.left - (railRect.width - thumbRect.width) / 2;
+    };
 
     var showGalleryItem = function (nextIndex) {
       if (!galleryItems.length) return;
@@ -833,15 +845,15 @@
         var active = index === galleryIndex;
         thumb.classList.toggle('is-active', active);
         thumb.setAttribute('aria-current', active ? 'true' : 'false');
-        if (active) thumb.scrollIntoView({behavior: 'smooth', block: 'nearest', inline: 'center'});
       });
+      if (lightbox.classList.contains('is-open')) window.requestAnimationFrame(centerActiveThumbnail);
     };
 
     var closeGallery = function () {
       if (lightbox.hidden) return;
       lightbox.classList.remove('is-open');
       document.body.classList.remove('gb-gallery-open');
-      window.setTimeout(function () {
+      galleryCloseTimer = window.setTimeout(function () {
         lightbox.hidden = true;
         galleryImage.removeAttribute('src');
         galleryVideoFrame.removeAttribute('src'); // stop playback, not just hide it
@@ -851,6 +863,7 @@
     };
 
     var openVideo = function (card, embedUrl) {
+      window.clearTimeout(galleryCloseTimer);
       galleryItems = [];
       galleryTrigger = card;
       lightbox.classList.add('is-video');
@@ -864,11 +877,12 @@
       document.body.classList.add('gb-gallery-open');
       window.requestAnimationFrame(function () {
         lightbox.classList.add('is-open');
-        galleryClose.focus();
+        galleryClose.focus({ preventScroll: true });
       });
     };
 
     var openGallery = function (card) {
+      window.clearTimeout(galleryCloseTimer);
       var videoEmbed = card.dataset.videoEmbed || '';
       if (videoEmbed) {
         openVideo(card, videoEmbed);
@@ -905,7 +919,7 @@
         });
       }
       if (!galleryItems.length) {
-        var cover = card.querySelector('.pt-thumb img, .bl-thumb img');
+        var cover = card.querySelector('.pt-card__media img, .pt-thumb img, .bl-thumb img');
         if (cover) galleryItems.push({
           src: cover.currentSrc || cover.getAttribute('src'),
           thumb: cover.currentSrc || cover.getAttribute('src'),
@@ -915,8 +929,12 @@
       galleryItems = galleryItems.filter(function (item, index, items) {
         return item.src && items.findIndex(function (candidate) { return candidate.src === item.src; }) === index;
       });
-      if (!galleryItems.length) return;
-      var clickedImage = card.querySelector('.pt-thumb img, .bl-thumb img');
+      if (!galleryItems.length) {
+        card.dataset.galleryError = 'missing-images';
+        console.error('Portfolio gallery has no usable images.');
+        return;
+      }
+      var clickedImage = card.querySelector('.pt-card__media img, .pt-thumb img, .bl-thumb img');
       var clickedImageSrc = clickedImage ? (clickedImage.currentSrc || clickedImage.getAttribute('src')) : '';
       var initialGalleryIndex = galleryItems.findIndex(function (item) {
         return item.src === clickedImageSrc || item.thumb === clickedImageSrc;
@@ -946,7 +964,8 @@
       document.body.classList.add('gb-gallery-open');
       window.requestAnimationFrame(function () {
         lightbox.classList.add('is-open');
-        galleryClose.focus();
+        galleryClose.focus({ preventScroll: true });
+        centerActiveThumbnail();
       });
     };
 

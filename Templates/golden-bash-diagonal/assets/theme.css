@@ -2187,11 +2187,10 @@ body.theme-golden-bash.theme-golden-bash-diagonal .gb-hero-wave-outline{width:10
 body.theme-golden-bash.theme-golden-bash-diagonal .hp-hero>.theme-hero-video,
 body.theme-golden-bash.theme-golden-bash-diagonal .hp-hero>.hero-bg{
   width:100%!important;
-  /* Misto diagonalniho orezu plynuly prechod: video je u leveho okraje pruhledne
-     a od poloviny sirky plne viditelne, takze vlevo prosvita papirove pozadi. */
-  /* Smoothstep fade ends at the client's blue marker (58%); video stays opaque beyond it. */
-  -webkit-mask-image:linear-gradient(to right,transparent 30%,rgba(0,0,0,.028) 32.8%,rgba(0,0,0,.104) 35.6%,rgba(0,0,0,.216) 38.4%,rgba(0,0,0,.352) 41.2%,rgba(0,0,0,.5) 44%,rgba(0,0,0,.648) 46.8%,rgba(0,0,0,.784) 49.6%,rgba(0,0,0,.896) 52.4%,rgba(0,0,0,.972) 55.2%,#000 58%)!important;
-  mask-image:linear-gradient(to right,transparent 30%,rgba(0,0,0,.028) 32.8%,rgba(0,0,0,.104) 35.6%,rgba(0,0,0,.216) 38.4%,rgba(0,0,0,.352) 41.2%,rgba(0,0,0,.5) 44%,rgba(0,0,0,.648) 46.8%,rgba(0,0,0,.784) 49.6%,rgba(0,0,0,.896) 52.4%,rgba(0,0,0,.972) 55.2%,#000 58%)!important;
+  /* The inverse paper fade is a separate hero layer, never a mask on a live
+     iframe/video surface. This avoids video tiles leaking through on repaint. */
+  -webkit-mask-image:none!important;
+  mask-image:none!important;
   clip-path:none!important;
 }
 @media(max-width:700px){
@@ -2219,6 +2218,27 @@ body.theme-golden-bash.theme-golden-bash-diagonal .hp-hero>.theme-hero-video .th
 @media(max-width:700px){
   body.theme-golden-bash.theme-golden-bash-diagonal .hp-hero>.theme-hero-video iframe{
     left:50%!important;right:auto!important;transform:translate(-50%,-50%)!important;
+  }
+}
+
+/* Separate stable paper layer: same 30%-58% smoothstep as the former mask.
+   Controls remain at z=2; the fade cannot intercept hover or touch. */
+@media(min-width:700.02px){
+  body.theme-golden-bash.theme-golden-bash-diagonal[data-cms-page-key="homepage"] .hp-hero::before{
+    content:""!important;display:block!important;position:absolute;inset:0;z-index:1;pointer-events:none;
+    background:linear-gradient(to right,#fffdf9 30%,rgba(255,253,249,.972) 32.8%,rgba(255,253,249,.896) 35.6%,rgba(255,253,249,.784) 38.4%,rgba(255,253,249,.648) 41.2%,rgba(255,253,249,.5) 44%,rgba(255,253,249,.352) 46.8%,rgba(255,253,249,.216) 49.6%,rgba(255,253,249,.104) 52.4%,rgba(255,253,249,.028) 55.2%,rgba(255,253,249,0) 58%);
+  }
+  body.theme-golden-bash.theme-golden-bash-diagonal[data-cms-page-key="homepage"] .hp-hero>.theme-hero-video{
+    overflow:hidden!important;isolation:isolate;
+  }
+  body.theme-golden-bash.theme-golden-bash-diagonal[data-cms-page-key="homepage"] .hp-hero>div.theme-hero-video{
+    filter:none!important;
+  }
+  body.theme-golden-bash.theme-golden-bash-diagonal[data-cms-page-key="homepage"] .hp-hero>.theme-hero-video iframe,
+  body.theme-golden-bash.theme-golden-bash-diagonal[data-cms-page-key="homepage"] .hp-hero>.theme-hero-video img,
+  body.theme-golden-bash.theme-golden-bash-diagonal[data-cms-page-key="homepage"] .hp-hero>video.theme-hero-video,
+  body.theme-golden-bash.theme-golden-bash-diagonal[data-cms-page-key="homepage"] .hp-hero>.hero-bg{
+    filter:saturate(.78) sepia(.12) brightness(1.03)!important;
   }
 }
 
