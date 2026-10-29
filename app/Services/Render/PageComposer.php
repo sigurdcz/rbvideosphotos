@@ -89,6 +89,7 @@ final class PageComposer
         $html = HomepageSectionRenderer::stabilizeGoldenBashHero($html, $isHome, self::themeKey($ctx));
         $html = CenikPageRenderer::inject($html, $blocks, $pageKey, self::themeKey($ctx), $editMode);
         $html = HomepageSectionRenderer::injectHomepageAboutVisualSource($html, (int)$page['id'], (int)$page['site_id'], $isHome);
+        $html = GoldenBashAboutRenderer::compose($html, $isHome, self::themeKey($ctx), $editMode);
         $html = HomepageSectionRenderer::removeLegacyVideoWeddingTag($html);
         $html = SharedProcessRenderer::inject($html, self::themeKey($ctx));
         $html = HeroEnhancementRenderer::inject($html, self::themeKey($ctx));
@@ -143,6 +144,7 @@ final class PageComposer
         $html = HomepageSectionRenderer::stabilizeGoldenBashHero($html, $isHome, self::themeKey($ctx));
         $html = CenikPageRenderer::inject($html, $blocks, $pageKey, self::themeKey($ctx));
         $html = HomepageSectionRenderer::injectHomepageAboutVisualSource($html, (int)$page['id'], (int)($page['site_id'] ?? 0), $isHome);
+        $html = GoldenBashAboutRenderer::compose($html, $isHome, self::themeKey($ctx));
         $html = HomepageSectionRenderer::removeLegacyVideoWeddingTag($html);
         $html = SharedProcessRenderer::inject($html, self::themeKey($ctx));
         $html = HeroEnhancementRenderer::inject($html, self::themeKey($ctx));

@@ -2798,3 +2798,30 @@ Uzivatel po staging pushi a uspechu Actions potvrdil, ze aktualni zmeny vyzkouse
 
 Master 7729e27fe2a9cc9a7b322e3c3521021e7c24bf52 pushnut. Produkcni Actions 40731189741 completed success; nasledne homepage, /kontakt a /admin/login HTTP 200. Obsah presne odpovida staging revizi 5662eaa (staging Actions 40718356250 success). Migrace 113-115 na produkci nejsou potvrzene a vyzaduji samostatne provedeni. Wiki release zaznam a3977e0. Zaver se commituje jen na dev bez dalsiho pushe; artifacts/ zustava mimo release.
 
+---
+# UKOL: Vykon homepage bez uprav videa
+
+Datum: 2026-10-29
+Zadani: Opravit dostupne problemy vykonu z PageSpeed reportu bez zmeny videa a jeho prehravani.
+Doporuceny model: Sol - Zmena serveroveho renderu, mobilni priority a navigacniho JavaScriptu s kontrolou vzhledu.
+
+## Kroky
+
+- [x] Overit pipeline homepage a pripravit serverove vykresleni vizualu O nas.
+- [x] Opravit nacitani mobilniho LCP obrazku a zbytecne layout reads v navigaci.
+- [x] Overit funkcni kontrakty, desktop/mobil a podle dostupnosti mereni pred/po.
+- [x] Aktualizovat dokumentaci a wiki a pripravit commit na dev bez pushe.
+
+## Poznamky
+
+Video, autoplay a zdroje videa jsou mimo tento ukol podle vyslovneho pozadavku uzivatele. Zachovat data z DB, vzhled a CLS; neodkladat plosne CSS. Existujici artifacts/ se nesmi pridat do commitu.
+GoldenBashAboutRenderer sklada DB obrazek do finalni figure/copy struktury v live i publish ceste, mimo edit mode. Oba theme JS zachovavaji existujici textove a interakcni upravy, ale serverove slozenou strukturu znovu nevytvareji. ResponsiveImageMarkupService dava explicitnimu obrazku eager a mobilni media-gated preload se shodnym srcset/sizes; desktopova hero priorita zustava. Navigace pouziva snapshoty IntersectionObserver a nemeni tridy pro stale stejny odkaz.
+Pridany behove PHP testy SSR, idempotence, edit/theme hranic, zachovani DB textu a video markup, responzivniho preloadu; zarazeny do hlavni sady i samostatneho runneru spolu s video regresemi (11/11 PASS). Node test navigace spousti realnou funkci s observer snapshoty a bez dostupneho DOM geometry API. Lokalni DB/media nejsou kopii produkce: chybi fotografie/logo a externi video hlasi nedostupnost uz pred upravou, proto nelze lokalni Lighthouse vydavat za produkcni mereni. Geometrie vizualu mobil pred/po shodna.
+Cele suite baseline bez mych zmen: 264 testu, 3 FAIL (Golden Bash CSS isolation, stary long-dash audit v admin analytics, zastaraly gallery source kontrakt) a 8 golden rozdilu. Nebyly opravovany ani prijaty nove goldeny. Upraven byl pouze souvisejici stary zdrojovy assert eager-loading na skutecny behovy test explicitniho eager obrazku a zachovani lazy ostatnich. Desktopova geometrie fotografie i sekce take presne odpovida baseline. PERFORMANCE a ARCHITECTURE popisuji novy kontrakt; opravena byla i zastarala poznamka o optional fontu podle aktualniho swap zdroje.
+Konzolova SyntaxError v baseline byla dohledana k extractInlineBodyScripts: application/json galerie se balilo do executable JS. V ramci stejne performance asset pipeline nyní bundluje jen klasicky JS; JSON, LD+JSON, moduly a dalsi datove typy zachovava. Pridana regrese kontroluje cisty datovy HTML i mix s opravdovym JS. bin/performance-smoke kontroluje mobilni preload a explicitni eager kandidaty podle noveho kontraktu.
+Finalni cilene testy 12/12 PASS a Node navigace PASS. Cela sada 268 testu se stejnymi 3 starsimi FAIL a 8 golden rozdily jako baseline, nove goldeny se negenerovaly. Prohlizec po oprave zachoval 36 JSON bloku galerii, galerie Kamila a Matej se otevrela s tremi img a bez data-gallery-error; po novem reloadu zadna nova konzolova chyba. BACKLOG eviduje staging mereni na skutecnych mediich a odlozene video.
+
+## Vysledek
+
+Fotografie O nas je ve finalni strukture jiz ze serveru a mobilni preload ji objevuje v head se shodnymi responsive kandidaty; desktopova priorita hero zustava. Navigace nepouziva synchronni layout reads a zbytecne neopakuje zmeny trid. Galerie si zachovavaji JSON a data se nespousteji jako JS, coz odstranilo konzolovou SyntaxError. Video/autoplay/zdroje ani CSS a fontove assety nebyly zmeneny. Cilene PHP testy 12/12 a Node test PASS, geometrie desktop/mobil shodna. Cela sada ma pouze stejne tri starsi FAIL a osm golden rozdilu jako baseline. Dokumentace ARCHITECTURE, PERFORMANCE a BACKLOG aktualizovana; wiki 726ea72. Bez nove migrace, bez pushe a bez nasazeni. Skutecne Lighthouse zlepseni a CLS je treba overit na stagingu s platnymi medii; lokalni chybejici media takove mereni neumoznuji.
+

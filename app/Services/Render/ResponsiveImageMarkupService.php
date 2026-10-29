@@ -18,7 +18,7 @@ final class ResponsiveImageMarkupService
         );
         $priorityAssigned = false;
 
-        return preg_replace_callback('~<img\b([^>]*)>~i', static function (array $match) use ($mediaMap, $hasExplicitPriorityCandidate, $hasHeroImage, &$priorityAssigned): string {
+        $html = preg_replace_callback('~<img\b([^>]*)>~i', static function (array $match) use ($mediaMap, $hasExplicitPriorityCandidate, $hasHeroImage, &$priorityAssigned): string {
             $attrs = (string)$match[1];
             $src = self::attribute($attrs, 'src');
             $class = self::attribute($attrs, 'class');
@@ -36,7 +36,8 @@ final class ResponsiveImageMarkupService
             $attrs = self::withoutAttributes($attrs, ['loading', 'fetchpriority', 'decoding']);
             // The header logo always sits above the fold, so it must never be deferred.
             // It stays off fetchpriority though - that slot belongs to the LCP image.
-            $attrs .= ' decoding="async" loading="' . ($isPriority || $isLogo ? 'eager' : 'lazy') . '"';
+            $isEager = (bool)preg_match('~\bdata-eager-image(?:\s|=|$)~i', $attrs);
+            $attrs .= ' decoding="async" loading="' . ($isPriority || $isLogo || $isEager ? 'eager' : 'lazy') . '"';
             if ($isPriority) $attrs .= ' fetchpriority="high"';
 
             $storageKey = self::storageKey($src);
@@ -93,6 +94,24 @@ final class ResponsiveImageMarkupService
 
             return '<img' . $attrs . '>';
         }, $html) ?? $html;
+
+        // Responsive preload prioritizes the measured mobile LCP without taking
+        // the desktop hero's priority slot. Use exactly the same responsive candidates.
+        $html = preg_replace('~<link\b[^>]*\bdata-mobile-lcp-preload[^>]*>~i', '', $html) ?? $html;
+        if (preg_match('~<img\b(?=[^>]*\bdata-mobile-lcp(?:\s|=|>))[^>]*>~i', $html, $mobile)) {
+            $attrs = $mobile[0];
+            $src = self::attribute($attrs, 'src');
+            if ($src !== '') {
+                $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                $preload = '<link rel="preload" as="image" media="(max-width: 700px)" fetchpriority="high" data-mobile-lcp-preload href="' . $escape($src) . '"';
+                foreach (['srcset' => 'imagesrcset', 'sizes' => 'imagesizes'] as $source => $target) {
+                    $value = self::attribute($attrs, $source);
+                    if ($value !== '') $preload .= ' ' . $target . '="' . $escape($value) . '"';
+                }
+                $html = preg_replace('~</head>~i', $preload . '></head>', $html, 1) ?? $html;
+            }
+        }
+        return $html;
     }
 
     private static function attribute(string $attrs, string $name): string

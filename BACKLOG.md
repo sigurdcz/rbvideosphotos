@@ -2,6 +2,13 @@
 
 Odložená práce. Před zahájením vybereme prioritu; rozpracovaný úkol se vede v `UKOL.md`.
 
+## Performance homepage: overeni na skutecnych mediich — 2026-10-29
+
+- Po lokalni oprave SSR fotografie, mobilniho preloadu, observer navigace a zachovani galerijniho JSON overit staging se skutecnymi medii a publish vystupem. Lokalni DB obsahuje chybejici obrazky/logo a neplatny externi videoodkaz; lokalni Lighthouse neni s produkcnim reportem srovnatelny.
+- Hotovo: tri mobilni a jeden desktopovy beh za stejnych podminek, zaznamenany median a LCP element, zadne zhorseni CLS/layoutu ani galerie. Potvrdit, ze mobilni preload a obrazek sdileji stejny vybrany zdroj a ze nevznika druhy download obrazku.
+- Optimalizace videa je podle uzivatele odlozena na dodani klipu; tato oprava jeho zdroje, autoplay ani prehravani nemeni. Velky objem videa tedy zustava.
+- Cela sada ma pred i po oprave tri starsi FAIL (Golden Bash CSS isolation, long-dash audit admin analytics, zastaraly source kontrakt galerie) a osm golden rozdilu. Neresit je automatickym prijetim goldenu; samostatna oprava musi prokazat spravny obsah/vzhled a soulad kontraktu.
+
 ## 1. Stabilní workflow produkce a stagingu — P1, částečně hotovo
 
 - Hotovo: `dev` → environment `staging`, `master` → `production`; samostatné FTP secrets, staging povoluje jen větev `dev`; pravidla v `INSTRUCTIONS.md`, instalační návod `STAGING.md`.

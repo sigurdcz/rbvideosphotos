@@ -509,6 +509,9 @@ require __DIR__ . '/AdminFaviconTest.php';
 register_admin_favicon_tests($test, $assert);
 
 $failures = 0;
+require __DIR__ . '/HomepagePerformanceTest.php';
+register_homepage_performance_tests($test, $assert);
+
 foreach ($tests as [$name, $callback]) {
     try {
         $callback();

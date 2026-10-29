@@ -158,7 +158,11 @@ function register_seo_audit_regression_tests(callable $test, callable $assert): 
         $composer = (string)file_get_contents($root . '/app/Services/Render/PageComposer.php');
         $assert(str_contains($front, 'function injectImagePerformanceAttributes'));
         $assert(str_contains($front, 'ResponsiveImageMarkupService::optimize'));
-        $assert(str_contains($responsive, "loading=\"' . (\$isPriority || \$isLogo ? 'eager' : 'lazy')"), 'Only the priority image and the above-the-fold logo may load eagerly.');
+        $eager = \App\Services\Render\ResponsiveImageMarkupService::optimize(
+            '<html><head></head><body><img class="hero-bg" src="/hero.webp"><img data-eager-image src="/above-fold.webp"><img src="/below-fold.webp"></body></html>', 0
+        );
+        $assert((bool)preg_match('~<img[^>]*src="/above-fold.webp"[^>]*loading="eager"~', $eager), 'An explicit above-fold image must load eagerly.');
+        $assert((bool)preg_match('~<img[^>]*src="/below-fold.webp"[^>]*loading="lazy"~', $eager), 'Ordinary below-fold images must remain lazy.');
         $assert(str_contains($responsive, "fetchpriority=\"high\""));
         $assert(str_contains($responsive, 'data-lcp-candidate'));
         $assert(str_contains($responsive, "['small', 'medium', 'large']"));

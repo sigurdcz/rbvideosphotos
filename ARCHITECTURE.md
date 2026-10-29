@@ -224,6 +224,14 @@ Vychozi zname fraze zahrnuji bot marker `pxqrrbvideosphotos.czpxqr` a reklamni s
 
 `POST /admin/settings/spam-test` vyzaduje admin roli a CSRF, pouziva naposledy ulozeny profil a vola pouze klasifikator. Nevola archiv ani mail transport. Admin save serializuje konfiguraci pres `ContactSpamConfig::fromPost()`; neplatne hodnoty odmitne jako celek bez castecneho ulozeni.
 
+### Serverove umisteni homepage LCP fotografie
+
+`PageComposer` v live i publish ceste po DB injekci obrazku vola `GoldenBashAboutRenderer::compose`. Pouze pro homepage rodiny Golden Bash a mimo edit mode presune DB fotografii do finalni `figure.gb-services-visual`, zbytek obsahu kontejneru zachova v `gb-services-copy`. Nemení text ani odkazy z DB a nezasahuje video. Chybny znamy layout s chybejicim kontejnerem vyvola explicitni chybu. Marker `data-about-visual-ready="1"` zabrani JS opakovanemu skladani; puvodni JS cesta zustava kompatibilni se starymi publikovanymi strankami.
+
+`ResponsiveImageMarkupService` respektuje `data-eager-image` a pro `data-mobile-lcp` vytvori jediny preload omezeny na mobilni media query se stejnymi responsive kandidaty a sizes jako obrazek. Neodebira prioritu desktopovemu hero posteru. Sdilena navigace zpracovava observer snapshoty bez dodatecnych layout reads. Kontrakty a omezeni mereni jsou v `PERFORMANCE.md`.
+
+Extrakce body skriptu v `MarkupNormalizer` rozlisuje klasicky JavaScript od JSON a ostatnich typu. Pouze prazdny type nebo bezny JavaScript/ecmascript MIME jde do klasickeho generovaneho bundlu; galerijni `application/json`, LD+JSON, moduly, importmap a dalsi datove bloky zachovavaji type, obsah i pozici. Galerijni JSON se nesmi spoustet ani odstranovat jako JS.
+
 ## Obsahovy model
 
 ### CMS stranky

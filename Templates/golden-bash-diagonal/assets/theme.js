@@ -477,7 +477,8 @@
       servicesLabel.textContent = 'Poznejte nás';
       servicesTitle.textContent = 'O nás';
       servicesIntro.textContent = 'Jsme dvojice fotografů a filmařů,\u00a0které spojuje cit pro přirozené světlo,\u00a0opravdové emoce a poctivou práci.';
-      var servicesVisual = document.createElement('figure');
+      var serverAboutReady = services.dataset.aboutVisualReady === '1';
+      var servicesVisual = serverAboutReady ? servicesContainer.querySelector('.gb-services-visual') : document.createElement('figure');
       servicesVisual.className = 'gb-services-visual';
       var servicesImage = aboutVisualSource.tagName === 'IMG'
         ? aboutVisualSource
@@ -487,15 +488,15 @@
       servicesImage.removeAttribute('hidden');
       servicesImage.className = 'gb-services-visual__image';
       servicesImage.alt = 'RB Videos & Photos při práci';
-      servicesVisual.appendChild(servicesImage);
-      var servicesCopy = document.createElement('div');
+      if (!serverAboutReady) servicesVisual.appendChild(servicesImage);
+      var servicesCopy = serverAboutReady ? servicesContainer.querySelector('.gb-services-copy') : document.createElement('div');
       servicesCopy.className = 'gb-services-copy';
       [servicesLabel, servicesTitle, servicesIntro, servicesGrid, servicesCta].forEach(function (element) {
-        servicesCopy.appendChild(element);
+        if (!serverAboutReady) servicesCopy.appendChild(element);
       });
       var servicesLink = servicesCta.querySelector('a');
       if (servicesLink) servicesLink.textContent = 'Více info o nás  →';
-      servicesContainer.replaceChildren(servicesVisual, servicesCopy);
+      if (!serverAboutReady) servicesContainer.replaceChildren(servicesVisual, servicesCopy);
       Array.prototype.slice.call(services.querySelectorAll('a')).forEach(function (link) {
         link.setAttribute('href', '/#kontakt');
       });
