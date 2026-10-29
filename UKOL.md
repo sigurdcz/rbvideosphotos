@@ -2872,8 +2872,9 @@ spojit s novou revizi. Master zustava nezmeneny podle povinneho staging pravidla
   AUTH TLS234, TLS1.3 a FIN po OPTS UTF8 ON, pred USER.
 - [x] Overit explicitni TLS1.2 (fa0cdbf, run40955955246): stejny FIN pred USER.
   Neuspesnou hypotezu odstranit, ponechat pouze diagnostiku a zdokumentovat vysledek.
-- [ ] Hosting: proverit serverove logy a ochranu/IP pristupu pro GitHub runner.
-- [ ] Po odstraneni priciny zopakovat staging deploy a overit spravne assety.
+- [x] Hosting/GEO hypotezu nahradit nezavislym dukazem: curl listing na stejnem
+  runneru uspel, Node klient selhal na pre-login OPTS UTF8; zadny zasah hostingu nebyl nutny.
+- [x] Po odstraneni priciny zopakovat staging deploy a overit spravne assety.
 - [ ] Uzivatel znovu overi konkretni revizi; zmena release obsahu vyzaduje novy
   vyslovny souhlas s merge do master. Zadny automaticky merge.
 
@@ -2885,4 +2886,15 @@ nezavisly curl FTPS listing na stejnem GitHub runneru se stejnymi secrets, bez z
 Insecure cert kontrola odpovida existujicimu security:loose; sifrovani je povinne.
 Pokud curl uspeje a Node akce selze, izoluje to klientskou implementaci, nikoli hosting
 obecne. Nezkouset stale stejny deploy bez noveho diagnostickeho dukazu.
+
+## Dokonceni opravy stagingu
+
+89a5fba pripina puvodni akci na SHA a kontrolovanym patchem vynecha pouze
+pred-prihlasovaci OPTS UTF8. Post-login UTF8, FTPS, account, state-name a exclude
+seznam zustavaji. Run40957885713 success; homepage /nase-prace /kontakt /admin/login
+HTTP200,36 JSON galerii a nove JS/CSS potvrzeny na webu. Skutecna staging galerie
+prochazi touch open/next/close v Chrome i WebKit393x852. Fyzicky iPhone a hardware
+video stale vyzaduji uzivatelskou kontrolu. Master nebyl zmenen, novy obsah release
+zahrnuje take kompatibilitu deploymentu a vyzaduje nove konkretni schvaleni.
+Tento zaverecny dokumentacni commit je lokalni; nasazena a overena revize89a5fba.
 

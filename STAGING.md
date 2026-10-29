@@ -20,7 +20,8 @@ Beh40955812189 navazal TLS1.3, ale server ukoncil spojeni po `OPTS UTF8 ON`
 pred `USER`. Kontrolni beh40955955246 explicitne navazal TLS1.2 a selhal ve stejnem
 miste. Omezeni TLS bylo proto odstraneno; samo problem neresi. FTP secrets se
 od16.10.2026 nezmenily, stejna verze akce/SHA fungovala28.10.2026. Serverove logy
-a GEO/IP ochranu musi proverit hosting; klientsky log sam jejich pricinu nedokazuje.
+a GEO/IP ochrana byly kandidaty k provereni; klientsky log sam pricinu nedokazoval.
+Nasledujici nezavisly test a uspesny kompatibilitni patch tuto diagnostiku zpresnily.
 
 Nasledna izolace v run40957685958: curl na stejnem runneru se stejnymi secrets
 uspesne provedl AUTH SSL/TLS1.3, USER/PASS230 a chraneny listing (PROT P).
@@ -32,6 +33,13 @@ odpovidajici blok a pritomnost obou puvodnich OPTS prikazu; jiny zdroj viditelne
 Synchronizacni stav, exclude seznam, FTPS a existujici cert policy se nemeni.
 Tento postup neni skryty fallback na jiny protokol ani klienta. Produkcni workflow
 zatim neni zmenen; po overeni stagingu je nutne konkretni release znovu schvalit.
+
+Potvrzeni opravy: run40957885713 na89a5fba dokoncen success. FTPS prenesl zmeny,
+homepage a /nase-prace vraci nove hashovane assety; listing obsahuje36 inertnich JSON
+galerii, novy galleryCloseTimer a homepage inverzni papirovy fade. Dotykove otevreni,
+dalsi fotka a zavreni skutecne staging galerie prosly v Chrome i WebKit (393x852).
+Homepage, /nase-prace, /kontakt a /admin/login HTTP200. To nenahrazuje fyzicky
+iPhone Firefox ani vizualni potvrzeni hardwaroveho video repaintu uzivatelem.
 
 ## 2. Povinné GitHub Environment Secrets
 
