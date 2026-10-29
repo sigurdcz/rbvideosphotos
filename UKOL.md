@@ -2927,3 +2927,18 @@ Bez nove migrace. Fyzicke zarizeni/GPU zde nejsou simulovany dukaz skutecneho ha
 uzivatel potvrdil chovani totozneho frontendu na stagingu. Pracovni vetev navracena na dev,
 artifacts/ nedotceno. Tento zaverecny dokumentacni zaznam zustava lokalni na dev.
 
+---
+# UKOL: Obnovit chybejici hero gradient 2026-10-29
+
+Uzivatel screenshotem prokazal ostrou hranu misto gradientu po produkcnim releasu.
+Model Sol: najit konkretni kaskadu na zivem webu, opravit a overit realny vystup.
+
+- [x] Zivy Chrome computed ::before displayblock, ale backgroundImagenone;
+  sdileny inline hero reset ma background/background-image:none!important.
+- [x] Theme gradient dostal important a fixture skutecny shared reset; puvodni
+  izolovany fixture tento konflikt neobsahoval a jeho PASS nedokazoval zivy vzhled.
+- [ ] Regrese generovaneho CSS a skutecna vizualni kontrola na stagingu.
+- [ ] Po staging QA konkretni schvaleni produkcniho merge podle AGENTS.
+
+Nemeni se media/klip, maska na videu se nevraci, pouze se opravuje priorita fade.
+
