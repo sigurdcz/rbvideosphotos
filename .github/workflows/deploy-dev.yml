@@ -84,6 +84,9 @@ jobs:
 
       - name: Deploy via FTPS (staging)
         uses: SamKirkland/FTP-Deploy-Action@v4.4.0
+        env:
+          # Test server compatibility: TLS 1.3 closes after OPTS UTF8, before USER.
+          NODE_OPTIONS: --tls-min-v1.2 --tls-max-v1.2
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
