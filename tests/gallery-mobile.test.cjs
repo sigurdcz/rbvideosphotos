@@ -11,6 +11,7 @@ const fixture = `<html><head><meta name="viewport" content="width=device-width,i
 <a class="pt-card" id="gallery" href="/first-detail"><div class="pt-card__media"><img src="${image}" alt="First cover"></div><h3 class="pt-title">Touch gallery</h3><script type="application/json" class="pt-photos-data">${photos}</script></a>
 <a class="pt-card" id="legacy" href="/legacy-detail"><div class="pt-card__media"><img src="${image}" alt="Legacy cover"></div><h3 class="pt-title">Legacy single cover</h3></a>
 <a class="pt-card" id="invalid" href="/invalid-detail"><div class="pt-card__media"><img src="${image}" alt="Invalid data cover"></div><h3 class="pt-title">Invalid data</h3><script type="application/json" class="pt-photos-data">{bad</script></a>
+<a class="pt-card" id="video" href="/video-detail" data-video-embed="about:blank"><h3 class="pt-title">Explicit empty video layout fixture</h3></a>
 </section></main></body></html>`;
 
 (async () => {
@@ -30,6 +31,9 @@ const fixture = `<html><head><meta name="viewport" content="width=device-width,i
       await page.addScriptTag({ path: path.join(root, 'Templates/golden-bash-diagonal/assets/theme.js') });
       await page.locator('#gallery').tap();
       await page.locator('.gb-work-lightbox.is-open').waitFor({ state: 'visible' });
+      const bounds = await page.locator('.gb-work-lightbox__dialog').boundingBox();
+      assert.deepEqual(bounds, { x: 0, y: 0, width: 393, height: 852 }, 'Photo viewer must fill the viewport without a framed margin.');
+      assert.equal(await page.locator('.gb-work-lightbox__dialog').evaluate(e => getComputedStyle(e).borderRadius), '0px');
       assert.equal(await page.locator('.gb-work-lightbox__thumb').count(), 2);
       assert.equal(await page.locator('.gb-work-lightbox__caption a').getAttribute('href'), '/first-detail');
       await page.locator('.gb-work-lightbox__arrow--next').tap();
@@ -49,8 +53,22 @@ const fixture = `<html><head><meta name="viewport" content="width=device-width,i
       await page.locator('#invalid').tap();
       assert.equal(await page.locator('#invalid').getAttribute('data-gallery-error'), 'invalid-data');
       assert(!(await page.locator('.gb-work-lightbox').isVisible()), 'Invalid primary data must not silently use its cover.');
+      await page.locator('#video').tap();
+      await page.locator('.gb-work-lightbox.is-video.is-open').waitFor({ state: 'visible' });
+      assert.deepEqual(await page.locator('.gb-work-lightbox__dialog').boundingBox(), bounds, 'Video viewer must use the same edge-to-edge dialog.');
+      const frame = await page.locator('.gb-work-lightbox__video iframe').boundingBox();
+      assert.equal(frame.width, 393);
+      assert(frame.height > 600, 'Video viewport must use available height. Fixture does not test provider playback.');
+      await page.locator('.gb-work-lightbox__close').tap();
+      await page.locator('.gb-work-lightbox').waitFor({ state: 'hidden' });
+      assert.equal(await page.locator('.gb-work-lightbox__video iframe').getAttribute('src'), null, 'Closing must stop the video.');
+      await page.setViewportSize({width:1280,height:800});
+      await page.locator('#gallery').tap();
+      await page.locator('.gb-work-lightbox.is-open').waitFor({state:'visible'});
+      assert.deepEqual(await page.locator('.gb-work-lightbox__dialog').boundingBox(), {x:0,y:0,width:1280,height:800});
+      assert((await page.locator('.gb-work-lightbox__close i').boundingBox()).width > 0, 'Desktop close icon must remain visible.');
       assert.deepEqual(errors, []);
-      console.log(`PASS ${name}: mobile touch, original photos, next, close, legacy cover, fast reopen and invalid-data diagnostics.`);
+      console.log(`PASS ${name}: fullscreen mobile photo/video and desktop, touch, next/close, stopped video, legacy cover, fast reopen and invalid-data diagnostics.`);
       await context.close();
     } finally { await browser.close(); }
   }

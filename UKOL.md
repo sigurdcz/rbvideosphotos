@@ -2959,3 +2959,45 @@ Chrome na https://rbvideosphotos.cz/ potvrdil linear-gradient30-58%, z1/contentz
 masknone, beze zmeny pri8hover cyklech, hranice700/701/1280 a zadny overflow.
 Oprava je nasazena, nova migrace nebyla. Zaver ulozen jen lokalne na dev.
 
+---
+# UKOL: Fullscreen galerie a kompaktni mobilni footer
+
+Datum2026-10-29. Uzivatel chce prohlizeni foto/video bez ramecku pres cele okno
+a kratsi mobilni paticku preskladanim informaci vedle sebe; screenshoty pred/po.
+Model Sol: responsive CSS, dotykove ovladani a overeni realneho renderu.
+
+- [x] Zachytit baseline mobile screenshoty galerie a footeru na realnem webu.
+- [x] Upravit fullscreen viewer fotek/video a kompaktni sloupce footeru.
+- [x] Overit interakce, mobilni hranice a desktop; zachytit screenshoty po.
+- [x] Dokumentace/wiki a pripravit lokalni commit na dev, bez pushe/master merge.
+
+QA: Chrome/CDP393x852 DPR1 a stejna data pred/po, desktop1280 pro regresi.
+Rubrika100: fullscreen bez ramce35, dostupnost ovladani25, kompaktni/footer
+citelný bez ztraty obsahu30, responsive bez overflow10. Cil alespon95 a vsechny
+povinne podminky; screenshoty nejsou fyzicky iPhone. Obsah zustava DB-owned.
+
+Iterace1: stejna theme CSS uprava v obou Golden Bash motivech. Viewer100dvh,
+safe-area padding, zadny border/radius/margin, obsah fotografie contain bez orezu,
+44px close/sipky a zachovany detail odkaz. Footer do700px: brandpres2, odkazy/kontakty
+vedle sebe, social/legalvedle sebe, copyrightspolecny. Vsechny DB informace zachovany.
+Baseline393x852 footer745.5px, po486.6px (-34.7%). Foto dialog pred361x459.5,
+po393x852. QA pouziva skutecny staging DOM a lokalne generovane/prunovane nove CSS,
+nikoli deploy noveho vzhledu. Prvni baseline foto nezacalo nacitat vcas; capture
+byl zopakovan po complete/naturalWidth a byl nahrazen platnym obrazkem.
+Lokalni PHP nema duveryhodny CA pro HTTPS fetch; pouzit existujici Chrome response
+HTML pres stdin do generatoru, zadne vypnuti TLS ani nahradni data.
+
+Finalni regrese Chrome i WebKit PASS pro fullscreen mobile foto/video a desktop,
+next/close, zastaveni iframe, invalidJSON, legacycover a reopen. Hero fade regrese PASS.
+Footer bez overflow320/360/393/430/700;701 a1280 maji shodnou geometrii s baseline.
+QA CSS je vystup FrontendAssetManager + PageCssSubsetter nad skutecnym staging HTML,
+hash589df896baa005b2; pred/po source screenshoty CDP393x852 DPR1 na /nase-prace,
+cookies skutecne odmitnuty pri viditelnosti, foto complete/naturalWidth overeny.
+Plna stranka mobile-full-{before,after}.png a detaily gallery/footer-{before,after}.png
+v .codex-qa; nebyly pridany do git. Baseline40/100 (0/35,20/25,10/30,10/10),
+final97/100 (35/35,25/25,27/30,10/10): na320px adresa vice radku a drobnejsi footer
+text je kompromis kompaktniho layoutu, nikoli ztrata obsahu. Fyzicky iPhone neoveren.
+Desktop close ma samostatnou viditelnou ikonu,44px cil a focus-visible outline.
+Screenshoty po jsou lokalni preview noveho generovaneho CSS nad online daty;
+novy layout nebyl pushnut ani nasazen. ARCHITECTURE a wiki aktualizovany.
+

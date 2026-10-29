@@ -869,3 +869,21 @@ Druhy test kontroluje skutecny generovany/prunovany CSS asset, vrstvy, hover a
 hranici 700/701px; screenshot uklada do `.codex-qa`. Pouziva synteticky iframe,
 proto nedokazuje odstraneni hardwaroveho blikani skutecneho filmu.
 WebKit test neni nahradou fyzickeho iPhone Firefoxu; oba projevy vyzaduji staging QA.
+
+### Fullscreen viewer a kompaktni footer (2026-10-29)
+
+Oba Golden Bash theme CSS maji jednotny viewer bez vnejsiho panelu: overlay
+padding0, dialog width100%/height100dvh (100vh pro starsi prohlizece), border0,
+radius0 a env(safe-area-inset-*) padding. Flex header/stage/thumbnail rail drzi
+close a nahledy v okne. Frame zabira zbytek vysky, foto pouziva object-fit:contain,
+iframe stejnou dostupnou plochu. Cerne pasy jsou prirozenym dusledkem rozdilneho
+pomeru stran fotografie a telefonu; fotografie se neorezava. Jde o celou plochu
+browser viewportu, nikoli skryvani systemoveho UI pres Fullscreen API.
+
+Mobilni footer do700px pouziva dve grid kolony: brand pres obe, odkazy vlevo,
+kontakt vcetne adresy vpravo, social/legal dalsi radek a copyright pres obe.
+Obsah ani jeho poradi v DB se nemeni. Od701px zustava puvodni footer layout.
+393px reference: footer745.5 ->486.6px, viewer361x459.5 ->393x852px.
+Test gallery-mobile overuje fullscreen fotek/video, zastaveni iframe pri zavreni
+a viditelne desktopove zavirani v Chrome/WebKit; provider playback neni testovan
+syntetickou about:blank video fixture.
