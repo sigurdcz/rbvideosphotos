@@ -1,5 +1,17 @@
 # Backlog
 
+## Mobilni galerie a hero hover — 2026-10-29, opraveno lokalne, ceka staging QA
+
+- Galerie: opravena interakce skryteho dialogu, listingovy cover a zaviraci timer;
+  JSON pipeline zavisi take na lokalnim performance commitu `2c16fd6`.
+- Hero: samostatny papirovy fade misto masky na zive videoplose, bez zmeny klipu.
+- Chrome a WebKit dotykova regrese prosla. Generovane CSS proslo hover/vrstvy a
+  700/701px kontrolou na syntetickem iframe; to neni dukaz skutecneho video playbacku.
+- Dokonceni: po staging nasazeni otevrit nekolik galerii v iPhone 15 Firefoxu,
+  prepinat fotky, zavrit a znovu otevrit bez posunu stranky; na pocitaci z nahravky
+  opakovane rychle prejizdet CTA a navigaci nad skutecnym videem bez svisleho pruhu.
+- Bez automatickeho merge do master; fyzicke zarizeni ani stejna GPU nejsou lokalne dostupne.
+
 Odložená práce. Před zahájením vybereme prioritu; rozpracovaný úkol se vede v `UKOL.md`.
 
 ## Performance homepage: overeni na skutecnych mediich — 2026-10-29

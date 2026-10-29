@@ -2825,3 +2825,36 @@ Finalni cilene testy 12/12 PASS a Node navigace PASS. Cela sada 268 testu se ste
 
 Fotografie O nas je ve finalni strukture jiz ze serveru a mobilni preload ji objevuje v head se shodnymi responsive kandidaty; desktopova priorita hero zustava. Navigace nepouziva synchronni layout reads a zbytecne neopakuje zmeny trid. Galerie si zachovavaji JSON a data se nespousteji jako JS, coz odstranilo konzolovou SyntaxError. Video/autoplay/zdroje ani CSS a fontove assety nebyly zmeneny. Cilene PHP testy 12/12 a Node test PASS, geometrie desktop/mobil shodna. Cela sada ma pouze stejne tri starsi FAIL a osm golden rozdilu jako baseline. Dokumentace ARCHITECTURE, PERFORMANCE a BACKLOG aktualizovana; wiki 726ea72. Bez nove migrace, bez pushe a bez nasazeni. Skutecne Lighthouse zlepseni a CLS je treba overit na stagingu s platnymi medii; lokalni chybejici media takove mereni neumoznuji.
 
+---
+# UKOL: Mobilni galerie a blikani hero pri hoveru
+
+Datum: 2026-10-29
+Zadani: Opravit otevirani fotogalerie na /nase-prace v iPhone Firefoxu a svisly problikavajici pruh hero videa pri rychlem hoveru podle dodaneho zaznamu.
+Doporuceny model: Sol - Kompatibilita dotykove galerie a skladani video/CSS vrstev vyzaduji reprodukci a regresni overeni.
+
+## Kroky
+
+- [x] Prohlednout video a zmapovat konkretni interakcni/renderovaci priciny.
+- [x] Opravit galerii a hero vrstvy bez zmeny obsahu videa.
+- [x] Overit dostupne regresni testy, dotykove interakce a vrstvy; fyzicke QA v BACKLOG.
+- [x] Aktualizovat dokumentaci a wiki, pripravit commit na dev bez pushe.
+
+## Poznamky
+
+Existujici lokalni performance commit 2c16fd6 je zachovany. Oprava prehravaci vrstvy je nyní vyslovne zadana; zmena video klipu/bitrate zustava mimo rozsah. Overeni na fyzickem iPhone zatim neni dostupne a nesmi se predstirat.
+Zaznam 16,6 s ukazuje pruh ziveho videa v oblasti leveho fade. Diagonal hero maska byla nahrazena inverznim papírovym gradientem na samostatnem hero pseudo-elementu, se stejnymi 30-58% body a vrstvou pod ovladanim; videoplocha nema masku ani filter wrapper, barvovy filter je na samotnem mediu. Mobilni fade zustava puvodni bez zmeny. Galerie v obou theme JS rozpoznava take .pt-card__media img, centruje nahledy jen pres vodorovny rail po zobrazeni, pouziva preventScroll focus a rusi stary zaviraci timer pri znovuotevreni. Chybejici obrazky maji explicitni diagnostiku.
+
+## Vysledek
+
+Chrome a WebKit dotykove testy PASS (otevreni, originaly, dalsi fotka, zavreni,
+legacy cover, rychle reopen a invalid JSON). Chrome nad realne generovanym/prunovanym
+CSS PASS pro hover, vrstvy, zadny overflow a hranici 700/701px; screenshot1280x800
+je synteticka iframe plocha, nikoli dukaz opravy GPU blikani skutecneho filmu.
+Performance12/12, navigace, HeroVideoCover a HeroVideoBreakpoint PASS; JS/PHP syntax
+a diff check PASS. Cela sada268 testu ma stejne3 drive zname FAIL a8 golden rozdilu
+jako baseline; zdrojovy assert cover selektoru byl aktualizovan pro novy kontrakt.
+Na zivem webu chybi JSON galerie kvuli stare pipeline, proto oprava potrebuje take
+predchozi lokalni commit2c16fd6. ARCHITECTURE a BACKLOG aktualizovany, wiki ma
+samostatnou rekonstrukcni stranku gallery-video-repaint. Fyzicky iPhone Firefox
+a stejna desktop GPU vyzaduji staging overeni; nenasazeno, zadny push ani master merge.
+

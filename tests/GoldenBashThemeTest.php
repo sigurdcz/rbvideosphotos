@@ -64,9 +64,10 @@ function register_golden_bash_theme_tests(callable $test, callable $assert): voi
         $normalizedCss = str_replace('/assets/golden-bash-diagonal/', '/assets/golden-bash/', (string)$normalizedCss);
         $assert($normalizedCss === $sourceCss, 'Diagonal CSS differs beyond its asset identity and bounded hero override.');
         // The diagonal cut was replaced by a left-to-right fade at the client's request,
-        // so the hero media is full width and masked rather than clipped.
+        // so full-width media uses a separate inverse paper fade on the hero.
         $assert(str_contains($diagonalCss, 'width:100%!important;')
-            && str_contains($diagonalCss, 'mask-image:linear-gradient(to right,transparent')
+            && str_contains($diagonalCss, 'mask-image:none!important;')
+            && str_contains($diagonalCss, 'background:linear-gradient(to right,#fffdf9 30%')
             && !str_contains($diagonalCss, 'clip-path:url(#gb-hero-wave-clip)'), 'Diagonal theme must expose full-width hero media faded in from the left, not a clipped diagonal.');
 
         $sourceJsLines = preg_split('~\R~', (string)file_get_contents($themeDir . '/assets/theme.js')) ?: [];
@@ -283,7 +284,7 @@ function register_golden_bash_theme_tests(callable $test, callable $assert): voi
         $assert(str_contains($css, '.gb-services-profile>.container{display:grid!important;grid-template-columns:minmax(330px,430px)') && str_contains($css, 'grid-template-columns:repeat(3,minmax(0,1fr))'), 'Golden Bash services must expose the reference desktop portrait and 3x2 service grid.');
         $assert(str_contains($css, '.gb-services::before{content:none!important;display:none!important}'), 'Golden Bash services must not cast the generic homepage section fade over the bottom of the hero.');
         $assert(str_contains($js, "portfolio.classList.add('gb-portfolio', 'gb-portfolio-mosaic')") && !str_contains($js, 'mosaicTiles') && !str_contains($js, 'gb-mosaic-derived'), 'Golden Bash homepage portfolio must keep exactly one card per server-rendered database gallery.');
-        $assert(str_contains($js, "var clickedImage = card.querySelector('.pt-thumb img, .bl-thumb img')") && str_contains($js, 'showGalleryItem(initialGalleryIndex)'), 'Golden Bash work gallery must open on the photograph visible in the clicked card.');
+        $assert(str_contains($js, "var clickedImage = card.querySelector('.pt-card__media img, .pt-thumb img, .bl-thumb img')") && str_contains($js, 'showGalleryItem(initialGalleryIndex)'), 'Golden Bash work gallery must open on the photograph visible in the clicked card.');
         $assert(str_contains($layout, 'class="gb-welcome-layer"') && str_contains($layout, 'class="gb-welcome-brand__mark">RB</strong>') && str_contains($layout, 'data-welcome-progress'), 'Golden Bash layout must render the branded progress screen in the initial HTML response.');
         $assert(str_contains($css, 'body.theme-golden-bash:not([data-cms-page-key="homepage"]) .gb-welcome-layer{display:none!important}') && str_contains($js, "document.body.dataset.cmsPageKey === 'homepage'") && str_contains($js, 'if (welcomeLayer && (!isHomepage || skipWelcome))') && str_contains($js, 'welcomeLayer.remove()'), 'Golden Bash must expose and animate its welcome screen only on desktop homepage.');
         $assert(str_contains($css, '.gb-welcome-layer{--gb-load-progress:0;position:fixed;z-index:20000;inset:0') && str_contains($css, 'url("/assets/golden-bash/welcome-desktop.webp")') && str_contains($css, '.gb-welcome-layer.is-leaving{animation:none!important;opacity:0!important;filter:none!important}'), 'Golden Bash desktop welcome layer must cover the viewport and leave without a flash or blur — the entrance keyframe animation must be cancelled so the exit opacity transition can actually play instead of snapping instantly.');
