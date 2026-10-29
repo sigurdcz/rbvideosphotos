@@ -2939,7 +2939,7 @@ Model Sol: najit konkretni kaskadu na zivem webu, opravit a overit realny vystup
   izolovany fixture tento konflikt neobsahoval a jeho PASS nedokazoval zivy vzhled.
 - [x] Regrese generovaneho CSS a skutecna kontrola computed styles na stagingu;
   screenshot1659x900/CDP potvrzuje plynuly fade, Vimeo vsak blokuje zivy playback.
-- [ ] Po staging QA konkretni schvaleni produkcniho merge podle AGENTS.
+- [x] Po staging QA konkretni schvaleni produkcniho merge podle AGENTS.
 
 Nemeni se media/klip, maska na videu se nevraci, pouze se opravuje priorita fade.
 
@@ -2951,4 +2951,11 @@ cookies odmitnuty skutecnym ovladanim pokud viditelne. Zadny celkovy vizualni PA
 score pro skutecne video: Vimeo v QA hlasi connection restriction, nesmi se skryt.
 Predchozi isolated-fixture PASS byl nedostatecny pro zivy sdileny CSS reset.
 Oprava pripravena ke konkretnimu schvaleni master merge; tento zaznam lokalni dev.
+
+Uzivatel potvrdil spravny staging gradient a vyslovne schvalil MASTER. Schvaleny
+origin/devfb83ddd byl sloucen do master jako1a14d38e036e23359d779c82870438646c60a08b,
+strom shodny s dev a push dokoncen. Produkcni Actions40960886096 success. Zivy
+Chrome na https://rbvideosphotos.cz/ potvrdil linear-gradient30-58%, z1/contentz2,
+masknone, beze zmeny pri8hover cyklech, hranice700/701/1280 a zadny overflow.
+Oprava je nasazena, nova migrace nebyla. Zaver ulozen jen lokalne na dev.
 
