@@ -8,7 +8,7 @@ $html = '<html><head><meta name="viewport" content="width=device-width,initial-s
     . '<main class="gb-main"><section class="hp-hero"><div class="theme-hero-video theme-hero-video--embed is-playing" style="--hero-video-cover-width:1280px">'
     . '<iframe title="Synthetic changing surface" srcdoc="&lt;body style=&quot;margin:0;background:red&quot;&gt;&lt;/body&gt;"></iframe></div>'
     . '<div class="container"><h1>Hero heading</h1><div class="hero-cta-wrap"><a class="gb-button" href="#first">First action</a><a class="gb-button" href="#second">Second action</a></div></div>'
-    . '</section></main></div></body></html>';
+    . '</section></main></div><style data-shared-hero-reset>.hero-overlay,.hero::before,.hp-hero::before,.page-hero::before{content:""!important;position:absolute!important;inset:0!important;z-index:1!important;pointer-events:none!important;background:none!important;background-image:none!important;background-color:transparent!important}</style></body></html>';
 $html = App\Support\FrontendAssetManager::injectGeneratedCss($html,
     file_get_contents(dirname(__DIR__) . '/Templates/golden-bash-diagonal/assets/theme.css'), 'page-css', 'data-generated-page-css');
 $html = App\Support\PageCssSubsetter::apply($html);

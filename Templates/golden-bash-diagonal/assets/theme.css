@@ -2226,7 +2226,7 @@ body.theme-golden-bash.theme-golden-bash-diagonal .hp-hero>.theme-hero-video .th
 @media(min-width:700.02px){
   body.theme-golden-bash.theme-golden-bash-diagonal[data-cms-page-key="homepage"] .hp-hero::before{
     content:""!important;display:block!important;position:absolute;inset:0;z-index:1;pointer-events:none;
-    background:linear-gradient(to right,#fffdf9 30%,rgba(255,253,249,.972) 32.8%,rgba(255,253,249,.896) 35.6%,rgba(255,253,249,.784) 38.4%,rgba(255,253,249,.648) 41.2%,rgba(255,253,249,.5) 44%,rgba(255,253,249,.352) 46.8%,rgba(255,253,249,.216) 49.6%,rgba(255,253,249,.104) 52.4%,rgba(255,253,249,.028) 55.2%,rgba(255,253,249,0) 58%);
+    background:linear-gradient(to right,#fffdf9 30%,rgba(255,253,249,.972) 32.8%,rgba(255,253,249,.896) 35.6%,rgba(255,253,249,.784) 38.4%,rgba(255,253,249,.648) 41.2%,rgba(255,253,249,.5) 44%,rgba(255,253,249,.352) 46.8%,rgba(255,253,249,.216) 49.6%,rgba(255,253,249,.104) 52.4%,rgba(255,253,249,.028) 55.2%,rgba(255,253,249,0) 58%)!important;
   }
   body.theme-golden-bash.theme-golden-bash-diagonal[data-cms-page-key="homepage"] .hp-hero>.theme-hero-video{
     overflow:hidden!important;isolation:isolate;
