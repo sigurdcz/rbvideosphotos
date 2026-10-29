@@ -2880,3 +2880,9 @@ spojit s novou revizi. Master zustava nezmeneny podle povinneho staging pravidla
 Zadna zmena FTP hesla/protokolu, zadny nesifrovany prenos, zadne nove migrace,
 zadny rucni produkcni upload. TLS1.2 pokus neprokazuje konkretni pricinu na hostingu.
 
+Uzivatel29.10. vyslovne zada pokracovat a okamzite opravit staging. Dalsi krok je
+nezavisly curl FTPS listing na stejnem GitHub runneru se stejnymi secrets, bez zapisu.
+Insecure cert kontrola odpovida existujicimu security:loose; sifrovani je povinne.
+Pokud curl uspeje a Node akce selze, izoluje to klientskou implementaci, nikoli hosting
+obecne. Nezkouset stale stejny deploy bez noveho diagnostickeho dukazu.
+

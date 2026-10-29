@@ -82,6 +82,16 @@ jobs:
           mkdir -p _deploy/storage/published
           mkdir -p _deploy/storage/templates
 
+      - name: Diagnose FTPS with independent curl client (read only)
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          curl --ssl-reqd --insecure --verbose --connect-timeout 15 --max-time 45 \
+            --list-only --output /dev/null \
+            --user "$FTP_USERNAME:$FTP_PASSWORD" "ftp://$FTP_SERVER/"
+
       - name: Deploy via FTPS (staging)
         uses: SamKirkland/FTP-Deploy-Action@v4.4.0
         with:
