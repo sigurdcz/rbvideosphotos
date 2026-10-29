@@ -2907,11 +2907,23 @@ Model Sol: release musi zachovat schvaleny frontend a overenou FTPS kompatibilit
 - [x] Overit dev/master rozsah a staging uzivatelske potvrzeni pro89a5fba.
 - [x] Pripravit shodny existujici FTPS patch take pro production workflow na dev;
   puvodni production akce jej nepouzivala a mela stejnou pre-login UTF8 sekvenci.
-- [ ] Push dev a overeni finalni revize staging deploymentem.
-- [ ] Predlozit konkretni rozsirenou revizi uzivateli k novemu master merge souhlasu
+- [x] Push dev a overeni finalni revize staging deploymentem.
+- [x] Predlozit konkretni rozsirenou revizi uzivateli k novemu master merge souhlasu
   podle AGENTS/INSTRUCTIONS, protoze pribyla production workflow zmena.
-- [ ] Po souhlasu merge dev do master a overit produkcni Actions i zive assety.
+- [x] Po souhlasu merge dev do master a overit produkcni Actions i zive assety.
 
 Zdrojove frontend zmeny se nemeni. Production FTP secrets, cil, sifrovani,
 state-name a excludes zustavaji puvodni. Neni nova migrace ani rucni upload.
+
+## Vysledek release
+
+Uzivatel vyslovne schvalil merge50717d0 slovy pushni dev do masteru po predlozeni
+konkretni revize a staging success40958535020. Vytvoren merge1e334db68e9fc03a4f4c006d697c0fd68e118d50,
+strom presne odpovida schvalenemu origin/dev; master push probehl. Produkcni
+Actions40958877982 success. Homepage /nase-prace /kontakt /admin/login HTTP200,
+36 inertnich JSON galerii, nove hero CSS4cf5adde401ecec7 a gallery JSe7195244815d97be.
+Skutecna produkcni galerie prochazi touch open/next/close v Chrome i WebKit393x852.
+Bez nove migrace. Fyzicke zarizeni/GPU zde nejsou simulovany dukaz skutecneho hardwaru;
+uzivatel potvrdil chovani totozneho frontendu na stagingu. Pracovni vetev navracena na dev,
+artifacts/ nedotceno. Tento zaverecny dokumentacni zaznam zustava lokalni na dev.
 
