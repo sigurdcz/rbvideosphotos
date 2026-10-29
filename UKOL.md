@@ -2937,8 +2937,18 @@ Model Sol: najit konkretni kaskadu na zivem webu, opravit a overit realny vystup
   sdileny inline hero reset ma background/background-image:none!important.
 - [x] Theme gradient dostal important a fixture skutecny shared reset; puvodni
   izolovany fixture tento konflikt neobsahoval a jeho PASS nedokazoval zivy vzhled.
-- [ ] Regrese generovaneho CSS a skutecna vizualni kontrola na stagingu.
+- [x] Regrese generovaneho CSS a skutecna kontrola computed styles na stagingu;
+  screenshot1659x900/CDP potvrzuje plynuly fade, Vimeo vsak blokuje zivy playback.
 - [ ] Po staging QA konkretni schvaleni produkcniho merge podle AGENTS.
 
 Nemeni se media/klip, maska na videu se nevraci, pouze se opravuje priorita fade.
+
+Staging fb83ddd, Actions40960625693 success. Gradient linear-gradient30-58%,
+z1 pod obsahemz2, masknone, bez overflow pri700/701/1280/1659px. Hover8cyklu
+nezmenil computed stav. Regresni fixture obsahuje realny background-image reset.
+QA .codex-qa/hero-gradient-staging-{full,detail}.png, DPR1 Chrome1659x900,
+cookies odmitnuty skutecnym ovladanim pokud viditelne. Zadny celkovy vizualni PASS
+score pro skutecne video: Vimeo v QA hlasi connection restriction, nesmi se skryt.
+Predchozi isolated-fixture PASS byl nedostatecny pro zivy sdileny CSS reset.
+Oprava pripravena ke konkretnimu schvaleni master merge; tento zaznam lokalni dev.
 
