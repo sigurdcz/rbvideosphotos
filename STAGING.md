@@ -22,6 +22,17 @@ miste. Omezeni TLS bylo proto odstraneno; samo problem neresi. FTP secrets se
 od16.10.2026 nezmenily, stejna verze akce/SHA fungovala28.10.2026. Serverove logy
 a GEO/IP ochranu musi proverit hosting; klientsky log sam jejich pricinu nedokazuje.
 
+Nasledna izolace v run40957685958: curl na stejnem runneru se stejnymi secrets
+uspesne provedl AUTH SSL/TLS1.3, USER/PASS230 a chraneny listing (PROT P).
+Node/basic-ftp selze po OPTS UTF8 pred USER. Staging proto pouziva akci pripnutou
+na SHA110f9186c050f71550953127052e77650219c287 a explicitni kompatibilitni patch
+`bin/patch-staging-ftp-login.py`: odstrani pouze pred-prihlasovaci OPTS UTF8,
+post-prihlasovaci nastaveni v useDefaultSettings zustava. Patch vyzaduje presne jeden
+odpovidajici blok a pritomnost obou puvodnich OPTS prikazu; jiny zdroj viditelne selze.
+Synchronizacni stav, exclude seznam, FTPS a existujici cert policy se nemeni.
+Tento postup neni skryty fallback na jiny protokol ani klienta. Produkcni workflow
+zatim neni zmenen; po overeni stagingu je nutne konkretni release znovu schvalit.
+
 ## 2. Povinné GitHub Environment Secrets
 
 Otevři repozitář → Settings → Environments → **staging** → Add environment secret:
