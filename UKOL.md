@@ -2858,3 +2858,25 @@ predchozi lokalni commit2c16fd6. ARCHITECTURE a BACKLOG aktualizovany, wiki ma
 samostatnou rekonstrukcni stranku gallery-video-repaint. Fyzicky iPhone Firefox
 a stejna desktop GPU vyzaduji staging overeni; nenasazeno, zadny push ani master merge.
 
+---
+# UKOL: Staging FTPS disconnect 2026-10-29
+
+Zadani: Dokoncit staging a nasledne schvaleny release; vysvetlit dodany FIN log.
+Model: Sol. Lokalni dev9709a18 byl pushnut, run40914514477 selhal ve3 pokusech.
+Zivy staging ma stale stary gallery JS i masku, proto uzivatelovo overeni nelze
+spojit s novou revizi. Master zustava nezmeneny podle povinneho staging pravidla.
+
+- [x] Porovnat posledni uspech a selhani: stejna akce/SHA, stejna konfigurace,
+  FTP secrets naposledy zmeneny16.10.; oba runnery Ubuntu24.04.5 s jinou image revizi.
+- [x] Zapnout staging verbose log, commit4fa2dd6 pushnut; run40955812189 ukazuje
+  AUTH TLS234, TLS1.3 a FIN po OPTS UTF8 ON, pred USER.
+- [x] Overit explicitni TLS1.2 (fa0cdbf, run40955955246): stejny FIN pred USER.
+  Neuspesnou hypotezu odstranit, ponechat pouze diagnostiku a zdokumentovat vysledek.
+- [ ] Hosting: proverit serverove logy a ochranu/IP pristupu pro GitHub runner.
+- [ ] Po odstraneni priciny zopakovat staging deploy a overit spravne assety.
+- [ ] Uzivatel znovu overi konkretni revizi; zmena release obsahu vyzaduje novy
+  vyslovny souhlas s merge do master. Zadny automaticky merge.
+
+Zadna zmena FTP hesla/protokolu, zadny nesifrovany prenos, zadne nove migrace,
+zadny rucni produkcni upload. TLS1.2 pokus neprokazuje konkretni pricinu na hostingu.
+

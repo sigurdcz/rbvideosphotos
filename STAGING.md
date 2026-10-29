@@ -17,9 +17,10 @@ unexpectedly` sama nerozlisuje TLS od odmitnuti prihlaseni/GEO ochrany. Pred zme
 protokolu nebo TLS nastaveni overte posledni odpoved serveru. Zadne prepnuti na
 nesifrovane FTP ani automaticky alternativni server se nepouziva.
 Beh40955812189 navazal TLS1.3, ale server ukoncil spojeni po `OPTS UTF8 ON`
-pred `USER`. Staging proto explicitne testuje TLS1.2 pres step-local
-`NODE_OPTIONS: --tls-min-v1.2 --tls-max-v1.2`. Nejde o automaticky fallback;
-protokol zustava FTPS a vysledek musi potvrdit novy deployment log.
+pred `USER`. Kontrolni beh40955955246 explicitne navazal TLS1.2 a selhal ve stejnem
+miste. Omezeni TLS bylo proto odstraneno; samo problem neresi. FTP secrets se
+od16.10.2026 nezmenily, stejna verze akce/SHA fungovala28.10.2026. Serverove logy
+a GEO/IP ochranu musi proverit hosting; klientsky log sam jejich pricinu nedokazuje.
 
 ## 2. Povinné GitHub Environment Secrets
 
