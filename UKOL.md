@@ -2898,3 +2898,20 @@ video stale vyzaduji uzivatelskou kontrolu. Master nebyl zmenen, novy obsah rele
 zahrnuje take kompatibilitu deploymentu a vyzaduje nove konkretni schvaleni.
 Tento zaverecny dokumentacni commit je lokalni; nasazena a overena revize89a5fba.
 
+---
+# UKOL: Produkcni release po staging QA 2026-10-29
+
+Uzivatel potvrzuje, ze se problem na stagingu uz neprojevuje, a zada produkci.
+Model Sol: release musi zachovat schvaleny frontend a overenou FTPS kompatibilitu.
+
+- [x] Overit dev/master rozsah a staging uzivatelske potvrzeni pro89a5fba.
+- [x] Pripravit shodny existujici FTPS patch take pro production workflow na dev;
+  puvodni production akce jej nepouzivala a mela stejnou pre-login UTF8 sekvenci.
+- [ ] Push dev a overeni finalni revize staging deploymentem.
+- [ ] Predlozit konkretni rozsirenou revizi uzivateli k novemu master merge souhlasu
+  podle AGENTS/INSTRUCTIONS, protoze pribyla production workflow zmena.
+- [ ] Po souhlasu merge dev do master a overit produkcni Actions i zive assety.
+
+Zdrojove frontend zmeny se nemeni. Production FTP secrets, cil, sifrovani,
+state-name a excludes zustavaji puvodni. Neni nova migrace ani rucni upload.
+
