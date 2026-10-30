@@ -210,6 +210,23 @@ Totez plati pro `POST /api/visit`: beacon nesmi zakladat session a lezi mimo `/a
 
 ### Konfigurovatelny kontaktni antispam
 
+Migrace116 a defaults pridavaji `campaign_rules` do profilu verze1: seznam radku
+`cast jedna && cast dva && cast tri`. Kazdy radek vyzaduje vsechny casti soucasne
+ve spojenem normalizovanem jmenu a zprave. Validace povoli2-5 ruznych casti, alespon
+3znaky kazda; limity seznamu100 a radku200znaku zustavaji. Admin textarea se deli
+pouze po radcich, nikoli carkach (castka50,000,000 zustava jednou casti).
+Shoda prida stavajici vahu `known_phrase` s reason `campaign-combination`, nejvyse
+jednou a pouze pokud jiz nebyla shoda zname fraze. Pravidla tak nespravuji skryty
+threshold ani samostatnou blacklist odesilatelu; existujici enabled/vahy/prah plati.
+Pet vychozich kombinaci pokryva lead-generation parafraze, sliby obrich mesicnich
+vydelku, NFT LoveShop, AIFlipDomains a nemecky dedicky podvod z dodaneho archivu.
+Starsimu ulozenemu profilu bez pole se nepridavaji skryte defaults: ma prazdny
+seznam do migrace116 nebo vyslovneho admin ulozeni. Migrace inicializuje pouze
+chybejici pole a appenduje skupiny idempotentne bez nahrazeni custom nastaveni.
+Stary otevreny admin formular bez noveho POST pole zachova aktualniDBpravidla;
+explicitne prazdne pole v novem formulari je smi odstranit. Historicke accepted
+stavy archivu se zpetne nepreklasifikuji. Deploy PHP sam nedokazuje provedeni116.
+
 Migrace 115 a defaults pridavaji znamou frazi `расширенная информация в отношении физ лиц` pro dodanou nabidku osobnich/firemnich databazi. Fraze nema carky, protoze admin seznamy je pouzivaji jako oddelovac polozek. Cely vzorek od Nikolaje ma 10 bodu (fraze 8, odkazy 2) proti vychozimu prahu 7. Rustina, stejny odesilatel, Telegram nebo zadost o firemni foceni/fakturu se samostatne neblokuji. Jde o uzkou kampanovou signaturu, ne obecnou detekci prodeje dat; preformulovane nabidky nemusi zachytit. Migrace prida chybejici frazi jednou a zachova ostatni nastaveni. Lokalni SQL regresni sada overuje i 115 dvakrat na docasne tabulce.
 
 Migrace 114 pridava do ulozenych profilu stejnou znamou frazi jako defaults: `voici un article tres interessant a lire pendant son temps libre`. Dodany Marie06 vzorek dosahuje 12 bodu (fraze 8, odkaz 2, tokeny za e-mailem 2). Jde o signaturu konkretni reklamni kampane, ne obecne blokovani francouzstiny, paste webu nebo vsech nesouladu href/text odkazu. Zachovavaji se vlastni fraze, vahy, prah, domeny a prepinace; opakovany beh nepridava duplicity. Cilena sada `php tests/run-contact-spam.php --mysql` overuje i migraci 114 na docasne lokalni tabulce.

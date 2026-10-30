@@ -38,6 +38,13 @@ final class ContactSpamConfig
                 'казино', 'играть', 'dragonmoney',
             ],
             'calls_to_action' => ['play now', 'click here', 'visit now', 'no luck? no problem'],
+            'campaign_rules' => [
+                'qualifies them and books the appointment && blue phone icon && 14 days',
+                'read the news && per month && 50,000,000',
+                'loveshop && shop1-biz && nft',
+                'aiflipdomains && lifetime access && one-time',
+                'verstorbenen mandanten && 50-50 && millionen us-dollar',
+            ],
             'allowed_domains' => [],
         ];
     }
@@ -78,6 +85,7 @@ final class ContactSpamConfig
             'known_phrases' => self::parseList((string)($post['contact_spam_known_phrases'] ?? '')),
             'promotion_terms' => self::parseList((string)($post['contact_spam_promotion_terms'] ?? '')),
             'calls_to_action' => self::parseList((string)($post['contact_spam_calls_to_action'] ?? '')),
+            'campaign_rules' => preg_split('/\R/u', (string)($post['contact_spam_campaign_rules'] ?? ''), -1, PREG_SPLIT_NO_EMPTY) ?: [],
             'allowed_domains' => self::parseList((string)($post['contact_spam_allowed_domains'] ?? '')),
         ]);
     }
@@ -110,6 +118,29 @@ final class ContactSpamConfig
         $promotion = self::validateList($config['promotion_terms'] ?? null, 'Reklamní slova', false);
         $calls = self::validateList($config['calls_to_action'] ?? null, 'Reklamní výzvy', false);
         $domains = self::validateList($config['allowed_domains'] ?? null, 'Povolené domény', true, true);
+        // Legacy saved profiles stay unchanged until an explicit migration or admin save.
+        $rawCampaigns = array_key_exists('campaign_rules', $config) ? $config['campaign_rules'] : [];
+        if (!is_array($rawCampaigns) || array_filter($rawCampaigns, static fn($rule) => !is_string($rule)) !== []) {
+            throw new \InvalidArgumentException('Kombinovaná pravidla musí být seznam textových řádků.');
+        }
+        $campaigns = self::validateList($rawCampaigns, 'Kombinovaná pravidla', true);
+        foreach ($campaigns as &$rule) {
+            $parts = array_values(array_unique(array_map('trim', explode('&&', $rule))));
+            if (count($parts) < 2 || count($parts) > 5) {
+                throw new \InvalidArgumentException('Kombinované pravidlo musí mít 2 až 5 různých částí oddělených &&.');
+            }
+            foreach ($parts as $part) {
+                if (mb_strlen($part) < 3) {
+                    throw new \InvalidArgumentException('Každá část kombinovaného pravidla musí mít alespoň 3 znaky.');
+                }
+            }
+            $rule = implode(' && ', $parts);
+            if (mb_strlen($rule) > 200) {
+                throw new \InvalidArgumentException('Kombinované pravidlo smí mít nejvýše 200 znaků.');
+            }
+        }
+        unset($rule);
+        $campaigns = array_values(array_unique($campaigns));
 
         $enabled = $config['enabled'] ?? null;
         if (!is_bool($enabled)) {
@@ -131,6 +162,7 @@ final class ContactSpamConfig
             'known_phrases' => $known,
             'promotion_terms' => $promotion,
             'calls_to_action' => $calls,
+            'campaign_rules' => $campaigns,
             'allowed_domains' => $domains,
         ];
     }

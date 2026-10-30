@@ -25,7 +25,7 @@ register_contact_spam_filter_tests($test, $assert);
 register_contact_spam_notification_tests($test, $assert);
 
 if (in_array('--mysql', $argv, true)) {
-    $test('migrations 112 through 115 extend stored profiles once and preserve settings', static function () use ($assert): void {
+    $test('migrations 112 through 116 extend stored profiles once and preserve settings', static function () use ($assert): void {
         App\Core\Env::load(dirname(__DIR__) . '/.env');
         $assert(App\Core\Env::get('DB_HOST') === '127.0.0.1', 'Migration tests require an explicitly local DB host.');
         // TEMPORARY sites shadows the real table for this connection only.
@@ -85,6 +85,25 @@ if (in_array('--mysql', $argv, true)) {
         $expected['known_phrases'][] = 'расширенная информация в отношении физ лиц';
         $migrated = App\Services\ContactSpamConfig::fromStored($second115);
         $assert($migrated === $expected, 'Migration 115 must preserve custom settings and all previous phrases.');
+        // Exercise 116 against a genuinely old profile and an administrator-owned rule.
+        $legacyProfile = $migrated;
+        unset($legacyProfile['campaign_rules']);
+        $db->prepare('UPDATE sites SET contact_spam_config_json=? WHERE id=1')->execute([json_encode($legacyProfile, JSON_THROW_ON_ERROR)]);
+        $custom['campaign_rules'] = ['custom first && custom second'];
+        $insert->execute([4, App\Services\ContactSpamConfig::encode($custom)]);
+        $sql116 = file_get_contents(dirname(__DIR__) . '/database/migrations/116_add_combined_spam_campaign_rules.sql');
+        $db->exec($sql116);
+        $first116 = $db->query('SELECT contact_spam_config_json FROM sites WHERE id = 1')->fetchColumn();
+        $customFirst116 = $db->query('SELECT contact_spam_config_json FROM sites WHERE id = 4')->fetchColumn();
+        $db->exec($sql116);
+        $assert($first116 === $db->query('SELECT contact_spam_config_json FROM sites WHERE id = 1')->fetchColumn(), 'Migration 116 must be idempotent for old profiles.');
+        $assert($customFirst116 === $db->query('SELECT contact_spam_config_json FROM sites WHERE id = 4')->fetchColumn(), 'Custom campaign rules must not duplicate either.');
+        $expected['campaign_rules'] = App\Services\ContactSpamConfig::defaults()['campaign_rules'];
+        $migrated = App\Services\ContactSpamConfig::fromStored($first116);
+        $assert($migrated === $expected, 'Migration 116 must add only campaign rules to legacy profiles.');
+        $customExpected = $custom;
+        $customExpected['campaign_rules'] = array_merge($custom['campaign_rules'], App\Services\ContactSpamConfig::defaults()['campaign_rules']);
+        $assert(App\Services\ContactSpamConfig::fromStored($customFirst116) === $customExpected, 'Existing custom campaign rules and all settings must survive.');
         $assert($db->query('SELECT contact_spam_config_json FROM sites WHERE id = 2')->fetchColumn() === null, 'NULL stays on defaults.');
         $assert($db->query('SELECT contact_spam_config_json FROM sites WHERE id = 3')->fetchColumn() === '', 'Empty default profile stays empty.');
         $migrated['enabled'] = true;

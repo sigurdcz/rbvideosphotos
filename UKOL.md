@@ -3001,3 +3001,39 @@ Desktop close ma samostatnou viditelnou ikonu,44px cil a focus-visible outline.
 Screenshoty po jsou lokalni preview noveho generovaneho CSS nad online daty;
 novy layout nebyl pushnut ani nasazen. ARCHITECTURE a wiki aktualizovany.
 
+---
+# UKOL: Rozsireni antispamu podle auditu archivu
+
+Datum2026-10-30. Pokracovani po limitu: doplnit kombinovane kampanove signaly
+pro parafraze lead-generation, rychle vydelky, NFT a dedicky podvod; zachovat inquiry.
+Model Sol: klasifikace, ulozeny profil/admin a append-only migrace se musi shodovat.
+
+- [x] Projit konfiguraci/admin/testy a navrhnout explicitni kombinovana pravidla.
+- [x] Implementovat pravidla, admin roundtrip a novou migraci bez prepsani nastaveni.
+- [x] Otestovat vlozene kampane, legitimni poptavky, starsi profily a migraci dvakrat.
+- [x] Dokumentace/wiki a pripravit commit na dev bez pushe; archivni transport stavy nemenit.
+
+Predchozi UI commit01ae0a3 zachovan. Aktivni produkcni DB profil neni dostupny z
+exportu; nema se predstirat jeho kontrola. Nesnizovat globalni threshold ani banovat
+jazyky, emailove domeny nebo samotne odkazy. Navrh vyzaduje vice soubeznych znaku.
+
+Implementace: optional campaign_rules v profilu v1, radky s2-5 castmi oddelenymi
+&&, vsechny casti vyzadovany ve jmenu/zprave. Vaha known_phrase se pocita nejvys jednou,
+threshold/enable/notify zustavaji. Admin textarea pouziva pouze oddeleni radky,
+takze50,000,000 se nedeli carkami. Stary ulozeny JSON bezpole ma[], novy default5kombinaci.
+Nova migrace116 inicializuje pouze chybejici pole a appenduje signatury idempotentne,
+zachova custom pravidla/vahy/threshold/prepinace. Stary admin tab beznoveho POSTpole
+priulozeni zachova aktualniDBcampaignrules; explicitne prazdne pole je smi vymazat.
+Cilene testy11/11 vcetne MariaDB TEMPORARY sites a migrace2x prosly; fyzicka
+produkcni konfigurace ani archivy nejsou v teto fazi meneny.
+
+Vysledek: replay celeho dostupneho rozepsaneho archivu zachyti8drive unikajicich
+kampani (#19/21/23/25/27/34/35/36), kontrolni poptavky/testy a madarsky dotaz0bodu.
+PHP targeted11/11 vcetne skutecne lokalni MariaDB/temporarysites a116dvakrat PASS;
+syntax a diffcheck PASS. Cela sada270testu ma stejne3starsifail (CSSisolation,
+analyticslongdash, legacygallerykontrakt) a8goldenrozdilu; goldeny se neprepisovaly.
+Pridana pouze migrace116, historicke migrace nezmeneny, zadna migrace provedena
+na produkci/stagingu. ARCHITECTURE a wiki zachovavaji implementacni kontrakt.
+Bez pushe/nasazeni; dalsi krok stage deploy a aplikace116 vcetne overeni aktivniho
+profilu. PredchoziUIcommit01ae0a3 zustava v dev a artifacts/ mimo stagingcommitu.
+

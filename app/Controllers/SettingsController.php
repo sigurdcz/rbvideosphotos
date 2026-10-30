@@ -71,7 +71,13 @@ class SettingsController extends Controller
         $contactRepo = new ContactRepository();
         $site = $sites->findFirst();
         try {
-            $spamConfigJson = ContactSpamConfig::encode(ContactSpamConfig::fromPost($_POST));
+            $postedSpamConfig = ContactSpamConfig::fromPost($_POST);
+            // A settings tab opened before this field existed must not erase
+            // the rules added meanwhile. An explicitly empty new field can clear them.
+            if (!array_key_exists('contact_spam_campaign_rules', $_POST)) {
+                $postedSpamConfig['campaign_rules'] = ContactSpamConfig::fromStored($site['contact_spam_config_json'] ?? null)['campaign_rules'];
+            }
+            $spamConfigJson = ContactSpamConfig::encode($postedSpamConfig);
         } catch (\InvalidArgumentException $e) {
             $this->flash('error', 'Antispam: ' . $e->getMessage() . ' Nastavení nebylo uloženo.');
             $this->redirect('/admin/settings#antispam');
