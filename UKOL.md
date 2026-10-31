@@ -3065,3 +3065,9 @@ jako aktualizovany. Uzivatel pozadan o protected migrate-util s vlastnim produkc
 tokenem a kontrolu cekajicich113-116; token se nema sdilet. DB nebyla meni bez tokenu.
 Zaver zaznamenan lokalne na dev bez dalsiho deploymentu.
 
+Uzivatel potvrdil dokonceni produkcnich migraci a funkcni stav. Nezavisly GET
+https://rbvideosphotos.cz/ potvrdil118applied/latest116_add_combined_spam_campaign_rules.sql.
+Produkcni migration116 je tedy evidovana jako provedena, cekani je uzavreno.
+Pocet migraci se od staging119lisi; samotny pocet proto neni vydavan za uplnou
+paritu historickych evidenci. Konkretní posledni pozadovana migrace116 potvrzena.
+
