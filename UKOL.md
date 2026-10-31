@@ -3053,3 +3053,15 @@ migrations:119applied, latest116_add_combined_spam_campaign_rules.sql.
 Tedy116je jiz evidovana jako aplikovana, nikoli cekajici. Stav jednotlivych
 customprepinacu/vah nebyl cten z verejneho HTML; migration evidence potvrzena.
 
+## Produkcni release 2026-10-31
+
+Uzivatel po staging testu vyslovne schvalil master. Schvaleny origin/dev164b7a6
+sloucen jako8a8b0048d28f7ff56a6cd6c563ae7ae7d9544ce0, strom shodny a push dokoncen.
+Produkcni Actions41183293905 success. Zivy Chrome/WebKit393x852 potvrdil fullscreen,
+footer486.6px, gallery open/next/close PASS, kontakt/admin-login200.
+Produkcni metadata ovsem uvadi114applied/latest112_extend_contact_spam_phrases.sql,
+oproti staging119/latest116. Ulozeny produkcni antispam profil proto neni potvrzen
+jako aktualizovany. Uzivatel pozadan o protected migrate-util s vlastnim produkcnim
+tokenem a kontrolu cekajicich113-116; token se nema sdilet. DB nebyla meni bez tokenu.
+Zaver zaznamenan lokalne na dev bez dalsiho deploymentu.
+
