@@ -3037,3 +3037,13 @@ na produkci/stagingu. ARCHITECTURE a wiki zachovavaji implementacni kontrakt.
 Bez pushe/nasazeni; dalsi krok stage deploy a aplikace116 vcetne overeni aktivniho
 profilu. PredchoziUIcommit01ae0a3 zustava v dev a artifacts/ mimo stagingcommitu.
 
+## Staging push 2026-10-31
+
+Na vyslovne dej na staging pushnut origin/dev164b7a65900b9a3dabee89810b0d2b5269795ae3.
+Actions41182910570 completed success. Soucasti jsou antispam116 i drive pripravene
+fullscreen galerie/kompaktni footer. Zivy Chrome/WebKit393x852: dialog fullscreen,
+footer486.6px, open/next/close PASS. Homepage/kontakt/admin-login HTTP200.
+Migrace116 timto deploymentem neni provedena; aktivni DB profil neoveren.
+Uzivatel pozadan o chrany migrate-util se svym stagingtokenem, bez sdileni tokenu.
+Master nezmenen. Zaver zaznamenan pouze lokalne na dev bez dalsiho pushe.
+
