@@ -130,6 +130,9 @@ ob_start();
       <div class="form-group">
         <label>Známé spamové fráze</label>
         <textarea name="contact_spam_known_phrases" rows="6" required><?= $h(\App\Services\ContactSpamConfig::listText($spamConfig['known_phrases'])) ?></textarea>
+        <label>Kombinovaná pravidla kampaní</label>
+        <textarea name="contact_spam_campaign_rules" rows="6" placeholder="část textu &amp;&amp; další část textu"><?= $h(\App\Services\ContactSpamConfig::listText($spamConfig['campaign_rules'])) ?></textarea>
+        <small>Jedno pravidlo na řádek. Všechny části oddělené &amp;&amp; musí být současně ve jménu nebo zprávě. Shoda přidá váhu známé spamové fráze nejvýše jednou; práh i ostatní pravidla zůstávají platné. Čárky jsou součást textu.</small>
         <p class="help-text">Jedna fráze na řádek. Shoda přidá nastavený počet bodů.</p>
       </div>
       <div class="form-group">

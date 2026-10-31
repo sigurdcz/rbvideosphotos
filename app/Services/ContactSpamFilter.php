@@ -34,10 +34,27 @@ final class ContactSpamFilter
         $score = 0;
         $reasons = [];
 
+        $knownMatched = false;
         foreach ($this->config['known_phrases'] as $phrase) {
             if (str_contains($all, $phrase)) {
                 $this->add($score, $reasons, $this->weight('known_phrase'), 'known-bot-boilerplate');
+                $knownMatched = true;
                 break;
+            }
+        }
+
+        // Every fragment on one rule line must match. Do not double-count the
+        // same signature confidence when an existing known phrase already won.
+        if (!$knownMatched) {
+            foreach ($this->config['campaign_rules'] as $rule) {
+                $matched = true;
+                foreach (explode(' && ', $rule) as $fragment) {
+                    if (!str_contains($all, $fragment)) { $matched = false; break; }
+                }
+                if ($matched) {
+                    $this->add($score, $reasons, $this->weight('known_phrase'), 'campaign-combination');
+                    break;
+                }
             }
         }
 

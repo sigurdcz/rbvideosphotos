@@ -7,6 +7,75 @@ use App\Services\ContactSpamConfig;
 
 function register_contact_spam_filter_tests(callable $test, callable $assert): void
 {
+    $test('combined campaign rules catch paraphrases without banning inquiries or sender domains', function () use ($assert): void {
+        $filter = new ContactSpamFilter();
+        $messages = [
+            'When a lead requests a call, our AI qualifies them and books the appointment. Tap the blue phone icon. The first 14 days are free. https://ultraleadgeneration.com',
+            'An AI voice agent qualifies them and books the appointment, 24/7. Tap the blue phone icon. You get 14 days free. https://firstleadgen.com',
+            'READ THE NEWS AND SYNERGIZE EFFORTS FOR $50,000,000 PER MONTH https://telegra.ph/example',
+            'Read the news and earn $50,000,000 per month pleased https://telegra.ph/other',
+            'А ты уже участвовал в розыгрыше NFT от LoveShop? Shop1-biz предлагает токены. https://telegra.ph/example',
+            'Claim lifetime access to AIFlipDomains. A one-time launch investment instead of recurring fees. https://iiil.ink/example',
+            'Transaktion mit einem Wert von 13,5 Millionen US-Dollar von meinem verstorbenen Mandanten. Erlöse 50-50. info@example.com',
+        ];
+        foreach ($messages as $message) {
+            $result = $filter->classify('Contact', 'hello@firstleadgen.com', $message);
+            $assert($result['isSpam'] && in_array('campaign-combination', $result['reasons'], true), 'Every supplied campaign variant must match its combined rule.');
+        }
+        // Each rule fragment alone, or with only some of its companions, must pass.
+        foreach (ContactSpamConfig::defaults()['campaign_rules'] as $rule) {
+            $parts = explode(' && ', $rule);
+            foreach ($parts as $omit => $_) {
+                $incomplete = $parts;
+                unset($incomplete[$omit]);
+                $assert(!$filter->classify('Jan', 'jan@example.cz', implode(' ', $incomplete) . ' https://example.cz')['isSpam'], 'All fragments must be required.');
+            }
+        }
+        foreach ([
+            'Dobrý den, prosím foto a video svatby 15.06.2027, místo https://example.cz/stodola.',
+            'We work at an AI company. Can you photograph our team in 14 days? https://firstleadgen.com',
+            'Please photograph our NFT exhibition. The blue phone icon is on our website.',
+            'Guten Tag, was kostet ein Familienfotoshooting?',
+            'Szia, meg akartam tudni az árát.',
+        ] as $message) {
+            $assert(!$filter->classify('Customer', 'hello@firstleadgen.com', $message)['isSpam'], 'Language, domain and generic marketing terms alone must not reject an inquiry.');
+        }
+        $config = ContactSpamConfig::defaults();
+        $config['enabled'] = false;
+        $assert(!(new ContactSpamFilter($config))->classify('Contact', '', $messages[0])['isSpam']);
+        $config['enabled'] = true;
+        $config['threshold'] = 99;
+        $assert(!(new ContactSpamFilter($config))->classify('Contact', '', $messages[0])['isSpam'], 'Custom threshold must remain effective.');
+        $config['threshold'] = 7;
+        $config['weights']['known_phrase'] = 0;
+        $assert(!(new ContactSpamFilter($config))->classify('Contact', '', $messages[0])['isSpam'], 'Administrator signature weight must also control campaign rules.');
+        $config['weights']['known_phrase'] = 8;
+        $config['known_phrases'] = ['qualifies them and books the appointment'];
+        $result = (new ContactSpamFilter($config))->classify('Contact', '', $messages[0]);
+        $assert($result['score'] === 10 && !in_array('campaign-combination', $result['reasons'], true), 'Signature confidence must not be counted twice.');
+    });
+
+    $test('campaign configuration roundtrips commas and rejects incomplete AND groups', function () use ($assert): void {
+        $config = ContactSpamConfig::defaults();
+        $legacy = $config;
+        unset($legacy['campaign_rules']);
+        $assert(ContactSpamConfig::fromStored(json_encode($legacy, JSON_THROW_ON_ERROR))['campaign_rules'] === [], 'Old saved profiles acquire no hidden rules.');
+        $config['campaign_rules'] = ['HELLO THERE&& Good Morning'];
+        $normalized = ContactSpamConfig::fromStored(json_encode($config, JSON_THROW_ON_ERROR));
+        $assert($normalized['campaign_rules'] === ['hello there && good morning']);
+        foreach (['only one fragment', 'hello &&', 'same same && same same', 'tiny && ab'] as $bad) {
+            $config['campaign_rules'] = [$bad];
+            $threw = false;
+            try { ContactSpamConfig::encode($config); } catch (InvalidArgumentException) { $threw = true; }
+            $assert($threw, 'Malformed campaign group must fail visibly.');
+        }
+        foreach ([null, 'not a list', [42], [[]]] as $badType) {
+            $config['campaign_rules'] = $badType;
+            $threw = false;
+            try { ContactSpamConfig::encode($config); } catch (InvalidArgumentException) { $threw = true; }
+            $assert($threw, 'Explicit invalid campaign data must not silently become an empty list.');
+        }
+    });
     $test('personal data sales campaign is spam without banning Russian or Telegram', function () use ($assert): void {
         $message = <<<'MESSAGE'
 Расширенная информация в отношении физ лиц, ИП, организаций (любые интересующие Вас сведения). Работаем комплексно с множеством баз и источников.
@@ -29,7 +98,7 @@ MESSAGE;
         foreach ($defaults['weights'] as $key => $value) {
             $post['contact_spam_weight_' . $key] = $value;
         }
-        foreach (['known_phrases', 'promotion_terms', 'calls_to_action', 'allowed_domains'] as $key) {
+        foreach (['known_phrases', 'promotion_terms', 'calls_to_action', 'allowed_domains', 'campaign_rules'] as $key) {
             $post['contact_spam_' . $key] = ContactSpamConfig::listText($defaults[$key]);
         }
         $assert(ContactSpamConfig::fromPost($post) === $defaults, 'Saving defaults through admin must preserve whole signatures without comma splitting.');
@@ -212,11 +281,13 @@ MESSAGE;
             'contact_spam_promotion_terms' => "casino\nbonus",
             'contact_spam_calls_to_action' => "click here\nplay now",
             'contact_spam_allowed_domains' => "Example.COM\nsub.example.org",
+            'contact_spam_campaign_rules' => "READ THE NEWS && per month && 50,000,000",
         ];
         $config = ContactSpamConfig::fromPost($post);
         $assert($config['enabled'] === true && $config['notify_recipients'] === true && $config['threshold'] === 9);
         $assert($config['known_phrases'] === ['bot phrase'], 'Lists must normalize and deduplicate.');
         $assert($config['allowed_domains'] === ['example.com', 'sub.example.org'], 'Domains must normalize.');
+        $assert($config['campaign_rules'] === ['read the news && per month && 50,000,000'], 'Campaign fragments containing commas must roundtrip unchanged.');
         $assert(ContactSpamConfig::fromStored(ContactSpamConfig::encode($config)) === $config, 'Stored config must round-trip exactly.');
         $legacy = $config;
         unset($legacy['notify_recipients']);
@@ -241,7 +312,7 @@ MESSAGE;
         $router = (string)file_get_contents($root . '/admin/index.php');
         $public = (string)file_get_contents($root . '/public/index.php');
         $migration = (string)file_get_contents($root . '/database/migrations/111_add_contact_spam_config.sql');
-        foreach (['contact_spam_enabled', 'contact_spam_notify_recipients', 'contact_spam_threshold', 'contact_spam_known_phrases', 'contact_spam_allowed_domains', '/admin/settings/spam-test'] as $needle) {
+        foreach (['contact_spam_enabled', 'contact_spam_notify_recipients', 'contact_spam_threshold', 'contact_spam_known_phrases', 'contact_spam_allowed_domains', 'contact_spam_campaign_rules', '/admin/settings/spam-test'] as $needle) {
             $assert(str_contains($settings . $router, $needle), 'Missing antispam admin control: ' . $needle);
         }
         $assert(str_contains($controller, 'ContactSpamConfig::fromPost($_POST)') && str_contains($controller, 'function testSpam'));
