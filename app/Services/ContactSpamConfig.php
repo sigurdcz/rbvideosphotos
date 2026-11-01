@@ -44,6 +44,8 @@ final class ContactSpamConfig
                 'loveshop && shop1-biz && nft',
                 'aiflipdomains && lifetime access && one-time',
                 'verstorbenen mandanten && 50-50 && millionen us-dollar',
+                'драгон мани && пополнение и вывод && подробно разобрано здесь',
+                'roberthip && kam dashur të di çmimin tuaj',
             ],
             'allowed_domains' => [],
         ];

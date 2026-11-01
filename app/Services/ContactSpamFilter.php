@@ -62,8 +62,18 @@ final class ContactSpamFilter
             $this->add($score, $reasons, $this->weight('url_in_name'), 'url-in-name');
         }
 
-        $promotionTerms = $this->countTerms($all, $this->config['promotion_terms']);
-        if (is_int($promotionTerms) && $promotionTerms >= 2) {
+        // Portfolio/Instagram URLs may contain words such as /reel/. A URL
+        // token is not promotional prose. Campaign signatures can still use it.
+        $promotionText = preg_replace('~(?:https?://|www\.)[^\s<>"\']+~iu', ' ', $all);
+        if ($promotionText === null) {
+            throw new \RuntimeException('Antispam promotional text normalization failed.');
+        }
+        $promotionTerms = $this->countTerms($promotionText, $this->config['promotion_terms']);
+        // Cash, a bonus print or winning an award are ordinary inquiry terms.
+        // Require one additional, specific configured promotion term before
+        // those generic words can contribute to a gambling-promotion signal.
+        $specificTerms = array_diff($this->config['promotion_terms'], ['cash', 'bonus', 'win', 'wins']);
+        if ($promotionTerms >= 2 && $this->countTerms($promotionText, $specificTerms) > 0) {
             $this->add($score, $reasons, $this->weight('promotion_terms'), 'gambling-promotion');
         }
 

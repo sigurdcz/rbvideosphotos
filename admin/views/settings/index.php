@@ -138,7 +138,7 @@ ob_start();
       <div class="form-group">
         <label>Reklamní a hazardní slova</label>
         <textarea name="contact_spam_promotion_terms" rows="6" required><?= $h(\App\Services\ContactSpamConfig::listText($spamConfig['promotion_terms'])) ?></textarea>
-        <p class="help-text">Jedno slovo nebo výraz na řádek. Body se přidají při výskytu alespoň dvou položek.</p>
+        <p class="help-text">Jedno slovo nebo výraz na řádek. Vyhodnocuje se text mimo URL. Body se přidají při výskytu alespoň dvou položek; alespoň jedna musí být jiná než obecná slova cash, bonus, win a wins. Ta sama mohou patřit do běžné poptávky.</p>
       </div>
     </div>
     <div class="form-row">

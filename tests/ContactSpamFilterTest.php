@@ -7,6 +7,24 @@ use App\Services\ContactSpamConfig;
 
 function register_contact_spam_filter_tests(callable $test, callable $assert): void
 {
+    $test('Dragon withdrawal spam and known Roberthip identity are blocked without a language or price-query ban', function () use ($assert): void {
+        $filter = new ContactSpamFilter();
+        $dragon = 'Всем здравствуйте! Коротко расскажу про пополнение и вывод в Драгон мани. Разбираются в этом не все. Главное, что стоит знать: вывод идёт через «Кошелёк», скорость зависит от направления. Подробно разобрано здесь: <a href=https://dragon-pay.org>РІС‹РІРѕРґ РЅР° РєР°СЂС‚Сѓ Р”СЂР°РіРѕРЅРњР°РЅРё</a>. В деталях разобраться не лишнее — речь про деньги. Вопрос ко всем: пробовали пополнять криптой или остаётесь на картах? На этом всё!';
+        $price = 'Hi, kam dashur të di çmimin tuaj';
+        foreach ([['JamesTralf', 'hidpn@dlaofv.se qdtb l848...', $dragon], ['Roberthip', 'aveyekoha655@gmail.com', $price]] as $sample) {
+            $result = $filter->classify(...$sample);
+            $assert($result['isSpam'] && in_array('campaign-combination', $result['reasons'], true), 'Each supplied spam must match an explicit campaign.');
+        }
+        foreach ([
+            ['Elira Dervishi', 'elira@example.test', $price],
+            ['Roberthip', 'aveyekoha655@gmail.com', 'Dobrý den, poptávám rodinné focení v Olomouci.'],
+            ['JamesTralf', 'hidpn@dlaofv.se', 'Здравствуйте! Сколько стоит семейная фотосессия?'],
+            ['Customer', 'contact@example.test', 'Our company Dragon Money needs corporate portraits. https://dragon-pay.org'],
+            ['Customer', 'contact@example.test', 'Can I pay cash and receive a bonus print? https://rbvideosphotos.cz/cenik'],
+        ] as $sample) {
+            $assert(!$filter->classify(...$sample)['isSpam'], 'Price text, bot name, email/domain, language or ordinary cash/bonus words alone must not block.');
+        }
+    });
     $test('combined campaign rules catch paraphrases without banning inquiries or sender domains', function () use ($assert): void {
         $filter = new ContactSpamFilter();
         $messages = [

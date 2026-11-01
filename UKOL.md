@@ -3071,3 +3071,48 @@ Produkcni migration116 je tedy evidovana jako provedena, cekani je uzavreno.
 Pocet migraci se od staging119lisi; samotny pocet proto neni vydavan za uplnou
 paritu historickych evidenci. Konkretní posledni pozadovana migrace116 potvrzena.
 
+---
+# UKOL: 1000 legitimnich poptavek a dalsi dve bot kampane
+
+Datum2026-11-01. Zadani: vytvorit1000realistickych legitimnich zprav vsechnyPASS,
+od kultivovanych po kratke/typos/odkazy, zachytit dodane JamesTralf a Roberthip,
+commit a staging push. Model Sol: zabranit false positives i obejiti novych pravidel.
+
+- [-] Vytvorit deterministicky, konkretni a ruznorody1000fixture dataset + bezSMTP runner.
+- [ ] Doplnit uzke kombinovane signatury, nove migrace117bezprepsani profilu.
+- [ ] Overit1000PASS, skutecne spamvzorky, negativni sousedni pripady a migrace2x.
+- [ ] Dokumentace/wiki, commit a push dev, staging smoke; migraci overit zvlast.
+
+Albanstina price query sama je legitimni; blokovat jen znamou identituRoberthip
+soucasne s konkretnim opakovanym textem, nikoli jazyk/cenu/emailprovider.
+Fixture je synteticky cloveku podobny, nikoli dukaz vsech realnych poptavek.
+Zadne testovaci zpravy neposilat formularem/SMTP ani neukladat do archivu.
+
+Korpus20kategorii x5rucnepsanych template x10konkretnich kontextu =1000unikatnich
+tel, realne ulozenyJSONfixture +reprodukovatelny PHPgenerator. CZformal/casual/ascii/
+typos/short/phone/wedding/family/business/ownURL/externalURL/video/invoices/pricing
+a EN/DE/SK/PL/RU/SQ. Generator sklonuje CZmista, kontakty jsou synteticke.
+Prvni beh odhalil10false positives cash+bonusprint+URL (8bodu). Zpravy nezmeneny;
+klasifikator nyní vyzaduje vedledvou nastavenych promotion_terms alespon jednu
+neobecnou polozku (necash/bonus/win/wins), spravni napoveda tuto podminku vysvetluje.
+Novy117appenduje pouze2kombinace: Drakonbrand+depositwithdrawal+boilerplate a
+Roberthip+konkretni albanskapricephrase. Stejny albanskytext s jinym jmenem projde,
+Roberthip s normalni odlisnou inquiry take. Zadny banGmailu/jazyka/kratkychdotazu.
+
+Nyni1000/1000PASS poddefaulty iJSONroundtripem, navic1000/1000PASS podlokalne
+migrovanymprofilem. Oba dodane spamvzorky zachyceny a jejich legitimni sousedni
+pripady prochazeji. Cilena sada13/13PASS vcetne SQL116/117dvakrat a customnastaveni.
+Generator/data maREADME s pokyny nezmenit legitimni label kvuli novemu filtru;
+vystup je konecny synteticky corpus, ne dukaz vsech skutecnych dotazu.
+
+RozsirenaURLcoverage obsahujeMaps/Instagramreel/Vimeo/YouTube/Drive/Pinterest/
+Facebook/alba. URLpath/reel/nesmi byt hazardnipromo kontext; promo-scan proto vynecha
+explicitniURLs (ostatni scoring a kampane je dal vidi). Aktualizovana adminnapoveda.
+SQL117vyzkousen i bezpolecampaign_rules vedle drive116upgraded/customprofilu.
+
+Finalni lokalni overeni:13/13PASS vcetne3x1000klasifikaci a MySQL117dvakrat.
+Cela sada272testu stejné3starsifail/8goldenrozdilu; goldeny nezmeneny.
+JSON262250bajtu, SHA2567DEDD096EA89C36CF0CD64D814F1E300FD800C90FE8D348DF8618FC9F7890A4F,
+opakovana regeneracebyte-identicka. .gitattributes drzi LF pro totoJSON iWindows.
+Zdrojova a mechanicky generovana zmena budou oddelene commity podle INSTRUCTIONS.
+

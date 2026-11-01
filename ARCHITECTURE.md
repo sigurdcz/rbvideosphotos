@@ -210,6 +210,25 @@ Totez plati pro `POST /api/visit`: beacon nesmi zakladat session a lezi mimo `/a
 
 ### Konfigurovatelny kontaktni antispam
 
+Migrace117 a defaults pridavaji dve uzke kombinace: `драгон мани && пополнение и вывод && подробно разобрано здесь`
+a `roberthip && kam dashur të di çmimin tuaj`. Druha odpovida znamemu bot jmenu
+soucasne s konkretnim opakovanym textem; stejna albanska cena-dotaz s jinym jmenem
+je legitimni a projde. Emailova adresa, Gmail, rustina nebo kratke dotazy se neblokuji.
+Mig117 pouze appenduje tyto radky pri absenci, predchozi migrace nemenit.
+
+Signal `gambling-promotion` stale vyzaduje dve ruzne promotion_terms, navic ale
+alespon jednu jinou nez obecne cash/bonus/win/wins. Tyto obecne vyrazy s pouhym
+odkazem nesmi samy zablokovat zadost o platbu hotove a bonusovou fotografii.
+Pro tento signal se pred pocitanim odstrani URL s http(s):// nebo www., protoze
+napr.Instagram/reel/ neni reklamni slovo v textu. Ostatni URLsignaly a kombinovane
+kampane nad uplnym textem zustavaji zachovany.
+Vahy/práh zustavaji konfigurovatelne, novou podminku vysvetluje admin napoveda.
+`tests/fixtures/contact-legitimate-1000.json` je deterministicky synteticky korpus
+20kategorii x5template x10kontextu s1000unikatnimi tely. Generator aREADME jsou vedle.
+Korpus bezi v hlavni i samostatne spam sade; MySQLrežim overuje i migrovany profil.
+Zadne testy neposilajiHTTPkontakt/SMTP ani neukladaji zpravy do archivu. PASS je
+kontrakt vychozi politiky, nikoli libovolne upraveneho admin threshold/profilu.
+
 Migrace116 a defaults pridavaji `campaign_rules` do profilu verze1: seznam radku
 `cast jedna && cast dva && cast tri`. Kazdy radek vyzaduje vsechny casti soucasne
 ve spojenem normalizovanem jmenu a zprave. Validace povoli2-5 ruznych casti, alespon
