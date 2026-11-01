@@ -5,6 +5,7 @@ declare(strict_types=1);
 require dirname(__DIR__) . '/vendor/autoload.php';
 require __DIR__ . '/ContactSpamFilterTest.php';
 require __DIR__ . '/ContactSpamNotificationTest.php';
+require __DIR__ . '/ContactLegitimateCorpusTest.php';
 
 $failures = 0;
 $total = 0;
@@ -23,9 +24,10 @@ $assert = static function (bool $condition, string $message = 'Assertion failed'
 };
 register_contact_spam_filter_tests($test, $assert);
 register_contact_spam_notification_tests($test, $assert);
+register_contact_legitimate_corpus_tests($test, $assert);
 
 if (in_array('--mysql', $argv, true)) {
-    $test('migrations 112 through 116 extend stored profiles once and preserve settings', static function () use ($assert): void {
+    $test('migrations 112 through 117 extend stored profiles once and preserve settings', static function () use ($assert): void {
         App\Core\Env::load(dirname(__DIR__) . '/.env');
         $assert(App\Core\Env::get('DB_HOST') === '127.0.0.1', 'Migration tests require an explicitly local DB host.');
         // TEMPORARY sites shadows the real table for this connection only.
@@ -98,12 +100,38 @@ if (in_array('--mysql', $argv, true)) {
         $db->exec($sql116);
         $assert($first116 === $db->query('SELECT contact_spam_config_json FROM sites WHERE id = 1')->fetchColumn(), 'Migration 116 must be idempotent for old profiles.');
         $assert($customFirst116 === $db->query('SELECT contact_spam_config_json FROM sites WHERE id = 4')->fetchColumn(), 'Custom campaign rules must not duplicate either.');
-        $expected['campaign_rules'] = App\Services\ContactSpamConfig::defaults()['campaign_rules'];
+        // Freeze migration 116, rather than accidentally expecting future defaults from it.
+        $rules116 = [
+            'qualifies them and books the appointment && blue phone icon && 14 days',
+            'read the news && per month && 50,000,000',
+            'loveshop && shop1-biz && nft',
+            'aiflipdomains && lifetime access && one-time',
+            'verstorbenen mandanten && 50-50 && millionen us-dollar',
+        ];
+        $expected['campaign_rules'] = $rules116;
         $migrated = App\Services\ContactSpamConfig::fromStored($first116);
         $assert($migrated === $expected, 'Migration 116 must add only campaign rules to legacy profiles.');
         $customExpected = $custom;
-        $customExpected['campaign_rules'] = array_merge($custom['campaign_rules'], App\Services\ContactSpamConfig::defaults()['campaign_rules']);
+        $customExpected['campaign_rules'] = array_merge($custom['campaign_rules'], $rules116);
         $assert(App\Services\ContactSpamConfig::fromStored($customFirst116) === $customExpected, 'Existing custom campaign rules and all settings must survive.');
+        $rules117 = ['драгон мани && пополнение и вывод && подробно разобрано здесь', 'roberthip && kam dashur të di çmimin tuaj'];
+        $bareProfile = $custom;
+        unset($bareProfile['campaign_rules']);
+        $insert->execute([5, json_encode($bareProfile, JSON_THROW_ON_ERROR)]);
+        $sql117 = file_get_contents(dirname(__DIR__) . '/database/migrations/117_add_dragon_and_roberthip_campaign_rules.sql');
+        $db->exec($sql117);
+        $first117 = $db->query('SELECT contact_spam_config_json FROM sites WHERE id = 1')->fetchColumn();
+        $customFirst117 = $db->query('SELECT contact_spam_config_json FROM sites WHERE id = 4')->fetchColumn();
+        $db->exec($sql117);
+        $assert($first117 === $db->query('SELECT contact_spam_config_json FROM sites WHERE id = 1')->fetchColumn(), '117 must be idempotent.');
+        $assert($customFirst117 === $db->query('SELECT contact_spam_config_json FROM sites WHERE id = 4')->fetchColumn(), '117 must not duplicate custom rules.');
+        $expected['campaign_rules'] = array_merge($expected['campaign_rules'], $rules117);
+        $customExpected['campaign_rules'] = array_merge($customExpected['campaign_rules'], $rules117);
+        $migrated = App\Services\ContactSpamConfig::fromStored($first117);
+        $assert($migrated === $expected && App\Services\ContactSpamConfig::fromStored($customFirst117) === $customExpected, '117 must preserve every administrator setting and earlier rule.');
+        $bareProfile['campaign_rules'] = $rules117;
+        $expectedBare = App\Services\ContactSpamConfig::fromStored(json_encode($bareProfile, JSON_THROW_ON_ERROR));
+        $assert(App\Services\ContactSpamConfig::fromStored($db->query('SELECT contact_spam_config_json FROM sites WHERE id = 5')->fetchColumn()) === $expectedBare, '117 must also initialize its own field on a bare older profile.');
         $assert($db->query('SELECT contact_spam_config_json FROM sites WHERE id = 2')->fetchColumn() === null, 'NULL stays on defaults.');
         $assert($db->query('SELECT contact_spam_config_json FROM sites WHERE id = 3')->fetchColumn() === '', 'Empty default profile stays empty.');
         $migrated['enabled'] = true;
@@ -112,6 +140,13 @@ if (in_array('--mysql', $argv, true)) {
         $assert((new App\Services\ContactSpamFilter($migrated))->classify('Keenan', 'hello@firstleadgen.com', "You're reading this because I just used your contact form.")['isSpam'], 'Migrated profile must detect First Lead Gen.');
         $assert((new App\Services\ContactSpamFilter($migrated))->classify('Marie06', 'bot@example.fr', 'Voici un article tres interessant a lire pendant son temps libre.')['isSpam'], 'Migrated profile must detect French article campaign.');
         $assert((new App\Services\ContactSpamFilter($migrated))->classify('Николай', '4mk@mlzwq.ru', 'Расширенная информация в отношении физ лиц, ИП, организаций')['isSpam'], 'Migrated profile must detect personal data sales campaign.');
+        $migratedFilter = new App\Services\ContactSpamFilter($migrated);
+        $assert($migratedFilter->classify('Roberthip', 'any@example.test', 'Hi, kam dashur të di çmimin tuaj')['isSpam']);
+        $assert($migratedFilter->classify('JamesTralf', 'any@example.test', 'Пополнение и вывод в Драгон мани. Подробно разобрано здесь: https://dragon-pay.org')['isSpam']);
+        $corpus = json_decode(file_get_contents(__DIR__ . '/fixtures/contact-legitimate-1000.json'), true, 32, JSON_THROW_ON_ERROR);
+        foreach ($corpus as $row) {
+            $assert(!$migratedFilter->classify($row['name'], $row['contact'], $row['message'])['isSpam'], 'Migrated-profile false positive: ' . $row['id']);
+        }
     });
 }
 echo "$total tests, $failures failures\n";

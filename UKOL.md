@@ -3037,3 +3037,87 @@ na produkci/stagingu. ARCHITECTURE a wiki zachovavaji implementacni kontrakt.
 Bez pushe/nasazeni; dalsi krok stage deploy a aplikace116 vcetne overeni aktivniho
 profilu. PredchoziUIcommit01ae0a3 zustava v dev a artifacts/ mimo stagingcommitu.
 
+## Staging push 2026-10-31
+
+Na vyslovne dej na staging pushnut origin/dev164b7a65900b9a3dabee89810b0d2b5269795ae3.
+Actions41182910570 completed success. Soucasti jsou antispam116 i drive pripravene
+fullscreen galerie/kompaktni footer. Zivy Chrome/WebKit393x852: dialog fullscreen,
+footer486.6px, open/next/close PASS. Homepage/kontakt/admin-login HTTP200.
+Migrace116 timto deploymentem neni provedena; aktivni DB profil neoveren.
+Uzivatel pozadan o chrany migrate-util se svym stagingtokenem, bez sdileni tokenu.
+Master nezmenen. Zaver zaznamenan pouze lokalne na dev bez dalsiho pushe.
+
+Uzivatel potvrdil uspech maintenance bez novych migraci a pritomnost116.
+Nezavisly GET staging homepage31.10. potvrdil SeoRenderer metadata:
+migrations:119applied, latest116_add_combined_spam_campaign_rules.sql.
+Tedy116je jiz evidovana jako aplikovana, nikoli cekajici. Stav jednotlivych
+customprepinacu/vah nebyl cten z verejneho HTML; migration evidence potvrzena.
+
+## Produkcni release 2026-10-31
+
+Uzivatel po staging testu vyslovne schvalil master. Schvaleny origin/dev164b7a6
+sloucen jako8a8b0048d28f7ff56a6cd6c563ae7ae7d9544ce0, strom shodny a push dokoncen.
+Produkcni Actions41183293905 success. Zivy Chrome/WebKit393x852 potvrdil fullscreen,
+footer486.6px, gallery open/next/close PASS, kontakt/admin-login200.
+Produkcni metadata ovsem uvadi114applied/latest112_extend_contact_spam_phrases.sql,
+oproti staging119/latest116. Ulozeny produkcni antispam profil proto neni potvrzen
+jako aktualizovany. Uzivatel pozadan o protected migrate-util s vlastnim produkcnim
+tokenem a kontrolu cekajicich113-116; token se nema sdilet. DB nebyla meni bez tokenu.
+Zaver zaznamenan lokalne na dev bez dalsiho deploymentu.
+
+Uzivatel potvrdil dokonceni produkcnich migraci a funkcni stav. Nezavisly GET
+https://rbvideosphotos.cz/ potvrdil118applied/latest116_add_combined_spam_campaign_rules.sql.
+Produkcni migration116 je tedy evidovana jako provedena, cekani je uzavreno.
+Pocet migraci se od staging119lisi; samotny pocet proto neni vydavan za uplnou
+paritu historickych evidenci. Konkretní posledni pozadovana migrace116 potvrzena.
+
+---
+# UKOL: 1000 legitimnich poptavek a dalsi dve bot kampane
+
+Datum2026-11-01. Zadani: vytvorit1000realistickych legitimnich zprav vsechnyPASS,
+od kultivovanych po kratke/typos/odkazy, zachytit dodane JamesTralf a Roberthip,
+commit a staging push. Model Sol: zabranit false positives i obejiti novych pravidel.
+
+- [-] Vytvorit deterministicky, konkretni a ruznorody1000fixture dataset + bezSMTP runner.
+- [ ] Doplnit uzke kombinovane signatury, nove migrace117bezprepsani profilu.
+- [ ] Overit1000PASS, skutecne spamvzorky, negativni sousedni pripady a migrace2x.
+- [ ] Dokumentace/wiki, commit a push dev, staging smoke; migraci overit zvlast.
+
+Albanstina price query sama je legitimni; blokovat jen znamou identituRoberthip
+soucasne s konkretnim opakovanym textem, nikoli jazyk/cenu/emailprovider.
+Fixture je synteticky cloveku podobny, nikoli dukaz vsech realnych poptavek.
+Zadne testovaci zpravy neposilat formularem/SMTP ani neukladat do archivu.
+
+Korpus20kategorii x5rucnepsanych template x10konkretnich kontextu =1000unikatnich
+tel, realne ulozenyJSONfixture +reprodukovatelny PHPgenerator. CZformal/casual/ascii/
+typos/short/phone/wedding/family/business/ownURL/externalURL/video/invoices/pricing
+a EN/DE/SK/PL/RU/SQ. Generator sklonuje CZmista, kontakty jsou synteticke.
+Prvni beh odhalil10false positives cash+bonusprint+URL (8bodu). Zpravy nezmeneny;
+klasifikator nyní vyzaduje vedledvou nastavenych promotion_terms alespon jednu
+neobecnou polozku (necash/bonus/win/wins), spravni napoveda tuto podminku vysvetluje.
+Novy117appenduje pouze2kombinace: Drakonbrand+depositwithdrawal+boilerplate a
+Roberthip+konkretni albanskapricephrase. Stejny albanskytext s jinym jmenem projde,
+Roberthip s normalni odlisnou inquiry take. Zadny banGmailu/jazyka/kratkychdotazu.
+
+Nyni1000/1000PASS poddefaulty iJSONroundtripem, navic1000/1000PASS podlokalne
+migrovanymprofilem. Oba dodane spamvzorky zachyceny a jejich legitimni sousedni
+pripady prochazeji. Cilena sada13/13PASS vcetne SQL116/117dvakrat a customnastaveni.
+Generator/data maREADME s pokyny nezmenit legitimni label kvuli novemu filtru;
+vystup je konecny synteticky corpus, ne dukaz vsech skutecnych dotazu.
+
+RozsirenaURLcoverage obsahujeMaps/Instagramreel/Vimeo/YouTube/Drive/Pinterest/
+Facebook/alba. URLpath/reel/nesmi byt hazardnipromo kontext; promo-scan proto vynecha
+explicitniURLs (ostatni scoring a kampane je dal vidi). Aktualizovana adminnapoveda.
+SQL117vyzkousen i bezpolecampaign_rules vedle drive116upgraded/customprofilu.
+
+Finalni lokalni overeni:13/13PASS vcetne3x1000klasifikaci a MySQL117dvakrat.
+Cela sada272testu stejné3starsifail/8goldenrozdilu; goldeny nezmeneny.
+JSON262250bajtu, SHA2567DEDD096EA89C36CF0CD64D814F1E300FD800C90FE8D348DF8618FC9F7890A4F,
+opakovana regeneracebyte-identicka. .gitattributes drzi LF pro totoJSON iWindows.
+Zdrojova a mechanicky generovana zmena budou oddelene commity podle INSTRUCTIONS.
+
+Zdrojovycommit86e7771 a generovanysnapshotf07cc53 pushnuty; stagingActions41304714309
+success. Navic bude workflowdevspoustet php tests/run-contact-spam.php pred
+buildem/uploadem, aby1000dotazu byly automaticka brana kazdeho dalsiho stagingpush.
+ProSQLitein-memorynotificationtest explicitniPHPextensionspdo_sqlite,mbstring.
+

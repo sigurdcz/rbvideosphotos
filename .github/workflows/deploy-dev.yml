@@ -44,10 +44,14 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.1'
+          extensions: pdo_sqlite, mbstring
           tools: composer
 
       - name: Install Composer dependencies (no-dev)
         run: composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+
+      - name: Guard antispam with 1000 legitimate inquiries
+        run: php tests/run-contact-spam.php
 
       - name: Build deploy artifact
         run: |
