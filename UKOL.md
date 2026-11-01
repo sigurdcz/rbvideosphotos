@@ -3078,10 +3078,11 @@ Datum2026-11-01. Zadani: vytvorit1000realistickych legitimnich zprav vsechnyPASS
 od kultivovanych po kratke/typos/odkazy, zachytit dodane JamesTralf a Roberthip,
 commit a staging push. Model Sol: zabranit false positives i obejiti novych pravidel.
 
-- [-] Vytvorit deterministicky, konkretni a ruznorody1000fixture dataset + bezSMTP runner.
-- [ ] Doplnit uzke kombinovane signatury, nove migrace117bezprepsani profilu.
-- [ ] Overit1000PASS, skutecne spamvzorky, negativni sousedni pripady a migrace2x.
-- [ ] Dokumentace/wiki, commit a push dev, staging smoke; migraci overit zvlast.
+- [x] Vytvorit deterministicky, konkretni a ruznorody1000fixture dataset + bezSMTP runner.
+- [x] Doplnit uzke kombinovane signatury, nove migrace117bezprepsani profilu.
+- [x] Overit1000PASS, skutecne spamvzorky, negativni sousedni pripady a migrace2x.
+- [x] Dokumentace/wiki, commit a push dev, staging smoke; migraci overit zvlast.
+- [ ] Uzivatel spusti117na stagingu vlastnimtokenem; potvrdit aktualizaci ulozeneho profilu.
 
 Albanstina price query sama je legitimni; blokovat jen znamou identituRoberthip
 soucasne s konkretnim opakovanym textem, nikoli jazyk/cenu/emailprovider.
@@ -3120,4 +3121,11 @@ Zdrojovycommit86e7771 a generovanysnapshotf07cc53 pushnuty; stagingActions413047
 success. Navic bude workflowdevspoustet php tests/run-contact-spam.php pred
 buildem/uploadem, aby1000dotazu byly automaticka brana kazdeho dalsiho stagingpush.
 ProSQLitein-memorynotificationtest explicitniPHPextensionspdo_sqlite,mbstring.
+
+Finalnirevize1a70fbe1e51a9baf0afadc00f59c1822a2c9a7dd nasazena stagingActions41304791683
+success, krokGuardantispam1000inquiries success iFTPsuccess. / /nase-prace /kontakt
+/admin/loginHTTP200. Metadata119applied/latest116:117neni potvrzena, asyncdotaz
+uzivateli na chrany migrate-util svymtokenem bez jeho sdileni. Master beze zmeny.
+Corpus soubor je pristupny uzivateli vtests/fixtures,3hotovecommitypushnuty.
+Tento finalni dokumentacni zaznam zustava pouze lokalne na dev bez noveho deploymentu.
 
