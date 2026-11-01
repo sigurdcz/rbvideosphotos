@@ -22,6 +22,8 @@ their stored JSON roundtrip, and a migrated local profile. The MySQL mode requir
 DB_HOST=127.0.0.1 and uses a connection-local temporary sites table; it never
 changes real site settings. Without `--mysql`, the first two modes still run.
 The corpus is also included in `php tests/run.php`.
+Every staging deployment runs the non-MySQL spam suite before building or
+uploading files. A false-positive regression fails the job and prevents deploy.
 
 Tests call the classifier directly: no HTTP submissions, SMTP, SMS or archived
 messages. Failures identify the record and score/reasons. Never relabel a
