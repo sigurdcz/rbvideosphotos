@@ -3153,3 +3153,20 @@ Autentizovany download v prohlizeci zatim neoveren. Zmeny pouze lokalne na dev.
 Export neznamena lidsky overene legitimni zpravy; stare nezachycene spamy mohou
 byt zahrnuty. Doplnit tuto skutecnost u tlacitka, nic automaticky nereklasifikovat.
 
+# UKOL: Zachytit kampane z archivniho vypisu
+Datum: 2026-11-02. Doplnit cilena pravidla pro dolozene spamove kampane.
+Doporuceny model: Terra - ohranicene rozsireni konfigurace a regresnich testu.
+- [x] Porovnat vzorky s aktualnimi pravidly a doplnit chybejici kombinace.
+- [x] Nova append-only migrace zachova uzivatelskou konfiguraci.
+- [x] Overit spamove vzorky a 1000 legitimnich poptavek.
+- [x] Aktualizovat dokumentaci/wiki a commit na dev bez pushe.
+Historicky archiv nepreznacovat; samotny cizi jazyk ani dotaz na cenu neblokovat.
+Config + migrace118 pridavaji tri AND skupiny: dve Roberthip jazykove varianty
+a handles-questions variantu lead-gen. Testy pokryvaji i legitimni sousedni dotazy.
+Pridano 19 anonymizovanych vynatku se zdrojovymi ID; vsechny zachyceny pri
+default/stored/migrated profilech. 1000 legitimnich projde. Cilena sada 15/15,
+PHP lint a diff check OK. Dokumentace ARCHITECTURE aktualizovana.
+## Vysledek
+Tri pravidla doplnena append-only migraci118. Wiki mail-archive aktualizovana.
+Pouze lokalni commit na dev; po nasazeni na staging bude potreba migrace118.
+

@@ -27,7 +27,7 @@ register_contact_spam_notification_tests($test, $assert);
 register_contact_legitimate_corpus_tests($test, $assert);
 
 if (in_array('--mysql', $argv, true)) {
-    $test('migrations 112 through 117 extend stored profiles once and preserve settings', static function () use ($assert): void {
+    $test('migrations 112 through 118 extend stored profiles once and preserve settings', static function () use ($assert): void {
         App\Core\Env::load(dirname(__DIR__) . '/.env');
         $assert(App\Core\Env::get('DB_HOST') === '127.0.0.1', 'Migration tests require an explicitly local DB host.');
         // TEMPORARY sites shadows the real table for this connection only.
@@ -132,6 +132,23 @@ if (in_array('--mysql', $argv, true)) {
         $bareProfile['campaign_rules'] = $rules117;
         $expectedBare = App\Services\ContactSpamConfig::fromStored(json_encode($bareProfile, JSON_THROW_ON_ERROR));
         $assert(App\Services\ContactSpamConfig::fromStored($db->query('SELECT contact_spam_config_json FROM sites WHERE id = 5')->fetchColumn()) === $expectedBare, '117 must also initialize its own field on a bare older profile.');
+        $rules118 = ['roberthip && achọrọ m ịmara ọnụahịa gị', 'roberthip && meg akartam tudni az árát', 'it handles questions && books the appointment && blue phone icon && 14 days'];
+        $insert->execute([6, json_encode(array_diff_key($custom, ['campaign_rules' => true]), JSON_THROW_ON_ERROR)]);
+        $priorDefaults = App\Services\ContactSpamConfig::defaults();
+        $priorDefaults['campaign_rules'] = array_values(array_diff($priorDefaults['campaign_rules'], $rules118));
+        $insert->execute([7, App\Services\ContactSpamConfig::encode($priorDefaults)]);
+        $sql118 = file_get_contents(dirname(__DIR__) . '/database/migrations/118_add_archive_campaign_variants.sql');
+        $db->exec($sql118);
+        $first118 = $db->query('SELECT id, contact_spam_config_json FROM sites ORDER BY id')->fetchAll(PDO::FETCH_KEY_PAIR);
+        $db->exec($sql118);
+        $assert($first118 === $db->query('SELECT id, contact_spam_config_json FROM sites ORDER BY id')->fetchAll(PDO::FETCH_KEY_PAIR), '118 must be idempotent for all profiles.');
+        $expected['campaign_rules'] = array_merge($expected['campaign_rules'], $rules118);
+        $customExpected['campaign_rules'] = array_merge($customExpected['campaign_rules'], $rules118);
+        $migrated = App\Services\ContactSpamConfig::fromStored($first118[1]);
+        $assert($migrated === $expected && App\Services\ContactSpamConfig::fromStored($first118[4]) === $customExpected, '118 must preserve custom rules, switches, weights and threshold.');
+        $bare118 = $custom;
+        $bare118['campaign_rules'] = $rules118;
+        $assert(App\Services\ContactSpamConfig::fromStored($first118[6]) === $bare118, '118 must initialize only its own rules on bare profiles.');
         $assert($db->query('SELECT contact_spam_config_json FROM sites WHERE id = 2')->fetchColumn() === null, 'NULL stays on defaults.');
         $assert($db->query('SELECT contact_spam_config_json FROM sites WHERE id = 3')->fetchColumn() === '', 'Empty default profile stays empty.');
         $migrated['enabled'] = true;
@@ -141,6 +158,15 @@ if (in_array('--mysql', $argv, true)) {
         $assert((new App\Services\ContactSpamFilter($migrated))->classify('Marie06', 'bot@example.fr', 'Voici un article tres interessant a lire pendant son temps libre.')['isSpam'], 'Migrated profile must detect French article campaign.');
         $assert((new App\Services\ContactSpamFilter($migrated))->classify('Николай', '4mk@mlzwq.ru', 'Расширенная информация в отношении физ лиц, ИП, организаций')['isSpam'], 'Migrated profile must detect personal data sales campaign.');
         $migratedFilter = new App\Services\ContactSpamFilter($migrated);
+        foreach (['Ndewo, achọrọ m ịmara ọnụahịa gị.', 'Szia, meg akartam tudni az árát.'] as $variant) {
+            $assert($migratedFilter->classify('Roberthip', 'any@example.test', $variant)['isSpam']);
+        }
+        $assert($migratedFilter->classify('Lesli', '', 'It handles questions and books the appointment. Tap the blue phone icon. You get 14 days free. https://boostleadgen.com')['isSpam']);
+        $archiveSamples = json_decode(file_get_contents(__DIR__ . '/fixtures/contact-archive-spam-excerpts.json'), true, 32, JSON_THROW_ON_ERROR);
+        $archiveFilter = new App\Services\ContactSpamFilter(App\Services\ContactSpamConfig::fromStored($first118[7]));
+        foreach ($archiveSamples as $sample) {
+            $assert($archiveFilter->classify($sample['name'], 'sender@example.test', $sample['message'])['isSpam'], 'Migrated archive miss #' . $sample['id']);
+        }
         $assert($migratedFilter->classify('Roberthip', 'any@example.test', 'Hi, kam dashur të di çmimin tuaj')['isSpam']);
         $assert($migratedFilter->classify('JamesTralf', 'any@example.test', 'Пополнение и вывод в Драгон мани. Подробно разобрано здесь: https://dragon-pay.org')['isSpam']);
         $corpus = json_decode(file_get_contents(__DIR__ . '/fixtures/contact-legitimate-1000.json'), true, 32, JSON_THROW_ON_ERROR);
