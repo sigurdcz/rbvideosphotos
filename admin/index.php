@@ -40,6 +40,7 @@ try {
     $router->post('/admin/account/password', 'AccountController', 'changePassword');
 
     $router->get('/admin/messages', 'MessagesController', 'index');
+    $router->get('/admin/messages/download-non-spam', 'MessagesController', 'downloadNonSpam');
     $router->get('/admin/analytics', 'VisitAnalyticsController', 'index');
 
     // Dashboard

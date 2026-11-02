@@ -3140,3 +3140,16 @@ Uzivatelpozadan oprotectedproductionmigrate-util s vlastnimtokenem bezsdileni.
 KlasifikacniURL/cashbonusopravakodunasazena, noveulozenekampanevyzaduji117.
 Zaverecnyzaznamjenlokalnidev, artifacts/ nedotceno.
 
+---
+# UKOL: Export nespamovych kontaktnich zprav
+Datum2026-11-02. Pridat do admin/messages tlacitko proJSONdownload vsech
+kontaktnich zprav bez archivedstatusspam. Model Terra: maly admin export s ochranou dat.
+- [x] Implementovat admin-only GETexport a tlacitko s jasnou definici vyberu.
+- [x] Overit vyrazeni spamu/resetu, vsechny stranky a zachovani ceskeho obsahu.
+- [x] Dokumentace/wiki a lokalnicommitdev, bez nevyzadaneho pushe.
+Overeni: PHP lint a git diff --check prosly. Dva nove testy prosly v cele sade
+(274 testu; 3 drive zname chyby a 8 golden rozdilu). Zadny golden nebyl prijat.
+Autentizovany download v prohlizeci zatim neoveren. Zmeny pouze lokalne na dev.
+Export neznamena lidsky overene legitimni zpravy; stare nezachycene spamy mohou
+byt zahrnuty. Doplnit tuto skutecnost u tlacitka, nic automaticky nereklasifikovat.
+

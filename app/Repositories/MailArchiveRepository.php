@@ -8,6 +8,14 @@ final class MailArchiveRepository
 {
     public function __construct(private PDO $db) {}
 
+    /** All non-spam contacts, independent of overview pagination and filters. */
+    public function nonSpamContacts(): array
+    {
+        return $this->db->query(
+            "SELECT id, created_at, status, subject, body FROM mail_archive WHERE kind = 'contact' AND status <> 'spam' ORDER BY id DESC"
+        )->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function overview(string $status = '', string $kind = '', int $page = 1): array
     {
         if (!in_array($status, ['', 'stored', 'accepted', 'failed', 'spam'], true)

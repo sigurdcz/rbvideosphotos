@@ -210,6 +210,15 @@ Totez plati pro `POST /api/visit`: beacon nesmi zakladat session a lezi mimo `/a
 
 ### Konfigurovatelny kontaktni antispam
 
+Admin-only `GET /admin/messages/download-non-spam` stahuje JSON vsech kontaktu
+s archivnim `status <> spam`, bez omezeni na50polozek nebo aktualni UI filtry.
+Obsahuje id/created_at/status/subject/body a metadata vyberu/pocet/casUTC;
+neobsahuje password_reset zaznamy ani recipient/CC. `MessagesController` nejprve
+vyzaduje requireAdmin, pak repository select a cele JSONkodovani s THROW_ON_ERROR
+pred downloadheaders (attachment, private/no-store, nosniff). Existujici statusy
+se nepreklasifikuji: UI i export vyslovne uvadeji, ze historicky nezachyceny spam
+muze byt zahrnut. Tlacitko je nad filtrem v prehledu E-maily a zpravy.
+
 Migrace117 a defaults pridavaji dve uzke kombinace: `драгон мани && пополнение и вывод && подробно разобрано здесь`
 a `roberthip && kam dashur të di çmimin tuaj`. Druha odpovida znamemu bot jmenu
 soucasne s konkretnim opakovanym textem; stejna albanska cena-dotaz s jinym jmenem

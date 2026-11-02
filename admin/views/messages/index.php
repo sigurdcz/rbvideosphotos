@@ -5,6 +5,8 @@ $pageTitle = 'E-maily a zprávy';
 $pageUrl = static fn(int $number): string => '?' . http_build_query(['status' => $status, 'kind' => $kind, 'page' => $number]);
 ob_start(); ?>
 <div class="page-header"><h1>E-maily a zprávy</h1></div>
+<p><a href="/admin/messages/download-non-spam" class="btn btn-secondary">Stáhnout nespamové zprávy</a></p>
+<p class="help-text">JSON všech kontaktních zpráv bez označení spam, ze všech stránek bez ohledu na aktuální filtry. Starší nezachycený spam může být zahrnut; export není ručně ověřený seznam legitimních zpráv.</p>
 <p>Kontaktní zprávy se ukládají před odesíláním. Přijetí poštovní službou nepotvrzuje doručení do schránky. Obsah obnovy hesla se z bezpečnostních důvodů neukládá.</p>
 <p>Nalezeno: <?= $h($total) ?>. Archiv obsahuje osobní údaje; přístup má pouze administrátor. Zálohujte databázi.</p>
 <p>Všechny pokusy: <strong><?= $h(array_sum($counts)) ?></strong> · Předáno poštovní službě: <strong><?= $h($counts['accepted']) ?></strong> · Zachycený spam: <strong><?= $h($counts['spam']) ?></strong> · Selhalo: <strong><?= $h($counts['failed']) ?></strong> · Výsledek nepotvrzen: <strong><?= $h($counts['stored']) ?></strong></p>
