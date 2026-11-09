@@ -3170,3 +3170,15 @@ PHP lint a diff check OK. Dokumentace ARCHITECTURE aktualizovana.
 Tri pravidla doplnena append-only migraci118. Wiki mail-archive aktualizovana.
 Pouze lokalni commit na dev; po nasazeni na staging bude potreba migrace118.
 
+# UKOL: Verejny Google verification soubor
+Datum: 2026-11-09. Zverejnit dodany google5a940440ca6a22c5.html v koreni webu.
+Doporuceny model: Luna - pridani jednoducheho statickeho souboru.
+- [x] Overit obsah a routovani existujicich souboru pres root .htaccess.
+- [x] Pridat soubor do korene repozitare; deploy jej zahrne bez uprav workflow.
+- [x] Overit shodu obsahu, dokumentovat URL a ulozit commit na dev.
+Bez migrace, bez pushe. Produkcni URL bude dostupna az po schvalenem nasazeni.
+Overeni: obsah shodny s dodanym souborem (mimo koncovy newline), neni ignorovan,
+git diff --check OK. README dokumentuje verejnou URL a kontrolu po nasazeni.
+Wiki reflection: SKIP - jednoduche pridani vendor souboru, bez noveho mechanismu;
+postup a dukaz obsahu jsou v README a tomto zaznamu. Online HTTP zatim neovereno.
+
