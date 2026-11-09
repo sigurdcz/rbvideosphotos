@@ -3078,10 +3078,11 @@ Datum2026-11-01. Zadani: vytvorit1000realistickych legitimnich zprav vsechnyPASS
 od kultivovanych po kratke/typos/odkazy, zachytit dodane JamesTralf a Roberthip,
 commit a staging push. Model Sol: zabranit false positives i obejiti novych pravidel.
 
-- [-] Vytvorit deterministicky, konkretni a ruznorody1000fixture dataset + bezSMTP runner.
-- [ ] Doplnit uzke kombinovane signatury, nove migrace117bezprepsani profilu.
-- [ ] Overit1000PASS, skutecne spamvzorky, negativni sousedni pripady a migrace2x.
-- [ ] Dokumentace/wiki, commit a push dev, staging smoke; migraci overit zvlast.
+- [x] Vytvorit deterministicky, konkretni a ruznorody1000fixture dataset + bezSMTP runner.
+- [x] Doplnit uzke kombinovane signatury, nove migrace117bezprepsani profilu.
+- [x] Overit1000PASS, skutecne spamvzorky, negativni sousedni pripady a migrace2x.
+- [x] Dokumentace/wiki, commit a push dev, staging smoke; migraci overit zvlast.
+- [ ] Uzivatel spusti117na stagingu vlastnimtokenem; potvrdit aktualizaci ulozeneho profilu.
 
 Albanstina price query sama je legitimni; blokovat jen znamou identituRoberthip
 soucasne s konkretnim opakovanym textem, nikoli jazyk/cenu/emailprovider.
@@ -3120,4 +3121,64 @@ Zdrojovycommit86e7771 a generovanysnapshotf07cc53 pushnuty; stagingActions413047
 success. Navic bude workflowdevspoustet php tests/run-contact-spam.php pred
 buildem/uploadem, aby1000dotazu byly automaticka brana kazdeho dalsiho stagingpush.
 ProSQLitein-memorynotificationtest explicitniPHPextensionspdo_sqlite,mbstring.
+
+Finalnirevize1a70fbe1e51a9baf0afadc00f59c1822a2c9a7dd nasazena stagingActions41304791683
+success, krokGuardantispam1000inquiries success iFTPsuccess. / /nase-prace /kontakt
+/admin/loginHTTP200. Metadata119applied/latest116:117neni potvrzena, asyncdotaz
+uzivateli na chrany migrate-util svymtokenem bez jeho sdileni. Master beze zmeny.
+Corpus soubor je pristupny uzivateli vtests/fixtures,3hotovecommitypushnuty.
+Tento finalni dokumentacni zaznam zustava pouze lokalne na dev bez noveho deploymentu.
+
+## Schvaleny produkcni release 2026-11-02
+
+Uzivatel potvrdil stagingfunkcnost/migraci a vyslovne schvalilmaster. GETstaging
+potvrdil120applied/latest117. Schvalenyorigin/dev1a70fbe sloucen jako
+46d16440de29a56d045c14f2212b1b4e86b99b3f, merge tree shodny sdev, pushmasterdokoncen.
+ProdukcniActions41360092066success, homepage/kontakt/nase-prace/admin-login200.
+Produkcni metadata stale118applied/latest116, proto117jestecekanaaplikaci.
+Uzivatelpozadan oprotectedproductionmigrate-util s vlastnimtokenem bezsdileni.
+KlasifikacniURL/cashbonusopravakodunasazena, noveulozenekampanevyzaduji117.
+Zaverecnyzaznamjenlokalnidev, artifacts/ nedotceno.
+
+---
+# UKOL: Export nespamovych kontaktnich zprav
+Datum2026-11-02. Pridat do admin/messages tlacitko proJSONdownload vsech
+kontaktnich zprav bez archivedstatusspam. Model Terra: maly admin export s ochranou dat.
+- [x] Implementovat admin-only GETexport a tlacitko s jasnou definici vyberu.
+- [x] Overit vyrazeni spamu/resetu, vsechny stranky a zachovani ceskeho obsahu.
+- [x] Dokumentace/wiki a lokalnicommitdev, bez nevyzadaneho pushe.
+Overeni: PHP lint a git diff --check prosly. Dva nove testy prosly v cele sade
+(274 testu; 3 drive zname chyby a 8 golden rozdilu). Zadny golden nebyl prijat.
+Autentizovany download v prohlizeci zatim neoveren. Zmeny pouze lokalne na dev.
+Export neznamena lidsky overene legitimni zpravy; stare nezachycene spamy mohou
+byt zahrnuty. Doplnit tuto skutecnost u tlacitka, nic automaticky nereklasifikovat.
+
+# UKOL: Zachytit kampane z archivniho vypisu
+Datum: 2026-11-02. Doplnit cilena pravidla pro dolozene spamove kampane.
+Doporuceny model: Terra - ohranicene rozsireni konfigurace a regresnich testu.
+- [x] Porovnat vzorky s aktualnimi pravidly a doplnit chybejici kombinace.
+- [x] Nova append-only migrace zachova uzivatelskou konfiguraci.
+- [x] Overit spamove vzorky a 1000 legitimnich poptavek.
+- [x] Aktualizovat dokumentaci/wiki a commit na dev bez pushe.
+Historicky archiv nepreznacovat; samotny cizi jazyk ani dotaz na cenu neblokovat.
+Config + migrace118 pridavaji tri AND skupiny: dve Roberthip jazykove varianty
+a handles-questions variantu lead-gen. Testy pokryvaji i legitimni sousedni dotazy.
+Pridano 19 anonymizovanych vynatku se zdrojovymi ID; vsechny zachyceny pri
+default/stored/migrated profilech. 1000 legitimnich projde. Cilena sada 15/15,
+PHP lint a diff check OK. Dokumentace ARCHITECTURE aktualizovana.
+## Vysledek
+Tri pravidla doplnena append-only migraci118. Wiki mail-archive aktualizovana.
+Pouze lokalni commit na dev; po nasazeni na staging bude potreba migrace118.
+
+# UKOL: Verejny Google verification soubor
+Datum: 2026-11-09. Zverejnit dodany google5a940440ca6a22c5.html v koreni webu.
+Doporuceny model: Luna - pridani jednoducheho statickeho souboru.
+- [x] Overit obsah a routovani existujicich souboru pres root .htaccess.
+- [x] Pridat soubor do korene repozitare; deploy jej zahrne bez uprav workflow.
+- [x] Overit shodu obsahu, dokumentovat URL a ulozit commit na dev.
+Bez migrace, bez pushe. Produkcni URL bude dostupna az po schvalenem nasazeni.
+Overeni: obsah shodny s dodanym souborem (mimo koncovy newline), neni ignorovan,
+git diff --check OK. README dokumentuje verejnou URL a kontrolu po nasazeni.
+Wiki reflection: SKIP - jednoduche pridani vendor souboru, bez noveho mechanismu;
+postup a dukaz obsahu jsou v README a tomto zaznamu. Online HTTP zatim neovereno.
 

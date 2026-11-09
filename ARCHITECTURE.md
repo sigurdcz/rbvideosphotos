@@ -210,11 +210,30 @@ Totez plati pro `POST /api/visit`: beacon nesmi zakladat session a lezi mimo `/a
 
 ### Konfigurovatelny kontaktni antispam
 
+Admin-only `GET /admin/messages/download-non-spam` stahuje JSON vsech kontaktu
+s archivnim `status <> spam`, bez omezeni na50polozek nebo aktualni UI filtry.
+Obsahuje id/created_at/status/subject/body a metadata vyberu/pocet/casUTC;
+neobsahuje password_reset zaznamy ani recipient/CC. `MessagesController` nejprve
+vyzaduje requireAdmin, pak repository select a cele JSONkodovani s THROW_ON_ERROR
+pred downloadheaders (attachment, private/no-store, nosniff). Existujici statusy
+se nepreklasifikuji: UI i export vyslovne uvadeji, ze historicky nezachyceny spam
+muze byt zahrnut. Tlacitko je nad filtrem v prehledu E-maily a zpravy.
+
 Migrace117 a defaults pridavaji dve uzke kombinace: `драгон мани && пополнение и вывод && подробно разобрано здесь`
 a `roberthip && kam dashur të di çmimin tuaj`. Druha odpovida znamemu bot jmenu
 soucasne s konkretnim opakovanym textem; stejna albanska cena-dotaz s jinym jmenem
 je legitimni a projde. Emailova adresa, Gmail, rustina nebo kratke dotazy se neblokuji.
 Mig117 pouze appenduje tyto radky pri absenci, predchozi migrace nemenit.
+
+Migrace118 doplnuje tri chybejici varianty archivnich kampani: `roberthip && achọrọ m ịmara ọnụahịa gị`,
+`roberthip && meg akartam tudni az árát` a
+`it handles questions && books the appointment && blue phone icon && 14 days`.
+Stejne skupiny jsou ve vychozim profilu; ulozene profily doplni pouze migrace.
+Pravidla nemeni starsi statusy archivu ani nastaveni administratora.
+`tests/fixtures/contact-archive-spam-excerpts.json` obsahuje 19 identifikovanych
+vynatku z dodaneho archivu bez soukromych kontaktnich udaju. Testuje se jejich
+zachyceni ve vychozim, ulozenem a migrovanem profilu i pruchod 1000 legitimnich
+syntetickych poptavek (`php tests/run-contact-spam.php --mysql`).
 
 Signal `gambling-promotion` stale vyzaduje dve ruzne promotion_terms, navic ale
 alespon jednu jinou nez obecne cash/bonus/win/wins. Tyto obecne vyrazy s pouhym

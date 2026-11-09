@@ -46,6 +46,9 @@ final class ContactSpamConfig
                 'verstorbenen mandanten && 50-50 && millionen us-dollar',
                 'драгон мани && пополнение и вывод && подробно разобрано здесь',
                 'roberthip && kam dashur të di çmimin tuaj',
+                'roberthip && achọrọ m ịmara ọnụahịa gị',
+                'roberthip && meg akartam tudni az árát',
+                'it handles questions && books the appointment && blue phone icon && 14 days',
             ],
             'allowed_domains' => [],
         ];

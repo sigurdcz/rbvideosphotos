@@ -293,6 +293,14 @@ Prikaz reset tvrde odmita databazi, jejiz `DB_HOST` neni `127.0.0.1`, `localhost
 
 ## Active24 deployment a prvni instalace
 
+Google overeni vlastnictvi: soubor `google5a940440ca6a22c5.html` v koreni
+repozitare se nasazuje jako verejny staticky soubor na
+`/google5a940440ca6a22c5.html`. Obsah je
+`google-site-verification: google5a940440ca6a22c5.html`.
+Po nasazeni overte HTTP 200 a tento text bez CMS layoutu/prihlaseni, napr.
+`curl -i https://staging.rbvideosphotos.cz/google5a940440ca6a22c5.html`.
+Produkce soubor ziska az standardnim schvalenym releasem z dev do master.
+
 Tento repozitar prebral aktualni CMS ze `sigurdcz/seo-cms`, commit `b8da8da02878735ef10c506fb75c43cf41984542`. Produkcni a staging runtime data zustavaji oddelena.
 
 - GitHub `master` -> environment `production`; `dev` -> environment `staging`.

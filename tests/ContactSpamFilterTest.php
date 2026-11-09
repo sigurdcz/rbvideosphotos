@@ -7,6 +7,35 @@ use App\Services\ContactSpamConfig;
 
 function register_contact_spam_filter_tests(callable $test, callable $assert): void
 {
+    $test('all 19 accepted archive spam excerpts match default and stored profiles', function () use ($assert): void {
+        // Excerpts from the supplied archive: only names and relevant text, no private recipients/contact data.
+        $samples = json_decode(file_get_contents(__DIR__ . '/fixtures/contact-archive-spam-excerpts.json'), true, 32, JSON_THROW_ON_ERROR);
+        $assert(count($samples) === 19);
+        foreach ([new ContactSpamFilter(), new ContactSpamFilter(ContactSpamConfig::fromStored(ContactSpamConfig::encode(ContactSpamConfig::defaults())))] as $filter) {
+            foreach ($samples as $sample) {
+                $assert($filter->classify($sample['name'], 'sender@example.test', $sample['message'])['isSpam'], 'Missed archive spam #' . $sample['id']);
+            }
+        }
+    });
+    $test('archive campaign variants are blocked while matching legitimate price inquiries pass', function () use ($assert): void {
+        $filter = new ContactSpamFilter();
+        foreach ([
+            ['Roberthip', 'Ndewo, achọrọ m ịmara ọnụahịa gị.'],
+            ['Roberthip', 'Szia, meg akartam tudni az árát.'],
+            ['Lesli', "Hey team, When a lead requests a call on your website, we call them about 30 seconds later. An AI voice agent. It handles questions, finds out what they need and books the appointment, 24/7, then sends you the transcript. See it in action: visit https://boostleadgen.com, tap the blue phone icon in the bottom corner and enter your phone number. No credit card is needed on our Basic plan. You get 14 days free."],
+        ] as [$name, $message]) {
+            $result = $filter->classify($name, 'customer@example.test', $message);
+            $assert($result['isSpam'] && in_array('campaign-combination', $result['reasons'], true), 'Archive variant must match an explicit campaign: ' . $name);
+        }
+        foreach ([
+            ['Chidi', 'Ndewo, achọrọ m ịmara ọnụahịa gị.'],
+            ['Anna', 'Szia, meg akartam tudni az árát.'],
+            ['Roberthip', 'Kolik stojí rodinné focení?'],
+            ['Lesli', 'Can you photograph our AI team in 14 days? https://boostleadgen.com'],
+        ] as [$name, $message]) {
+            $assert(!$filter->classify($name, 'hello@firstleadgen.com', $message)['isSpam'], 'Language, name or domain alone must not block a customer.');
+        }
+    });
     $test('Dragon withdrawal spam and known Roberthip identity are blocked without a language or price-query ban', function () use ($assert): void {
         $filter = new ContactSpamFilter();
         $dragon = 'Всем здравствуйте! Коротко расскажу про пополнение и вывод в Драгон мани. Разбираются в этом не все. Главное, что стоит знать: вывод идёт через «Кошелёк», скорость зависит от направления. Подробно разобрано здесь: <a href=https://dragon-pay.org>РІС‹РІРѕРґ РЅР° РєР°СЂС‚Сѓ Р”СЂР°РіРѕРЅРњР°РЅРё</a>. В деталях разобраться не лишнее — речь про деньги. Вопрос ко всем: пробовали пополнять криптой или остаётесь на картах? На этом всё!';
