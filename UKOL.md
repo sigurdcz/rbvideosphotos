@@ -3182,3 +3182,25 @@ git diff --check OK. README dokumentuje verejnou URL a kontrolu po nasazeni.
 Wiki reflection: SKIP - jednoduche pridani vendor souboru, bez noveho mechanismu;
 postup a dukaz obsahu jsou v README a tomto zaznamu. Online HTTP zatim neovereno.
 
+# UKOL: VideoObject thumbnailUrl
+Datum: 2026-11-10. Opravit chybejici thumbnailUrl pro video portfolio ve vsech vystupech.
+Doporuceny model: Terra - opraveni spolecneho SEO vystupu s regresnimi testy.
+- [x] Dohledat generator a dostupne skutecne nahledy pro pet uvedenych stranek.
+- [x] Doplnit sdilene generovani bez falesnych obrazku, overit live/publish cestu.
+- [x] Regresni testy, dokumentace/wiki a lokalni commit na dev.
+Google vyzaduje thumbnailUrl, name a uploadDate; pouzit skutecny dostupny nahled.
+Bez automatickeho pushe/master merge.
+Vsech pet produkcnich JSON-LD bezthumbnail potvrzeno; vsech pet YouTube hqdefault
+overeno HTTP200 image/jpeg. PortfolioVideoSchema sdili builder live/export,
+preferuje vlastni fotografii, jinak existujici youtubeThumbnail. Bez dostupneho
+zdroje (napr. Vimeo bez fotografie) varuje logem a nepublikuje neplatny objekt.
+## Vysledek
+4/4 cilenych testu proslo (vcetne skutecneho standalone exportu). Sirsi sada
+279 testu/3 drive zname chyby, 28 golden kontrol/8 drive znamych rozdilu;
+goldeny nemenit. Puvodni casovopasmovy predpoklad testu opraven porovnanim instantu.
+Local HTTP200 + spravne JSON-LD: Ester/Tomas, Pavlina/Marek, Marketa/Petr.
+Martina/Jaroslav a Ivanka/Lubomir lokalne404 (chybi data), jejich ID v unit testech;
+vsech pet skutecnych img.youtube.com thumbnail URL HTTP200.
+PHP lint/diff check OK. ARCHITECTURE a wiki architektura aktualizovany.
+Jen lokalni dev commit; staging/produkce a Search Console validace zatim cekaji.
+

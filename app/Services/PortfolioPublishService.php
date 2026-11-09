@@ -64,6 +64,15 @@ class PortfolioPublishService
         }
         $metaTitle = trim((string)($entry['meta_title'] ?? '')) ?: (string)$entry['title'];
         $metaTitleEsc = $h($metaTitle);
+        $schemaEntry = $entry;
+        $schemaEntry['video_url'] = $videos[0]['url'] ?? '';
+        $schemaImage = isset($mediaItems[0])
+            ? $this->publicMediaUrl((string)($mediaItems[0]['medium_path'] ?? $mediaItems[0]['storage_path'] ?? ''))
+            : '';
+        $videoSchema = PortfolioVideoSchema::build($site, $schemaEntry, $pageUrl, $schemaImage);
+        $videoSchemaHtml = $videoSchema === [] ? '' : '<script type="application/ld+json">'
+            . json_encode($videoSchema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_THROW_ON_ERROR)
+            . '</script>';
         $socialHead = (new SeoRenderer())->renderHead([
             'meta_title' => $metaTitle,
             'meta_description' => html_entity_decode($metaDesc, ENT_QUOTES, 'UTF-8'),
@@ -81,6 +90,7 @@ class PortfolioPublishService
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{$metaTitleEsc}</title>
   <meta name="description" content="{$metaDesc}">
+  {$videoSchemaHtml}
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:system-ui,-apple-system,sans-serif;color:#1a1a1a;background:#fff;line-height:1.6}
