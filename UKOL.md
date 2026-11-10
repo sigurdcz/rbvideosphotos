@@ -3295,3 +3295,25 @@ listenery pro galerii, kontakt, sluzby, soubory a mapu. GTM event se bez Analyti
 souhlasu nefrontuje. Node VM regresni test overil GTM, direct GA i consent block; PHP lint prosel.
 Cely historicky runner dobehl ke znamemu nesouvisejicimu Golden Bash rozdilu a nedostupne DB.
 
+# UKOL: Nove antispamove vzorky
+Datum: 2026-11-10.
+Zadani: Zachytit reckou kasinovou reklamu a parove generovane tokeny bez blokovani legitimnich dotazu.
+Doporuceny model: Terra - uzke klasifikacni signaly, append-only migrace a false-positive regresni sada.
+
+## Kroky
+
+- [x] Proverit oba dodane vzorky a navrhnout uzke signaly.
+- [x] Doplnit pravidlo pro reckou kasinovou reklamu.
+- [x] Doplnit detekci parovych generovanych tokenu.
+- [x] Pridat pozitivni a negativni regresni testy.
+- [x] Spustit antispamove testy vcetne 1 000 legitimnich poptavek.
+- [x] Overit migraci, syntax a diff.
+- [x] Zapsat vysledek do lokalni wiki.
+- [x] Commitnout zmeny na dev.
+
+## Vysledek
+
+Cilena sada ma 15/15 PASS a vsech 1 000 syntetickych legitimnich poptavek zustava povoleno.
+Plny historicky runner nadale hlasi znamou nesouvisejici odchylku Golden Bash Diagonal a chybejici
+lokalni databazove pripojeni; tyto chyby nebyly skryty ani nahrazeny fallbackem.
+
