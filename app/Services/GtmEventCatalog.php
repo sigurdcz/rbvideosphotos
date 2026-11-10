@@ -10,14 +10,14 @@ class GtmEventCatalog
     {
         return [
             $this->event('lead_form_submit', 'Odeslani kontaktniho formulare', 'hlavni konverze', 'Uspesne odeslani kontaktniho formulare'),
-            $this->event('click_phone', 'Kliknuti na telefonni cislo', 'mikro-konverze', 'Kliknuti na telefonni cislo'),
-            $this->event('click_email', 'Kliknuti na e-mail', 'mikro-konverze', 'Kliknuti na e-mail'),
+            $this->event('phone_click', 'Kliknuti na telefonni cislo', 'mikro-konverze', 'Kliknuti na telefonni cislo'),
+            $this->event('email_click', 'Kliknuti na e-mail', 'mikro-konverze', 'Kliknuti na e-mail'),
             $this->event('select_package', 'Vyber konkretniho balicku', 'silna mikro-konverze', 'Vyber balicku'),
             $this->event('cta_click', 'Kliknuti na hlavni CTA tlacitko', 'mikro-konverze', 'Kliknuti na hlavni CTA tlacitko'),
             $this->event('gallery_open', 'Otevreni galerie nebo detailu fotky', 'engagement', 'Otevreni galerie nebo detailu fotky'),
             $this->event('gallery_image_view', 'Zobrazeni konkretni fotky v galerii', 'engagement', 'Zobrazeni konkretni fotky v galerii'),
             $this->event('gallery_category_click', 'Kliknuti na kategorii galerie', 'engagement', 'Kliknuti na kategorii galerie'),
-            $this->event('video_start', 'Spusteni prezentacniho videa', 'engagement', 'Spusteni prezentacniho videa'),
+            $this->event('video_play', 'Spusteni prezentacniho videa', 'engagement', 'Spusteni prezentacniho videa'),
             $this->event('video_complete', 'Dokonceni prezentacniho videa', 'engagement', 'Dokonceni prezentacniho videa'),
             $this->event('view_google_reviews', 'Otevreni Google recenzi', 'odchozi interakce', 'Kliknuti na vsechny Google recenze'),
             $this->event('scroll_90', 'Doscrollovani na 90 % stranky', 'engagement', 'Doscrollovani na 90 % stranky'),

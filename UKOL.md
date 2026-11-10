@@ -3248,3 +3248,50 @@ Zive HTML po migraci 119 obsahuje GTM-P7Z5TP6G a trackingLoaderMode gtm.
 GTM se po splneni marketingoveho consentu nacita okamzite, aby jej Google tester neminul;
 bez souhlasu zustava pri aktivnim consentu zablokovany. JS syntaxe a novy regresni test prosly.
 
+# UKOL: Audit AI a Markdown stop ve verejnem obsahu
+Datum: 2026-11-10.
+Zadani: Najit a odstranit z uzivatelsky viditelnych textu dlouhe pomlcky, dvojita podtrzitka,
+dvojite hvezdicky a dalsi zbytky AI/Markdown formatovani.
+Doporuceny model: Terra - je nutne odlisit obsah od PHP, SQL, JS, CSS a Markdown syntaxe.
+
+## Kroky
+
+- [x] Zmapovat vsechny podezrele znaky a sekvence ve verejnych zdrojich obsahu.
+- [x] Rozdelit nalezy na skutecne viditelne texty a technickou syntaxi.
+- [x] Opravit zdroje, seed a existujici DB obsah append-only migraci.
+- [x] Pridat regresni kontrolu, spustit relevantni testy a zkontrolovat diff.
+- [x] Aktualizovat dokumentaci a wiki, commitnout na dev bez produkcniho merge.
+
+## Vysledek
+
+Audit 67 stagingovych URL nasel 28 dlouhych pomlcek ve 12 svatebnich clancich.
+Vyrenderovany web nepropoustel dvojita podtrzitka, hvezdicky, tildy, code fences,
+Markdown nadpisy ani Markdown odkazy. Technicke sekvence v PHP a CSS zustaly beze zmeny.
+Zdrojove clanky, nekolik dalsich viditelnych textu a import byly normalizovany; existujici
+DB obsah opravuje cilena append-only migrace 120 pouze pro auditovane slugs.
+Tri izolovane regresni testy vcetne SQLite migrace prosly. Cely historicky runner se lokalne
+nedokonci kvuli starsimu golden rozdilu a nedostupne DB; zmena je proto popsana bez plosneho PASS.
+Dokumentace a lokalni wiki byly aktualizovany. Zmeny jsou pripraveny v lokalnim dev commitu bez pushe.
+
+# UKOL: GTM eventy se nespousteji
+Datum: 2026-11-10.
+Zadani: Opravit webovou vrstvu, aby udalosti pouzite GTM kontejnerem skutecne vstupovaly do dataLayer.
+Doporuceny model: Terra - zavada propojuje consent runtime, GTM transport, frontend listenery a konfiguraci eventu.
+
+## Kroky
+
+- [x] Porovnat GTM runtime, consent a nazvy udalosti z Tag Assistantu.
+- [x] Posilat udalosti pres dataLayer v GTM rezimu a zachovat prime gtag odesilani bez GTM.
+- [x] Sjednotit nazvy udalosti s publikovanym GTM kontejnerem.
+- [x] Pridat regresni testy a overit pripraveny runtime.
+- [x] Aktualizovat dokumentaci a wiki, commitnout a pushnout opravu na dev/staging.
+
+## Vysledek
+
+Pricinou bylo odesilani vsech eventu pres neexistujici window.gtag i v GTM rezimu.
+GTM ted dostava Custom Event objekty pres dataLayer.push; direct GA nadale pouziva gtag.
+Sjednoceny byly nazvy phone_click, email_click, video_play a thank_you_page_view a doplneny
+listenery pro galerii, kontakt, sluzby, soubory a mapu. GTM event se bez Analytics i Marketing
+souhlasu nefrontuje. Node VM regresni test overil GTM, direct GA i consent block; PHP lint prosel.
+Cely historicky runner dobehl ke znamemu nesouvisejicimu Golden Bash rozdilu a nedostupne DB.
+

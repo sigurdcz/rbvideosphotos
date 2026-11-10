@@ -70,9 +70,9 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 ## Doporučené ALT texty
 
-- `Svatba Lucie a Miroslava v areálu Jívová – svatební fotografie RB Videos & Photos`
+- `Svatba Lucie a Miroslava v areálu Jívová - svatební fotografie RB Videos & Photos`
 - `Svatební fotograf a kameraman v lokalitě Sportovně střelecký areál Jívová`
-- `Přirozené svatební foto a video – svatba Sportovně střelecký areál Jívová`
+- `Přirozené svatební foto a video - svatba Sportovně střelecký areál Jívová`
 
 # Schválený redakční text
 
@@ -96,7 +96,7 @@ Ve videu širší krajina dobře funguje při představení místa. Hlavní př�
 
 Začátek června nabízí dlouhé odpoledne a více možností rozdělit portrétní focení. Nemusíme odcházet na hodinu. Krátký blok po obřadu doplníme několika minutami v pozdějším měkčím světle. Pár tak nepřijde o velkou část hostiny a výsledná galerie přesto obsahuje různorodé snímky.
 
-**Svatební film:** [Lucie a Miroslav – Jívová](https://www.youtube.com/watch?v=hYj2w3P5rK8)
+**Svatební film:** [Lucie a Miroslav - Jívová](https://www.youtube.com/watch?v=hYj2w3P5rK8)
 
 ### Časté otázky
 
@@ -115,5 +115,5 @@ Plánujete svatbu v Olomouckém kraji, na Moravě nebo kdekoliv v České republ
 
 ## Zdroje k místu
 
-1. Sportovně střelecký areál Jívová – Svatby: https://www.strelnicejivova.cz/svytby.html  
-2. Poznej Šternbersko – Obec Jívová: https://www.poznej-sternbersko.cz/o-meste/obce-v-okoli/obec-jivova-628cs.html
+1. Sportovně střelecký areál Jívová - Svatby: https://www.strelnicejivova.cz/svytby.html
+2. Poznej Šternbersko - Obec Jívová: https://www.poznej-sternbersko.cz/o-meste/obce-v-okoli/obec-jivova-628cs.html

@@ -22,9 +22,9 @@ event:
   couple: Pája a Marek
   date_iso: '2025-09-26'
   date_display: 26. září 2025
-  ceremony: Bešť – Hospůdka ve stodole, Zábeštní Lhota
-  celebration: Bešť – Hospůdka ve stodole, Zábeštní Lhota
-  venue_summary: Bešť – Hospůdka ve stodole, Zábeštní Lhota
+  ceremony: Bešť - Hospůdka ve stodole, Zábeštní Lhota
+  celebration: Bešť - Hospůdka ve stodole, Zábeštní Lhota
+  venue_summary: Bešť - Hospůdka ve stodole, Zábeštní Lhota
   video_url: https://www.youtube.com/watch?v=5ZlVVcIu10U
 assets:
   hero_image: 'TODO: přiřadit správnou fotografii ke konkrétní svatbě'
@@ -56,8 +56,8 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 - Pár: **Pája a Marek**
 - Datum: **26. září 2025**
-- Obřad: **Bešť – Hospůdka ve stodole, Zábeštní Lhota**
-- Oslava: **Bešť – Hospůdka ve stodole, Zábeštní Lhota**
+- Obřad: **Bešť - Hospůdka ve stodole, Zábeštní Lhota**
+- Oslava: **Bešť - Hospůdka ve stodole, Zábeštní Lhota**
 - Video: **https://www.youtube.com/watch?v=5ZlVVcIu10U**
 
 ## Doporučené interní odkazy
@@ -70,9 +70,9 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 ## Doporučené ALT texty
 
-- `Svatba Páji a Marka v Hospůdce ve stodole Bešť – svatební fotografie RB Videos & Photos`
-- `Svatební fotograf a kameraman v lokalitě Bešť – Hospůdka ve stodole, Zábeštní Lhota`
-- `Přirozené svatební foto a video – svatba Hospůdka ve stodole Bešť`
+- `Svatba Páji a Marka v Hospůdce ve stodole Bešť - svatební fotografie RB Videos & Photos`
+- `Svatební fotograf a kameraman v lokalitě Bešť - Hospůdka ve stodole, Zábeštní Lhota`
+- `Přirozené svatební foto a video - svatba Hospůdka ve stodole Bešť`
 
 # Schválený redakční text
 
@@ -96,7 +96,7 @@ Ve videu je důležitý zvuk. Dřevěný prostor může mít výraznější ozv�
 
 Ke konci září zapadá slunce dříve. Portrétní blok proto plánujeme podle skutečného času západu slunce, ne jen podle programu na papíře. Často stačí krátká procházka v okolí areálu. Důležitější než množství lokací je dobré světlo, čisté pozadí a uvolněný pár.
 
-**Svatební film:** [Pája a Marek – Bešť, Hospůdka ve stodole](https://www.youtube.com/watch?v=5ZlVVcIu10U)
+**Svatební film:** [Pája a Marek - Bešť, Hospůdka ve stodole](https://www.youtube.com/watch?v=5ZlVVcIu10U)
 
 ### Časté otázky
 
@@ -115,5 +115,5 @@ Plánujete svatbu v Olomouckém kraji, na Moravě nebo kdekoliv v České republ
 
 ## Zdroje k místu
 
-1. Obec Zábeštní Lhota – oficiální web: https://www.zabestnilhota.cz/  
-2. Budeme svoji – Bešť, Hospůdka ve stodole: https://www.budemesvoji.cz/listing/best-hospudka-ve-stodole/
+1. Obec Zábeštní Lhota - oficiální web: https://www.zabestnilhota.cz/
+2. Budeme svoji - Bešť, Hospůdka ve stodole: https://www.budemesvoji.cz/listing/best-hospudka-ve-stodole/

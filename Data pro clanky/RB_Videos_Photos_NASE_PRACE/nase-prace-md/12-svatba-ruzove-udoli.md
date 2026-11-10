@@ -69,15 +69,15 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 ## Doporučené ALT texty
 
-- `Svatba Ivanky a Lubomíra v Růžovém údolí – svatební fotografie RB Videos & Photos`
+- `Svatba Ivanky a Lubomíra v Růžovém údolí - svatební fotografie RB Videos & Photos`
 - `Svatební fotograf a kameraman v lokalitě Růžové údolí, Pivonín u Zábřehu`
-- `Přirozené svatební foto a video – svatba Růžové údolí`
+- `Přirozené svatební foto a video - svatba Růžové údolí`
 
 # Schválený redakční text
 
 # Svatba Ivanky a Lubomíra v Růžovém údolí u Zábřehu
 
-Ivanka a Lubomír si pro 6. června 2026 vybrali Růžové údolí v Pivoníně u Zábřehu. Obřad i oslava na jednom místě umožňují zachytit den souvisle — od příprav přes slavnostní část až po večerní program — bez dlouhého přesunu hostů a techniky.
+Ivanka a Lubomír si pro 6. června 2026 vybrali Růžové údolí v Pivoníně u Zábřehu. Obřad i oslava na jednom místě umožňují zachytit den souvisle - od příprav přes slavnostní část až po večerní program - bez dlouhého přesunu hostů a techniky.
 
 ## Růžové údolí jako svatební místo
 
@@ -97,7 +97,7 @@ Na začátku června je den dlouhý a portrétní focení lze rozdělit. Krátk�
 
 Ve svatebním filmu využíváme prostředí jako úvod a předěly mezi kapitolami. Hlavní hodnotu však mají hlasy, reakce a drobné okamžiky mezi párem a hosty. Právě ty budou po letech důležitější než efektní záběr budovy.
 
-**Svatební film:** [Ivanka a Lubomír – Růžové údolí](https://www.youtube.com/watch?v=L-zaa5hj-aU)
+**Svatební film:** [Ivanka a Lubomír - Růžové údolí](https://www.youtube.com/watch?v=L-zaa5hj-aU)
 
 ### Časté otázky
 
@@ -116,4 +116,4 @@ Plánujete svatbu v Olomouckém kraji, na Moravě nebo kdekoliv v České republ
 
 ## Zdroje k místu
 
-1. TIC Zábřeh – Penzion Růžové údolí: https://tourism.zabreh.cz/katalog-sluzby-firmy/penzion-ruzove-udoli-2/
+1. TIC Zábřeh - Penzion Růžové údolí: https://tourism.zabreh.cz/katalog-sluzby-firmy/penzion-ruzove-udoli-2/

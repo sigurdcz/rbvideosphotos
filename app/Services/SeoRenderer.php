@@ -196,17 +196,23 @@ class SeoRenderer
 
         $defaultEvents = [
             'lead_form_submit'   => true,
-            'lead_thank_you_page'=> true,
-            'click_phone'        => true,
-            'click_email'        => true,
+            'thank_you_page_view'=> true,
+            'phone_click'        => true,
+            'email_click'        => true,
             'cta_click'          => true,
             'social_click'       => true,
             'gallery_open'       => true,
-            'video_start'        => true,
+            'gallery_image_view' => true,
+            'gallery_category_click' => true,
+            'video_play'         => true,
             'video_complete'     => true,
             'select_package'     => true,
             'view_google_reviews'=> true,
             'scroll_90'          => true,
+            'contact_section_view'=> true,
+            'service_detail_view'=> true,
+            'file_download'      => true,
+            'map_click'          => true,
         ];
 
         $eventsRaw = (string)($site['tracking_events_json'] ?? '');

@@ -71,9 +71,9 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 ## Doporučené ALT texty
 
-- `Letní svatba Michaely a Jana u rybníka Sobáčov – svatební fotografie RB Videos & Photos`
+- `Letní svatba Michaely a Jana u rybníka Sobáčov - svatební fotografie RB Videos & Photos`
 - `Svatební fotograf a kameraman v lokalitě Rybník Sobáčov, Mladeč`
-- `Přirozené svatební foto a video – svatba rybník Sobáčov`
+- `Přirozené svatební foto a video - svatba rybník Sobáčov`
 
 # Schválený redakční text
 
@@ -97,7 +97,7 @@ Párové focení nemusí znamenat dlouhé zmizení ze svatby. U vody lze vytvoř
 
 Přírodní lokalita svádí k pomalým záběrům a romantickým přeletům, ale svatební film musí zůstat především o lidech. Široké záběry používáme k orientaci a atmosféře. Těžiště filmu tvoří slib, doteky, smích, proslovy a reakce hostů.
 
-**Svatební film:** [Michaela a Jan – rybník Sobáčov](https://www.youtube.com/watch?v=1z-qckQn5UU)
+**Svatební film:** [Michaela a Jan - rybník Sobáčov](https://www.youtube.com/watch?v=1z-qckQn5UU)
 
 ### Časté otázky
 
@@ -116,5 +116,5 @@ Plánujete svatbu v Olomouckém kraji, na Moravě nebo kdekoliv v České republ
 
 ## Zdroje k místu
 
-1. Turistický informační portál Olomouckého kraje – Sobáčovský rybník: https://www.ok-tourism.cz/cil/sobacovsky-rybnik/  
-2. Sobáčov – oficiální web areálu: https://www.sobacov.cz/
+1. Turistický informační portál Olomouckého kraje - Sobáčovský rybník: https://www.ok-tourism.cz/cil/sobacovsky-rybnik/
+2. Sobáčov - oficiální web areálu: https://www.sobacov.cz/

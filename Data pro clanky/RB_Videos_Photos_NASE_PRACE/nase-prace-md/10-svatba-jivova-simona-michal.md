@@ -70,9 +70,9 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 ## Doporučené ALT texty
 
-- `Zářijová svatba Simony a Michala v Jívové – svatební fotografie RB Videos & Photos`
+- `Zářijová svatba Simony a Michala v Jívové - svatební fotografie RB Videos & Photos`
 - `Svatební fotograf a kameraman v lokalitě Sportovně střelecký areál Jívová`
-- `Přirozené svatební foto a video – zářijová svatba Jívová`
+- `Přirozené svatební foto a video - zářijová svatba Jívová`
 
 # Schválený redakční text
 
@@ -96,7 +96,7 @@ Někdy stačí deset minut. Vyjdeme na okraj areálu, vytvoříme několik širo
 
 Při venkovním obřadu plánujeme pozice předem. Jedna kamera snímá bezpečný celkový záběr, druhá zachycuje výrazy a detaily. Fotograf se pohybuje jen ve chvílích, kdy neruší hosty ani záběr. Díky tomu máme více úhlů, ale obřad nepůsobí jako televizní studio.
 
-**Svatební film:** [Simona a Michal – Jívová](https://www.youtube.com/watch?v=cXU7Ty-kjyA)
+**Svatební film:** [Simona a Michal - Jívová](https://www.youtube.com/watch?v=cXU7Ty-kjyA)
 
 ### Časté otázky
 
@@ -115,5 +115,5 @@ Plánujete svatbu v Olomouckém kraji, na Moravě nebo kdekoliv v České republ
 
 ## Zdroje k místu
 
-1. Sportovně střelecký areál Jívová – Svatby: https://www.strelnicejivova.cz/svytby.html  
-2. Obec Jívová – Historie obce: https://www.obecjivova.cz/obec/historie-obce/
+1. Sportovně střelecký areál Jívová - Svatby: https://www.strelnicejivova.cz/svytby.html
+2. Obec Jívová - Historie obce: https://www.obecjivova.cz/obec/historie-obce/

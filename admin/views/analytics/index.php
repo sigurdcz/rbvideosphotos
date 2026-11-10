@@ -66,7 +66,7 @@ ob_start(); ?>
   <?php endif; ?>
   <div class="stats-grid analytics-overview-grid">
     <?php if (is_array($healthSummary)): ?>
-      <div class="stat-card"><div class="stat-num"><?= $healthSummary['uptime'] === null ? '—' : $h(number_format((float) $healthSummary['uptime'], 2, ',', ' ')) . ' %' ?></div><div class="stat-lbl">Dostupnost</div></div>
+      <div class="stat-card"><div class="stat-num"><?= $healthSummary['uptime'] === null ? '-' : $h(number_format((float) $healthSummary['uptime'], 2, ',', ' ')) . ' %' ?></div><div class="stat-lbl">Dostupnost</div></div>
       <div class="stat-card"><div class="stat-num"><?= $h(number_format((int) $healthSummary['average_ms'], 0, ',', ' ')) ?> ms</div><div class="stat-lbl">Průměrná odezva</div></div>
       <div class="stat-card"><div class="stat-num"><?= $h(number_format((int) $healthSummary['unhealthy'], 0, ',', ' ')) ?></div><div class="stat-lbl">Nezdravé kontroly</div></div>
     <?php endif; ?>
@@ -101,7 +101,7 @@ ob_start(); ?>
       <div><strong><?= $h($stateLabel) ?></strong><div><?= $latest ? 'Poslední kontrola: ' . $h($latest['checked_at']) . ' UTC' : 'Zatím neproběhla žádná kontrola.' ?></div></div>
     </div>
     <div class="stats-grid">
-      <div class="stat-card"><div class="stat-num"><?= $healthSummary['uptime'] === null ? '—' : $h(number_format((float) $healthSummary['uptime'], 2, ',', ' ')) . ' %' ?></div><div class="stat-lbl">Dostupnost z provedených kontrol</div></div>
+      <div class="stat-card"><div class="stat-num"><?= $healthSummary['uptime'] === null ? '-' : $h(number_format((float) $healthSummary['uptime'], 2, ',', ' ')) . ' %' ?></div><div class="stat-lbl">Dostupnost z provedených kontrol</div></div>
       <div class="stat-card"><div class="stat-num"><?= $h(number_format((int) $healthSummary['checks'], 0, ',', ' ')) ?></div><div class="stat-lbl">Provedené kontroly</div></div>
       <div class="stat-card"><div class="stat-num"><?= $h(number_format((int) $healthSummary['unhealthy'], 0, ',', ' ')) ?></div><div class="stat-lbl">Nezdravé kontroly</div></div>
       <div class="stat-card"><div class="stat-num"><?= $h(number_format((int) $healthSummary['average_ms'], 0, ',', ' ')) ?> ms</div><div class="stat-lbl">Průměrná odezva</div></div>
@@ -133,7 +133,7 @@ ob_start(); ?>
           <thead><tr><th>Čas UTC</th><th>HTTP</th><th>Databáze</th><th>Kód</th><th>Odezva</th><th>Zdroj</th></tr></thead>
           <tbody><?php foreach ($healthSummary['recent_failures'] as $failure): ?><tr>
             <td><?= $h($failure['checked_at']) ?></td>
-            <td><?= $failure['http_status'] === null ? '—' : $h($failure['http_status']) ?></td>
+            <td><?= $failure['http_status'] === null ? '-' : $h($failure['http_status']) ?></td>
             <td><?= $h($failure['database_status']) ?></td>
             <td><code><?= $h($failure['error_code'] ?? 'unknown') ?></code></td>
             <td><?= $h($failure['response_time_ms']) ?> ms</td>

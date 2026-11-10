@@ -70,9 +70,9 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 ## Doporučené ALT texty
 
-- `Svatba Martiny a Jaroslava U Robinsona – svatební fotografie RB Videos & Photos`
+- `Svatba Martiny a Jaroslava U Robinsona - svatební fotografie RB Videos & Photos`
 - `Svatební fotograf a kameraman v lokalitě U Robinsona, Hradečná 31, Bílá Lhota`
-- `Přirozené svatební foto a video – svatba U Robinsona Hradečná`
+- `Přirozené svatební foto a video - svatba U Robinsona Hradečná`
 
 # Schválený redakční text
 
@@ -98,7 +98,7 @@ Portrétní focení plánujeme před setměním, ale nemusí přerušit večern�
 
 Večer pracujeme s dostupným osvětlením a citlivě přidáváme vlastní světlo. Chceme zachovat atmosféru, ne proměnit hostinu v jasně nasvícené studio.
 
-**Svatební film:** [Martina a Jaroslav – U Robinsona](https://www.youtube.com/watch?v=b9WhNN8VYhc)
+**Svatební film:** [Martina a Jaroslav - U Robinsona](https://www.youtube.com/watch?v=b9WhNN8VYhc)
 
 ### Časté otázky
 
@@ -117,4 +117,4 @@ Plánujete svatbu v Olomouckém kraji, na Moravě nebo kdekoliv v České republ
 
 ## Zdroje k místu
 
-1. Hradečské paměti – Dům č. 31, sladovna a hostinec U Robinsona: https://gotiskovo.webnode.cz/news/z-gruntovnic-soupis-domku-a-domu-v-hradecne-ii-cast-cp-31-6/
+1. Hradečské paměti - Dům č. 31, sladovna a hostinec U Robinsona: https://gotiskovo.webnode.cz/news/z-gruntovnic-soupis-domku-a-domu-v-hradecne-ii-cast-cp-31-6/

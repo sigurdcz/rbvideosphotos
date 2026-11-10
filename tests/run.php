@@ -471,6 +471,9 @@ register_seo_audit_regression_tests($test, $assert);
 require __DIR__ . '/PortfolioVideoSchemaTest.php';
 register_portfolio_video_schema_tests($test, $assert);
 
+require __DIR__ . '/VisibleCopyNormalizerTest.php';
+register_visible_copy_normalizer_tests($test, $assert);
+
 require __DIR__ . '/SeoSmokeCheckerTest.php';
 register_seo_smoke_checker_tests($test, $assert);
 

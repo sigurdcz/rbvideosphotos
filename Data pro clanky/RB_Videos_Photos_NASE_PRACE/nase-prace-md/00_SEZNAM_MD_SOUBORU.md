@@ -1,4 +1,4 @@
-# Seznam Markdown souborů – svatební blog
+# Seznam Markdown souborů - svatební blog
 
 | # | Soubor | Cílová URL | Název realizace |
 |---:|---|---|---|

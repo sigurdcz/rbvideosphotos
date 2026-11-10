@@ -24,8 +24,8 @@ event:
   date_iso: '2023-06-17'
   date_display: 17. června 2023
   ceremony: Hrad Šternberk
-  celebration: Paseka – Obecní úřad
-  venue_summary: Hrad Šternberk; Paseka – Obecní úřad
+  celebration: Paseka - Obecní úřad
+  venue_summary: Hrad Šternberk; Paseka - Obecní úřad
   video_url: https://www.youtube.com/watch?v=DBWKJ46eM4c
 assets:
   hero_image: 'TODO: přiřadit správnou fotografii ke konkrétní svatbě'
@@ -59,7 +59,7 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 - Pár: **Markéta a Petr**
 - Datum: **17. června 2023**
 - Obřad: **Hrad Šternberk**
-- Oslava: **Paseka – Obecní úřad**
+- Oslava: **Paseka - Obecní úřad**
 - Video: **https://www.youtube.com/watch?v=DBWKJ46eM4c**
 
 ## Doporučené interní odkazy
@@ -72,9 +72,9 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 ## Doporučené ALT texty
 
-- `Svatba Markéty a Petra na hradě Šternberk – svatební fotografie RB Videos & Photos`
+- `Svatba Markéty a Petra na hradě Šternberk - svatební fotografie RB Videos & Photos`
 - `Svatební fotograf a kameraman na hradě Šternberk a v prostorách Obecního úřadu v Pasece`
-- `Přirozené svatební foto a video – svatba na hradě Šternberk`
+- `Přirozené svatební foto a video - svatba na hradě Šternberk`
 
 # Schválený redakční text
 
@@ -98,7 +98,7 @@ Paseka je obec severně od Šternberka, která v roce 2026 slaví 700 let od prv
 
 Přesun do Paseky změnil rytmus dne. Formální historické prostředí vystřídala bližší, osobnější atmosféra. Právě tento kontrast je pro výsledný film cenný: slavnostní obřad dostane vlastní kapitolu a oslava může být živější, barevnější a více soustředěná na hosty.
 
-**Svatební film:** [Markéta a Petr – hrad Šternberk a Paseka](https://www.youtube.com/watch?v=DBWKJ46eM4c)
+**Svatební film:** [Markéta a Petr - hrad Šternberk a Paseka](https://www.youtube.com/watch?v=DBWKJ46eM4c)
 
 ### Časté otázky
 
@@ -117,6 +117,6 @@ Plánujete svatbu v Olomouckém kraji, na Moravě nebo kdekoliv v České republ
 
 ## Zdroje k místu
 
-1. Hrad Šternberk – Historie: https://www.hrad-sternberk.cz/cs/o-hradu/historie  
-2. Hrad Šternberk – Svatební obřady: https://www.hrad-sternberk.cz/cs/svatby  
-3. Obec Paseka – 700 let obce: https://www.obecpaseka.cz/700-let-obce
+1. Hrad Šternberk - Historie: https://www.hrad-sternberk.cz/cs/o-hradu/historie
+2. Hrad Šternberk - Svatební obřady: https://www.hrad-sternberk.cz/cs/svatby
+3. Obec Paseka - 700 let obce: https://www.obecpaseka.cz/700-let-obce

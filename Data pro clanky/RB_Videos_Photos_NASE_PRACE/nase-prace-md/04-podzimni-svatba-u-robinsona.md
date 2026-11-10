@@ -70,9 +70,9 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 ## Doporučené ALT texty
 
-- `Podzimní svatba Ester a Tomáše U Robinsona – svatební fotografie RB Videos & Photos`
+- `Podzimní svatba Ester a Tomáše U Robinsona - svatební fotografie RB Videos & Photos`
 - `Svatební fotograf a kameraman v lokalitě U Robinsona, Hradečná 31, Bílá Lhota`
-- `Přirozené svatební foto a video – svatba U Robinsona`
+- `Přirozené svatební foto a video - svatba U Robinsona`
 
 # Schválený redakční text
 
@@ -96,7 +96,7 @@ U videa se soustředíme na návaznost denních a večerních scén. Přechod z 
 
 Obřad a oslava na jednom místě znamenají méně přesunů. Pár se nemusí po obřadu okamžitě soustředit na logistiku a my můžeme pracovat nenápadněji. Místo dlouhého aranžovaného focení preferujeme krátké portrétní bloky a většinu dne dokumentujeme tak, jak skutečně probíhá.
 
-**Svatební film:** [Ester a Tomáš – U Robinsona](https://www.youtube.com/watch?v=su0hKnBnCKw)
+**Svatební film:** [Ester a Tomáš - U Robinsona](https://www.youtube.com/watch?v=su0hKnBnCKw)
 
 ### Časté otázky
 
@@ -115,4 +115,4 @@ Plánujete svatbu v Olomouckém kraji, na Moravě nebo kdekoliv v České republ
 
 ## Zdroje k místu
 
-1. Hradečské paměti – Dům č. 31, sladovna a hostinec U Robinsona: https://gotiskovo.webnode.cz/news/z-gruntovnic-soupis-domku-a-domu-v-hradecne-ii-cast-cp-31-6/
+1. Hradečské paměti - Dům č. 31, sladovna a hostinec U Robinsona: https://gotiskovo.webnode.cz/news/z-gruntovnic-soupis-domku-a-domu-v-hradecne-ii-cast-cp-31-6/

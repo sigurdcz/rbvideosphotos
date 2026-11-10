@@ -8,6 +8,7 @@ use App\Core\Database;
 use App\Repositories\MediaRepository;
 use App\Repositories\BlogRepository;
 use App\Repositories\PortfolioRepository;
+use App\Support\VisibleCopyNormalizer;
 use PDO;
 use RuntimeException;
 
@@ -200,16 +201,16 @@ final class WeddingBlogDemoContentImporter
         if ($markerPosition === false) {
             throw new RuntimeException('Chybí schválený redakční text: ' . basename($path));
         }
-        $markdown = trim(substr($source, $markerPosition + strlen(self::CONTENT_MARKER)));
+        $markdown = VisibleCopyNormalizer::markdown(trim(substr($source, $markerPosition + strlen(self::CONTENT_MARKER))));
 
         return [
             'source' => basename($path),
             'slug' => $this->yamlScalar($front, 'slug'),
-            'title' => $this->yamlScalar($front, 'title'),
+            'title' => VisibleCopyNormalizer::plain($this->yamlScalar($front, 'title')),
             'target_path' => $this->yamlScalar($front, 'target_path'),
-            'meta_title' => $this->yamlNestedScalar($front, 'seo', 'meta_title'),
-            'meta_description' => $this->yamlNestedScalar($front, 'seo', 'meta_description'),
-            'couple' => $this->yamlNestedScalar($front, 'event', 'couple'),
+            'meta_title' => VisibleCopyNormalizer::plain($this->yamlNestedScalar($front, 'seo', 'meta_title')),
+            'meta_description' => VisibleCopyNormalizer::plain($this->yamlNestedScalar($front, 'seo', 'meta_description')),
+            'couple' => VisibleCopyNormalizer::plain($this->yamlNestedScalar($front, 'event', 'couple')),
             'date' => trim($this->yamlNestedScalar($front, 'event', 'date_iso'), "'\"") ,
             'video_url' => $this->yamlNestedScalar($front, 'event', 'video_url'),
             'description' => $this->markdownToHtml((string)preg_replace('/\s*\[\d+\](?:\[\d+\])*/u', '', $markdown)),
