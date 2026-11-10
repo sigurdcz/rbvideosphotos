@@ -123,10 +123,10 @@ function register_seo_audit_regression_tests(callable $test, callable $assert): 
         $catalog = (string)file_get_contents($root . '/app/Services/GtmEventCatalog.php');
         foreach ([
             'generate_lead',
-            'click_phone',
-            'click_email',
+            'phone_click',
+            'email_click',
             'select_package',
-            'video_start',
+            'video_play',
             'video_complete',
             'view_google_reviews',
         ] as $eventName) {

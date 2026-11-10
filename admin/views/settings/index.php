@@ -574,10 +574,13 @@ ob_start();
 
   <?php
     $trackingEventsDefault = [
-      'lead_form_submit' => true, 'lead_thank_you_page' => true,
+      'lead_form_submit' => true, 'thank_you_page_view' => true,
       'phone_click' => true, 'email_click' => true, 'cta_click' => true,
       'social_click' => true, 'gallery_open' => true, 'video_play' => true,
+      'gallery_image_view' => true, 'gallery_category_click' => true,
       'pricing_click' => true, 'scroll_90' => true,
+      'contact_section_view' => true, 'service_detail_view' => true,
+      'file_download' => true, 'map_click' => true,
     ];
     $trackingEventsRaw = trim((string)($site['tracking_events_json'] ?? ''));
     $trackingEvents = $trackingEventsDefault;
@@ -587,15 +590,21 @@ ob_start();
     }
     $trackingEventLabels = [
       'lead_form_submit'   => 'Odeslani kontaktniho formulare',
-      'lead_thank_you_page'=> 'Navsteva stranky /dekujeme (hlavni konverze)',
+      'thank_you_page_view'=> 'Navsteva stranky /dekujeme (hlavni konverze)',
       'phone_click'        => 'Klik na telefonni cislo',
       'email_click'        => 'Klik na e-mailovou adresu',
       'cta_click'          => 'Klik na CTA tlacitko (data-track-event)',
       'social_click'       => 'Klik na socialni site (Instagram, FB, YouTube...)',
       'gallery_open'       => 'Otevreni polozky galerie / portfolia',
+      'gallery_image_view' => 'Zobrazeni konkretni fotografie v galerii',
+      'gallery_category_click' => 'Klik na kategorii galerie',
       'video_play'         => 'Prehrani videa (prvni spusteni)',
       'pricing_click'      => 'Klik na cenovou kartu',
       'scroll_90'          => 'Scrollovani 90 % stranky',
+      'contact_section_view'=> 'Zobrazeni kontaktni sekce',
+      'service_detail_view'=> 'Zobrazeni detailu sluzby',
+      'file_download'      => 'Stazeni PDF nebo nabidky',
+      'map_click'          => 'Klik na mapu nebo navigaci',
     ];
   ?>
   <div class="card settings-panel" data-settings-panel="measurement">

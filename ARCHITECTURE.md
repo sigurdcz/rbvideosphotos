@@ -529,17 +529,28 @@ Inline editor umi i procedualni klice jako `faq:ID:question`, `blog:ID:title`, `
 `public/assets/tracking.js` emituje udalosti jako:
 
 - `lead_form_submit`
-- `lead_thank_you_page`
+- `thank_you_page_view`
 - `phone_click`
 - `email_click`
 - `cta_click`
 - `social_click`
 - `gallery_open`
+- `gallery_image_view`
+- `gallery_category_click`
 - `video_play`
 - `pricing_click`
 - `scroll_90`
+- `contact_section_view`
+- `service_detail_view`
+- `file_download`
+- `map_click`
 
 Zapnuti/vypnuti jednotlivych eventu se ridi `sites.tracking_events_json`.
+V rezimu `gtm` se udalost odesila jako objekt `{event: name, ...params}` pres
+`window.dataLayer.push()`, aby ji zachytil GTM Custom Event trigger. Prime volani
+`gtag('event', ...)` se pouziva pouze v rezimu `direct-ga`; samotny GTM loader
+funkci `gtag` nevytvari. GTM eventy vyzaduji souhlas Analytics i Marketing, protoze
+kontejner je v tomto CMS zarazen do marketingove kategorie.
 
 ### Vlastni mereni navstevnosti (zaloha k GA4)
 
@@ -683,8 +694,10 @@ Klicove skupiny sloupcu v `sites`:
 
 Tracking runtime je jednotne doplnen i do specialnich verejnych rout (FAQ,
 kontakt, blog, portfolio a hodnoceni). Kanonicka slovni zasoba GA4 udalosti je:
-`generate_lead`, `click_phone`, `click_email`, `select_package`,
-`video_start`, `video_complete` a `view_google_reviews`.
+`generate_lead`, `phone_click`, `email_click`, `select_package`,
+`video_play`, `video_complete`, `view_google_reviews`, `gallery_open`,
+`gallery_image_view`, `gallery_category_click`, `thank_you_page_view`,
+`contact_section_view`, `service_detail_view`, `file_download` a `map_click`.
 
 SEO render doplnuje na kazdou verejnou stranku entitu `Organization`.
 Portfolio detail s vyplnenym `video_url` navic generuje `VideoObject`.

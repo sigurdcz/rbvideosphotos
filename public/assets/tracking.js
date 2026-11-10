@@ -61,12 +61,37 @@
         log('consent not given for analytics');
         return 'analytics_consent_missing';
       }
+      if (window.cmsTrackingRuntime && window.cmsTrackingRuntime.mode === 'gtm' && !cc.canLoadMarketing()) {
+        log('consent not given for GTM');
+        return 'marketing_consent_missing';
+      }
     }
     return null;
   }
 
   function canTrack(eventName) {
     return getTrackBlockReason(eventName) === null;
+  }
+
+  function dispatchAnalyticsEvent(name, params) {
+    var extra = params || {};
+    var mode = window.cmsTrackingRuntime ? window.cmsTrackingRuntime.mode : 'none';
+
+    if (mode === 'gtm') {
+      window.dataLayer = window.dataLayer || [];
+      var payload = {};
+      Object.keys(extra).forEach(function (key) { payload[key] = extra[key]; });
+      payload.event = name;
+      window.dataLayer.push(payload);
+      return { sent: true, transport: 'dataLayer' };
+    }
+
+    if (typeof window.gtag === 'function') {
+      window.gtag('event', name, extra);
+      return { sent: true, transport: 'gtag' };
+    }
+
+    return { sent: false, transport: 'unavailable' };
   }
 
   function trackEvent(name, params) {
@@ -79,25 +104,24 @@
     }
 
     try {
-      if (typeof window.gtag !== 'function') {
-        audit('warn', 'Event neodeslan', { eventName: name, reason: 'gtag_unavailable', params: extra });
+      var result = dispatchAnalyticsEvent(name, extra);
+      if (!result.sent) {
+        audit('warn', 'Event neodeslan', { eventName: name, reason: 'analytics_transport_unavailable', params: extra });
         return false;
       }
 
-      // GA4 direct
-      window.gtag('event', name, extra);
-      audit('info', 'Event odeslan', { eventName: name, params: extra });
-      log('gtag:', name, extra);
+      audit('info', 'Event odeslan', { eventName: name, transport: result.transport, params: extra });
+      log(result.transport + ':', name, extra);
 
       // GA4 standard conversion events + Meta Pixel
-      if (name === 'lead_form_submit' || name === 'lead_thank_you_page') {
+      if (name === 'lead_form_submit' || name === 'thank_you_page_view') {
         if (typeof window.fbq === 'function') {
           window.fbq('track', 'Lead');
           log('fbq Lead');
         }
-        window.gtag('event', 'generate_lead');
-        audit('info', 'Event odeslan', { eventName: 'generate_lead', sourceEvent: name });
-        log('gtag generate_lead');
+        dispatchAnalyticsEvent('generate_lead', { source_event: name });
+        audit('info', 'Event odeslan', { eventName: 'generate_lead', sourceEvent: name, transport: result.transport });
+        log(result.transport + ': generate_lead');
       }
       if (name === 'social_click') {
         if (typeof window.fbq === 'function') {
@@ -123,7 +147,7 @@
       var target = e.target;
       var a = target && target.closest ? target.closest('a[href^="tel:"]') : null;
       if (!a) return;
-      trackEvent('click_phone', { event_category: 'contact', event_label: a.href });
+      trackEvent('phone_click', { event_category: 'contact', event_label: a.href });
     });
   }
 
@@ -134,7 +158,7 @@
       var a = target && target.closest ? target.closest('a[href^="mailto:"]') : null;
       if (!a) return;
       var addr = (a.href || '').replace(/^mailto:/i, '').split('?')[0];
-      trackEvent('click_email', { event_category: 'contact', event_label: addr });
+      trackEvent('email_click', { event_category: 'contact', event_label: addr });
     });
   }
 
@@ -197,7 +221,7 @@
     var path   = window.location.pathname;
     var search = window.location.search;
     if (path === '/dekujeme' || path.indexOf('/dekujeme') === 0) {
-      trackEvent('lead_thank_you_page', { event_category: 'lead', event_label: 'thank_you_page' });
+      trackEvent('thank_you_page_view', { event_category: 'lead', event_label: 'thank_you_page' });
     } else if (search.indexOf('sent=1') !== -1) {
       trackEvent('lead_form_submit', { event_category: 'lead', event_label: 'sent_param' });
     }
@@ -214,7 +238,82 @@
         : null;
       if (!el) return;
       tracked = true;
-      trackEvent('gallery_open', { event_category: 'engagement' });
+      var label = el.getAttribute('href') || el.getAttribute('data-gallery') || 'gallery';
+      trackEvent('gallery_open', { event_category: 'engagement', event_label: label });
+      trackEvent('gallery_image_view', { event_category: 'engagement', event_label: label, image_index: 1 });
+    });
+  }
+
+  function setupGalleryInteractions() {
+    document.addEventListener('click', function (e) {
+      var target = e.target;
+      var filter = target && target.closest
+        ? target.closest('[data-portfolio-filter], [data-gallery-filter], [data-filter]')
+        : null;
+      if (filter) {
+        trackEvent('gallery_category_click', {
+          event_category: 'engagement',
+          event_label: filter.getAttribute('data-portfolio-filter') || filter.getAttribute('data-gallery-filter') || filter.getAttribute('data-filter') || 'all'
+        });
+        return;
+      }
+
+      var imageControl = target && target.closest
+        ? target.closest('.gb-work-lightbox__thumb, .gb-work-lightbox__arrow, .gb-work-lightbox__image-button, [data-gallery-index]')
+        : null;
+      if (!imageControl) return;
+      trackEvent('gallery_image_view', {
+        event_category: 'engagement',
+        event_label: imageControl.getAttribute('data-gallery-index') || imageControl.getAttribute('aria-label') || 'gallery_navigation'
+      });
+    });
+  }
+
+  function setupContactSectionView() {
+    var section = document.querySelector('#kontakt, .gb-contact, .contact-section, [data-contact-section]');
+    if (!section || typeof window.IntersectionObserver !== 'function') return;
+    var observer = new window.IntersectionObserver(function (entries) {
+      for (var i = 0; i < entries.length; i++) {
+        if (!entries[i].isIntersecting) continue;
+        observer.disconnect();
+        trackEvent('contact_section_view', { event_category: 'engagement' });
+        return;
+      }
+    }, { threshold: 0.35 });
+    observer.observe(section);
+  }
+
+  function setupServiceDetailView() {
+    var servicePaths = [
+      '/svatebni-foto-video',
+      '/rodinne-a-portretni-foceni',
+      '/reklamni-foto-video',
+      '/rande-a-zasnuby'
+    ];
+    var path = (window.location.pathname || '').replace(/\/$/, '');
+    if (servicePaths.indexOf(path) === -1) return;
+    trackEvent('service_detail_view', { event_category: 'engagement', event_label: path });
+  }
+
+  function setupFileDownload() {
+    document.addEventListener('click', function (e) {
+      var target = e.target;
+      var link = target && target.closest ? target.closest('a[href]') : null;
+      if (!link) return;
+      var href = link.getAttribute('href') || '';
+      if (!/\.(?:pdf|docx?|xlsx?|zip)(?:[?#]|$)/i.test(href)) return;
+      trackEvent('file_download', { event_category: 'outbound', event_label: href });
+    });
+  }
+
+  function setupMapClick() {
+    document.addEventListener('click', function (e) {
+      var target = e.target;
+      var link = target && target.closest
+        ? target.closest('a[href*="maps.google"], a[href*="google.com/maps"], a[href*="maps.app.goo.gl"], a[href*="mapy.cz"], [data-map-link]')
+        : null;
+      if (!link) return;
+      trackEvent('map_click', { event_category: 'outbound', event_label: link.href || 'map' });
     });
   }
 
@@ -225,7 +324,7 @@
     function fireVideoStart(label, element) {
       if (element && started.indexOf(element) !== -1) return;
       if (element) started.push(element);
-      trackEvent('video_start', { event_category: 'video', event_label: label || 'hero' });
+      trackEvent('video_play', { event_category: 'video', event_label: label || 'hero' });
     }
 
     // Native <video>
@@ -308,19 +407,24 @@
     }
     log('AppTracking init', { requireConsent: requireConsent, debug: debug, events: events });
 
-    if (events.click_phone         !== false) setupPhoneClick();
-    if (events.click_email         !== false) setupEmailClick();
+    if (events.phone_click         !== false) setupPhoneClick();
+    if (events.email_click         !== false) setupEmailClick();
     if (events.cta_click           !== false) setupCtaClick();
     if (events.social_click        !== false) setupSocialClick();
     if (events.lead_form_submit    !== false) setupFormSubmit();
     if (events.gallery_open        !== false) setupGalleryOpen();
-    if (events.video_start         !== false || events.video_complete !== false) setupVideoPlay();
+    if (events.gallery_image_view  !== false || events.gallery_category_click !== false) setupGalleryInteractions();
+    if (events.video_play          !== false || events.video_complete !== false) setupVideoPlay();
     if (events.select_package      !== false) setupPricingClick();
     if (events.view_google_reviews !== false) setupGoogleReviewsClick();
     if (events.scroll_90           !== false) setupScroll90();
+    if (events.contact_section_view !== false) setupContactSectionView();
+    if (events.service_detail_view !== false) setupServiceDetailView();
+    if (events.file_download       !== false) setupFileDownload();
+    if (events.map_click           !== false) setupMapClick();
 
     // Thank-you page fires immediately
-    if (events.lead_thank_you_page !== false) setupThankYouPage();
+    if (events.thank_you_page_view !== false) setupThankYouPage();
   }
 
   // Public API

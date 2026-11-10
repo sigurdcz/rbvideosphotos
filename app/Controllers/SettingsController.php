@@ -210,9 +210,11 @@ class SettingsController extends Controller
     private function buildTrackingEventsJson(): string
     {
         $eventKeys = [
-            'lead_form_submit', 'lead_thank_you_page', 'phone_click',
+            'lead_form_submit', 'thank_you_page_view', 'phone_click',
             'email_click', 'cta_click', 'social_click', 'gallery_open',
-            'video_play', 'pricing_click', 'scroll_90',
+            'gallery_image_view', 'gallery_category_click', 'video_play',
+            'pricing_click', 'scroll_90', 'contact_section_view',
+            'service_detail_view', 'file_download', 'map_click',
         ];
         $result = [];
         foreach ($eventKeys as $key) {
