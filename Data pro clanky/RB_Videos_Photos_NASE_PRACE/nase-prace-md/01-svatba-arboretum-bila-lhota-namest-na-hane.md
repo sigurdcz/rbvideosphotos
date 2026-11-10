@@ -72,9 +72,9 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 ## Doporučené ALT texty
 
-- `Svatba Heleny a Tomáše v Arboretu Bílá Lhota – svatební fotografie RB Videos & Photos`
+- `Svatba Heleny a Tomáše v Arboretu Bílá Lhota - svatební fotografie RB Videos & Photos`
 - `Svatební fotograf a kameraman v Arboretu Bílá Lhota a Náměšti na Hané`
-- `Přirozené svatební foto a video – svatba Arboretum Bílá Lhota`
+- `Přirozené svatební foto a video - svatba Arboretum Bílá Lhota`
 
 # Schválený redakční text
 
@@ -98,11 +98,11 @@ Přesun mezi obřadem a oslavou jsme v příběhu svatby nevnímali jako přeru�
 
 Při společné práci fotografa a kameramana je důležité, aby se oba navzájem neblokovali a zároveň nepřehlédli okamžik, který se už nebude opakovat. Fotograf potřebuje čistou kompozici a přesný zlomek sekundy. Kameraman pracuje s pohybem, zvukem a návazností scén. Výsledkem proto nemají být dvě oddělené dokumentace, ale jeden konzistentní příběh dne.
 
-**Svatební film:** [Helena a Tomáš – Arboretum Bílá Lhota a Náměšť na Hané](https://www.youtube.com/watch?v=GBKJ_VB_Nmw)
+**Svatební film:** [Helena a Tomáš - Arboretum Bílá Lhota a Náměšť na Hané](https://www.youtube.com/watch?v=GBKJ_VB_Nmw)
 
 ## Plánujete svatbu v Arboretu Bílá Lhota?
 
-Arboretum je vhodné pro páry, které chtějí zeleň, klid a přirozené portréty bez okázalých kulis. Při plánování doporučujeme počítat s časem na krátkou procházku areálem a také s variantou pro déšť. Samotné focení nemusí trvat hodinu — často stačí několik kratších bloků během dne, kdy je světlo a nálada nejpřirozenější.
+Arboretum je vhodné pro páry, které chtějí zeleň, klid a přirozené portréty bez okázalých kulis. Při plánování doporučujeme počítat s časem na krátkou procházku areálem a také s variantou pro déšť. Samotné focení nemusí trvat hodinu - často stačí několik kratších bloků během dne, kdy je světlo a nálada nejpřirozenější.
 
 ### Časté otázky
 
@@ -121,6 +121,6 @@ Plánujete svatbu v Olomouckém kraji, na Moravě nebo kdekoliv v České republ
 
 ## Zdroje k místu
 
-1. Arboretum Bílá Lhota – Historie arboreta: https://www.arboretumbilalhota.cz/historie-arboreta  
-2. Infocentrum Náměšť na Hané – Arboretum Bílá Lhota: https://infocentrum.namestnahane.cz/priroda-1/arboretum-bila-lhota-32cs.html  
-3. Zámek Náměšť na Hané – O zámku: https://www.zamek.namestnahane.cz/pro-navstevniky/o-zamku/
+1. Arboretum Bílá Lhota - Historie arboreta: https://www.arboretumbilalhota.cz/historie-arboreta
+2. Infocentrum Náměšť na Hané - Arboretum Bílá Lhota: https://infocentrum.namestnahane.cz/priroda-1/arboretum-bila-lhota-32cs.html
+3. Zámek Náměšť na Hané - O zámku: https://www.zamek.namestnahane.cz/pro-navstevniky/o-zamku/

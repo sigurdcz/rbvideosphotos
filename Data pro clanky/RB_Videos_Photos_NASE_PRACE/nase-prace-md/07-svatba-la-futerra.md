@@ -71,9 +71,9 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 ## Doporučené ALT texty
 
-- `Svatba Ivety a Reného v areálu La Futerra – svatební fotografie RB Videos & Photos`
+- `Svatba Ivety a Reného v areálu La Futerra - svatební fotografie RB Videos & Photos`
 - `Svatební fotograf a kameraman v areálu La Futerra ve Zlámance u Kroměříže`
-- `Přirozené svatební foto a video – svatba La Futerra`
+- `Přirozené svatební foto a video - svatba La Futerra`
 
 # Schválený redakční text
 
@@ -91,13 +91,13 @@ Přesnou kapacitu, rozsah ubytování a aktuálně dostupné služby doporučuje
 
 Rustikální areál automaticky neznamená, že každá fotografie musí být hnědá, silně tónovaná nebo plná dekorací. Naším cílem je zachovat skutečné barvy dne a odlišit prostředí od lidí. Dřevo, tráva a přírodní materiály používáme jako rám, nikoliv jako hlavní téma.
 
-Ve videu funguje střídání klidnějších venkovních scén s živější hostinou a večerním programem. Pokud jsou přípravy, obřad i oslava na jednom místě, můžeme zachytit také proměnu areálu během dne — od ranního chystání přes slavnostní okamžik až po večerní světla.
+Ve videu funguje střídání klidnějších venkovních scén s živější hostinou a večerním programem. Pokud jsou přípravy, obřad i oslava na jednom místě, můžeme zachytit také proměnu areálu během dne - od ranního chystání přes slavnostní okamžik až po večerní světla.
 
 ## Proč je důležitý sehraný tým fotografa a kameramana
 
 V kompaktním areálu se fotograf a kameraman často pohybují blízko sebe. Bez domluvy by si mohli vstupovat do záběru nebo blokovat hlavní úhel obřadu. Předem proto určujeme pozice, používáme dlouhá ohniska a během klíčových okamžiků se pohybujeme co nejméně. Novomanželé ani hosté tak nemají pocit, že jsou součástí natáčení reklamy.
 
-**Svatební film:** [Iveta a René – La Futerra](https://www.youtube.com/watch?v=o-1xGllIShY)
+**Svatební film:** [Iveta a René - La Futerra](https://www.youtube.com/watch?v=o-1xGllIShY)
 
 ### Časté otázky
 
@@ -116,5 +116,5 @@ Plánujete svatbu v Olomouckém kraji, na Moravě nebo kdekoliv v České republ
 
 ## Zdroje k místu
 
-1. La Futerra – oficiální web: https://lafuterra.mozellosite.com/
-2. La Futerra – oficiální Instagram: https://www.instagram.com/svatebnimistolafuterra/
+1. La Futerra - oficiální web: https://lafuterra.mozellosite.com/
+2. La Futerra - oficiální Instagram: https://www.instagram.com/svatebnimistolafuterra/

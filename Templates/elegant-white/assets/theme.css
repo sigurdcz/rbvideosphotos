@@ -6113,7 +6113,7 @@ body.theme-elegant-white .fq-hero h1 {
 
 body.theme-elegant-white .services-hero > .container::after,
 body.theme-elegant-white .fq-hero > .container::after {
-  content: "—  ♡  —";
+  content: "-  ♡  -";
   display: block;
   margin-top: 24px;
   color: var(--ew-2026-gold);

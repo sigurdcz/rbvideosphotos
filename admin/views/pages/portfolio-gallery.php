@@ -19,7 +19,7 @@ $galleryGroups = ['photo' => 'Fotogalerie', 'video' => 'Videogalerie'];
         <?php foreach ($galleryItems as $galleryItem): ?>
           <li style="margin-bottom:12px">
             <a href="/admin/portfolio/edit?id=<?= (int)$galleryItem['id'] ?>" target="_blank" rel="noopener">Upravit: <?= $h($galleryItem['title']) ?> (nová karta)</a>
-            — pořadí <?= (int)$galleryItem['sort_order'] ?>,
+            - pořadí <?= (int)$galleryItem['sort_order'] ?>,
             <?= ($galleryItem['status'] ?? '') === 'published' ? 'publikováno' : 'koncept' ?>
           </li>
         <?php endforeach; ?>

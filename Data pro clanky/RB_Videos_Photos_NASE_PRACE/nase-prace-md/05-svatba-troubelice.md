@@ -71,9 +71,9 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 ## Doporučené ALT texty
 
-- `Svatba Marie a Miroslava v Troubelicích – svatební fotografie RB Videos & Photos`
+- `Svatba Marie a Miroslava v Troubelicích - svatební fotografie RB Videos & Photos`
 - `Svatební fotograf a kameraman v lokalitě Dům podporovaného bydlení Troubelice; Kulturní dům Troubelice`
-- `Přirozené svatební foto a video – svatba Troubelice`
+- `Přirozené svatební foto a video - svatba Troubelice`
 
 # Schválený redakční text
 
@@ -97,7 +97,7 @@ Při dokumentování takového dne nevytváříme umělou „luxusní“ iluzi. 
 
 Krátký přesun v rámci jedné obce umožňuje zachovat kontinuitu. Fotograf může dokončit skupinové fotografie a kameraman mezitím připravit záběr příjezdu nebo začátku hostiny. Důležité je, aby logistika zbytečně nezatěžovala novomanžele. Trasu a časový plán řešíme předem.
 
-**Svatební film:** [Marie a Miroslav – Troubelice](https://www.youtube.com/watch?v=O5i9TzCms5c)
+**Svatební film:** [Marie a Miroslav - Troubelice](https://www.youtube.com/watch?v=O5i9TzCms5c)
 
 ### Časté otázky
 
@@ -116,5 +116,5 @@ Plánujete svatbu v Olomouckém kraji, na Moravě nebo kdekoliv v České republ
 
 ## Zdroje k místu
 
-1. Obec Troubelice – základní informace: https://www.troubelice.cz/uvod.php  
-2. Program rozvoje obce Troubelice 2024–2034: https://www.obcepro.cz/pro/31331703076666.pdf
+1. Obec Troubelice - základní informace: https://www.troubelice.cz/uvod.php
+2. Program rozvoje obce Troubelice 2024-2034: https://www.obcepro.cz/pro/31331703076666.pdf

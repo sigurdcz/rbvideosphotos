@@ -1,4 +1,4 @@
-# RB Videos & Photos – podklady pro blog
+# RB Videos & Photos - podklady pro blog
 
 Tato složka obsahuje 12 samostatných Markdown souborů připravených jako zdrojové podklady pro AI nebo CMS.
 

@@ -71,9 +71,9 @@ Z tohoto souboru vytvoř finální stránku realizace pro web **RB Videos & Phot
 
 ## Doporučené ALT texty
 
-- `Svatba Nikoly a Jirky v Penzionu Fojtství – svatební fotografie RB Videos & Photos`
+- `Svatba Nikoly a Jirky v Penzionu Fojtství - svatební fotografie RB Videos & Photos`
 - `Svatební fotograf a kameraman v lokalitě Penzion Fojtství, Svatý Kopeček u Olomouce`
-- `Přirozené svatební foto a video – svatba Penzion Fojtství`
+- `Přirozené svatební foto a video - svatba Penzion Fojtství`
 
 # Schválený redakční text
 
@@ -95,9 +95,9 @@ Ve fotografiích hledáme vedle „velkých“ okamžiků i vztahy mezi lidmi. U
 
 ## Jak zde pracujeme s prostorem
 
-Historický areál může vypadat romanticky, rustikálně i elegantně — záleží na výzdobě a světle. Naším cílem není místo přestylizovat, ale zachovat jeho charakter. U širokých záběrů ukazujeme prostředí, zatímco u portrétů využíváme klidnější pozadí a menší hloubku ostrosti. Před důležitými okamžiky dne si jako fotograf a kameraman rozdělujeme pozice tak, abychom si navzájem nevstupovali do záběru.
+Historický areál může vypadat romanticky, rustikálně i elegantně - záleží na výzdobě a světle. Naším cílem není místo přestylizovat, ale zachovat jeho charakter. U širokých záběrů ukazujeme prostředí, zatímco u portrétů využíváme klidnější pozadí a menší hloubku ostrosti. Před důležitými okamžiky dne si jako fotograf a kameraman rozdělujeme pozice tak, abychom si navzájem nevstupovali do záběru.
 
-**Svatební film:** [Nikola a Jirka – Penzion Fojtství](https://www.youtube.com/watch?v=C1wL3QFZhn0)
+**Svatební film:** [Nikola a Jirka - Penzion Fojtství](https://www.youtube.com/watch?v=C1wL3QFZhn0)
 
 ### Časté otázky
 
@@ -116,5 +116,5 @@ Plánujete svatbu v Olomouckém kraji, na Moravě nebo kdekoliv v České republ
 
 ## Zdroje k místu
 
-1. Penzion Fojtství – Svatby: https://penzionfojtstvi.cz/svatby/  
-2. Penzion Fojtství – Nabídka služeb: https://penzionfojtstvi.cz/nabidka-sluzeb/
+1. Penzion Fojtství - Svatby: https://penzionfojtstvi.cz/svatby/
+2. Penzion Fojtství - Nabídka služeb: https://penzionfojtstvi.cz/nabidka-sluzeb/
