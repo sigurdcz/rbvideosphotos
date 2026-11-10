@@ -49,6 +49,7 @@ final class ContactSpamConfig
                 'roberthip && achọrọ m ịmara ọnụahịa gị',
                 'roberthip && meg akartam tudni az árát',
                 'it handles questions && books the appointment && blue phone icon && 14 days',
+                'καζίνο && μπόνους && δωρεάν περιστροφές && κατάθεση',
             ],
             'allowed_domains' => [],
         ];

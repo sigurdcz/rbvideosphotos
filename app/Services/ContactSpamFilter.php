@@ -34,6 +34,14 @@ final class ContactSpamFilter
         $score = 0;
         $reasons = [];
 
+        // Some form bots submit a single machine-generated token as both the
+        // name and the complete message. Requiring this narrow shape in both
+        // fields avoids treating ordinary names, reference numbers or short
+        // typo-filled inquiries as spam.
+        if ($this->isGeneratedToken($name) && $this->isGeneratedToken($message)) {
+            $this->add($score, $reasons, $this->weight('known_phrase'), 'generated-token-payload');
+        }
+
         $knownMatched = false;
         foreach ($this->config['known_phrases'] as $phrase) {
             if (str_contains($all, $phrase)) {
@@ -107,6 +115,11 @@ final class ContactSpamFilter
             '~(?:https?://|www\.|\b[a-z0-9][a-z0-9.-]+\.(?:com|net|org|io|ru|xyz|top|click|site|online)(?:/|\b))~iu',
             $value
         ) === 1;
+    }
+
+    private function isGeneratedToken(string $value): bool
+    {
+        return preg_match('/^[A-Z]{6,}\d{5,}[A-Z]{5,}$/D', trim($value)) === 1;
     }
 
     private function containsUntrustedUrl(string $value): bool

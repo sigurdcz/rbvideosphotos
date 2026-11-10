@@ -7,6 +7,37 @@ use App\Services\ContactSpamConfig;
 
 function register_contact_spam_filter_tests(callable $test, callable $assert): void
 {
+    $test('Greek casino promotion and paired generated tokens are blocked without broad language rules', function () use ($assert): void {
+        $filter = new ContactSpamFilter();
+        $casino = <<<'MESSAGE'
+Γεια σας!
+Γνωρίστε το Trueluck — ένα online καζίνο με φρουτάκια, παιχνίδια με live κρουπιέρηδες και μπόνους για νέους παίκτες.
+Το πακέτο καλωσορίσματος προσφέρει 175 δωρεάν περιστροφές στις πρώτες τρεις καταθέσεις. Πρώτη κατάθεση: 100% έως 500 €.
+Δείτε τις προσφορές και τους όρους - https://gamevisor.org/trueluck-casino/
+MESSAGE;
+        $casinoResult = $filter->classify('RalphFub', 'fntfb@oppcfx.xl frkx r250...', $casino);
+        $assert($casinoResult['isSpam'], 'Supplied Greek casino advertisement must be spam.');
+        $assert(in_array('campaign-combination', $casinoResult['reasons'], true), 'Casino campaign reason must be explicit.');
+
+        $tokenResult = $filter->classify(
+            'NAERTREGE1069594NEYHRTGE',
+            'werhi@nhkwkr.vl uock k620...',
+            'MERTYHR1069594MAERWETT'
+        );
+        $assert($tokenResult['isSpam'], 'Paired generated name and message tokens must be spam.');
+        $assert(in_array('generated-token-payload', $tokenResult['reasons'], true), 'Generated-token reason must be explicit.');
+
+        foreach ([
+            ['Γιώργος', 'giorgos@example.gr', 'Γεια σας, ποια είναι η τιμή για οικογενειακή φωτογράφιση;'],
+            ['Anna', 'anna@example.cz', 'Fotíme firemní večírek v kasinu. Pošlete prosím cenu.'],
+            ['Studio1069594', 'studio@example.cz', 'Dobrý den, potřebujeme firemní fotografie pro Studio 1069594.'],
+            ['NAERTREGE1069594NEYHRTGE', 'client@example.cz', 'Dobrý den, kolik stojí svatební focení?'],
+            ['Jan Novák', 'jan@example.cz', 'MERTYHR1069594MAERWETT'],
+        ] as [$name, $contact, $message]) {
+            $assert(!$filter->classify($name, $contact, $message)['isSpam'], 'A language, venue, number or one token field alone must pass.');
+        }
+    });
+
     $test('all 19 accepted archive spam excerpts match default and stored profiles', function () use ($assert): void {
         // Excerpts from the supplied archive: only names and relevant text, no private recipients/contact data.
         $samples = json_decode(file_get_contents(__DIR__ . '/fixtures/contact-archive-spam-excerpts.json'), true, 32, JSON_THROW_ON_ERROR);
