@@ -317,7 +317,7 @@ $test('disabled consent keeps analytics categories available without a banner', 
     $assert(str_contains($decoded, '"marketingCategoryEnabled":true'));
 });
 
-$test('tracking bootstrap chooses one interaction-deferred primary loader and defers Clarity', function () use ($assert): void {
+$test('tracking bootstrap gives GTM priority and defers the single primary loader with Clarity', function () use ($assert): void {
     $html = (new SeoRenderer())->renderConsentRuntime([
         'cookie_consent_enabled' => 0,
         'google_analytics_id' => 'G-TEST123',
@@ -327,7 +327,8 @@ $test('tracking bootstrap chooses one interaction-deferred primary loader and de
     $decoded = html_entity_decode($html, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
     $runtime = (string)file_get_contents(dirname(__DIR__) . '/public/assets/cookie-consent-runtime.js');
 
-    $assert(str_contains($decoded, '"trackingLoaderMode":"direct-ga"'));
+    $assert(str_contains($decoded, '"googleTagManagerId":"GTM-TEST123"'));
+    $assert(str_contains($decoded, '"trackingLoaderMode":"gtm"'));
     $assert(str_contains($runtime, "trackingLoaderMode !== 'gtm'"));
     $assert(str_contains($runtime, "window.addEventListener('pointerdown', activate"));
     $assert(str_contains($runtime, 'function schedulePrimaryTracking'));
@@ -336,6 +337,15 @@ $test('tracking bootstrap chooses one interaction-deferred primary loader and de
     $assert(str_contains($runtime, 'window.setTimeout(activate, 8000)'));
     $assert(str_contains($runtime, 'loadAnalyticsScripts(true)') && str_contains($runtime, 'loadMarketingScripts(true)'));
     $assert(!str_contains($runtime, "loadGoogleAnalytics();\n    loadClarity();"), 'GA4 and Clarity still start in parallel.');
+});
+
+$test('RB Videos and Photos GTM migration activates the requested container without broad site overwrite', function () use ($assert): void {
+    $migration = (string)file_get_contents(dirname(__DIR__) . '/database/migrations/119_set_rbvideosphotos_gtm_container.sql');
+
+    $assert(str_contains($migration, "google_tag_manager_id = 'GTM-P7Z5TP6G'"));
+    $assert(str_contains($migration, "LOWER(TRIM(name)) = 'rb videos & photos'"));
+    $assert(str_contains($migration, "LOWER(TRIM(TRAILING '/' FROM domain)) IN"));
+    $assert(!str_contains($migration, 'UPDATE sites\nSET google_tag_manager_id = \'GTM-P7Z5TP6G\';'), 'Migration would overwrite unrelated sites.');
 });
 
 $test('main and demo seed share an existing default hero poster asset', function () use ($assert): void {

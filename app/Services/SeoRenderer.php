@@ -426,7 +426,7 @@ HTML;
             'marketingCategoryEnabled' => (int)($site['cookie_consent_marketing_enabled'] ?? 1) === 1,
             'googleAnalyticsId'        => $googleAnalyticsId,
             'googleTagManagerId'       => $googleTagManagerId,
-            'trackingLoaderMode'       => $googleAnalyticsId !== '' ? 'direct-ga' : ($googleTagManagerId !== '' ? 'gtm' : 'none'),
+            'trackingLoaderMode'       => $googleTagManagerId !== '' ? 'gtm' : ($googleAnalyticsId !== '' ? 'direct-ga' : 'none'),
             'analyticsHeadScripts'     => (string)($site['analytics_head_scripts'] ?? ''),
             'analyticsBodyScripts'     => (string)($site['analytics_body_scripts'] ?? ''),
             'marketingHeadScripts'     => (string)($site['marketing_head_scripts'] ?? ''),

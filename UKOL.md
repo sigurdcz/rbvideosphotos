@@ -3204,3 +3204,29 @@ vsech pet skutecnych img.youtube.com thumbnail URL HTTP200.
 PHP lint/diff check OK. ARCHITECTURE a wiki architektura aktualizovany.
 Jen lokalni dev commit; staging/produkce a Search Console validace zatim cekaji.
 
+# UKOL: GTM-P7Z5TP6G
+Datum: 2026-11-10.
+Zadani: Zapojit kontejner GTM-P7Z5TP6G do existujiciho verejneho tracking flow webu.
+Doporuceny model: Terra - projekt uz ma DB konfiguraci, consent runtime a vice renderovacich cest.
+
+## Kroky
+
+- [x] Overit existujici GTM konfiguraci, consent chovani a vsechny renderovaci cesty.
+- [x] Nastavit GTM-P7Z5TP6G bez duplicitniho skriptu a bez obchazeni souhlasu.
+- [x] Doplnit regresni testy a overit PHP/JS vystup.
+- [x] Aktualizovat dokumentaci a wiki, vytvorit lokalni commit na dev bez pushe.
+
+## Poznamky
+
+Uz existuje cookie-consent-runtime, ktery nacita gtm.js z google_tag_manager_id
+az po marketingovem souhlasu. Nepridavat druhy hardcodovany script do layoutu.
+
+## Vysledek
+
+GTM-P7Z5TP6G je nastaven append-only migraci 119 pro produkcni i stagingovy web.
+SeoRenderer dava GTM prednost pred prime GA4 konfiguraci, aby se nenacitaly dva primarni loadery.
+Nacteni zustava za marketingovym consentem a s existujicim interakcnim odkladem.
+Nove GTM testy a PHP lint prosly. Cely test runner nadale hlasi starsi nesouvisejici
+FAIL u izolace Golden Bash Diagonal a nedostupnou lokalni databazi.
+Dokumentace i lokalni wiki byly aktualizovany; pripraven lokalni dev commit bez pushe.
+
