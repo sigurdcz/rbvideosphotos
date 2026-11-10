@@ -317,7 +317,7 @@ $test('disabled consent keeps analytics categories available without a banner', 
     $assert(str_contains($decoded, '"marketingCategoryEnabled":true'));
 });
 
-$test('tracking bootstrap gives GTM priority and defers the single primary loader with Clarity', function () use ($assert): void {
+$test('tracking bootstrap gives GTM priority, loads it immediately when permitted and defers Clarity', function () use ($assert): void {
     $html = (new SeoRenderer())->renderConsentRuntime([
         'cookie_consent_enabled' => 0,
         'google_analytics_id' => 'G-TEST123',
@@ -333,7 +333,8 @@ $test('tracking bootstrap gives GTM priority and defers the single primary loade
     $assert(str_contains($runtime, "window.addEventListener('pointerdown', activate"));
     $assert(str_contains($runtime, 'function schedulePrimaryTracking'));
     $assert(str_contains($runtime, "schedulePrimaryTracking(loadGoogleAnalytics, '__analyticsLoaded')"));
-    $assert(str_contains($runtime, "schedulePrimaryTracking(loadGoogleTagManager, '__gtmLoaded')"));
+    $assert(str_contains($runtime, "if (trackingLoaderMode === 'gtm') {\n      loadGoogleTagManager();"));
+    $assert(!str_contains($runtime, "schedulePrimaryTracking(loadGoogleTagManager, '__gtmLoaded')"), 'GTM is still delayed beyond Google tag detection.');
     $assert(str_contains($runtime, 'window.setTimeout(activate, 8000)'));
     $assert(str_contains($runtime, 'loadAnalyticsScripts(true)') && str_contains($runtime, 'loadMarketingScripts(true)'));
     $assert(!str_contains($runtime, "loadGoogleAnalytics();\n    loadClarity();"), 'GA4 and Clarity still start in parallel.');

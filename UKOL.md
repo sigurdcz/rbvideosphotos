@@ -3230,3 +3230,21 @@ Nove GTM testy a PHP lint prosly. Cely test runner nadale hlasi starsi nesouvise
 FAIL u izolace Golden Bash Diagonal a nedostupnou lokalni databazi.
 Dokumentace i lokalni wiki byly aktualizovany; pripraven lokalni dev commit bez pushe.
 
+# UKOL: Detekce GTM na stagingu
+Datum: 2026-11-10.
+Zadani: Opravit hlaseni Google, ze na stagingu nebyla nalezena znacka.
+Doporuceny model: Terra - problem propojuje databazovou konfiguraci, consent runtime a zivy staging.
+
+## Kroky
+
+- [x] Overit zive HTML a stav migrace 119.
+- [x] Identifikovat osmivterinovy odklad jako druhou pricinu automaticke detekce.
+- [x] Nacist GTM okamzite po splneni consent podminek a doplnit regresni test.
+- [x] Aktualizovat wiki, commitnout na dev a nasadit na staging v ramci schvaleneho staging flow.
+
+## Vysledek
+
+Zive HTML po migraci 119 obsahuje GTM-P7Z5TP6G a trackingLoaderMode gtm.
+GTM se po splneni marketingoveho consentu nacita okamzite, aby jej Google tester neminul;
+bez souhlasu zustava pri aktivnim consentu zablokovany. JS syntaxe a novy regresni test prosly.
+

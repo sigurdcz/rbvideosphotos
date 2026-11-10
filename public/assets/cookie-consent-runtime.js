@@ -208,8 +208,7 @@
   function loadMarketingScripts(immediate){
     if (!canLoadMarketing()) return;
     if (trackingLoaderMode === 'gtm') {
-      if (immediate === true) loadGoogleTagManager();
-      else schedulePrimaryTracking(loadGoogleTagManager, '__gtmLoaded');
+      loadGoogleTagManager();
     }
     loadMetaPixel();
     appendHtml(settings.marketingHeadScripts || '', 'head', '__marketingHeadScriptsLoaded');

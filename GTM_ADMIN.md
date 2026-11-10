@@ -6,7 +6,7 @@ Tento dokument popisuje admin sekci `/admin/gtm`, ktera slouzi ke sprave Google 
 
 Kontejner verejneho webu se nastavuje v `sites.google_tag_manager_id`. Pro RB Videos & Photos jej migrace `119_set_rbvideosphotos_gtm_container.sql` nastavuje na `GTM-P7Z5TP6G` pro produkcni i stagingovou domenu.
 
-`SeoRenderer::renderConsentRuntime()` posle ID do `cookie-consent-runtime.js`. Pokud jsou vyplnene GTM i prime GA4 ID, primarni loader je GTM; tagy uvnitr kontejneru pak mohou obslouzit GA4 bez druheho paralelniho loaderu. Skript `gtm.js` se nacte az po povoleni marketingove kategorie a pouze jednou.
+`SeoRenderer::renderConsentRuntime()` posle ID do `cookie-consent-runtime.js`. Pokud jsou vyplnene GTM i prime GA4 ID, primarni loader je GTM; tagy uvnitr kontejneru pak mohou obslouzit GA4 bez druheho paralelniho loaderu. Skript `gtm.js` se po splneni marketingoveho consentu nacte okamzite a pouze jednou, aby jej nasel Google Tag Assistant. Pri aktivnim consentu bez souhlasu zustava zcela zablokovany.
 
 Po staging deployi over v HTML meta `cms-cookie-consent-settings` hodnoty `googleTagManagerId: GTM-P7Z5TP6G` a `trackingLoaderMode: gtm`. Po marketingovem souhlasu musi Network obsahovat jediny request na `https://www.googletagmanager.com/gtm.js?id=GTM-P7Z5TP6G`.
 
