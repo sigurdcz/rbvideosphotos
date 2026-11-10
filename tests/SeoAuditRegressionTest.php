@@ -137,8 +137,10 @@ function register_seo_audit_regression_tests(callable $test, callable $assert): 
     $test('portfolio videos emit VideoObject structured data', function () use ($assert, $root): void {
         $front = (string)file_get_contents($root . '/public/index.php');
         $assert(str_contains($front, 'function renderPortfolioVideoJsonLd'));
-        $assert(str_contains($front, "'@type' => 'VideoObject'"));
-        $assert(str_contains($front, "'embedUrl' => PortfolioRepository::embedUrl"));
+        $schema = (string)file_get_contents($root . '/app/Services/PortfolioVideoSchema.php');
+        $assert(str_contains($schema, "'@type' => 'VideoObject'"));
+        $assert(str_contains($schema, "'embedUrl' => PortfolioRepository::embedUrl"));
+        $assert(str_contains($front, 'PortfolioVideoSchema::build('));
         $assert(str_contains($front, 'renderPortfolioVideoJsonLd('));
     });
 

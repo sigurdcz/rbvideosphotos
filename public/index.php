@@ -1084,27 +1084,8 @@ function renderBlogPostJsonLd(array $site, array $post, string $canonical, ?stri
 
 function renderPortfolioVideoJsonLd(array $site, array $entry, string $canonical, ?string $imageUrl = null): string
 {
-    $videoUrl = trim((string)($entry['video_url'] ?? ''));
-    if ($videoUrl === '') {
-        return '';
-    }
-
-    $payload = [
-        '@context' => 'https://schema.org',
-        '@type' => 'VideoObject',
-        'name' => trim((string)($entry['title'] ?? 'Ukázka videa')),
-        'description' => trim(strip_tags((string)($entry['meta_description'] ?? $entry['description'] ?? ''))),
-        'url' => $canonical,
-        'embedUrl' => PortfolioRepository::embedUrl($videoUrl),
-    ];
-    if ($imageUrl !== null && trim($imageUrl) !== '') {
-        $payload['thumbnailUrl'] = $imageUrl;
-    }
-    if (!empty($entry['published_at'])) {
-        $payload['uploadDate'] = date(DATE_ATOM, strtotime((string)$entry['published_at']));
-    }
-
-    return jsonLd($payload);
+    $payload = \App\Services\PortfolioVideoSchema::build($site, $entry, $canonical, $imageUrl);
+    return $payload === [] ? '' : jsonLd($payload);
 }
 
 /**

@@ -3182,3 +3182,69 @@ git diff --check OK. README dokumentuje verejnou URL a kontrolu po nasazeni.
 Wiki reflection: SKIP - jednoduche pridani vendor souboru, bez noveho mechanismu;
 postup a dukaz obsahu jsou v README a tomto zaznamu. Online HTTP zatim neovereno.
 
+# UKOL: VideoObject thumbnailUrl
+Datum: 2026-11-10. Opravit chybejici thumbnailUrl pro video portfolio ve vsech vystupech.
+Doporuceny model: Terra - opraveni spolecneho SEO vystupu s regresnimi testy.
+- [x] Dohledat generator a dostupne skutecne nahledy pro pet uvedenych stranek.
+- [x] Doplnit sdilene generovani bez falesnych obrazku, overit live/publish cestu.
+- [x] Regresni testy, dokumentace/wiki a lokalni commit na dev.
+Google vyzaduje thumbnailUrl, name a uploadDate; pouzit skutecny dostupny nahled.
+Bez automatickeho pushe/master merge.
+Vsech pet produkcnich JSON-LD bezthumbnail potvrzeno; vsech pet YouTube hqdefault
+overeno HTTP200 image/jpeg. PortfolioVideoSchema sdili builder live/export,
+preferuje vlastni fotografii, jinak existujici youtubeThumbnail. Bez dostupneho
+zdroje (napr. Vimeo bez fotografie) varuje logem a nepublikuje neplatny objekt.
+## Vysledek
+4/4 cilenych testu proslo (vcetne skutecneho standalone exportu). Sirsi sada
+279 testu/3 drive zname chyby, 28 golden kontrol/8 drive znamych rozdilu;
+goldeny nemenit. Puvodni casovopasmovy predpoklad testu opraven porovnanim instantu.
+Local HTTP200 + spravne JSON-LD: Ester/Tomas, Pavlina/Marek, Marketa/Petr.
+Martina/Jaroslav a Ivanka/Lubomir lokalne404 (chybi data), jejich ID v unit testech;
+vsech pet skutecnych img.youtube.com thumbnail URL HTTP200.
+PHP lint/diff check OK. ARCHITECTURE a wiki architektura aktualizovany.
+Jen lokalni dev commit; staging/produkce a Search Console validace zatim cekaji.
+
+# UKOL: GTM-P7Z5TP6G
+Datum: 2026-11-10.
+Zadani: Zapojit kontejner GTM-P7Z5TP6G do existujiciho verejneho tracking flow webu.
+Doporuceny model: Terra - projekt uz ma DB konfiguraci, consent runtime a vice renderovacich cest.
+
+## Kroky
+
+- [x] Overit existujici GTM konfiguraci, consent chovani a vsechny renderovaci cesty.
+- [x] Nastavit GTM-P7Z5TP6G bez duplicitniho skriptu a bez obchazeni souhlasu.
+- [x] Doplnit regresni testy a overit PHP/JS vystup.
+- [x] Aktualizovat dokumentaci a wiki, vytvorit lokalni commit na dev bez pushe.
+
+## Poznamky
+
+Uz existuje cookie-consent-runtime, ktery nacita gtm.js z google_tag_manager_id
+az po marketingovem souhlasu. Nepridavat druhy hardcodovany script do layoutu.
+
+## Vysledek
+
+GTM-P7Z5TP6G je nastaven append-only migraci 119 pro produkcni i stagingovy web.
+SeoRenderer dava GTM prednost pred prime GA4 konfiguraci, aby se nenacitaly dva primarni loadery.
+Nacteni zustava za marketingovym consentem a s existujicim interakcnim odkladem.
+Nove GTM testy a PHP lint prosly. Cely test runner nadale hlasi starsi nesouvisejici
+FAIL u izolace Golden Bash Diagonal a nedostupnou lokalni databazi.
+Dokumentace i lokalni wiki byly aktualizovany; pripraven lokalni dev commit bez pushe.
+
+# UKOL: Detekce GTM na stagingu
+Datum: 2026-11-10.
+Zadani: Opravit hlaseni Google, ze na stagingu nebyla nalezena znacka.
+Doporuceny model: Terra - problem propojuje databazovou konfiguraci, consent runtime a zivy staging.
+
+## Kroky
+
+- [x] Overit zive HTML a stav migrace 119.
+- [x] Identifikovat osmivterinovy odklad jako druhou pricinu automaticke detekce.
+- [x] Nacist GTM okamzite po splneni consent podminek a doplnit regresni test.
+- [x] Aktualizovat wiki, commitnout na dev a nasadit na staging v ramci schvaleneho staging flow.
+
+## Vysledek
+
+Zive HTML po migraci 119 obsahuje GTM-P7Z5TP6G a trackingLoaderMode gtm.
+GTM se po splneni marketingoveho consentu nacita okamzite, aby jej Google tester neminul;
+bez souhlasu zustava pri aktivnim consentu zablokovany. JS syntaxe a novy regresni test prosly.
+

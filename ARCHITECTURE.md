@@ -310,6 +310,19 @@ Blog a portfolio sdileji layout a navigaci, ale maji vlastni tabulky a renderer:
 
 Prime slugy bez `/blog/` a `/nase-prace/` prefixu jsou zamerne. `tryRedirectLegacyContentPath()` drzi 301 redirect ze starych cest.
 
+Video strukturovana data sdili `PortfolioVideoSchema::build()` mezi live
+`renderPortfolioVideoJsonLd()` a standalone `PortfolioPublishService::publishEntry()`.
+`thumbnailUrl` preferuje prvni fotografii galerie a prevede ji na absolutni URL;
+bez fotografie pouzije existujici `PortfolioRepository::youtubeThumbnail()`
+(`https://img.youtube.com/vi/{id}/hqdefault.jpg`) prislusneho videa.
+Nepouziva logo ani vychozi site OG obrazek. Vimeo vyzaduje vlastni fotografii;
+bez verejneho HTTP(S) nahledu se VideoObject vynecha a zapise warning
+`portfolio-video-schema`, prehravac zustava. Neprobihaji HTTP dotazy pri renderu.
+Export popisuje prvni video ze stejne serazene kolekce jako iframe. Stare exporty
+se opravi pri novem publikovani, live detail pouzije opravu ihned po nasazeni.
+Regrese: `php tests/PortfolioVideoSchemaTest.php` overuje pet Google prikladu,
+absolutni URL, Vimeo hranice a skutecne JSON-LD ve standalone exportu.
+
 ### Media
 
 - DB uchovava interni `storage_path` jako `storage/media/YYYY/MM/file.webp`
