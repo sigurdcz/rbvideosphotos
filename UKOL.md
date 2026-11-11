@@ -3359,3 +3359,48 @@ databazovym pripojenim, proto neni vydavan za plne uspesny. Dokumentace i lokaln
 jsou aktualizovane. Zmeny jsou commitnute na `dev` bez pushe; slozka `artifacts/` zustala
 nedotcena a `master` se nezmenil.
 
+# UKOL: Graficka GTM analytika
+
+Datum: 2026-11-11
+Zadani: Rozsirit administracni Analytiku o podrobny graficky dashboard nad lokalne ulozenymi GTM udalostmi.
+Doporuceny model: Sol - zmena propojuje SQL agregace, casove rady, filtrovani, bezpecne predani dat do grafu a responzivni administraci.
+
+## Kroky
+
+- [x] Zmapovat existujici analyticke agregace, UI komponenty a dostupny zpusob vykresleni grafu.
+- [x] Navrhnout metriky, filtry a grafy bez zameni lokalniho dispatch zaznamu za potvrzeni GA4.
+- [x] Rozsirit repository/controller o potrebne agregace a validaci obdobi.
+- [x] Implementovat responzivni graficky dashboard a pristupnou tabulkovou alternativu.
+- [x] Doplnit regresni testy a aktualizovat technickou dokumentaci.
+- [x] Provest cilene i sirsi overeni, wiki reflection a commit na `dev` bez automatickeho pushe.
+
+## Poznamky
+
+Vychozim bodem je commit `c4da18e` na vetvi `dev`. Neversionovana slozka `artifacts/`
+je nesouvisejici a zustane nedotcena. Dashboard bude zobrazovat lokalni first-party zaznamy;
+nesmi tvrdit, ze GA4 nebo Google Tag Manager udalost skutecne prijaly.
+Projekt nepouziva knihovnu grafu ani frontendovy build. Dashboard proto pouzije serverem
+pripravena data, lokalni HTML/CSS a pristupne inline SVG bez externi zavislosti. Navrh zahrnuje
+denni trend udalosti a dennich anonymnich navstevniku, rozdeleni eventu, aktivitu podle hodin,
+vykon stranek, podil souhlasu, prumer udalosti na denniho navstevnika a tabulkovou alternativu.
+Repository nyni vraci denni unikatni otisky a souhlasy, agregaci podle verejne cesty a kompletni
+24hodinovy profil. Controller doplnuje lidske nazvy eventu i do kombinaci stranka-event.
+Admin dashboard vykresluje sest KPI, SVG trend, distribucni pruhy, hodinovy graf a dve detailni
+tabulky. Grafy jsou bez CDN a JavaScriptove zavislosti, responzivni a maji textovou alternativu.
+Regresni fixture pokryva nove agregace, 24hodinovou radu, SVG markup a responzivni CSS kontrakt.
+README, ARCHITECTURE a GTM_ADMIN byly aktualizovany. Wiki reflection rozsirila integrations,
+data-model a projektovy hub; samostatny wiki commit je `87ff43a`.
+
+## Vysledek
+
+Podrobny GTM dashboard je implementovany nad existujici tabulkou `tracking_events`; nova migrace
+neni potreba. Nabizi sest KPI, denni SVG trend udalosti a dennich anonymnich navstevniku,
+rozdeleni eventu, aktivitu podle hodin, nejaktivnejsi stranky a detail kombinaci event-stranka.
+Volba 7/30/90/365 dni zustava spolecna s ostatni Analytikou. Grafy jsou lokalni, responzivni,
+bez externi knihovny a doplnene tabulkami.
+
+Cilena sada `php tests/run-tracking-events.php` prosla 4/4, zmenene PHP soubory prosly lintem
+a `git diff --check` je cisty. Cely historicky runner znovu narazil na znamy nesouvisejici
+Golden Bash Diagonal rozdil a nedostupne lokalni DB pripojeni; tyto blokery nejsou skryte.
+Zmeny jsou commitnute na `dev` bez pushe. `artifacts/` zustava nedotcena a `master` se nemeni.
+

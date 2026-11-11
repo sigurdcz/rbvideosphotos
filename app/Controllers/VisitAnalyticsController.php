@@ -62,6 +62,11 @@ final class VisitAnalyticsController extends Controller
                     $row['category'] = $definition['category'] ?? 'nezarazeno';
                 }
                 unset($row);
+                foreach ($eventSummary['top_paths'] as &$row) {
+                    $definition = $catalog[$row['event_name']] ?? null;
+                    $row['label'] = $definition['label'] ?? $row['event_name'];
+                }
+                unset($row);
             } catch (\PDOException $e) {
                 \App\Core\Logger::error('tracking-events', $e->getMessage());
                 $eventLoadError = 'Historie událostí není dostupná. Spusťte migrace (122_create_tracking_events.sql).';

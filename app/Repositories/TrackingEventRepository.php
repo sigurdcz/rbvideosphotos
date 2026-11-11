@@ -63,18 +63,55 @@ final class TrackingEventRepository
         ], $stmt->fetchAll(PDO::FETCH_ASSOC));
 
         $stmt = $this->db->prepare(
-            'SELECT occurred_on, COUNT(*) AS events FROM tracking_events' . $where . '
+            'SELECT occurred_on, COUNT(*) AS events,
+                    COUNT(DISTINCT visitor_hash) AS daily_uniques,
+                    COALESCE(SUM(consent_analytics), 0) AS consented_events
+             FROM tracking_events' . $where . '
              GROUP BY occurred_on ORDER BY occurred_on ASC'
         );
         $stmt->execute($range);
         $byDay = [];
         foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
-            $byDay[(string) $row['occurred_on']] = (int) $row['events'];
+            $byDay[(string) $row['occurred_on']] = [
+                'events' => (int) $row['events'],
+                'daily_uniques' => (int) $row['daily_uniques'],
+                'consented_events' => (int) $row['consented_events'],
+            ];
         }
         $daily = [];
         for ($i = $days - 1; $i >= 0; $i--) {
             $day = $today->modify('-' . $i . ' days')->format('Y-m-d');
-            $daily[] = ['day' => $day, 'events' => $byDay[$day] ?? 0];
+            $daily[] = ['day' => $day] + ($byDay[$day] ?? [
+                'events' => 0,
+                'daily_uniques' => 0,
+                'consented_events' => 0,
+            ]);
+        }
+
+        $stmt = $this->db->prepare(
+            'SELECT path, COUNT(*) AS events, COUNT(DISTINCT visitor_hash) AS daily_uniques
+             FROM tracking_events' . $where . '
+             GROUP BY path ORDER BY events DESC, path ASC LIMIT 15'
+        );
+        $stmt->execute($range);
+        $byPath = array_map(static fn(array $row): array => [
+            'path' => (string) $row['path'],
+            'events' => (int) $row['events'],
+            'daily_uniques' => (int) $row['daily_uniques'],
+        ], $stmt->fetchAll(PDO::FETCH_ASSOC));
+
+        $stmt = $this->db->prepare(
+            'SELECT SUBSTR(occurred_at, 12, 2) AS event_hour, COUNT(*) AS events
+             FROM tracking_events' . $where . '
+             GROUP BY SUBSTR(occurred_at, 12, 2) ORDER BY event_hour ASC'
+        );
+        $stmt->execute($range);
+        $byHour = array_fill(0, 24, 0);
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $hour = filter_var($row['event_hour'], FILTER_VALIDATE_INT);
+            if ($hour !== false && $hour >= 0 && $hour <= 23) {
+                $byHour[$hour] = (int) $row['events'];
+            }
         }
 
         $stmt = $this->db->prepare(
@@ -97,6 +134,8 @@ final class TrackingEventRepository
             'consented_events' => (int) ($totals['consented_events'] ?? 0),
             'by_event' => $byEvent,
             'daily' => $daily,
+            'by_path' => $byPath,
+            'by_hour' => $byHour,
             'top_paths' => $topPaths,
         ];
     }

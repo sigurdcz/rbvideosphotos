@@ -67,7 +67,12 @@ function register_tracking_event_analytics_tests(callable $test, callable $asser
         $summary = $repository->summary(1, 2, new DateTimeImmutable('2026-11-11'));
         $assert($summary['events'] === 3 && $summary['daily_uniques'] === 2 && $summary['consented_events'] === 2);
         $assert($summary['by_event'][0]['event_name'] === 'phone_click' && $summary['by_event'][0]['events'] === 2);
-        $assert($summary['daily'] === [['day' => '2026-11-10', 'events' => 2], ['day' => '2026-11-11', 'events' => 1]]);
+        $assert($summary['daily'] === [
+            ['day' => '2026-11-10', 'events' => 2, 'daily_uniques' => 1, 'consented_events' => 2],
+            ['day' => '2026-11-11', 'events' => 1, 'daily_uniques' => 1, 'consented_events' => 0],
+        ]);
+        $assert($summary['by_path'][0] === ['path' => '/kontakt', 'events' => 2, 'daily_uniques' => 1]);
+        $assert($summary['by_hour'][10] === 3 && array_sum($summary['by_hour']) === 3);
         $assert($summary['top_paths'][0] === ['path' => '/kontakt', 'event_name' => 'phone_click', 'events' => 2]);
     });
 
@@ -101,9 +106,11 @@ function register_tracking_event_analytics_tests(callable $test, callable $asser
         $eventSummary = [
             'from' => '2026-10-13', 'to' => '2026-11-11', 'events' => 4,
             'daily_uniques' => 2, 'consented_events' => 3,
-            'daily' => [['day' => '2026-11-11', 'events' => 4]],
+            'daily' => [['day' => '2026-11-11', 'events' => 4, 'daily_uniques' => 2, 'consented_events' => 3]],
             'by_event' => [['event_name' => 'phone_click', 'label' => 'Kliknutí na telefonní číslo', 'category' => 'mikro-konverze', 'events' => 4, 'daily_uniques' => 2]],
-            'top_paths' => [['path' => '/kontakt', 'event_name' => 'phone_click', 'events' => 4]],
+            'by_path' => [['path' => '/kontakt', 'events' => 4, 'daily_uniques' => 2]],
+            'by_hour' => array_replace(array_fill(0, 24, 0), [10 => 4]),
+            'top_paths' => [['path' => '/kontakt', 'event_name' => 'phone_click', 'label' => 'Kliknutí na telefonní číslo', 'events' => 4]],
         ];
         $_user = ['role' => 'admin', 'email' => 'admin@example.test'];
         $_csrfToken = 'test';
@@ -111,8 +118,13 @@ function register_tracking_event_analytics_tests(callable $test, callable $asser
         ob_start();
         include $root . '/admin/views/analytics/index.php';
         $html = (string) ob_get_clean();
-        foreach (['Frontendové události', 'phone_click', '/kontakt', 'Události celkem', 'Nejde o potvrzení, že je GA4 přijalo'] as $needle) {
+        foreach (['GTM události', 'phone_click', '/kontakt', 'Události celkem', 'Potvrzují odeslání z webu', 'Vývoj událostí', 'Rozdělení událostí', 'Aktivita během dne', 'Nejaktivnější stránky'] as $needle) {
             $assert(str_contains($html, $needle), 'Events analytics missing: ' . $needle);
+        }
+        $assert(str_contains($html, '<svg class="analytics-line-chart"'), 'Events analytics must render the accessible SVG trend chart.');
+        $css = (string) file_get_contents($root . '/admin/assets/admin.css');
+        foreach (['.analytics-event-grid', '.analytics-line-chart', '.analytics-hour-chart', '@media(max-width:1000px)'] as $needle) {
+            $assert(str_contains($css, $needle), 'Events analytics CSS missing: ' . $needle);
         }
     });
 }
