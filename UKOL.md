@@ -1,3 +1,37 @@
+# UKOL: Článek Natálie a David v Naše práce
+
+Datum: 2026-11-11
+Zadani: Přidat článek Natálie a Davida do Naše práce, přirozeně zkrátit SEO text podle doplnění uživatele, uvést Sportovně střelecký areál Jívová, ověřit video a odkazy a využít existující kontaktní panel.
+Doporuceny model: Terra - Jde o obsahovou úpravu s kontrolou CMS panelů a odkazů.
+
+## Kroky
+
+- [x] Ověřit datový model portfolia, existující panely, zdrojový článek a původní cíle odkazů.
+- [x] Připravit opravený článek jako novou obsahovou migraci na dev.
+- [-] Ověřit obsah, metadata, počet tvarů Olomouce, video, odkazy, responzivitu a kontaktní panel.
+- [ ] Commitnout změnu, nasadit a ověřit staging; produkční merge vyžaduje následný konkrétní souhlas.
+- [ ] Provést kontrolu dokumentace a wiki reflection, shrnout výsledek.
+
+## Poznamky
+
+- Vstup: svatebni-video-olomouc-natalie-david.html v uživatelem zadaném scratchpadu.
+- Akceptace: nový detail a karta v Naše práce, 4–5 obsahových sekcí, přirozená čeština, 2–3 zmínky Olomouce v hlavním textu, ověřené odkazy a video, stávající kontaktní panel bez druhé ruční kopie.
+- Doplnění uživatele: přesné místo Sportovně střelecký areál Jívová, datum 3. října 2026, H1/title/description podle zadání, preferovaný nový slug svatba-jivova-natalie-david. Odstranit obecné FAQ (výslovně dovoleno v novém zadání) a sekci žádající zpětné odkazy.
+- Původní interní URL jsou dostupné (HTTP 200); první webový nástroj dvě URL nenačetl, přímé HTTP je úspěšně ověřilo. YouTube oEmbed potvrzuje video E29Cz-B2UdA, pár a datum svatby.
+- Přidána pouze obsahová migrace 123: nový přímý slug, 4 H2, opravený příběh a přesná SEO metadata. FAQ a žádost o zpětné odkazy odstraněny, kontaktní panel a responzivní přehrávač zajišťuje stávající portfolio šablona. Neověřené datum nahrání videa a délku nezapisujeme; published_at je NULL.
+- Migrace 123 je registrována v ApplicationCompatibleMigrationService, aby při čisté instalaci běžela až po starší náhradě videí 106 a při chybějícím webu zůstala viditelně odložená.
+- Izolovaná databázová kontrola přes SQLite ověřila spuštění skutečného handleru, opakovatelnost, omezení na první web a zachování ostatních položek. Skutečný portfolio view vrací 1 H1, 4 obsahové H2, 1 iframe a 1 existující kontaktní panel. Tvarů Olomouce je 13 → 2 včetně H1; text má přibližně 609 → 369 slov.
+- Původní i nový zamýšlený slug vracejí na produkci 404: jde o nový článek, není co přesměrovávat. Související svatba Lucie a Miroslava v Jívové vrací na produkci i stagingu 200. Stávající projektový token byl na stagingu přijat při read-only kontrole.
+- ARCHITECTURE.md popisuje pořadí nové obsahové migrace a záměrné vynechání neověřených metadat videa; README, API.md a INSTRUCTIONS.md změnu kontraktu nevyžadují.
+- Výchozí dev: 3639c77. Existující neversionované obrázky v artifacts/ jsou nesouvisející a nebudou commitnuty. Níže zůstává historie předchozích úkolů.
+- PowerShell zachoval při kontrolním pokusu všech 1–4 zpětných lomítek; soubory se upravují přes apply_patch.
+
+## Vysledek
+
+Probíhá příprava.
+
+---
+
 # UKOL: Tři sekce administrační Analytiky
 
 Datum: 2026-10-21

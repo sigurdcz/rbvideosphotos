@@ -323,6 +323,15 @@ se opravi pri novem publikovani, live detail pouzije opravu ihned po nasazeni.
 Regrese: `php tests/PortfolioVideoSchemaTest.php` overuje pet Google prikladu,
 absolutni URL, Vimeo hranice a skutecne JSON-LD ve standalone exportu.
 
+Obsahova migrace `123_add_natalie_david_wedding_portfolio.sql` pridava pribeh
+Natalie a Davida na `/svatba-jivova-natalie-david` do prvniho webu. Je odlozena
+pres `ApplicationCompatibleMigrationService`, aby se provedla az po historicke
+nahrade videi 106 a pri chybejicim webu nezustala tise prazdna. Opakovani
+neprepisuje pozdejsi redakcni upravy. Popis vyuziva stavajici portfolio prehravac
+a kontaktni panel; nepotrebuje vlastni CSS ani kopii obecneho FAQ. `published_at`
+je NULL, protoze zname datum svatby neni overene datum nahrani videa; VideoObject
+proto neuvadi `uploadDate` ani neoverenou delku.
+
 ### Media
 
 - DB uchovava interni `storage_path` jako `storage/media/YYYY/MM/file.webp`
