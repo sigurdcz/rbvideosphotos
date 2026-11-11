@@ -25,7 +25,8 @@ SELECT
 <p>Obřad, proslovy a vzkazy hostů tak dohromady vydávají svědectví o jedné konkrétní svatbě v Jívové. Ne jen o tom, jak vypadala, ale hlavně o tom, co si při ní lidé řekli.</p>
 
 <h2>Svatební video a fotografie od jednoho týmu</h2>
-<p>Pod značkou RB Videos and photos se věnuji videu, o fotografie se stará můj kolega Zdeněk Černohlávek. Pokud vás zajímá společná práce našeho týmu, najdete ji na stránce <a href="/svatebni-foto-video">svatební fotografie a video</a>. Pro další příběh ze stejné obce se můžete podívat na <a href="/svatba-jivova-lucie-miroslav">svatbu Lucie a Miroslava v Jívové</a>.</p>',
+<p>Pod značkou RB Videos and photos se věnuji videu, o fotografie se stará můj kolega Zdeněk Černohlávek. Video a fotky tak vznikají u jednoho týmu a vizuálně k sobě ladí. Společnou práci shrnuje stránka <a href="/svatebni-foto-video">svatební fotografie a video</a>, fotografické stránce se věnuje <a href="/svatebni-fotograf-olomouc">svatební fotograf Olomouc</a>. Pokud váháte, zda video na svatbu chcete, přečtěte si, <a href="/proc-mit-svatebni-video">proč mít svatební video</a>.</p>
+<p>Další příběhy z Jívové najdete u <a href="/svatba-jivova-lucie-miroslav">svatby Lucie a Miroslava</a> a u <a href="/zarijova-svatba-jivova-simona-michal">zářijové svatby Simony a Michala</a>. Ostatní naše realizace jsou v sekci <a href="/nase-prace">Naše práce</a>, informace o cenách v <a href="/cenik">ceníku</a> a odpovědi na nejčastější otázky v <a href="/faq">častých dotazech</a>. Máte-li zájem o podobné video, <a href="/kontakt">napište nám</a>.</p>',
     'https://www.youtube.com/watch?v=E29Cz-B2UdA',
     'video',
     'published',
