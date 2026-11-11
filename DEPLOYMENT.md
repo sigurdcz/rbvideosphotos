@@ -39,6 +39,12 @@ Po prihlaseni na `/admin/login` pouzij `/admin/setup`. Na opravdu prazdne instal
 - `php bin/seo-smoke.php https://rbvideosphotos.cz`: produkcni kontrola po migraci a publishi; dokud web nema inicializovany obsah, HTTP 404/500 je nezavrena brana.
 - `.gitattributes` sjednocuje LF zdroju, aby textove kontrakty fungovaly i na Windows.
 
+## Lokální statistiky frontendových událostí
+
+Po nasazení spusťte append-only migraci **122_create_tracking_events.sql** chráněným `migrate-util.php`. Event endpoint používá stejný serverový `VISIT_ANALYTICS_SALT` jako vlastní návštěvnost; pokud není nastaven, použije existující `API_KEY`. Bez obou hodnot vrací `/api/tracking-event` HTTP 503 a nic neukládá. Tajemství se neposílá do prohlížeče.
+
+Staging ověření: po analytickém/marketingovém souhlasu vyvolejte například klik na telefon, v Network ověřte `POST /api/tracking-event` s HTTP 204 a v **Analytika → Události** počet `phone_click`. Request body smí obsahovat jen `e`, `p`, `a`; nesmí obsahovat telefon ani `event_label`. **GTM → Eventy** ukazuje počet za posledních 30 dní. Lokální počet potvrzuje dispatch z webu, ne přijetí GA4. Data se čistí po 14 měsících stejným lazy mechanismem jako `site_visits`.
+
 ## Health monitoring a cron
 
 Po nasazeni aplikuj append-only migraci **110_create_health_checks.sql**. Do serveroveho `.env` lze explicitne pridat:

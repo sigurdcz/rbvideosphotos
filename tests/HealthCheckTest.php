@@ -128,10 +128,12 @@ function register_health_check_tests(callable $test, callable $assert): void
         $render = static function (string $view) use ($root): string {
             $days = 30;
             $activeView = $view;
-            $enabled = true;
+            $visitEnabled = true;
+            $eventEnabled = true;
             $hasSite = true;
             $loadError = null;
             $healthLoadError = null;
+            $eventLoadError = null;
             $summary = [
                 'from' => '2026-09-22', 'to' => '2026-10-21', 'visits' => 120, 'uniques' => 80,
                 'consented_uniques' => 40, 'consent_share' => 33.3, 'bots' => 5,
@@ -144,6 +146,7 @@ function register_health_check_tests(callable $test, callable $assert): void
                 'daily' => [['day' => '2026-10-21', 'checks' => 10, 'unhealthy' => 0, 'uptime' => 100]],
                 'recent_failures' => [],
             ];
+            $eventSummary = ['events' => 12];
             $_user = ['role' => 'admin', 'email' => 'admin@example.test'];
             $_csrfToken = 'test';
             $_SERVER['REQUEST_URI'] = '/admin/analytics?view=' . $view . '&days=30';

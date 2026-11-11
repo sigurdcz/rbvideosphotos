@@ -469,6 +469,26 @@ CREATE TABLE IF NOT EXISTS `site_visits` (
   KEY `site_visits_day_visitor` (`visited_on`, `visitor_hash`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+  -- --------------------------------------------------------
+  -- tracking_events (migrace 122)
+  -- Lokální agregovatelná kopie povolených frontendových eventů bez parametrů.
+  -- --------------------------------------------------------
+  CREATE TABLE IF NOT EXISTS `tracking_events` (
+    `id`                BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `site_id`           INT UNSIGNED NOT NULL,
+    `occurred_at`       DATETIME NOT NULL,
+    `occurred_on`       DATE NOT NULL,
+    `event_name`        VARCHAR(64) NOT NULL,
+    `path`              VARCHAR(255) NOT NULL,
+    `visitor_hash`      CHAR(32) NOT NULL,
+    `consent_analytics` TINYINT(1) NOT NULL DEFAULT 0,
+    `is_bot`            TINYINT(1) NOT NULL DEFAULT 0,
+    PRIMARY KEY (`id`),
+    KEY `tracking_events_site_day` (`site_id`, `occurred_on`),
+    KEY `tracking_events_site_event_day` (`site_id`, `event_name`, `occurred_on`),
+    KEY `tracking_events_day_visitor` (`occurred_on`, `visitor_hash`)
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- --------------------------------------------------------
 -- health_checks (migrace 110)
 -- Desetiminutova historie dostupnosti verejneho health API. check_uuid chrani

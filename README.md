@@ -171,7 +171,7 @@ Po migraci `110_create_health_checks.sql` spoustej na serveru kazdych 10 minut:
 
 V Active24 cronu vyber PHP CLI dostupne pro danou verzi, nastav interval 10 minut a jako prikaz pouzij absolutni cestu k `bin/health-check.php`. Runner vypise jeden stavovy radek a vraci exit0 pro healthy, exit1 pro zachyceny problem a exit2 pro konfiguracni/persistencni chybu. Pokud DB pri vypadku neprijima zapisy, zaznam zustane v `storage/logs/health-check-pending.jsonl` a po obnove se automaticky importuje. Soubor nema byt verejne dostupny ani mazany deployem.
 
-V administraci otevri **Analytika** (`/admin/analytics`). Zdravi a navstevnost pouzivaji spolecny vyber 7/30/90/365 dni, ale nacitaji se nezavisle. Bez behu dele nez 20 minut se ukaze „Monitoring neběží“; den bez dat je sedy a neni zapocten jako uspesny.
+V administraci otevri **Analytika** (`/admin/analytics`). Zdravi, navstevnost a lokalni GTM udalosti pouzivaji spolecny vyber 7/30/90/365 dni, ale nacitaji se nezavisle. Karta Udalosti nabizi KPI, denni SVG trend, rozdeleni eventu, hodinovou aktivitu a vykon stranek; jde o lokalni dukaz dispatch, ne potvrzeni prijeti v GA4. Bez behu health kontroly dele nez 20 minut se ukaze „Monitoring neběží“; den bez dat je sedy a neni zapocten jako uspesny.
 
 ## Chraneny PHP runtime check
 

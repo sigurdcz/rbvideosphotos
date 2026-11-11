@@ -859,6 +859,14 @@ Popisky portfolio lightboxu normalizuje `PortfolioCaptionFormatter`. HTML popisu
 
 Hero obsahovy container je ve vyssi vizualni vrstve nez video, ale jeho neinteraktivni plocha musi mit `pointer-events: none`; odkazy, tlacitka a formularove prvky uvnitr explicitne pouzivaji `pointer-events: auto`. Jinak container zachyti klik urceny consent-aware play tlacitku video fasady a iframe se nikdy nevytvori.
 
+## Lokální evidence frontendových událostí
+
+`public/assets/tracking.js` nejprve projde existujícím consent a event-enabled gate a předá event do `dataLayer` (GTM) nebo `gtag` (direct GA). Teprve po úspěšném dispatchi pošle oddělený keepalive `POST /api/tracking-event`. Lokální zápis proto znamená „web event emitoval“, nikoli potvrzení, že jej GTM tag nebo GA4 zpracoval. Odvozený `generate_lead` se lokálně nepřidává, aby nedubloval zdrojový `lead_form_submit`/`thank_you_page_view`.
+
+Endpoint běží před `Auth::start()`, nevytváří session a vyžaduje přesný same-origin, `VISIT_ANALYTICS_SALT` nebo serverový `API_KEY`, limit 120 požadavků za minutu pro IPv4 /24 či IPv6 /48 a event z `GtmEventCatalog`. Payload obsahuje pouze `e` (název), `p` (veřejná cesta bez query) a `a` (výslovný analytický souhlas). Parametry eventu se kvůli možným telefonům, e-mailům a URL neukládají. Raw IP se použije jen uvnitř stejného denně rotujícího HMAC jako `site_visits` a do DB se nedostane. Bot UA se ignoruje.
+
+Append-only migrace 122 a fresh schema vytvářejí `tracking_events`. Zápis respektuje `sites.tracking_enabled` nezávisle na přepínači page-view měření `visit_analytics_enabled`. `TrackingEventRepository` zapisuje řádky, lazily odstraňuje data starší než 14 měsíců a agreguje je podle dne, názvu, veřejné cesty a hodiny. Denní řada vrací počet eventů, denních anonymních otisků a eventů s výslovným souhlasem; hodinová řada vždy obsahuje všech 24 hodin v serverové časové zóně. `/admin/gtm/events` ukazuje 30denní počet podle katalogu; `/admin/analytics?view=events` nabízí období 7/30/90/365 dní, KPI, přístupný inline SVG trend, CSS grafy a detailní tabulky bez CDN nebo knihovny grafů. Denní HMAC nelze vydávat za unikátního člověka napříč dny. Chyba DB vrací endpointu 503 a frontend ji hlásí v konzoli; není nahrazena falešným úspěchem.
+
 ## Archiv pošty
 
 Kontaktní POST nejdříve validuje CSRF, honeypot, limit a vstup. `ContactSpamFilter` následně přiděluje body pouze vysvětlitelným statickým signálům. Samotný odkaz má 2 body a nestačí k blokaci; práh je 7 bodů. Silné signály jsou známá botí věta, URL vložená do jména nebo kombinace hazardní propagace, výzvy k akci a odkazu. Filtr nepoužívá externí službu ani jazyk jako důvod zamítnutí.

@@ -11,6 +11,7 @@ use App\Repositories\GtmManagedEntityRepository;
 use App\Repositories\GtmSyncOperationRepository;
 use App\Repositories\GtmSyncRunRepository;
 use App\Repositories\SiteRepository;
+use App\Repositories\TrackingEventRepository;
 use App\Services\GtmApiClient;
 use App\Services\GtmApiException;
 use App\Services\GtmApplyService;
@@ -92,11 +93,24 @@ class GtmController extends Controller
             return;
         }
         $definitions = (new GtmEventDefinitionRepository())->allBySite((int) $site['id']);
+        $eventCounts = [];
+        $eventStatsError = null;
+        try {
+            $eventSummary = (new TrackingEventRepository())->summary((int) $site['id'], 30, new \DateTimeImmutable('today'));
+            foreach ($eventSummary['by_event'] as $row) {
+                $eventCounts[(string) $row['event_name']] = (int) $row['events'];
+            }
+        } catch (\PDOException $e) {
+            \App\Core\Logger::error('tracking-events', $e->getMessage());
+            $eventStatsError = 'Počty událostí nejsou dostupné. Spusťte migraci 122.';
+        }
 
         $this->view('gtm.events', [
             'site' => $site,
             'definitions' => $definitions,
             'catalog' => $this->catalog->all(),
+            'eventCounts' => $eventCounts,
+            'eventStatsError' => $eventStatsError,
             'success' => $this->getFlash('success'),
             'error' => $this->getFlash('error'),
         ]);

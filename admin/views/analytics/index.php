@@ -1,9 +1,12 @@
 <?php
 $h = static fn($v) => htmlspecialchars((string) $v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 $pageTitle = 'Analytika';
-$activeView = in_array(($activeView ?? 'overview'), ['overview', 'health', 'visits'], true) ? $activeView : 'overview';
+$activeView = in_array(($activeView ?? 'overview'), ['overview', 'health', 'visits', 'events'], true) ? $activeView : 'overview';
 $viewUrl = static fn(string $view) => '/admin/analytics?' . http_build_query(['view' => $view, 'days' => $days]);
 $deviceLabels = ['desktop' => 'Počítač', 'mobile' => 'Mobil', 'tablet' => 'Tablet', 'unknown' => 'Neznámé'];
+$measurementDisabled = $activeView === 'visits'
+    ? empty($visitEnabled)
+    : ($activeView === 'events' ? empty($eventEnabled) : ($activeView === 'overview' && (empty($visitEnabled) || empty($eventEnabled))));
 $renderTop = static function (string $title, array $rows, ?array $labels = null) use ($h): void {
     $max = 0;
     foreach ($rows as $row) { $max = max($max, (int) $row['visits']); }
@@ -24,15 +27,16 @@ $renderTop = static function (string $title, array $rows, ?array $labels = null)
 };
 ob_start(); ?>
 <div class="page-header"><h1>Analytika</h1></div>
-<p>Jedno místo pro dostupnost webu a vlastní měření návštěvnosti. Health monitoring neukládá údaje návštěvníků a neběží přes analytický beacon.</p>
+<p>Jedno místo pro dostupnost webu, vlastní měření návštěvnosti a frontendové události. Health monitoring neukládá údaje návštěvníků a neběží přes analytický beacon.</p>
 <nav class="tabs analytics-tabs" aria-label="Sekce analytiky">
-  <?php foreach (['overview' => 'Přehled', 'health' => 'Health', 'visits' => 'Návštěvnost'] as $viewKey => $viewLabel): ?>
+  <?php foreach (['overview' => 'Přehled', 'health' => 'Health', 'visits' => 'Návštěvnost', 'events' => 'Události'] as $viewKey => $viewLabel): ?>
     <a class="tab-btn <?= $activeView === $viewKey ? 'active' : '' ?>" href="<?= $h($viewUrl($viewKey)) ?>" <?= $activeView === $viewKey ? 'aria-current="page"' : '' ?>><?= $h($viewLabel) ?></a>
   <?php endforeach; ?>
 </nav>
-<?php if (!$enabled && $hasSite && $activeView !== 'health'): ?><div class="alert alert-warning">Měření je vypnuté v <a href="/admin/settings">Nastavení</a> (karta Cookies, consent a analytics). Zobrazená data jsou historická.</div><?php endif; ?>
-<?php if (!empty($loadError) && $activeView !== 'health'): ?><div class="alert alert-danger"><?= $h($loadError) ?></div><?php endif; ?>
-<?php if (!empty($healthLoadError) && $activeView !== 'visits'): ?><div class="alert alert-danger"><?= $h($healthLoadError) ?></div><?php endif; ?>
+<?php if ($measurementDisabled && $hasSite): ?><div class="alert alert-warning">Příslušné měření je vypnuté v <a href="/admin/settings">Nastavení</a> (karta Cookies, consent a analytics). Zobrazená data jsou historická.</div><?php endif; ?>
+<?php if (!empty($loadError) && in_array($activeView, ['overview', 'visits'], true)): ?><div class="alert alert-danger"><?= $h($loadError) ?></div><?php endif; ?>
+<?php if (!empty($healthLoadError) && in_array($activeView, ['overview', 'health'], true)): ?><div class="alert alert-danger"><?= $h($healthLoadError) ?></div><?php endif; ?>
+<?php if (!empty($eventLoadError) && in_array($activeView, ['overview', 'events'], true)): ?><div class="alert alert-danger"><?= $h($eventLoadError) ?></div><?php endif; ?>
 <?php if (!$hasSite): ?><div class="card"><p>Nejprve <a href="/admin/settings">nastavte web</a>.</p></div><?php endif; ?>
 
 <form method="get" action="/admin/analytics" style="display:flex;gap:12px;flex-wrap:wrap;margin:20px 0;align-items:center">
@@ -75,11 +79,142 @@ ob_start(); ?>
       <div class="stat-card"><div class="stat-num"><?= $h(number_format($summary['uniques'], 0, ',', ' ')) ?></div><div class="stat-lbl">Unikátní návštěvníci</div></div>
       <div class="stat-card"><div class="stat-num"><?= $h(number_format((float) $summary['consent_share'], 1, ',', ' ')) ?> %</div><div class="stat-lbl">Návštěvy se souhlasem</div></div>
     <?php endif; ?>
+    <?php if (is_array($eventSummary)): ?>
+      <div class="stat-card"><div class="stat-num"><?= $h(number_format($eventSummary['events'], 0, ',', ' ')) ?></div><div class="stat-lbl">Frontendové události</div></div>
+    <?php endif; ?>
   </div>
   <div class="analytics-overview-actions">
     <a class="btn btn-secondary" href="<?= $h($viewUrl('health')) ?>">Podrobný health</a>
     <a class="btn btn-secondary" href="<?= $h($viewUrl('visits')) ?>">Podrobná návštěvnost</a>
+    <a class="btn btn-secondary" href="<?= $h($viewUrl('events')) ?>">Podrobné události</a>
   </div>
+</section>
+<?php endif; ?>
+
+<?php if ($activeView === 'events'): ?>
+<section class="analytics-section" aria-labelledby="events-heading">
+  <div class="analytics-section__head">
+    <div><h2 id="events-heading">GTM události</h2><p class="help-text">Podrobný dashboard nad lokální evidencí frontendových událostí.</p></div>
+    <a class="btn btn-secondary" href="/admin/gtm/events">Správa GTM událostí</a>
+  </div>
+  <div class="alert alert-info">Grafy ukazují události, které web předal do <code>dataLayer</code> nebo <code>gtag</code>. Potvrzují odeslání z webu, nikoli přijetí nebo zpracování v GA4 či Google Tag Manageru.</div>
+  <?php if (is_array($eventSummary)): ?>
+    <?php
+      $eventCount = (int) $eventSummary['events'];
+      $uniqueCount = (int) $eventSummary['daily_uniques'];
+      $consentShare = $eventCount > 0 ? ((int) $eventSummary['consented_events'] / $eventCount * 100) : 0.0;
+      $eventsPerUnique = $uniqueCount > 0 ? ($eventCount / $uniqueCount) : 0.0;
+      $activeDays = count(array_filter($eventSummary['daily'], static fn(array $row): bool => (int) $row['events'] > 0));
+      $dailyAverage = $activeDays > 0 ? ($eventCount / $activeDays) : 0.0;
+      $trendWidth = 720;
+      $trendHeight = 220;
+      $trendPadX = 34;
+      $trendPadY = 24;
+      $trendPlotWidth = $trendWidth - ($trendPadX * 2);
+      $trendPlotHeight = $trendHeight - ($trendPadY * 2);
+      $trendRows = $eventSummary['daily'];
+      $trendMax = 1;
+      foreach ($trendRows as $row) { $trendMax = max($trendMax, (int) $row['events'], (int) $row['daily_uniques']); }
+      $eventPoints = [];
+      $uniquePoints = [];
+      $trendDenominator = max(1, count($trendRows) - 1);
+      foreach ($trendRows as $index => $row) {
+          $x = $trendPadX + ($index / $trendDenominator * $trendPlotWidth);
+          $eventY = $trendPadY + $trendPlotHeight - ((int) $row['events'] / $trendMax * $trendPlotHeight);
+          $uniqueY = $trendPadY + $trendPlotHeight - ((int) $row['daily_uniques'] / $trendMax * $trendPlotHeight);
+          $eventPoints[] = round($x, 1) . ',' . round($eventY, 1);
+          $uniquePoints[] = round($x, 1) . ',' . round($uniqueY, 1);
+      }
+      $maxByEvent = 0;
+      foreach ($eventSummary['by_event'] as $row) { $maxByEvent = max($maxByEvent, (int) $row['events']); }
+      $maxByHour = max(1, ...array_map('intval', $eventSummary['by_hour']));
+    ?>
+    <p class="help-text">Období <?= $h($eventSummary['from']) ?> až <?= $h($eventSummary['to']) ?>.</p>
+    <div class="stats-grid analytics-event-kpis">
+      <div class="stat-card"><div class="stat-num"><?= $h(number_format($eventSummary['events'], 0, ',', ' ')) ?></div><div class="stat-lbl">Události celkem</div></div>
+      <div class="stat-card"><div class="stat-num"><?= $h(number_format($eventSummary['daily_uniques'], 0, ',', ' ')) ?></div><div class="stat-lbl">Denní anonymní návštěvníci</div></div>
+      <div class="stat-card"><div class="stat-num"><?= $h(number_format($eventsPerUnique, 2, ',', ' ')) ?></div><div class="stat-lbl">Události na denního návštěvníka</div></div>
+      <div class="stat-card"><div class="stat-num"><?= $h(number_format($dailyAverage, 1, ',', ' ')) ?></div><div class="stat-lbl">Průměr na aktivní den</div></div>
+      <div class="stat-card"><div class="stat-num"><?= $h(number_format($consentShare, 1, ',', ' ')) ?> %</div><div class="stat-lbl">Události s výslovným souhlasem</div></div>
+      <div class="stat-card"><div class="stat-num"><?= $h(number_format($activeDays, 0, ',', ' ')) ?></div><div class="stat-lbl">Dny s aktivitou</div></div>
+    </div>
+
+    <div class="analytics-event-grid analytics-event-grid--wide">
+      <div class="card analytics-chart-card analytics-chart-card--trend">
+        <div class="analytics-chart-head"><div><div class="card-title">Vývoj událostí</div><p class="help-text">Denní odeslané události a denní anonymní návštěvníci.</p></div><div class="analytics-chart-legend"><span><i class="legend-dot legend-dot--events"></i>Události</span><span><i class="legend-dot legend-dot--uniques"></i>Návštěvníci</span></div></div>
+        <?php if ($eventCount > 0): ?>
+          <svg class="analytics-line-chart" viewBox="0 0 <?= $h($trendWidth) ?> <?= $h($trendHeight) ?>" role="img" aria-labelledby="event-trend-title event-trend-desc">
+            <title id="event-trend-title">Vývoj frontendových událostí</title>
+            <desc id="event-trend-desc">Čára událostí a denních anonymních návštěvníků od <?= $h($eventSummary['from']) ?> do <?= $h($eventSummary['to']) ?>.</desc>
+            <?php for ($grid = 0; $grid <= 4; $grid++): $gridY = $trendPadY + ($grid / 4 * $trendPlotHeight); ?>
+              <line class="analytics-line-chart__grid" x1="<?= $h($trendPadX) ?>" y1="<?= $h($gridY) ?>" x2="<?= $h($trendWidth - $trendPadX) ?>" y2="<?= $h($gridY) ?>" />
+            <?php endfor; ?>
+            <polyline class="analytics-line-chart__series analytics-line-chart__series--events" points="<?= $h(implode(' ', $eventPoints)) ?>" />
+            <polyline class="analytics-line-chart__series analytics-line-chart__series--uniques" points="<?= $h(implode(' ', $uniquePoints)) ?>" />
+            <text class="analytics-line-chart__label" x="<?= $h($trendPadX) ?>" y="<?= $h($trendHeight - 4) ?>"><?= $h($eventSummary['from']) ?></text>
+            <text class="analytics-line-chart__label" text-anchor="end" x="<?= $h($trendWidth - $trendPadX) ?>" y="<?= $h($trendHeight - 4) ?>"><?= $h($eventSummary['to']) ?></text>
+            <text class="analytics-line-chart__label" x="4" y="<?= $h($trendPadY + 4) ?>"><?= $h($trendMax) ?></text>
+            <text class="analytics-line-chart__label" x="16" y="<?= $h($trendHeight - $trendPadY) ?>">0</text>
+          </svg>
+        <?php else: ?><p class="help-text">Za zvolené období bez dat.</p><?php endif; ?>
+      </div>
+
+      <div class="card analytics-chart-card">
+        <div class="card-title">Rozdělení událostí</div>
+        <p class="help-text">Podíl jednotlivých názvů eventů na celkovém objemu.</p>
+        <div class="analytics-bar-list">
+          <?php foreach ($eventSummary['by_event'] as $row): $share = $eventCount > 0 ? ((int) $row['events'] / $eventCount * 100) : 0; ?>
+            <div class="analytics-bar-row">
+              <div class="analytics-bar-row__label"><span><?= $h($row['label']) ?></span><strong><?= $h(number_format($row['events'], 0, ',', ' ')) ?> <small><?= $h(number_format($share, 1, ',', ' ')) ?> %</small></strong></div>
+              <div class="analytics-bar-row__track"><span style="width:<?= $h($maxByEvent > 0 ? round((int) $row['events'] / $maxByEvent * 100, 2) : 0) ?>%"></span></div>
+            </div>
+          <?php endforeach; ?>
+          <?php if ($eventSummary['by_event'] === []): ?><p class="help-text">Za zvolené období bez dat.</p><?php endif; ?>
+        </div>
+      </div>
+    </div>
+
+    <div class="analytics-event-grid">
+      <div class="card analytics-chart-card">
+        <div class="card-title">Aktivita během dne</div>
+        <p class="help-text">Čas je uložený v serverové časové zóně. Vyšší sloupec znamená více událostí.</p>
+        <div class="analytics-hour-chart" role="img" aria-label="Počet frontendových událostí podle hodiny dne">
+          <?php foreach ($eventSummary['by_hour'] as $hour => $count): ?>
+            <div class="analytics-hour-chart__item" title="<?= $h(sprintf('%02d:00 - %s událostí', $hour, number_format($count, 0, ',', ' '))) ?>">
+              <span class="analytics-hour-chart__value"><?= $count > 0 ? $h($count) : '' ?></span>
+              <div class="analytics-hour-chart__track"><span style="height:<?= $h(round((int) $count / $maxByHour * 100, 2)) ?>%"></span></div>
+              <?php if ($hour % 3 === 0): ?><small><?= $h(sprintf('%02d', $hour)) ?></small><?php endif; ?>
+            </div>
+          <?php endforeach; ?>
+        </div>
+      </div>
+
+      <div class="card analytics-chart-card">
+        <div class="card-title">Nejaktivnější stránky</div>
+        <?php if ($eventSummary['by_path'] === []): ?><p class="help-text">Za zvolené období bez dat.</p><?php else: ?>
+          <div class="table-scroll"><table class="data-table analytics-compact-table">
+            <thead><tr><th>Stránka</th><th class="num">Události</th><th class="num">Denní návštěvníci</th></tr></thead>
+            <tbody><?php foreach ($eventSummary['by_path'] as $row): ?><tr><td><code><?= $h($row['path']) ?></code></td><td class="num"><?= $h(number_format($row['events'], 0, ',', ' ')) ?></td><td class="num"><?= $h(number_format($row['daily_uniques'], 0, ',', ' ')) ?></td></tr><?php endforeach; ?></tbody>
+          </table></div>
+        <?php endif; ?>
+      </div>
+    </div>
+
+    <div class="card analytics-chart-card analytics-event-detail-table">
+      <div class="card-title">Detail událostí a stránek</div>
+      <p class="help-text">Tabulková alternativa ke grafům a nejčastější kombinace stránky s událostí.</p>
+      <?php if ($eventSummary['top_paths'] === []): ?><p class="help-text">Za zvolené období bez dat.</p><?php else: ?>
+        <div class="table-scroll"><table class="data-table">
+          <thead><tr><th>Stránka</th><th>Událost</th><th>Technický název</th><th class="num">Počet</th></tr></thead>
+          <tbody><?php foreach ($eventSummary['top_paths'] as $row): ?><tr>
+            <td><code><?= $h($row['path']) ?></code></td><td><?= $h($row['label']) ?></td><td><code><?= $h($row['event_name']) ?></code></td><td class="num"><?= $h(number_format($row['events'], 0, ',', ' ')) ?></td>
+          </tr><?php endforeach; ?></tbody>
+        </table></div>
+      <?php endif; ?>
+    </div>
+  <?php else: ?>
+    <div class="card"><p>Historie frontendových událostí zatím není dostupná.</p></div>
+  <?php endif; ?>
 </section>
 <?php endif; ?>
 
