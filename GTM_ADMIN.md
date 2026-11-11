@@ -79,6 +79,7 @@ Prehled zobrazuje:
 ### `/admin/gtm/events`
 
 Sprava lokaniho katalogu event definic, ze ktereho se kompiluje GTM konfigurace.
+Tabulka navíc ukazuje lokálně zaznamenaný počet jednotlivých eventů za posledních 30 dní a odkazuje na podrobnou kartu **Analytika → Události**. Počet znamená, že veřejný web event úspěšně předal do `dataLayer` nebo `gtag` a následně zapsal bezpečnou lokální kopii; není to potvrzení zpracování v GA4.
 
 Priklady eventu v katalogu:
 
@@ -143,4 +144,10 @@ To prinasi:
 - upravy `public/assets/tracking.js`
 - automaticke publikovani po kazde zmene
 
-Tyto oblasti patri do runtime trackingu a architektury webu, ne do GTM admin orchestracni vrstvy.
+Tyto oblasti patri do runtime trackingu a architektury webu, ne do GTM admin orchestracni vrstvy. GTM admin pouze zobrazuje agregované výsledky, které tato oddělená runtime vrstva uložila.
+
+## Lokalni statistiky eventu
+
+`tracking.js` po úspěšném GTM/direct-GA dispatchi odešle samostatný keepalive požadavek na `/api/tracking-event`. Ukládá se pouze allowlistovaný `event_name`, cesta bez query, čas, denní HMAC návštěvníka a flag výslovného analytického souhlasu. `event_label`, `event_category`, telefon, e-mail a cílová URL se neukládají. Neznámý event, admin cesta a cizí origin se odmítnou. Data drží tabulka `tracking_events` z migrace 122 a stejně jako vlastní návštěvnost se čistí po 14 měsících.
+
+Detail v `/admin/analytics?view=events` ukazuje celkový počet, denní vývoj, počty podle eventu a nejčastější kombinace event + stránka. Chyba lokálního zápisu se vypíše v konzoli a endpoint vrátí neúspěšný HTTP stav; nemění už provedený GTM dispatch.

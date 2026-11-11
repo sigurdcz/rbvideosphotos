@@ -29,6 +29,7 @@ use App\Repositories\ServiceRepository;
 use App\Repositories\SiteRepository;
 use App\Repositories\TemplateRepository;
 use App\Repositories\VisitAnalyticsRepository;
+use App\Repositories\TrackingEventRepository;
 use App\Services\HomepageContentService;
 use App\Services\PageRenderer;
 use App\Services\SeoRenderer;
@@ -36,6 +37,7 @@ use App\Services\SecurityTxtHttpResponder;
 use App\Services\SecurityTxtService;
 use App\Services\ThemeTemplateRegistry;
 use App\Services\VisitAnalyticsService;
+use App\Services\TrackingEventService;
 use App\Services\HealthCheckHttpResponder;
 use App\Services\PhpRuntimeInfoHttpResponder;
 use App\Security\RequestThrottle;
@@ -343,6 +345,102 @@ function logRejectedVisitBeacon(string $reason): void
 }
 
 if (tryRecordVisitBeacon($earlyUri)) {
+    exit;
+}
+
+/**
+ * POST /api/tracking-event - first-party copy of an event already dispatched
+ * to GTM/GA. This endpoint never confirms GA4 receipt; it only records that the
+ * website emitted an allowlisted event. It runs before sessions and stores no
+ * event parameters or raw IP address.
+ */
+function tryRecordTrackingEvent(string $uri): bool
+{
+    if ($uri !== '/api/tracking-event') {
+        return false;
+    }
+
+    header_remove('Set-Cookie');
+    header('Cache-Control: no-store');
+    header('X-Robots-Tag: noindex');
+
+    if (strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'POST') {
+        http_response_code(405);
+        header('Allow: POST');
+        return true;
+    }
+    if (!VisitAnalyticsService::isSameOrigin($_SERVER)) {
+        Logger::warning('tracking-events', 'Foreign event beacon rejected');
+        http_response_code(403);
+        return true;
+    }
+
+    $secret = VisitAnalyticsService::secret();
+    if ($secret === null) {
+        Logger::error('tracking-events', 'Event storage requires VISIT_ANALYTICS_SALT or API_KEY');
+        http_response_code(503);
+        return true;
+    }
+
+    $ip = RequestThrottle::currentIp();
+    $throttle = RequestThrottle::hit(
+        TrackingEventService::THROTTLE_SCOPE,
+        VisitAnalyticsService::throttleKey($ip),
+        120,
+        60,
+        300
+    );
+    if (random_int(1, 100) === 1) {
+        RequestThrottle::purgeStale(TrackingEventService::THROTTLE_SCOPE, TrackingEventService::THROTTLE_STALE_SECONDS, 200);
+    }
+    if ($throttle['locked']) {
+        http_response_code(429);
+        header('Retry-After: ' . max(1, (int) $throttle['retry_after']));
+        return true;
+    }
+
+    $body = file_get_contents('php://input', false, null, 0, TrackingEventService::MAX_BODY_BYTES + 1);
+    $payload = is_string($body) ? TrackingEventService::parsePayload($body) : null;
+    if ($payload === null) {
+        Logger::warning('tracking-events', 'Invalid event beacon rejected');
+        http_response_code(400);
+        return true;
+    }
+
+    $userAgent = substr((string) ($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 512);
+    if (VisitAnalyticsService::isBot($userAgent)) {
+        http_response_code(204);
+        return true;
+    }
+
+    try {
+        $site = (new SiteRepository())->findFirst();
+        if ($site && (int) ($site['tracking_enabled'] ?? 1) === 1) {
+            $now = new DateTimeImmutable('now');
+            $repository = new TrackingEventRepository();
+            $repository->insert(TrackingEventService::buildRecord(
+                (int) $site['id'],
+                $payload,
+                $ip,
+                $userAgent,
+                $secret,
+                $now
+            ));
+            if (random_int(1, 100) === 1) {
+                $repository->purgeBefore(VisitAnalyticsService::retentionCutoff($now));
+            }
+        }
+    } catch (\Throwable $e) {
+        Logger::error('tracking-events', $e->getMessage());
+        http_response_code(503);
+        return true;
+    }
+
+    http_response_code(204);
+    return true;
+}
+
+if (tryRecordTrackingEvent($earlyUri)) {
     exit;
 }
 Auth::start();

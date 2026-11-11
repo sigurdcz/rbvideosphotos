@@ -2,6 +2,7 @@
 $pageTitle = 'Google Tag Manager - Eventy';
 $h = fn($v) => htmlspecialchars((string)($v ?? ''), ENT_QUOTES, 'UTF-8');
 $definitions = $definitions ?? [];
+$eventCounts = $eventCounts ?? [];
 ob_start();
 ?>
 <div class="page-header">
@@ -10,8 +11,10 @@ ob_start();
     <a class="btn btn-secondary" href="/admin/gtm">Zpet na prehled</a>
     <a class="btn btn-secondary" href="/admin/gtm/entities">Entity</a>
     <a class="btn btn-secondary" href="/admin/gtm/versions">Verze</a>
+    <a class="btn btn-secondary" href="/admin/analytics?view=events&amp;days=30">Podrobné statistiky</a>
   </div>
 </div>
+<?php if (!empty($eventStatsError)): ?><div class="alert alert-warning"><?= $h($eventStatsError) ?></div><?php endif; ?>
 
 <div class="card">
   <div class="card-title">Katalog eventu</div>
@@ -27,6 +30,7 @@ ob_start();
           <th>Tag</th>
           <th>Trigger</th>
           <th>Verze</th>
+          <th>Počet za 30 dní</th>
           <th></th>
         </tr>
       </thead>
@@ -40,6 +44,7 @@ ob_start();
           <td><?= $h($definition['tag_type']) ?></td>
           <td><?= $h($definition['trigger_type']) ?></td>
           <td><?= (int)($definition['local_version'] ?? 1) ?></td>
+          <td style="text-align:right"><?= $h(number_format((int)($eventCounts[$definition['event_key']] ?? 0), 0, ',', ' ')) ?></td>
           <td><a class="btn btn-secondary btn-sm" href="/admin/gtm/events/edit?id=<?= (int)$definition['id'] ?>">Upravit</a></td>
         </tr>
       <?php endforeach; ?>

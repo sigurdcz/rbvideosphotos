@@ -94,6 +94,42 @@
     return { sent: false, transport: 'unavailable' };
   }
 
+  function hasExplicitAnalyticsConsent() {
+    try {
+      var cc = window.cmsCookieConsent;
+      return !!(cc && cc.enabled === true && cc.canLoadAnalytics());
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function recordFirstPartyEvent(name) {
+    if (typeof navigator !== 'undefined' && navigator.webdriver) return;
+    if (typeof document.getElementById === 'function' && document.getElementById('cms-adminbar')) return;
+    if (typeof window.fetch !== 'function') {
+      audit('warn', 'Lokalni event neulozen', { eventName: name, reason: 'fetch_unavailable' });
+      return;
+    }
+    var body = JSON.stringify({
+      e: name,
+      p: String(window.location.pathname || '/').slice(0, 255),
+      a: hasExplicitAnalyticsConsent() ? 1 : 0
+    });
+    window.fetch('/api/tracking-event', {
+      method: 'POST',
+      body: body,
+      headers: {'Content-Type': 'application/json'},
+      credentials: 'same-origin',
+      keepalive: true
+    }).then(function (response) {
+      if (!response.ok) {
+        audit('warn', 'Lokalni event neulozen', { eventName: name, reason: 'http_' + response.status });
+      }
+    })['catch'](function () {
+      audit('warn', 'Lokalni event neulozen', { eventName: name, reason: 'network_error' });
+    });
+  }
+
   function trackEvent(name, params) {
     var blockReason = getTrackBlockReason(name);
     var extra = params || {};
@@ -112,6 +148,7 @@
 
       audit('info', 'Event odeslan', { eventName: name, transport: result.transport, params: extra });
       log(result.transport + ':', name, extra);
+      recordFirstPartyEvent(name);
 
       // GA4 standard conversion events + Meta Pixel
       if (name === 'lead_form_submit' || name === 'thank_you_page_view') {

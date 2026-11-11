@@ -2,6 +2,12 @@
 
 REST API je dostupne na `/api/v1/*`. Vsechny endpointy vraceji JSON a vyzaduji autentizaci klicem z `.env`.
 
+## Interni verejne beacon endpointy
+
+`POST /api/visit` a `POST /api/tracking-event` nejsou soucasti autentizovaneho REST API. Volá je pouze frontend stejného originu před založením session. Event endpoint přijímá nejvýše 1 024 bajtů JSON ve tvaru `{"e":"phone_click","p":"/kontakt","a":1}`. Název musí být v pevném `GtmEventCatalog`, cesta nesmí mířit do `/admin` a `a` označuje výslovný analytický souhlas. Parametry GTM eventu se neposílají ani neukládají.
+
+Odpovědi: `204` uložený nebo záměrně ignorovaný bot/vypnuté měření, `400` neplatný payload, `403` cizí origin, `405` jiná metoda, `429` limit a `503` chybějící serverový HMAC secret nebo chyba DB. Endpoint nepotvrzuje přijetí události v GA4; eviduje pouze úspěšný frontendový dispatch do `dataLayer`/`gtag`.
+
 ## Autentizace
 
 ```env

@@ -508,6 +508,9 @@ register_smtp_mailer_tests($test, $assert);
 require __DIR__ . '/VisitAnalyticsTest.php';
 register_visit_analytics_tests($test, $assert);
 
+require __DIR__ . '/TrackingEventAnalyticsTest.php';
+register_tracking_event_analytics_tests($test, $assert);
+
 require __DIR__ . '/HealthCheckTest.php';
 register_health_check_tests($test, $assert);
 

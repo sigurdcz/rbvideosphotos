@@ -1,9 +1,12 @@
 <?php
 $h = static fn($v) => htmlspecialchars((string) $v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 $pageTitle = 'Analytika';
-$activeView = in_array(($activeView ?? 'overview'), ['overview', 'health', 'visits'], true) ? $activeView : 'overview';
+$activeView = in_array(($activeView ?? 'overview'), ['overview', 'health', 'visits', 'events'], true) ? $activeView : 'overview';
 $viewUrl = static fn(string $view) => '/admin/analytics?' . http_build_query(['view' => $view, 'days' => $days]);
 $deviceLabels = ['desktop' => 'Počítač', 'mobile' => 'Mobil', 'tablet' => 'Tablet', 'unknown' => 'Neznámé'];
+$measurementDisabled = $activeView === 'visits'
+    ? empty($visitEnabled)
+    : ($activeView === 'events' ? empty($eventEnabled) : ($activeView === 'overview' && (empty($visitEnabled) || empty($eventEnabled))));
 $renderTop = static function (string $title, array $rows, ?array $labels = null) use ($h): void {
     $max = 0;
     foreach ($rows as $row) { $max = max($max, (int) $row['visits']); }
@@ -24,15 +27,16 @@ $renderTop = static function (string $title, array $rows, ?array $labels = null)
 };
 ob_start(); ?>
 <div class="page-header"><h1>Analytika</h1></div>
-<p>Jedno místo pro dostupnost webu a vlastní měření návštěvnosti. Health monitoring neukládá údaje návštěvníků a neběží přes analytický beacon.</p>
+<p>Jedno místo pro dostupnost webu, vlastní měření návštěvnosti a frontendové události. Health monitoring neukládá údaje návštěvníků a neběží přes analytický beacon.</p>
 <nav class="tabs analytics-tabs" aria-label="Sekce analytiky">
-  <?php foreach (['overview' => 'Přehled', 'health' => 'Health', 'visits' => 'Návštěvnost'] as $viewKey => $viewLabel): ?>
+  <?php foreach (['overview' => 'Přehled', 'health' => 'Health', 'visits' => 'Návštěvnost', 'events' => 'Události'] as $viewKey => $viewLabel): ?>
     <a class="tab-btn <?= $activeView === $viewKey ? 'active' : '' ?>" href="<?= $h($viewUrl($viewKey)) ?>" <?= $activeView === $viewKey ? 'aria-current="page"' : '' ?>><?= $h($viewLabel) ?></a>
   <?php endforeach; ?>
 </nav>
-<?php if (!$enabled && $hasSite && $activeView !== 'health'): ?><div class="alert alert-warning">Měření je vypnuté v <a href="/admin/settings">Nastavení</a> (karta Cookies, consent a analytics). Zobrazená data jsou historická.</div><?php endif; ?>
-<?php if (!empty($loadError) && $activeView !== 'health'): ?><div class="alert alert-danger"><?= $h($loadError) ?></div><?php endif; ?>
-<?php if (!empty($healthLoadError) && $activeView !== 'visits'): ?><div class="alert alert-danger"><?= $h($healthLoadError) ?></div><?php endif; ?>
+<?php if ($measurementDisabled && $hasSite): ?><div class="alert alert-warning">Příslušné měření je vypnuté v <a href="/admin/settings">Nastavení</a> (karta Cookies, consent a analytics). Zobrazená data jsou historická.</div><?php endif; ?>
+<?php if (!empty($loadError) && in_array($activeView, ['overview', 'visits'], true)): ?><div class="alert alert-danger"><?= $h($loadError) ?></div><?php endif; ?>
+<?php if (!empty($healthLoadError) && in_array($activeView, ['overview', 'health'], true)): ?><div class="alert alert-danger"><?= $h($healthLoadError) ?></div><?php endif; ?>
+<?php if (!empty($eventLoadError) && in_array($activeView, ['overview', 'events'], true)): ?><div class="alert alert-danger"><?= $h($eventLoadError) ?></div><?php endif; ?>
 <?php if (!$hasSite): ?><div class="card"><p>Nejprve <a href="/admin/settings">nastavte web</a>.</p></div><?php endif; ?>
 
 <form method="get" action="/admin/analytics" style="display:flex;gap:12px;flex-wrap:wrap;margin:20px 0;align-items:center">
@@ -75,11 +79,71 @@ ob_start(); ?>
       <div class="stat-card"><div class="stat-num"><?= $h(number_format($summary['uniques'], 0, ',', ' ')) ?></div><div class="stat-lbl">Unikátní návštěvníci</div></div>
       <div class="stat-card"><div class="stat-num"><?= $h(number_format((float) $summary['consent_share'], 1, ',', ' ')) ?> %</div><div class="stat-lbl">Návštěvy se souhlasem</div></div>
     <?php endif; ?>
+    <?php if (is_array($eventSummary)): ?>
+      <div class="stat-card"><div class="stat-num"><?= $h(number_format($eventSummary['events'], 0, ',', ' ')) ?></div><div class="stat-lbl">Frontendové události</div></div>
+    <?php endif; ?>
   </div>
   <div class="analytics-overview-actions">
     <a class="btn btn-secondary" href="<?= $h($viewUrl('health')) ?>">Podrobný health</a>
     <a class="btn btn-secondary" href="<?= $h($viewUrl('visits')) ?>">Podrobná návštěvnost</a>
+    <a class="btn btn-secondary" href="<?= $h($viewUrl('events')) ?>">Podrobné události</a>
   </div>
+</section>
+<?php endif; ?>
+
+<?php if ($activeView === 'events'): ?>
+<section class="analytics-section" aria-labelledby="events-heading">
+  <h2 id="events-heading">Frontendové události</h2>
+  <p>Vlastní databázový záznam událostí, které web předal do <code>dataLayer</code> nebo <code>gtag</code>. Nejde o potvrzení, že je GA4 přijalo. Neukládají se parametry událostí, telefon, e-mail ani cílové URL; pouze název z povoleného katalogu, cesta stránky, čas a denní anonymní otisk. Retence je 14 měsíců.</p>
+  <?php if (is_array($eventSummary)): ?>
+    <p class="help-text">Období <?= $h($eventSummary['from']) ?> až <?= $h($eventSummary['to']) ?>.</p>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-num"><?= $h(number_format($eventSummary['events'], 0, ',', ' ')) ?></div><div class="stat-lbl">Události celkem</div></div>
+      <div class="stat-card"><div class="stat-num"><?= $h(number_format($eventSummary['daily_uniques'], 0, ',', ' ')) ?></div><div class="stat-lbl">Denní anonymní návštěvníci</div></div>
+      <div class="stat-card"><div class="stat-num"><?= $h(number_format($eventSummary['consented_events'], 0, ',', ' ')) ?></div><div class="stat-lbl">Události s výslovným souhlasem</div></div>
+    </div>
+
+    <?php $maxEventDay = 0; foreach ($eventSummary['daily'] as $row) { $maxEventDay = max($maxEventDay, (int) $row['events']); } ?>
+    <div class="card" style="padding:16px;margin-top:16px">
+      <div class="card-title">Události podle dne</div>
+      <div style="overflow-x:auto"><table class="data-table" style="width:100%">
+        <thead><tr><th>Den</th><th style="width:70%"></th><th style="text-align:right">Počet</th></tr></thead>
+        <tbody><?php foreach (array_reverse($eventSummary['daily']) as $row): ?><tr>
+          <td style="white-space:nowrap"><?= $h($row['day']) ?></td>
+          <td><div style="height:8px;background:#4f7cff;border-radius:2px;width:<?= $h($maxEventDay > 0 ? round($row['events'] / $maxEventDay * 100) : 0) ?>%"></div></td>
+          <td style="text-align:right"><?= $h(number_format($row['events'], 0, ',', ' ')) ?></td>
+        </tr><?php endforeach; ?></tbody>
+      </table></div>
+    </div>
+
+    <div class="card" style="padding:16px;margin-top:16px">
+      <div class="card-title">Počty podle události</div>
+      <?php if ($eventSummary['by_event'] === []): ?><p class="help-text">Za zvolené období bez dat.</p><?php else: ?>
+      <div style="overflow-x:auto"><table class="data-table" style="width:100%">
+        <thead><tr><th>Událost</th><th>Kategorie</th><th style="text-align:right">Počet</th><th style="text-align:right">Denní návštěvníci</th></tr></thead>
+        <tbody><?php foreach ($eventSummary['by_event'] as $row): ?><tr>
+          <td><strong><?= $h($row['label']) ?></strong><div class="help-text"><code><?= $h($row['event_name']) ?></code></div></td>
+          <td><?= $h($row['category']) ?></td>
+          <td style="text-align:right"><?= $h(number_format($row['events'], 0, ',', ' ')) ?></td>
+          <td style="text-align:right"><?= $h(number_format($row['daily_uniques'], 0, ',', ' ')) ?></td>
+        </tr><?php endforeach; ?></tbody>
+      </table></div><?php endif; ?>
+    </div>
+
+    <div class="card" style="padding:16px;margin-top:16px">
+      <div class="card-title">Nejčastější události podle stránky</div>
+      <?php if ($eventSummary['top_paths'] === []): ?><p class="help-text">Za zvolené období bez dat.</p><?php else: ?>
+      <div style="overflow-x:auto"><table class="data-table" style="width:100%">
+        <thead><tr><th>Stránka</th><th>Událost</th><th style="text-align:right">Počet</th></tr></thead>
+        <tbody><?php foreach ($eventSummary['top_paths'] as $row): ?><tr>
+          <td><code><?= $h($row['path']) ?></code></td><td><code><?= $h($row['event_name']) ?></code></td>
+          <td style="text-align:right"><?= $h(number_format($row['events'], 0, ',', ' ')) ?></td>
+        </tr><?php endforeach; ?></tbody>
+      </table></div><?php endif; ?>
+    </div>
+  <?php else: ?>
+    <div class="card"><p>Historie frontendových událostí zatím není dostupná.</p></div>
+  <?php endif; ?>
 </section>
 <?php endif; ?>
 
