@@ -58,3 +58,52 @@ Odložená práce. Před zahájením vybereme prioritu; rozpracovaný úkol se v
 - Popsat: bez souhlasu se ukládá jen serverový záznam (cesta, doména odkazující stránky, UTM, typ zařízení, denně rotující anonymní otisk z IP a prohlížeče; IP adresa se do `site_visits` neukládá); po souhlasu s analytickými cookies cookie `cms_vid` (náhodný identifikátor, platnost cca 13 měsíců); retence 14 celých měsíců + běžící měsíc; správce dat; měření lze vypnout v Nastavení.
 - Pozor, „IP se neukládá“ platí jen pro `site_visits`: `Runtime::startRequest()`/`finishRequest()` zapisuje do `storage/logs/traffic-*.log` u každého requestu (i `POST /api/visit`) IP, User-Agent a Referer. Rozhodnout a zdokumentovat zásady a retenci aplikačních logů (doba uchování, rotace/mazání `storage/logs`, případně zkrácení IP nebo vynechání `/api/visit` z traffic logu) a promítnout to do textu zásad.
 - Hotovo bude, když `/podminky-uziti` na stagingu obsahuje uvedené body včetně názvu cookie `cms_vid`, její doby platnosti a retence, text odpovídá chování `public/assets/visit-analytics.js` i skutečnému logování, retence logů je nastavená a uživatel text schválí.
+
+## 6. SEO, PageSpeed a navazující kontroly — P3, odloženo po urgentních úkolech, 2026-11-16
+
+**Stav: pouze evidence, implementace nezahájena.** Na výslovný pokyn uživatele řešit až po dokončení urgentnějších věcí. Pořadí bodů určuje postup uvnitř tohoto odloženého balíku, nepovyšuje je nad aktuální úkoly. Při zahájení znovu ověřit stav webu a vybrat konkrétní rozsah do `UKOL.md`.
+
+Navazuje na výše uvedený bod „Performance homepage: overeni na skutecnych mediich“ a kontrolu českých fontů. Společné ověření provést jednou a výsledek promítnout do obou souvisejících záznamů. Nadále platí dřívější odklad optimalizace videa do dodání klipu; tento zápis není pokynem měnit video ani jeho přehrávání nyní.
+
+### Podklady a omezení
+
+- Uživatelem dodané screenshoty v `C:/Users/sigur/Downloads/FullPageScreenshots/`:
+  - `fullpage-2026-11-11_01-49-37-seoptimer.com-SEO-Audit-for-rbvideosphotos.cz-SEOptimer.png`
+  - `fullpage-2026-11-11_02-33-35-pagespeed.web.dev-PageSpeed-Insights.png`
+- Jde o historická měření z 2026-11-11, nikoli o nově ověřený stav k datu zápisu. SEOptimer hlásil chybu crawleru a možné neúplné výsledky: D+, mobil 88, desktop 94, 34 odkazů z 32 domén (9 dofollow).
+- PageSpeed mobil: výkon 74, FCP 1,1 s, LCP 6,3 s, TBT 70 ms, CLS 0; přenos 17 878 KiB, dva řádky MP4 dohromady přibližně 17 019 KiB (95 %). Zkrácené URL nedokazují duplicitní stahování. Rozdíl 88/74 bodů sám nedokazuje regresi.
+- LCP prvkem byla fotografie „RB Videos & Photos při práci“; rozklad uváděl čekání na zdroj 350 ms, stahování 190 ms a čekání na vykreslení 1 960 ms. Součet rozkladu s TTFB 30 ms je přibližně 2,53 s, nikoli 6,3 s; pozorované části a simulovaná hlavní metrika se nesmějí zaměňovat. Příčina zdržení ani přesná úspora dosud nejsou prokázané.
+- CSS: odhad úspory blokování 160 ms, nevyužité CSS asi 14 KiB. Google skripty asi 298 KiB, odhad nevyužitého JS 140 KiB. Cache náhledu YouTube: odhad úspory 11 KiB. Odhady různých auditů nesčítat jako garantované zrychlení.
+
+### Odložený seznam doporučení a podmínky dokončení
+
+- [ ] **1. Dostupnost pro SEOptimer:** prověřit logy hostingu, 403/429/5xx, timeouty a případná omezení konkrétního crawleru. Hotovo: zdokumentovaná příčina, úplný nový audit bez varování a úspěšný živý test URL v Search Console; bezpečnostní ochrany měnit pouze cíleně podle důkazů.
+- [ ] **2. Mobilní video:** po dodání klipu připravit přiměřené rozlišení a datový tok, případně odstranit nepotřebnou zvukovou stopu. Hotovo: doložené snížení přenosu proti nové baseline při přijatelném vzhledu a funkčním přehrávání.
+- [ ] **3. Dva velké požadavky na MP4:** porovnat úplné URL, iniciátory, odpovědi a `Range`/`Content-Range`. Hotovo: vysvětlené části přenosu a odstraněná případná zbytečná opakování; dva řádky reportu nepovažovat automaticky za dva celé downloady.
+- [ ] **4. Pozdní vykreslení LCP fotografie:** pořídit Chrome Performance trace a najít skutečnou příčinu čekání po načtení obrázku. Hotovo: doložená příčina a opakovatelně nižší LCP bez regresí. Mobilní preload a eager loading již byly přítomné, mobilní welcome vrstva vypnutá v CSS; jejich další úpravy musí vycházet z měření.
+- [ ] **5. Současné načítání videa a první obrazovky:** ověřit soutěž o síťové prostředky a přednostní zobrazení obsahu. Hotovo: síťový záznam dokládá správné pořadí a potřebnou variantu videa bez zhoršení přehrávání. `preload="metadata"` při autoplay není zárukou malého přenosu.
+- [ ] **6. Relevantní zpětné odkazy:** získávat přirozené zmínky od skutečných svatebních míst, koordinátorů a dodavatelů. Hotovo pro první etapu: evidované 3–5 relevantních zmínek v dohodnutém období a sledování návštěv/poptávek; nehodnotit jen počet či skóre domén.
+- [ ] **7. Obsah a důvěryhodnost:** připravit konkrétní reportáže ze zakázek s místem, vlastními fotografiemi, průběhem spolupráce a autentickými referencemi; ověřit údaje ve firemních profilech. Hotovo: publikovaný dohodnutý rozsah a sjednocené ověřené údaje, bez vymyšlených referencí.
+- [ ] **8. GTM a analytika:** zkontrolovat potřebnost tagů, spouštění a duplicitní události; odstranit nepotřebné integrace. Hotovo: zdokumentovaný seznam aktivních tagů, ověřené události a menší zátěž bez ztráty důležitých návštěv/poptávek. Přítomnost GTM i Google tagu sama neprokazuje duplicitu.
+- [ ] **9. Fonty:** přednačítat pouze řezy první obrazovky, prověřit velkou kurzívu a rozsahy znaků. Hotovo: menší přenos fontů, zachované české znaky a vzhled, bez nechtěného náhradního fontu či zhoršení CLS.
+- [ ] **10. Blokující CSS:** zmenšit hlavní balík a podle měření oddělit styly nepotřebné pro první obrazovku. Hotovo: nižší blokování a stejný vzhled při pomalém načítání; nepovažovat odhad 160 ms za vysvětlení celého LCP.
+- [ ] **11. Nevyužité CSS:** ověřit označená pravidla také v otevřeném menu, galeriích, formulářích a všech responzivních stavech. Hotovo: odstraněna jen skutečně nepotřebná pravidla a ověřeny interakce.
+- [ ] **12. Srovnatelné měření:** minimálně tři mobilní a jeden desktopový běh stejné finální URL za srovnatelných podmínek se skutečnými médii. Hotovo: uložený medián, LCP prvek, přenosy a srovnání před/po; kontrola vzhledu, CLS a funkčnosti. Výsledky propojit s existujícím performance bodem.
+- [ ] **13. Reálné Core Web Vitals:** sledovat Search Console; při nedostatku dat posoudit vlastní měření LCP, INP a CLS. Hotovo: doložený zdroj a rozsah dat, případně výslovně zaznamenaný nedostatek dat. Chybějící data neznamenají neúspěšný test. Cíle pro reálná data na 75. percentilu: LCP ≤ 2,5 s, INP ≤ 200 ms, CLS ≤ 0,1.
+- [ ] **14. Cache náhledu YouTube:** zvážit vlastní spravovaný náhled s odpovídající cache. Hotovo: ověřený přínos nebo zdůvodněné ponechání; malá úspora 11 KiB neospravedlňuje složité řešení. Vlastní hlavičky nemění cache cizího serveru.
+- [ ] **15. Podezřelé odkazy:** posoudit původ a relevanci automatických „Domain Report“, „Website Stats“ a podobných stránek. Hotovo: doložené rozhodnutí; nepoužívat automatický disavow podle názvu či skóre domény.
+- [ ] **16. Přístupnost:** ručně ověřit klávesnici a alternativní texty; u videí s důležitým mluveným obsahem titulky. Hotovo: relevantní obsah a ovládání jsou přístupné, nálezy mají konkrétní důkaz. Rozbalovací doporučení reportu ani skóre 100 nejsou úplným auditem.
+- [ ] **17. Bezpečnostní doporučení:** prověřit CSP, HSTS, COOP a vhodnost Trusted Types. Hotovo: zdokumentované rozhodnutí a kompatibilita případných úprav s administrací, videem a analytikou; obecná doporučení nejsou potvrzené zranitelnosti.
+- [ ] **18. Strukturovaná data a úplnost SEO:** ověřit platnost dat, shodu s viditelným obsahem a důležité podstránky. Hotovo: uložené výsledky validace a vyřešené konkrétní nálezy; skóre SEO 100 / On-Page A+ nevydávat za kompletní audit.
+
+### Dříve ověřené body, které nyní nejsou samostatnou opravou
+
+- Dne 2026-11-11 vedly HTTP/www varianty jedním přesměrováním na `https://rbvideosphotos.cz/`; finální URL neměla přesměrování. Před změnou pravidel znovu změřit.
+- Homepage, robots.txt a sitemap vracely HTTP 200, sitemap byla platné XML se 68 URL; obecné procházení bylo povoleno. Homepage měla title, description, H1, canonical a `index,follow`. To samo nepotvrzuje přístup skutečného Googlebotu ani indexaci.
+- Reporty neprokazovaly zásadní chybu minifikace, explicitních rozměrů obrázků ani cache vlastních statických souborů. Nízké TBT a CLS zachovat.
+
+### Společné podmínky dokončení technických změn
+
+- Začít až po urgentnějších úkolech, s čerstvou baseline a konkrétním vybraným rozsahem. Neprovádět automaticky všechny hypotetické opravy.
+- Implementace na `dev` nebo `codex/*` založené z `dev`, ověření na stagingu se skutečnými médii; kontrola vzhledu, videa, galerií, formulářů, analytiky a českých fontů. Produkce pouze po výslovně schváleném konkrétním merge ověřeného `dev` do `master`.
+- U každého vybraného bodu uložit výsledek a důkaz, případně zdůvodnění, proč oprava není potřebná. Nezaměňovat laboratorní skóre za reálné Core Web Vitals a neslibovat pořadí ve vyhledávání.

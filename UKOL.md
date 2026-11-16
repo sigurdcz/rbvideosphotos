@@ -3438,3 +3438,24 @@ a `git diff --check` je cisty. Cely historicky runner znovu narazil na znamy nes
 Golden Bash Diagonal rozdil a nedostupne lokalni DB pripojeni; tyto blokery nejsou skryte.
 Zmeny jsou commitnute na `dev` bez pushe. `artifacts/` zustava nedotcena a `master` se nemeni.
 
+# UKOL: Odlozeni doporuceni SEO a PageSpeed do backlogu
+
+Datum: 2026-11-16
+Zadani: Ulozit sjednocena doporuceni z uzivatelovych reportu SEOptimer a PageSpeed z 2026-11-11 do BACKLOG.md pro reseni az po urgentnejsich ukolech.
+Doporuceny model: Luna - jde o jednoduchou dokumentacni upravu bez implementace oprav.
+
+## Kroky
+
+- [x] Precist existujici backlog a overit pracovni vetev dev.
+- [x] Zapsat vsechna doporuceni, jejich odlozeni, historicke podklady a podminky dokonceni.
+- [x] Overit diff a uplnost zaznamu.
+
+## Poznamky
+
+Ukol pouze eviduje budouci praci; SEO ani vykonove opravy se nezahajuji. Existujici zaznamy a nesouvisejici artifacts/ zustavaji zachovany. Relevantni dokumentace je BACKLOG.md a tento zaznam; chovani aplikace se nemeni.
+BACKLOG.md obsahuje novy bod 6 s prioritou P3, explicitnim odkladem po urgentnich ukolech, vsemi 18 doporucenimi, historickymi metrikami, kriterii dokonceni a vazbou na stavajici performance/font zaznamy. Zachovan je take odklad videa do dodani klipu.
+
+## Vysledek
+
+Vsech 18 doporuceni je ulozeno v BACKLOG.md jako odlozena prace po urgentnejsich ukolech. Kontrola diffu prosla, zmeny jsou pouze dokumentacni v BACKLOG.md a UKOL.md; aplikacni testy ani deployment nejsou pro tento zapis potreba. README, ARCHITECTURE a ostatni provozni dokumentace nevyzaduji zmenu. Wiki reflection: pouze evidence drive znamych doporuceni, zadna nova technicka znalost k ulozeni. Opravy se nezahajuji.
+
