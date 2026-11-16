@@ -6,6 +6,39 @@ use App\Services\Render\NavigationNormalizer;
 
 function register_navigation_and_reviews_link_tests(callable $test, callable $assert): void
 {
+    $test('homepage work navigation targets its section while subpages keep the listing route', function () use ($assert): void {
+        $seed = (string)file_get_contents(dirname(__DIR__) . '/database/seeds/seed.php');
+        preg_match('~\$layoutNavHome = <<<\'NAV\'\R(.*?)\RNAV;~s', $seed, $matches);
+        $source = $matches[1] ?? '';
+        $assert($source !== '', 'The real seeded homepage menu must be available.');
+        $home = NavigationNormalizer::forPage($source, true);
+        $sub = NavigationNormalizer::forPage($source, false);
+
+        $assert(str_contains($home, 'href="#nase-prace"'), 'Homepage must link to its own portfolio section.');
+        $assert($home === str_replace('href="/nase-prace"', 'href="#nase-prace"', $source), 'Other menu links and markup must be preserved.');
+        $assert($sub === $source, 'Subpage navigation must retain its route URLs.');
+        $assert(NavigationNormalizer::forPage($home, true) === $home, 'Repeated rendering must be idempotent.');
+
+        $layout = (string)file_get_contents(dirname(__DIR__) . '/Templates/golden-bash-diagonal/layout.html');
+        $rendered = (new \App\Services\PageRenderer())->applyLayout($layout, '<section id="nase-prace">Portfolio</section>', 'Test site', $home);
+        $assert(str_contains($rendered, 'href="#nase-prace"') && str_contains($rendered, 'id="nase-prace"'), 'The actual theme layout must retain the section link and target.');
+        $assert(str_contains($rendered, 'href="/kontakt"'), 'The header contact action must not change.');
+    });
+
+    $test('homepage work navigation preserves explicit destinations and supports stored quote variants', function () use ($assert): void {
+        $source = <<<'HTML'
+<nav><a href='/nase-prace/'>Work</a><a class="work" href = "/nase-prace">Work</a><a href="#nase-prace">Section</a><a href="/#nase-prace">Home section</a><a href="/nase-prace#videogalerie">Videos</a><a href="/nase-prace?filter=video">Filtered</a><a href="https://example.org/nase-prace">External</a><a data-href="/nase-prace" href="/blog">Blog</a><a href="/o-nas">About</a><a href="/hodnoceni">Reviews</a></nav>
+HTML;
+        $expected = str_replace(
+            ["href='/nase-prace/'", 'href = "/nase-prace"'],
+            ["href='#nase-prace'", 'href="#nase-prace"'],
+            $source
+        );
+        $assert(NavigationNormalizer::forPage($source, true) === $expected);
+        $assert(NavigationNormalizer::forPage($source, false) === $source);
+        $assert(NavigationNormalizer::forPage('', true) === '');
+    });
+
     $test('navigation normalizer adds Reference before the contact CTA once', function () use ($assert): void {
         $source = '<nav><div class="nav-links"><a href="/sluzby">Služby</a><a href="/kontakt" class="nav-cta">Kontakt</a></div></nav>';
         $normalized = NavigationNormalizer::ensureReviewsLink($source);

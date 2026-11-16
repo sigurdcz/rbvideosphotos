@@ -9,6 +9,27 @@ final class NavigationNormalizer
     private const REVIEWS_LINK = '<a href="/hodnoceni">Reference</a>';
     private const ABOUT_LINK = '<a href="/o-nas">O nás</a>';
 
+    public static function forPage(string $nav, bool $isHome): string
+    {
+        $nav = self::ensureReviewsLink($nav);
+        if (!$isHome) {
+            return $nav;
+        }
+
+        // Stored menus may share route URLs; homepage work navigation targets
+        // its own section. Keep explicit queries, fragments and external URLs.
+        $normalized = preg_replace(
+            '~(<a\b[^>]*\s)href\s*=\s*(["\'])/nase-prace/?\2~i',
+            '$1href=$2#nase-prace$2',
+            $nav
+        );
+        if ($normalized === null) {
+            throw new \RuntimeException('Homepage navigation normalization failed.');
+        }
+
+        return $normalized;
+    }
+
     public static function ensureReviewsLink(string $nav): string
     {
         if (trim($nav) === '') {

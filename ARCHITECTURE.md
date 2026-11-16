@@ -621,6 +621,14 @@ Verejna i staticky publikovana navigace prochazi
 `/hodnoceni` pred kontaktni CTA, takze odkaz Reference zustane dostupny i u
 starsich navigacnich fragmentu ulozenych v databazi.
 
+Obe renderovaci cesty volaji `NavigationNormalizer::forPage($nav, $isHome)`.
+Na homepage se prosty interni odkaz `/nase-prace` (i s koncovym lomitkem)
+v navbaru meni na `#nase-prace`, aby klik posunul stranku k jejimu portfoliu.
+Na podstrankach zustava `/nase-prace`. Ostatni polozky menu, explicitni query,
+fragmenty a externi URL se zachovavaji; obsahove CTA a paticka tim neprochazeji.
+Pravidlo se aplikuje pri renderovani i na drive ulozene navigacni fragmenty,
+takze nevyzaduje datovou migraci ani JavaScriptove prepisovani odkazu.
+
 Google Business URL se neuklada do sablony. Je soucasti `contact_info.reviews_url`
 a spravuje se v administraci kontaktu. Stranka hodnoceni odkaz vykresli jen
 tehdy, kdyz je skutecne vyplneny.

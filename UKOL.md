@@ -1,3 +1,33 @@
+# UKOL: Navigace homepage scrolluje na Naše práce
+
+Datum: 2026-11-17
+Zadani: Opravit navbar na staging homepage tak, aby Naše práce posunuly stránku na její sekci, zatímco navigace z podstránek dál vede na /nase-prace.
+Doporuceny model: Terra - Jde o ohranicenou opravu navigace s overenim homepage a podstranek.
+
+## Kroky
+
+- [x] Přečíst projektové postupy a odděleně commitnout hotové poznámky předchozího úkolu.
+- [x] Reprodukovat chybu na stagingu a dohledat příčinu v renderování nebo JavaScriptu.
+- [-] Opravit homepage navigaci a ověřit cílené regrese včetně podstránek a mobilního menu.
+- [-] Commitnout opravu na dev, nasadit a ověřit staging.
+- [ ] Aktualizovat relevantní dokumentaci a provést wiki reflection.
+
+## Poznamky
+
+- Akceptace: kliknutí Naše práce v navbaru homepage zachová cestu / a posune viewport k odpovídající sekci; z podstránky otevře /nase-prace.
+- Výchozí dev bb5641b; předchozí dokumentační změny uloženy samostatně jako cf208ac. Nesouvisející artifacts/ se nemění.
+- Změny zdrojů přes apply_patch; kontrolní pokus v PowerShellu zachoval 1–4 zpětná lomítka. Produkční master není součástí úkolu.
+- Staging reprodukce: otevření menu a klik Naše práce přejde z / na /nase-prace; sekce #nase-prace na homepage existuje. Git blame ukazuje import d7edef4, který změnil původní homepage kotvy na route URL i v seedu.
+- NavigationNormalizer::forPage překládá pouze prostý interní odkaz /nase-prace na #nase-prace a pouze pro homepage. public/index.php a PublishService předávají shodný kontext; explicitní dotazy, fragmenty, externí odkazy a podstránky se nemění. Oprava je pravidlem renderování, nemění data ani nevyžaduje migraci.
+- NavigationAndReviewsLinkTest ověřuje skutečný seed menu a theme layout, podstránky, opakovatelnost, jednoduché/dvojité uvozovky a zachování explicitních cílů. ARCHITECTURE.md popisuje společný renderovací kontrakt; README/API/INSTRUCTIONS změnu nevyžadují.
+- Lokální ověření: 5/5 cílených PHP testů a existující Node test aktivní navigace prošly. PHP lint všech dotčených PHP souborů, NUL kontrola a git diff --check bez chyb; živý desktop/mobil bude ověřen po staging deployi.
+
+## Vysledek
+
+Probíhá diagnostika.
+
+---
+
 # UKOL: Článek Natálie a David v Naše práce
 
 Datum: 2026-11-11
