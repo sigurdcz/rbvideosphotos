@@ -13,8 +13,8 @@ Doporuceny model: Terra - Jde o ohranicenou opravu navigace s overenim homepage 
 - [x] Aktualizovat relevantní dokumentaci a provést wiki reflection.
 - [x] Získat konkrétní souhlas a nasadit schválený rozsah dev@4ed9872 na produkci.
 - [x] Ověřit produkční navbar a získat potvrzení aktuální zálohy produkční DB.
-- [-] Opravit a na stagingu ověřit nově zjištěné chybné pořadí společného upgrade migrací 123–131.
-- [ ] Po schválení konkrétní doplňující revize provést produkční merge, migrace a publish článku.
+- [x] Opravit a na stagingu ověřit nově zjištěné chybné pořadí společného upgrade migrací 123–131.
+- [x] Po schválení konkrétní doplňující revize provést produkční merge, migrace a publish článku.
 
 ## Poznamky
 
@@ -33,10 +33,14 @@ Doporuceny model: Terra - Jde o ohranicenou opravu navigace s overenim homepage 
 - Produkční browser QA prošlo: homepage scroll /#nase-prace na 1440×1000 i 390×844, nadpis viditelný, mobilní menu se zavře; z Kontaktu obě šířky přejdou na /nase-prace. Uživatel potvrdil aktuální produkční DB zálohu.
 - Před spuštěním migrací odhalena regrese: maintenance SQL pass vykoná 124–131 před odloženou 123, takže nový článek skončí původním textem. Produkční migrace zatím NEBYLY spuštěny. Přidán PortfolioStoryMigrationOrderTest pro přechody ze 122/123/130 a replay, zapojen do tests/run.php.
 - Regrese ze 122 reprodukována testem. ApplicationCompatibleMigrationService nyní odkládá celý allowlist 123–131 a provádí původní SQL v pořadí. Žádná historická migrace upravena. ARCHITECTURE popisuje závislost, README opravuje nepravdivé tvrzení o automatických produkčních migracích. Širší SetupEnvironment test narazil na nedostupné lokální DB připojení; cílený test používá izolované SQLite fixture a tento limit neskrývá.
+- Doplňující commit ce65c44: 3/3 migračních scénářů + replay, 5/5 navbar testů, PHP lint a diff check passed. Staging Actions 43990610507 success, protected maintenance bez čekajících migrací a s úspěšným publishem; finální text HTTP 200 zachován. První automatický review staging příkazu zaměnil helper s produkčním; po doložení pevné staging URL stejné volání povoleno a dokončeno. Žádná produkční mutace se nestala.
+- Konkrétní merge dev@ce65c44 a následné produkční migrace/publish předloženy uživateli ke schválení po staging ověření podle AGENTS.md. Wiki zaznamenává reproduktor a řešení v story-migration-order.html, commit 023f3b9. Produkční backup uživatel potvrdil; na toto potvrzení navážeme bez opakování dotazu.
+- Uživatel výslovně schválil doplňující merge dev@ce65c44 i dokončení migrací. Merge commit cf73a77 byl pushnut na master a produkční Actions 44073800874 skončily success. Následně byly v opraveném pořadí aplikovány migrace 123–131 a úplný publish skončil explicitním úspěchem.
+- Závěrečná veřejná kontrola: homepage, /kontakt, /nase-prace i /svatba-jivova-natalie-david vracejí HTTP 200; homepage navbar používá #nase-prace, podstránky /nase-prace, článek obsahuje finální kameramanský text a build diagnostika uvádí latest 131_use_cameraman_text_natalie_david_story.sql.
 
 ## Vysledek
 
-Schválený kód je na produkci; probíhá browser kontrola navbaru. Migrace článku a publish čekají na potvrzení aktuální zálohy produkční DB.
+Navbar i článek Natálie a Davida jsou nasazené a ověřené na produkci. Doplňující oprava pořadí migrací byla sloučena jako cf73a77, produkční workflow 44073800874 prošlo a migrace 123–131 i úplný publish skončily úspěšně. Homepage scrolluje na #nase-prace, zatímco podstránky odkazují na /nase-prace; nový článek vrací HTTP 200 a obsahuje finální revizi textu.
 
 ---
 
