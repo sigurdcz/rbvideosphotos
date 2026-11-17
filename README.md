@@ -204,9 +204,11 @@ Migrace pres URL utilitu:
 http://localhost:8000/migrate-util.php?token=<MIGRATE_TOKEN>
 ```
 
-Produkční workflow po FTPS deployi vytvoří jednorázový náhodně pojmenovaný vstupní bod, který načte `MIGRATE_TOKEN` přímo z produkčního `.env`, zavolá stejnou utilitu s `publish=1` a po požadavku se sám odstraní. Díky tomu se nedestruktivní migrace, úplný publish a SEO smoke provedou při každém produkčním nasazení, aniž by se produkční token kopíroval do GitHub Secrets nebo vypisoval do logu. Chybějící produkční `MIGRATE_TOKEN`, chyba migrace, publish nebo následného SEO smoke ukončí deployment jako neúspěšný.
-
-Příčina původního pádu GitHub Actions, odstranění chybného požadavku na duplicitní GitHub secret a celý bezpečnostní kontrakt jsou popsány v [DEPLOYMENT.md](DEPLOYMENT.md).
+Aktuální produkční workflow končí FTPS přenosem kódu. Migrace ani publish automaticky
+nespouští; `deploy-maintenance.php` je pouze neaktivní placeholder vracející 404.
+Po záloze databáze spusť chráněný `migrate-util.php` s produkčním `MIGRATE_TOKEN`
+a `publish=1`, potom ověř skutečný obsah a SEO smoke podle [DEPLOYMENT.md](DEPLOYMENT.md).
+Úspěšný deployment sám nepotvrzuje aktualizaci databáze. Token nezapisuj do Gitu ani logů.
 
 Seed z adminu:
 

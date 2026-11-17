@@ -8,23 +8,35 @@ Doporuceny model: Terra - Jde o ohranicenou opravu navigace s overenim homepage 
 
 - [x] Přečíst projektové postupy a odděleně commitnout hotové poznámky předchozího úkolu.
 - [x] Reprodukovat chybu na stagingu a dohledat příčinu v renderování nebo JavaScriptu.
-- [-] Opravit homepage navigaci a ověřit cílené regrese včetně podstránek a mobilního menu.
-- [-] Commitnout opravu na dev, nasadit a ověřit staging.
-- [ ] Aktualizovat relevantní dokumentaci a provést wiki reflection.
+- [x] Opravit homepage navigaci a ověřit cílené regrese včetně podstránek a mobilního menu.
+- [x] Commitnout opravu na dev, nasadit a ověřit staging.
+- [x] Aktualizovat relevantní dokumentaci a provést wiki reflection.
+- [x] Získat konkrétní souhlas a nasadit schválený rozsah dev@4ed9872 na produkci.
+- [x] Ověřit produkční navbar a získat potvrzení aktuální zálohy produkční DB.
+- [-] Opravit a na stagingu ověřit nově zjištěné chybné pořadí společného upgrade migrací 123–131.
+- [ ] Po schválení konkrétní doplňující revize provést produkční merge, migrace a publish článku.
 
 ## Poznamky
 
 - Akceptace: kliknutí Naše práce v navbaru homepage zachová cestu / a posune viewport k odpovídající sekci; z podstránky otevře /nase-prace.
 - Výchozí dev bb5641b; předchozí dokumentační změny uloženy samostatně jako cf208ac. Nesouvisející artifacts/ se nemění.
-- Změny zdrojů přes apply_patch; kontrolní pokus v PowerShellu zachoval 1–4 zpětná lomítka. Produkční master není součástí úkolu.
+- Změny zdrojů přes apply_patch; kontrolní pokus v PowerShellu zachoval 1–4 zpětná lomítka. Produkci uživatel přidal a konkrétně schválil po staging kontrole.
 - Staging reprodukce: otevření menu a klik Naše práce přejde z / na /nase-prace; sekce #nase-prace na homepage existuje. Git blame ukazuje import d7edef4, který změnil původní homepage kotvy na route URL i v seedu.
 - NavigationNormalizer::forPage překládá pouze prostý interní odkaz /nase-prace na #nase-prace a pouze pro homepage. public/index.php a PublishService předávají shodný kontext; explicitní dotazy, fragmenty, externí odkazy a podstránky se nemění. Oprava je pravidlem renderování, nemění data ani nevyžaduje migraci.
 - NavigationAndReviewsLinkTest ověřuje skutečný seed menu a theme layout, podstránky, opakovatelnost, jednoduché/dvojité uvozovky a zachování explicitních cílů. ARCHITECTURE.md popisuje společný renderovací kontrakt; README/API/INSTRUCTIONS změnu nevyžadují.
 - Lokální ověření: 5/5 cílených PHP testů a existující Node test aktivní navigace prošly. PHP lint všech dotčených PHP souborů, NUL kontrola a git diff --check bez chyb; živý desktop/mobil bude ověřen po staging deployi.
+- Commit opravy 4ed9872, staging Actions 43980897635 success. Browser 1440×1000: URL /#nase-prace, scrollY=1546, sekce top≈0, aktivní odkaz. Mobil 390×844: URL /#nase-prace, scrollY=2439, sekce top≈42, nadpis viditelný, menu zavřené. Z /kontakt klik vede na /nase-prace na obou šířkách.
+- Wiki reflection WRITE: reprodukovatelný kód, příčina a ověření v projects/seo-editor/homepage-navigation.html, odkazy z domain-logic/hubu/katalogu; wiki commit aa65fbd. Širší domain-logic zůstává partial.
+- Uživatel po staging ověření požádal o produkci. Kontrola origin/master..origin/dev zjistila kromě navbaru i dosud nesloučený článek Natálie a Davida (migrace 123–131) a backlog. Byl vyžádán konkrétní souhlas s celým merge dev@4ed9872 podle AGENTS.md; do odpovědi master nezměněn. Lokální změna tohoto záznamu není součástí schvalované revize.
+- Uživatel výslovně potvrdil „Ano, nasadit celý tento rozsah“. Merge fc5494d má rodiče e83928e a schválený 4ed9872; výsledný strom odpovídá schválené dev revizi. Produkční Actions 43989712383 success. GitHub konektor nedostupný; použit Git merge v izolovaném worktree bez symlinků a read-only REST monitoring.
+- Produkční homepage, /kontakt a /nase-prace HTTP 200, navbar href #nase-prace na homepage a /nase-prace na podstránkách. Článek zatím 404; build diagnostika ukazuje latest 122. README tvrdí automatické migrace, ale skutečný deploy.yml je nespouští. Migrační token ověřen read-only HTTP 200, lokální DB je localhost, přístup pro plnou produkční zálohu není dostupný. Před migracemi vyžádáno potvrzení aktuální zálohy podle STAGING.md.
+- Produkční browser QA prošlo: homepage scroll /#nase-prace na 1440×1000 i 390×844, nadpis viditelný, mobilní menu se zavře; z Kontaktu obě šířky přejdou na /nase-prace. Uživatel potvrdil aktuální produkční DB zálohu.
+- Před spuštěním migrací odhalena regrese: maintenance SQL pass vykoná 124–131 před odloženou 123, takže nový článek skončí původním textem. Produkční migrace zatím NEBYLY spuštěny. Přidán PortfolioStoryMigrationOrderTest pro přechody ze 122/123/130 a replay, zapojen do tests/run.php.
+- Regrese ze 122 reprodukována testem. ApplicationCompatibleMigrationService nyní odkládá celý allowlist 123–131 a provádí původní SQL v pořadí. Žádná historická migrace upravena. ARCHITECTURE popisuje závislost, README opravuje nepravdivé tvrzení o automatických produkčních migracích. Širší SetupEnvironment test narazil na nedostupné lokální DB připojení; cílený test používá izolované SQLite fixture a tento limit neskrývá.
 
 ## Vysledek
 
-Probíhá diagnostika.
+Schválený kód je na produkci; probíhá browser kontrola navbaru. Migrace článku a publish čekají na potvrzení aktuální zálohy produkční DB.
 
 ---
 

@@ -450,6 +450,9 @@ register_homepage_pricing_tests($test, $assert);
 require __DIR__ . '/SetupEnvironmentMigrationTest.php';
 register_setup_environment_migration_tests($test, $assert);
 
+require __DIR__ . '/PortfolioStoryMigrationOrderTest.php';
+register_portfolio_story_migration_order_tests($test, $assert);
+
 require __DIR__ . '/OgImageSettingsTest.php';
 register_og_image_settings_tests($test, $assert);
 
