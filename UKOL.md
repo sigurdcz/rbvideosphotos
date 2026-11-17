@@ -3516,9 +3516,9 @@ Doporuceny model: Terra - Jde o ohranicenou produkcni CSS/sablonovou upravu s re
 - [x] Zmapovat sablony, styly a skutecny mobilni vzhled HERO blogu a Nase prace.
 - [x] Vytvorit 100bodovou vizualni rubriku a zachytit baseline v Chrome pri uzamcenem mobilnim viewportu.
 - [x] Sjednotit prezentacni vrstvu HERO Nase prace s blogovym designem bez zmeny dat nebo desktopovych kontraktu.
-- [-] Doplnit regresni testy a overit obe strany responzivnich breakpointu.
-- [ ] Commitnout na dev, nasadit a vizualne overit staging; master ponechat beze zmeny.
-- [ ] Zkontrolovat dokumentaci a provest wiki reflection.
+- [x] Doplnit regresni testy a overit obe strany responzivnich breakpointu.
+- [x] Commitnout na dev, nasadit a vizualne overit staging; master ponechat beze zmeny.
+- [x] Zkontrolovat dokumentaci a provest wiki reflection.
 
 ## Poznamky
 
@@ -3527,10 +3527,12 @@ Doporuceny model: Terra - Jde o ohranicenou produkcni CSS/sablonovou upravu s re
 - Staging baseline Chrome 390x844, scale 1, bez horizontalniho overflow: blog ma tmavy overlay a bily/zlaty text, portfolio bily gradient a tmavy text. Rubrika: overlay/vinetace 35, barvy 25, geometrie/crop 20, citelnost/overflow 10, runtime 10. Baseline 38/100; screenshoty jsou v .codex-qa/hero-unification.
 - Aktivni staging tema je golden-bash-diagonal. Portfolio detail v obou Golden Bash kopich dostal explicitni gb-portfolio-article-hero kontrakt: plny responzivni LCP obrazek zustava v DOM, nad nim je stejny tmavy editorialni gradient jako u blogu, nadpis je bily, kicker zlaty a popis bily s 80% opacity. Pravidla jsou na konci kaskady, aby je historicky svetly gb-unified-hero kontrakt neprepsal.
 - GoldenBashThemeTest hlida opt-in tridu i overlay a barevnou hierarchii v obou kopiich. PHP lint a diff check prosly. Sirsi runner dosel pres novy kontrakt, ale stale hlasi drive znamou nesouvisejici odchylku izolace Diagonal CSS a pote chybejici lokalni DB pripojeni; plny PASS proto neni tvrzen.
+- Implementacni commit e0549e3 byl na vyslovny souhlas pushnut do origin/dev; staging Actions 44091091777 success. Chrome 390/600/601 px, scale 1: tmavy overlay, zlaty kicker, bily nadpis a svetly popis jsou viditelne, obrazek je full-bleed, bez horizontalniho overflow nebo orezu textu. Finalni skore 98/100; dva body jsou pouze za obsahove odlisnou vysku, protoze portfolio nema blogove datum a autora.
+- README, INSTRUCTIONS, STAGING a API kontrakt se nemeni; jde o theme prezentaci. Wiki architecture byla doplnena o reprodukovatelny shared article HERO kontrakt a staging dukazy, samostatny wiki commit 0358b16.
 
 ## Vysledek
 
-Probihá priprava.
+HERO detailu Nase prace sdili s blogovym clankem tmavy editorialni overlay a bilo-zlatou typografii pri zachovani responzivniho LCP obrazku a obsahu. Zmena je na stagingu overena v Chrome pri 390, 600 a 601 px se skore 98/100; master zustava beze zmeny.
 
 ---
 
