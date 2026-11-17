@@ -1,5 +1,5 @@
 <?php /** @var array $entry */ /** @var array $gallery */ ?>
-<section class="pf-detail-hero gb-unified-hero">
+<section class="pf-detail-hero gb-unified-hero gb-portfolio-article-hero">
   <?php if ($entry['hero_image'] !== ''): ?><img class="hero-bg" src="<?= $this->e($entry['hero_image']) ?>" alt="" data-responsive-profile="portfolio-hero" data-lcp-candidate><?php endif; ?>
   <div class="container"><span class="gb-page-kicker">Naše práce</span><h1><?= $this->e($entry['title']) ?></h1><?php if ($entry['meta_description'] !== ''): ?><p><?= $this->e($entry['meta_description']) ?></p><?php endif; ?></div>
 </section>

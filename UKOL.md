@@ -3505,3 +3505,32 @@ BACKLOG.md obsahuje novy bod 6 s prioritou P3, explicitnim odkladem po urgentnic
 
 Vsech 18 doporuceni je ulozeno v BACKLOG.md jako odlozena prace po urgentnejsich ukolech. Kontrola diffu prosla, zmeny jsou pouze dokumentacni v BACKLOG.md a UKOL.md; aplikacni testy ani deployment nejsou pro tento zapis potreba. README, ARCHITECTURE a ostatni provozni dokumentace nevyzaduji zmenu. Wiki reflection: pouze evidence drive znamych doporuceni, zadna nova technicka znalost k ulozeni. Opravy se nezahajuji.
 
+# UKOL: Sjednoceni HERO clanku Blog a Nase prace
+
+Datum: 2026-11-17
+Zadani: Upravit mobilni HERO clanku Nase prace tak, aby melo stejny tmavy vinetacni overlay a bilo-oranzovo-zlatou typografii jako HERO blogovych clanku, bez zmeny obsahu.
+Doporuceny model: Terra - Jde o ohranicenou produkcni CSS/sablonovou upravu s responzivnim staging QA.
+
+## Kroky
+
+- [x] Zmapovat sablony, styly a skutecny mobilni vzhled HERO blogu a Nase prace.
+- [x] Vytvorit 100bodovou vizualni rubriku a zachytit baseline v Chrome pri uzamcenem mobilnim viewportu.
+- [x] Sjednotit prezentacni vrstvu HERO Nase prace s blogovym designem bez zmeny dat nebo desktopovych kontraktu.
+- [-] Doplnit regresni testy a overit obe strany responzivnich breakpointu.
+- [ ] Commitnout na dev, nasadit a vizualne overit staging; master ponechat beze zmeny.
+- [ ] Zkontrolovat dokumentaci a provest wiki reflection.
+
+## Poznamky
+
+- Akceptace: mobilni HERO detailu Nase prace pouziva stejny tmavy overlay s jemnou vinetaci a stejnou bilou, oranzovou a zlatou typografickou hierarchii jako detail blogu. Obsah, obrazek a URL se nemeni.
+- Vychozi dev je 68cf208; neversionovana slozka artifacts/ je nesouvisejici a zustane nedotcena.
+- Staging baseline Chrome 390x844, scale 1, bez horizontalniho overflow: blog ma tmavy overlay a bily/zlaty text, portfolio bily gradient a tmavy text. Rubrika: overlay/vinetace 35, barvy 25, geometrie/crop 20, citelnost/overflow 10, runtime 10. Baseline 38/100; screenshoty jsou v .codex-qa/hero-unification.
+- Aktivni staging tema je golden-bash-diagonal. Portfolio detail v obou Golden Bash kopich dostal explicitni gb-portfolio-article-hero kontrakt: plny responzivni LCP obrazek zustava v DOM, nad nim je stejny tmavy editorialni gradient jako u blogu, nadpis je bily, kicker zlaty a popis bily s 80% opacity. Pravidla jsou na konci kaskady, aby je historicky svetly gb-unified-hero kontrakt neprepsal.
+- GoldenBashThemeTest hlida opt-in tridu i overlay a barevnou hierarchii v obou kopiich. PHP lint a diff check prosly. Sirsi runner dosel pres novy kontrakt, ale stale hlasi drive znamou nesouvisejici odchylku izolace Diagonal CSS a pote chybejici lokalni DB pripojeni; plny PASS proto neni tvrzen.
+
+## Vysledek
+
+Probihá priprava.
+
+---
+
