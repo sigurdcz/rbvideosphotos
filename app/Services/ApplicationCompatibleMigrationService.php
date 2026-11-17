@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Repositories\SiteRepository;
+use App\Core\Database;
 
 final class ApplicationCompatibleMigrationService
 {
@@ -25,6 +26,7 @@ final class ApplicationCompatibleMigrationService
         '101_replace_about_cameraman_video_fallback.sql',
         '102_replace_work_listing_hero.sql',
         '106_replace_approved_video_portfolio.sql',
+        '123_add_natalie_david_wedding_portfolio.sql',
     ];
 
     private SiteRepository $sites;
@@ -126,6 +128,17 @@ final class ApplicationCompatibleMigrationService
             ),
             '106_replace_approved_video_portfolio.sql' => $this->applyWithoutResult(
                 static fn() => (new ApprovedVideoPortfolioService())->replace($siteId)
+            ),
+            // Run after the legacy video replacement (106), including fresh
+            // installations where all content migrations are deferred together.
+            '123_add_natalie_david_wedding_portfolio.sql' => $this->applyWithoutResult(
+                static function (): void {
+                    $sql = file_get_contents(dirname(__DIR__, 2) . '/database/migrations/123_add_natalie_david_wedding_portfolio.sql');
+                    if ($sql === false) {
+                        throw new \RuntimeException('Obsahovou migraci 123 nelze načíst.');
+                    }
+                    Database::getInstance()->exec($sql);
+                }
             ),
         };
     }

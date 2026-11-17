@@ -1,3 +1,67 @@
+# UKOL: Navigace homepage scrolluje na Naše práce
+
+Datum: 2026-11-17
+Zadani: Opravit navbar na staging homepage tak, aby Naše práce posunuly stránku na její sekci, zatímco navigace z podstránek dál vede na /nase-prace.
+Doporuceny model: Terra - Jde o ohranicenou opravu navigace s overenim homepage a podstranek.
+
+## Kroky
+
+- [x] Přečíst projektové postupy a odděleně commitnout hotové poznámky předchozího úkolu.
+- [x] Reprodukovat chybu na stagingu a dohledat příčinu v renderování nebo JavaScriptu.
+- [-] Opravit homepage navigaci a ověřit cílené regrese včetně podstránek a mobilního menu.
+- [-] Commitnout opravu na dev, nasadit a ověřit staging.
+- [ ] Aktualizovat relevantní dokumentaci a provést wiki reflection.
+
+## Poznamky
+
+- Akceptace: kliknutí Naše práce v navbaru homepage zachová cestu / a posune viewport k odpovídající sekci; z podstránky otevře /nase-prace.
+- Výchozí dev bb5641b; předchozí dokumentační změny uloženy samostatně jako cf208ac. Nesouvisející artifacts/ se nemění.
+- Změny zdrojů přes apply_patch; kontrolní pokus v PowerShellu zachoval 1–4 zpětná lomítka. Produkční master není součástí úkolu.
+- Staging reprodukce: otevření menu a klik Naše práce přejde z / na /nase-prace; sekce #nase-prace na homepage existuje. Git blame ukazuje import d7edef4, který změnil původní homepage kotvy na route URL i v seedu.
+- NavigationNormalizer::forPage překládá pouze prostý interní odkaz /nase-prace na #nase-prace a pouze pro homepage. public/index.php a PublishService předávají shodný kontext; explicitní dotazy, fragmenty, externí odkazy a podstránky se nemění. Oprava je pravidlem renderování, nemění data ani nevyžaduje migraci.
+- NavigationAndReviewsLinkTest ověřuje skutečný seed menu a theme layout, podstránky, opakovatelnost, jednoduché/dvojité uvozovky a zachování explicitních cílů. ARCHITECTURE.md popisuje společný renderovací kontrakt; README/API/INSTRUCTIONS změnu nevyžadují.
+- Lokální ověření: 5/5 cílených PHP testů a existující Node test aktivní navigace prošly. PHP lint všech dotčených PHP souborů, NUL kontrola a git diff --check bez chyb; živý desktop/mobil bude ověřen po staging deployi.
+
+## Vysledek
+
+Probíhá diagnostika.
+
+---
+
+# UKOL: Článek Natálie a David v Naše práce
+
+Datum: 2026-11-11
+Zadani: Přidat článek Natálie a Davida do Naše práce, přirozeně zkrátit SEO text podle doplnění uživatele, uvést Sportovně střelecký areál Jívová, ověřit video a odkazy a využít existující kontaktní panel.
+Doporuceny model: Terra - Jde o obsahovou úpravu s kontrolou CMS panelů a odkazů.
+
+## Kroky
+
+- [x] Ověřit datový model portfolia, existující panely, zdrojový článek a původní cíle odkazů.
+- [x] Připravit opravený článek jako novou obsahovou migraci na dev.
+- [-] Ověřit obsah, metadata, počet tvarů Olomouce, video, odkazy, responzivitu a kontaktní panel.
+- [ ] Commitnout změnu, nasadit a ověřit staging; produkční merge vyžaduje následný konkrétní souhlas.
+- [ ] Provést kontrolu dokumentace a wiki reflection, shrnout výsledek.
+
+## Poznamky
+
+- Vstup: svatebni-video-olomouc-natalie-david.html v uživatelem zadaném scratchpadu.
+- Akceptace: nový detail a karta v Naše práce, 4–5 obsahových sekcí, přirozená čeština, 2–3 zmínky Olomouce v hlavním textu, ověřené odkazy a video, stávající kontaktní panel bez druhé ruční kopie.
+- Doplnění uživatele: přesné místo Sportovně střelecký areál Jívová, datum 3. října 2026, H1/title/description podle zadání, preferovaný nový slug svatba-jivova-natalie-david. Odstranit obecné FAQ (výslovně dovoleno v novém zadání) a sekci žádající zpětné odkazy.
+- Původní interní URL jsou dostupné (HTTP 200); první webový nástroj dvě URL nenačetl, přímé HTTP je úspěšně ověřilo. YouTube oEmbed potvrzuje video E29Cz-B2UdA, pár a datum svatby.
+- Přidána pouze obsahová migrace 123: nový přímý slug, 4 H2, opravený příběh a přesná SEO metadata. FAQ a žádost o zpětné odkazy odstraněny, kontaktní panel a responzivní přehrávač zajišťuje stávající portfolio šablona. Neověřené datum nahrání videa a délku nezapisujeme; published_at je NULL.
+- Migrace 123 je registrována v ApplicationCompatibleMigrationService, aby při čisté instalaci běžela až po starší náhradě videí 106 a při chybějícím webu zůstala viditelně odložená.
+- Izolovaná databázová kontrola přes SQLite ověřila spuštění skutečného handleru, opakovatelnost, omezení na první web a zachování ostatních položek. Skutečný portfolio view vrací 1 H1, 4 obsahové H2, 1 iframe a 1 existující kontaktní panel. Tvarů Olomouce je 13 → 2 včetně H1; text má přibližně 609 → 369 slov.
+- Původní i nový zamýšlený slug vracejí na produkci 404: jde o nový článek, není co přesměrovávat. Související svatba Lucie a Miroslava v Jívové vrací na produkci i stagingu 200. Stávající projektový token byl na stagingu přijat při read-only kontrole.
+- ARCHITECTURE.md popisuje pořadí nové obsahové migrace a záměrné vynechání neověřených metadat videa; README, API.md a INSTRUCTIONS.md změnu kontraktu nevyžadují.
+- Výchozí dev: 3639c77. Existující neversionované obrázky v artifacts/ jsou nesouvisející a nebudou commitnuty. Níže zůstává historie předchozích úkolů.
+- PowerShell zachoval při kontrolním pokusu všech 1–4 zpětných lomítek; soubory se upravují přes apply_patch.
+
+## Vysledek
+
+Probíhá příprava.
+
+---
+
 # UKOL: Tři sekce administrační Analytiky
 
 Datum: 2026-10-21
@@ -3403,4 +3467,25 @@ Cilena sada `php tests/run-tracking-events.php` prosla 4/4, zmenene PHP soubory 
 a `git diff --check` je cisty. Cely historicky runner znovu narazil na znamy nesouvisejici
 Golden Bash Diagonal rozdil a nedostupne lokalni DB pripojeni; tyto blokery nejsou skryte.
 Zmeny jsou commitnute na `dev` bez pushe. `artifacts/` zustava nedotcena a `master` se nemeni.
+
+# UKOL: Odlozeni doporuceni SEO a PageSpeed do backlogu
+
+Datum: 2026-11-16
+Zadani: Ulozit sjednocena doporuceni z uzivatelovych reportu SEOptimer a PageSpeed z 2026-11-11 do BACKLOG.md pro reseni az po urgentnejsich ukolech.
+Doporuceny model: Luna - jde o jednoduchou dokumentacni upravu bez implementace oprav.
+
+## Kroky
+
+- [x] Precist existujici backlog a overit pracovni vetev dev.
+- [x] Zapsat vsechna doporuceni, jejich odlozeni, historicke podklady a podminky dokonceni.
+- [x] Overit diff a uplnost zaznamu.
+
+## Poznamky
+
+Ukol pouze eviduje budouci praci; SEO ani vykonove opravy se nezahajuji. Existujici zaznamy a nesouvisejici artifacts/ zustavaji zachovany. Relevantni dokumentace je BACKLOG.md a tento zaznam; chovani aplikace se nemeni.
+BACKLOG.md obsahuje novy bod 6 s prioritou P3, explicitnim odkladem po urgentnich ukolech, vsemi 18 doporucenimi, historickymi metrikami, kriterii dokonceni a vazbou na stavajici performance/font zaznamy. Zachovan je take odklad videa do dodani klipu.
+
+## Vysledek
+
+Vsech 18 doporuceni je ulozeno v BACKLOG.md jako odlozena prace po urgentnejsich ukolech. Kontrola diffu prosla, zmeny jsou pouze dokumentacni v BACKLOG.md a UKOL.md; aplikacni testy ani deployment nejsou pro tento zapis potreba. README, ARCHITECTURE a ostatni provozni dokumentace nevyzaduji zmenu. Wiki reflection: pouze evidence drive znamych doporuceni, zadna nova technicka znalost k ulozeni. Opravy se nezahajuji.
 

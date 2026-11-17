@@ -323,6 +323,15 @@ se opravi pri novem publikovani, live detail pouzije opravu ihned po nasazeni.
 Regrese: `php tests/PortfolioVideoSchemaTest.php` overuje pet Google prikladu,
 absolutni URL, Vimeo hranice a skutecne JSON-LD ve standalone exportu.
 
+Obsahova migrace `123_add_natalie_david_wedding_portfolio.sql` pridava pribeh
+Natalie a Davida na `/svatba-jivova-natalie-david` do prvniho webu. Je odlozena
+pres `ApplicationCompatibleMigrationService`, aby se provedla az po historicke
+nahrade videi 106 a pri chybejicim webu nezustala tise prazdna. Opakovani
+neprepisuje pozdejsi redakcni upravy. Popis vyuziva stavajici portfolio prehravac
+a kontaktni panel; nepotrebuje vlastni CSS ani kopii obecneho FAQ. `published_at`
+je NULL, protoze zname datum svatby neni overene datum nahrani videa; VideoObject
+proto neuvadi `uploadDate` ani neoverenou delku.
+
 ### Media
 
 - DB uchovava interni `storage_path` jako `storage/media/YYYY/MM/file.webp`
@@ -611,6 +620,14 @@ Verejna i staticky publikovana navigace prochazi
 `App\Services\Render\NavigationNormalizer`. Normalizer idempotentne vlozi odkaz
 `/hodnoceni` pred kontaktni CTA, takze odkaz Reference zustane dostupny i u
 starsich navigacnich fragmentu ulozenych v databazi.
+
+Obe renderovaci cesty volaji `NavigationNormalizer::forPage($nav, $isHome)`.
+Na homepage se prosty interni odkaz `/nase-prace` (i s koncovym lomitkem)
+v navbaru meni na `#nase-prace`, aby klik posunul stranku k jejimu portfoliu.
+Na podstrankach zustava `/nase-prace`. Ostatni polozky menu, explicitni query,
+fragmenty a externi URL se zachovavaji; obsahove CTA a paticka tim neprochazeji.
+Pravidlo se aplikuje pri renderovani i na drive ulozene navigacni fragmenty,
+takze nevyzaduje datovou migraci ani JavaScriptove prepisovani odkazu.
 
 Google Business URL se neuklada do sablony. Je soucasti `contact_info.reviews_url`
 a spravuje se v administraci kontaktu. Stranka hodnoceni odkaz vykresli jen

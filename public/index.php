@@ -1980,7 +1980,7 @@ function resolveThemeNav(array $site, bool $isHome): string
         $nav = (string)$site['layout_nav_sub'];
     }
 
-    return \App\Services\Render\NavigationNormalizer::ensureReviewsLink($nav);
+    return \App\Services\Render\NavigationNormalizer::forPage($nav, $isHome);
 }
 
 function findPageIdForHeroPath(string $path, int $siteId): ?int

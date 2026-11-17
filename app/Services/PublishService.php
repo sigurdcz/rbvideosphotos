@@ -155,7 +155,7 @@ class PublishService implements PublishPageChrome
         $themeNav = $isHome && !empty($site['layout_nav_home'])
             ? (string)$site['layout_nav_home']
             : (!empty($site['layout_nav_sub']) ? (string)$site['layout_nav_sub'] : '');
-        $themeNav = \App\Services\Render\NavigationNormalizer::ensureReviewsLink($themeNav);
+        $themeNav = \App\Services\Render\NavigationNormalizer::forPage($themeNav, $isHome);
         if ($theme) {
             $themeCss = $this->themes->getCssForPage($theme, $pageKey);
             $themeJs = $this->themes->getJsForPage($theme, $pageKey);
