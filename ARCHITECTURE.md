@@ -332,6 +332,14 @@ a kontaktni panel; nepotrebuje vlastni CSS ani kopii obecneho FAQ. `published_at
 je NULL, protoze zname datum svatby neni overene datum nahrani videa; VideoObject
 proto neuvadi `uploadDate` ani neoverenou delku.
 
+Navazujici textove migrace 124–131 se odkladaji spolu s 123 a provadeji ve
+vzestupnem poradi ve stejnem application-compatible pruchodu. Samostatny SQL
+pruchod by jinak vykonal UPDATE pred vytvorenim clanku a oznacil jej za hotovy
+bez zmeny dat. Historicke SQL zustavaji beze zmeny; registry pouziva pevny
+allowlist nazvu a pri chybejicim webu se cely retezec viditelne odlozi.
+`PortfolioStoryMigrationOrderTest` simuluje davkovy upgrade ze stavu 122, 123
+a 130 i opakovani celeho retezce se zachovanim finalniho textu a jednoho videa.
+
 ### Media
 
 - DB uchovava interni `storage_path` jako `storage/media/YYYY/MM/file.webp`

@@ -26,7 +26,20 @@ final class ApplicationCompatibleMigrationService
         '101_replace_about_cameraman_video_fallback.sql',
         '102_replace_work_listing_hero.sql',
         '106_replace_approved_video_portfolio.sql',
+    ];
+
+    // These SQL updates depend on the row inserted by deferred migration 123.
+    // Keep the whole chain in the deferred pass, after video replacement 106.
+    private const PORTFOLIO_STORY_MIGRATIONS = [
         '123_add_natalie_david_wedding_portfolio.sql',
+        '124_rewrite_natalie_david_story_narrative.sql',
+        '125_add_internal_links_natalie_david_story.sql',
+        '126_add_cameraman_voice_natalie_david_story.sql',
+        '127_remove_photographer_claim_natalie_david_story.sql',
+        '128_remove_unusual_venue_claim_natalie_david_story.sql',
+        '129_move_venue_aside_natalie_david_story.sql',
+        '130_describe_venue_as_event_area_natalie_david_story.sql',
+        '131_use_cameraman_text_natalie_david_story.sql',
     ];
 
     private SiteRepository $sites;
@@ -40,7 +53,8 @@ final class ApplicationCompatibleMigrationService
 
     public function supports(string $migrationName): bool
     {
-        return in_array($migrationName, self::SUPPORTED_MIGRATIONS, true);
+        return in_array($migrationName, self::SUPPORTED_MIGRATIONS, true)
+            || in_array($migrationName, self::PORTFOLIO_STORY_MIGRATIONS, true);
     }
 
     /**
@@ -71,6 +85,15 @@ final class ApplicationCompatibleMigrationService
         $site = $this->sites->findFirst();
         if (!$site) {
             throw new \RuntimeException('Application-compatible migrace vyzaduje existujici web: ' . $migrationName);
+        }
+
+        if (in_array($migrationName, self::PORTFOLIO_STORY_MIGRATIONS, true)) {
+            $sql = file_get_contents(dirname(__DIR__, 2) . '/database/migrations/' . $migrationName);
+            if ($sql === false) {
+                throw new \RuntimeException('Obsahovou migraci nelze načíst: ' . $migrationName);
+            }
+            Database::getInstance()->exec($sql);
+            return 'application-compatible';
         }
 
         $siteId = (int)$site['id'];
@@ -128,17 +151,6 @@ final class ApplicationCompatibleMigrationService
             ),
             '106_replace_approved_video_portfolio.sql' => $this->applyWithoutResult(
                 static fn() => (new ApprovedVideoPortfolioService())->replace($siteId)
-            ),
-            // Run after the legacy video replacement (106), including fresh
-            // installations where all content migrations are deferred together.
-            '123_add_natalie_david_wedding_portfolio.sql' => $this->applyWithoutResult(
-                static function (): void {
-                    $sql = file_get_contents(dirname(__DIR__, 2) . '/database/migrations/123_add_natalie_david_wedding_portfolio.sql');
-                    if ($sql === false) {
-                        throw new \RuntimeException('Obsahovou migraci 123 nelze načíst.');
-                    }
-                    Database::getInstance()->exec($sql);
-                }
             ),
         };
     }
