@@ -254,3 +254,11 @@ Smaze medium vcetne vsech variant ze souboroveho systemu a DB.
 | `DELETE` portfolio | smazani publikovanych souboru a sync homepage dlazdic |
 | `POST` media | generovani variant `webp`, `medium`, `thumb` a `og`, pokud je dostupne GD |
 | `DELETE` media | smazani vsech variant ze souboroveho systemu a DB |
+
+## Hero a thumbnail clanku
+
+`POST` a `PUT` pro blog i portfolio prijimaji volitelna pole
+`hero_image_id`, `thumbnail_image_id`, `hero_focus_y` a `thumbnail_focus_y`.
+Ohnisko je cele cislo 0-100. Hodnota `null` znamena puvodni obrazek a vychozi
+stred 50 %. Pri `PUT` se neuvedena pole zachovaji; explicitni `null` nastaveni
+zrusi. Stejna pole vraceji i detailove API odpovedi.

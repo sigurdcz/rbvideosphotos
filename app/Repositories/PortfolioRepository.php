@@ -55,8 +55,8 @@ class PortfolioRepository
     public function create(array $d): int
     {
         $stmt = $this->db->prepare(
-            'INSERT INTO portfolio_entries (site_id, title, slug, description, video_url, content_type, status, published_at, sort_order, meta_title, meta_description)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+            'INSERT INTO portfolio_entries (site_id, title, slug, description, video_url, hero_image_id, thumbnail_image_id, hero_focus_y, thumbnail_focus_y, content_type, status, published_at, sort_order, meta_title, meta_description)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
         $stmt->execute([
             $d['site_id'],
@@ -64,6 +64,10 @@ class PortfolioRepository
             $d['slug'],
             $d['description']      ?? '',
             $d['video_url']        ?? null,
+            $d['hero_image_id'] ?? null,
+            $d['thumbnail_image_id'] ?? null,
+            $d['hero_focus_y'] ?? null,
+            $d['thumbnail_focus_y'] ?? null,
             $d['content_type']     ?? 'photo',
             $d['status']           ?? 'draft',
             $d['published_at']     ?? null,
@@ -77,13 +81,17 @@ class PortfolioRepository
     public function update(int $id, array $d): void
     {
         $stmt = $this->db->prepare(
-            'UPDATE portfolio_entries SET title=?, slug=?, description=?, video_url=?, content_type=?, status=?, published_at=?, sort_order=?, meta_title=?, meta_description=? WHERE id=?'
+            'UPDATE portfolio_entries SET title=?, slug=?, description=?, video_url=?, hero_image_id=?, thumbnail_image_id=?, hero_focus_y=?, thumbnail_focus_y=?, content_type=?, status=?, published_at=?, sort_order=?, meta_title=?, meta_description=? WHERE id=?'
         );
         $stmt->execute([
             $d['title'],
             $d['slug'],
             $d['description']      ?? '',
             $d['video_url']        ?? null,
+            $d['hero_image_id'] ?? null,
+            $d['thumbnail_image_id'] ?? null,
+            $d['hero_focus_y'] ?? null,
+            $d['thumbnail_focus_y'] ?? null,
             $d['content_type']     ?? 'photo',
             $d['status']           ?? 'draft',
             $d['published_at']     ?? null,

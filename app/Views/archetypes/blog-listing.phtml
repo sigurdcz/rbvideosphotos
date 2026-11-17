@@ -14,7 +14,7 @@
 <section class="bl-grid-wrap">
   <div class="container">
     <div class="bl-grid"><?php if ($posts === []): ?><p class="bl-empty">Zat&#237;m &#382;&#225;dn&#233; &#269;l&#225;nky.</p><?php else: foreach ($posts as $post): ?><a class="bl-card" href="/<?= $this->e($post['slug']) ?>">
-  <?= $post['image_url'] !== '' ? '<div class="bl-thumb"><img src="' . $this->e($post['image_url']) . '" alt="' . $this->e($post['title']) . '" loading="lazy"></div>' : '<div class="bl-thumb bl-thumb--empty"></div>' ?>
+  <?= $post['image_url'] !== '' ? '<div class="bl-thumb"><img src="' . $this->e($post['image_url']) . '" alt="' . $this->e($post['title']) . '" loading="lazy" style="object-position:50% ' . (int)$post['thumbnail_focus_y'] . '%"></div>' : '<div class="bl-thumb bl-thumb--empty"></div>' ?>
 
   <div class="bl-body">
     <div class="bl-date"><?= $this->e($post['date']) ?></div>

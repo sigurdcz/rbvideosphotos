@@ -6,6 +6,7 @@ namespace App\ViewModels;
 
 use App\Repositories\PortfolioRepository;
 use App\Services\Render\MediaUrlResolver;
+use App\Services\Render\ArticleVisual;
 
 /**
  * Pure data provider for the `portfolio-detail` archetype
@@ -68,7 +69,8 @@ final class PortfolioDetailData
                 'video_embed_url' => $embedUrl,
                 'videos' => $videos,
                 'meta_description' => $metaDescription,
-                'hero_image' => $gallery[0]['medium'] ?? '',
+                'hero_image' => ArticleVisual::url(ArticleVisual::media($entry, 'hero')) ?: ($gallery[0]['medium'] ?? ''),
+                'hero_focus_y' => ArticleVisual::focusY($entry, 'hero'),
             ],
             'gallery' => $gallery,
         ];

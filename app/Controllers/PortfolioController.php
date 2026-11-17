@@ -112,6 +112,8 @@ class PortfolioController extends Controller
             'initialContentType' => ($_GET['content_type'] ?? '') === 'video' ? 'video' : 'photo',
             'selectedMedia' => [],
             'videos' => [],
+            'heroMedia' => null,
+            'thumbnailMedia' => null,
         ]);
     }
 
@@ -138,6 +140,10 @@ class PortfolioController extends Controller
             'slug'             => $slug,
             'description'      => $_POST['description'] ?? '',
             'video_url'        => $postedVideos['items'][0]['url'] ?? null,
+            'hero_image_id' => $this->intOrNull($_POST['hero_image_id'] ?? ''),
+            'thumbnail_image_id' => $this->intOrNull($_POST['thumbnail_image_id'] ?? ''),
+            'hero_focus_y' => $this->focusOrNull($_POST['hero_focus_y'] ?? ''),
+            'thumbnail_focus_y' => $this->focusOrNull($_POST['thumbnail_focus_y'] ?? ''),
             'content_type'     => $contentType,
             'status'           => $status,
             'published_at'     => $status === 'published' ? date('Y-m-d H:i:s') : null,
@@ -174,11 +180,14 @@ class PortfolioController extends Controller
         }
 
         $selectedMedia = $repo->getMedia($id);
+        $mediaRepository = new MediaRepository();
 
         $this->view('portfolio.form', [
             'entry'    => $entry,
             'selectedMedia' => $selectedMedia,
             'videos' => $repo->getVideos($id),
+            'heroMedia' => !empty($entry['hero_image_id']) ? $mediaRepository->findByIdWithThumb((int)$entry['hero_image_id']) : null,
+            'thumbnailMedia' => !empty($entry['thumbnail_image_id']) ? $mediaRepository->findByIdWithThumb((int)$entry['thumbnail_image_id']) : null,
             'success'  => $this->getFlash('success'),
             'error'    => $this->getFlash('error'),
         ]);
@@ -210,6 +219,10 @@ class PortfolioController extends Controller
             'slug'             => $slug,
             'description'      => $_POST['description'] ?? '',
             'video_url'        => $postedVideos['items'][0]['url'] ?? null,
+            'hero_image_id' => $this->intOrNull($_POST['hero_image_id'] ?? ''),
+            'thumbnail_image_id' => $this->intOrNull($_POST['thumbnail_image_id'] ?? ''),
+            'hero_focus_y' => $this->focusOrNull($_POST['hero_focus_y'] ?? ''),
+            'thumbnail_focus_y' => $this->focusOrNull($_POST['thumbnail_focus_y'] ?? ''),
             'content_type'     => $contentType,
             'status'           => $status,
             'published_at'     => $publishedAt,
@@ -264,6 +277,19 @@ class PortfolioController extends Controller
     private function currentUserId(): int
     {
         return (int)(\App\Core\Auth::user()['id'] ?? 0);
+    }
+
+    private function intOrNull(mixed $value): ?int
+    {
+        if (!is_scalar($value)) return null;
+        $value = trim((string)$value);
+        return $value !== '' && (int)$value > 0 ? (int)$value : null;
+    }
+
+    private function focusOrNull(mixed $value): ?int
+    {
+        if (!is_scalar($value) || trim((string)$value) === '') return null;
+        return min(100, max(0, (int)$value));
     }
 
 }

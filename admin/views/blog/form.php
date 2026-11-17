@@ -132,6 +132,12 @@ ob_start();
       </div>
 
       <!-- ── Galerie ─────────────────────────────────────── -->
+      <?php
+      $articleVisualRecord = $post ?? [];
+      $articleVisualFallbackMedia = $featuredMedia ?? null;
+      require __DIR__ . '/../partials/article-visual-media.php';
+      ?>
+
       <div class="card">
         <div class="card-title">Galerie</div>
         <p style="font-size:13px;color:var(--c-muted);margin-bottom:12px">

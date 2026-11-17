@@ -6,6 +6,7 @@ use App\Repositories\MediaRepository;
 use App\Repositories\PageRepository;
 use App\Repositories\PortfolioRepository;
 use App\Repositories\UserRepository;
+use App\Services\Render\ArticleVisual;
 
 class PortfolioPublishService
 {
@@ -27,6 +28,11 @@ class PortfolioPublishService
         $h  = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
         $sn = $h($site['name'] ?? 'RB Videos & Photos');
         $title = $h($entry['title']);
+        $heroUrl = ArticleVisual::url(ArticleVisual::media($entry, 'hero', $mediaItems[0] ?? null), true);
+        $heroFocusY = ArticleVisual::focusY($entry, 'hero');
+        $heroHtml = $heroUrl !== ''
+            ? '<img class="pf-hero__image" src="' . $h($heroUrl) . '" alt="" style="object-position:50% ' . $heroFocusY . '%">'
+            : '';
 
         $galleryHtml = '';
         foreach ($mediaItems as $idx => $m) {
@@ -97,8 +103,8 @@ class PortfolioPublishService
     .pf-nav{background:#111;padding:14px 24px;display:flex;align-items:center;gap:16px}
     .pf-nav a{color:#fff;text-decoration:none;font-size:14px;opacity:.8}.pf-nav a:hover{opacity:1}
     .pf-nav-logo{font-weight:700;font-size:16px;opacity:1!important}
-    .pf-hero{background:#111;color:#fff;padding:48px 24px 40px;text-align:center}
-    .pf-hero h1{font-size:clamp(1.4rem,4vw,2.4rem);font-weight:700;max-width:700px;margin:0 auto}
+    .pf-hero{position:relative;overflow:hidden;background:#111;color:#fff;padding:48px 24px 40px;text-align:center}
+    .pf-hero__image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.45}.pf-hero h1{position:relative;font-size:clamp(1.4rem,4vw,2.4rem);font-weight:700;max-width:700px;margin:0 auto}
     .pf-container{max-width:960px;margin:0 auto;padding:40px 24px}
     .pf-video-wrap{position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:10px;margin-bottom:40px;background:#000}
     .pf-video-wrap iframe{position:absolute;top:0;left:0;width:100%;height:100%}
@@ -128,7 +134,7 @@ class PortfolioPublishService
   <a class="pf-nav-logo" href="/">{$sn}</a>
   <a href="/nase-prace">← Naše práce</a>
 </nav>
-<div class="pf-hero"><h1>{$title}</h1></div>
+<div class="pf-hero">{$heroHtml}<h1>{$title}</h1></div>
 <div class="pf-container">
   {$videoHtml}
   <div class="pf-description">{$description}</div>

@@ -126,6 +126,12 @@ ob_start();
     </div>
   </div>
 
+  <?php
+  $articleVisualRecord = $entry ?? [];
+  $articleVisualFallbackMedia = $selectedMedia[0] ?? null;
+  require __DIR__ . '/../partials/article-visual-media.php';
+  ?>
+
   <!-- Gallery picker -->
   <div class="card">
     <div class="card-title">Fotogalerie</div>

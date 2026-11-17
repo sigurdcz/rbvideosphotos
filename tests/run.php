@@ -533,6 +533,7 @@ require __DIR__ . '/SettingsNavigationTest.php';
 register_settings_navigation_tests($test, $assert);
 
 require __DIR__ . '/AdminFaviconTest.php';
+require __DIR__ . '/ArticleVisualMediaTest.php';
 register_admin_favicon_tests($test, $assert);
 
 $failures = 0;

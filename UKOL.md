@@ -3536,3 +3536,35 @@ HERO detailu Nase prace sdili s blogovym clankem tmavy editorialni overlay a bil
 
 ---
 
+# UKOL: Samostatne Hero a Thumbnail obrazky s vertikalnim ohniskem
+
+Datum: 2026-11-17
+Zadani: Pridat do editoru kazdeho Blog a Nase prace clanku sekci Thumbnail & Hero se samostatnym vyberem fotografie, vertikalnim ohniskem a zivymi desktop/tablet/mobile nahledy vpravo; bez nastaveni zachovat dnesni chovani.
+Doporuceny model: Sol - Zmena propojuje DB migraci, oba editory, media picker, render/publish pipeline a responzivni nahledy.
+
+## Kroky
+
+- [x] Zmapovat datovy model, repository/controller flow, media picker a verejne zdroje thumbnail/Hero pro Blog i Nase prace.
+- [x] Navrhnout append-only schema a presny fallback kontrakt bez zmeny soucasneho chovani nenastavenych clanku.
+- [x] Implementovat ukladani samostatneho Hero/Thumbnail media a vertikalniho ohniska pro oba typy clanku.
+- [x] Pridat sekci Thumbnail & Hero a sest zivych IRL nahledu napravo v editorech.
+- [x] Zapojit vybrane obrazky a ohniska do live i publish renderovani.
+- [x] Doplnit migracni, datove, renderovaci a UI regresni testy.
+- [ ] Overit admin vizualne v Chrome na desktopu, tabletu a mobilu a zkontrolovat fallback na existujicich clancich.
+- [-] Aktualizovat technickou dokumentaci a wiki, commitnout na dev; staging push az po vyslovnem souhlasu.
+
+## Poznamky
+
+- Akceptace: Blog i Nase prace maji stejny ovladaci kontrakt. Hero a Thumbnail lze vybrat nezavisle; kazdy ma vertikalni pozici. Vpravo jsou skutecne pomerove nahledy desktop/tablet/mobile. Bez nastaveni se pouzije dosavadni obrazek a stredovy crop jako dnes.
+- Vertikalni ohnisko znamena pouze osu Y v rozsahu 0-100 %, horizontalni pozice zustava 50 %.
+- Vychozi lokalni dev je 29b44bb, origin/dev e0549e3; lokalni commit navic obsahuje jen dokonceny task log predchoziho ukolu. Nesouvisejici artifacts/ zustava nedotcena.
+- Nova append-only migrace 132 pridava do blog_posts i portfolio_entries volitelne hero_image_id, thumbnail_image_id, hero_focus_y a thumbnail_focus_y vcetne FK s ON DELETE SET NULL. Bootstrap schema je aktualizovane; historicke migrace 001-131 zustaly nedotcene. TINYINT UNSIGNED uklada cele procento 0-100, NULL zachovava soucasny obrazek i centrovani.
+- Sdileny ArticleVisual kontrakt obsluhuje detail, vypisy, homepage i staticky portfolio export. Golden Bash/Diagonal i Premium Photo dostaly ohnisko; Golden Bash ma explicitni CSS prioritu proti starsimu `object-position:center top!important`.
+- API prijima, zachovava a vraci nova pole; starsi PUT klient, ktery je neposle, je nesmaze. Cilene PHP linty, ArticleVisual kontrola a `git diff --check` prosly. Plny runner dobehl ke dvema znamym nesouvisejicim blockerum: existujici izolacni rozdil Golden Bash Diagonal a nedostupna lokalni DB.
+
+## Vysledek
+
+Implementace je lokalne hotova; chybi staging deploy a vizualni overeni v prihlasenem adminu.
+
+---
+

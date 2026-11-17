@@ -22,7 +22,7 @@ $t = static fn(string $key, string $default): string =>
     <div class="bl-grid"><?php if ($posts === []): ?><p class="bl-empty"<?= $this->inlineAttr('blog_empty_text') ?>><?= $this->e($t('blog_empty_text', 'Zatím žádné články.')) ?></p><?php else: foreach ($posts as $post): ?>
       <article class="bl-card">
         <a class="bl-thumb" href="/<?= $this->e($post['slug']) ?>" aria-label="<?= $this->e($post['title']) ?>">
-          <?php if ($post['image_url'] !== ''): ?><img src="<?= $this->e($post['image_url']) ?>" alt="<?= $this->e($post['title']) ?>" loading="lazy"><?php endif; ?>
+          <?php if ($post['image_url'] !== ''): ?><img src="<?= $this->e($post['image_url']) ?>" alt="<?= $this->e($post['title']) ?>" loading="lazy" style="--article-focus-y:<?= (int)$post['thumbnail_focus_y'] ?>%;object-position:50% <?= (int)$post['thumbnail_focus_y'] ?>%"><?php endif; ?>
         </a>
         <div class="bl-body">
           <div class="bl-date"><?= $this->e($post['date']) ?></div>

@@ -7,6 +7,7 @@ namespace App\ViewModels;
 use App\Repositories\BlogRepository;
 use App\Repositories\MediaRepository;
 use App\Services\Render\MediaUrlResolver;
+use App\Services\Render\ArticleVisual;
 
 /**
  * Pure data provider for the `blog-detail` archetype
@@ -30,17 +31,21 @@ final class BlogPostData
     public static function forPost(array $post): array
     {
         $imageUrl = '';
+        $featuredImageUrl = '';
         $featuredMedia = null;
         if (!empty($post['featured_image_id'])) {
             $featuredMedia = (new MediaRepository())->findByIdWithThumb((int)$post['featured_image_id']);
             if ($featuredMedia) {
                 // Hero is a large-format surface: use the original/full file,
                 // never the <=900 px medium derivative used by thumbnails.
-                $imageUrl = MediaUrlResolver::publicMediaUrl(
+                $featuredImageUrl = MediaUrlResolver::publicMediaUrl(
                     (string)($featuredMedia['storage_path'] ?? '')
                 );
             }
         }
+
+        $heroMedia = ArticleVisual::media($post, 'hero', $featuredMedia);
+        $imageUrl = ArticleVisual::url($heroMedia, true);
 
         try {
             $galleryItems = (new BlogRepository())->getGallery((int)($post['id'] ?? 0));
@@ -50,17 +55,17 @@ final class BlogPostData
 
         $gallery = [];
         $seenFullUrls = [];
-        if ($featuredMedia && $imageUrl !== '') {
+        if ($featuredMedia && $featuredImageUrl !== '') {
             $featuredAlt = (string)($featuredMedia['alt_text'] ?? $post['title'] ?? '');
             $gallery[] = [
                 'thumb' => MediaUrlResolver::publicMediaUrl(
                     (string)($featuredMedia['thumb_path'] ?? $featuredMedia['medium_path'] ?? $featuredMedia['storage_path'] ?? '')
                 ),
-                'full' => $imageUrl,
+                'full' => $featuredImageUrl,
                 'alt' => $featuredAlt,
                 'label' => trim($featuredAlt) !== '' ? trim($featuredAlt) : 'Hlavní fotografie',
             ];
-            $seenFullUrls[$imageUrl] = true;
+            $seenFullUrls[$featuredImageUrl] = true;
         }
         foreach ($galleryItems as $g) {
             $fullUrl = MediaUrlResolver::publicMediaUrl((string)($g['storage_path'] ?? ''));
@@ -91,6 +96,7 @@ final class BlogPostData
                 'excerpt' => (string)($post['excerpt'] ?? ''),
                 'content' => (string)($post['content'] ?? ''),
                 'image_url' => $imageUrl,
+                'hero_focus_y' => ArticleVisual::focusY($post, 'hero'),
             ],
             'gallery' => $gallery,
         ];

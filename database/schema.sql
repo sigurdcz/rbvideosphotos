@@ -272,6 +272,10 @@ CREATE TABLE IF NOT EXISTS `blog_posts` (
   `excerpt`           TEXT DEFAULT NULL,
   `content`           LONGTEXT DEFAULT NULL,
   `featured_image_id` INT UNSIGNED DEFAULT NULL,
+  `hero_image_id`     INT UNSIGNED DEFAULT NULL,
+  `thumbnail_image_id` INT UNSIGNED DEFAULT NULL,
+  `hero_focus_y`      TINYINT UNSIGNED DEFAULT NULL,
+  `thumbnail_focus_y` TINYINT UNSIGNED DEFAULT NULL,
   `status`            ENUM('draft','published') NOT NULL DEFAULT 'draft',
   `published_at`      DATETIME DEFAULT NULL,
   `sort_order`        INT UNSIGNED NOT NULL DEFAULT 0,
@@ -284,8 +288,12 @@ CREATE TABLE IF NOT EXISTS `blog_posts` (
   KEY `fk_blog_posts_site` (`site_id`),
   KEY `idx_blog_posts_site_status_order` (`site_id`, `status`, `sort_order`, `published_at`),
   KEY `fk_blog_posts_featured_media` (`featured_image_id`),
+  KEY `fk_blog_posts_hero_media` (`hero_image_id`),
+  KEY `fk_blog_posts_thumbnail_media` (`thumbnail_image_id`),
   CONSTRAINT `fk_blog_posts_site` FOREIGN KEY (`site_id`) REFERENCES `sites` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_blog_posts_featured_media` FOREIGN KEY (`featured_image_id`) REFERENCES `media` (`id`) ON DELETE SET NULL
+  CONSTRAINT `fk_blog_posts_featured_media` FOREIGN KEY (`featured_image_id`) REFERENCES `media` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_blog_posts_hero_media` FOREIGN KEY (`hero_image_id`) REFERENCES `media` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_blog_posts_thumbnail_media` FOREIGN KEY (`thumbnail_image_id`) REFERENCES `media` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -298,6 +306,10 @@ CREATE TABLE IF NOT EXISTS `portfolio_entries` (
   `slug`             VARCHAR(255) NOT NULL,
   `description`      LONGTEXT DEFAULT NULL,
   `video_url`        VARCHAR(1000) DEFAULT NULL,
+  `hero_image_id`    INT UNSIGNED DEFAULT NULL,
+  `thumbnail_image_id` INT UNSIGNED DEFAULT NULL,
+  `hero_focus_y`     TINYINT UNSIGNED DEFAULT NULL,
+  `thumbnail_focus_y` TINYINT UNSIGNED DEFAULT NULL,
   `status`           ENUM('draft','published') NOT NULL DEFAULT 'draft',
   `published_at`     DATETIME DEFAULT NULL,
   `sort_order`       INT UNSIGNED NOT NULL DEFAULT 0,
@@ -308,7 +320,11 @@ CREATE TABLE IF NOT EXISTS `portfolio_entries` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_portfolio_entries_site_slug` (`site_id`, `slug`),
   KEY `fk_portfolio_entries_site` (`site_id`),
-  CONSTRAINT `fk_portfolio_entries_site` FOREIGN KEY (`site_id`) REFERENCES `sites` (`id`) ON DELETE CASCADE
+  KEY `fk_portfolio_entries_hero_media` (`hero_image_id`),
+  KEY `fk_portfolio_entries_thumbnail_media` (`thumbnail_image_id`),
+  CONSTRAINT `fk_portfolio_entries_site` FOREIGN KEY (`site_id`) REFERENCES `sites` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_portfolio_entries_hero_media` FOREIGN KEY (`hero_image_id`) REFERENCES `media` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_portfolio_entries_thumbnail_media` FOREIGN KEY (`thumbnail_image_id`) REFERENCES `media` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------

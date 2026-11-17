@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\ViewModels;
 
 use App\Services\Render\PortfolioCaptionFormatter;
+use App\Services\Render\ArticleVisual;
 
 use App\Domain\PricingPackageCatalog;
 
@@ -150,6 +151,7 @@ final class HomepageData
             'description' => $caption['description'],
             'author' => $caption['author'],
             'thumbUrl' => $thumbUrl,
+            'thumbnailFocusY' => ArticleVisual::focusY($entry, 'thumbnail'),
             'hasVideo' => $hasVideo,
             'photos' => $photos,
             'videoEmbedUrl' => $videoEmbedUrl,
@@ -171,6 +173,7 @@ final class HomepageData
             'title' => (string)($post['title'] ?? ''),
             'excerpt' => mb_strimwidth(strip_tags((string)($post['excerpt'] ?? '')), 0, 120, '…'),
             'imageUrl' => $imageUrl,
+            'thumbnailFocusY' => ArticleVisual::focusY($post, 'thumbnail'),
         ];
     }
 
