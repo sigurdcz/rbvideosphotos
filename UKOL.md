@@ -1,3 +1,34 @@
+# UKOL: Staticka detekce spamovych poptavek
+
+Datum: 2026-11-18
+Zadani: Pridat vysoke spam risk skore za neprirozene dlouha souvisla slova a za obchodni nabidky guest postu, link insertion a placene publikace.
+Doporuceny model: Terra - Jde o ohranicenou produkcni upravu skore s regresni kontrolou proti legitimnim ceskym poptavkam.
+
+## Kroky
+
+- [x] Zmapovat aktualni staticke signaly, vahy, rozhodovaci prahy a legitimni korpus.
+- [x] Navrhnout explicitni heuristiky bez jazykoveho AI modelu a s omezenim false positives.
+- [x] Implementovat skore a duvody pro dlouhe nesmyslne tokeny a guest-post/link-building nabidky.
+- [x] Doplnit oba dodane e-maily jako regresni testy a overit legitimni korpus.
+- [x] Aktualizovat relevantni dokumentaci, wiki reflection a vytvorit lokalni commit na dev; push jen na pokyn uzivatele.
+
+## Poznamky
+
+- Akceptace: oba dodane vzory musi dostat velmi vysoke skore a byt odmitnuty; bezne ceske poptavky vcetne legitimnich delších slov a URL nesmi byt plosne blokovany.
+- Nesouvisejici `artifacts/` zustava mimo rozsah. Predchozi crop oprava je uz samostatne commitnuta jako `b899d97`.
+- Filtr ma vychozi prah 7 a vahu silne signatury 8. Nova pravidla proto pouzivaji stejnou adminem nastavitelnou vahu `known_phrase`: dve a vice samostatnych slov o 22+ pismenech, nebo alespon dva specificke guest-post/link-building pojmy.
+- URL a e-mail se pred kontrolou dlouhych slov odstranuji. Jedine dlouhe slovo ani jediny marketingovy pojem samy o sobe body nepridaji.
+- Regresni test obsahuje oba dodane vzory a negativni pripady: jedno dlouhe ceske slovo, dlouhy URL slug, jedinou zminku o guest postu a samostatne `get paid` v legitimnim kontextu.
+- `php tests/run-contact-spam.php`: 16/16 PASS vcetne 1 000 ruznych legitimnich poptavek ve vychozim i serializovanem profilu. Vzorky dosahuji skore 8 a 10 pri prahu 7.
+- ARCHITECTURE.md popisuje presne prahy, tokenizaci, reason codes, guest-post pojmy a false-positive pojistky. README ani API kontrakt se nemeni.
+- Wiki reflection UPDATE: `projects/seo-editor/mail-archive.html` obsahuje reprodukovatelne jadro obou heuristik, limity a overeni; jednorazovy zapis skoncil s NUL=0 a presne jednim novym section markerem.
+
+## Vysledek
+
+Hotovo: oba dodane vzory jsou staticky zachyceny se skore 8 a 10 pri vychozim prahu 7. Cileny runner 16/16 PASS, vcetne 1 000 legitimnich poptavek pro defaultni i ulozeny profil; PHP lint a `git diff --check` PASS. Zmena nevyzaduje databazovou migraci. Pripraven lokalni commit na `dev`, bez pushe a bez zmeny `master`.
+
+---
+
 # UKOL: Navigace homepage scrolluje na Naše práce
 
 Datum: 2026-11-17
