@@ -44,6 +44,41 @@ Navbar i článek Natálie a Davida jsou nasazené a ověřené na produkci. Dop
 
 ---
 
+# UKOL: Shodny crop thumbnailu v admin nahledu a na webu
+
+Datum: 2026-11-18
+Zadani: Opravit rozdil mezi vertikalnim pozicovanim v admin nahledech a skutecnym Hero/Thumbnail cropem na webu, overeno na portretni svatebni fotografii `useknute hlavy.webp`.
+Doporuceny model: Terra - Jde o ohranicenou CSS/geometrickou regresi s nutnym vizualnim overenim vice pomeru stran.
+
+## Kroky
+
+- [x] Zmerit zdrojovou fotografii a zmapovat skutecne rozmery/crop CSS pro admin a verejne thumbnail povrchy.
+  - Fotografie ma 1280 x 1920 (2:3). Admin chybne simuloval thumbnail jako 4:3 / 1:1 / 3:4 a na uzkem admin viewportu vse prepisoval na 16:9.
+- [x] Stanovit 100bodovou vizualni rubriku a baseline na landscape thumbnailu.
+  - Rubrika: zdroj/object-fit 15, shoda pomeru 25, shoda pohybu ohniska 20, responsive varianty 15, bezpeci hlavniho motivu 15, layout/overflow 10.
+  - Baseline 30/100: stejny zdroj a CSS cover, ale admin 3:4 proti verejnemu 664:230 prakticky eliminoval vertikalni pohyb a nedokazal predpovedet landscape crop.
+- [x] Sjednotit admin nahledy se skutecnymi responzivnimi pomery a CSS prioritami webu.
+  - Formular nyni rozlisuje BLOG a NASE PRACE a popisuje konkretni referencni rozmery nahledu.
+  - Hero pouziva referencni viewporty 1440x590, 768x590 a 390x480. BLOG pouziva skutecne rozmery karet; NASE PRACE zobrazuje nejkritictejsi sirokou dlazdici, aby byl crop bezpecny i v uzsich variantach mozaiky.
+  - Odstranen vliv sirky admin okna: mobilni media query uz nemuze prepsat vsechny simulovane viewporty na 16:9.
+- [x] Doplnit regresni test geometrickeho kontraktu a overit desktop/tablet/mobile crop.
+  - Test hlida kontext formulare, vsechny referencni pomery stran i prioritu nad legacy mobilnim 16:9 prepisem.
+  - Test take vaze admin pomery na konkretni verejne breakpoint kontrakty Golden Bash, aby pozdejsi zmena frontendu nesla potichu mimo admin.
+  - Prvni lint odhalil chybejici uzavreni pole preview labelu; chyba byla opravena pred dalsim overenim.
+  - Izolovany beh odhalil starsi neplatne aserce literalnich jmen dynamicky generovanych inputu; test je nyni kontroluje podle skutecne sablony.
+- [x] Aktualizovat dokumentaci a wiki reflection, commitnout na dev; push jen na pokyn uzivatele.
+
+## Poznamky
+
+- Akceptace: stejny obrazek a stejna hodnota vertikalniho ohniska musi v admin nahledu i na verejnem povrchu ukazat stejny vyrez. U dodane fotografie nesmi landscape thumbnail pri spravne nastavene hodnote useknout hlavy zenicha ani nevesty.
+- Referencni soubor: `C:/Users/sigur/Downloads/useknute hlavy.webp`. Nesouvisejici `artifacts/` zustava mimo rozsah.
+
+## Vysledek
+
+Lokalni Chrome CDP geometricky dukaz pri ohnisku 25 %: novy admin a verejna siroka dlazdice maji shodny 664:230 vyrez, bez horizontalniho overflow a s celymi hlavami. Skore 95/100; zbyvajicich 5 bodu je vyhrazeno pro autentizovany staging formular po budoucim pushi. Cilene testy 4/4 PASS, PHP lint a `git diff --check` PASS. Cela historicka sada neni lokalne zelena kvuli nesouvisejici odchylce Golden Bash Diagonal a nedostupne lokalni DB; tyto prekazky nebyly vydavany za uspech.
+
+---
+
 # UKOL: Prepinac inline editace v admin liste
 
 Datum: 2026-11-18

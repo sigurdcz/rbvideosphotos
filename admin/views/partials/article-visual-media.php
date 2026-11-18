@@ -11,13 +11,30 @@ $heroUrl = $visualUrl($heroMedia) ?: $fallbackUrl;
 $thumbnailUrl = $visualUrl($thumbnailMedia) ?: $fallbackUrl;
 $heroFocusStored = $visualRecord['hero_focus_y'] ?? null;
 $thumbnailFocusStored = $visualRecord['thumbnail_focus_y'] ?? null;
+$visualContext = ($articleVisualContext ?? '') === 'portfolio' ? 'portfolio' : 'blog';
+$previewLabels = [
+    'hero' => [
+        'desktop' => 'Desktop · 1440 × 590',
+        'tablet' => 'Tablet · 768 × 590',
+        'mobile' => 'Mobil · 390 × 480',
+    ],
+    'thumbnail' => $visualContext === 'portfolio' ? [
+        'desktop' => 'Desktop · nejširší dlaždice',
+        'tablet' => 'Tablet · nejširší dlaždice',
+        'mobile' => 'Mobil · široká dlaždice',
+    ] : [
+        'desktop' => 'Desktop · karta 429 × 220',
+        'tablet' => 'Tablet · karta 335 × 220',
+        'mobile' => 'Mobil · karta 358 × 210',
+    ],
+];
 $visualPickerItems = static fn(?array $media): array => $media ? [[
     'id' => (int)$media['id'],
     'name' => (string)($media['original_filename'] ?? ''),
     'thumb' => $visualUrl($media),
 ]] : [];
 ?>
-<section class="card article-visual-editor" data-article-visual-editor
+<section class="card article-visual-editor article-visual-editor--<?= $visualContext ?>" data-article-visual-editor
          data-fallback-src="<?= $h($fallbackUrl) ?>">
   <div class="card-title">Thumbnail &amp; Hero</div>
   <p class="form-hint">Volitelné nastavení. Bez vybraného obrázku a pozice se použije dosavadní obrázek i středový ořez.</p>
@@ -49,7 +66,7 @@ $visualPickerItems = static fn(?array $media): array => $media ? [[
       <section class="article-visual-preview-group" data-preview-group="<?= $visualKey ?>">
         <h3><?= $visualLabel ?></h3>
         <div class="article-visual-preview-grid">
-          <?php foreach (['desktop' => 'Desktop', 'tablet' => 'Tablet', 'mobile' => 'Mobil'] as $device => $deviceLabel): ?>
+          <?php foreach ($previewLabels[$visualKey] as $device => $deviceLabel): ?>
           <figure class="article-visual-preview article-visual-preview--<?= $visualKey ?> article-visual-preview--<?= $device ?>">
             <div><img src="<?= $h($visualKey === 'hero' ? $heroUrl : $thumbnailUrl) ?>" alt="" data-visual-preview-image></div>
             <figcaption><?= $deviceLabel ?></figcaption>

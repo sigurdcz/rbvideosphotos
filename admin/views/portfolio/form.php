@@ -129,6 +129,7 @@ ob_start();
   <?php
   $articleVisualRecord = $entry ?? [];
   $articleVisualFallbackMedia = $selectedMedia[0] ?? null;
+  $articleVisualContext = 'portfolio';
   require __DIR__ . '/../partials/article-visual-media.php';
   ?>
 

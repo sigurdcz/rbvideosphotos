@@ -135,6 +135,7 @@ ob_start();
       <?php
       $articleVisualRecord = $post ?? [];
       $articleVisualFallbackMedia = $featuredMedia ?? null;
+      $articleVisualContext = 'blog';
       require __DIR__ . '/../partials/article-visual-media.php';
       ?>
 

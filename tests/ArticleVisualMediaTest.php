@@ -22,10 +22,39 @@ $test('article visual migration is append-only and covers both article types', f
 
 $test('article visual admin exposes two pickers, focal controls and six previews', function () use ($assert): void {
     $view = (string)file_get_contents(dirname(__DIR__) . '/admin/views/partials/article-visual-media.php');
-    $assert(str_contains($view, 'name="hero_image_id"'));
-    $assert(str_contains($view, 'name="thumbnail_image_id"'));
-    $assert(str_contains($view, 'name="hero_focus_y"'));
-    $assert(str_contains($view, 'name="thumbnail_focus_y"'));
-    $assert(str_contains($view, "['desktop', 'tablet', 'mobile']"), 'Expected desktop, tablet and mobile preview variants.');
+    $blogForm = (string)file_get_contents(dirname(__DIR__) . '/admin/views/blog/form.php');
+    $portfolioForm = (string)file_get_contents(dirname(__DIR__) . '/admin/views/portfolio/form.php');
+    $assert(str_contains($view, 'name="<?= $visualKey ?>_image_id"'), 'Expected a media input for each visual surface.');
+    $assert(str_contains($view, 'name="<?= $visualKey ?>_focus_y"'), 'Expected a focal input for each visual surface.');
+    foreach (['desktop', 'tablet', 'mobile'] as $device) {
+        $assert(str_contains($view, "'{$device}' =>"), 'Expected ' . $device . ' preview variant.');
+    }
     $assert(str_contains($view, "['hero' => 'Hero', 'thumbnail' => 'Thumbnail']"), 'Expected previews for both surfaces.');
+    $assert(str_contains($blogForm, "\$articleVisualContext = 'blog'"), 'Blog form must select blog preview geometry.');
+    $assert(str_contains($portfolioForm, "\$articleVisualContext = 'portfolio'"), 'Portfolio form must select portfolio preview geometry.');
+});
+
+$test('article visual preview geometry mirrors public responsive crop frames', function () use ($assert): void {
+    $css = (string)file_get_contents(dirname(__DIR__) . '/admin/assets/admin.css');
+    $publicCss = (string)file_get_contents(dirname(__DIR__) . '/Templates/golden-bash/assets/theme.css');
+    foreach ([
+        '1440/590', '768/590', '390/480',
+        '429/220', '335/220', '358/210',
+        '664/230', '736/260',
+    ] as $ratio) {
+        $assert(str_contains($css, 'aspect-ratio:' . $ratio . '!important'), 'Missing preview ratio ' . $ratio);
+    }
+    $overridePosition = strrpos($css, 'aspect-ratio:390/480!important');
+    $legacyMobilePosition = strrpos($css, 'aspect-ratio:16/9!important');
+    $assert($overridePosition !== false && $legacyMobilePosition !== false && $overridePosition > $legacyMobilePosition,
+        'Exact simulated viewport ratios must override the admin viewport media query.');
+    foreach ([
+        '.gb-blog-listing .bl-thumb{display:block;height:220px',
+        '.gb-blog-listing .bl-thumb{height:210px}',
+        'grid-template-columns:repeat(4,minmax(0,1fr))!important;grid-template-rows:repeat(4,230px)',
+        'grid-auto-rows:260px!important',
+        'grid-auto-rows:220px!important',
+    ] as $publicContract) {
+        $assert(str_contains($publicCss, $publicContract), 'Public crop geometry changed without updating admin previews: ' . $publicContract);
+    }
 });
