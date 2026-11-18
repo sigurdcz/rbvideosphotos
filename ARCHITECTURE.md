@@ -1010,3 +1010,14 @@ v rozsahu 0-100. Vsechny ctyri hodnoty jsou nullable: NULL zachovava dosavadni
 zdroj obrazku a stred 50 %. `ArticleVisual` sjednocuje tento kontrakt pro detail,
 vypisy, homepage a staticky portfolio export. Admin zobrazuje pro obe plochy
 prubezne desktop/tablet/mobile nahledy; horizontalni pozice zustava 50 %.
+
+### Session prepinac inline editace (2026-11-18)
+
+Prihlaseni admina a inline edit mode jsou oddelene stavy. `Auth` uklada
+`inline_editing_enabled` pouze do aktualni session; chybejici hodnota znamena
+`true`, aby upgrade zachoval puvodni chovani. Admin lista se prihlasenemu
+uzivateli injektuje vzdy, ale `data-inline-*` atributy, editor metadata a
+`inline-editor.js` jen pri zapnutem stavu a mimo nahled. CSRF-chraneny endpoint
+`POST /admin/inline/toggle-mode` meni session stav a vraci se jen na lokalni
+cestu. Zapisove inline endpointy pri vypnutem stavu vraceji HTTP 409, takze
+vypnuti neni pouze vizualni.

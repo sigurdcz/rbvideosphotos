@@ -107,15 +107,13 @@ final class PageComposer
         }
         $html = \sanitizeFrontendHtml($html, $site);
 
-        if ($editMode) {
-            $html = \injectCmsEditorChrome(
-                $html,
-                (string)($ctx['uri'] ?? ''),
-                (string)($page['title'] ?? ''),
-                (int)$page['id'],
-                (bool)($ctx['previewMode'] ?? false)
-            );
-        }
+        $html = \injectCmsEditorChrome(
+            $html,
+            (string)($ctx['uri'] ?? ''),
+            (string)($page['title'] ?? ''),
+            (int)$page['id'],
+            (bool)($ctx['previewMode'] ?? false)
+        );
 
         return $html;
     }

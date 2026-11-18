@@ -84,6 +84,7 @@ try {
     // Inline editor (front-end, requires auth + CSRF)
     $router->post('/admin/inline/update', 'InlineController', 'update');
     $router->post('/admin/inline/upload', 'InlineController', 'upload');
+    $router->post('/admin/inline/toggle-mode', 'InlineController', 'toggleMode');
 
     // SEO
     $router->get('/admin/seo/edit',    'SeoController', 'edit');

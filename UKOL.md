@@ -44,6 +44,37 @@ Navbar i článek Natálie a Davida jsou nasazené a ověřené na produkci. Dop
 
 ---
 
+# UKOL: Prepinac inline editace v admin liste
+
+Datum: 2026-11-18
+Zadani: Pridat do admin listy prepinac, ktery prihlasenemu adminovi povoli nebo zakaze inline editaci; pri vypnuti zustane lista viditelna, ale web se chova jako bezny verejny web.
+Doporuceny model: Terra - Jde o ohranicenou upravu session/UI stavu, verejneho renderu a regresnich testu bez zmeny databazoveho schematu.
+
+## Kroky
+
+- [x] Zmapovat zapinani edit mode, admin listu, session/routing a existujici testy.
+- [x] Navrhnout per-admin stav s bezpecnym vychozim chovanim shodnym s dneskem.
+- [x] Implementovat toggle a vypnuti vsech inline editacnich interakci pri zachovani listy.
+- [x] Doplnit regresni testy pro zapnuty i vypnuty stav a overit lint/testy.
+- [x] Aktualizovat relevantni dokumentaci a wiki reflection, commitnout na dev; staging push jen na pokyn uzivatele.
+
+## Poznamky
+
+- Akceptace: po prihlaseni je lista vzdy viditelna. Zapnuto zachova dnesni inline editaci. Vypnuto zrusi editacni chovani a stranka funguje jako beznemu navstevnikovi, aniz by admin prisel o listu nebo prihlaseni.
+- Nesouvisejici `artifacts/` zustava mimo rozsah a nebude commitnuto.
+- `Auth` nyni drzi per-session boolean `inline_editing_enabled` s vychozi hodnotou true, aby se po nasazeni zachovalo dnesni chovani. Novy CSRF-chraneny POST `/admin/inline/toggle-mode` stav meni a povoluje jen lokalni navratovou cestu.
+- Verejny renderer oddeluje prihlaseni od edit mode: admin chrome se injektuje vzdy prihlasenemu uzivateli, zatimco editacni atributy, metadata, JS a inline zapisove endpointy jsou podminene zapnutym session prepinacem. Lista obsahuje stavove tlacitko a pri vypnuti badge `WEB`.
+- Pridan staticky regresni test `InlineEditingToggleTest`, ktery hlida vychozi stav, route, zapisovy guard, render podminky i nezavislost admin listy na edit mode.
+- Plny runner odhalil dva zastarale staticke asserty z predchozi funkce Hero/Thumbnail: stale ocekavaly Hero vzdy z prvni galerie a jednu promennou pro Hero i galerii. Testy byly srovnany s novym kontraktem (samostatny Hero, ale kompletni galerie zustava); nejde o zmenu runtime chovani.
+- Overeni: PHP lint vsech dotcenych PHP souboru, samostatny session toggle test, novy staticky kontrakt a `git diff --check` prosly. Plny runner po oprave zastaralych assertu znovu konci jen na drive znamem Diagonal CSS isolation rozdilu a nedostupne lokalni DB.
+- Lokalni feature commit obsahuje implementaci, testy a ARCHITECTURE. Wiki reflection WRITE doplnila reprodukovatelny session/render/guard kontrakt do domain-logic a hubu, samostatny wiki commit `451edd5`; domain-logic zustava partial kvuli sirsim mezeram dossieru.
+
+## Vysledek
+
+Implementace, testy, projektova dokumentace, lokalni commit i wiki reflection jsou hotove. Zbyva staging push a prihlasena vizualni QA pouze na pokyn uzivatele.
+
+---
+
 # UKOL: Článek Natálie a David v Naše práce
 
 Datum: 2026-11-11

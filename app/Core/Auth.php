@@ -101,6 +101,19 @@ class Auth
         return isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
     }
 
+    public static function inlineEditingEnabled(): bool
+    {
+        self::start();
+        return !array_key_exists('inline_editing_enabled', $_SESSION)
+            || $_SESSION['inline_editing_enabled'] === true;
+    }
+
+    public static function setInlineEditingEnabled(bool $enabled): void
+    {
+        self::start();
+        $_SESSION['inline_editing_enabled'] = $enabled;
+    }
+
     private static function enforceSessionTimeouts(): void
     {
         $now = time();

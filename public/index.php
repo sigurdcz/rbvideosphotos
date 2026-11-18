@@ -448,6 +448,7 @@ Auth::start();
 function tryServeDatabasePage(string $uri, bool $authenticated = false, bool $previewMode = false): bool
 {
     $slug = ltrim($uri, '/');
+    $editMode = $authenticated && Auth::inlineEditingEnabled() && !$previewMode;
 
     try {
         $pages = new PageRepository();
@@ -502,7 +503,7 @@ function tryServeDatabasePage(string $uri, bool $authenticated = false, bool $pr
             normalizeLegacyTemplateSource((string)($template['html_source'] ?? '')),
             $blocks,
             $mediaMap,
-            $authenticated && !$previewMode
+            $editMode
         );
         // Phase 5: generic CMS pages (and the homepage) flow their legacy
         // PageRenderer fragment through the generic `page` archetype. Byte-for-byte
@@ -517,7 +518,7 @@ function tryServeDatabasePage(string $uri, bool $authenticated = false, bool $pr
         $activeThemeKey = resolveActiveThemeKeyForSite($site, $themePreviewKey);
         $contentView = getThemeTemplateRegistry()->pageContentViewForSite($site, $themeKey, $themePreviewKey);
         $html = $contentView !== null
-            ? \App\View\ViewFactory::forTheme($contentView['themeKey'], ['editMode' => $authenticated && !$previewMode], $contentView['viewsDir'])
+            ? \App\View\ViewFactory::forTheme($contentView['themeKey'], ['editMode' => $editMode], $contentView['viewsDir'])
                 ->render($contentView['view'], [
                     'fragment' => $fragment,
                     'pageKey' => $themeKey,
@@ -572,7 +573,7 @@ function tryServeDatabasePage(string $uri, bool $authenticated = false, bool $pr
             'isHome'      => $isHome,
             'pageKey'     => $themeKey,
             'themeKey'    => $activeThemeKey,
-            'editMode'    => $authenticated,
+            'editMode'    => $editMode,
             'previewMode' => $previewMode,
             'uri'         => $uri,
         ]);
@@ -1380,15 +1381,20 @@ function injectCmsEditorChrome(string $html, string $uri, string $pageTitle, ?in
     $appVersion = htmlspecialchars(Version::APP, ENT_QUOTES);
     $previewHref = htmlspecialchars($uri . '?cms_preview=1', ENT_QUOTES);
     $editHref = htmlspecialchars($uri, ENT_QUOTES);
-    $modeClass = $previewMode ? 'cms-ab-mode-badge--preview' : 'cms-ab-mode-badge--edit';
-    $modeText = $previewMode ? 'NAHLED' : 'EDITACE';
+    $inlineEditing = !$previewMode && Auth::inlineEditingEnabled();
+    $modeClass = $previewMode ? 'cms-ab-mode-badge--preview' : ($inlineEditing ? 'cms-ab-mode-badge--edit' : 'cms-ab-mode-badge--view');
+    $modeText = $previewMode ? 'NAHLED' : ($inlineEditing ? 'EDITACE' : 'WEB');
     $editorButton = $previewMode
         ? '<a class="cms-ab-btn cms-ab-btn--active" href="' . $editHref . '">&#9998; Editace</a>'
-        : '<a class="cms-ab-btn" href="' . $previewHref . '">&#128065; Nahled</a>';
+        : ($inlineEditing ? '<a class="cms-ab-btn" href="' . $previewHref . '">&#128065; Nahled</a>' : '');
+    $toggleText = $inlineEditing ? 'Inline editace: zapnuta' : 'Inline editace: vypnuta';
+    $toggleClass = $inlineEditing ? ' cms-ab-btn--toggle-on' : '';
+    $toggleValue = $inlineEditing ? '0' : '1';
+    $togglePressed = $inlineEditing ? 'true' : 'false';
 
     $editorMeta = '<meta name="app-version" content="' . $appVersion . '">'
         . '<link rel="stylesheet" href="/assets/inline-editor.css">';
-    if (!$previewMode && $pageId !== null) {
+    if ($inlineEditing && $pageId !== null) {
         $editorMeta = '<meta name="inline-page-id" content="' . (int)$pageId . '">'
             . '<meta name="inline-csrf" content="' . $csrfToken . '">'
             . $editorMeta;
@@ -1406,6 +1412,12 @@ function injectCmsEditorChrome(string $html, string $uri, string $pageTitle, ?in
     <span class="cms-ab-ver">{$appVersion}</span>
     <span class="cms-ab-email">{$userEmail}</span>
     {$editorButton}
+    <form method="POST" action="/admin/inline/toggle-mode" class="cms-ab-form">
+      <input type="hidden" name="_csrf" value="{$csrfToken}">
+      <input type="hidden" name="enabled" value="{$toggleValue}">
+      <input type="hidden" name="return_to" value="{$editHref}">
+      <button type="submit" class="cms-ab-btn cms-ab-toggle{$toggleClass}" aria-pressed="{$togglePressed}">{$toggleText}</button>
+    </form>
     <a class="cms-ab-btn" href="/admin">Administrace</a>
     <form method="POST" action="/admin/logout" class="cms-ab-form">
       <input type="hidden" name="_csrf" value="{$csrfToken}">
@@ -1417,7 +1429,7 @@ HTML;
 
     $html = str_replace('</head>', "\n" . $editorMeta . "\n</head>", $html);
     $html = preg_replace('/<body\b([^>]*)>/i', '<body$1>' . "\n" . $adminBar, $html, 1) ?? $html;
-    if (!$previewMode && $pageId !== null) {
+    if ($inlineEditing && $pageId !== null) {
         $html = str_replace('</body>', "\n<script src=\"/assets/inline-editor.js\"></script>\n</body>", $html);
     }
 
@@ -1461,7 +1473,7 @@ function defaultContactFormEmail(): string
 
 function inlineAttrs(?array $page, string $key, string $type = 'text'): string
 {
-    if (!Auth::check() || isset($_GET['cms_preview']) || !$page || $key === '') {
+    if (!Auth::check() || !Auth::inlineEditingEnabled() || isset($_GET['cms_preview']) || !$page || $key === '') {
         return '';
     }
 
@@ -2044,7 +2056,7 @@ function tryServeServicesPage(string $uri): bool
         ['hero_sub', 'hero_intro'],
         'Od svateb přes portréty až po firemní vizuál. Každou zakázku stavíme na emocích, detailu a profesionálním výsledku.'
     );
-    $editMode = Auth::check() && !isset($_GET['cms_preview']) && $page !== null;
+    $editMode = Auth::check() && Auth::inlineEditingEnabled() && !isset($_GET['cms_preview']) && $page !== null;
 
     $sluzbyData = SluzbyPageData::forSite(
         (int)$site['id'],
@@ -2172,7 +2184,7 @@ function tryServePortfolioPage(string $uri, bool $detailOnly = false): bool
         $pageBlocks = pageBlockMap($page);
         [$heroTitleKey, $heroTitle, $heroTitleType] = firstBlockValue($pageBlocks, ['hero_h1', 'hero_heading'], 'Naše práce');
         [$heroSubKey, $heroSub, $heroSubType] = firstBlockValue($pageBlocks, ['hero_sub', 'hero_intro'], 'Ukázka videí a galerií z naší práce.');
-        $editMode = Auth::check() && !isset($_GET['cms_preview']) && $page !== null;
+        $editMode = Auth::check() && Auth::inlineEditingEnabled() && !isset($_GET['cms_preview']) && $page !== null;
         $siteNameEsc = $h($siteName);
 
         // CSS specific to portfolio pages - nav/footer/base reset comes from layout_css when layout is active
@@ -2406,7 +2418,7 @@ function tryServeFaqPage(): bool
     $pageBlocks = pageBlockMap($page);
     [$heroTitleKey, $heroTitle, $heroTitleType] = firstBlockValue($pageBlocks, ['hero_h1', 'hero_heading'], $heroTitle);
     [$heroSubKey, $heroSub, $heroSubType] = firstBlockValue($pageBlocks, ['hero_sub', 'hero_intro'], $heroSub);
-    $editMode = Auth::check() && !isset($_GET['cms_preview']) && $page !== null;
+    $editMode = Auth::check() && Auth::inlineEditingEnabled() && !isset($_GET['cms_preview']) && $page !== null;
 
     $faqCss = rtrim((string)file_get_contents(ViewFactory::base() . '/app/Views/assets/faq.css'), "\n");
 
@@ -2510,7 +2522,7 @@ function tryServeKontaktPage(): bool
     if ($plainHeroSub === 'Ozvěte se nám. Rádi odpovíme na vaše otázky.' || $plainHeroSub === 'Rádi odpovíme na vaše otázky.') {
         $heroSub = 'Napište nám termín, místo a představu. Ozveme se vám co nejdříve a navrhneme to nejlepší řešení.';
     }
-    $editMode = Auth::check() && !isset($_GET['cms_preview']) && $page !== null;
+    $editMode = Auth::check() && Auth::inlineEditingEnabled() && !isset($_GET['cms_preview']) && $page !== null;
     $csrfToken = \App\Core\Auth::csrfToken();
     $sentState = isset($_GET['sent']) ? (string)$_GET['sent'] : null;
     $kontaktCss = rtrim((string)file_get_contents(ViewFactory::base() . '/app/Views/assets/kontakt.css'), "\n");
@@ -2594,7 +2606,7 @@ function tryServeBlogListingPage(): bool
     $pageBlocks = pageBlockMap($page);
     [$heroTitleKey, $heroTitle, $heroTitleType] = firstBlockValue($pageBlocks, ['hero_h1', 'hero_heading'], 'Blog & Inspirace');
     [$heroSubKey, $heroSub, $heroSubType] = firstBlockValue($pageBlocks, ['hero_sub', 'hero_intro'], 'Tipy a rady od profesionálního fotografa z Olomouce.');
-    $editMode = Auth::check() && !isset($_GET['cms_preview']) && $page !== null;
+    $editMode = Auth::check() && Auth::inlineEditingEnabled() && !isset($_GET['cms_preview']) && $page !== null;
 
     $blogCss = rtrim((string)file_get_contents(ViewFactory::base() . '/app/Views/assets/blog-listing.css'), "\n");
 
