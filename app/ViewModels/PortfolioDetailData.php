@@ -70,6 +70,7 @@ final class PortfolioDetailData
                 'videos' => $videos,
                 'meta_description' => $metaDescription,
                 'hero_image' => ArticleVisual::url(ArticleVisual::media($entry, 'hero')) ?: ($gallery[0]['medium'] ?? ''),
+                'hero_focus_x' => ArticleVisual::focusX($entry, 'hero'),
                 'hero_focus_y' => ArticleVisual::focusY($entry, 'hero'),
             ],
             'gallery' => $gallery,

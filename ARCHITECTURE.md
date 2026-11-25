@@ -1009,11 +1009,13 @@ syntetickou about:blank video fixture.
 ### Obrazky clanku: Hero a Thumbnail (2026-11-17)
 
 `blog_posts` a `portfolio_entries` maji volitelne odkazy `hero_image_id` a
-`thumbnail_image_id` a vertikalni ohniska `hero_focus_y` a `thumbnail_focus_y`
-v rozsahu 0-100. Vsechny ctyri hodnoty jsou nullable: NULL zachovava dosavadni
-zdroj obrazku a stred 50 %. `ArticleVisual` sjednocuje tento kontrakt pro detail,
-vypisy, homepage a staticky portfolio export. Admin zobrazuje pro obe plochy
-prubezne desktop/tablet/mobile nahledy; horizontalni pozice zustava 50 %.
+`thumbnail_image_id`. Oba obrazky maji nezavisla vodorovna a svisla ohniska
+`hero_focus_x`, `hero_focus_y`, `thumbnail_focus_x` a `thumbnail_focus_y`
+v rozsahu 0-100. NULL u obrazku vybira dosavadni zdroj, NULL na kazde ose
+znamena stred 50 %. Migrace 133 pridava obe vodorovne hodnoty. `ArticleVisual`
+sjednocuje tento kontrakt pro detail, vypisy, homepage a staticky portfolio
+export. Admin posuvniky meni obe osy v zivych nahledech pro desktop, tablet
+a mobil. Vycentrovani resetuje obe osy zvoleneho obrazku.
 
 ### Session prepinac inline editace (2026-11-18)
 

@@ -1,3 +1,27 @@
+# UKOL: Vodorovný posun Hero a Thumbnail
+
+Datum: 2026-11-25
+Zadani: Přidat nezávislé vodorovné ohnisko obou obrázků pro články blogu a portfolia.
+Doporuceny model: Sol - Změna propojuje migraci, formulář, API a publikované šablony.
+
+## Kroky
+
+- [x] Zmapovat současný svislý posun a všechny renderovací cesty.
+- [x] Doplnit migraci, uložení a živý náhled obou os.
+- [x] Ověřit uložení, migraci a vykreslení lokálně.
+- [-] Nasadit z dev, po potvrzené záloze spustit migraci a ověřit staging.
+
+## Poznamky
+
+- Stávající migrace 132 je již v historii. Nová osa použije migraci 133 a hodnotu 50 % při NULL.
+- Migrace, repozitáře, adminové zápisy, REST a živé i statické výstupy předávají X stejně jako Y.
+- Admin mění vodorovnou a svislou polohu odděleně pro každý obrázek. API a ARCHITECTURE popisují nové hodnoty a význam NULL.
+- MariaDB test potvrdil upgrade s existujícími Y, opakování migrace a uložení/reset obou X v blogu i portfoliu. Chrome potvrdil šest náhledů a detailové Hero obou Golden Bash motivů na 1440 a 390 px. Celá sada má stejných 6 regresních a 26 golden selhání jako výchozí revize.
+- Uživatel potvrdil aktuální zálohu stagingové databáze.
+- Nový rozsah produkčního merge bude potřeba posoudit po stagingu.
+
+---
+
 # UKOL: Změna přihlašovacího jména v administraci
 
 Datum: 2026-11-25

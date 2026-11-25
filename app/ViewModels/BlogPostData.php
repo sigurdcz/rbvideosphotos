@@ -96,6 +96,7 @@ final class BlogPostData
                 'excerpt' => (string)($post['excerpt'] ?? ''),
                 'content' => (string)($post['content'] ?? ''),
                 'image_url' => $imageUrl,
+                'hero_focus_x' => ArticleVisual::focusX($post, 'hero'),
                 'hero_focus_y' => ArticleVisual::focusY($post, 'hero'),
             ],
             'gallery' => $gallery,

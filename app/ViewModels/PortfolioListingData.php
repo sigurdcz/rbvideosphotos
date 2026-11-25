@@ -64,6 +64,7 @@ final class PortfolioListingData
                 // The hand-typed order; interleaveByContentType() groups by it.
                 'sort_order' => (int)($entry['sort_order'] ?? 0),
                 'thumb' => $thumb,
+                'thumbnail_focus_x' => ArticleVisual::focusX($entry, 'thumbnail'),
                 'thumbnail_focus_y' => ArticleVisual::focusY($entry, 'thumbnail'),
                 'has_video' => $hasVideo,
                 'video_embed_url' => $hasVideo ? PortfolioRepository::embedUrl((string)$entry['video_url']) : '',

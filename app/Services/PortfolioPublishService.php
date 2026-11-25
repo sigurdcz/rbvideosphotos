@@ -29,9 +29,10 @@ class PortfolioPublishService
         $sn = $h($site['name'] ?? 'RB Videos & Photos');
         $title = $h($entry['title']);
         $heroUrl = ArticleVisual::url(ArticleVisual::media($entry, 'hero', $mediaItems[0] ?? null), true);
+        $heroFocusX = ArticleVisual::focusX($entry, 'hero');
         $heroFocusY = ArticleVisual::focusY($entry, 'hero');
         $heroHtml = $heroUrl !== ''
-            ? '<img class="pf-hero__image" src="' . $h($heroUrl) . '" alt="" style="object-position:50% ' . $heroFocusY . '%">'
+            ? '<img class="pf-hero__image" src="' . $h($heroUrl) . '" alt="" style="object-position:' . $heroFocusX . '% ' . $heroFocusY . '%">'
             : '';
 
         $galleryHtml = '';

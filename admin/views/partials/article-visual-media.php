@@ -9,8 +9,7 @@ $visualUrl = static fn(?array $media): string => $media
 $fallbackUrl = $visualUrl($visualFallbackMedia);
 $heroUrl = $visualUrl($heroMedia) ?: $fallbackUrl;
 $thumbnailUrl = $visualUrl($thumbnailMedia) ?: $fallbackUrl;
-$heroFocusStored = $visualRecord['hero_focus_y'] ?? null;
-$thumbnailFocusStored = $visualRecord['thumbnail_focus_y'] ?? null;
+$focusAxes = ['x' => 'Vodorovná poloha', 'y' => 'Svislá poloha'];
 $visualContext = ($articleVisualContext ?? '') === 'portfolio' ? 'portfolio' : 'blog';
 $previewLabels = [
     'hero' => [
@@ -41,22 +40,28 @@ $visualPickerItems = static fn(?array $media): array => $media ? [[
   <div class="article-visual-editor__layout">
     <div class="article-visual-editor__controls">
       <?php foreach ([
-          'hero' => ['Hero fotografie', $heroMedia, $heroFocusStored, $heroUrl],
-          'thumbnail' => ['Thumbnail fotografie', $thumbnailMedia, $thumbnailFocusStored, $thumbnailUrl],
-      ] as $visualKey => [$visualLabel, $selectedMediaItem, $storedFocus, $resolvedUrl]): ?>
+          'hero' => ['Hero fotografie', $heroMedia],
+          'thumbnail' => ['Thumbnail fotografie', $thumbnailMedia],
+      ] as $visualKey => [$visualLabel, $selectedMediaItem]):
+          $hasStoredFocus = isset($visualRecord[$visualKey . '_focus_x']) || isset($visualRecord[$visualKey . '_focus_y']);
+      ?>
       <fieldset class="article-visual-control" data-visual-control="<?= $visualKey ?>">
         <legend><?= $visualLabel ?></legend>
         <input type="hidden" name="<?= $visualKey ?>_image_id" data-visual-media-id value="<?= !empty($visualRecord[$visualKey . '_image_id']) ? (int)$visualRecord[$visualKey . '_image_id'] : '' ?>">
-        <input type="hidden" name="<?= $visualKey ?>_focus_y" data-visual-focus-value value="<?= $storedFocus !== null ? (int)$storedFocus : '' ?>">
         <div class="article-visual-control__actions">
           <button type="button" class="btn btn-secondary" data-visual-pick><?= $selectedMediaItem ? 'Změnit fotografii' : 'Vybrat fotografii' ?></button>
           <button type="button" class="btn btn-secondary" data-visual-clear <?= $selectedMediaItem ? '' : 'hidden' ?>>Použít výchozí</button>
         </div>
-        <label class="article-visual-focus">
-          <span>Vertikální střed: <strong data-visual-focus-label><?= $storedFocus !== null ? (int)$storedFocus : 50 ?> %</strong></span>
-          <input type="range" min="0" max="100" step="1" value="<?= $storedFocus !== null ? (int)$storedFocus : 50 ?>" data-visual-focus>
+        <?php foreach ($focusAxes as $axis => $axisLabel):
+            $storedFocus = $visualRecord[$visualKey . '_focus_' . $axis] ?? null;
+        ?>
+        <input type="hidden" name="<?= $visualKey ?>_focus_<?= $axis ?>" data-visual-focus-value="<?= $axis ?>" value="<?= $storedFocus !== null ? (int)$storedFocus : '' ?>">
+        <label class="article-visual-focus" data-visual-axis="<?= $axis ?>">
+          <span><?= $axisLabel ?> <strong data-visual-focus-label><?= (int)($storedFocus ?? 50) ?> %</strong></span>
+          <input type="range" min="0" max="100" step="1" value="<?= (int)($storedFocus ?? 50) ?>" data-visual-focus>
         </label>
-        <button type="button" class="article-visual-reset-focus" data-visual-reset-focus <?= $storedFocus !== null ? '' : 'hidden' ?>>Obnovit výchozí střed</button>
+        <?php endforeach; ?>
+        <button type="button" class="article-visual-reset-focus" data-visual-reset-focus <?= $hasStoredFocus ? '' : 'hidden' ?>>Vycentrovat obrázek</button>
         <p class="form-hint" data-visual-state><?= $selectedMediaItem ? $h((string)($selectedMediaItem['original_filename'] ?? 'Vybraná fotografie')) : 'Používá se dosavadní fotografie' ?></p>
       </fieldset>
       <?php endforeach; ?>
@@ -89,9 +94,13 @@ document.addEventListener('DOMContentLoaded', function () {
     editor.querySelectorAll('[data-visual-control]').forEach(function (control) {
       const key = control.dataset.visualControl;
       const mediaInput = control.querySelector('[data-visual-media-id]');
-      const focusInput = control.querySelector('[data-visual-focus-value]');
-      const slider = control.querySelector('[data-visual-focus]');
-      const focusLabel = control.querySelector('[data-visual-focus-label]');
+      const axes = Array.from(control.querySelectorAll('[data-visual-axis]'), function (label) {
+        return {
+          input: control.querySelector('[data-visual-focus-value="' + label.dataset.visualAxis + '"]'),
+          slider: label.querySelector('[data-visual-focus]'),
+          valueLabel: label.querySelector('[data-visual-focus-label]'),
+        };
+      });
       const pick = control.querySelector('[data-visual-pick]');
       const clear = control.querySelector('[data-visual-clear]');
       const reset = control.querySelector('[data-visual-reset-focus]');
@@ -102,17 +111,20 @@ document.addEventListener('DOMContentLoaded', function () {
       function render() {
         const item = selected[0] || null;
         const src = item ? (item.thumb || item.url || '') : fallbackSrc;
-        const focus = focusInput.value === '' ? 50 : Number(focusInput.value);
+        const position = axes.map(function ({input, slider, valueLabel}) {
+          slider.value = input.value === '' ? '50' : input.value;
+          const percentage = slider.value + '%';
+          valueLabel.textContent = slider.value + ' %';
+          return percentage;
+        }).join(' ');
         mediaInput.value = item ? item.id : '';
-        slider.value = String(focus);
-        focusLabel.textContent = String(focus) + ' %';
         pick.textContent = item ? 'Změnit fotografii' : 'Vybrat fotografii';
         clear.hidden = !item;
-        reset.hidden = focusInput.value === '';
+        reset.hidden = axes.every(function ({input}) { return input.value === ''; });
         state.textContent = item ? (item.name || 'Vybraná fotografie') : 'Používá se dosavadní fotografie';
         previews.forEach(function (image) {
           image.src = src;
-          image.style.objectPosition = '50% ' + focus + '%';
+          image.style.objectPosition = position;
           image.closest('figure').classList.toggle('is-empty', !src);
         });
       }
@@ -120,8 +132,13 @@ document.addEventListener('DOMContentLoaded', function () {
         AdminMediaPicker.open({mode:'single', imagesOnly:true, selected:selected, onConfirm:function (list) { selected = list.slice(0, 1); render(); }});
       });
       clear.addEventListener('click', function () { selected = []; render(); });
-      slider.addEventListener('input', function () { focusInput.value = slider.value; render(); });
-      reset.addEventListener('click', function () { focusInput.value = ''; render(); });
+      axes.forEach(function ({input, slider}) {
+        slider.addEventListener('input', function () { input.value = slider.value; render(); });
+      });
+      reset.addEventListener('click', function () {
+        axes.forEach(function ({input}) { input.value = ''; });
+        render();
+      });
       render();
     });
   });

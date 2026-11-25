@@ -258,7 +258,8 @@ Smaze medium vcetne vsech variant ze souboroveho systemu a DB.
 ## Hero a thumbnail clanku
 
 `POST` a `PUT` pro blog i portfolio prijimaji volitelna pole
-`hero_image_id`, `thumbnail_image_id`, `hero_focus_y` a `thumbnail_focus_y`.
-Ohnisko je cele cislo 0-100. Hodnota `null` znamena puvodni obrazek a vychozi
-stred 50 %. Pri `PUT` se neuvedena pole zachovaji; explicitni `null` nastaveni
-zrusi. Stejna pole vraceji i detailove API odpovedi.
+`hero_image_id`, `thumbnail_image_id`, `hero_focus_x`, `hero_focus_y`,
+`thumbnail_focus_x` a `thumbnail_focus_y`. Ohnisko kazde osy je cele cislo
+0-100. Hodnota `null` u obrazku vybere puvodni zdroj, u osy stred 50 %.
+Pri `PUT` se neuvedena pole zachovaji. Explicitni `null` resetuje dane pole.
+Stejna pole vraceji i detailove API odpovedi.

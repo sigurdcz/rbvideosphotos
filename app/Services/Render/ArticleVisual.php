@@ -8,9 +8,18 @@ use App\Repositories\MediaRepository;
 
 final class ArticleVisual
 {
+    public static function focusX(array $record, string $surface): int
+    {
+        return self::normalizedFocus($record[$surface . '_focus_x'] ?? null);
+    }
+
     public static function focusY(array $record, string $surface): int
     {
-        $value = $record[$surface . '_focus_y'] ?? null;
+        return self::normalizedFocus($record[$surface . '_focus_y'] ?? null);
+    }
+
+    private static function normalizedFocus(mixed $value): int
+    {
         return $value === null || $value === '' ? 50 : max(0, min(100, (int)$value));
     }
 

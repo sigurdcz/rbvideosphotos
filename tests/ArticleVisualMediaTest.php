@@ -10,6 +10,14 @@ $test('article visual focus defaults and clamps safely', function () use ($asser
     $assert(ArticleVisual::focusY(['hero_focus_y' => 0], 'hero') === 0);
     $assert(ArticleVisual::focusY(['hero_focus_y' => 73], 'hero') === 73);
     $assert(ArticleVisual::focusY(['hero_focus_y' => 150], 'hero') === 100);
+    $legacy = ['hero_focus_y' => 24, 'thumbnail_focus_y' => 80];
+    $assert(ArticleVisual::focusX($legacy, 'hero') === 50);
+    $assert(ArticleVisual::focusX($legacy, 'thumbnail') === 50);
+    $assert(ArticleVisual::focusX(['hero_focus_x' => 0], 'hero') === 0);
+    $assert(ArticleVisual::focusX(['thumbnail_focus_x' => 120], 'thumbnail') === 100);
+    $both = $legacy + ['hero_focus_x' => 90, 'thumbnail_focus_x' => 10];
+    $assert(ArticleVisual::focusX($both, 'hero') === 90 && ArticleVisual::focusY($both, 'hero') === 24);
+    $assert(ArticleVisual::focusX($both, 'thumbnail') === 10 && ArticleVisual::focusY($both, 'thumbnail') === 80);
 });
 
 $test('article visual migration is append-only and covers both article types', function () use ($assert): void {
@@ -18,6 +26,13 @@ $test('article visual migration is append-only and covers both article types', f
         $assert(str_contains($sql, $needle), 'Migration is missing ' . $needle);
     }
     $assert(substr_count($sql, 'ON DELETE SET NULL') === 4, 'Every optional media reference must clear safely on media deletion.');
+    $horizontal = (string)file_get_contents(dirname(__DIR__) . '/database/migrations/133_add_article_horizontal_focus.sql');
+    foreach (['blog_posts', 'portfolio_entries'] as $table) {
+        $assert(str_contains($horizontal, $table), 'Horizontal migration is missing ' . $table);
+    }
+    foreach (['hero_focus_x', 'thumbnail_focus_x'] as $column) {
+        $assert(substr_count($horizontal, 'ADD COLUMN `' . $column . '` TINYINT UNSIGNED DEFAULT NULL') === 2, 'Both tables need a nullable ' . $column . ' column.');
+    }
 });
 
 $test('article visual admin exposes two pickers, focal controls and six previews', function () use ($assert): void {
@@ -25,7 +40,8 @@ $test('article visual admin exposes two pickers, focal controls and six previews
     $blogForm = (string)file_get_contents(dirname(__DIR__) . '/admin/views/blog/form.php');
     $portfolioForm = (string)file_get_contents(dirname(__DIR__) . '/admin/views/portfolio/form.php');
     $assert(str_contains($view, 'name="<?= $visualKey ?>_image_id"'), 'Expected a media input for each visual surface.');
-    $assert(str_contains($view, 'name="<?= $visualKey ?>_focus_y"'), 'Expected a focal input for each visual surface.');
+    $assert(str_contains($view, 'name="<?= $visualKey ?>_focus_<?= $axis ?>"'), 'Expected a stored field per surface and axis.');
+    $assert(str_contains($view, "['x' => 'Vodorovná poloha', 'y' => 'Svislá poloha']"), 'The position must read horizontal before vertical.');
     foreach (['desktop', 'tablet', 'mobile'] as $device) {
         $assert(str_contains($view, "'{$device}' =>"), 'Expected ' . $device . ' preview variant.');
     }

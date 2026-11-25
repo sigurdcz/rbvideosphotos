@@ -51,6 +51,7 @@ final class BlogListingData
                 'title' => (string)($post['title'] ?? ''),
                 'excerpt' => (string)($post['excerpt'] ?? ''),
                 'image_url' => $imageUrl,
+                'thumbnail_focus_x' => ArticleVisual::focusX($post, 'thumbnail'),
                 'thumbnail_focus_y' => ArticleVisual::focusY($post, 'thumbnail'),
                 'date' => !empty($post['published_at'])
                     ? date('j. n. Y', (int)strtotime((string)$post['published_at']))
