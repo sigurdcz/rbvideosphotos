@@ -27,10 +27,16 @@ final class PasswordResetService
         $stmt->execute([$email]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
         if (!$user) { return; } // Same confirmation for unknown logins.
-        $recipientQuery = $this->db->query('SELECT c.form_email FROM sites s LEFT JOIN contact_info c ON c.site_id = s.id ORDER BY s.id ASC LIMIT 1');
-        $recipient = trim((string) $recipientQuery->fetchColumn());
+        $contact = $this->db->query('SELECT c.form_email, c.form_email_cc FROM sites s LEFT JOIN contact_info c ON c.site_id = s.id ORDER BY s.id ASC LIMIT 1')
+            ->fetch(PDO::FETCH_ASSOC);
+        $recipient = trim((string) ($contact['form_email'] ?? ''));
         if (!filter_var($recipient, FILTER_VALIDATE_EMAIL) || preg_match('/[\r\n]/', $recipient)) {
             throw new RuntimeException('Obnova není dostupná: správce musí v Nastavení uložit platný e-mail pro příjem formulářů a obnovu přístupu.');
+        }
+        try {
+            $cc = EmailRecipientList::normalize((string) ($contact['form_email_cc'] ?? ''), $recipient);
+        } catch (\InvalidArgumentException $e) {
+            throw new RuntimeException('Obnova není dostupná, protože seznam adres pro kopii v Nastavení je neplatný.', 0, $e);
         }
         $token = bin2hex(random_bytes(32));
         $hash = hash('sha256', $token);
@@ -41,7 +47,7 @@ final class PasswordResetService
             . "\n\nPokud jste o změnu nežádali, tento e-mail ignorujte.\n";
         $headers = 'From: ' . $from . "\r\nContent-Type: text/plain; charset=UTF-8";
         try {
-            $result = (new MailArchiveService($this->db, $this->sender))->send('password_reset', $recipient, 'Obnova hesla - CMS', $body, $headers);
+            $result = (new MailArchiveService($this->db, $this->sender))->send('password_reset', $recipient, 'Obnova hesla - CMS', $body, $headers, $cc);
             if ($result['status'] !== 'accepted') { throw new RuntimeException('Mail transport acceptance not confirmed'); }
         } catch (\Throwable $e) {
             $this->db->prepare('DELETE FROM password_resets WHERE user_id = ? AND token_hash = ?')->execute([$user['id'], $hash]);

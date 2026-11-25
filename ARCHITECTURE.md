@@ -912,7 +912,7 @@ SMTP konfigurace je v serverovém `.env` (`SMTP_HOST`, `SMTP_PORT`, `SMTP_ENCRYP
 
 ## Centrální recovery příjemce
 
-`PasswordResetService` používá users.email jen jako login. Pro existující účet načte form_email z contact_info prvního sites řádku, vyžaduje platnou explicitně uloženou adresu a pošle na ni odkaz vázaný na dané user_id. Neexistuje fallback na login ani veřejný kontaktní e-mail.
+`PasswordResetService` používá users.email jen jako login. Pro existující účet načte `form_email` a `form_email_cc` z contact_info prvního sites řádku, vyžaduje platnou explicitně uloženou hlavní adresu a normalizuje CC pomocí `EmailRecipientList` před vytvořením tokenu. Jednorázový odkaz vázaný na dané user_id odešle stejným SMTP jako kontaktní zprávy. Každý příjemce může odkaz použít. Archiv zaznamená hlavní adresu a CC, tělo resetovacího e-mailu má hodnotu NULL. Neexistuje fallback na login ani veřejný kontaktní e-mail.
 
 `ContactRepository::upsert` má chráněné pole form_email a opt-in `$allowRecoveryRecipientChange=false`. Běžné aktualizace chráněný sloupec v SQL vynechávají; změněná hodnota bez oprávnění selže. Controller gate `mayChangeRecoveryRecipient` odmítne editora HTTP403 před zápisem. Settings a trusted seed mají explicitní opt-in. Tím editor veřejných kontaktů nemůže přesměrovat obnovu administrátorského účtu.
 
@@ -957,8 +957,8 @@ Kontaktní POST načte uložené CC a předá je šestým argumentem MailArchive
 SmtpMailer přidává každé CC přes PHPMailer::addCC a každou zprávu začíná
 clearAllRecipients. CC shodné s hlavním příjemcem se potlačí. Jediná neplatná adresa
 odmítne celý seznam; MailArchiveService přitom zachová kontaktní zprávu i zadaný CC
-text a uloží `invalid_cc_recipient`. Password reset kopii nepoužívá a archivní služba
-explicitní CC u resetu odmítá. SMTP přijetí stále neznamená prokázané doručení.
+text a uloží `invalid_cc_recipient`. Obnova hesla předává platné CC stejným
+argumentem. SMTP přijetí stále neznamená prokázané doručení.
 
 ### Galerie na dotyku a skladani hero vrstev (2026-10-29)
 

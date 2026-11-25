@@ -1,3 +1,29 @@
+# UKOL: Obnova a změna hesla v administraci
+
+Datum: 2026-11-25
+Zadani: Obnova hesla má používat stejného odesílatele, hlavního příjemce a uložené CC jako pošta z webu. Přihlášený uživatel má mít v administraci formulář pro změnu vlastního hesla.
+Doporuceny model: Sol - Změna CC příjemců rozšiřuje přístup k resetovacím odkazům a vyžaduje ověření obou cest.
+
+## Kroky
+
+- [x] Ověřit existující formulář, obnovu, SMTP a ochranu nastavení příjemců.
+- [x] Napojit obnovu na uložené CC a zpřístupnit změnu hesla v hlavní navigaci.
+- [x] Ověřit změnu i obnovu hesla v izolovaných testech a aktualizovat dokumentaci.
+- [-] Připravit commit na dev a ověřit staging.
+
+## Poznamky
+
+- Formulář a hlavní adresát obnovy již existují. Zákaz CC je přímo v poštovní službě. Pole CC je editovatelné pouze správcem.
+- Pracovní větev je dev. Složka artifacts/ patří k dřívější práci.
+- Obnova čte hlavní adresu a CC jediným dotazem. Neplatné CC zastaví žádost před vytvořením tokenu. Nastavení vysvětluje oprávnění každého příjemce obnovy.
+- Obnova (22 kontrol), změna hesla (12), ochrana nastavení (13), archiv (24), SMTP, parser adres a nastavení prošly. Test změny hesla nyní očekává i existující počet spam záznamů.
+
+## Vysledek
+
+Obnova sdílí SMTP, hlavní adresu a CC s kontaktní poštou. Formulář změny hesla je v hlavním menu administrace. Projektová dokumentace popisuje přístup příjemců k odkazu a testování na stagingu. Změna nevyžaduje novou migraci.
+
+---
+
 # UKOL: Staticka detekce spamovych poptavek
 
 Datum: 2026-11-18

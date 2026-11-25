@@ -58,7 +58,7 @@ final class PasswordResetController extends Controller
         foreach ($keys as $key) { RequestThrottle::hit('password-reset', $key, 3, 900, 900); }
         try {
             (new PasswordResetService(Database::getInstance()))->request($email);
-            $this->flash('success', 'Pokud účet existuje, byl odkaz předán k odeslání na adresu nastavenou v administraci. Zkontrolujte i spam.');
+            $this->flash('success', 'Pokud účet existuje, byl odkaz předán k odeslání na adresy nastavené v administraci. Zkontrolujte i spam.');
         } catch (\Throwable $e) {
             // Do not log tokens, mail body, passwords or request payloads.
             Logger::error('password_reset', 'Password recovery request failed', ['type' => get_class($e)]);

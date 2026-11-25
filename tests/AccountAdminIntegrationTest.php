@@ -44,7 +44,7 @@ try {
  $stmt->execute(['contact','configured@example.test','Pending','Saved','stored','2026-10-16',null]);
  $repo=new MailArchiveRepository($db);
  $data=$repo->overview();check($data['total']===57 && count($data['rows'])===50,'Overview pagination count');
- check($data['counts']===['stored'=>1,'accepted'=>55,'failed'=>1],'Overview honest status totals');
+ check($data['counts']===['stored'=>1,'accepted'=>55,'failed'=>1,'spam'=>0],'Overview honest status totals');
  $data=$repo->overview('accepted','contact',2);check($data['total']===55 && count($data['rows'])===5,'Combined filters preserve pagination');
  $data=$repo->overview('failed','password_reset');check($data['total']===1 && $data['rows'][0]['body']===null,'Reset metadata visible without secret');
  reject(fn()=>$repo->overview("accepted' OR 1=1",'',1));

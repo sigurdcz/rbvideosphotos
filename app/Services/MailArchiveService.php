@@ -15,7 +15,6 @@ final class MailArchiveService
     {
         if (!in_array($kind, ['contact', 'password_reset'], true)) { throw new RuntimeException('Unknown mail kind'); }
         $cc = trim($cc);
-        if ($kind !== 'contact' && $cc !== '') { throw new RuntimeException('Password reset copies are not allowed'); }
         $ccError = false;
         if ($cc !== '') {
             try {

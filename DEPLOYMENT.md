@@ -109,10 +109,10 @@ Obnova hesla zapisuje pouze metadata pokusu do stejné tabulky, **nikdy resetova
 
 Po nasazení spusťte migrace **107_add_contact_email_copy.sql** a
 **108_expand_contact_email_copy_list.sql**. V **Nastavení → Kontaktní komunikace**
-lze uložit více adres do pole **Kopie kontaktních zpráv**. Adresy oddělte čárkou,
+lze uložit více adres do pole **Kopie kontaktních zpráv a obnovy hesla**. Adresy oddělte čárkou,
 mezerou nebo novým řádkem. Prázdné pole kopii vypne; hlavní příjemce zůstává zachovaný.
 Používá se běžná CC kopie, takže její adresy vidí ostatní příjemci. Duplicity a adresa
-shodná s hlavním příjemcem se neposílají opakovaně. Kopie se neposílá u obnovy hesla.
+shodná s hlavním příjemcem se neposílají opakovaně. Stejný seznam se používá pro obnovu hesla. Každý příjemce může odkaz použít ke změně hesla, proto do CC ukládejte pouze schránky oprávněných správců.
 Nastavení smí měnit jen administrátor.
 
 Normalizovaný seznam eviduje databázový archiv v `cc_recipient` ještě před SMTP
@@ -148,9 +148,9 @@ Ověření: `php tests/SmtpMailerTest.php`, `php tests/MailPersistenceIntegratio
 ## Přehled e-mailů a změna vlastního hesla
 
 - `/admin/messages`: administrátor vidí kontaktní zprávy i metadata obnovy hesla. Filtry `status=accepted|failed|stored|spam` a `kind=contact|password_reset` lze kombinovat. Přehled zobrazuje příjemce, předmět, vznik a poslední pokus (UTC), obsah kontaktu a bezpečný chybový kód. Počty jsou za celý archiv, počet nalezených a seznam respektují filtr. Stránkování po 50 zachovává filtry. `accepted` je předání poštovní službě, nikoli potvrzené doručení. Neplatný filtr vrací HTTP 400; editor nemá k archivu přístup.
-- `/admin/account/password`: každý přihlášený uživatel může změnit **pouze vlastní heslo**. Odkaz je v patičce administrace. Zadává současné heslo, nové heslo (12–72 bajtů, jiné než současné) a jeho potvrzení. POST vyžaduje CSRF a má limit 5 pokusů za 15 minut na účet. Po úspěchu se uživatel odhlásí a přihlásí novým heslem. Ostatní relace budou při dalším požadavku odmítnuty; existující reset odkazy účtu se zneplatní.
+- `/admin/account/password`: každý přihlášený uživatel může změnit **pouze vlastní heslo** přes položku **Změna hesla** v hlavním menu administrace. Zadává současné heslo, nové heslo (12–72 bajtů, jiné než současné) a jeho potvrzení. POST vyžaduje CSRF a má limit 5 pokusů za 15 minut na účet. Po úspěchu se uživatel odhlásí a přihlásí novým heslem. Ostatní relace budou při dalším požadavku odmítnuty; existující reset odkazy účtu se zneplatní.
 
-Změna hesla neodesílá e-mail a nezávisí na dostupnosti SMTP. Pokud současné heslo neznáte, použijte `/admin/forgot-password`; ten identifikuje účet podle loginu a posílá odkaz na uložené `contact_info.form_email`. Heslo ani reset token se do archivu/logu nepíše, audit změny obsahuje pouze user_id.
+Změna hesla neodesílá e-mail a nezávisí na dostupnosti SMTP. Pokud současné heslo neznáte, použijte `/admin/forgot-password`. Obnova identifikuje účet podle loginu a posílá odkaz na uložené `contact_info.form_email` a případné `form_email_cc`. Heslo ani reset token se do archivu/logu nepíše, audit změny obsahuje pouze user_id.
 
 Bez nové SQL migrace; vyžaduje existující `password_resets` a `mail_archive` (103/104). `php tests/AccountAdminIntegrationTest.php` ověřuje vlastní účet, reset tokeny, rollback a filtrování na samostatné testovací DB, která se v finally odstraní.
 
@@ -158,7 +158,7 @@ Bez nové SQL migrace; vyžaduje existující `password_resets` a `mail_archive`
 
 Obnova neposílá na login účtu. Používá **uložené** pole Nastavení > E-mail pro příjem formulářů (`contact_info.form_email`) u prvního webu. Pokud pole chybí nebo není platné, zobrazí chybu, nevytvoří token a nic nepošle na users.email, veřejný contact_info.email ani výchozí adresu. V Nastavení je nutné platnou adresu skutečně uložit. Při neexistujícím loginu zůstává obecné potvrzení bez e-mailu.
 
-Odkaz je stále jednorázový, 30 minut a vázaný na konkrétní user_id. Tělo e-mailu uvádí login, archiv ukládá skutečného centrálního příjemce bez resetovacího těla/tokenu. Centrální schránka tedy spravuje obnovu všech CMS účtů, které zná podle loginu.
+Odkaz je jednorázový, platí 30 minut a je vázaný na konkrétní user_id. Dostane ho hlavní příjemce i všechny uložené platné CC adresy. Tělo e-mailu uvádí login. Archiv ukládá seznam příjemců bez těla zprávy a tokenu.
 
 Proto je `form_email` chráněné pole: admin smí adresu měnit, editor může upravovat ostatní veřejné kontakty. Contact/Page kontrolují roli před zápisem a ContactRepository při běžném upsertu chráněný sloupec vůbec neaktualizuje. Settings (requireAdmin) a důvěryhodný demo seed změnu povolují výslovně. Změna veřejného contact_info.email nemění recovery adresu.
 

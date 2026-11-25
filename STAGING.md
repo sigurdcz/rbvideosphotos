@@ -123,7 +123,7 @@ Ověření 17. 10. 2026: staging bootstrap i login HTTP 200, veřejná homepage 
 - Ověř správnou doménu v adresním řádku, homepage a `/kontakt`, admin login, motiv a načtení médií. HTTP 404 před seedem není důkaz chyby FTP.
 - Zkontroluj sdílecí metadata: stránky bez vlastního override mají globální OG/Twitter obrázek. Migrace 105 odstraňuje stará jednotlivá nastavení; po ní obnov statický publish.
 - Odešli vlastní testovací kontakt, ověř `/admin/messages` a skutečné doručení. `accepted` potvrzuje pouze přijetí SMTP serverem. Při selhání je kontakt uložen v DB; neúspěšná obnova hesla vyžaduje nový pokus po opravě SMTP.
-- Ověř obnovu na `/admin/forgot-password` a odkaz mířící na staging. Login účtu pouze identifikuje účet; cílem je uložený e-mail z Nastavení.
+- Ověř obnovu na `/admin/forgot-password` s testovacím účtem a odkaz mířící na staging. Ověř příjem na hlavní testovací adrese i na uložených testovacích CC adresách. V menu administrace otevři **Změna hesla** a ověř přihlášení novým heslem testovacího účtu.
 - Při problému čti čerstvý `storage/logs/app-YYYY-MM-DD.log` / exception log. Sdílej pouze očištěné řádky bez tokenů. Prázdný log může znamenat nezapisovatelný adresář nebo jinou instalaci.
 - Před každou další DB aktualizací udělej zálohu. Push `dev` přenese pouze kód, pak spusť případné migrace a publish. Obnova staršího kódu sama nevrací DB; potřebuje kompatibilní schéma nebo odpovídající zálohu.
 - Teprve po ověření stagingu si vyžádej souhlas uživatele s konkrétním merge do `master`. GitHub automatické slučování nepoužívej. Otevřené navazující kroky jsou v `BACKLOG.md`.

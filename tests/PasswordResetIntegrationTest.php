@@ -20,7 +20,7 @@ try {
     $db->exec("CREATE TABLE contact_info (site_id INT UNSIGNED PRIMARY KEY, form_email VARCHAR(255), email VARCHAR(255)) ENGINE=InnoDB");
     $db->exec(file_get_contents(dirname(__DIR__) . '/database/migrations/107_add_contact_email_copy.sql'));
     $db->exec(file_get_contents(dirname(__DIR__) . '/database/migrations/108_expand_contact_email_copy_list.sql'));
-    $db->exec("INSERT INTO sites VALUES (1); INSERT INTO contact_info (site_id,form_email,email,form_email_cc) VALUES (1, 'recovery@example.test', 'public@example.test', 'copy@example.test')");
+    $db->exec("INSERT INTO sites VALUES (1); INSERT INTO contact_info (site_id,form_email,email,form_email_cc) VALUES (1, 'recovery@example.test', 'public@example.test', 'copy@example.test second@example.test, COPY@example.test, RECOVERY@example.test')");
     $oldHash = password_hash('old-password-123', PASSWORD_BCRYPT);
     $db->prepare('INSERT INTO users (email, password_hash) VALUES (?, ?)')->execute(['admin@example.test', $oldHash]);
     $_ENV['APP_URL'] = 'https://example.test';
@@ -31,8 +31,10 @@ try {
     check(count($messages) === 0, 'Unknown account sends no mail');
     $service->request('admin@example.test');
     check($messages[0][0] === 'recovery@example.test', 'Mail goes to configured recovery address, not login or public email');
-    check(($messages[0][4] ?? '') === '', 'Configured contact copy must not receive password reset links');
-    check($db->query('SELECT cc_recipient FROM mail_archive ORDER BY id DESC LIMIT 1')->fetchColumn() === null, 'Reset archive has no CC');
+    check($messages[0][4] === 'copy@example.test, second@example.test', 'Recovery uses all unique configured contact copies');
+    check(str_contains($messages[0][3], 'From: noreply@example.test'), 'Recovery uses configured mail sender');
+    $archive = $db->query('SELECT cc_recipient, body FROM mail_archive ORDER BY id DESC LIMIT 1')->fetch(PDO::FETCH_ASSOC);
+    check($archive['cc_recipient'] === $messages[0][4] && $archive['body'] === null, 'Reset archive records CC and excludes the secret body');
     check(str_contains($messages[0][2], 'admin@example.test'), 'Recovery email identifies target account');
     check($db->query('SELECT recipient FROM mail_archive ORDER BY id DESC LIMIT 1')->fetchColumn() === 'recovery@example.test', 'Archive records actual central recipient');
     preg_match('/token=([a-f0-9]{64})/', $messages[0][2], $m); $token = $m[1];
@@ -67,11 +69,16 @@ try {
         check(count($messages) === $before && (int) $db->query('SELECT COUNT(*) FROM password_resets')->fetchColumn() === 0, 'Missing or invalid recipient creates no token, sends no fallback mail');
     }
     $db->exec("UPDATE contact_info SET form_email = 'recovery@example.test'");
+    $db->exec("UPDATE contact_info SET form_email_cc = 'copy@example.test, invalid'");
+    rejected(fn() => $service->request('admin@example.test'));
+    check(count($messages) === $before && (int) $db->query('SELECT COUNT(*) FROM password_resets')->fetchColumn() === 0, 'Invalid CC creates no token and sends no partial mail');
+    $db->exec("UPDATE contact_info SET form_email_cc = NULL");
     $db->prepare('INSERT INTO users (email,password_hash) VALUES (?,?)')->execute(['plain-admin-login', $oldHash]);
     $accountOneHash = $db->query('SELECT password_hash FROM users WHERE id=1')->fetchColumn();
     $service->request('plain-admin-login');
     $last = $messages[array_key_last($messages)];
     check($last[0] === 'recovery@example.test' && str_contains($last[2], 'plain-admin-login'), 'Plain login still routes to configured mailbox');
+    check($last[4] === '', 'No CC is sent when the optional list is empty');
     preg_match('/token=([a-f0-9]{64})/', $last[2], $m);
     $service->reset($m[1], 'second-new-password-123');
     check($db->query('SELECT password_hash FROM users WHERE id=1')->fetchColumn() === $accountOneHash, 'Central link never resets another account');
