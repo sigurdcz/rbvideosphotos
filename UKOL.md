@@ -1,3 +1,29 @@
+# UKOL: Změna přihlašovacího jména v administraci
+
+Datum: 2026-11-25
+Zadani: Přidat možnost změnit vlastní přihlašovací jméno v administraci.
+Doporuceny model: Sol - Změna zasahuje přihlašování, session a obnovu účtu.
+
+## Kroky
+
+- [x] Ověřit přihlašování, obnovu a databázovou unikátnost jména.
+- [x] Přidat chráněný formulář a uložení vlastního jména.
+- [x] Ověřit úspěch, duplicitu, nesprávné heslo a návaznost přihlášení.
+- [-] Nasadit a ověřit na stagingu.
+
+## Poznamky
+
+- Přihlášení i obnova hledají login ve stávajícím unikátním `users.email`. Formuláře už podporují běžné jméno bez e-mailové adresy.
+- Formulář a navigace používají chráněnou routu účtu. Uložení vyžaduje aktuální heslo a CSRF, unikátnost hlídá databáze. Auth načítá aktuální jméno při kontrole relace.
+- Obnova kontroluje délku v UTF-8 znacích stejně jako uložení. Integrační testy pokrývají změnu, kolizi, platnou relaci a obnovu novým jménem. README a ARCHITECTURE popisují formulář a jeho dopady.
+- Integrační sady prošly (17 a 25 kontrol), dotčené PHP soubory prošly lintem.
+
+## Vysledek
+
+Změna vlastního přihlašovacího jména je hotová a ověřená integračními testy. Nasazení a kontrola stagingu probíhají.
+
+---
+
 # UKOL: Obnova a změna hesla v administraci
 
 Datum: 2026-11-25

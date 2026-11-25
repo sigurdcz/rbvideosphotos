@@ -42,6 +42,7 @@
       <?php if (($_user['role'] ?? '') === 'admin'): ?><li><a href="/admin/messages" class="<?= str_starts_with($requestUri, '/admin/messages') ? 'active' : '' ?>">E-maily a zprávy</a></li><?php endif; ?>
       <?php if (($_user['role'] ?? '') === 'admin'): ?><li><a href="/admin/analytics" class="<?= str_starts_with($requestUri, '/admin/analytics') ? 'active' : '' ?>">Analytika</a></li><?php endif; ?>
       <li><a href="/admin/account/password"<?= $requestUri === '/admin/account/password' ? ' class="active" aria-current="page"' : '' ?>>Změna hesla</a></li>
+      <li><a href="/admin/account/username"<?= $requestUri === '/admin/account/username' ? ' class="active" aria-current="page"' : '' ?>>Změna přihlašovacího jména</a></li>
     </ul>
     <div style="padding:12px 16px 0;display:flex;flex-direction:column;gap:8px">
       <a href="<?= htmlspecialchars($homepageEditUrl) ?>" target="_blank" class="btn btn-inline-edit" style="width:100%;justify-content:center;box-sizing:border-box">&#9998; Editovat inline</a>

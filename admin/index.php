@@ -38,6 +38,8 @@ try {
 
     $router->get('/admin/account/password', 'AccountController', 'passwordForm');
     $router->post('/admin/account/password', 'AccountController', 'changePassword');
+    $router->get('/admin/account/username', 'AccountController', 'usernameForm');
+    $router->post('/admin/account/username', 'AccountController', 'changeUsername');
 
     $router->get('/admin/messages', 'MessagesController', 'index');
     $router->get('/admin/messages/download-non-spam', 'MessagesController', 'downloadNonSpam');

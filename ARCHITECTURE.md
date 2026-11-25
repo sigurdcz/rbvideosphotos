@@ -904,9 +904,11 @@ Obnova hesla používá stejnou službu, ale ukládá pouze metadata bez těla a
 
 SMTP konfigurace je v serverovém `.env` (`SMTP_HOST`, `SMTP_PORT`, `SMTP_ENCRYPTION`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `MAIL_FROM`). From odpovídá účtu, příjemce pochází z CMS. Výjimky se převádějí na bezpečné kódy bez uchování SMTP textu nebo tajných údajů.
 
-## Vlastní heslo a mailový přehled administrace
+## Vlastní přihlašovací údaje a mailový přehled administrace
 
 `AccountController` používá Auth, CSRF a RequestThrottle; identitu bere pouze ze session. `AccountPasswordService` transakčně zamkne users řádek, ověří současný bcrypt hash, uloží nové heslo a odstraní reset tokeny účtu. Selhání odstranění tokenů vrací celou transakci zpět. Controller po úspěchu odhlašuje aktuální relaci, stávající Auth fingerprint odmítne ostatní staré relace při příštím požadavku.
+
+GET a POST `/admin/account/username` umožňují přihlášenému uživateli změnit vlastní jméno. `AccountUsernameService` ověří současné heslo pod zámkem řádku a uloží jméno do unikátního `users.email`. Přihlášení i obnova používají tento sloupec. Při kontrole fingerprintu si aktivní relace načtou nové jméno. Heslo a už vydané odkazy pro obnovu zůstávají platné. Doručení obnovy se dál řídí příjemci uloženými v Nastavení.
 
 `MessagesController` vyžaduje roli admin a deleguje SQL na `MailArchiveRepository`. Parametrizované filtry mají allowlist status `stored|accepted|failed|spam` a kind, stránka je kladné číslo nejvýše 1 000 000, limit je 50. Počty za celý archiv jsou oddělené od filtrovaného výsledku. Zobrazení HTML escapuje a nesmí obsahovat resetovací tokeny.
 

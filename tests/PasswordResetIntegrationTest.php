@@ -3,6 +3,7 @@ declare(strict_types=1);
 if (PHP_SAPI !== 'cli') { http_response_code(404); exit; }
 require dirname(__DIR__) . '/vendor/autoload.php';
 use App\Core\Env;
+use App\Services\AccountUsernameService;
 use App\Services\PasswordResetService;
 Env::load(dirname(__DIR__) . '/.env');
 $db = new PDO(sprintf('mysql:host=%s;port=%s;charset=utf8mb4', Env::get('DB_HOST'), Env::get('DB_PORT', '3306')), Env::get('DB_USER'), Env::get('DB_PASS'), [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
@@ -90,6 +91,15 @@ try {
     App\Core\Auth::login(['id' => 1, 'email' => 'admin@example.test', 'role' => 'admin', 'password_hash' => $db->query('SELECT password_hash FROM users')->fetchColumn()]);
     (new ReflectionProperty(App\Core\Auth::class, 'passwordChecked'))->setValue(null, false);
     check(App\Core\Auth::check(), 'Current password session stays valid');
+    $renamedLogin = str_repeat('č', 255);
+    (new AccountUsernameService($db))->change(1, 'new-password-123', $renamedLogin);
+    (new ReflectionProperty(App\Core\Auth::class, 'passwordChecked'))->setValue(null, false);
+    check(App\Core\Auth::user()['email'] === $renamedLogin, 'Existing session refreshes renamed login');
+    $before = count($messages);
+    $service->request('admin@example.test');
+    check(count($messages) === $before, 'Old login no longer requests a reset');
+    $service->request($renamedLogin);
+    check(count($messages) === $before + 1 && str_contains($messages[$before][2], $renamedLogin), 'Recovery uses the new login');
     echo "PASS: {$checks} assertions plus expired, reused, superseded, malformed, invalid-password and transport rejection cases.\n";
 } finally {
     $db->exec('DROP DATABASE `' . $name . '`');

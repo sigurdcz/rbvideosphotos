@@ -44,7 +44,7 @@ final class PasswordResetController extends Controller
         $this->headers();
         $this->csrfCheck();
         $email = trim((string) ($_POST['email'] ?? ''));
-        if ($email === '' || strlen($email) > 255 || preg_match('/[\r\n\x00]/', $email)) {
+        if ($email === '' || mb_strlen($email, 'UTF-8') > 255 || preg_match('/\p{Cc}/u', $email) !== 0) {
             $this->flash('error', 'Zadejte přihlašovací jméno účtu.');
             $this->redirect('/admin/forgot-password');
         }

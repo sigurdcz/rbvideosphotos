@@ -4,6 +4,7 @@ if (PHP_SAPI !== 'cli') { http_response_code(404); exit; }
 require dirname(__DIR__) . '/vendor/autoload.php';
 use App\Core\Env;
 use App\Services\AccountPasswordService;
+use App\Services\AccountUsernameService;
 use App\Repositories\MailArchiveRepository;
 Env::load(dirname(__DIR__) . '/.env');
 $db = new PDO(sprintf('mysql:host=%s;port=%s;charset=utf8mb4', Env::get('DB_HOST'), Env::get('DB_PORT','3306')), Env::get('DB_USER'), Env::get('DB_PASS'), [PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC]);
@@ -14,12 +15,28 @@ function check(bool $ok, string $message): void { global $checks; if (!$ok) { th
 function reject(Closure $fn): void { try { $fn(); } catch (InvalidArgumentException $e) { return; } throw new RuntimeException('Expected validation failure'); }
 try {
  $db->exec('USE `' . $name . '`');
- $db->exec("CREATE TABLE users (id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT, email VARCHAR(255), password_hash VARCHAR(255)) ENGINE=InnoDB");
+ $db->exec("CREATE TABLE users (id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT, email VARCHAR(255) NOT NULL UNIQUE, password_hash VARCHAR(255)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
  $db->exec(file_get_contents(dirname(__DIR__).'/database/migrations/103_add_password_resets.sql'));
  $db->exec(file_get_contents(dirname(__DIR__).'/database/migrations/104_add_mail_archive.sql'));
  $old=password_hash('old-password-123', PASSWORD_BCRYPT);
  $db->prepare('INSERT INTO users (email,password_hash) VALUES (?,?),(?,?)')->execute(['one@example.test',$old,'two@example.test',$old]);
  $db->exec("INSERT INTO password_resets VALUES (1, REPEAT('a',64),'2030-01-01'),(2,REPEAT('b',64),'2030-01-01')");
+ $usernameService = new AccountUsernameService($db);
+ reject(fn() => $usernameService->change(1, 'wrong', 'new-login'));
+ reject(fn() => $usernameService->change(1, 'old-password-123', 'TWO@example.test'));
+ reject(fn() => $usernameService->change(1, 'old-password-123', '   '));
+ reject(fn() => $usernameService->change(1, 'old-password-123', str_repeat('č', 256)));
+ reject(fn() => $usernameService->change(1, 'old-password-123', "new\nlogin"));
+ check($db->query('SELECT email FROM users WHERE id=1')->fetchColumn() === 'one@example.test', 'Invalid changes preserve original login');
+ $usernameService->change(1, 'old-password-123', '  nové-jméno  ');
+ $lookup = $db->prepare('SELECT id, password_hash FROM users WHERE email = ?');
+ $lookup->execute(['one@example.test']);
+ check($lookup->fetch() === false, 'Old login no longer resolves');
+ $lookup->execute(['nové-jméno']);
+ $renamed = $lookup->fetch();
+ check($renamed && (int) $renamed['id'] === 1 && $renamed['password_hash'] === $old, 'New login resolves the same account with the original password');
+ check($db->query('SELECT email FROM users WHERE id=2')->fetchColumn() === 'two@example.test', 'Other login unchanged');
+ check((int) $db->query('SELECT COUNT(*) FROM password_resets')->fetchColumn() === 2, 'Username change preserves existing recovery tokens');
  $service=new AccountPasswordService($db);
  reject(fn()=>$service->change(1,'wrong','new-password-123'));
  reject(fn()=>$service->change(1,'old-password-123','short'));
