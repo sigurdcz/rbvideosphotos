@@ -61,6 +61,11 @@ jobs:
           mkdir -p _deploy/storage/published
           mkdir -p _deploy/storage/templates
 
+      - name: Write build revision
+        run: |
+          sha="$(git rev-parse --verify HEAD)"
+          jq -n --arg sha "$sha" '{short_sha: $sha[0:12], built_at: (now | strftime("%Y-%m-%dT%H:%M:%SZ"))}' > _deploy/public/assets/build-info.json
+
       - name: Apply FTPS login ordering compatibility
         run: python3 bin/patch-staging-ftp-login.py
 

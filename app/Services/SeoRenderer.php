@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Core\Version;
 use App\Repositories\ContactRepository;
 
 class SeoRenderer
@@ -103,15 +104,19 @@ class SeoRenderer
      */
     private function renderVersionComment(): string
     {
-        $parts = [];
-
         $buildFile = dirname(__DIR__, 2) . '/public/assets/build-info.json';
-        $build = is_file($buildFile) ? json_decode((string)file_get_contents($buildFile), true) : null;
-        if (is_array($build) && !empty($build['short_sha'])) {
-            $parts[] = 'build ' . $build['short_sha'] . (!empty($build['built_at']) ? ' (' . $build['built_at'] . ')' : '');
-        } else {
-            $parts[] = 'build local/dev';
+        $buildStamp = 'build unavailable';
+        if (is_file($buildFile) && is_readable($buildFile)) {
+            $build = json_decode((string)file_get_contents($buildFile), true);
+            $sha = $build['short_sha'] ?? null;
+            $builtAt = $build['built_at'] ?? null;
+            $buildStamp = 'build invalid';
+            if (is_string($sha) && preg_match('/\A[0-9a-f]{7,40}\z/', $sha) === 1
+                && is_string($builtAt) && preg_match('/\A[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z\z/', $builtAt) === 1) {
+                $buildStamp = 'build ' . $sha . ' (' . $builtAt . ')';
+            }
         }
+        $parts = [$buildStamp, 'SW version: ' . Version::APP];
 
         try {
             $db = \App\Core\Database::getInstance();

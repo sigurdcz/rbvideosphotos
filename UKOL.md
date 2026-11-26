@@ -1,3 +1,22 @@
+# UKOL: Verze SW v HTML komentáři
+
+Datum: 2026-11-26
+Zadani: Zobrazit v komentáři verzi aplikace a jednoznačně identifikovat nasazené sestavení.
+Doporuceny model: Sol - Změna propojuje výstup aplikace a nasazovací workflow.
+
+## Kroky
+
+- [x] Dohledat existující komentář, verzi aplikace a zdroj nasazené revize.
+- [x] Přidat do komentáře verzi SW a do obou nasazení generování metadat.
+- [-] Ověřit aplikaci a staging.
+
+## Poznamky
+
+- Verze aplikace je `App\Core\Version::APP`. Sestavení se rozlišuje krátkým SHA a časem UTC. Chybějící build soubor dřív na produkci zavádějícím způsobem vypadal jako lokální `local/dev`.
+- Místní HTML test prošel pro chybějící, platná i poškozená metadata. PHP lint a YAML kontrola pořadí kroků obou workflow prošly.
+
+---
+
 # UKOL: Vodorovný posun Hero a Thumbnail
 
 Datum: 2026-11-25

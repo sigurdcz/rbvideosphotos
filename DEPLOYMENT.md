@@ -11,6 +11,7 @@ Aktualni aplikacni zdroje pochazeji ze `sigurdcz/seo-cms`, commit `b8da8da028787
 - Kazdy FTP ucet musi byt omezen na vlastni cilovou slozku; absolutni cestu hostingu workflow nepridava.
 - Environment Secrets: `FTP_SERVER` (pouze hostname/IP), `FTP_USERNAME`, `FTP_PASSWORD`.
 - FTPS port 21, Composer produkcni zavislosti a samostatny `_deploy` artefakt.
+- Staging i produkce generuji `public/assets/build-info.json` z nasazovaneho Git commitu. Ve zdroji HTML komentar `<!-- build … | SW version: … | migrations: … -->` ukazuje 12 znaku SHA, UTC cas sestaveni, verzi z `App\Core\Version::APP` a stav databazovych migraci. Chybejici nebo neplatne metadata jsou videt jako `build unavailable` nebo `build invalid`.
 - `.env`, media, cache, logy, publikovany obsah a generovane assety patri serveru a neprenaseji se.
 - Lokalni `.agents`, `.codex`, `.codex-qa`, `.tmp*`, zaloha `.htaccess` a testy se do artefaktu nedostanou. Prenesene docasne PHP helpery navic odmitaji HTTP a bezi jen pres CLI.
 - GitHub Actions zde neprovadi automaticky migrace ani reset databaze. `deploy-maintenance.php` zustava neaktivni placeholder HTTP 404.
