@@ -44,7 +44,7 @@ final class PasswordResetController extends Controller
         $this->headers();
         $this->csrfCheck();
         $email = trim((string) ($_POST['email'] ?? ''));
-        if ($email === '' || strlen($email) > 255 || preg_match('/[\r\n\x00]/', $email)) {
+        if ($email === '' || mb_strlen($email, 'UTF-8') > 255 || preg_match('/\p{Cc}/u', $email) !== 0) {
             $this->flash('error', 'Zadejte přihlašovací jméno účtu.');
             $this->redirect('/admin/forgot-password');
         }
@@ -58,7 +58,7 @@ final class PasswordResetController extends Controller
         foreach ($keys as $key) { RequestThrottle::hit('password-reset', $key, 3, 900, 900); }
         try {
             (new PasswordResetService(Database::getInstance()))->request($email);
-            $this->flash('success', 'Pokud účet existuje, byl odkaz předán k odeslání na adresu nastavenou v administraci. Zkontrolujte i spam.');
+            $this->flash('success', 'Pokud účet existuje, byl odkaz předán k odeslání na adresy nastavené v administraci. Zkontrolujte i spam.');
         } catch (\Throwable $e) {
             // Do not log tokens, mail body, passwords or request payloads.
             Logger::error('password_reset', 'Password recovery request failed', ['type' => get_class($e)]);

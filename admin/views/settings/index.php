@@ -293,9 +293,9 @@ ob_start();
       </p>
     </div>
     <div class="form-group">
-      <label for="form-email-cc">Kopie kontaktních zpráv (nepovinné)</label>
+      <label for="form-email-cc">Kopie kontaktních zpráv a obnovy hesla (nepovinné)</label>
       <textarea id="form-email-cc" name="form_email_cc" rows="4" maxlength="60000" spellcheck="false" placeholder="kopie@vase-domena.cz&#10;dalsi@vase-domena.cz"><?= $h($contact['form_email_cc'] ?? '') ?></textarea>
-      <p class="help-text">Zadejte jednu nebo více CC adres oddělených čárkou, mezerou nebo novým řádkem. Prázdné pole = bez kopie. Odkazy pro obnovu hesla se sem neposílají.</p>
+      <p class="help-text">Každá adresa dostane i odkaz, kterým lze změnit heslo účtu. Uvádějte pouze schránky oprávněných správců. Adresy oddělte čárkou, mezerou nebo novým řádkem.</p>
     </div>
   </div>
 

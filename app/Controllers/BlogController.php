@@ -30,7 +30,7 @@ class BlogController extends Controller
     public function create(array $params): void
     {
         $this->requireAuth();
-        $this->view('blog.form', ['post' => null, 'featuredMedia' => null, 'galleryMedia' => []]);
+        $this->view('blog.form', ['post' => null, 'featuredMedia' => null, 'heroMedia' => null, 'thumbnailMedia' => null, 'galleryMedia' => []]);
     }
 
     /**
@@ -77,6 +77,12 @@ class BlogController extends Controller
             'excerpt'           => trim($_POST['excerpt'] ?? ''),
             'content'           => $_POST['content']      ?? '',
             'featured_image_id' => $this->intOrNull($_POST['featured_image_id'] ?? ''),
+            'hero_image_id' => $this->intOrNull($_POST['hero_image_id'] ?? ''),
+            'thumbnail_image_id' => $this->intOrNull($_POST['thumbnail_image_id'] ?? ''),
+            'hero_focus_x' => $this->focusOrNull($_POST['hero_focus_x'] ?? ''),
+            'hero_focus_y' => $this->focusOrNull($_POST['hero_focus_y'] ?? ''),
+            'thumbnail_focus_x' => $this->focusOrNull($_POST['thumbnail_focus_x'] ?? ''),
+            'thumbnail_focus_y' => $this->focusOrNull($_POST['thumbnail_focus_y'] ?? ''),
             'status'            => $status,
             'published_at'      => $status === 'published' ? date('Y-m-d H:i:s') : null,
             'sort_order'        => PortfolioRepository::clampSortOrder($_POST['sort_order'] ?? 0),
@@ -103,9 +109,13 @@ class BlogController extends Controller
         }
 
         $featuredMedia = !empty($post['featured_image_id']) ? (new MediaRepository())->findByIdWithThumb((int)$post['featured_image_id']) : null;
+        $heroMedia = !empty($post['hero_image_id']) ? (new MediaRepository())->findByIdWithThumb((int)$post['hero_image_id']) : null;
+        $thumbnailMedia = !empty($post['thumbnail_image_id']) ? (new MediaRepository())->findByIdWithThumb((int)$post['thumbnail_image_id']) : null;
         $this->view('blog.form', [
             'post'    => $post,
             'featuredMedia' => $featuredMedia,
+            'heroMedia' => $heroMedia,
+            'thumbnailMedia' => $thumbnailMedia,
             'galleryMedia' => $repo->getGallery($id),
             'success' => $this->getFlash('success'),
             'error'   => $this->getFlash('error'),
@@ -137,6 +147,12 @@ class BlogController extends Controller
             'excerpt'           => trim($_POST['excerpt'] ?? ''),
             'content'           => $_POST['content']      ?? '',
             'featured_image_id' => $this->intOrNull($_POST['featured_image_id'] ?? ''),
+            'hero_image_id' => $this->intOrNull($_POST['hero_image_id'] ?? ''),
+            'thumbnail_image_id' => $this->intOrNull($_POST['thumbnail_image_id'] ?? ''),
+            'hero_focus_x' => $this->focusOrNull($_POST['hero_focus_x'] ?? ''),
+            'hero_focus_y' => $this->focusOrNull($_POST['hero_focus_y'] ?? ''),
+            'thumbnail_focus_x' => $this->focusOrNull($_POST['thumbnail_focus_x'] ?? ''),
+            'thumbnail_focus_y' => $this->focusOrNull($_POST['thumbnail_focus_y'] ?? ''),
             'status'            => $status,
             'published_at'      => $publishedAt,
             'sort_order'        => PortfolioRepository::clampSortOrder($_POST['sort_order'] ?? 0),
@@ -175,9 +191,16 @@ class BlogController extends Controller
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    private function intOrNull(string $v): ?int
+    private function intOrNull(mixed $v): ?int
     {
-        $v = trim($v);
-        return $v !== '' ? (int)$v : null;
+        if (!is_scalar($v)) return null;
+        $v = trim((string)$v);
+        return $v !== '' && (int)$v > 0 ? (int)$v : null;
+    }
+
+    private function focusOrNull(mixed $value): ?int
+    {
+        if (!is_scalar($value) || trim((string)$value) === '') return null;
+        return min(100, max(0, (int)$value));
     }
 }

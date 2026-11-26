@@ -122,6 +122,9 @@
 }
 .cms-ab-mode-badge--edit    { background: rgba(99,102,241,0.25); color: #a5b4fc; }
 .cms-ab-mode-badge--preview { background: rgba(250,189,47,0.2);  color: #f9e2af; }
+.cms-ab-mode-badge--view { background: rgba(148,163,184,.18); color: #cbd5e1; }
+.cms-ab-btn--toggle-on { background: rgba(34,197,94,.18); border-color: rgba(34,197,94,.42); color: #bbf7d0; }
+.cms-ab-btn--toggle-on:hover { background: rgba(34,197,94,.28); }
 
 /* The CMS bar lives in the normal page flow so it never covers template headers. */
 body { padding-top: 0 !important; }

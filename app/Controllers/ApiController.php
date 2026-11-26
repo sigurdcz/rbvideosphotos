@@ -152,6 +152,12 @@ class ApiController
                 'excerpt'           => trim((string)($data['excerpt'] ?? '')),
                 'content'           => (string)($data['content'] ?? ''),
                 'featured_image_id' => $this->intOrNull($data['featured_image_id'] ?? null),
+                'hero_image_id' => $this->intOrNull($data['hero_image_id'] ?? null),
+                'thumbnail_image_id' => $this->intOrNull($data['thumbnail_image_id'] ?? null),
+                'hero_focus_x' => $this->focusOrNull($data['hero_focus_x'] ?? null),
+                'hero_focus_y' => $this->focusOrNull($data['hero_focus_y'] ?? null),
+                'thumbnail_focus_x' => $this->focusOrNull($data['thumbnail_focus_x'] ?? null),
+                'thumbnail_focus_y' => $this->focusOrNull($data['thumbnail_focus_y'] ?? null),
                 'status'            => $status,
                 'published_at'      => $status === 'published' ? date('Y-m-d H:i:s') : null,
                 'sort_order'        => PortfolioRepository::clampSortOrder($data['sort_order'] ?? 0),
@@ -212,6 +218,12 @@ class ApiController
                 'excerpt'           => isset($data['excerpt'])           ? trim((string)$data['excerpt'])           : (string)($post['excerpt'] ?? ''),
                 'content'           => isset($data['content'])           ? (string)$data['content']                : (string)($post['content'] ?? ''),
                 'featured_image_id' => isset($data['featured_image_id']) ? $this->intOrNull($data['featured_image_id']) : ($post['featured_image_id'] ?? null),
+                'hero_image_id' => array_key_exists('hero_image_id', $data) ? $this->intOrNull($data['hero_image_id']) : ($post['hero_image_id'] ?? null),
+                'thumbnail_image_id' => array_key_exists('thumbnail_image_id', $data) ? $this->intOrNull($data['thumbnail_image_id']) : ($post['thumbnail_image_id'] ?? null),
+                'hero_focus_x' => array_key_exists('hero_focus_x', $data) ? $this->focusOrNull($data['hero_focus_x']) : ($post['hero_focus_x'] ?? null),
+                'hero_focus_y' => array_key_exists('hero_focus_y', $data) ? $this->focusOrNull($data['hero_focus_y']) : ($post['hero_focus_y'] ?? null),
+                'thumbnail_focus_x' => array_key_exists('thumbnail_focus_x', $data) ? $this->focusOrNull($data['thumbnail_focus_x']) : ($post['thumbnail_focus_x'] ?? null),
+                'thumbnail_focus_y' => array_key_exists('thumbnail_focus_y', $data) ? $this->focusOrNull($data['thumbnail_focus_y']) : ($post['thumbnail_focus_y'] ?? null),
                 'status'            => $status,
                 'published_at'      => $publishedAt,
                 'sort_order'        => isset($data['sort_order']) ? PortfolioRepository::clampSortOrder($data['sort_order']) : (int)($post['sort_order'] ?? 0),
@@ -321,6 +333,12 @@ class ApiController
                 'slug'             => $slug,
                 'description'      => (string)($data['description'] ?? ''),
                 'video_url'        => trim((string)($data['video_url'] ?? '')) ?: null,
+                'hero_image_id' => $this->intOrNull($data['hero_image_id'] ?? null),
+                'thumbnail_image_id' => $this->intOrNull($data['thumbnail_image_id'] ?? null),
+                'hero_focus_x' => $this->focusOrNull($data['hero_focus_x'] ?? null),
+                'hero_focus_y' => $this->focusOrNull($data['hero_focus_y'] ?? null),
+                'thumbnail_focus_x' => $this->focusOrNull($data['thumbnail_focus_x'] ?? null),
+                'thumbnail_focus_y' => $this->focusOrNull($data['thumbnail_focus_y'] ?? null),
                 'status'           => $status,
                 'published_at'     => $status === 'published' ? date('Y-m-d H:i:s') : null,
                 'sort_order'       => PortfolioRepository::clampSortOrder($data['sort_order'] ?? 0),
@@ -391,6 +409,12 @@ class ApiController
                 'slug'             => $newSlug,
                 'description'      => isset($data['description']) ? (string)$data['description'] : (string)($entry['description'] ?? ''),
                 'video_url'        => isset($data['video_url'])    ? (trim((string)$data['video_url']) ?: null) : $entry['video_url'],
+                'hero_image_id' => array_key_exists('hero_image_id', $data) ? $this->intOrNull($data['hero_image_id']) : ($entry['hero_image_id'] ?? null),
+                'thumbnail_image_id' => array_key_exists('thumbnail_image_id', $data) ? $this->intOrNull($data['thumbnail_image_id']) : ($entry['thumbnail_image_id'] ?? null),
+                'hero_focus_x' => array_key_exists('hero_focus_x', $data) ? $this->focusOrNull($data['hero_focus_x']) : ($entry['hero_focus_x'] ?? null),
+                'hero_focus_y' => array_key_exists('hero_focus_y', $data) ? $this->focusOrNull($data['hero_focus_y']) : ($entry['hero_focus_y'] ?? null),
+                'thumbnail_focus_x' => array_key_exists('thumbnail_focus_x', $data) ? $this->focusOrNull($data['thumbnail_focus_x']) : ($entry['thumbnail_focus_x'] ?? null),
+                'thumbnail_focus_y' => array_key_exists('thumbnail_focus_y', $data) ? $this->focusOrNull($data['thumbnail_focus_y']) : ($entry['thumbnail_focus_y'] ?? null),
                 'status'           => $status,
                 'published_at'     => $publishedAt,
                 'sort_order'       => isset($data['sort_order']) ? PortfolioRepository::clampSortOrder($data['sort_order']) : (int)$entry['sort_order'],
@@ -551,6 +575,12 @@ class ApiController
             'excerpt'            => $p['excerpt'] ?? '',
             'content'            => $p['content'] ?? '',
             'featured_image_url' => $imgUrl,
+            'hero_image_id'      => $this->intOrNull($p['hero_image_id'] ?? null),
+            'thumbnail_image_id' => $this->intOrNull($p['thumbnail_image_id'] ?? null),
+            'hero_focus_x'       => ($p['hero_focus_x'] ?? null) === null ? null : (int)$p['hero_focus_x'],
+            'hero_focus_y'       => ($p['hero_focus_y'] ?? null) === null ? null : (int)$p['hero_focus_y'],
+            'thumbnail_focus_x'  => ($p['thumbnail_focus_x'] ?? null) === null ? null : (int)$p['thumbnail_focus_x'],
+            'thumbnail_focus_y'  => ($p['thumbnail_focus_y'] ?? null) === null ? null : (int)$p['thumbnail_focus_y'],
             'meta_title'         => $p['meta_title'],
             'meta_description'   => $p['meta_description'],
             'status'             => $p['status'],
@@ -612,6 +642,12 @@ class ApiController
             // is the whole ordered list.
             'videos'           => $repo->getVideos((int)$e['id']),
             'photos'           => $photos,
+            'hero_image_id' => $this->intOrNull($e['hero_image_id'] ?? null),
+            'thumbnail_image_id' => $this->intOrNull($e['thumbnail_image_id'] ?? null),
+            'hero_focus_x' => ($e['hero_focus_x'] ?? null) === null ? null : (int)$e['hero_focus_x'],
+            'hero_focus_y' => ($e['hero_focus_y'] ?? null) === null ? null : (int)$e['hero_focus_y'],
+            'thumbnail_focus_x' => ($e['thumbnail_focus_x'] ?? null) === null ? null : (int)$e['thumbnail_focus_x'],
+            'thumbnail_focus_y' => ($e['thumbnail_focus_y'] ?? null) === null ? null : (int)$e['thumbnail_focus_y'],
             'meta_title'       => $e['meta_title'],
             'meta_description' => $e['meta_description'],
             'status'           => $e['status'],
@@ -660,6 +696,12 @@ class ApiController
         if ($v === null || $v === '' || $v === false) return null;
         $i = (int)$v;
         return $i > 0 ? $i : null;
+    }
+
+    private function focusOrNull(mixed $value): ?int
+    {
+        if ($value === null || $value === '') return null;
+        return max(0, min(100, (int)$value));
     }
 
     private function isDuplicateEntry(\PDOException $e): bool

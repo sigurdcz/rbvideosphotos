@@ -38,6 +38,8 @@ try {
 
     $router->get('/admin/account/password', 'AccountController', 'passwordForm');
     $router->post('/admin/account/password', 'AccountController', 'changePassword');
+    $router->get('/admin/account/username', 'AccountController', 'usernameForm');
+    $router->post('/admin/account/username', 'AccountController', 'changeUsername');
 
     $router->get('/admin/messages', 'MessagesController', 'index');
     $router->get('/admin/messages/download-non-spam', 'MessagesController', 'downloadNonSpam');
@@ -84,6 +86,7 @@ try {
     // Inline editor (front-end, requires auth + CSRF)
     $router->post('/admin/inline/update', 'InlineController', 'update');
     $router->post('/admin/inline/upload', 'InlineController', 'upload');
+    $router->post('/admin/inline/toggle-mode', 'InlineController', 'toggleMode');
 
     // SEO
     $router->get('/admin/seo/edit',    'SeoController', 'edit');

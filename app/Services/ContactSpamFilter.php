@@ -42,6 +42,24 @@ final class ContactSpamFilter
             $this->add($score, $reasons, $this->weight('known_phrase'), 'generated-token-payload');
         }
 
+        // Randomized contact-form payloads often contain several alphabetic
+        // tokens far beyond normal inquiry vocabulary. One long word can be a
+        // legitimate Czech compound, surname or technical term; requiring two
+        // 22+ letter tokens keeps that case below the blocking threshold.
+        if ($this->countExtraLongWords($all) >= 2) {
+            $this->add($score, $reasons, $this->weight('known_phrase'), 'multiple-extra-long-words');
+        }
+
+        // SEO/link-building solicitations vary their introduction, but combine
+        // several unambiguous commercial concepts. Language alone, one mention
+        // of a guest post or an ordinary customer link never triggers this.
+        if ($this->countTerms($all, [
+            'guest post', 'guest posts', 'link insertion', 'link insertions',
+            'get paid', 'paypal payout', 'publisher list', 'list their site',
+        ]) >= 2) {
+            $this->add($score, $reasons, $this->weight('known_phrase'), 'guest-post-solicitation');
+        }
+
         $knownMatched = false;
         foreach ($this->config['known_phrases'] as $phrase) {
             if (str_contains($all, $phrase)) {
@@ -120,6 +138,19 @@ final class ContactSpamFilter
     private function isGeneratedToken(string $value): bool
     {
         return preg_match('/^[A-Z]{6,}\d{5,}[A-Z]{5,}$/D', trim($value)) === 1;
+    }
+
+    private function countExtraLongWords(string $value): int
+    {
+        $withoutLinks = preg_replace(
+            '~(?:https?://|www\.)[^\s<>"\']+|\b[^\s@]+@[^\s@]+\.[^\s@]+\b~iu',
+            ' ',
+            $value
+        );
+        if ($withoutLinks === null) {
+            throw new \RuntimeException('Antispam long-word normalization failed.');
+        }
+        return preg_match_all('/(?<!\pL)\pL{22,}(?!\pL)/u', $withoutLinks) ?: 0;
     }
 
     private function containsUntrustedUrl(string $value): bool

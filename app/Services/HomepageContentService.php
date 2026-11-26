@@ -13,6 +13,7 @@ use App\Repositories\ServiceRepository;
 use App\Repositories\SiteRepository;
 use App\View\ViewFactory;
 use App\ViewModels\HomepageData;
+use App\Services\Render\ArticleVisual;
 
 class HomepageContentService
 {
@@ -390,6 +391,10 @@ class HomepageContentService
                 $thumbFile = $photos[0]['medium_path'] ?? $photos[0]['thumb_path'] ?? $photos[0]['storage_path'] ?? '';
                 $thumb = $this->publicMediaUrl((string)$thumbFile);
             }
+            $customThumb = ArticleVisual::url(ArticleVisual::media($entry, 'thumbnail'));
+            if ($customThumb !== '') {
+                $thumb = $customThumb;
+            }
 
             $photoData = [];
             // The hidden strip is also the lightbox data source. Keep the cover
@@ -439,6 +444,7 @@ class HomepageContentService
                 $media = $gallery[0];
             }
         }
+        $media = ArticleVisual::media($post, 'thumbnail', $media);
         $imageUrl = $media
             ? $this->publicMediaUrl((string)($media['storage_path'] ?? $media['medium_path'] ?? $media['thumb_path'] ?? ''))
             : '';

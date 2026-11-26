@@ -522,6 +522,16 @@ function register_golden_bash_theme_tests(callable $test, callable $assert): voi
         $assert(str_contains($css, '.pf-hero>.hero-bg') && str_contains($css, 'mask-image:linear-gradient'), 'Golden Bash inner heroes must retain their full-size media with the editorial fade.');
         $assert(str_contains($themedPortfolioListing, 'gb-work-listing') && str_contains($themedPortfolioListing, 'pt-card__media'), 'Golden Bash portfolio listing must use its light editorial card composition.');
         $assert(str_contains($themedPortfolioDetail, '$entry[\'hero_image\']') && str_contains($themedPortfolioDetail, 'data-responsive-profile="portfolio-hero"') && str_contains($themedPortfolioDetail, 'data-lcp-candidate') && str_contains($themedPortfolioDetail, 'gb-work-detail'), 'Golden Bash portfolio detail must expose a responsive medium lead image as the priority hero and keep the light body.');
+        $assert(str_contains($themedPortfolioDetail, 'gb-portfolio-article-hero'), 'Golden Bash portfolio detail must opt into the shared dark article hero language.');
+        foreach (['golden-bash', 'golden-bash-diagonal'] as $articleHeroTheme) {
+            $articleHeroCss = (string) file_get_contents(dirname(__DIR__) . '/Templates/' . $articleHeroTheme . '/assets/theme.css');
+            $assert(str_contains($articleHeroCss, '.gb-portfolio-article-hero::after')
+                && str_contains($articleHeroCss, 'rgba(15,10,7,.78)')
+                && str_contains($articleHeroCss, '.gb-portfolio-article-hero h1')
+                && str_contains($articleHeroCss, 'color:#fff!important')
+                && str_contains($articleHeroCss, '.gb-portfolio-article-hero .gb-page-kicker')
+                && str_contains($articleHeroCss, 'color:#d5aa60!important'), $articleHeroTheme . ' portfolio article hero must match the blog hero overlay and white-gold type hierarchy.');
+        }
         $assert(str_contains($portfolioDetailCss, 'width:50px!important;height:50px!important;min-width:50px!important;min-height:50px!important;aspect-ratio:1')
             && str_contains($portfolioDetailCss, 'width:52px!important;height:52px!important;min-width:52px!important;min-height:52px!important;aspect-ratio:1')
             && str_contains($portfolioDetailCss, 'background:transparent!important;box-shadow:none!important')

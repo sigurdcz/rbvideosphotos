@@ -260,6 +260,8 @@ Prikaz reset tvrde odmita databazi, jejiz `DB_HOST` neni `127.0.0.1`, `localhost
 - Vychozi e-mail: `admin@example.com`
 - Vychozi heslo: `admin123`
 
+V menu administrace otevřete **Změna přihlašovacího jména**, zadejte nové jméno a potvrďte ho současným heslem. Nové jméno pak používejte při přihlášení a obnově hesla.
+
 ## Lokalni databaze
 
 - Host: `127.0.0.1`

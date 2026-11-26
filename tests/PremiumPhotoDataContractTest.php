@@ -219,7 +219,7 @@ function register_premium_photo_data_contract_tests(callable $test, callable $as
         $assert(str_contains($blogDetail, '$articleGallery = $gallery') && !str_contains($blogDetail, 'premium-article-cover'), 'Blog detail does not retain its hero media in the shared gallery.');
 
         $portfolioDetail = (string)file_get_contents($themeDir . '/views/archetypes/portfolio-detail.phtml');
-        $assert(str_contains($portfolioDetail, '$gallery[0][\'full\']') && str_contains($portfolioDetail, '$articleGallery = $gallery'), 'Portfolio detail does not retain its hero image in the shared gallery.');
+        $assert(str_contains($portfolioDetail, "\$entry['hero_image']") && str_contains($portfolioDetail, '$articleGallery = $gallery'), 'Portfolio detail does not use the dedicated hero while retaining the complete gallery.');
         $assert(str_contains($css, 'font-weight:300'), 'Premium Photo navigation does not neutralize route-specific bold font rules.');
 
         foreach (['faq.phtml', 'blog-listing.phtml', 'blog-detail.phtml', 'portfolio-detail.phtml', 'sluzby.phtml'] as $view) {
@@ -250,7 +250,7 @@ function register_premium_photo_data_contract_tests(callable $test, callable $as
         $assert(!str_contains($blogDetail, 'array_slice($gallery, 1)') && !str_contains($portfolioDetail, 'array_slice($gallery, 1)'), 'Hero media is removed from the detail gallery list.');
         $assert(str_contains($blogDetail, '$articleGallery = $gallery') && str_contains($portfolioDetail, '$articleGallery = $gallery'), 'Detail gallery does not retain the complete media list.');
         $assert(str_contains($blogData, "(string)(\$featuredMedia['storage_path'] ?? '')"), 'Blog hero does not use the full/original featured image.');
-        $assert(str_contains($blogData, '$gallery[] = [') && str_contains($blogData, "'full' => \$imageUrl"), 'Featured blog image is not prepended to the gallery data.');
+        $assert(str_contains($blogData, '$gallery[] = [') && str_contains($blogData, "'full' => \$featuredImageUrl"), 'Featured blog image is not prepended to the gallery independently of a dedicated hero.');
     });
 
     $test('premium photo owns database snippet markup through theme partials and archetypes', function () use ($assert, $themeDir): void {

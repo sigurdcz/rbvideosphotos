@@ -12,7 +12,7 @@
     <h1><?= $this->e($post['title']) ?></h1>
     <p class="bp-excerpt"><?= $this->e($post['excerpt']) ?></p>
   </div>
-</section><?= $post['image_url'] !== '' ? '<div class="bp-featured"><img src="' . $this->e($post['image_url']) . '" alt="' . $this->e($post['title']) . '"></div>' : '' ?>
+</section><?= $post['image_url'] !== '' ? '<div class="bp-featured"><img src="' . $this->e($post['image_url']) . '" alt="' . $this->e($post['title']) . '" style="object-position:' . (int)($post['hero_focus_x'] ?? 50) . '% ' . (int)$post['hero_focus_y'] . '%"></div>' : '' ?>
 
 <section class="bp-content-wrap">
   <div class="container">

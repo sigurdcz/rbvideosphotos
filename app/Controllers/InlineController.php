@@ -18,10 +18,27 @@ use App\Services\PublishService;
 
 class InlineController extends Controller
 {
+    public function toggleMode(array $params): void
+    {
+        $this->requireAuth();
+        $this->csrfCheck();
+
+        Auth::setInlineEditingEnabled(($_POST['enabled'] ?? '') === '1');
+        $returnTo = trim((string)($_POST['return_to'] ?? '/'));
+        if ($returnTo === '' || $returnTo[0] !== '/' || str_starts_with($returnTo, '//')) {
+            $returnTo = '/';
+        }
+
+        $this->redirect($returnTo);
+    }
+
     public function update(array $params): void
     {
         $this->requireAuth();
         $this->csrfCheck();
+        if (!Auth::inlineEditingEnabled()) {
+            $this->json(['ok' => false, 'error' => 'Inline editace je vypnuta.'], 409);
+        }
 
         $pageId  = (int)($_POST['page_id']   ?? 0);
         $key     = trim($_POST['block_key']  ?? '');
@@ -195,6 +212,9 @@ class InlineController extends Controller
     {
         $this->requireAuth();
         $this->csrfCheck();
+        if (!Auth::inlineEditingEnabled()) {
+            $this->json(['ok' => false, 'error' => 'Inline editace je vypnuta.'], 409);
+        }
 
         $pageId = (int)($_POST['page_id']  ?? 0);
         $key    = trim($_POST['block_key'] ?? '');

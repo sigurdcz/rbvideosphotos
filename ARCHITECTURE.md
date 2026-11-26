@@ -277,6 +277,8 @@ Vychozi zname fraze zahrnuji bot marker `pxqrrbvideosphotos.czpxqr` a reklamni s
 
 `ContactSpamFilter` dostane validovanou konfiguraci a vraci pouze `isSpam`, `score` a stabilni reason codes. Verejny kontaktni tok nacte konfiguraci ze stejneho zaznamu `sites`, klasifikuje pred `MailArchiveService::send()` a pri spamu vola `archiveSpam()`. Spam se vzdy nejprve ulozi. Je-li `notify_recipients=true`, sluzba potom odesle hlavnimu prijemci a normalizovanym CC pevne upozorneni obsahujici pouze ID archivu a reason codes; puvodni predmet, text ani odkazy se do e-mailu nekopiruji. Stav spamu se nemeni a chyba upozorneni se explicitne loguje. Povolené domeny potlaci pouze body za odkaz ve zprave; URL ve jmenu zustava silny signal.
 
+Staticke strukturni signaly pouzivaji stejnou adminem nastavitelnou vahu `known_phrase` (vychozi 8 bodu, prah 7), ale nejsou vazane na konkretni jazyk. Reason `multiple-extra-long-words` vyzaduje nejmene dva samostatne abecedni tokeny o 22 a vice pismenech; pred merenim se odstrani URL a e-maily, takze jedine dlouhe ceske slovo ani dlouhy slug neblokuji. Reason `guest-post-solicitation` vyzaduje nejmene dva specificke obchodni pojmy z mnoziny guest post(s), link insertion(s), get paid, PayPal payout, publisher list a list their site. Jediny pojem, anglictina nebo odkaz samy o sobe silnou signaturu nevytvori. Dodane vzorky maji ve vychozim profilu skore 8 (nahodne dlouhe tokeny) a 10 (guest-post signatura plus neduveryhodny odkaz); oba tedy konci jako spam. Cileny beh `php tests/run-contact-spam.php` overuje take 1 000 legitimnich poptavek pro vychozi i serializovany profil.
+
 `POST /admin/settings/spam-test` vyzaduje admin roli a CSRF, pouziva naposledy ulozeny profil a vola pouze klasifikator. Nevola archiv ani mail transport. Admin save serializuje konfiguraci pres `ContactSpamConfig::fromPost()`; neplatne hodnoty odmitne jako celek bez castecneho ulozeni.
 
 ### Serverove umisteni homepage LCP fotografie
@@ -902,15 +904,17 @@ Obnova hesla používá stejnou službu, ale ukládá pouze metadata bez těla a
 
 SMTP konfigurace je v serverovém `.env` (`SMTP_HOST`, `SMTP_PORT`, `SMTP_ENCRYPTION`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `MAIL_FROM`). From odpovídá účtu, příjemce pochází z CMS. Výjimky se převádějí na bezpečné kódy bez uchování SMTP textu nebo tajných údajů.
 
-## Vlastní heslo a mailový přehled administrace
+## Vlastní přihlašovací údaje a mailový přehled administrace
 
 `AccountController` používá Auth, CSRF a RequestThrottle; identitu bere pouze ze session. `AccountPasswordService` transakčně zamkne users řádek, ověří současný bcrypt hash, uloží nové heslo a odstraní reset tokeny účtu. Selhání odstranění tokenů vrací celou transakci zpět. Controller po úspěchu odhlašuje aktuální relaci, stávající Auth fingerprint odmítne ostatní staré relace při příštím požadavku.
+
+GET a POST `/admin/account/username` umožňují přihlášenému uživateli změnit vlastní jméno. `AccountUsernameService` ověří současné heslo pod zámkem řádku a uloží jméno do unikátního `users.email`. Přihlášení i obnova používají tento sloupec. Při kontrole fingerprintu si aktivní relace načtou nové jméno. Heslo a už vydané odkazy pro obnovu zůstávají platné. Doručení obnovy se dál řídí příjemci uloženými v Nastavení.
 
 `MessagesController` vyžaduje roli admin a deleguje SQL na `MailArchiveRepository`. Parametrizované filtry mají allowlist status `stored|accepted|failed|spam` a kind, stránka je kladné číslo nejvýše 1 000 000, limit je 50. Počty za celý archiv jsou oddělené od filtrovaného výsledku. Zobrazení HTML escapuje a nesmí obsahovat resetovací tokeny.
 
 ## Centrální recovery příjemce
 
-`PasswordResetService` používá users.email jen jako login. Pro existující účet načte form_email z contact_info prvního sites řádku, vyžaduje platnou explicitně uloženou adresu a pošle na ni odkaz vázaný na dané user_id. Neexistuje fallback na login ani veřejný kontaktní e-mail.
+`PasswordResetService` používá users.email jen jako login. Pro existující účet načte `form_email` a `form_email_cc` z contact_info prvního sites řádku, vyžaduje platnou explicitně uloženou hlavní adresu a normalizuje CC pomocí `EmailRecipientList` před vytvořením tokenu. Jednorázový odkaz vázaný na dané user_id odešle stejným SMTP jako kontaktní zprávy. Každý příjemce může odkaz použít. Archiv zaznamená hlavní adresu a CC, tělo resetovacího e-mailu má hodnotu NULL. Neexistuje fallback na login ani veřejný kontaktní e-mail.
 
 `ContactRepository::upsert` má chráněné pole form_email a opt-in `$allowRecoveryRecipientChange=false`. Běžné aktualizace chráněný sloupec v SQL vynechávají; změněná hodnota bez oprávnění selže. Controller gate `mayChangeRecoveryRecipient` odmítne editora HTTP403 před zápisem. Settings a trusted seed mají explicitní opt-in. Tím editor veřejných kontaktů nemůže přesměrovat obnovu administrátorského účtu.
 
@@ -955,8 +959,8 @@ Kontaktní POST načte uložené CC a předá je šestým argumentem MailArchive
 SmtpMailer přidává každé CC přes PHPMailer::addCC a každou zprávu začíná
 clearAllRecipients. CC shodné s hlavním příjemcem se potlačí. Jediná neplatná adresa
 odmítne celý seznam; MailArchiveService přitom zachová kontaktní zprávu i zadaný CC
-text a uloží `invalid_cc_recipient`. Password reset kopii nepoužívá a archivní služba
-explicitní CC u resetu odmítá. SMTP přijetí stále neznamená prokázané doručení.
+text a uloží `invalid_cc_recipient`. Obnova hesla předává platné CC stejným
+argumentem. SMTP přijetí stále neznamená prokázané doručení.
 
 ### Galerie na dotyku a skladani hero vrstev (2026-10-29)
 
@@ -1001,3 +1005,25 @@ Obsah ani jeho poradi v DB se nemeni. Od701px zustava puvodni footer layout.
 Test gallery-mobile overuje fullscreen fotek/video, zastaveni iframe pri zavreni
 a viditelne desktopove zavirani v Chrome/WebKit; provider playback neni testovan
 syntetickou about:blank video fixture.
+
+### Obrazky clanku: Hero a Thumbnail (2026-11-17)
+
+`blog_posts` a `portfolio_entries` maji volitelne odkazy `hero_image_id` a
+`thumbnail_image_id`. Oba obrazky maji nezavisla vodorovna a svisla ohniska
+`hero_focus_x`, `hero_focus_y`, `thumbnail_focus_x` a `thumbnail_focus_y`
+v rozsahu 0-100. NULL u obrazku vybira dosavadni zdroj, NULL na kazde ose
+znamena stred 50 %. Migrace 133 pridava obe vodorovne hodnoty. `ArticleVisual`
+sjednocuje tento kontrakt pro detail, vypisy, homepage a staticky portfolio
+export. Admin posuvniky meni obe osy v zivych nahledech pro desktop, tablet
+a mobil. Vycentrovani resetuje obe osy zvoleneho obrazku.
+
+### Session prepinac inline editace (2026-11-18)
+
+Prihlaseni admina a inline edit mode jsou oddelene stavy. `Auth` uklada
+`inline_editing_enabled` pouze do aktualni session; chybejici hodnota znamena
+`true`, aby upgrade zachoval puvodni chovani. Admin lista se prihlasenemu
+uzivateli injektuje vzdy, ale `data-inline-*` atributy, editor metadata a
+`inline-editor.js` jen pri zapnutem stavu a mimo nahled. CSRF-chraneny endpoint
+`POST /admin/inline/toggle-mode` meni session stav a vraci se jen na lokalni
+cestu. Zapisove inline endpointy pri vypnutem stavu vraceji HTTP 409, takze
+vypnuti neni pouze vizualni.

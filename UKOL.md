@@ -1,3 +1,110 @@
+# UKOL: Vodorovný posun Hero a Thumbnail
+
+Datum: 2026-11-25
+Zadani: Přidat nezávislé vodorovné ohnisko obou obrázků pro články blogu a portfolia.
+Doporuceny model: Sol - Změna propojuje migraci, formulář, API a publikované šablony.
+
+## Kroky
+
+- [x] Zmapovat současný svislý posun a všechny renderovací cesty.
+- [x] Doplnit migraci, uložení a živý náhled obou os.
+- [x] Ověřit uložení, migraci a vykreslení lokálně.
+- [-] Nasadit z dev, po potvrzené záloze spustit migraci a ověřit staging.
+
+## Poznamky
+
+- Stávající migrace 132 je již v historii. Nová osa použije migraci 133 a hodnotu 50 % při NULL.
+- Migrace, repozitáře, adminové zápisy, REST a živé i statické výstupy předávají X stejně jako Y.
+- Admin mění vodorovnou a svislou polohu odděleně pro každý obrázek. API a ARCHITECTURE popisují nové hodnoty a význam NULL.
+- MariaDB test potvrdil upgrade s existujícími Y, opakování migrace a uložení/reset obou X v blogu i portfoliu. Chrome potvrdil šest náhledů a detailové Hero obou Golden Bash motivů na 1440 a 390 px. Celá sada má stejných 6 regresních a 26 golden selhání jako výchozí revize.
+- Uživatel potvrdil aktuální zálohu stagingové databáze.
+- Nový rozsah produkčního merge bude potřeba posoudit po stagingu.
+
+---
+
+# UKOL: Změna přihlašovacího jména v administraci
+
+Datum: 2026-11-25
+Zadani: Přidat možnost změnit vlastní přihlašovací jméno v administraci.
+Doporuceny model: Sol - Změna zasahuje přihlašování, session a obnovu účtu.
+
+## Kroky
+
+- [x] Ověřit přihlašování, obnovu a databázovou unikátnost jména.
+- [x] Přidat chráněný formulář a uložení vlastního jména.
+- [x] Ověřit úspěch, duplicitu, nesprávné heslo a návaznost přihlášení.
+- [-] Nasadit a ověřit na stagingu.
+
+## Poznamky
+
+- Přihlášení i obnova hledají login ve stávajícím unikátním `users.email`. Formuláře už podporují běžné jméno bez e-mailové adresy.
+- Formulář a navigace používají chráněnou routu účtu. Uložení vyžaduje aktuální heslo a CSRF, unikátnost hlídá databáze. Auth načítá aktuální jméno při kontrole relace.
+- Obnova kontroluje délku v UTF-8 znacích stejně jako uložení. Integrační testy pokrývají změnu, kolizi, platnou relaci a obnovu novým jménem. README a ARCHITECTURE popisují formulář a jeho dopady.
+- Integrační sady prošly (17 a 25 kontrol), dotčené PHP soubory prošly lintem.
+
+## Vysledek
+
+Změna vlastního přihlašovacího jména je hotová a ověřená integračními testy. Nasazení a kontrola stagingu probíhají.
+
+---
+
+# UKOL: Obnova a změna hesla v administraci
+
+Datum: 2026-11-25
+Zadani: Obnova hesla má používat stejného odesílatele, hlavního příjemce a uložené CC jako pošta z webu. Přihlášený uživatel má mít v administraci formulář pro změnu vlastního hesla.
+Doporuceny model: Sol - Změna CC příjemců rozšiřuje přístup k resetovacím odkazům a vyžaduje ověření obou cest.
+
+## Kroky
+
+- [x] Ověřit existující formulář, obnovu, SMTP a ochranu nastavení příjemců.
+- [x] Napojit obnovu na uložené CC a zpřístupnit změnu hesla v hlavní navigaci.
+- [x] Ověřit změnu i obnovu hesla v izolovaných testech a aktualizovat dokumentaci.
+- [-] Připravit commit na dev a ověřit staging.
+
+## Poznamky
+
+- Formulář a hlavní adresát obnovy již existují. Zákaz CC je přímo v poštovní službě. Pole CC je editovatelné pouze správcem.
+- Pracovní větev je dev. Složka artifacts/ patří k dřívější práci.
+- Obnova čte hlavní adresu a CC jediným dotazem. Neplatné CC zastaví žádost před vytvořením tokenu. Nastavení vysvětluje oprávnění každého příjemce obnovy.
+- Obnova (22 kontrol), změna hesla (12), ochrana nastavení (13), archiv (24), SMTP, parser adres a nastavení prošly. Test změny hesla nyní očekává i existující počet spam záznamů.
+
+## Vysledek
+
+Obnova sdílí SMTP, hlavní adresu a CC s kontaktní poštou. Formulář změny hesla je v hlavním menu administrace. Projektová dokumentace popisuje přístup příjemců k odkazu a testování na stagingu. Změna nevyžaduje novou migraci.
+
+---
+
+# UKOL: Staticka detekce spamovych poptavek
+
+Datum: 2026-11-18
+Zadani: Pridat vysoke spam risk skore za neprirozene dlouha souvisla slova a za obchodni nabidky guest postu, link insertion a placene publikace.
+Doporuceny model: Terra - Jde o ohranicenou produkcni upravu skore s regresni kontrolou proti legitimnim ceskym poptavkam.
+
+## Kroky
+
+- [x] Zmapovat aktualni staticke signaly, vahy, rozhodovaci prahy a legitimni korpus.
+- [x] Navrhnout explicitni heuristiky bez jazykoveho AI modelu a s omezenim false positives.
+- [x] Implementovat skore a duvody pro dlouhe nesmyslne tokeny a guest-post/link-building nabidky.
+- [x] Doplnit oba dodane e-maily jako regresni testy a overit legitimni korpus.
+- [x] Aktualizovat relevantni dokumentaci, wiki reflection a vytvorit lokalni commit na dev; push jen na pokyn uzivatele.
+
+## Poznamky
+
+- Akceptace: oba dodane vzory musi dostat velmi vysoke skore a byt odmitnuty; bezne ceske poptavky vcetne legitimnich delších slov a URL nesmi byt plosne blokovany.
+- Nesouvisejici `artifacts/` zustava mimo rozsah. Predchozi crop oprava je uz samostatne commitnuta jako `b899d97`.
+- Filtr ma vychozi prah 7 a vahu silne signatury 8. Nova pravidla proto pouzivaji stejnou adminem nastavitelnou vahu `known_phrase`: dve a vice samostatnych slov o 22+ pismenech, nebo alespon dva specificke guest-post/link-building pojmy.
+- URL a e-mail se pred kontrolou dlouhych slov odstranuji. Jedine dlouhe slovo ani jediny marketingovy pojem samy o sobe body nepridaji.
+- Regresni test obsahuje oba dodane vzory a negativni pripady: jedno dlouhe ceske slovo, dlouhy URL slug, jedinou zminku o guest postu a samostatne `get paid` v legitimnim kontextu.
+- `php tests/run-contact-spam.php`: 16/16 PASS vcetne 1 000 ruznych legitimnich poptavek ve vychozim i serializovanem profilu. Vzorky dosahuji skore 8 a 10 pri prahu 7.
+- ARCHITECTURE.md popisuje presne prahy, tokenizaci, reason codes, guest-post pojmy a false-positive pojistky. README ani API kontrakt se nemeni.
+- Wiki reflection UPDATE: `projects/seo-editor/mail-archive.html` obsahuje reprodukovatelne jadro obou heuristik, limity a overeni; jednorazovy zapis skoncil s NUL=0 a presne jednim novym section markerem.
+
+## Vysledek
+
+Hotovo: oba dodane vzory jsou staticky zachyceny se skore 8 a 10 pri vychozim prahu 7. Cileny runner 16/16 PASS, vcetne 1 000 legitimnich poptavek pro defaultni i ulozeny profil; PHP lint a `git diff --check` PASS. Zmena nevyzaduje databazovou migraci. Pripraven lokalni commit na `dev`, bez pushe a bez zmeny `master`.
+
+---
+
 # UKOL: Navigace homepage scrolluje na Naše práce
 
 Datum: 2026-11-17
@@ -13,8 +120,8 @@ Doporuceny model: Terra - Jde o ohranicenou opravu navigace s overenim homepage 
 - [x] Aktualizovat relevantní dokumentaci a provést wiki reflection.
 - [x] Získat konkrétní souhlas a nasadit schválený rozsah dev@4ed9872 na produkci.
 - [x] Ověřit produkční navbar a získat potvrzení aktuální zálohy produkční DB.
-- [-] Opravit a na stagingu ověřit nově zjištěné chybné pořadí společného upgrade migrací 123–131.
-- [ ] Po schválení konkrétní doplňující revize provést produkční merge, migrace a publish článku.
+- [x] Opravit a na stagingu ověřit nově zjištěné chybné pořadí společného upgrade migrací 123–131.
+- [x] Po schválení konkrétní doplňující revize provést produkční merge, migrace a publish článku.
 
 ## Poznamky
 
@@ -33,10 +140,80 @@ Doporuceny model: Terra - Jde o ohranicenou opravu navigace s overenim homepage 
 - Produkční browser QA prošlo: homepage scroll /#nase-prace na 1440×1000 i 390×844, nadpis viditelný, mobilní menu se zavře; z Kontaktu obě šířky přejdou na /nase-prace. Uživatel potvrdil aktuální produkční DB zálohu.
 - Před spuštěním migrací odhalena regrese: maintenance SQL pass vykoná 124–131 před odloženou 123, takže nový článek skončí původním textem. Produkční migrace zatím NEBYLY spuštěny. Přidán PortfolioStoryMigrationOrderTest pro přechody ze 122/123/130 a replay, zapojen do tests/run.php.
 - Regrese ze 122 reprodukována testem. ApplicationCompatibleMigrationService nyní odkládá celý allowlist 123–131 a provádí původní SQL v pořadí. Žádná historická migrace upravena. ARCHITECTURE popisuje závislost, README opravuje nepravdivé tvrzení o automatických produkčních migracích. Širší SetupEnvironment test narazil na nedostupné lokální DB připojení; cílený test používá izolované SQLite fixture a tento limit neskrývá.
+- Doplňující commit ce65c44: 3/3 migračních scénářů + replay, 5/5 navbar testů, PHP lint a diff check passed. Staging Actions 43990610507 success, protected maintenance bez čekajících migrací a s úspěšným publishem; finální text HTTP 200 zachován. První automatický review staging příkazu zaměnil helper s produkčním; po doložení pevné staging URL stejné volání povoleno a dokončeno. Žádná produkční mutace se nestala.
+- Konkrétní merge dev@ce65c44 a následné produkční migrace/publish předloženy uživateli ke schválení po staging ověření podle AGENTS.md. Wiki zaznamenává reproduktor a řešení v story-migration-order.html, commit 023f3b9. Produkční backup uživatel potvrdil; na toto potvrzení navážeme bez opakování dotazu.
+- Uživatel výslovně schválil doplňující merge dev@ce65c44 i dokončení migrací. Merge commit cf73a77 byl pushnut na master a produkční Actions 44073800874 skončily success. Následně byly v opraveném pořadí aplikovány migrace 123–131 a úplný publish skončil explicitním úspěchem.
+- Závěrečná veřejná kontrola: homepage, /kontakt, /nase-prace i /svatba-jivova-natalie-david vracejí HTTP 200; homepage navbar používá #nase-prace, podstránky /nase-prace, článek obsahuje finální kameramanský text a build diagnostika uvádí latest 131_use_cameraman_text_natalie_david_story.sql.
 
 ## Vysledek
 
-Schválený kód je na produkci; probíhá browser kontrola navbaru. Migrace článku a publish čekají na potvrzení aktuální zálohy produkční DB.
+Navbar i článek Natálie a Davida jsou nasazené a ověřené na produkci. Doplňující oprava pořadí migrací byla sloučena jako cf73a77, produkční workflow 44073800874 prošlo a migrace 123–131 i úplný publish skončily úspěšně. Homepage scrolluje na #nase-prace, zatímco podstránky odkazují na /nase-prace; nový článek vrací HTTP 200 a obsahuje finální revizi textu.
+
+---
+
+# UKOL: Shodny crop thumbnailu v admin nahledu a na webu
+
+Datum: 2026-11-18
+Zadani: Opravit rozdil mezi vertikalnim pozicovanim v admin nahledech a skutecnym Hero/Thumbnail cropem na webu, overeno na portretni svatebni fotografii `useknute hlavy.webp`.
+Doporuceny model: Terra - Jde o ohranicenou CSS/geometrickou regresi s nutnym vizualnim overenim vice pomeru stran.
+
+## Kroky
+
+- [x] Zmerit zdrojovou fotografii a zmapovat skutecne rozmery/crop CSS pro admin a verejne thumbnail povrchy.
+  - Fotografie ma 1280 x 1920 (2:3). Admin chybne simuloval thumbnail jako 4:3 / 1:1 / 3:4 a na uzkem admin viewportu vse prepisoval na 16:9.
+- [x] Stanovit 100bodovou vizualni rubriku a baseline na landscape thumbnailu.
+  - Rubrika: zdroj/object-fit 15, shoda pomeru 25, shoda pohybu ohniska 20, responsive varianty 15, bezpeci hlavniho motivu 15, layout/overflow 10.
+  - Baseline 30/100: stejny zdroj a CSS cover, ale admin 3:4 proti verejnemu 664:230 prakticky eliminoval vertikalni pohyb a nedokazal predpovedet landscape crop.
+- [x] Sjednotit admin nahledy se skutecnymi responzivnimi pomery a CSS prioritami webu.
+  - Formular nyni rozlisuje BLOG a NASE PRACE a popisuje konkretni referencni rozmery nahledu.
+  - Hero pouziva referencni viewporty 1440x590, 768x590 a 390x480. BLOG pouziva skutecne rozmery karet; NASE PRACE zobrazuje nejkritictejsi sirokou dlazdici, aby byl crop bezpecny i v uzsich variantach mozaiky.
+  - Odstranen vliv sirky admin okna: mobilni media query uz nemuze prepsat vsechny simulovane viewporty na 16:9.
+- [x] Doplnit regresni test geometrickeho kontraktu a overit desktop/tablet/mobile crop.
+  - Test hlida kontext formulare, vsechny referencni pomery stran i prioritu nad legacy mobilnim 16:9 prepisem.
+  - Test take vaze admin pomery na konkretni verejne breakpoint kontrakty Golden Bash, aby pozdejsi zmena frontendu nesla potichu mimo admin.
+  - Prvni lint odhalil chybejici uzavreni pole preview labelu; chyba byla opravena pred dalsim overenim.
+  - Izolovany beh odhalil starsi neplatne aserce literalnich jmen dynamicky generovanych inputu; test je nyni kontroluje podle skutecne sablony.
+- [x] Aktualizovat dokumentaci a wiki reflection, commitnout na dev; push jen na pokyn uzivatele.
+
+## Poznamky
+
+- Akceptace: stejny obrazek a stejna hodnota vertikalniho ohniska musi v admin nahledu i na verejnem povrchu ukazat stejny vyrez. U dodane fotografie nesmi landscape thumbnail pri spravne nastavene hodnote useknout hlavy zenicha ani nevesty.
+- Referencni soubor: `C:/Users/sigur/Downloads/useknute hlavy.webp`. Nesouvisejici `artifacts/` zustava mimo rozsah.
+
+## Vysledek
+
+Lokalni Chrome CDP geometricky dukaz pri ohnisku 25 %: novy admin a verejna siroka dlazdice maji shodny 664:230 vyrez, bez horizontalniho overflow a s celymi hlavami. Skore 95/100; zbyvajicich 5 bodu je vyhrazeno pro autentizovany staging formular po budoucim pushi. Cilene testy 4/4 PASS, PHP lint a `git diff --check` PASS. Cela historicka sada neni lokalne zelena kvuli nesouvisejici odchylce Golden Bash Diagonal a nedostupne lokalni DB; tyto prekazky nebyly vydavany za uspech.
+
+---
+
+# UKOL: Prepinac inline editace v admin liste
+
+Datum: 2026-11-18
+Zadani: Pridat do admin listy prepinac, ktery prihlasenemu adminovi povoli nebo zakaze inline editaci; pri vypnuti zustane lista viditelna, ale web se chova jako bezny verejny web.
+Doporuceny model: Terra - Jde o ohranicenou upravu session/UI stavu, verejneho renderu a regresnich testu bez zmeny databazoveho schematu.
+
+## Kroky
+
+- [x] Zmapovat zapinani edit mode, admin listu, session/routing a existujici testy.
+- [x] Navrhnout per-admin stav s bezpecnym vychozim chovanim shodnym s dneskem.
+- [x] Implementovat toggle a vypnuti vsech inline editacnich interakci pri zachovani listy.
+- [x] Doplnit regresni testy pro zapnuty i vypnuty stav a overit lint/testy.
+- [x] Aktualizovat relevantni dokumentaci a wiki reflection, commitnout na dev; staging push jen na pokyn uzivatele.
+
+## Poznamky
+
+- Akceptace: po prihlaseni je lista vzdy viditelna. Zapnuto zachova dnesni inline editaci. Vypnuto zrusi editacni chovani a stranka funguje jako beznemu navstevnikovi, aniz by admin prisel o listu nebo prihlaseni.
+- Nesouvisejici `artifacts/` zustava mimo rozsah a nebude commitnuto.
+- `Auth` nyni drzi per-session boolean `inline_editing_enabled` s vychozi hodnotou true, aby se po nasazeni zachovalo dnesni chovani. Novy CSRF-chraneny POST `/admin/inline/toggle-mode` stav meni a povoluje jen lokalni navratovou cestu.
+- Verejny renderer oddeluje prihlaseni od edit mode: admin chrome se injektuje vzdy prihlasenemu uzivateli, zatimco editacni atributy, metadata, JS a inline zapisove endpointy jsou podminene zapnutym session prepinacem. Lista obsahuje stavove tlacitko a pri vypnuti badge `WEB`.
+- Pridan staticky regresni test `InlineEditingToggleTest`, ktery hlida vychozi stav, route, zapisovy guard, render podminky i nezavislost admin listy na edit mode.
+- Plny runner odhalil dva zastarale staticke asserty z predchozi funkce Hero/Thumbnail: stale ocekavaly Hero vzdy z prvni galerie a jednu promennou pro Hero i galerii. Testy byly srovnany s novym kontraktem (samostatny Hero, ale kompletni galerie zustava); nejde o zmenu runtime chovani.
+- Overeni: PHP lint vsech dotcenych PHP souboru, samostatny session toggle test, novy staticky kontrakt a `git diff --check` prosly. Plny runner po oprave zastaralych assertu znovu konci jen na drive znamem Diagonal CSS isolation rozdilu a nedostupne lokalni DB.
+- Lokalni feature commit obsahuje implementaci, testy a ARCHITECTURE. Wiki reflection WRITE doplnila reprodukovatelny session/render/guard kontrakt do domain-logic a hubu, samostatny wiki commit `451edd5`; domain-logic zustava partial kvuli sirsim mezeram dossieru.
+
+## Vysledek
+
+Implementace, testy, projektova dokumentace, lokalni commit i wiki reflection jsou hotove. Zbyva staging push a prihlasena vizualni QA pouze na pokyn uzivatele.
 
 ---
 
@@ -3500,4 +3677,67 @@ BACKLOG.md obsahuje novy bod 6 s prioritou P3, explicitnim odkladem po urgentnic
 ## Vysledek
 
 Vsech 18 doporuceni je ulozeno v BACKLOG.md jako odlozena prace po urgentnejsich ukolech. Kontrola diffu prosla, zmeny jsou pouze dokumentacni v BACKLOG.md a UKOL.md; aplikacni testy ani deployment nejsou pro tento zapis potreba. README, ARCHITECTURE a ostatni provozni dokumentace nevyzaduji zmenu. Wiki reflection: pouze evidence drive znamych doporuceni, zadna nova technicka znalost k ulozeni. Opravy se nezahajuji.
+
+# UKOL: Sjednoceni HERO clanku Blog a Nase prace
+
+Datum: 2026-11-17
+Zadani: Upravit mobilni HERO clanku Nase prace tak, aby melo stejny tmavy vinetacni overlay a bilo-oranzovo-zlatou typografii jako HERO blogovych clanku, bez zmeny obsahu.
+Doporuceny model: Terra - Jde o ohranicenou produkcni CSS/sablonovou upravu s responzivnim staging QA.
+
+## Kroky
+
+- [x] Zmapovat sablony, styly a skutecny mobilni vzhled HERO blogu a Nase prace.
+- [x] Vytvorit 100bodovou vizualni rubriku a zachytit baseline v Chrome pri uzamcenem mobilnim viewportu.
+- [x] Sjednotit prezentacni vrstvu HERO Nase prace s blogovym designem bez zmeny dat nebo desktopovych kontraktu.
+- [x] Doplnit regresni testy a overit obe strany responzivnich breakpointu.
+- [x] Commitnout na dev, nasadit a vizualne overit staging; master ponechat beze zmeny.
+- [x] Zkontrolovat dokumentaci a provest wiki reflection.
+
+## Poznamky
+
+- Akceptace: mobilni HERO detailu Nase prace pouziva stejny tmavy overlay s jemnou vinetaci a stejnou bilou, oranzovou a zlatou typografickou hierarchii jako detail blogu. Obsah, obrazek a URL se nemeni.
+- Vychozi dev je 68cf208; neversionovana slozka artifacts/ je nesouvisejici a zustane nedotcena.
+- Staging baseline Chrome 390x844, scale 1, bez horizontalniho overflow: blog ma tmavy overlay a bily/zlaty text, portfolio bily gradient a tmavy text. Rubrika: overlay/vinetace 35, barvy 25, geometrie/crop 20, citelnost/overflow 10, runtime 10. Baseline 38/100; screenshoty jsou v .codex-qa/hero-unification.
+- Aktivni staging tema je golden-bash-diagonal. Portfolio detail v obou Golden Bash kopich dostal explicitni gb-portfolio-article-hero kontrakt: plny responzivni LCP obrazek zustava v DOM, nad nim je stejny tmavy editorialni gradient jako u blogu, nadpis je bily, kicker zlaty a popis bily s 80% opacity. Pravidla jsou na konci kaskady, aby je historicky svetly gb-unified-hero kontrakt neprepsal.
+- GoldenBashThemeTest hlida opt-in tridu i overlay a barevnou hierarchii v obou kopiich. PHP lint a diff check prosly. Sirsi runner dosel pres novy kontrakt, ale stale hlasi drive znamou nesouvisejici odchylku izolace Diagonal CSS a pote chybejici lokalni DB pripojeni; plny PASS proto neni tvrzen.
+- Implementacni commit e0549e3 byl na vyslovny souhlas pushnut do origin/dev; staging Actions 44091091777 success. Chrome 390/600/601 px, scale 1: tmavy overlay, zlaty kicker, bily nadpis a svetly popis jsou viditelne, obrazek je full-bleed, bez horizontalniho overflow nebo orezu textu. Finalni skore 98/100; dva body jsou pouze za obsahove odlisnou vysku, protoze portfolio nema blogove datum a autora.
+- README, INSTRUCTIONS, STAGING a API kontrakt se nemeni; jde o theme prezentaci. Wiki architecture byla doplnena o reprodukovatelny shared article HERO kontrakt a staging dukazy, samostatny wiki commit 0358b16.
+
+## Vysledek
+
+HERO detailu Nase prace sdili s blogovym clankem tmavy editorialni overlay a bilo-zlatou typografii pri zachovani responzivniho LCP obrazku a obsahu. Zmena je na stagingu overena v Chrome pri 390, 600 a 601 px se skore 98/100; master zustava beze zmeny.
+
+---
+
+# UKOL: Samostatne Hero a Thumbnail obrazky s vertikalnim ohniskem
+
+Datum: 2026-11-17
+Zadani: Pridat do editoru kazdeho Blog a Nase prace clanku sekci Thumbnail & Hero se samostatnym vyberem fotografie, vertikalnim ohniskem a zivymi desktop/tablet/mobile nahledy vpravo; bez nastaveni zachovat dnesni chovani.
+Doporuceny model: Sol - Zmena propojuje DB migraci, oba editory, media picker, render/publish pipeline a responzivni nahledy.
+
+## Kroky
+
+- [x] Zmapovat datovy model, repository/controller flow, media picker a verejne zdroje thumbnail/Hero pro Blog i Nase prace.
+- [x] Navrhnout append-only schema a presny fallback kontrakt bez zmeny soucasneho chovani nenastavenych clanku.
+- [x] Implementovat ukladani samostatneho Hero/Thumbnail media a vertikalniho ohniska pro oba typy clanku.
+- [x] Pridat sekci Thumbnail & Hero a sest zivych IRL nahledu napravo v editorech.
+- [x] Zapojit vybrane obrazky a ohniska do live i publish renderovani.
+- [x] Doplnit migracni, datove, renderovaci a UI regresni testy.
+- [ ] Overit admin vizualne v Chrome na desktopu, tabletu a mobilu a zkontrolovat fallback na existujicich clancich.
+- [-] Aktualizovat technickou dokumentaci a wiki, commitnout na dev; staging push az po vyslovnem souhlasu.
+
+## Poznamky
+
+- Akceptace: Blog i Nase prace maji stejny ovladaci kontrakt. Hero a Thumbnail lze vybrat nezavisle; kazdy ma vertikalni pozici. Vpravo jsou skutecne pomerove nahledy desktop/tablet/mobile. Bez nastaveni se pouzije dosavadni obrazek a stredovy crop jako dnes.
+- Vertikalni ohnisko znamena pouze osu Y v rozsahu 0-100 %, horizontalni pozice zustava 50 %.
+- Vychozi lokalni dev je 29b44bb, origin/dev e0549e3; lokalni commit navic obsahuje jen dokonceny task log predchoziho ukolu. Nesouvisejici artifacts/ zustava nedotcena.
+- Nova append-only migrace 132 pridava do blog_posts i portfolio_entries volitelne hero_image_id, thumbnail_image_id, hero_focus_y a thumbnail_focus_y vcetne FK s ON DELETE SET NULL. Bootstrap schema je aktualizovane; historicke migrace 001-131 zustaly nedotcene. TINYINT UNSIGNED uklada cele procento 0-100, NULL zachovava soucasny obrazek i centrovani.
+- Sdileny ArticleVisual kontrakt obsluhuje detail, vypisy, homepage i staticky portfolio export. Golden Bash/Diagonal i Premium Photo dostaly ohnisko; Golden Bash ma explicitni CSS prioritu proti starsimu `object-position:center top!important`.
+- API prijima, zachovava a vraci nova pole; starsi PUT klient, ktery je neposle, je nesmaze. Cilene PHP linty, ArticleVisual kontrola a `git diff --check` prosly. Plny runner dobehl ke dvema znamym nesouvisejicim blockerum: existujici izolacni rozdil Golden Bash Diagonal a nedostupna lokalni DB.
+
+## Vysledek
+
+Implementace je lokalne hotova; chybi staging deploy a vizualni overeni v prihlasenem adminu.
+
+---
 

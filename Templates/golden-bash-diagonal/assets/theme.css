@@ -437,6 +437,7 @@ body.theme-golden-bash[data-cms-page-key="blog"] .bl-hero{
   body.theme-golden-bash[data-cms-page-key="homepage"] .gb-contact-faq>.hp-section-cta>.gb-button{min-height:44px!important;font-size:12px!important}
 }
 
+
 .gb-page-kicker,.gb-list-kicker{display:block;margin:0 0 18px;color:#111;font:700 11px/1.2 Montserrat,sans-serif;letter-spacing:.24em;text-transform:uppercase}
 body.theme-golden-bash[data-cms-page-key="blog"] .bl-hero h1{margin:0;color:var(--gb-ink)!important;font:500 clamp(54px,6vw,82px)/.95 "Cormorant Garamond",serif!important}
 body.theme-golden-bash[data-cms-page-key="blog"] .bl-hero p{margin:20px 0 0;color:var(--gb-muted)!important}
@@ -509,7 +510,7 @@ body.theme-golden-bash[data-cms-page-key="cenik"] .gb-cenik-packages .ckp-card{d
 body.theme-golden-bash[data-cms-page-key="cenik"] .cenik-cta{padding:64px 0!important;background:#fffaf3!important;text-align:center}
 
 .gb-article-hero{display:flex!important;position:relative;min-height:590px!important;padding:82px 0!important;align-items:flex-end;overflow:hidden;background:#171717!important;color:#fff}
-.gb-article-hero:after{content:"";position:absolute!important;inset:0!important;z-index:0!important;background:linear-gradient(90deg,rgba(15,10,7,.78),rgba(15,10,7,.3) 68%,rgba(15,10,7,.18)),var(--gb-article-image,none) center/cover no-repeat!important}
+.gb-article-hero:after{content:"";position:absolute!important;inset:0!important;z-index:0!important;background:linear-gradient(90deg,rgba(15,10,7,.78),rgba(15,10,7,.3) 68%,rgba(15,10,7,.18)),var(--gb-article-image,none) var(--gb-article-position-x,50%) var(--gb-article-position-y,50%)/cover no-repeat!important}
 .gb-article-hero>.container{position:relative;z-index:1;max-width:1280px!important}
 .gb-article-hero .gb-page-kicker,.gb-article-hero .bp-date{color:#d5aa60}.gb-article-hero .bp-date{margin-bottom:18px;font:500 11px/1 Montserrat,sans-serif;letter-spacing:.14em;text-transform:uppercase}
 .gb-article-hero h1{max-width:900px;margin:0;color:#fff!important;font:500 clamp(58px,7vw,96px)/.86 "Cormorant Garamond",serif!important}
@@ -3341,3 +3342,19 @@ body.theme-golden-bash .gb-work-lightbox__thumbs{margin:0;padding:6px 18px 12px}
   body.theme-golden-bash .gb-footer .gb-footer-legal>a:last-of-type{min-height:44px!important}
   body.theme-golden-bash .gb-footer .gb-footer-rich>.site-footer-bottom{grid-column:1 / -1!important;order:6;margin:0!important;padding:12px 0 0!important;background:none;font-size:10px!important}
 }
+
+/* Portfolio articles deliberately share the dark editorial hero language of blog articles. */
+body.theme-golden-bash .gb-portfolio-article-hero{display:flex!important;position:relative!important;min-height:590px!important;padding:82px 0!important;align-items:flex-end!important;overflow:hidden!important;background:#171717!important;color:#fff!important}
+body.theme-golden-bash .gb-portfolio-article-hero>.hero-bg{display:block!important;position:absolute!important;inset:0!important;z-index:0!important;width:100%!important;height:100%!important;max-width:none!important;object-fit:cover!important;object-position:center top!important;-webkit-mask-image:none!important;mask-image:none!important}
+body.theme-golden-bash .gb-portfolio-article-hero::after{content:""!important;display:block!important;position:absolute!important;inset:0!important;z-index:1!important;background:linear-gradient(90deg,rgba(15,10,7,.78),rgba(15,10,7,.3) 68%,rgba(15,10,7,.18))!important;pointer-events:none}
+body.theme-golden-bash .gb-portfolio-article-hero>.container{position:relative!important;z-index:2!important;width:min(calc(100% - 80px),1280px)!important;margin:auto auto 0!important}
+body.theme-golden-bash .gb-portfolio-article-hero .gb-page-kicker{margin:0 0 18px!important;color:#d5aa60!important}
+body.theme-golden-bash .gb-portfolio-article-hero h1{max-width:900px!important;margin:0!important;color:#fff!important;font:500 clamp(58px,7vw,96px)/.86 "Cormorant Garamond",serif!important;letter-spacing:normal!important}
+body.theme-golden-bash .gb-portfolio-article-hero p{max-width:680px!important;margin:24px 0 0!important;color:rgba(255,255,255,.8)!important;font:400 16px/1.6 Montserrat,sans-serif!important}
+@media(max-width:600px){
+  body.theme-golden-bash .gb-portfolio-article-hero{min-height:480px!important;padding:54px 0!important;align-items:flex-end!important}
+  body.theme-golden-bash .gb-portfolio-article-hero>.container{width:min(calc(100% - 36px),1280px)!important;margin:auto auto 0!important;align-self:auto!important}
+  body.theme-golden-bash .gb-portfolio-article-hero h1{font-size:52px!important}
+}
+body.theme-golden-bash img[style*="--article-focus-y"],
+body.theme-golden-bash .gb-portfolio-article-hero>.hero-bg[style*="--article-focus-y"]{object-position:var(--article-focus-x,50%) var(--article-focus-y)!important}

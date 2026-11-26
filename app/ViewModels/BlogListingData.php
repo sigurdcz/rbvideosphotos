@@ -7,6 +7,7 @@ namespace App\ViewModels;
 use App\Repositories\BlogRepository;
 use App\Repositories\MediaRepository;
 use App\Services\Render\MediaUrlResolver;
+use App\Services\Render\ArticleVisual;
 
 /**
  * Pure data provider for the `blog-listing` archetype
@@ -41,6 +42,8 @@ final class BlogListingData
                     );
                 }
             }
+            $thumbnailMedia = ArticleVisual::media($post, 'thumbnail', $media ?? null);
+            $imageUrl = ArticleVisual::url($thumbnailMedia);
 
             $posts[] = [
                 'id' => (int)($post['id'] ?? 0),
@@ -48,6 +51,8 @@ final class BlogListingData
                 'title' => (string)($post['title'] ?? ''),
                 'excerpt' => (string)($post['excerpt'] ?? ''),
                 'image_url' => $imageUrl,
+                'thumbnail_focus_x' => ArticleVisual::focusX($post, 'thumbnail'),
+                'thumbnail_focus_y' => ArticleVisual::focusY($post, 'thumbnail'),
                 'date' => !empty($post['published_at'])
                     ? date('j. n. Y', (int)strtotime((string)$post['published_at']))
                     : '',

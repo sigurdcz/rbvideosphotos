@@ -30,12 +30,14 @@ class Auth
         self::enforceSessionTimeouts();
         if (!self::$passwordChecked && !empty($_SESSION['user_id'])) {
             self::$passwordChecked = true;
-            $stmt = Database::getInstance()->prepare('SELECT password_hash FROM users WHERE id = ?');
+            $stmt = Database::getInstance()->prepare('SELECT email, password_hash FROM users WHERE id = ?');
             $stmt->execute([$_SESSION['user_id']]);
-            $hash = $stmt->fetchColumn();
-            if (!$hash || !hash_equals(hash('sha256', $hash), (string) ($_SESSION['password_fingerprint'] ?? ''))) {
+            $user = $stmt->fetch();
+            if (!$user || !hash_equals(hash('sha256', $user['password_hash']), (string) ($_SESSION['password_fingerprint'] ?? ''))) {
                 $_SESSION = [];
                 session_regenerate_id(true);
+            } else {
+                $_SESSION['user_email'] = $user['email'];
             }
         }
     }
@@ -99,6 +101,19 @@ class Auth
     {
         self::start();
         return isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
+    }
+
+    public static function inlineEditingEnabled(): bool
+    {
+        self::start();
+        return !array_key_exists('inline_editing_enabled', $_SESSION)
+            || $_SESSION['inline_editing_enabled'] === true;
+    }
+
+    public static function setInlineEditingEnabled(bool $enabled): void
+    {
+        self::start();
+        $_SESSION['inline_editing_enabled'] = $enabled;
     }
 
     private static function enforceSessionTimeouts(): void

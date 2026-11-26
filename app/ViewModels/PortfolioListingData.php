@@ -7,6 +7,7 @@ namespace App\ViewModels;
 use App\Repositories\PortfolioRepository;
 use App\Services\Render\MediaUrlResolver;
 use App\Services\Render\PortfolioCaptionFormatter;
+use App\Services\Render\ArticleVisual;
 
 /**
  * Pure data provider for the `portfolio-listing` archetype
@@ -39,6 +40,10 @@ final class PortfolioListingData
                 $thumbFile = $photos[0]['storage_path'] ?? $photos[0]['medium_path'] ?? $photos[0]['thumb_path'] ?? '';
                 $thumb = MediaUrlResolver::publicMediaUrl((string)$thumbFile);
             }
+            $thumbnailUrl = ArticleVisual::url(ArticleVisual::media($entry, 'thumbnail'));
+            if ($thumbnailUrl !== '') {
+                $thumb = $thumbnailUrl;
+            }
 
             // Short excerpt from the work's copy (shown under the title in the grid).
             $caption = PortfolioCaptionFormatter::fromHtml((string)($entry['description'] ?? ''), 220);
@@ -59,6 +64,8 @@ final class PortfolioListingData
                 // The hand-typed order; interleaveByContentType() groups by it.
                 'sort_order' => (int)($entry['sort_order'] ?? 0),
                 'thumb' => $thumb,
+                'thumbnail_focus_x' => ArticleVisual::focusX($entry, 'thumbnail'),
+                'thumbnail_focus_y' => ArticleVisual::focusY($entry, 'thumbnail'),
                 'has_video' => $hasVideo,
                 'video_embed_url' => $hasVideo ? PortfolioRepository::embedUrl((string)$entry['video_url']) : '',
                 'content_type' => ($entry['content_type'] ?? '') === 'video' ? 'video' : 'photo',

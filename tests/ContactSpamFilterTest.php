@@ -7,6 +7,36 @@ use App\Services\ContactSpamConfig;
 
 function register_contact_spam_filter_tests(callable $test, callable $assert): void
 {
+    $test('long randomized words and guest-post sales pitches receive strong static risk', function () use ($assert): void {
+        $filter = new ContactSpamFilter();
+        $randomized = $filter->classify(
+            'DonaldTom',
+            'sender@example.test',
+            'Gfihudwgfyehjwowjifwhu fuehiqokewwfueiweqijwihrwu ifwiqdjwrhwijwijwirhwu rbvideosphotos.cz'
+        );
+        $assert($randomized['isSpam'] && $randomized['score'] >= 8, 'Multiple supplied long tokens must exceed the default spam threshold.');
+        $assert(in_array('multiple-extra-long-words', $randomized['reasons'], true), 'Long-token risk must have an explicit reason.');
+
+        $guestPost = <<<'MESSAGE'
+Hi,
+I think this site could be a good fit for a marketplace where site owners list their site and get paid for guest posts.
+You set the price for guest posts and link insertions, approve every order, then request your PayPal payout.
+We are building our founding publisher list now: https://guestposts4u.org
+MESSAGE;
+        $sales = $filter->classify('Ana', 'publisher@example.test', $guestPost);
+        $assert($sales['isSpam'] && $sales['score'] >= 10, 'Supplied guest-post pitch must combine a strong signature and link risk.');
+        $assert(in_array('guest-post-solicitation', $sales['reasons'], true), 'Guest-post sales risk must have an explicit reason.');
+
+        foreach ([
+            'Dobrý den, řešíme nejneobhospodařovávatelnějšími pozemky a potřebujeme firemní fotografie.',
+            'Píšeme jeden guest post o naší svatbě a hledáme fotografa.',
+            'Podklady jsou na https://example.cz/nejneobhospodarovavatelnejsimi-nejpravdepodobnejsimi-fotografiemi',
+            'Please photograph our publisher conference; attendees get paid after the event.',
+        ] as $legitimate) {
+            $assert(!$filter->classify('Zákazník', 'client@example.cz', $legitimate)['isSpam'], 'One long word, URL or one sales term alone must pass: ' . $legitimate);
+        }
+    });
+
     $test('Greek casino promotion and paired generated tokens are blocked without broad language rules', function () use ($assert): void {
         $filter = new ContactSpamFilter();
         $casino = <<<'MESSAGE'

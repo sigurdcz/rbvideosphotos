@@ -52,8 +52,8 @@ class BlogRepository
     public function create(array $d): int
     {
         $stmt = $this->db->prepare(
-            'INSERT INTO blog_posts (site_id, title, slug, excerpt, content, featured_image_id, status, published_at, sort_order, meta_title, meta_description)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+            'INSERT INTO blog_posts (site_id, title, slug, excerpt, content, featured_image_id, hero_image_id, thumbnail_image_id, hero_focus_x, hero_focus_y, thumbnail_focus_x, thumbnail_focus_y, status, published_at, sort_order, meta_title, meta_description)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
         $stmt->execute([
             $d['site_id'],
@@ -62,6 +62,12 @@ class BlogRepository
             $d['excerpt']           ?? '',
             $d['content']           ?? '',
             $d['featured_image_id'] ?? null,
+            $d['hero_image_id'] ?? null,
+            $d['thumbnail_image_id'] ?? null,
+            $d['hero_focus_x'] ?? null,
+            $d['hero_focus_y'] ?? null,
+            $d['thumbnail_focus_x'] ?? null,
+            $d['thumbnail_focus_y'] ?? null,
             $d['status']            ?? 'draft',
             $d['published_at']      ?? null,
             PortfolioRepository::clampSortOrder($d['sort_order'] ?? 0),
@@ -74,7 +80,7 @@ class BlogRepository
     public function update(int $id, array $d): void
     {
         $stmt = $this->db->prepare(
-            'UPDATE blog_posts SET title=?, slug=?, excerpt=?, content=?, featured_image_id=?, status=?, published_at=?, sort_order=?, meta_title=?, meta_description=? WHERE id=?'
+            'UPDATE blog_posts SET title=?, slug=?, excerpt=?, content=?, featured_image_id=?, hero_image_id=?, thumbnail_image_id=?, hero_focus_x=?, hero_focus_y=?, thumbnail_focus_x=?, thumbnail_focus_y=?, status=?, published_at=?, sort_order=?, meta_title=?, meta_description=? WHERE id=?'
         );
         $stmt->execute([
             $d['title'],
@@ -82,6 +88,12 @@ class BlogRepository
             $d['excerpt']           ?? '',
             $d['content']           ?? '',
             $d['featured_image_id'] ?? null,
+            $d['hero_image_id'] ?? null,
+            $d['thumbnail_image_id'] ?? null,
+            $d['hero_focus_x'] ?? null,
+            $d['hero_focus_y'] ?? null,
+            $d['thumbnail_focus_x'] ?? null,
+            $d['thumbnail_focus_y'] ?? null,
             $d['status']            ?? 'draft',
             $d['published_at']      ?? null,
             PortfolioRepository::clampSortOrder($d['sort_order'] ?? 0),

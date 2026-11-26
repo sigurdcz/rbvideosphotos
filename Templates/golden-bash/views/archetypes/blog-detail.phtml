@@ -3,7 +3,7 @@
 /** @var array $gallery */
 ?>
 <article class="gb-article">
-  <header class="bp-hero gb-article-hero"<?php if ($post['image_url'] !== ''): ?> style="--gb-article-image:url('<?= $this->e($post['image_url']) ?>')"<?php endif; ?>>
+  <header class="bp-hero gb-article-hero"<?php if ($post['image_url'] !== ''): ?> style="--gb-article-image:url('<?= $this->e($post['image_url']) ?>');--gb-article-position-x:<?= (int)($post['hero_focus_x'] ?? 50) ?>%;--gb-article-position-y:<?= (int)$post['hero_focus_y'] ?>%"<?php endif; ?>>
     <div class="container">
       <span class="gb-page-kicker">Z našeho blogu</span>
       <div class="bp-date"><?= $this->e($post['date']) ?></div>
