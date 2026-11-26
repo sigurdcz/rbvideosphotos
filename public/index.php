@@ -1040,6 +1040,7 @@ function injectPageHeadMetadata(string $html, array $site, array $meta): string
         );
     }
 
+    $html = str_replace('</head>', $seoRenderer->renderVersionComment() . "\n</head>", $html);
     return injectFaviconLinks($html, $site);
 }
 

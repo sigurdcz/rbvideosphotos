@@ -14,6 +14,7 @@ Doporuceny model: Sol - Změna propojuje výstup aplikace a nasazovací workflow
 
 - Verze aplikace je `App\Core\Version::APP`. Sestavení se rozlišuje krátkým SHA a časem UTC. Chybějící build soubor dřív na produkci zavádějícím způsobem vypadal jako lokální `local/dev`.
 - Místní HTML test prošel pro chybějící, platná i poškozená metadata. PHP lint a YAML kontrola pořadí kroků obou workflow prošly.
+- První staging ověřil commit v HTML úvodní stránky. Specializované veřejné routy skládají hlavičku mimo renderHead, proto sdílejí renderVersionComment přes injectPageHeadMetadata.
 
 ---
 

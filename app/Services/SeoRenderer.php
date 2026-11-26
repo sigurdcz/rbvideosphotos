@@ -102,7 +102,7 @@ class SeoRenderer
      * 2026-09-22, where a demo-content replay silently reverted SEO fields
      * a later migration didn't know to re-check).
      */
-    private function renderVersionComment(): string
+    public function renderVersionComment(): string
     {
         $buildFile = dirname(__DIR__, 2) . '/public/assets/build-info.json';
         $buildStamp = 'build unavailable';

@@ -47,9 +47,8 @@ function normalizeHtmlForGolden(string $html, bool $editMode = false): string
 {
     $html = str_replace(["\r\n", "\r"], "\n", $html);
 
-    // Database revision diagnostics vary with the local fixture database; they
-    // are not page content and must not invalidate every route snapshot.
-    $html = preg_replace('~<!-- build [^\r\n]*?\| migrations: [^\r\n]*?-->~', '<!-- build BUILD | migrations: MIGRATIONS -->', $html) ?? $html;
+    // Build and migration diagnostics are independent of the page content.
+    $html = preg_replace('~<!-- build [^\r\n]*?\| migrations: [^\r\n]*?-->\n?~', '', $html) ?? $html;
 
     // Publish stamp, e.g. "<!-- cms: v_1.3.0 published: 2026-07-17 12:34:56 -->".
     $html = preg_replace(
