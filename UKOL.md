@@ -1,3 +1,21 @@
+# UKOL: Zkrácení komentáře na verzi SW
+
+Datum: 2026-11-26
+Zadani: V HTML komentáři zobrazit pouze verzi aplikace.
+Doporuceny model: Sol - Jde o malou úpravu veřejného rendereru a nasazovacích workflow.
+
+## Kroky
+
+- [x] Ponechat pouze hodnotu Version::APP ve sdíleném komentáři.
+- [x] Odebrat sestavovací metadata z workflow a upravit dokumentaci a normalizaci snapshotů.
+- [-] Ověřit na stagingu.
+
+## Poznamky
+
+- Zdroj zůstává společný pro běžné i specializované veřejné routy.
+
+---
+
 # UKOL: Verze SW v HTML komentáři
 
 Datum: 2026-11-26

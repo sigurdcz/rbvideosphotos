@@ -94,46 +94,9 @@ class SeoRenderer
         return implode("\n", $lines);
     }
 
-    /**
-     * HTML comment stamping the deployed build and how many migrations the
-     * production database has actually run, so a mismatch between "code I
-     * pushed" and "what's live" is visible in view-source instead of only
-     * discoverable by re-diagnosing from scratch (see the deploy drift found
-     * 2026-09-22, where a demo-content replay silently reverted SEO fields
-     * a later migration didn't know to re-check).
-     */
     public function renderVersionComment(): string
     {
-        $buildFile = dirname(__DIR__, 2) . '/public/assets/build-info.json';
-        $buildStamp = 'build unavailable';
-        if (is_file($buildFile) && is_readable($buildFile)) {
-            $build = json_decode((string)file_get_contents($buildFile), true);
-            $sha = $build['short_sha'] ?? null;
-            $builtAt = $build['built_at'] ?? null;
-            $buildStamp = 'build invalid';
-            if (is_string($sha) && preg_match('/\A[0-9a-f]{7,40}\z/', $sha) === 1
-                && is_string($builtAt) && preg_match('/\A[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z\z/', $builtAt) === 1) {
-                $buildStamp = 'build ' . $sha . ' (' . $builtAt . ')';
-            }
-        }
-        $parts = [$buildStamp, 'SW version: ' . Version::APP];
-
-        try {
-            $db = \App\Core\Database::getInstance();
-            $count = (int)$db->query('SELECT COUNT(*) FROM schema_migrations')->fetchColumn();
-            if ($count > 0) {
-                $latest = $db->query(
-                    'SELECT migration FROM schema_migrations ORDER BY applied_at DESC, id DESC LIMIT 1'
-                )->fetchColumn();
-                $parts[] = 'migrations: ' . $count . ' applied, latest ' . $latest;
-            } else {
-                $parts[] = 'migrations: none applied';
-            }
-        } catch (\Throwable $e) {
-            $parts[] = 'migrations: unavailable';
-        }
-
-        return '<!-- ' . implode(' | ', $parts) . ' -->';
+        return '<!-- SW version: ' . Version::APP . ' -->';
     }
 
     public function renderBodyScripts(array $site): string

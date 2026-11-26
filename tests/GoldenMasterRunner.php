@@ -47,8 +47,8 @@ function normalizeHtmlForGolden(string $html, bool $editMode = false): string
 {
     $html = str_replace(["\r\n", "\r"], "\n", $html);
 
-    // Build and migration diagnostics are independent of the page content.
-    $html = preg_replace('~<!-- build [^\r\n]*?\| migrations: [^\r\n]*?-->\n?~', '', $html) ?? $html;
+    // Ignore the version comment and its older build-and-migration format.
+    $html = preg_replace('~<!-- (?:SW version: [^\r\n]*?|build [^\r\n]*?\| migrations: [^\r\n]*?)-->\n?~', '', $html) ?? $html;
 
     // Publish stamp, e.g. "<!-- cms: v_1.3.0 published: 2026-07-17 12:34:56 -->".
     $html = preg_replace(
